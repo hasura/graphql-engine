@@ -74,7 +74,7 @@ already in the `products` table of the docs sample app. Click "Run Request".
   width="1000px"
 />
 
-You will see the result returned below the "Run Request" button.
+You will see the result returned next to the query.
 
 You can test the other `insert_products_one` endpoint that we created in the same way by providing a new product
 object as the request variable.
@@ -82,7 +82,7 @@ object as the request variable.
 You can also use your favourite REST client to test the endpoint. For example, using `curl`:
 
 ```bash
-curl --location --request GET 'https://<your-hasura-project>/api/rest/products/7992fdfa-65b5-11ed-8612-6a8b11ef7372' \
+curl --location --request GET 'https://<your-hasura-project>.hasura.app/api/rest/products/7992fdfa-65b5-11ed-8612-6a8b11ef7372' \
 --header 'Content-Type: application/json' \
 --header 'x-hasura-admin-secret: <your-admin-secret>'
 ```

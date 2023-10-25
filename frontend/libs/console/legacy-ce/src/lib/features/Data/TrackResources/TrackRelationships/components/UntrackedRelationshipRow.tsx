@@ -1,9 +1,10 @@
 import { ChangeEvent } from 'react';
-import { FaArrowRight, FaColumns, FaDatabase, FaTable } from 'react-icons/fa';
+import { FaColumns, FaDatabase, FaTable } from 'react-icons/fa';
 import { capitaliseFirstLetter } from '../../../../../components/Common/ConfigureTransformation/utils';
 import { Button } from '../../../../../new-components/Button';
 import { CardedTable } from '../../../../../new-components/CardedTable';
 import { getTableDisplayName } from '../../../../DatabaseRelationships';
+import { RelationshipIcon } from '../../../../DatabaseRelationships/components/RelationshipIcon';
 import { SuggestedRelationshipWithName } from '../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 
 export type UntrackedRelationshipRowProps = {
@@ -83,8 +84,10 @@ export const DisplaySuggestedRelationship = ({
     <span>{getTableDisplayName(relationship.from.table)}</span>
     /
     <FaColumns />
-    {relationship.from.columns.join(' ')}
-    <FaArrowRight />
+    <span>{relationship.from.columns.join(' ')}</span>
+    <RelationshipIcon
+      type={relationship.type === 'array' ? 'one-to-many' : 'one-to-one'}
+    />
     <FaTable />
     <span>{getTableDisplayName(relationship.to.table)}</span>
     /

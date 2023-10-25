@@ -25,12 +25,14 @@ export const pathsToBreadcrumbs = (
     // skip source in path
     if (path === '{{source}}') return prev;
 
-    let title = startCase(injectRouteDetails(path, props));
+    let title = injectRouteDetails(path, props);
 
     //prepend source to the item directly following the source so the source is visible in the breadcrumb but not it's own entry in the crumbs
     if (arr[index - 1] === '{{source}}') {
       const source = injectRouteDetails(arr[index - 1], props);
       title = `${source} / ${title}`;
+    } else {
+      title = startCase(title);
     }
 
     return [

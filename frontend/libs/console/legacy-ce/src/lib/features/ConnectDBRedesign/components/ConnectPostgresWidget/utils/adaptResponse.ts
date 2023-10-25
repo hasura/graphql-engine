@@ -47,10 +47,10 @@ export const adaptPostgresConnectionInfo = (
     isolationLevel: connectionInfo.isolation_level,
     sslSettings: {
       sslMode: connectionInfo.ssl_configuration?.sslmode,
-      sslRootCert: connectionInfo.ssl_configuration?.sslrootcert.from_env,
-      sslCert: connectionInfo.ssl_configuration?.sslcert.from_env,
-      sslKey: connectionInfo.ssl_configuration?.sslkey.from_env,
-      sslPassword: connectionInfo.ssl_configuration?.sslpassword.from_env,
+      sslRootCert: connectionInfo.ssl_configuration?.sslrootcert?.from_env,
+      sslCert: connectionInfo.ssl_configuration?.sslcert?.from_env,
+      sslKey: connectionInfo.ssl_configuration?.sslkey?.from_env,
+      sslPassword: connectionInfo.ssl_configuration?.sslpassword?.from_env,
     },
   };
 };

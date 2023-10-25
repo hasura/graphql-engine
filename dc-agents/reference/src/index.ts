@@ -4,7 +4,7 @@ import { filterAvailableTables, getSchema, getTable, loadStaticData, StaticData 
 import { queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
+import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse, SchemaRequest } from '@hasura/dc-api-types';
 import { cloneDataset, defaultDbStoreName, deleteDataset, getDataset, getDbStoreName } from './datasets';
 
 const port = Number(process.env.PORT) || 8100;
@@ -20,15 +20,23 @@ server.register(FastifyCors, {
   allowedHeaders: ["X-Hasura-DataConnector-Config", "X-Hasura-DataConnector-SourceName"]
 });
 
+// This is a hack to get Fastify to parse bodies on /schema GET requests
+// We basically trick its code into thinking the request is actually a POST
+// request so it doesn't skip parsing request bodies.
+server.addHook("onRequest", async(request, reply) => {
+  if (request.routerPath === "/schema")
+    request.raw.method = "POST"
+})
+
 server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
   return capabilitiesResponse;
 });
 
-server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
+server.post<{ Body: SchemaRequest | undefined, Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(staticData, config);
+  return getSchema(staticData, config, request.body);
 });
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {

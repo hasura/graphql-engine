@@ -4,25 +4,14 @@
 
 module Hasura.Backends.DataConnector.API.V0.Query
   ( QueryRequest (..),
-    _QRTable,
-    _QRFunction,
-    TableRequest (..),
     pattern TableQueryRequest,
-    FunctionRequest (..),
     pattern FunctionQueryRequest,
-    FunctionArgument (..),
-    ArgumentValue (..),
+    pattern NativeQueryRequest,
     qrRelationships,
+    qrRedactionExpressions,
     qrQuery,
     qrForeach,
-    trTable,
-    trRelationships,
-    trQuery,
-    trForeach,
-    frFunction,
-    frFunctionArguments,
-    frQuery,
-    frRelationships,
+    qrTarget,
     FieldName (..),
     Query (..),
     qFields,
@@ -33,11 +22,16 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qWhere,
     qOrderBy,
     Field (..),
+    _ColumnField,
+    _RelField,
+    _NestedObjField,
+    _NestedArrayField,
     RelationshipField (..),
     ArrayField (..),
     QueryResponse (..),
     qrRows,
     qrAggregates,
+    qrInterpolatedQueries,
     FieldValue,
     mkColumnFieldValue,
     mkRelationshipFieldValue,
@@ -58,7 +52,7 @@ where
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.Arrow (left)
-import Control.Lens (Lens', Prism', Traversal', lens, prism')
+import Control.Lens (Lens', Prism', lens, prism')
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Aeson qualified as J
@@ -72,153 +66,63 @@ import Data.OpenApi (ToSchema)
 import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Tuple.Extra (fst3, snd3, thd3, uncurry3)
 import GHC.Generics (Generic)
 import GHC.Show (appPrec, appPrec1)
 import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Function qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.InterpolatedQuery qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.OrderBy qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Target qualified as API.V0
 import Servant.API (HasStatus (..))
 import Prelude
 
--- | A serializable request to retrieve strutured data from some
--- source.
-data QueryRequest
-  = QRTable TableRequest
-  | QRFunction FunctionRequest
+-- | A serializable request to retrieve strutured data from tables.
+data QueryRequest = QueryRequest
+  { _qrTarget :: API.V0.Target,
+    _qrRelationships :: Set API.V0.Relationships,
+    _qrRedactionExpressions :: Set API.V0.TargetRedactionExpressions,
+    _qrInterpolatedQueries :: API.V0.InterpolatedQueries,
+    _qrQuery :: Query,
+    _qrForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
+  }
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryRequest
-
--- Can we build this with existing traversals without a case?
-qrRelationships :: Lens' QueryRequest (Set API.V0.Relationships)
-qrRelationships = lens get set
-  where
-    get (QRTable (TableRequest {_trRelationships})) = _trRelationships
-    get (QRFunction (FunctionRequest {_frRelationships})) = _frRelationships
-    set (QRTable qrt) r = QRTable (qrt {_trRelationships = r})
-    set (QRFunction qrf) r = QRFunction (qrf {_frRelationships = r})
-
-qrQuery :: Lens' QueryRequest Query
-qrQuery = lens get set
-  where
-    get (QRTable (TableRequest {_trQuery})) = _trQuery
-    get (QRFunction (FunctionRequest {_frQuery})) = _frQuery
-    set (QRTable qrt) x = QRTable (qrt {_trQuery = x})
-    set (QRFunction qrf) x = QRFunction (qrf {_frQuery = x})
 
 instance HasCodec QueryRequest where
   codec =
     named "QueryRequest" $
-      object "QueryRequest" $
-        discriminatedUnionCodec "type" enc dec
-    where
-      enc = \case
-        QRTable qrt -> ("table", mapToEncoder qrt objectCodec)
-        QRFunction qrf -> ("function", mapToEncoder qrf objectCodec)
-      dec =
-        HashMap.fromList
-          [ ("table", ("TableRequest", mapToDecoder QRTable objectCodec)),
-            ("function", ("FunctionRequest", mapToDecoder QRFunction objectCodec))
-          ]
+      object "QueryRequest" objectCodec
 
-pattern TableQueryRequest :: API.V0.TableName -> Set API.V0.Relationships -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
-pattern TableQueryRequest table relationships query foreach = QRTable (TableRequest table relationships query foreach)
-
--- | A serializable request to retrieve strutured data from tables.
-data TableRequest = TableRequest
-  { _trTable :: API.V0.TableName,
-    _trRelationships :: Set API.V0.Relationships,
-    _trQuery :: Query,
-    _trForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
-  }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance HasObjectCodec TableRequest where
+instance HasObjectCodec QueryRequest where
   objectCodec =
-    TableRequest
-      <$> requiredField "table" "The name of the table to query"
-        .= _trTable
-      -- TODO: Rename this field to "relationships" at some point in the future ala FunctionRequest.
-      -- NOTE: This can't be done immediately as it would break compatibility in agents.
-      <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request"
-        .= _trRelationships
+    QueryRequest
+      <$> requiredField "target" "The name of the table to query"
+        .= _qrTarget
+      <*> requiredField "relationships" "The relationships between tables involved in the entire query request"
+        .= _qrRelationships
+      <*> optionalFieldWithOmittedDefault "redaction_expressions" mempty "Expressions that can be referenced by the query to redact fields/columns"
+        .= _qrRedactionExpressions
+      <*> optionalFieldWithOmittedDefault "interpolated_queries" mempty "The details of the query against the table"
+        .= _qrInterpolatedQueries
       <*> requiredField "query" "The details of the query against the table"
-        .= _trQuery
+        .= _qrQuery
       <*> optionalFieldOrNull "foreach" "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query."
-        .= _trForeach
+        .= _qrForeach
 
-pattern FunctionQueryRequest :: API.V0.FunctionName -> [FunctionArgument] -> Set API.V0.Relationships -> Query -> QueryRequest
-pattern FunctionQueryRequest function args relationships query = QRFunction (FunctionRequest function args relationships query)
+pattern FunctionQueryRequest :: API.V0.FunctionName -> [API.V0.FunctionArgument] -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern FunctionQueryRequest function args relationships redactionExps interpolated query foreach = QueryRequest (API.V0.TFunction (API.V0.TargetFunction function args)) relationships redactionExps interpolated query foreach
 
--- | A serializable request to compute strutured data from a function.
-data FunctionRequest = FunctionRequest
-  { _frFunction :: API.V0.FunctionName,
-    _frFunctionArguments :: [FunctionArgument],
-    _frRelationships :: Set API.V0.Relationships,
-    _frQuery :: Query
-  }
-  deriving stock (Eq, Ord, Show, Generic)
+pattern TableQueryRequest :: API.V0.TableName -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern TableQueryRequest table relationships redactionExps inpterpolated query foreach = QueryRequest (API.V0.TTable (API.V0.TargetTable table)) relationships redactionExps inpterpolated query foreach
 
--- | Note: Only named arguments are currently supported,
---         however this is reified explicitly since so that it can be extended to ordinal or other types in future.
---         We reuse the same type for the Codec and ObjectCodec since we only have one constructor but still
---         wish to make the type explicit.
-data FunctionArgument = NamedArgument
-  { _faName :: Text,
-    _faValue :: ArgumentValue
-  }
-  deriving stock (Eq, Ord, Show, Generic)
-
-newtype ArgumentValue = ScalarArgumentValue
-  { _savValue :: API.V0.ScalarValue
-  }
-  deriving stock (Eq, Ord, Show, Generic)
-
-instance HasCodec ArgumentValue where
-  codec =
-    object "ArgumentValue" $
-      discriminatedUnionCodec "type" enc dec
-    where
-      enc = \case
-        (ScalarArgumentValue n) -> ("scalar", mapToEncoder n objectCodec)
-      dec =
-        HashMap.fromList
-          [ ("scalar", ("ScalarArgumentValue", mapToDecoder ScalarArgumentValue objectCodec))
-          ]
-
-namedArgumentObjectCodec :: JSONObjectCodec FunctionArgument
-namedArgumentObjectCodec =
-  NamedArgument
-    <$> requiredField "name" "The name of the named argument" .= _faName
-    <*> requiredField "value" "The value of the named argument" .= _faValue
-
-instance HasCodec FunctionArgument where
-  codec =
-    object "FunctionRequestArgument" $
-      discriminatedUnionCodec "type" enc dec
-    where
-      enc = \case
-        n -> ("named", mapToEncoder n namedArgumentObjectCodec)
-      dec =
-        HashMap.fromList
-          [ ("named", ("NamedArgument", mapToDecoder id namedArgumentObjectCodec))
-          ]
-
-instance HasObjectCodec FunctionRequest where
-  objectCodec =
-    FunctionRequest
-      <$> requiredField "function" "The name of the function to query"
-        .= _frFunction
-      <*> optionalFieldWithDefault "function_arguments" mempty "Function Arguments. TODO. Improve this."
-        .= _frFunctionArguments
-      <*> requiredField "relationships" "The relationships between entities involved in the entire query request"
-        .= _frRelationships
-      <*> requiredField "query" "The details of the query against the table"
-        .= _frQuery
+pattern NativeQueryRequest :: API.V0.InterpolatedQueryId -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern NativeQueryRequest interpolatedId relationships redactionExps interpolatedQueries query foreach = QueryRequest (API.V0.TInterpolated (API.V0.TargetInterpolatedQuery interpolatedId)) relationships redactionExps interpolatedQueries query foreach
 
 newtype FieldName = FieldName {unFieldName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -313,7 +217,7 @@ arrayFieldObjectCodec =
 --   3. an "object", which indicates that the field contains a nested object
 --   4. an "array", which indicates that the field contains a nested array
 data Field
-  = ColumnField API.V0.ColumnName API.V0.ScalarType
+  = ColumnField API.V0.ColumnName API.V0.ScalarType (Maybe API.V0.RedactionExpressionName)
   | RelField RelationshipField
   | NestedObjField API.V0.ColumnName Query
   | NestedArrayField ArrayField
@@ -327,11 +231,12 @@ instance HasCodec Field where
         discriminatedUnionCodec "type" enc dec
     where
       columnCodec =
-        (,)
+        (,,)
           <$> requiredField' "column"
-            .= fst
+            .= fst3
           <*> requiredField' "column_type"
-            .= snd
+            .= snd3
+          <*> optionalFieldOrNull "redaction_expression" "If present, the name of the redaction expression to evaluate. If the expression is false, the column value must be nulled out." .= thd3
       nestedObjCodec =
         (,)
           <$> requiredField' "column"
@@ -339,13 +244,13 @@ instance HasCodec Field where
           <*> requiredField' "query"
             .= snd
       enc = \case
-        ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
+        ColumnField columnName scalarType redactionExpName -> ("column", mapToEncoder (columnName, scalarType, redactionExpName) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
         NestedObjField columnName nestedObjQuery -> ("object", mapToEncoder (columnName, nestedObjQuery) nestedObjCodec)
         NestedArrayField arrayField -> ("array", mapToEncoder arrayField arrayFieldObjectCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
+          [ ("column", ("ColumnField", mapToDecoder (uncurry3 ColumnField) columnCodec)),
             ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec)),
             ("object", ("NestedObjField", mapToDecoder (uncurry NestedObjField) nestedObjCodec)),
             ("array", ("NestedArrayField", mapToDecoder NestedArrayField arrayFieldObjectCodec))
@@ -497,12 +402,8 @@ _NestedArrayFieldValue :: Prism' FieldValue [FieldValue]
 _NestedArrayFieldValue = prism' mkNestedArrayFieldValue (either (const Nothing) Just . deserializeAsNestedArrayFieldValue)
 
 $(makePrisms ''QueryRequest)
-$(makeLenses ''TableRequest)
-$(makeLenses ''FunctionRequest)
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)
+$(makePrisms ''Field)
 $(makeLenses ''QueryResponse)
 $(makePrisms ''FieldValue)
-
-qrForeach :: Traversal' QueryRequest (Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)))
-qrForeach = _QRTable . trForeach

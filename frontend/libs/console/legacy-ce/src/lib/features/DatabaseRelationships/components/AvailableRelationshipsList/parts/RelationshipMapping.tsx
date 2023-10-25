@@ -1,14 +1,8 @@
+import { FaColumns, FaFont, FaPlug, FaTable } from 'react-icons/fa';
 import { getRemoteFieldPath } from '../../../../RelationshipsTable';
-import React from 'react';
-import {
-  FaArrowRight,
-  FaColumns,
-  FaFont,
-  FaPlug,
-  FaTable,
-} from 'react-icons/fa';
 import { Relationship } from '../../../types';
 import { getTableDisplayName } from '../../../utils/helpers';
+import { RelationshipIcon } from '../../RelationshipIcon';
 
 const Columns = ({
   mapping,
@@ -57,8 +51,15 @@ export const RelationshipMapping = ({
           <Columns mapping={relationship.definition.mapping} type="from" />
         )}
       </div>
-      <FaArrowRight />
-
+      <RelationshipIcon
+        type={
+          relationship.relationshipType === 'Array'
+            ? 'one-to-many'
+            : relationship.relationshipType === 'Object'
+            ? 'one-to-one'
+            : 'other'
+        }
+      />
       <div className="flex items-center gap-2">
         {relationship.type === 'remoteSchemaRelationship' ? (
           <>
@@ -70,7 +71,7 @@ export const RelationshipMapping = ({
         ) : relationship.type === 'remoteDatabaseRelationship' ? (
           <>
             <FaTable />
-            <div>{getTableDisplayName(relationship.definition.toSource)}</div>
+            <div>{getTableDisplayName(relationship.definition.toTable)}</div>
             /
             <FaColumns />
             <Columns mapping={relationship.definition.mapping} type="to" />

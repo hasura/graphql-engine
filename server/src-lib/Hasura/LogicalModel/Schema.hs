@@ -6,14 +6,15 @@ module Hasura.LogicalModel.Schema
   ( getSelPermInfoForLogicalModel,
     buildLogicalModelIR,
     buildLogicalModelPermissions,
+    logicalModelOrderByArg,
     logicalModelSelectionList,
+    logicalModelWhereArg,
     defaultLogicalModelArgs,
     defaultLogicalModelSelectionSet,
     logicalModelFieldParsers,
   )
 where
 
-import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Set qualified as S
@@ -65,12 +66,11 @@ import Hasura.RQL.Types.Backend (Backend, Column)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelName (..))
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Permission qualified as Permission
 import Hasura.RQL.Types.Relationships.Local (Nullable (..))
-import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.Table.Cache (SelPermInfo (..), _permSel)
+import Hasura.Table.Cache (SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | build select permissions for logical model
@@ -107,20 +107,22 @@ buildLogicalModelPermissions logicalModel = do
   pure $ logicalModelPermissions logicalModel roleName
 
 logicalModelColumnsForRole ::
+  (Backend b) =>
   RoleName ->
   LogicalModelInfo b ->
-  Maybe (Permission.PermColSpec b)
-logicalModelColumnsForRole role logicalModel =
-  if role == adminRoleName
-    then -- if admin, assume all columns are OK
-      pure Permission.PCStar
-    else -- find list of columns we're allowed to access for this role
-
-      HashMap.lookup role (_lmiPermissions logicalModel)
-        >>= _permSel
-        <&> Permission.PCCols
-        . HashMap.keys
-        . spiCols
+  [(Column b, LogicalModelField b, IR.AnnRedactionExpUnpreparedValue b)]
+logicalModelColumnsForRole roleName logicalModel =
+  case getSelPermInfoForLogicalModel roleName logicalModel of
+    Just selectPermissions ->
+      _lmiFields logicalModel
+        & InsOrdHashMap.toList
+        & mapMaybe
+          ( \(column, lmField) ->
+              -- Only columns that have redaction expressions are selectable
+              -- (because then they are defined in spiCols in selectPermissions)
+              (column,lmField,) <$> getRedactionExprForColumn selectPermissions column
+          )
+    Nothing -> []
 
 -- just the field parsers themselves
 -- we use them (plus relationships etc) to make the Native Query / Stored
@@ -136,25 +138,10 @@ logicalModelFieldParsers ::
   SchemaT r m [(IP.FieldParser MetadataObjId n (AnnotatedField b))]
 logicalModelFieldParsers knownRelNames logicalModel = do
   roleName <- retrieve scRole
-
-  let selectableColumns =
-        fromMaybe
-          (Permission.PCCols mempty)
-          (logicalModelColumnsForRole roleName logicalModel)
-
-  let isSelectable column =
-        case selectableColumns of
-          Permission.PCStar -> True
-          Permission.PCCols cols -> column `elem` cols
-
-  -- which columns are we allowed to access given permissions?
-  let allowedColumns =
-        filter
-          (isSelectable . fst)
-          (InsOrdHashMap.toList (_lmiFields logicalModel))
+  let allowedColumns = logicalModelColumnsForRole roleName logicalModel
 
   -- we filter out parsers that return 'Nothing' as those we are no permitted to see.
-  catMaybes <$> traverse (uncurry (parseLogicalModelField knownRelNames)) allowedColumns
+  catMaybes <$> traverse (\(column, lmField, redactionExp) -> parseLogicalModelField knownRelNames column lmField redactionExp) allowedColumns
 
 -- | this seems like it works on luck, ie that everything is really just Text
 -- underneath
@@ -172,8 +159,9 @@ parseLogicalModelField ::
   S.Set RelName ->
   Column b ->
   LogicalModelField b ->
+  IR.AnnRedactionExpUnpreparedValue b ->
   SchemaT r m (Maybe (IP.FieldParser MetadataObjId n (AnnotatedField b)))
-parseLogicalModelField knownRelNames column logimoField = runMaybeT do
+parseLogicalModelField knownRelNames column logimoField redactionExp = runMaybeT do
   case logimoField of
     ( LogicalModelField
         { lmfDescription,
@@ -182,10 +170,7 @@ parseLogicalModelField knownRelNames column logimoField = runMaybeT do
       ) -> do
         columnName <- G.mkName (toTxt column) `onNothing` throw500 (column <<> " is not a valid GraphQL name")
 
-        -- We have not yet worked out what providing permissions here enables
-        -- TODO(redactionExp): This should be drawn from SelPermInfo.spiCols
-        let redactionExp = IR.NoRedaction
-            columnType = ColumnScalar lmtsScalar
+        let columnType = ColumnScalar lmtsScalar
             pathArg = scalarSelectionArgumentsParser columnType
 
         field <- lift $ columnParser columnType (G.Nullability lmtsNullable)
@@ -259,29 +244,15 @@ defaultLogicalModelSelectionSet ::
 defaultLogicalModelSelectionSet logicalModel = runMaybeT do
   roleName <- retrieve scRole
 
-  selectableColumns <- hoistMaybe $ logicalModelColumnsForRole roleName logicalModel
-
-  let isSelectable column =
-        case selectableColumns of
-          Permission.PCStar -> True
-          Permission.PCCols cols -> column `elem` cols
-
-  let fieldName = getLogicalModelName (_lmiName logicalModel)
-
-  -- which columns are we allowed to access given permissions?
-  let allowedColumns =
-        filter
-          (isSelectable . fst)
-          (InsOrdHashMap.toList (_lmiFields logicalModel))
-
-  let description = G.Description <$> _lmiDescription logicalModel
-
+  let allowedColumns = logicalModelColumnsForRole roleName logicalModel
+      fieldName = getLogicalModelName (_lmiName logicalModel)
+      description = G.Description <$> _lmiDescription logicalModel
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
 
   lift $ P.memoizeOn 'defaultLogicalModelSelectionSet fieldName do
     -- we filter out parsers that return 'Nothing' as those we are no permitted to see.
-    parsers <- catMaybes <$> traverse (uncurry (parseLogicalModelField mempty)) allowedColumns
+    parsers <- catMaybes <$> traverse (\(column, lmField, redactionExp) -> parseLogicalModelField mempty column lmField redactionExp) allowedColumns
 
     pure
       $ P.selectionSetObject fieldName description parsers implementsInterfaces

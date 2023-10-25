@@ -15,6 +15,7 @@ module Test.AgentAPI
     getHealth,
     getSourceHealth,
     getSchemaGuarded,
+    getSchemaGuarded',
     guardSchemaResponse,
     queryGuarded,
     queryExpectError,
@@ -70,7 +71,12 @@ getSourceHealth = do
 getSchemaGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.SchemaResponse
 getSchemaGuarded = do
   (sourceName, config) <- getSourceNameAndConfig
-  guardSchemaResponse =<< (client // API._schema) sourceName config
+  guardSchemaResponse =<< (client // API._schemaPost) sourceName config (API.SchemaRequest mempty API.Everything)
+
+getSchemaGuarded' :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.SchemaRequest -> AgentClientT m API.SchemaResponse
+getSchemaGuarded' schemaRequest = do
+  (sourceName, config) <- getSourceNameAndConfig
+  guardSchemaResponse =<< (client // API._schemaPost) sourceName config schemaRequest
 
 guardSchemaResponse :: (MonadThrow m) => Union API.SchemaResponses -> m API.SchemaResponse
 guardSchemaResponse = API.schemaCase defaultAction successAction errorAction

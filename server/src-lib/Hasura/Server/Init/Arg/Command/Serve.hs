@@ -61,8 +61,10 @@ module Hasura.Server.Init.Arg.Command.Serve
     parseMetadataDefaults,
     metadataDefaultsOption,
     apolloFederationStatusOption,
+    triggersErrorLogLevelStatusOption,
     closeWebsocketsOnMetadataChangeOption,
     maxTotalHeaderLengthOption,
+    asyncActionsFetchBatchSizeOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -152,6 +154,8 @@ serveCommandParser =
     <*> parseApolloFederationStatus
     <*> parseEnableCloseWebsocketsOnMetadataChange
     <*> parseMaxTotalHeaderLength
+    <*> parseTriggersErrorLoglevelStatus
+    <*> parseAsyncActionsFetchBatchSize
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1215,6 +1219,39 @@ maxTotalHeaderLengthOption =
       Config._helpMessage = "Max cumulative length of all headers in bytes (Default: 1MB)"
     }
 
+triggersErrorLogLevelStatusOption :: Config.Option (Types.TriggersErrorLogLevelStatus)
+triggersErrorLogLevelStatusOption =
+  Config.Option
+    { Config._default = Types.TriggersErrorLogLevelDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL",
+      Config._helpMessage = "Set log-level as error for Trigger error logs (Event Triggers, Scheduled Triggers, Cron Triggers) (default: false)."
+    }
+
+parseTriggersErrorLoglevelStatus :: Opt.Parser (Maybe Types.TriggersErrorLogLevelStatus)
+parseTriggersErrorLoglevelStatus =
+  (bool Nothing (Just Types.TriggersErrorLogLevelEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-triggers-error-log-level"
+          <> Opt.help (Config._helpMessage triggersErrorLogLevelStatusOption)
+      )
+
+asyncActionsFetchBatchSizeOption :: Config.Option Int
+asyncActionsFetchBatchSizeOption =
+  Config.Option
+    { Config._default = 10,
+      Config._envVar = "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_BATCH_SIZE",
+      Config._helpMessage = "Number of requests processed at a time in asynchronous actions (Default: 10)"
+    }
+
+parseAsyncActionsFetchBatchSize :: Opt.Parser (Maybe Int)
+parseAsyncActionsFetchBatchSize =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "async-actions-fetch-batch-size"
+          <> Opt.help (Config._helpMessage asyncActionsFetchBatchSizeOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1316,6 +1353,7 @@ serveCmdFooter =
         Config.optionPP apolloFederationStatusOption,
         Config.optionPP closeWebsocketsOnMetadataChangeOption,
         Config.optionPP maxTotalHeaderLengthOption,
-        Config.optionPP remoteNullForwardingPolicyOption
+        Config.optionPP remoteNullForwardingPolicyOption,
+        Config.optionPP triggersErrorLogLevelStatusOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

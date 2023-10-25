@@ -14,9 +14,11 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Translate.Select
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWithM, toQuery)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM, runLogicalModelFieldsLookup)
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
@@ -187,7 +189,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 convSelectQ ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   TableName ('Postgres 'Vanilla) ->
@@ -267,7 +270,8 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 convExtRel ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
@@ -321,7 +325,8 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   SessionVariableBuilder m ->
@@ -336,16 +341,15 @@ convSelectQuery sqlGen sessVarBldr prepArgBuilder (DMLQuery _ qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ sqlGen qt fieldInfo selPermInfo extSelQ sessVarBldr prepArgBuilder
 
-selectP2 :: JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> PG.TxE QErr EncJSON
-selectP2 jsonAggSelect (sel, p) =
+selectP2 :: UserInfo -> JsonAggSelect -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> PG.TxE QErr EncJSON
+selectP2 userInfo jsonAggSelect (sel, p) = do
+  selectWithQuery <- selectToSelectWithM $ mkSQLSelect userInfo jsonAggSelect sel
+  let selectSQL =
+        toQuery
+          $ selectWithQuery
   runIdentity
     . PG.getRow
     <$> PG.rawQE dmlTxErrorHandler selectSQL (toList p) True
-  where
-    selectSQL =
-      toQuery
-        $ selectToSelectWith
-        $ mkSQLSelect jsonAggSelect sel
 
 phaseOne ::
   (QErrM m, UserInfoM m, CacheRM m) =>
@@ -355,13 +359,15 @@ phaseOne ::
 phaseOne sqlGen query = do
   let sourceName = getSourceDMLQuery query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
+  logicalModelCache :: LogicalModelCache ('Postgres 'Vanilla) <- fold <$> askLogicalModelCache sourceName
   flip runTableCacheRT tableCache
+    $ runLogicalModelFieldsLookup _lmiFields logicalModelCache
     $ runDMLP1T
     $ convSelectQuery sqlGen sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
-phaseTwo :: (MonadTx m) => (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> m EncJSON
-phaseTwo =
-  liftTx . selectP2 JASMultipleRows
+phaseTwo :: (MonadTx m) => UserInfo -> (AnnSimpleSelect ('Postgres 'Vanilla), DS.Seq PG.PrepArg) -> m EncJSON
+phaseTwo userInfo =
+  liftTx . selectP2 userInfo JASMultipleRows
 
 runSelect ::
   ( QErrM m,
@@ -377,4 +383,5 @@ runSelect ::
   m EncJSON
 runSelect sqlGen q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (getSourceDMLQuery q)
-  phaseOne sqlGen q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . phaseTwo
+  userInfo <- askUserInfo
+  phaseOne sqlGen q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . (phaseTwo userInfo)

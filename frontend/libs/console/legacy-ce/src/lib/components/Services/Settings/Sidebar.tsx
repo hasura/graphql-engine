@@ -15,7 +15,7 @@ import {
 
 import { useEELiteAccess } from '../../../features/EETrial';
 import { getQueryResponseCachingRoute } from '../../../utils/routeUtils';
-import { isCloudConsole } from '../../../utils/cloudConsole';
+import { isOpenTelemetrySupported } from '../../../utils/proConsole';
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -32,8 +32,7 @@ type SectionDataKey =
   | 'security'
   | 'monitoring'
   | 'performance'
-  | 'about'
-  | 'graphql';
+  | 'about';
 
 const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   const eeLiteAccess = useEELiteAccess(globals);
@@ -46,25 +45,6 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     label: 'Metadata',
     items: [],
   };
-
-  if (
-    isCloudConsole(globals) &&
-    (globals.userRole === 'admin' || globals.userRole === 'owner')
-  ) {
-    sectionsData.graphql = {
-      key: 'graphql',
-      label: 'GraphQL',
-      items: [
-        {
-          key: 'schema-registry',
-          label: 'Schema Registry (Beta)',
-          route: '/settings/schema-registry',
-          dataTestVal: 'metadata-schema-registry-link',
-        },
-      ],
-    };
-  }
-
   sectionsData.metadata.items.push({
     key: 'actions',
     label: 'Metadata Actions',
@@ -135,7 +115,6 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       label: 'Monitoring & observability',
       items: [],
     };
-
     sectionsData.monitoring.items.push({
       key: 'prometheus-settings',
       label: 'Prometheus Metrics',
@@ -152,12 +131,23 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       route: '/settings/prometheus-settings',
       dataTestVal: 'prometheus-settings-link',
     });
+  }
+
+  if (isOpenTelemetrySupported(window.__env)) {
+    if (!sectionsData.monitoring) {
+      sectionsData.monitoring = {
+        key: 'monitoring',
+        label: 'Monitoring & observability',
+        items: [],
+      };
+    }
 
     sectionsData.monitoring.items.push({
       key: 'opentelemetry-settings',
       label: 'OpenTelemetry Exporter (Beta)',
       status:
-        eeLiteAccess.access !== 'active'
+        eeLiteAccess.access !== 'active' &&
+        !isOpenTelemetrySupported(window.__env)
           ? 'disabled'
           : !openTelemetry
           ? 'none'

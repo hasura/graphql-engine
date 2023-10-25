@@ -14,6 +14,7 @@ module Harness.Services.GraphqlEngine.API
     hgePostMetadata,
     hgePostExplain,
     hgePostExplainRole,
+    hgePostV2Query,
     export_metadata,
     replace_metadata,
   )
@@ -100,6 +101,16 @@ hgePostGraphql ::
   IO J.Value
 hgePostGraphql env query = do
   hgePost env 200 "/v1/graphql" [] (J.object ["query" J..= query])
+
+hgePostV2Query ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  J.Value ->
+  IO J.Value
+hgePostV2Query env query = do
+  hgePost env 200 "/v2/query" [] query
 
 hgePostMetadata ::
   ( Has HgeServerInstance env,

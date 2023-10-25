@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { inputValidationSchema } from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 
 const columns = z.record(z.optional(z.boolean()));
 const presets = z.optional(
@@ -43,6 +44,7 @@ export const schema = z.discriminatedUnion('queryType', [
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
+    validateInput: inputValidationSchema.optional(),
   }),
   z.object({
     queryType: z.literal('select'),
@@ -57,6 +59,7 @@ export const schema = z.discriminatedUnion('queryType', [
     query_root_fields: z.array(z.string()).nullable().optional(),
     subscription_root_fields: z.array(z.string()).nullable().optional(),
     supportedOperators: z.array(z.any()),
+    validateInput: inputValidationSchema.optional(),
   }),
   z.object({
     queryType: z.literal('update'),
@@ -70,6 +73,7 @@ export const schema = z.discriminatedUnion('queryType', [
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
+    validateInput: inputValidationSchema.optional(),
   }),
   z.object({
     queryType: z.literal('delete'),
@@ -79,6 +83,7 @@ export const schema = z.discriminatedUnion('queryType', [
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
     clonePermissions: z.array(permission).optional(),
+    validateInput: inputValidationSchema.optional(),
   }),
 ]);
 

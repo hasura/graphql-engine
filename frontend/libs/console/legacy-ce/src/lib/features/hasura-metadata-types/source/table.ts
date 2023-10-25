@@ -87,4 +87,8 @@ export type MetadataTable = {
   select_permissions?: SelectPermission[];
   update_permissions?: UpdatePermission[];
   delete_permissions?: DeletePermission[];
+
+  apollo_federation_config?: {
+    enable: 'v1';
+  } | null;
 };

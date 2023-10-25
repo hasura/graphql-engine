@@ -15,6 +15,7 @@ import {
 } from '../hasura-metadata-types';
 
 import type { NetworkArgs } from './api';
+import { ColumnValueGenerationStrategy } from '@hasura/dc-api-types';
 
 export type { BigQueryTable } from './bigquery';
 export type { NetworkArgs };
@@ -64,7 +65,7 @@ export type TableColumn = {
   /**
    * dataType of the column as defined in the DB
    */
-  dataType: string;
+  dataType: string | { type: string; name: string };
   /**
    * console data type: the dataType property is group into one of these types and console uses this internally
    */
@@ -76,6 +77,7 @@ export type TableColumn = {
     scalarType: string;
     graphQLType?: GraphQLType | undefined;
   };
+  value_generated?: ColumnValueGenerationStrategy;
 };
 
 export type GetTrackableTablesProps = {

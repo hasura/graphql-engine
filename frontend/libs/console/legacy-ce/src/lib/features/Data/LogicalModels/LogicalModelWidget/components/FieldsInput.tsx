@@ -12,13 +12,13 @@ import {
   GraphQLSanitizedInputField,
   fieldLabelStyles,
 } from '../../../../../new-components/Form';
+import { LogicalModel } from '../../../../hasura-metadata-types';
 import { BooleanInput } from '../../components/BooleanInput';
 import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
 import {
   AddLogicalModelField,
   AddLogicalModelFormData,
 } from '../validationSchema';
-import { LogicalModel } from '../../../../hasura-metadata-types';
 
 const columnHelper = createColumnHelper<AddLogicalModelField>();
 
@@ -33,10 +33,9 @@ export const FieldsInput = ({
   disabled?: boolean;
   logicalModels: LogicalModel[];
 }) => {
-  const { control, setValue, watch } =
-    useFormContext<AddLogicalModelFormData>();
+  const { control, watch } = useFormContext<AddLogicalModelFormData>();
 
-  const { append, remove, fields } = useFieldArray({
+  const { append, remove, fields, update } = useFieldArray({
     control,
     name: 'fields',
   });
@@ -62,8 +61,7 @@ export const FieldsInput = ({
       columnHelper.accessor('type', {
         id: 'type',
         cell: ({ row }) => {
-          const typeValue = watch(`fields.${row.index}.type`);
-          const typeClassValue = watch(`fields.${row.index}.typeClass`);
+          const thisField = watch(`fields.${row.index}`);
           return (
             <select
               className={clsx(
@@ -73,15 +71,17 @@ export const FieldsInput = ({
                   ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
                   : 'hover:border-gray-400'
               )}
-              value={`${typeClassValue}:${typeValue}`}
+              value={`${thisField.typeClass}:${thisField.type}`}
               data-testid={`fields-input-type-${row.index}`}
               onChange={e => {
                 const [typeClass, selectedValue] = e.target.value.split(':');
-                setValue(`fields.${row.index}.type`, selectedValue);
-                setValue(`fields.${row.index}.typeClass`, typeClass as any);
-                if (typeClass === 'scalar') {
-                  setValue(`fields.${row.index}.array`, false);
-                }
+
+                update(row.index, {
+                  ...thisField,
+                  type: selectedValue,
+                  typeClass: typeClass as any,
+                  array: thisField.array,
+                });
               }}
               disabled={disabled}
             >
@@ -125,6 +125,7 @@ export const FieldsInput = ({
       }),
       columnHelper.accessor('array', {
         id: 'array',
+        header: 'ARRAY',
         cell: ({ row }) => {
           return (
             <BooleanInput
@@ -134,7 +135,6 @@ export const FieldsInput = ({
             />
           );
         },
-        header: 'Array',
       }),
       columnHelper.display({
         id: 'action',
@@ -152,7 +152,7 @@ export const FieldsInput = ({
         ),
       }),
     ],
-    [disabled, name, remove, types]
+    [disabled, logicalModels, name, remove, types, update, watch]
   );
 
   const argumentsTable = useReactTable({

@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.BoolExp
 where
 
 import Data.Has (getter)
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
@@ -32,6 +33,7 @@ import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Common
 import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
@@ -137,12 +139,24 @@ boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAg
         FIColumn (SCIScalarColumn columnInfo) ->
           let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
            in lift $ fmap (AVColumn columnInfo redactionExp) <$> comparisonExps @b (ciType columnInfo)
-        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
+        FIColumn (SCIObjectColumn nestedObjectInfo@NestedObjectInfo {..}) -> do
+          SourceInfo {..} <- asks getter
+          logicalModelInfo <-
+            HashMap.lookup _noiType _siLogicalModels
+              `onNothing` throw500 ("Logical model " <> _noiType <<> " not found in source " <>> _siName)
+          lift $ fmap (AVNestedObject nestedObjectInfo) <$> logicalModelBoolExp logicalModelInfo
         FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
-            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetNativeQuery nativeQueryName -> do
+              logicalModelInfo <- _nqiReturns <$> askNativeQueryInfo nativeQueryName
+              let remoteLogicalModelPermissions =
+                    (fmap . fmap) (partialSQLExpToUnpreparedValue)
+                      $ maybe annBoolExpTrue spiFilter
+                      $ getSelPermInfoForLogicalModel roleName logicalModelInfo
+              remoteBoolExp <- lift $ logicalModelBoolExp logicalModelInfo
+              pure $ fmap (AVRelationship relationshipInfo . RelationshipFilters remoteLogicalModelPermissions) remoteBoolExp
             RelTargetTable remoteTable -> do
               remoteTableInfo <- askTableInfo $ remoteTable
               let remoteTablePermissions =
@@ -192,32 +206,30 @@ logicalModelBoolExp ::
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 logicalModelBoolExp logicalModel = do
   roleName <- retrieve scRole
-  case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
-    Nothing -> throw500 $ "Error creating fields for logical model " <> tshow (_lmiName logicalModel)
-    Just fieldInfo -> do
-      let name = getLogicalModelName (_lmiName logicalModel)
-          gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
-          selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
+  let fieldInfos = HashMap.elems $ logicalModelFieldsToFieldInfo $ _lmiFields logicalModel
+      name = getLogicalModelName (_lmiName logicalModel)
+      gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
+      selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
 
-          -- Aggregation parsers let us say things like, "select all authors
-          -- with at least one article": they are predicates based on the
-          -- object's relationship with some other entity.
-          --
-          -- Currently, logical models can't be defined to have
-          -- relationships to other entities, and so they don't support
-          -- aggregation predicates.
-          --
-          -- If you're here because you've been asked to implement them, this
-          -- is where you want to put the parser.
-          mkAggPredParser = pure (pure mempty)
+      -- Aggregation parsers let us say things like, "select all authors
+      -- with at least one article": they are predicates based on the
+      -- object's relationship with some other entity.
+      --
+      -- Currently, logical models can't be defined to have
+      -- relationships to other entities, and so they don't support
+      -- aggregation predicates.
+      --
+      -- If you're here because you've been asked to implement them, this
+      -- is where you want to put the parser.
+      mkAggPredParser = pure (pure mempty)
 
-          memoizeKey = name
-          description =
-            G.Description
-              $ "Boolean expression to filter rows from the logical model for "
-              <> name
-              <<> ". All fields are combined with a logical 'AND'."
-       in boolExpInternal gqlName selectPermissions fieldInfo description memoizeKey mkAggPredParser
+      memoizeKey = name
+      description =
+        G.Description
+          $ "Boolean expression to filter rows from the logical model for "
+          <> name
+          <<> ". All fields are combined with a logical 'AND'."
+  boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAggPredParser
 
 -- |
 -- > input type_bool_exp {

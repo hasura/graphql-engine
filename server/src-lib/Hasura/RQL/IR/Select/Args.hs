@@ -32,7 +32,7 @@ data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
     _ssaBatchSize :: Int,
     -- | info related to the cursor column, a single item data type
     --   currently because only single column cursors are supported
-    _ssaCursorArg :: StreamCursorItem b
+    _ssaCursorArg :: StreamCursorItem b v
   }
   deriving (Generic, Functor, Foldable, Traversable)
 
@@ -117,16 +117,19 @@ deriving stock instance
   Show (AnnDistinctColumn b v)
 
 -- | Cursor for streaming subscription
-data StreamCursorItem (b :: BackendType) = StreamCursorItem
+data StreamCursorItem (b :: BackendType) v = StreamCursorItem
   { -- | Specifies how the cursor item should be ordered
     _sciOrdering :: CursorOrdering,
     -- | Column info of the cursor item
     _sciColInfo :: ColumnInfo b,
+    -- | This type is used to determine whether the column should be redacted
+    -- before it is sorted upon
+    _sciRedactionExpression :: AnnRedactionExp b v,
     -- | Initial value of the cursor item from where the streaming should start
     _sciInitialValue :: ColumnValue b
   }
-  deriving (Generic)
+  deriving (Generic, Functor, Foldable, Traversable)
 
-deriving instance (Backend b) => Eq (StreamCursorItem b)
+deriving instance (Backend b, Eq (AnnRedactionExp b v)) => Eq (StreamCursorItem b v)
 
-deriving instance (Backend b) => Show (StreamCursorItem b)
+deriving instance (Backend b, Show (AnnRedactionExp b v)) => Show (StreamCursorItem b v)

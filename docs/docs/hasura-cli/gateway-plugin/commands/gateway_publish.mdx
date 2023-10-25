@@ -1,0 +1,42 @@
+---
+sidebar_label: gateway publish
+sidebar_position: 2
+description: publish configuration to gateway
+keywords:
+  - hasura
+  - docs
+  - CLI
+  - connector create
+---
+
+# Hasura CLI: gateway publish
+
+Publish the configuration of the child Remote Schema to gateway configuration.
+
+## Synopsis
+
+This command reads the Remote Schema configuration of the current child Hasura present in the file mentioned by the flag
+`--gateway-configuration-file`, appends it to the gateway's metadata, and displays the final published metadata. Please note:
+
+- `gateway-url`, `gateway-configuration-file`, and the gateway's `admin-secret` are required to run this command.
+
+```bash
+hasura gateway [flags] publish
+```
+
+## Usage
+
+```bash
+# publishing the final metadata to the gateway
+hasura gateway --gateway-url https://gateway-hasura-app.hasura.app --gateway-configuration-file /path/to/gateway-configuration.json --admin-secret myadminsecret publish
+
+```
+
+## Options
+
+```sass
+    --gateway-url string                  url of the gateway instance
+    --gateway-configuration-file string   path to the current Hasura's configuration
+    --admin-secret string                 admin secret of the gateway
+-h, --help                                help for publish
+```

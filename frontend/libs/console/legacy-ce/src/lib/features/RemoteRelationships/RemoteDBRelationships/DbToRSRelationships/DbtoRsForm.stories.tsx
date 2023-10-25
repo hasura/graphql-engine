@@ -1,6 +1,6 @@
 import React from 'react';
 import { StoryObj, Meta } from '@storybook/react';
-import { userEvent, within } from '@storybook/testing-library';
+import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { dangerouslyDelay } from '../../../../storybook/utils/dangerouslyDelay';
@@ -79,17 +79,17 @@ export const PlaygroundWithPrimaryTest: StoryObj<DbToRsFormProps> = {
     userEvent.click(submitButton);
 
     const nameError = await canvas.findByText('Name is required!');
-    const selectError = await canvas.findByText(
-      'Related remote schema is required'
-    );
 
     // expect error messages
     expect(nameError).toBeInTheDocument();
-    expect(selectError).toBeInTheDocument();
 
     // update fields
     const nameInput = await canvas.findByLabelText('Name');
     userEvent.type(nameInput, 'test');
+
+    await waitFor(() => {
+      expect(canvas.getByTestId('source_database')).toBeInTheDocument();
+    });
 
     await userEvent.selectOptions(
       canvas.getByTestId('source_database'),
@@ -103,11 +103,12 @@ export const PlaygroundWithPrimaryTest: StoryObj<DbToRsFormProps> = {
 
     userEvent.click(submitButton);
 
-    const referenceSchema = await canvas.findByLabelText(
-      'Reference Remote Schema'
-    );
+    const referenceSchema = await canvas.findByText('Select a remote schema');
+    userEvent.click(referenceSchema);
 
-    userEvent.selectOptions(referenceSchema, 'remoteSchema2');
+    await userEvent.click(await canvas.findByText('remoteSchema2'), undefined, {
+      skipHover: true,
+    });
     userEvent.click(submitButton);
   },
 };
@@ -187,9 +188,6 @@ export const PlaygroundWithEditModeTest: StoryObj<DbToRsFormProps> = {
     const submitButton = await canvas.findByText('Save Relationship');
 
     await dangerouslyDelay(1000); // time to settle down the mock response (introspection)
-
-    const fromField = await canvas.findByLabelText('From Field');
-    userEvent.selectOptions(fromField, 'Name');
 
     userEvent.click(submitButton);
 

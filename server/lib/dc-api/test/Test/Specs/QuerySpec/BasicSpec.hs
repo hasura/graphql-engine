@@ -74,10 +74,10 @@ spec TestData {..} = describe "Basic Queries" $ do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
+       in TableQueryRequest _tdAlbumsTableName mempty mempty mempty query Nothing

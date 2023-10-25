@@ -86,7 +86,7 @@ handleTypename f (SelectTypename name) = f name
 
 data NullableInput a
   = NullableInputValue a
-  | NullableInputNull
+  | NullableInputNull G.GType
   | NullableInputAbsent
   deriving (Show, Functor)
 
@@ -110,14 +110,15 @@ nullableExact parser =
     Parser
       { pType = schemaType,
         pParser =
-          peelVariableWith False (toGraphQLType schemaType) >=> \case
-            Just (JSONValue J.Null) -> pure NullableInputNull
-            Just (GraphQLValue VNull) -> pure NullableInputNull
+          peelVariableWith False gType >=> \case
+            Just (JSONValue J.Null) -> pure $ NullableInputNull gType
+            Just (GraphQLValue VNull) -> pure $ NullableInputNull gType
             Just value -> NullableInputValue <$> pParser parser value
             Nothing -> pure NullableInputAbsent
       }
   where
     schemaType = nullableType $ pType parser
+    gType = toGraphQLType schemaType
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m origin a. FieldParser origin m a -> FieldParser origin m a

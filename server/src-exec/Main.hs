@@ -68,12 +68,12 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
     HCServe serveOptions@ServeOptions {..} -> do
       let poolSettings =
             PostgresPoolSettings
-              { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
-                _ppsTotalMaxConnections = Nothing,
-                _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
-                _ppsRetries = _pciRetries rci <|> Just 1,
-                _ppsPoolTimeout = PG.cpTimeout soConnParams,
-                _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
+              { ppsMaxConnections = Just $ PG.cpConns soConnParams,
+                ppsTotalMaxConnections = Nothing,
+                ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                ppsRetries = _pciRetries rci <|> Just 1,
+                ppsPoolTimeout = PG.cpTimeout soConnParams,
+                ppsConnectionLifetime = PG.cpMbLifetime soConnParams
               }
       basicConnectionInfo <-
         initBasicConnectionInfo
@@ -130,7 +130,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (throwErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
     HCDowngrade opts -> do
-      let poolSettings = setPostgresPoolSettings {_ppsRetries = _pciRetries rci <|> Just 1}
+      let poolSettings = setPostgresPoolSettings {ppsRetries = _pciRetries rci <|> Just 1}
       BasicConnectionInfo {..} <- initBasicConnectionInfo env metadataDbUrl rci (Just poolSettings) False PG.ReadCommitted
       res <- runTxWithMinimalPool bciMetadataConnInfo $ downgradeCatalog bciDefaultPostgres opts initTime
       either (throwErrJExit DowngradeProcessError) (liftIO . print) res

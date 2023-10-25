@@ -9,6 +9,7 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
 import { SERVER_CONSOLE_MODE } from './constants';
 import { ConsoleType, parseConsoleType } from './utils/envUtils';
+import { storybookGlobals } from './storybook/decorators/console-type/storybook-globals';
 
 export type LuxFeature =
   | 'DatadogIntegration'
@@ -136,9 +137,6 @@ export type CloudCliEnv = {
 type ProCliEnv = CloudCliEnv;
 type ProLiteCliEnv = CloudCliEnv;
 
-// Until this non-discriminated-union-based `EnvVars` exist, please keep the following spreadsheet
-// https://docs.google.com/spreadsheets/d/10feBESWKCfFuh7g9436Orp4i4fNoQxjnt5xxhrrdtJo/edit#gid=0
-// updated with all the env vars that the Console receives and their possible values. The spreadsheet acts as the source of truth for the environment variables, at the moment
 export type EnvVars = {
   nodeEnv?: string;
   apiHost?: string;
@@ -275,4 +273,19 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   }
 }
 
-export default globals;
+const globalsProxy = new Proxy(globals, {
+  get: (originalTarget, property) => {
+    // if running storybook, refer to the StorybookGlobals when the property matches a key of that object
+    // this allows us to manipulate certain properties without affecting the console
+    const target =
+      !!process.env.STORYBOOK && property in storybookGlobals
+        ? storybookGlobals
+        : originalTarget;
+
+    return Reflect.get(target, property);
+  },
+});
+
+const exportedGlobals = process.env.STORYBOOK ? globalsProxy : globals;
+
+export default exportedGlobals;

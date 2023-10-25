@@ -9,6 +9,7 @@ import { useContext } from 'react';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
 import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
 import { rootTableContext } from '../RootTableProvider';
+import { columnDataType } from '../../../../../../DataSource/utils';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -168,8 +169,10 @@ export function useOperators({ path }: { path: string[] }) {
     tables,
     table,
   });
-  if (dataType && hasWhitelistedOperators(dataType)) {
-    return operators.filter(o => whitelist[dataType || '']?.includes(o.name));
+  if (dataType && hasWhitelistedOperators(columnDataType(dataType))) {
+    return operators.filter(o =>
+      whitelist[columnDataType(dataType || '')]?.includes(o.name)
+    );
   }
   return operators;
 }

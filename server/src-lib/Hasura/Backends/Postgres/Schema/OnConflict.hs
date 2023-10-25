@@ -39,6 +39,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -143,6 +144,7 @@ conflictConstraint ::
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
 conflictConstraint constraints tableInfo = do
+  enableNamingConventionSep2023 <- FF.checkFlag FF.namingConventionSep2023
   sourceInfo :: SourceInfo ('Postgres pgKind) <- asks getter
   let sourceName = _siName sourceInfo
       tableName = tableInfoName tableInfo
@@ -157,7 +159,7 @@ conflictConstraint constraints tableInfo = do
         name <- textToName $ toTxt $ _cName
         pure
           ( P.Definition
-              name
+              ((if enableNamingConventionSep2023 then applyFieldNameCaseCust tCase else id) name)
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
               Nothing
               []

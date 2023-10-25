@@ -1,31 +1,25 @@
 import * as React from 'react';
-
-import { OpenTelemetry } from '../OpenTelemetry/OpenTelemetry';
-
 import { useOpenTelemetry } from './hooks/useOpenTelemetry';
 import { useSetOpenTelemetry } from './hooks/useSetOpenTelemetry';
-import { useEELiteAccess } from '../../EETrial';
-import globals from '../../../Globals';
+import { OpenTelemetry } from '../OpenTelemetry/OpenTelemetry';
 
 /**
  * Allow isolating OpenTelemetry (the UI core of the feature) from every ap logic like
  * notifications, metadata loading, etc.
  */
 export function OpenTelemetryProvider() {
-  const { access } = useEELiteAccess(globals);
   const { isLoadingMetadata, metadataFormValues, isFirstTimeSetup } =
     useOpenTelemetry();
 
-  const { setOpenTelemetry } = useSetOpenTelemetry();
+  const { setOpenTelemetry, isLoading } = useSetOpenTelemetry();
 
   return (
     <OpenTelemetry
       isFirstTimeSetup={isFirstTimeSetup}
-      skeletonMode={isLoadingMetadata || access === 'loading'}
+      skeletonMode={isLoadingMetadata}
       metadataFormValues={metadataFormValues}
       setOpenTelemetry={setOpenTelemetry}
-      withoutLicense={access !== 'active'}
-      eeAccess={access}
+      loading={isLoading}
     />
   );
 }

@@ -25,8 +25,3 @@ export const Basic: StoryObj<typeof ListNativeQueries> = {
     return <ListNativeQueries {...args} nativeQueries={data.queries} />;
   },
 };
-export const Loading: StoryObj<typeof ListNativeQueries> = {
-  render: args => {
-    return <ListNativeQueries {...args} isLoading />;
-  },
-};

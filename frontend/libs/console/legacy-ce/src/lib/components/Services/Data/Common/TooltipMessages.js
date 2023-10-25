@@ -3,6 +3,10 @@ Recommend using snake_case naming convertion for table and columns. eg:
 product_skus
 `;
 
+export const columnsDescription = `
+Any data type can be used as an array type. Enable the "Array" checkbox to convert the data type to array.
+`;
+
 export const primaryKeyDescription = `
 A primary-key is a column (or set of columns) that uniquely identifies a row
 of a table

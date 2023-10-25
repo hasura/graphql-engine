@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useRemoteSchema } from '../../../../MetadataAPI';
-import { useTableColumns } from '../../../../SqlQueries';
-import { InputField, Select } from '../../../../../new-components/Form';
 import { MapSelector } from '../../../../../new-components/MapSelector';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
@@ -13,6 +11,7 @@ import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
 import { Schema } from './schema';
 import { getTypesFromIntrospection } from '../../utils';
+import { useTableColumns } from '../../../../DatabaseRelationships/hooks/useTableColumns';
 
 export const FormElements = ({
   sourceRemoteSchema,
@@ -23,9 +22,7 @@ export const FormElements = ({
 }) => {
   const { watch } = useFormContext<Schema>();
 
-  const database = watch('database');
-  const schema = watch('schema');
-  const table = watch('table');
+  const target = watch('target');
   const RSTypeName = watch('typeName');
   const mapping = watch('mapping');
   const { fetchSchema, data, isLoading } = useRemoteSchema();
@@ -34,13 +31,12 @@ export const FormElements = ({
     []
   );
 
-  const { data: columnData } = useTableColumns(database, {
-    name: table,
-    schema,
-  });
+  const dataSourceName = target?.dataSourceName;
+  const table = target?.table;
+  const { data: columnData } = useTableColumns({ dataSourceName, table });
 
   const columns: string[] = columnData
-    ? columnData.slice(1).map((x: string[]) => x[3])
+    ? (columnData ?? []).map(column => column.name)
     : [];
 
   useEffect(() => {
@@ -72,48 +68,19 @@ export const FormElements = ({
 
   return (
     <>
-      <div className="w-full sm:w-6/12 my-md">
-        <div className="mb-md">
-          <InputField
-            name="relationshipName"
-            label="Name"
-            placeholder="Relationship name"
-            dataTest="rs-to-db-rel-name"
-            disabled={!!existingRelationshipName}
-          />
-        </div>
-
-        <div className="mb-md">
-          <Select
-            name="relationshipType"
-            label="Type"
-            dataTest="select-rel-type"
-            placeholder="Select a relationship type..."
-            options={[
-              {
-                label: 'Array Relationship',
-                value: 'array',
-              },
-              {
-                label: 'Object Relationship',
-                value: 'object',
-              },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12">
+      <div className="grid grid-cols-12 mt-md">
         <div className="col-span-5">
           <RsSourceTypeSelector
             types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey="typeName"
+            nameTypeKey="relationshipName"
+            isModify={!!existingRelationshipName}
           />
         </div>
 
         <LinkBlockHorizontal />
 
-        <div className="col-span-5">
+        <div className="col-span-5 pt-10 mt-20">
           <RemoteDatabaseWidget />
         </div>
       </div>

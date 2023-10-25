@@ -273,16 +273,19 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       ('Input <: k) =>
       Options.RemoteNullForwardingPolicy ->
       G.Nullability ->
+      G.Name ->
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable))
-    doNullability Options.RemoteOnlyForwardNonNull (G.Nullability True) parser =
+    doNullability Options.RemoteOnlyForwardNonNull (G.Nullability True) _tyName parser =
       nullable parser `bind` pure . join
-    doNullability Options.RemoteForwardAccurately (G.Nullability True) parser =
+    doNullability Options.RemoteForwardAccurately (G.Nullability True) tyName parser =
       P.nullableExact parser `bind` \case
         P.NullableInputValue x -> pure x
-        P.NullableInputNull -> pure $ Just (Altered False, G.VNull)
+        P.NullableInputNull hasuraType ->
+          -- Disallow short-circuit optimisation if the type name has been changed by remote schema customization
+          pure $ Just (Altered (G.getBaseType hasuraType /= tyName), G.VNull)
         P.NullableInputAbsent -> pure Nothing
-    doNullability _nullForwarding (G.Nullability False) parser = parser
+    doNullability _nullForwarding (G.Nullability False) _tyName parser = parser
 
     fieldConstructor ::
       forall k.
@@ -315,9 +318,9 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
               customizeTypename <- asks getter
               case typeDef of
                 G.TypeDefinitionScalar scalarTypeDefn ->
-                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability $ Just <$> remoteFieldScalarParser customizeTypename scalarTypeDefn
+                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability (G._stdName scalarTypeDefn) $ Just <$> remoteFieldScalarParser customizeTypename scalarTypeDefn
                 G.TypeDefinitionEnum defn ->
-                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability $ Just <$> remoteFieldEnumParser customizeTypename defn
+                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability (G._etdName defn) $ Just <$> remoteFieldEnumParser customizeTypename defn
                 G.TypeDefinitionObject _ ->
                   throw400 RemoteSchemaError "expected input type, but got output type"
                 G.TypeDefinitionInputObject defn -> do
@@ -343,13 +346,13 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
                     Right actualParser -> do
                       -- We're in the normal case: we do have a parser for the input object, which is
                       -- therefore valid (non-empty).
-                      mkInputFieldsParser $ doNullability nullForwarding nullability $ Just <$> actualParser
+                      mkInputFieldsParser $ doNullability nullForwarding nullability (G._iotdName defn) $ Just <$> actualParser
                 G.TypeDefinitionUnion _ ->
                   throw400 RemoteSchemaError "expected input type, but got output type"
                 G.TypeDefinitionInterface _ ->
                   throw400 RemoteSchemaError "expected input type, but got output type"
         G.TypeList nullability subType -> do
-          buildField (mkInputFieldsParser . doNullability nullForwarding nullability . fmap (Just . fmap G.VList . aggregateListAndAlteration) . P.list) subType
+          buildField (mkInputFieldsParser . doNullability nullForwarding nullability (G.getBaseType subType) . fmap (Just . fmap G.VList . aggregateListAndAlteration) . P.list) subType
 
 -- | remoteFieldScalarParser attempts to parse a scalar value for a given remote field
 --

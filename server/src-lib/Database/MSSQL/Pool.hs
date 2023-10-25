@@ -4,6 +4,7 @@ module Database.MSSQL.Pool
     ConnectionString (..),
     ConnectionOptions (..),
     MSSQLPool (..),
+    PoolOptions (..),
 
     -- * Functions
     initMSSQLPool,
@@ -31,12 +32,15 @@ instance HasCodec ConnectionString where
   codec = dimapCodec ConnectionString unConnectionString codec
 
 data ConnectionOptions
-  = ConnectionOptions
-      { _coConnections :: Int,
-        _coStripes :: Int,
-        _coIdleTime :: Int
-      }
+  = ConnectionOptionsPool PoolOptions
   | ConnectionOptionsNoPool
+  deriving (Show, Eq)
+
+data PoolOptions = PoolOptions
+  { poConnections :: Int,
+    poStripes :: Int,
+    poIdleTime :: Int
+  }
   deriving (Show, Eq)
 
 -- | ODBC connection pool
@@ -51,14 +55,14 @@ initMSSQLPool ::
   IO MSSQLPool
 initMSSQLPool (ConnectionString connString) ConnectionOptionsNoPool = do
   return $ MSSQLNoPool (ODBC.connect connString)
-initMSSQLPool (ConnectionString connString) ConnectionOptions {..} = do
+initMSSQLPool (ConnectionString connString) (ConnectionOptionsPool PoolOptions {..}) = do
   MSSQLPool
     <$> Pool.createPool
       (ODBC.connect connString)
       ODBC.close
-      _coStripes
-      (fromIntegral _coIdleTime)
-      _coConnections
+      poStripes
+      (fromIntegral poIdleTime)
+      poConnections
 
 -- | Destroy all pool resources
 drainMSSQLPool :: MSSQLPool -> IO ()

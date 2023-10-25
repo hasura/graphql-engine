@@ -18,25 +18,31 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
 import Data.Has
+import Data.HashMap.Internal.Strict qualified as Map
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM (..))
+import Hasura.LogicalModel.Types (LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BoolExp
-import Hasura.RQL.Types.Column (ColumnReference (ColumnReferenceColumn), StructuredColumnInfo (..))
+import Hasura.RQL.Types.Column (ColumnReference (ColumnReferenceColumn), NestedObjectInfo (..), StructuredColumnInfo (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Relationships.Remote (DBJoinField (..), RemoteFieldInfo (..), RemoteFieldInfoRHS (..), RemoteSourceFieldInfo (..))
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils
 import Hasura.Table.Cache
 
@@ -88,6 +94,7 @@ data CreatePermP1Res a = CreatePermP1Res
 procBoolExp ::
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -118,17 +125,18 @@ procLogicalModelBoolExp ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
   m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
-procLogicalModelBoolExp source lmn fieldInfoMap be = do
+procLogicalModelBoolExp source logicalModelLocation fieldInfoMap be = do
   let -- The parser for the "right hand side" of operations. We use @rhsParser@
       -- as the name here for ease of grepping, though it's maybe a bit vague.
       -- More specifically, if we think of an operation that combines a field
@@ -147,12 +155,12 @@ procLogicalModelBoolExp source lmn fieldInfoMap be = do
       -- this boolean expression? This dependency system is explained more
       -- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.
       deps :: [SchemaDependency]
-      deps = getLogicalModelBoolExpDeps source lmn abe
+      deps = getLogicalModelBoolExpDeps source logicalModelLocation abe
 
   return (abe, Seq.fromList deps)
 
 annBoolExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  (QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m, BackendMetadata b) =>
   BoolExpRHSParser b m v ->
   FieldInfoMap (FieldInfo b) ->
   FieldInfoMap (FieldInfo b) ->
@@ -173,7 +181,7 @@ annBoolExp rhsParser rootFieldInfoMap fim boolExp =
     procExps = mapM (annBoolExp rhsParser rootFieldInfoMap fim)
 
 annColExp ::
-  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  (QErrM m, TableCoreInfoRM b m, LogicalModelFieldsRM b m, BackendMetadata b) =>
   BoolExpRHSParser b m v ->
   FieldInfoMap (FieldInfo b) ->
   FieldInfoMap (FieldInfo b) ->
@@ -182,9 +190,17 @@ annColExp ::
 annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (SCIScalarColumn pgi) -> AVColumn pgi NoRedaction <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
-    FIColumn (SCIObjectColumn {}) ->
-      throw400 NotSupported "nested object not supported"
+    FIColumn (SCIScalarColumn pgi) ->
+      AVColumn pgi NoRedaction
+        <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
+    FIColumn (SCIObjectColumn nestedObjectInfo@NestedObjectInfo {..}) -> do
+      withPathK (toTxt _noiColumn) $ do
+        boolExp <- decodeValue colVal
+        logicalModelFields <-
+          lookupLogicalModelFields _noiType
+            `onNothingM` throw500 ("Logical model " <> _noiType <<> " not found")
+        let logicalModelFieldMap = logicalModelFieldsToFieldInfo logicalModelFields
+        AVNestedObject nestedObjectInfo <$> annBoolExp rhsParser rootFieldInfoMap logicalModelFieldMap boolExp
     FIColumn (SCIArrayColumn {}) ->
       throw400 NotSupported "nested array not supported"
     FIRelationship relInfo -> do
@@ -209,8 +225,34 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
     FIComputedField computedFieldInfo ->
       AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootFieldInfoMap colInfoMap computedFieldInfo colVal
     -- Using remote fields in the boolean expression is not supported.
-    FIRemoteRelationship {} ->
-      throw400 UnexpectedPayload "remote field unsupported"
+    FIRemoteRelationship (RemoteFieldInfo {..}) -> do
+      (lhsFieldName, lhsJoinField) <-
+        case (Map.toList _rfiLHS) of
+          [lhsField] -> pure lhsField
+          _ -> throw400 UnexpectedPayload "remote field mapping should have exactly one column"
+      lhsJoinCol <-
+        case lhsJoinField of
+          JoinColumn col colType -> pure (col, colType)
+          JoinComputedField _ -> throw400 UnexpectedPayload "remote field mapping should not have computed field"
+      case _rfiRHS of
+        RFISchema _ -> throw400 UnexpectedPayload "remote schema field unsupported"
+        RFISource backendRemoteSourceFieldInfo -> do
+          AB.dispatchAnyBackend @Backend backendRemoteSourceFieldInfo \(RemoteSourceFieldInfo {..} :: RemoteSourceFieldInfo tb) -> do
+            fetchCol <-
+              case (Map.lookup lhsFieldName _rsfiMapping) of
+                (Just col) -> pure col
+                Nothing -> throw400 UnexpectedPayload "LHS field name not found in the RHS mapping"
+            (relBoolExp :: RemoteRelRHSFetchWhereExp (Column tb)) <- decodeValue colVal
+            pure
+              $ AVRemoteRelationship
+              $ RemoteRelPermBoolExp (_rsfiName, colVal) lhsJoinCol
+              $ AB.mkAnyBackend @tb
+              $ RemoteRelRHSFetchInfo
+                fetchCol
+                _rsfiTable
+                relBoolExp
+                _rsfiSource
+                _rsfiSourceConfig
 
 getDepHeadersFromVal :: Value -> [Text]
 getDepHeadersFromVal val = case val of

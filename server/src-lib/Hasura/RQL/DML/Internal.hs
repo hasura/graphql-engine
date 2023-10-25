@@ -41,6 +41,7 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission (annBoolExp)
 import Hasura.RQL.IR.BoolExp
@@ -68,6 +69,7 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       MonadError e,
       TableCoreInfoRM b,
       TableInfoRM b,
+      LogicalModelFieldsRM b,
       CacheRM,
       UserInfoM
     )
@@ -314,6 +316,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
   AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
+  AVRemoteRelationship {} -> throw400 NotExists "Remote relationships permission checks not implemented yet"
 
 convAnnBoolExpPartialSQL ::
   (Applicative f) =>
@@ -372,7 +375,7 @@ checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp ::
-  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m, LogicalModelFieldsRM ('Postgres 'Vanilla) m) =>
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   SelPermInfo ('Postgres 'Vanilla) ->
   BoolExp ('Postgres 'Vanilla) ->

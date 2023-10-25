@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Database.MSSQL.Transaction
   ( TxET (..),
     MSSQLTxError (..),
@@ -52,6 +54,10 @@ instance MFunctor (TxET e) where
 
 instance MonadTrans (TxET e) where
   lift = TxET . lift . lift
+
+deriving via (ReaderT ODBC.Connection (ExceptT e m)) instance (MonadBase IO m) => MonadBase IO (TxET e m)
+
+deriving via (ReaderT ODBC.Connection (ExceptT e m)) instance (MonadBaseControl IO m) => MonadBaseControl IO (TxET e m)
 
 -- | Error type generally used in 'TxET'.
 data MSSQLTxError

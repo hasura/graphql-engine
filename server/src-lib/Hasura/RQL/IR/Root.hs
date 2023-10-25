@@ -28,6 +28,7 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName)
 import Hasura.RemoteSchema.SchemaCache.Types qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 
@@ -39,7 +40,7 @@ data RootField (db :: BackendType -> Type) remote action raw where
     RQL.SourceName ->
     AB.AnyBackend (SourceConfigWith db) ->
     RootField db remote action raw
-  RFRemote :: remote -> RootField db remote action raw
+  RFRemote :: RemoteSchemaName -> remote -> RootField db remote action raw
   RFAction :: action -> RootField db remote action raw
   RFRaw :: raw -> RootField db remote action raw
   RFMulti :: [RootField db remote action raw] -> RootField db remote action raw

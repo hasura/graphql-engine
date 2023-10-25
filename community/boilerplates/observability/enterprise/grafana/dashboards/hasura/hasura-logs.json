@@ -1,52 +1,52 @@
 {
-  "__elements": {},
   "__inputs": [
     {
-      "description": "",
-      "label": "Loki",
       "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
       "pluginId": "loki",
-      "pluginName": "Loki",
-      "type": "datasource"
+      "pluginName": "Loki"
     },
     {
-      "description": "",
-      "label": "Jaeger",
       "name": "DS_JAEGER",
+      "label": "Jaeger",
+      "description": "",
+      "type": "datasource",
       "pluginId": "jaeger",
-      "pluginName": "Jaeger",
-      "type": "datasource"
+      "pluginName": "Jaeger"
     }
   ],
+  "__elements": {},
   "__requires": [
     {
+      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "type": "grafana",
       "version": "9.5.2"
     },
     {
+      "type": "datasource",
       "id": "jaeger",
       "name": "Jaeger",
-      "type": "datasource",
       "version": "1.0.0"
     },
     {
+      "type": "panel",
       "id": "logs",
       "name": "Logs",
-      "type": "panel",
       "version": ""
     },
     {
+      "type": "datasource",
       "id": "loki",
       "name": "Loki",
-      "type": "datasource",
       "version": "1.0.0"
     },
     {
+      "type": "panel",
       "id": "traces",
       "name": "Traces",
-      "type": "panel",
       "version": ""
     }
   ],
@@ -102,8 +102,8 @@
             "type": "loki",
             "uid": "${DS_LOKI}"
           },
-          "editorMode": "builder",
-          "expr": "{job=~\"$job\", instance=~\"$instance\"} |~ `(?i)$search_keyword` | json | type =~ `$log_type`",
+          "editorMode": "code",
+          "expr": "{job=~\"$job\", exporter=~\"$exporter\"} |~ `(?i)$search_keyword` | json | attributes_type =~ `$log_type`",
           "queryType": "range",
           "refId": "A"
         }
@@ -141,12 +141,14 @@
   "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["hasura"],
+  "tags": [
+    "hasura"
+  ],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "Loki",
           "value": "Loki"
         },
@@ -158,6 +160,7 @@
         "name": "DS_LOKI",
         "options": [],
         "query": "loki",
+        "queryValue": "",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -217,12 +220,12 @@
         "definition": "",
         "hide": 0,
         "includeAll": true,
-        "label": "Instance",
+        "label": "Exporter",
         "multi": true,
-        "name": "instance",
+        "name": "exporter",
         "options": [],
         "query": {
-          "label": "instance",
+          "label": "exporter",
           "refId": "LokiVariableQueryEditor-VariableQuery",
           "stream": "",
           "type": 1
@@ -257,8 +260,12 @@
       {
         "current": {
           "selected": true,
-          "text": ["All"],
-          "value": ["$__all"]
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "description": "Hasura Log Type",
         "hide": 0,
@@ -337,7 +344,7 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},

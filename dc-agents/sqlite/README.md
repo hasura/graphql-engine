@@ -14,6 +14,7 @@ The SQLite agent currently supports the following capabilities:
 * [x] Prometheus Metrics
 * [x] Exposing Foreign-Key Information
 * [x] Mutations
+* [x] Native (Interpolated) Queries
 * [ ] Subscriptions
 * [ ] Streaming Subscriptions
 

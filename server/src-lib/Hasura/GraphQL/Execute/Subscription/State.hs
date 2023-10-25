@@ -50,6 +50,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName)
 import Hasura.GraphQL.Transport.WebSocket.Protocol (OperationId)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.SQL.AnyBackend qualified as AB
@@ -63,7 +64,7 @@ import Hasura.Server.Prometheus
     recordMetricWithLabel,
     streamingSubscriptionLabel,
   )
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), RequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState, RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
@@ -184,6 +185,8 @@ addLiveQuery ::
   -- | the action to be executed when result changes
   OnChange ->
   (Maybe (Endo JO.Value)) ->
+  [ModelInfoPart] ->
+  IO ModelInfoLogState ->
   IO LiveQuerySubscriberDetails
 addLiveQuery
   logger
@@ -199,7 +202,9 @@ addLiveQuery
   plan
   granularPrometheusMetricsState
   onResultAction
-  modifier = do
+  modifier
+  modelInfo
+  modelInfoLogStatus = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -243,6 +248,9 @@ addLiveQuery
             (_pOperationNamesMap poller)
             resolvedConnectionTemplate
             modifier
+            logger
+            modelInfo
+            modelInfoLogStatus
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -250,7 +258,7 @@ addLiveQuery
       liftIO $ Prometheus.Gauge.inc $ submActiveLiveQueryPollers $ pmSubscriptionMetrics $ prometheusMetrics
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
-    let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel parameterizedQueryHash operationName)
+    let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) operationName)
         promMetricLabel = SubscriptionLabel liveQuerySubscriptionLabel Nothing
     let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
     recordMetricWithLabel
@@ -303,6 +311,8 @@ addStreamSubscriptionQuery ::
   OnChange ->
   -- | the modifier for adding typename for namespaced queries
   (Maybe (Endo JO.Value)) ->
+  [ModelInfoPart] ->
+  IO ModelInfoLogState ->
   IO StreamingSubscriberDetails
 addStreamSubscriptionQuery
   logger
@@ -319,7 +329,9 @@ addStreamSubscriptionQuery
   plan
   granularPrometheusMetricsState
   onResultAction
-  modifier = do
+  modifier
+  modelInfo
+  modelInfoLogStatus = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -365,6 +377,9 @@ addStreamSubscriptionQuery
             (_pOperationNamesMap handler)
             resolvedConnectionTemplate
             modifier
+            logger
+            modelInfo
+            modelInfoLogStatus
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -375,7 +390,7 @@ addStreamSubscriptionQuery
       EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
       EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
 
-    let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel parameterizedQueryHash operationName)
+    let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) operationName)
         promMetricLabel = SubscriptionLabel streamingSubscriptionLabel Nothing
         numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
     recordMetricWithLabel
@@ -455,7 +470,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
           <*> TMap.null newOps
       when cohortIsEmpty $ TMap.delete cohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel parameterizedQueryHash maybeOperationName)
+      let promMetricGranularLabel = SubscriptionLabel liveQuerySubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) maybeOperationName)
           promMetricLabel = SubscriptionLabel liveQuerySubscriptionLabel Nothing
       -- when there is no need for handler i.e, this happens to be the last
       -- operation, take the ref for the polling thread to cancel it
@@ -554,7 +569,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
           <*> TMap.null newOps
       when cohortIsEmpty $ TMap.delete currentCohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel parameterizedQueryHash maybeOperationName)
+      let promMetricGranularLabel = SubscriptionLabel streamingSubscriptionLabel (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) maybeOperationName)
           promMetricLabel = SubscriptionLabel streamingSubscriptionLabel Nothing
       -- when there is no need for handler i.e,
       -- operation, take the ref for the polling thread to cancel it

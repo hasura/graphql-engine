@@ -5,10 +5,7 @@ import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 import { BulkDelete, BulkDeleteProps } from './BulkDelete';
 
-import { handlers } from './mocks/handlers.mock';
-
 export default {
-  title: 'Features/Permissions/Bulk Update',
   component: BulkDelete,
   decorators: [ReactQueryDecorator()],
 } as Meta;
@@ -22,9 +19,5 @@ export const Primary: StoryObj<BulkDeleteProps> = {
     dataSourceName: 'default',
     roles: ['user'],
     handleClose: () => {},
-  },
-
-  parameters: {
-    msw: handlers(),
   },
 };

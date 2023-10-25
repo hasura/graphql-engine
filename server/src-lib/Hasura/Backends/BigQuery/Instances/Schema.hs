@@ -4,7 +4,6 @@
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
 
-import Control.Applicative (Const (..))
 import Data.Aeson qualified as J
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -373,11 +372,9 @@ bqCountTypeInput = \case
   Nothing -> pure $ flip mkCountType Nothing
   where
     mkCountType :: IR.CountDistinct -> Maybe [(Column 'BigQuery, AnnRedactionExpUnpreparedValue 'BigQuery)] -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery)
-    mkCountType _ Nothing = Const $ BigQuery.StarCountable
-    mkCountType IR.SelectCountDistinct (Just cols) =
-      maybe (Const BigQuery.StarCountable) (Const . BigQuery.DistinctCountable) $ nonEmpty (fst <$> cols) -- TODO(redactionExp): Deal with redaction expressions
-    mkCountType IR.SelectCountNonDistinct (Just cols) =
-      maybe (Const BigQuery.StarCountable) (Const . BigQuery.NonNullFieldCountable) $ nonEmpty (fst <$> cols) -- TODO(redactionExp): Deal with redaction expressions
+    mkCountType IR.SelectCountDistinct (Just (col : cols)) = BigQuery.CountType (BigQuery.DistinctCountable (col :| cols))
+    mkCountType IR.SelectCountNonDistinct (Just (col : cols)) = BigQuery.CountType (BigQuery.NonNullFieldCountable (col :| cols))
+    mkCountType _ _ = BigQuery.CountType BigQuery.StarCountable
 
 geographyWithinDistanceInput ::
   forall m n r.

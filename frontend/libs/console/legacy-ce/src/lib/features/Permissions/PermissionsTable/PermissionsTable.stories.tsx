@@ -7,7 +7,6 @@ import { handlers } from '../PermissionsForm/mocks/handlers.mock';
 import { useTableMachine } from './hooks';
 
 export default {
-  title: 'Features/Permissions/Table',
   component: PermissionsTable,
   decorators: [ReactQueryDecorator()],
   parameters: {
@@ -15,6 +14,7 @@ export default {
   },
 } as Meta;
 
+// Fails
 export const GDCTable: StoryObj<PermissionsTableProps> = {
   render: args => {
     const machine = useTableMachine();
@@ -23,7 +23,7 @@ export const GDCTable: StoryObj<PermissionsTableProps> = {
   },
 
   args: {
-    dataSourceName: 'sqlite',
+    dataSourceName: 'Lite',
     table: ['Artist'],
   },
 };

@@ -62,7 +62,7 @@ export const Test: StoryObj<typeof ConnectPostgresWidget> = {
       'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
     );
     await expect(databaseUrlOption).toBeInTheDocument();
-    await expect(databaseUrlOption).toBeChecked();
+    await userEvent.click(databaseUrlOption);
 
     // Expect the first option to have the following input fields
     await expect(

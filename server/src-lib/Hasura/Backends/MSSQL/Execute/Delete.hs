@@ -9,6 +9,7 @@ module Hasura.Backends.MSSQL.Execute.Delete
   )
 where
 
+import Data.Tuple.Extra (both)
 import Database.MSSQL.Transaction qualified as Tx
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags
@@ -27,8 +28,11 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
@@ -37,13 +41,23 @@ executeDelete ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   Options.StringifyNumbers ->
+  SourceName ->
+  ModelSourceType ->
   SourceConfig 'MSSQL ->
   AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (OnBaseMonad (ExceptT QErr) EncJSON)
-executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
+  m (OnBaseMonad (ExceptT QErr) EncJSON, [ModelNameInfo])
+executeDelete userInfo stringifyNum sourceName modelSourceType sourceConfig deleteOperation = do
   queryTags <- ask
   preparedDelete <- traverse (prepareValueQuery $ _uiSession userInfo) deleteOperation
-  pure $ OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum queryTags)
+  let (modelName, modelType) = (tableName (_adTable deleteOperation), ModelTypeTable)
+      returnModels = getMutationOutputModelNamesGen sourceName modelSourceType (_adOutput deleteOperation)
+      (argPermissionModelNames, argModelNames) = both getWhereClauseModels $ _adWhere deleteOperation
+      modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> (argModelNames) <> (argPermissionModelNames) <> (returnModels)
+  pure $ (OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) (buildDeleteTx preparedDelete stringifyNum queryTags), modelNames)
+  where
+    getWhereClauseModels boolExp = do
+      (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType boolExp
+      res
 
 -- | Converts a Delete IR AST to a transaction of three delete sql statements.
 --

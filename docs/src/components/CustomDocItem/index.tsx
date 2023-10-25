@@ -4,7 +4,6 @@ import HasuraConBanner from '@site/src/components/HasuraConBanner';
 import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanner';
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
-import { ScrollToFeedbackButton } from '@site/src/components/Feedback/ScrollToFeedbackButton';
 import { Redirect } from '@docusaurus/router';
 
 const CustomDocItem = props => {
@@ -59,7 +58,6 @@ const CustomDocItem = props => {
         }
       >
         {/*<PageHelpful />*/}
-        {props.location.pathname === `/docs/latest/index/` ? null : <ScrollToFeedbackButton />}
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <CustomFooter />

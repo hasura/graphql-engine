@@ -59,6 +59,8 @@ import HeaderNavItem, {
 import { Tooltip } from './../../new-components/Tooltip';
 import { Badge } from './../../new-components/Badge';
 import { ConsoleDevTools } from '../../utils/console-dev-tools/ConsoleDevTools';
+import { isFeatureFlagEnabled } from '../../features/FeatureFlags/hooks/useFeatureFlags';
+import { availableFeatureFlagIds } from '../../features/FeatureFlags';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -279,6 +281,12 @@ class Main extends React.Component {
     const appPrefix = '';
 
     const getDataPath = () => {
+      const perfMode = isFeatureFlagEnabled(
+        availableFeatureFlagIds.performanceMode
+      );
+
+      if (perfMode) return '/data';
+
       return currentSource
         ? schemaList.length
           ? getSchemaBaseRoute(currentSchema, currentSource)

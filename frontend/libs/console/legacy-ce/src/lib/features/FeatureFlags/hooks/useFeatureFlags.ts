@@ -8,7 +8,7 @@ import {
 } from '../types';
 import { availableFeatureFlags } from '../availableFeatureFlags';
 
-const getFeatureFlagStore = async (): Promise<FeatureFlagState[]> => {
+const getFeatureFlagStore = (): FeatureFlagState[] => {
   const flagsFromLocalStorageAsString = getLSItem(LS_KEYS.featureFlag) ?? '';
   const content = isJsonString(flagsFromLocalStorageAsString)
     ? JSON.parse(flagsFromLocalStorageAsString)
@@ -20,10 +20,8 @@ const getFeatureFlagStore = async (): Promise<FeatureFlagState[]> => {
   return content;
 };
 
-// Async here to act as a placeholder when we will have an API
-const getAvailableFeatureFlags = async (): Promise<FeatureFlagDefinition[]> => {
-  return availableFeatureFlags;
-};
+const getAvailableFeatureFlags = (): FeatureFlagDefinition[] =>
+  availableFeatureFlags;
 
 export const mergeFlagWithState = (
   flags: FeatureFlagDefinition[],
@@ -41,11 +39,22 @@ export const mergeFlagWithState = (
   });
 };
 
+export const isFeatureFlagEnabled = (id: string) => {
+  const flag = getFeatureFlags().find(ff => ff.id === id);
+
+  if (!flag) return false;
+
+  return flag.state.enabled;
+};
+
+export function getFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
+  const flags = getAvailableFeatureFlags();
+  const state = getFeatureFlagStore();
+  return mergeFlagWithState([...(additionalFlags ?? []), ...flags], state);
+}
+
 export function useFeatureFlags(additionalFlags?: FeatureFlagDefinition[]) {
   return useQuery(['featureFlags', 'all'], () =>
-    Promise.all([getAvailableFeatureFlags(), getFeatureFlagStore()]).then(
-      ([flags, state]) =>
-        mergeFlagWithState([...(additionalFlags ?? []), ...flags], state)
-    )
+    getFeatureFlags(additionalFlags)
   );
 }

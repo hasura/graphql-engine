@@ -254,7 +254,7 @@ class OneGraphExplorer extends React.Component {
       );
     }
 
-    if (!schema) {
+    if (!schema && this.props.loading) {
       return (
         <div className="h-full flex">
           <Spinner />

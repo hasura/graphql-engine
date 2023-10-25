@@ -46,7 +46,7 @@ const activeStyle = {
   color: '#fd9540',
 };
 
-const legacyIconStyles = 'ml-2 mr-5';
+const legacyIconStyles = 'ml-2 mr-[15px]';
 
 const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
@@ -323,7 +323,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           setActiveDataSource(item.name);
         }}
         role="button"
-        className={styles.padd_bottom_small}
+        className={styles.padd_bottom_small + ' !text-gray-500'}
       >
         <span
           className={

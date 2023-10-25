@@ -16,7 +16,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 # Getting Started with Oracle in Hasura Cloud
 
 <div className="badge-container">
-  <ProductBadge free standard pro ee />
+  <ProductBadge free pro ee />
 </div>
 
 ## Introduction
@@ -80,6 +80,14 @@ jdbc:oracle:thin:myuser/mypassword@myhost.mycompany.com:1234:oracletest  # assum
 ```
 
 Click `Connect Database`.
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
 
 ### Step 3: Track tables and run GraphQL API queries
 

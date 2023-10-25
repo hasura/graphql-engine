@@ -8,6 +8,7 @@ export const rsToRsFormSchema = z.object({
   referenceRemoteSchema: z
     .string()
     .min(1, { message: 'Related remote schema is required' }),
+  selectedOperation: z.string(),
   resultSet: z.any(),
   relationship: z.any(),
 });

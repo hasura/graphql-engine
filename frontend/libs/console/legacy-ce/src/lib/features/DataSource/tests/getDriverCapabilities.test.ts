@@ -12,6 +12,7 @@ describe('Verify capabilities for native drivers', () => {
         "data_schema": {
           "supports_foreign_keys": true,
         },
+        "interpolated_queries": {},
         "mutations": {
           "delete": {},
           "insert": {},
@@ -35,6 +36,7 @@ describe('Verify capabilities for native drivers', () => {
         "data_schema": {
           "supports_foreign_keys": true,
         },
+        "interpolated_queries": {},
         "mutations": {
           "delete": {},
           "insert": {},
@@ -56,6 +58,7 @@ describe('Verify capabilities for native drivers', () => {
         "data_schema": {
           "supports_foreign_keys": true,
         },
+        "interpolated_queries": {},
         "mutations": {
           "delete": {},
           "insert": {},
@@ -77,6 +80,7 @@ describe('Verify capabilities for native drivers', () => {
         "data_schema": {
           "supports_foreign_keys": true,
         },
+        "interpolated_queries": {},
         "mutations": {
           "delete": {},
           "insert": {},
@@ -100,6 +104,7 @@ describe('Verify capabilities for native drivers', () => {
         "data_schema": {
           "supports_foreign_keys": false,
         },
+        "interpolated_queries": {},
         "queries": {
           "foreach": {},
         },

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -209,28 +210,54 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 				Value: fmt.Sprintf("!include %s", filepath.ToSlash(filepath.Join(source.Name, tablesDirectory, "tables.yaml"))),
 			}
 		}
+		// Functions are 2 types: PG and Snowflake, which differs in how naming is provided.
+		// See https://hasura.io/docs/latest/api-reference/metadata-api/custom-functions/
+		// PG:
+		// { "function": {"schema": "public", "name": "reset_widget"}, "configuration": ...}
+		// Snowflake:
+		// { "function": ["search_articles"], "configuration": ...}
 
 		if !source.Functions.IsZero() {
-			var functions []struct {
-				Function struct {
-					Name   string `yaml:"name"`
-					Schema string `yaml:"schema"`
-				} `yaml:"function"`
-			}
 			functionsbs, err := yaml.Marshal(source.Functions)
 			if err != nil {
 				return nil, errors.E(op, t.error(err))
 			}
-			var functionNodes []yaml.Node
+
+			var functions []struct {
+				Function yaml.Node `yaml:"function"`
+			}
 			if err := yaml.Unmarshal(functionsbs, &functions); err != nil {
 				return nil, errors.E(op, t.error(err))
 			}
+
+			var functionNodes []yaml.Node
 			if err := yaml.Unmarshal(functionsbs, &functionNodes); err != nil {
 				return nil, errors.E(op, t.error(err))
 			}
 
-			for idx, function := range functions {
-				functionFileName := fmt.Sprintf("%s_%s.yaml", function.Function.Schema, function.Function.Name)
+			for idx, functionNode := range functions {
+				var functionFileName string
+				functionbs, err := yaml.Marshal(functionNode.Function)
+				if err != nil {
+					return nil, errors.E(op, t.error(err))
+				}
+				if functionNode.Function.Kind == yaml.MappingNode { // Native DB functions
+					var function struct {
+						Name   string `yaml:"name"`
+						Schema string `yaml:"schema"`
+					}
+					if err := yaml.Unmarshal(functionbs, &function); err != nil {
+						return nil, errors.E(op, t.error(err))
+					}
+					functionFileName = fmt.Sprintf("%s_%s.yaml", function.Schema, function.Name)
+				} else { // Data Connector functions
+					var function []string
+					if err := yaml.Unmarshal(functionbs, &function); err != nil {
+						return nil, errors.E(op, t.error(err))
+					}
+					functionFileName = fmt.Sprintf("%s.yaml", strings.Join(function[:], "_"))
+				}
+
 				includeTag := yaml.Node{
 					Kind:  yaml.ScalarNode,
 					Tag:   "!!str",

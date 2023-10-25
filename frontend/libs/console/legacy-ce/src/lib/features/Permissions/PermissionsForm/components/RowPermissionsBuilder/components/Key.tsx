@@ -1,29 +1,18 @@
 import { isComparator } from './utils';
 import { Operator } from './Operator';
 import { Comparator } from './Comparator';
-import { useContext } from 'react';
-import { tableContext } from './TableProvider';
-import { typesContext } from './TypesProvider';
-import { createWrapper } from './EntryTypes/utils';
+import { ConditionalTableProvider } from './EntryTypes/ConditionalTableProvider';
 
 export const Key = ({ k, v, path }: { k: string; v: any; path: string[] }) => {
-  const { relationships } = useContext(tableContext);
-  const { types } = useContext(typesContext);
-
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   if (k === '_where' || k === '_table') {
     return <span className="font-bold">{k}</span>;
   }
 
   if (isComparator(k)) {
     return (
-      <Wrapper>
+      <ConditionalTableProvider path={path}>
         <Comparator v={v} comparator={k} path={path} />
-      </Wrapper>
+      </ConditionalTableProvider>
     );
   }
   return <Operator v={v} operator={k} path={path} />;

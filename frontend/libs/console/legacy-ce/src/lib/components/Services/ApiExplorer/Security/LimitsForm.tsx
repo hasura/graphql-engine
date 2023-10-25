@@ -60,14 +60,14 @@ export const LimitsForm: React.FC<LimitFormProps> = ({
   }, [isGlobal, role, unique_params_global, unique_params_role]);
 
   const isdisabledGlobally =
-    (isEmpty(globalLimit) || globalLimit < 0) && !isGlobal;
+    (isEmpty(globalLimit) || (globalLimit as number) < 0) && !isGlobal;
 
   const isDisabled = state === RoleState.global || state === RoleState.disabled;
 
   const renderValue = () => {
     const rateValue = isGlobal ? max_reqs_global : max_reqs_role;
     const othervalue = isGlobal
-      ? globalLimit >= 0
+      ? (globalLimit as number) >= 0
         ? (globalLimit as number)
         : ''
       : (roleLimit as number);

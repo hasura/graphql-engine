@@ -5,7 +5,6 @@ export default {
     '@storybook/addon-links',
     '@storybook/addon-interactions',
     '@storybook/addon-a11y',
-    'storybook-addon-console-env',
     '@storybook/addon-mdx-gfm',
   ],
   webpackFinal: async (config: any) => {

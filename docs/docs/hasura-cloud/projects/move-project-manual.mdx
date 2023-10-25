@@ -18,7 +18,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # Transfer Existing Hasura Cloud Project to a New Project
 
-<ProductBadge free standard pro ee />
+<ProductBadge free pro ee />
 
 ## Introduction
 
@@ -64,15 +64,14 @@ See [deleting projects](/hasura-cloud/projects/delete.mdx) to delete the earlier
 - You can [rename](/hasura-cloud/projects/details.mdx#rename-project) your new project to the same name as the earlier
   project if you wish.
 
-- If you haven't renamed your new project or set up a [custom domain](/hasura-cloud/domains.mdx) for your
-  project, you might want to update any clients consuming the GraphQL API to point to the new project's GraphQL
-  endpoint.
+- If you haven't renamed your new project or set up a [custom domain](/hasura-cloud/domains.mdx) for your project, you
+  might want to update any clients consuming the GraphQL API to point to the new project's GraphQL endpoint.
 
 ## Zero-downtime transfer
 
-To achieve a zero-downtime transfer, you will need to have a [custom domain](/hasura-cloud/domains.mdx)
-attached to your Cloud project. Once the new project is set up identically as the old one, you can update the DNS
-entries for your custom domain to the new project to have a seamless transfer of traffic to the new project.
+To achieve a zero-downtime transfer, you will need to have a [custom domain](/hasura-cloud/domains.mdx) attached to your
+Cloud project. Once the new project is set up identically as the old one, you can update the DNS entries for your custom
+domain to the new project to have a seamless transfer of traffic to the new project.
 
 If you simply want to avoid updating your clients with the new project's API endpoint, you can simply
 [rename](/hasura-cloud/projects/details.mdx#rename-project) your new project with the same name as the earlier project.

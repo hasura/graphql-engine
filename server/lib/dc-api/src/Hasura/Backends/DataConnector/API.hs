@@ -7,7 +7,8 @@ module Hasura.Backends.DataConnector.API
     CapabilitiesResponses,
     QueryResponses,
     MutationResponses,
-    SchemaApi,
+    SchemaGetApi,
+    SchemaPostApi,
     SchemaResponses,
     QueryApi,
     ConfigHeader,
@@ -80,11 +81,18 @@ schemaCase defaultAction schemaAction errorAction union = do
 
 type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse, V0.ErrorResponse400]
 
-type SchemaApi config =
+type SchemaGetApi config =
   "schema"
     :> SourceNameHeader Required
     :> ConfigHeader config Required
     :> UVerb 'GET '[JSON] SchemaResponses
+
+type SchemaPostApi config =
+  "schema"
+    :> SourceNameHeader Required
+    :> ConfigHeader config Required
+    :> ReqBody '[JSON] V0.SchemaRequest
+    :> UVerb 'POST '[JSON] SchemaResponses
 
 -- | This function defines a central place to ensure that all cases are covered for query and error responses.
 --   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
@@ -199,7 +207,8 @@ data RoutesG config mode = Routes
   { -- | 'GET /capabilities'
     _capabilities :: mode :- CapabilitiesApi,
     -- | 'GET /schema'
-    _schema :: mode :- SchemaApi config,
+    _schemaGet :: mode :- SchemaGetApi config,
+    _schemaPost :: mode :- SchemaPostApi config,
     -- | 'POST /query'
     _query :: mode :- QueryApi config,
     -- | 'POST /explain'
@@ -233,7 +242,8 @@ type Routes = RoutesG V0.Config
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
 type ApiG config =
   CapabilitiesApi
-    :<|> SchemaApi config
+    :<|> SchemaGetApi config
+    :<|> SchemaPostApi config
     :<|> QueryApi config
     :<|> ExplainApi config
     :<|> MutationApi config

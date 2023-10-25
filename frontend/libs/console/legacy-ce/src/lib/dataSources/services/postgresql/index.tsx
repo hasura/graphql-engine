@@ -517,6 +517,8 @@ const operators = [
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+export const isColTypeArray = (colType: string) => colType.includes('[]');
+
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
 const createSQLRegex =
@@ -641,6 +643,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       frequentlyUsedColumns: true,
       columnTypeSelector: true,
+      arrayTypes: true,
     },
     browse: {
       enabled: true,

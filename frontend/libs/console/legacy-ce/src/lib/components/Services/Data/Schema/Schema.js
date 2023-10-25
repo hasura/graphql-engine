@@ -748,13 +748,13 @@ class Schema extends Component {
             {getUntrackedTablesSection()}
             {isFeatureSupported('tables.relationships.track') &&
               getUntrackedRelationsSection()}
+            {getUntrackedFunctionsSection(
+              isFeatureSupported('functions.track.enabled')
+            )}
+            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
+              getNonTrackableFunctionsSection()}
           </FeatureFlagContainer>
 
-          {getUntrackedFunctionsSection(
-            isFeatureSupported('functions.track.enabled')
-          )}
-          {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
-            getNonTrackableFunctionsSection()}
           <hr className="my-md" />
         </>
       );

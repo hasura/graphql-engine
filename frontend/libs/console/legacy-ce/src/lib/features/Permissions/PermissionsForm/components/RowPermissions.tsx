@@ -26,7 +26,7 @@ const NoChecksLabel = () => (
 );
 
 const CustomLabel = () => (
-  <span data-test="custom-check" className="flex items-center">
+  <span data-testid="custom-check" className="flex items-center">
     With custom check:
     <IconTooltip message="Create custom check using permissions builder" />
   </span>

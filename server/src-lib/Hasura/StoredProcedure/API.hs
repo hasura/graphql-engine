@@ -5,9 +5,9 @@ module Hasura.StoredProcedure.API
   ( GetStoredProcedure (..),
     TrackStoredProcedure (..),
     UntrackStoredProcedure (..),
+    execTrackStoredProcedure,
+    execUntrackStoredProcedure,
     runGetStoredProcedure,
-    runTrackStoredProcedure,
-    runUntrackStoredProcedure,
     dropStoredProcedureInMetadata,
     module Hasura.StoredProcedure.Types,
   )
@@ -29,12 +29,10 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
   ( SourceName,
     sourceNameToText,
-    successMsg,
   )
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.StoredProcedure.Metadata (ArgumentName, StoredProcedureMetadata (..))
 import Hasura.StoredProcedure.Types
@@ -126,16 +124,15 @@ runGetStoredProcedure q = do
 -- | Handler for the 'track_stored_procedure' endpoint. The type 'TrackStoredProcedure b'
 -- (appearing here in wrapped as 'BackendTrackStoredProcedure b' for 'AnyBackend'
 -- compatibility) is defined in 'class StoredProcedureMetadata'.
-runTrackStoredProcedure ::
+execTrackStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
-    CacheRWM m,
-    MetadataM m
+    MonadError QErr m
   ) =>
   TrackStoredProcedure b ->
-  m EncJSON
-runTrackStoredProcedure TrackStoredProcedure {..} = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execTrackStoredProcedure TrackStoredProcedure {..} metadata = do
   sourceMetadata <-
     maybe
       ( throw400 NotFound
@@ -147,9 +144,9 @@ runTrackStoredProcedure TrackStoredProcedure {..} = do
       )
       pure
       . preview (metaSources . ix tspSource . toSourceMetadata @b)
-      =<< getMetadata
+      $ metadata
 
-  let metadata =
+  let spMetadata =
         StoredProcedureMetadata
           { _spmStoredProcedure = tspStoredProcedure,
             _spmConfig = tspConfig,
@@ -158,7 +155,7 @@ runTrackStoredProcedure TrackStoredProcedure {..} = do
             _spmDescription = tspDescription
           }
 
-  let storedProcedure = _spmStoredProcedure metadata
+  let storedProcedure = _spmStoredProcedure spMetadata
       metadataObj =
         MOSourceObjId tspSource
           $ AB.mkAnyBackend
@@ -167,12 +164,12 @@ runTrackStoredProcedure TrackStoredProcedure {..} = do
   when (storedProcedure `elem` existingStoredProcedures) do
     throw400 AlreadyTracked $ "Stored procedure '" <> toTxt storedProcedure <> "' is already tracked."
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ (metaSources . ix tspSource . toSourceMetadata @b . smStoredProcedures)
-    %~ InsOrdHashMap.insert storedProcedure metadata
+  let metadataModifier =
+        MetadataModifier
+          $ (metaSources . ix tspSource . toSourceMetadata @b . smStoredProcedures)
+          %~ InsOrdHashMap.insert storedProcedure spMetadata
 
-  pure successMsg
+  pure (metadataObj, metadataModifier)
 
 -- | API payload for the 'untrack_stored_procedure' endpoint.
 data UntrackStoredProcedure (b :: BackendType) = UntrackStoredProcedure
@@ -198,31 +195,25 @@ instance (Backend b) => ToJSON (UntrackStoredProcedure b) where
       ]
 
 -- | Handler for the 'untrack_stored_procedure' endpoint.
-runUntrackStoredProcedure ::
+execUntrackStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
-    CacheRWM m,
-    MetadataM m
+    MonadError QErr m
   ) =>
   UntrackStoredProcedure b ->
-  m EncJSON
-runUntrackStoredProcedure q = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execUntrackStoredProcedure (UntrackStoredProcedure {..}) metadata = do
   -- we do not check for feature flag here as we always want users to be able
   -- to remove stored procedures if they'd like
-  assertStoredProcedureExists @b source storedProcedure
+  assertStoredProcedureExists @b utspSource utspStoredProcedure metadata
 
   let metadataObj =
-        MOSourceObjId source
+        MOSourceObjId utspSource
           $ AB.mkAnyBackend
-          $ SMOStoredProcedure @b storedProcedure
+          $ SMOStoredProcedure @b utspStoredProcedure
 
-  buildSchemaCacheFor metadataObj
-    $ dropStoredProcedureInMetadata @b source storedProcedure
-  pure successMsg
-  where
-    source = utspSource q
-    storedProcedure = utspStoredProcedure q
+  pure (metadataObj, dropStoredProcedureInMetadata @b utspSource utspStoredProcedure)
 
 dropStoredProcedureInMetadata ::
   forall b.
@@ -241,13 +232,12 @@ dropStoredProcedureInMetadata source rootFieldName = do
 -- | Check whether a stored procedure exists for the given source.
 assertStoredProcedureExists ::
   forall b m.
-  (Backend b, MetadataM m, MonadError QErr m) =>
+  (Backend b, MonadError QErr m) =>
   SourceName ->
   FunctionName b ->
+  Metadata ->
   m ()
-assertStoredProcedureExists sourceName storedProcedure = do
-  metadata <- getMetadata
-
+assertStoredProcedureExists sourceName storedProcedure metadata = do
   let sourceMetadataTraversal :: Traversal' Metadata (SourceMetadata b)
       sourceMetadataTraversal = metaSources . ix sourceName . toSourceMetadata @b
 

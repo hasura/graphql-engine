@@ -95,6 +95,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
           scalarType: scalarType?.type ?? null,
           graphQLType: field?.type,
         },
+        value_generated: column.value_generated,
       };
     });
   } catch (error) {

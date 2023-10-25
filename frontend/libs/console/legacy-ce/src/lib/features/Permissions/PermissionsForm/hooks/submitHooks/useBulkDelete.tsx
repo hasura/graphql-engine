@@ -7,6 +7,8 @@ import { useFireNotification } from '../../../../../new-components/Notifications
 import { Permission } from '../../../../hasura-metadata-types';
 import { api } from '../../api';
 import { QueryType } from '../../../types';
+import { permissionsTableKey } from '../../../PermissionsTable/hooks';
+import { permissionsFormKey } from '../dataFetchingHooks';
 
 interface GetMetadataTableArgs {
   dataSourceName: string;
@@ -155,17 +157,19 @@ export const useBulkDeletePermissions = ({ dataSourceName, table }: Args) => {
           });
         },
         onSettled: () => {
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionFormData',
-            JSON.stringify(table),
-          ]);
+          queryClient.invalidateQueries(
+            permissionsFormKey({
+              dataSourceName,
+              table,
+            })
+          );
 
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionsTable',
-            JSON.stringify(table),
-          ]);
+          queryClient.invalidateQueries(
+            permissionsTableKey({
+              dataSourceName,
+              table,
+            })
+          );
         },
       }
     );

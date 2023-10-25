@@ -81,10 +81,11 @@ fromAnnBoolExpFld ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVColumn columnInfo _redactionExp opExpGs -> do
+    IR.AVColumn columnInfo redactionExp opExpGs -> do
       -- TODO(redactionExp): Deal with the redaction expression
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
-      pure (AndExpression expressions)
+      potentiallyRedacted redactionExp (AndExpression expressions)
+    IR.AVRemoteRelationship _ -> error "fromAnnBoolExpFld RemoteRelationship"
     IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
       case target of
         IR.RelTargetNativeQuery _ -> error "fromAnnBoolExpFld RelTargetNativeQuery"
@@ -113,6 +114,14 @@ fromAnnBoolExpFld =
                   }
             )
   where
+    potentiallyRedacted :: IR.AnnRedactionExp 'MSSQL Expression -> Expression -> ReaderT EntityAlias FromIr Expression
+    potentiallyRedacted redactionExp ex = do
+      case redactionExp of
+        IR.NoRedaction -> pure ex
+        IR.RedactIfFalse p -> do
+          condExp <- fromGBoolExp p
+          pure $ AndExpression [condExp, ex]
+
     -- Translate a relationship field mapping into column equality comparisons.
     translateMapping ::
       From ->

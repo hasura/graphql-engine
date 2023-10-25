@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { GraphQLSchema } from 'graphql';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
-import Button from '../../../Common/Button/Button';
 import {
   RemoteSchemaFields,
   FieldType,
   ArgTreeType,
   PermissionEdit,
+  CustomFieldType,
 } from './types';
 import { PermissionEditorContext } from './context';
 import Tree from './Tree';
 import { isEmpty } from '../../../Common/utils/jsUtils';
+import { InputField, useConsoleForm } from '../../../../new-components/Form';
+import { z } from 'zod';
+import { FaSearch, FaTimes } from 'react-icons/fa';
+import { Button } from '../../../../new-components/Button';
 
 type PermissionEditorProps = {
   permissionEdit: PermissionEdit;
@@ -30,6 +34,13 @@ type PermissionEditorProps = {
     errorCb?: () => void
   ) => void;
 };
+
+const countVisible = (list: { name: string }[]) =>
+  list.filter((field: any) => {
+    return !['scalar', 'enum'].some(type => {
+      return field?.name?.toLowerCase().includes(type);
+    });
+  }).length;
 
 const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   const {
@@ -77,6 +88,16 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
     }
   }, [schemaDefinition]);
 
+  const {
+    methods: { watch, setValue },
+    Form,
+  } = useConsoleForm({
+    schema: z.object({
+      search: z.string(),
+    }),
+  });
+  const search = watch('search');
+
   if (!isEditing) return null;
 
   const buttonStyle = 'mr-sm';
@@ -123,15 +144,65 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   };
   const isSaveDisabled = isEmpty(resultString) || isFetching;
 
+  const filteredTypes = new Set(
+    state
+      .filter((field: RemoteSchemaFields | FieldType) => {
+        if (
+          ['scalar', 'enum'].some(type => {
+            return field?.name?.toLowerCase().includes(type);
+          })
+        ) {
+          return false;
+        }
+
+        if (search === '') {
+          return true;
+        }
+
+        return (
+          field?.name?.toLowerCase().includes(search?.toLowerCase()) ||
+          field.children?.some((child: CustomFieldType) => {
+            return child?.name?.toLowerCase().includes(search?.toLowerCase());
+          })
+        );
+      })
+      .map((field: RemoteSchemaFields | FieldType) => field.name)
+  );
+
   return (
     <div className="bg-white p-sm border border-gray-300">
       <div>
         <PermissionEditorContext.Provider
           value={{ argTree, setArgTree, scrollToElement }}
         >
+          <div className="relative">
+            <Form onSubmit={() => {}}>
+              <InputField
+                size="medium"
+                icon={<FaSearch />}
+                placeholder="Search types..."
+                name="search"
+                inputClassName="rounded-r-none"
+                className="mb-4"
+                noErrorPlaceholder
+              />
+              {search && (
+                <FaTimes
+                  className="cursor-pointer absolute left-[480px] top-[10px] text-gray-500"
+                  onClick={() => setValue('search', '')}
+                />
+              )}
+              {search && (
+                <div className="text-gray-500 mb-2">
+                  {filteredTypes.size} out of {countVisible(state)} types found
+                </div>
+              )}
+            </Form>
+          </div>
           <Tree
             key={permissionEdit.isNewRole ? 'NEW' : permissionEdit.role}
             list={state as FieldType[]}
+            filteredTypes={filteredTypes}
             setState={setState}
             permissionEdit={permissionEdit}
           />
@@ -139,29 +210,29 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
           {/* <code style={{ whiteSpace: 'pre-wrap' }}>{resultString}</code> */}
         </PermissionEditorContext.Provider>
       </div>
-      <Button
-        onClick={saveFunc}
-        color="yellow"
-        className={`${buttonStyle} bg-yellow-300`}
-        disabled={isSaveDisabled}
-        data-test="save-remote-schema-permissions"
-      >
-        Save Permissions
-      </Button>
-      {!(isNewRole || isNewPerm) && (
+      <div className="mt-4 flex gap-2">
         <Button
-          onClick={removeFunc}
-          color="red"
-          className={`${buttonStyle} bg-red-500`}
-          disabled={isFetching}
-          data-test="delete-remote-schema-permissions"
+          onClick={saveFunc}
+          mode="primary"
+          disabled={isSaveDisabled}
+          data-test="save-remote-schema-permissions"
         >
-          Remove Permissions
+          Save Permissions
         </Button>
-      )}
-      <Button color="white" className={buttonStyle} onClick={closeEditor}>
-        Cancel
-      </Button>
+        {!(isNewRole || isNewPerm) && (
+          <Button
+            onClick={removeFunc}
+            mode="destructive"
+            disabled={isFetching}
+            data-test="delete-remote-schema-permissions"
+          >
+            Remove Permissions
+          </Button>
+        )}
+        <Button color="white" className={buttonStyle} onClick={closeEditor}>
+          Cancel
+        </Button>
+      </div>
     </div>
   );
 };

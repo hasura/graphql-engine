@@ -853,7 +853,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__BigQuery"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
                         },
                         "type": "array"
                     },
@@ -868,7 +868,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__BigQuery"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
                         },
                         "type": "array"
                     },
@@ -946,7 +946,15 @@
             "BigqueryRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -1810,7 +1818,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Citus_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
                         },
                         "type": "array"
                     },
@@ -1825,7 +1833,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Citus_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
                         },
                         "type": "array"
                     },
@@ -1919,7 +1927,15 @@
             "CitusRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -2810,7 +2826,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
                         },
                         "type": "array"
                     },
@@ -2825,7 +2841,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
                         },
                         "type": "array"
                     },
@@ -2919,7 +2935,15 @@
             "CockroachRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -3965,7 +3989,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__DataConnector"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
                         },
                         "type": "array"
                     },
@@ -3980,7 +4004,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__DataConnector"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
                         },
                         "type": "array"
                     },
@@ -4063,7 +4087,15 @@
             "DataconnectorRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -5660,7 +5692,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__MSSQL"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
                         },
                         "type": "array"
                     },
@@ -5675,7 +5707,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__MSSQL"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
                         },
                         "type": "array"
                     },
@@ -5768,7 +5800,15 @@
             "MssqlRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -6364,7 +6404,9 @@
                         "default": [],
                         "items": {
                             "enum": [
-                                "traces"
+                                "traces",
+                                "metrics",
+                                "logs"
                             ],
                             "type": "string"
                         },
@@ -6413,6 +6455,14 @@
                         },
                         "type": "array"
                     },
+                    "otlp_logs_endpoint": {
+                        "description": "Target URL to which the exporter is going to send logs. No default.",
+                        "type": "string"
+                    },
+                    "otlp_metrics_endpoint": {
+                        "description": "Target URL to which the exporter is going to send metrics. No default.",
+                        "type": "string"
+                    },
                     "otlp_traces_endpoint": {
                         "description": "Target URL to which the exporter is going to send traces. No default.",
                         "type": "string"
@@ -6430,6 +6480,21 @@
                         "description": "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes.",
                         "items": {
                             "$ref": "#/components/schemas/OtelNameValue"
+                        },
+                        "type": "array"
+                    },
+                    "traces_propagators": {
+                        "default": [
+                            "b3"
+                        ],
+                        "description": "List of propagators to inject and extract traces data from headers.",
+                        "items": {
+                            "description": "Possible trace propagators to use with OTLP",
+                            "enum": [
+                                "b3",
+                                "tracecontext"
+                            ],
+                            "type": "string"
                         },
                         "type": "array"
                     }
@@ -6934,7 +6999,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
                         },
                         "type": "array"
                     },
@@ -6949,7 +7014,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
                         },
                         "type": "array"
                     },
@@ -7118,7 +7183,15 @@
             "PostgresRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8016,7 +8089,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig__BigQuery": {
+            "RelDef_RelManualConfig__BigQuery": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8025,7 +8098,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8034,7 +8115,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig__DataConnector": {
+            "RelDef_RelManualConfig__DataConnector": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8043,7 +8124,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8052,7 +8141,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig__MSSQL": {
+            "RelDef_RelManualConfig__MSSQL": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8061,7 +8150,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8070,7 +8167,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig___Postgres__Citus_": {
+            "RelDef_RelManualConfig___Postgres__Citus_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8079,7 +8176,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8088,7 +8193,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_": {
+            "RelDef_RelManualConfig___Postgres__Cockroach_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8097,7 +8202,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8106,7 +8219,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_": {
+            "RelDef_RelManualConfig___Postgres__Vanilla_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8115,7 +8228,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [

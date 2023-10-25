@@ -1,0 +1,176 @@
+---
+sidebar_label: MongoDB Atlas (Hosted Database)
+description: Using Hasura with a MongoDB Atlas
+title: 'Cloud: Using Hasura Cloud with a MongoDB Atlas hosted database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - mongodb atlas
+  - mongodb
+sidebar_position: 5
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to a MongoDB Atlas hosted database
+
+## Introduction
+
+This guide explains how to connect a new or existing
+[MongoDB Atlas hosted database](https://www.mongodb.com/docs/atlas/getting-started/) to a Hasura instance, either on
+[Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions.
+
+:::info Hasura Cloud vs self-hosting
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-gcp).
+
+:::
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-atlas}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
+
+After the project is successfully initialized, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+`mongodb:// URL`. We'll grab this after creating our database and then come back here.
+
+<Thumbnail src="/img/databases/mongodb/mongodb-connect-db.png" alt="Hasura Cloud database setup" width="700px" />
+
+## Step 3: Create a Database in MongoDB Atlas {#create-atlas-db}
+
+:::info Existing database
+
+If you have an existing database on MongoDB Atlas, you can skip this step and move on to [step 4](#allow-connections).
+
+:::
+
+Log into the [MongoDB Atlas control panel](https://cloud.mongodb.com/).
+
+On the left-side navigation, under `Deployment`, click on `Database`.
+
+Select `Build a Database` when prompted. 
+
+<Thumbnail src="/img/databases/mongodb/1-atlas-build-db.png" alt="MongoDB Atlas Build Database" width="1000px" />
+
+Select your instance type, and enter your MongoDB cluster specifics.
+
+:::tip Match your MongoDB Atlas and Hasura Cloud hosting provider and region.
+
+Keeping your MongoDB Atlas in the same hosting provider and region as your Hasura Cloud project will help reduce latency and will yield the best performance.  
+
+:::
+
+<Thumbnail src="/img/databases/mongodb/2-atlas-database.png" alt="MongoDB Atlas Instance Details" width="1000px" />
+
+## Step 4: Allow connections to your MongoDB Atlas database from Hasura {#allow-connections}
+
+We need to allowlist the IP on which Hasura is running to be able to communicate with the database.
+
+After clicking create you should be taken to the Quickstart for your MongoDB cluster. 
+
+At this stage you can configure any other credentials for your cluster as needed and setup your MongoDB cluster to allow connecting to your Hasura Cloud project.
+
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
+
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Self-hosted IP addresses
+
+If you're using a self-hosted solution, you can select `Add My Current IP Address` to allow the local IP address that you're connected from, if hosting on the same IP as your instance - or you can retrieve the IP address from your self-hosted server.
+
+:::
+
+At the bottom of your MongoDB Atlas Quickstart, there should be an area for `Where would you like to connect from?`.
+(If you don't see this, you can also access IP whitelisting through the `Network Access` section in the left sidebar).
+
+Then to setup your allowed IP address:
+- Select Cloud Environment for the type of IP address.
+- Enter the Hasura IP address that you copied along with a name (e.g., `Hasura`):
+
+<Thumbnail src="/img/databases/mongodb/3-hasura-network.png" alt="Add a new network in MongoDB Atlas" width="700px" />
+
+Then click `Finish and Close` at the bottom of the page.
+
+## Step 5: Get your database connection URL {#atlas-get-url}
+
+Once you've finished the getting started guide select `Database` from the top-left corner.
+When you get a listing of your database clusters, select `Connect` on the one you just created.
+
+<Thumbnail
+  src="/img/databases/mongodb/4-atlas-connect-database.png"
+  alt="MongoDB Atlas - Connect to database"
+  width="1000px"
+/>
+
+You should get a number of options for how to connect, from here select `Drivers`:
+
+<Thumbnail
+  src="/img/databases/mongodb/4-atlas-options.png"
+  alt="MongoDB Atlas - Select drivers"
+  width="1000px"
+/>
+
+
+From the drivers instructions you can select and copy your connection connection string (note: you'll have to swap out your database's user access control password manually):
+
+<Thumbnail
+  src="/img/databases/mongodb/4-atlas-connection-string.png"
+  alt="MongoDB Atlas - Get connection string"
+  width="1000px"
+/>
+
+If you've forgotten your MongoDB Atlas database user password, you can reset it from `Database Access` in the left-hand sidebar.
+
+<Thumbnail
+  src="/img/databases/mongodb/4-atlas-reset-password.png"
+  alt="MongoDB Atlas - Reset Password"
+  width="1000px"
+/>
+
+## Step 6: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#atlas-get-url) under `connection`.
+
+Your `db` is the database name within your cluster. 
+If you've loaded the sample data, there should be a few samples available (such as `sample_analytics`). 
+
+<Thumbnail src="/img/databases/mongodb/5-database-url.png" alt="Database setup" width="1000px" />
+
+Then click `Connect Database`.
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" width="1100px" />
+
+## Next steps
+
+- You can check out getting started guide for MongoDB on [Cloud](/databases/mongodb/cloud.mdx) or using [Docker](/databases/mongodb/docker.mdx) for a more detailed instructions for setting up your MongoDB database with Hasura.
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/domains.mdx)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info MongoDB feature support
+
+For more information on which MongoDB features we support, check out
+[this page](/databases/mongodb/index.mdx).
+
+:::

@@ -1,6 +1,8 @@
+import React from 'react';
 import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
+import { WarningCard } from '../../Common/WarningCard';
 
 export const DatabaseUrl = ({
   name,
@@ -32,12 +34,15 @@ export const DatabaseUrl = ({
       </div>
 
       {connectionType === 'databaseUrl' ? (
-        <InputField
-          name={`${name}.url`}
-          key={`${name}.url`}
-          label="Database URL"
-          placeholder="postgresql://username:password@hostname:port/postgres"
-        />
+        <>
+          <WarningCard />
+          <InputField
+            name={`${name}.url`}
+            key={`${name}.url`}
+            label="Database URL"
+            placeholder="postgresql://username:password@hostname:port/postgres"
+          />
+        </>
       ) : connectionType === 'envVar' ? (
         <InputField
           name={`${name}.envVar`}
@@ -47,6 +52,7 @@ export const DatabaseUrl = ({
         />
       ) : (
         <>
+          <WarningCard />
           <InputField
             name={`${name}.username`}
             label="Username"

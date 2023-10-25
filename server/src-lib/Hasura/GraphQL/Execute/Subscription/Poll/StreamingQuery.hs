@@ -30,8 +30,9 @@ import Hasura.GraphQL.Execute.Subscription.Types
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
-import Hasura.Logging (LogLevel (..))
+import Hasura.Logging (Hasura, LogLevel (..), Logger (unLogger))
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendTag, reify)
 import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
@@ -39,8 +40,9 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
+import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubcriptionMetric, streamingSubscriptionLabel)
-import Hasura.Server.Types (GranularPrometheusMetricsState (..))
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
@@ -257,8 +259,11 @@ pollStreamingQuery ::
   TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
   Maybe (Endo JO.Value) ->
+  Logger Hasura ->
+  [ModelInfoPart] ->
+  IO ModelInfoLogState ->
   IO ()
-pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate modifier = do
+pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate modifier logger modelInfoList modelInfoLogStatus = do
   operationNames <- STM.atomically $ TMap.getMap operationNames'
   (totalTime, (snapshotTime, (batchesDetails, processedCohorts, maybeErrors))) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
@@ -459,6 +464,10 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
         mempty
         currentCohorts
     TMap.replace cohortMap updatedCohortsMap
+  modelInfoLogStatus' <- modelInfoLogStatus
+  when (modelInfoLogStatus' == ModelInfoLogOn) $ do
+    for_ (modelInfoList) $ \(ModelInfoPart modelName modelType modelSourceName modelSourceType modelQueryType) -> do
+      unLogger logger $ ModelInfoLog LevelInfo $ ModelInfo modelName (toTxt modelType) (toTxt <$> modelSourceName) (toTxt <$> modelSourceType) (toTxt modelQueryType) False
   postPollHook pollDetails
   let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
   recordSubcriptionMetric

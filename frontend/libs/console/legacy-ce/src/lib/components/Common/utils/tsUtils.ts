@@ -56,3 +56,19 @@ export const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
 export type CreateBooleanMap<T> = {
   [K in keyof T]?: boolean;
 };
+
+/**
+ * Lets you choose specific properties to make optional on a type
+ *
+ * For example:
+ *
+ * interface Person {
+ *   name: string;
+ *   hometown: string;
+ *   nickname: string;
+ * }
+ *
+ * type NicknameOptional = PartialBy<Person, 'nickname'>
+ *
+ */
+export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

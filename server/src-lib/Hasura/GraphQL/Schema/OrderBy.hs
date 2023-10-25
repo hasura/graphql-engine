@@ -26,7 +26,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
-import Hasura.LogicalModel.Common (columnsFromFields, getSelPermInfoForLogicalModel, toFieldInfo)
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel, logicalModelFieldsToFieldInfo)
 import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -81,16 +81,14 @@ logicalModelOrderByExp logicalModel = do
   roleName <- retrieve scRole
   let name = getLogicalModelName (_lmiName logicalModel)
       selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
-  case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
-    Nothing -> throw500 $ "Error creating fields for logical model " <> tshow name
-    Just tableFields -> do
-      let description =
-            G.Description
-              $ "Ordering options when selecting data from "
-              <> name
-              <<> "."
-          memoizeKey = name
-      orderByExpInternal (C.fromCustomName name) description selectPermissions tableFields memoizeKey
+      fieldInfos = HashMap.elems $ logicalModelFieldsToFieldInfo $ _lmiFields logicalModel
+      description =
+        G.Description
+          $ "Ordering options when selecting data from "
+          <> name
+          <<> "."
+      memoizeKey = name
+  orderByExpInternal (C.fromCustomName name) description selectPermissions fieldInfos memoizeKey
 
 -- | Corresponds to an object type for an order by.
 --
@@ -137,11 +135,19 @@ orderByExpInternal gqlName description selectPermissions tableFields memoizeKey 
             & P.fieldOptional fieldName Nothing
             <&> (fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo redactionExp)) . join)
             & pure
-        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
-        FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
+        FIColumn (SCIObjectColumn nestedObjectInfo@NestedObjectInfo {..}) -> do
+          let !fieldName = _noiName
+          logicalModelInfo <-
+            HashMap.lookup _noiType (_siLogicalModels sourceInfo)
+              `onNothing` throw500 ("Logical model " <> _noiType <<> " not found in source " <>> (_siName sourceInfo))
+          nestedParser <- lift $ logicalModelOrderByExp @b @r @m @n logicalModelInfo
+          pure $ do
+            nestedOrderBy <- P.fieldOptional fieldName Nothing nestedParser
+            pure $ fmap (map $ fmap $ IR.AOCNestedObject nestedObjectInfo) nestedOrderBy
+        FIColumn (SCIArrayColumn _) -> empty
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
-            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetNativeQuery _ -> hoistMaybe Nothing -- we do not support ordering by a nested Native Query yet
             RelTargetTable remoteTableName -> do
               remoteTableInfo <- askTableInfo remoteTableName
               perms <- hoistMaybe $ tableSelectPermissions roleName remoteTableInfo

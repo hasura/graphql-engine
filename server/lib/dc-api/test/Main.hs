@@ -24,12 +24,12 @@ import Test.Sandwich.Options qualified as Sandwich
 import Test.Specs.CapabilitiesSpec qualified
 import Test.Specs.ErrorSpec qualified
 import Test.Specs.ExplainSpec qualified
+import Test.Specs.FunctionsSpec qualified
 import Test.Specs.HealthSpec qualified
 import Test.Specs.MetricsSpec qualified
 import Test.Specs.MutationSpec qualified
 import Test.Specs.QuerySpec qualified
 import Test.Specs.SchemaSpec qualified
-import Test.Specs.UDFSpec qualified
 import Test.TestHelpers (AgentTestSpec)
 import Prelude
 
@@ -51,7 +51,7 @@ tests testData testConfig edgeCasesTestData capabilitiesResponse@API.Capabilitie
   for_ (API._cMutations _crCapabilities) \_ -> Test.Specs.MutationSpec.spec testData edgeCasesTestData _crCapabilities
   for_ (API._cUserDefinedFunctions _crCapabilities) \_ -> do
     usesDataset functionsTemplate do
-      Test.Specs.UDFSpec.spec testConfig _crCapabilities
+      Test.Specs.FunctionsSpec.spec testConfig _crCapabilities
 
 getCloneSchema :: Maybe API.Config -> API.DatasetTemplateName -> AgentIOClient -> IO API.SchemaResponse
 getCloneSchema mergeConfig datasetTemplate (AgentIOClient agentClient) =
@@ -59,13 +59,13 @@ getCloneSchema mergeConfig datasetTemplate (AgentIOClient agentClient) =
     (createClone agentClient datasetTemplate)
     (deleteClone agentClient)
     ( \DatasetCloneInfo {..} ->
-        (agentClient // API._schema) testSourceName (mergeAgentConfig _dciAgentConfig mergeConfig) >>= guardSchemaResponse
+        (agentClient // API._schemaPost) testSourceName (mergeAgentConfig _dciAgentConfig mergeConfig) (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
     )
 
 getChinookSchema :: API.Capabilities -> AgentConfig -> AgentIOClient -> IO API.SchemaResponse
 getChinookSchema API.Capabilities {..} agentConfig agentIOClient@(AgentIOClient agentClient) = do
   case agentConfig of
-    ManualConfig config -> (agentClient // API._schema) testSourceName config >>= guardSchemaResponse
+    ManualConfig config -> (agentClient // API._schemaPost) testSourceName config (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
     DatasetConfig mergeConfig ->
       if isJust _cDatasets
         then getCloneSchema mergeConfig chinookTemplate agentIOClient

@@ -15,6 +15,7 @@ import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
+import Data.Text.Extended (ToTxt (..))
 import Data.Tuple (swap)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
@@ -33,10 +34,11 @@ import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.IR.ModelInformation (ModelInfoPart (..), ModelOperationType (ModelOperationType), ModelType (ModelTypeRemoteSchema))
 import Hasura.RQL.Types.Common
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (RequestId)
+import Hasura.Server.Types (MonadGetPolicies, RequestId)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -63,7 +65,8 @@ processRemoteJoins ::
     MonadQueryLog m,
     MonadExecutionLog m,
     Tracing.MonadTrace m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   RequestId ->
   L.Logger L.Hasura ->
@@ -74,13 +77,14 @@ processRemoteJoins ::
   EncJSON ->
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
-  m EncJSON
-processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq =
-  Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree lhs \joinTree -> do
+  Tracing.HttpPropagator ->
+  m (EncJSON, [ModelInfoPart])
+processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq tracesPropagator =
+  Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree (lhs, []) \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
         `onLeft` (throw500 . T.pack)
-    jsonResult <-
+    (jsonResult, modelInfoList) <-
       foldJoinTreeWith
         callSource
         callRemoteServer
@@ -89,7 +93,7 @@ processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo 
         joinTree
         requestHeaders
         (_unOperationName <$> _grOperationName gqlreq)
-    pure $ encJFromOrderedValue $ runIdentity jsonResult
+    pure $ (encJFromOrderedValue $ runIdentity jsonResult, (modelInfoList))
   where
     -- How to process a source join call over the network.
     callSource ::
@@ -123,7 +127,7 @@ processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo 
       m BL.ByteString
     callRemoteServer remoteSchemaInfo request =
       fmap (view _3)
-        $ execRemoteGQ env userInfo requestHeaders remoteSchemaInfo request
+        $ execRemoteGQ env tracesPropagator userInfo requestHeaders remoteSchemaInfo request
 
 -- | Fold the join tree.
 --
@@ -135,7 +139,8 @@ foldJoinTreeWith ::
     MonadQueryTags m,
     Traversable f,
     Tracing.MonadTrace m,
-    MonadIO m
+    MonadIO m,
+    MonadGetPolicies m
   ) =>
   -- | How to process a call to a source.
   (AB.AnyBackend S.SourceJoinCall -> m BL.ByteString) ->
@@ -148,24 +153,25 @@ foldJoinTreeWith ::
   RemoteJoins ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  m (f JO.Value)
+  m (f JO.Value, [ModelInfoPart])
 foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap catMaybes
+  (joinIndices) <- fmap catMaybes
     $ for joins
     $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ HashMap.toList _jalArguments
-      previousStep <- case _jalJoin of
+      (previousStep, modelInfo') <- case _jalJoin of
         RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
           let remoteSchemaInfo = rsDef $ _rsjRemoteSchema remoteSchemaJoin
           maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin _jalFieldName joinArguments
-          pure $ fmap (childJoinTree,) maybeJoinIndex
+          let remoteSchemaModel = ModelInfoPart (toTxt $ _vrsdName remoteSchemaInfo) ModelTypeRemoteSchema Nothing Nothing (ModelOperationType G.OperationTypeQuery)
+          pure $ (fmap (childJoinTree,) maybeJoinIndex, Just [remoteSchemaModel])
         RemoteJoinSource sourceJoin childJoinTree -> do
           maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
-          pure $ fmap (childJoinTree,) maybeJoinIndex
-      for previousStep $ \(childJoinTree, joinIndex) -> do
-        forRemoteJoins childJoinTree joinIndex $ \childRemoteJoins -> do
-          results <-
+          pure $ (fmap (childJoinTree,) $ fst <$> maybeJoinIndex, snd <$> maybeJoinIndex)
+      result <- for previousStep $ \((childJoinTree, joinIndex)) -> do
+        forRemoteJoins childJoinTree (joinIndex, []) $ \childRemoteJoins -> do
+          (results, modelInfo) <-
             foldJoinTreeWith
               callSource
               callRemoteSchema
@@ -174,9 +180,15 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
               childRemoteJoins
               reqHeaders
               operationName
-          pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
+          pure $ ((IntMap.fromAscList $ zip (IntMap.keys joinIndex) results), modelInfo)
+      pure $ fmap (\(iMap, newModelInfo) -> (iMap, newModelInfo <> fromMaybe [] modelInfo')) result
+  let (key, (compositeValue')) = unzip (IntMap.toList joinIndices)
+      (intMap, model) = unzip compositeValue'
+      joinIndices' = IntMap.fromList $ zip key intMap
+      modelInfoList = concat model
   Tracing.newSpan "Join remote join results"
-    $ joinResults joinIndices compositeValue
+    $ (,(modelInfoList))
+    <$> (joinResults joinIndices' compositeValue)
 
 -------------------------------------------------------------------------------
 

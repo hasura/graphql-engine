@@ -13,7 +13,7 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName, genTableTarget)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
@@ -36,14 +36,14 @@ spec = do
   describe "Relationship" $ do
     let relationship =
           Relationship
-            { _rTargetTable = TableName ["target_table_name"],
+            { _rTarget = TTable (TargetTable (TableName ["target_table_name"])),
               _rRelationshipType = ObjectRelationship,
               _rColumnMapping = [(ColumnName "outer_column", ColumnName "inner_column")]
             }
     testToFromJSONToSchema
       relationship
       [aesonQQ|
-        { "target_table": ["target_table_name"],
+        { "target": {"type": "table", "name": ["target_table_name"]},
           "relationship_type": "object",
           "column_mapping": {
             "outer_column": "inner_column"
@@ -54,13 +54,13 @@ spec = do
   describe "TableRelationships" $ do
     let relationshipA =
           Relationship
-            { _rTargetTable = TableName ["target_table_name_a"],
+            { _rTarget = TTable (TargetTable (TableName ["target_table_name_a"])),
               _rRelationshipType = ObjectRelationship,
               _rColumnMapping = [(ColumnName "outer_column_a", ColumnName "inner_column_a")]
             }
     let relationshipB =
           Relationship
-            { _rTargetTable = TableName ["target_table_name_b"],
+            { _rTarget = TTable (TargetTable (TableName ["target_table_name_b"])),
               _rRelationshipType = ArrayRelationship,
               _rColumnMapping = [(ColumnName "outer_column_b", ColumnName "inner_column_b")]
             }
@@ -73,20 +73,20 @@ spec = do
                 ]
             }
     testToFromJSONToSchema
-      tableRelationships
+      (RTable tableRelationships)
       [aesonQQ|
         { "source_table": ["source_table_name"],
           "type": "table",
           "relationships": {
             "relationship_a": {
-              "target_table": ["target_table_name_a"],
+              "target": {"type": "table", "name": ["target_table_name_a"]},
               "relationship_type": "object",
               "column_mapping": {
                 "outer_column_a": "inner_column_a"
               }
             },
             "relationship_b": {
-              "target_table": ["target_table_name_b"],
+              "target": {"type": "table", "name":["target_table_name_b"]},
               "relationship_type": "array",
               "column_mapping": {
                 "outer_column_b": "inner_column_b"
@@ -95,7 +95,7 @@ spec = do
           }
         }
       |]
-    jsonOpenApiProperties genTableRelationships
+    jsonOpenApiProperties (RTable <$> genTableRelationships)
 
 genRelationshipName :: (MonadGen m) => m RelationshipName
 genRelationshipName =
@@ -107,7 +107,7 @@ genRelationshipType = Gen.enumBounded
 genRelationship :: (MonadGen m) => m Relationship
 genRelationship =
   Relationship
-    <$> genTableName
+    <$> genTableTarget
     <*> genRelationshipType
     <*> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnName <*> genColumnName))
 

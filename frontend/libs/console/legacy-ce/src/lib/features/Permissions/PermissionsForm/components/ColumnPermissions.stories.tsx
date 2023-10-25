@@ -12,7 +12,6 @@ import {
 const schema = z.object({ columns: z.record(z.optional(z.boolean())) });
 
 export default {
-  title: 'Features/Permissions/Form/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
     ReactQueryDecorator(),

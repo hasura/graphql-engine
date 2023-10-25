@@ -93,6 +93,25 @@ createPermissionMetadata testEnvironment (Types.SelectPermission Types.SelectPer
         allow_aggregations: *selectPermissionAllowAggregations
         limit: *selectPermissionLimit
   |]
+createPermissionMetadata testEnvironment (Types.LogicalModelSelectPermission Types.LogicalModelSelectPermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName =
+        maybe
+          (BackendType.backendSourceName backendTypeMetadata)
+          Text.unpack
+          lmSelectPermissionSource
+      requestType = backendType <> "_create_logical_model_select_permission"
+  [yaml|
+    type: *requestType
+    args:
+      source: *sourceName
+      name: *lmSelectPermissionName
+      role:  *lmSelectPermissionRole
+      permission:
+        columns: *lmSelectPermissionColumns
+        filter: *lmSelectPermissionFilter
+  |]
 createPermissionMetadata testEnvironment (Types.DeletePermission Types.DeletePermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
@@ -153,6 +172,22 @@ dropPermissionMetadata env (Types.SelectPermission Types.SelectPermissionDetails
       table: *qualifiedTable
       source: *sourceName
       role:  *selectPermissionRole
+  |]
+dropPermissionMetadata env (Types.LogicalModelSelectPermission Types.LogicalModelSelectPermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName =
+        maybe
+          (BackendType.backendSourceName backendTypeMetadata)
+          Text.unpack
+          lmSelectPermissionSource
+      requestType = backendType <> "_drop_logical_model_select_permission"
+  [yaml|
+    type: *requestType
+    args:
+      source: *sourceName
+      name: *lmSelectPermissionName
+      role: *lmSelectPermissionRole
   |]
 dropPermissionMetadata env (Types.UpdatePermission Types.UpdatePermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env

@@ -31,14 +31,16 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
     });
   };
 
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, refetch } = useQuery({
     queryKey: FETCH_REGISTRY_SCHEMA_QUERY_NAME,
     queryFn: () => fetchRegistrySchemaQueryFn(schemaId),
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
   });
-
+  React.useEffect(() => {
+    refetch();
+  }, [schemaId]);
   if (isLoading) {
     return {
       kind: 'loading',
@@ -51,7 +53,6 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
       message: 'error',
     };
   }
-
   return {
     kind: 'success',
     response: data.data,

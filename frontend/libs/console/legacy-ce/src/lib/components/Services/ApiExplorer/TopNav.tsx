@@ -3,6 +3,9 @@ import { Link, RouteComponentProps } from 'react-router';
 import { isProConsole } from '../../../utils/proConsole';
 import { useEELiteAccess } from '../../../features/EETrial';
 import globals from '../../../Globals';
+import { IconTooltip } from '../../../new-components/Tooltip';
+import { FaRegMap } from 'react-icons/fa';
+import { sendTelemetryEvent } from '../../../telemetry';
 
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];
@@ -24,6 +27,12 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
         link: '/api/rest',
         dataTestVal: 'rest-explorer-link',
         title: 'REST',
+      },
+      {
+        key: 'schema-registry',
+        link: '/api/schema-registry',
+        dataTestVal: 'schema-registry-link',
+        title: 'Schema Registry',
       },
     ],
     [
@@ -68,13 +77,30 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
             : 'border-white hover:border-gray-100'
         }`}
               key={section.key}
+              onClick={() => {
+                // Send Telemetry data for Schema Registry tab
+                if (section.key === 'schema-registry') {
+                  sendTelemetryEvent({
+                    type: 'CLICK_EVENT',
+                    data: {
+                      id: 'schema-registry-top-nav-tab',
+                    },
+                  });
+                }
+              }}
             >
               <Link
                 to={section.link}
                 data-test={section.dataTestVal}
-                className="text-gray-600 font-semibold no-underline hover:text-gray-600 hover:no-underline focus:text-gray-600 focus:no-underline"
+                className="flex text-gray-600 font-semibold no-underline hover:text-gray-600 hover:no-underline focus:text-gray-600 focus:no-underline"
               >
                 {section.title}
+                {section.key === 'schema-registry' && (
+                  <IconTooltip
+                    icon={<FaRegMap />}
+                    message="Detect breaking and dangerous changes, view schema change history. Keep your GraphQL services safe and reliable! 🚀"
+                  />
+                )}
               </Link>
             </div>
           ))

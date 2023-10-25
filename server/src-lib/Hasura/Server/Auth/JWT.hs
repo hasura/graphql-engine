@@ -138,6 +138,7 @@ instance J.ToJSON JWTClaimsFormat where
 data JWTHeader
   = JHAuthorization
   | JHCookie Text -- cookie name
+  | JHCustomHeader Text -- header name
   deriving (Show, Eq, Generic)
 
 instance Hashable JWTHeader
@@ -148,13 +149,19 @@ instance J.FromJSON JWTHeader where
     if
       | hdrType == "Authorization" -> pure JHAuthorization
       | hdrType == "Cookie" -> JHCookie <$> o J..: "name"
-      | otherwise -> fail "expected 'type' is 'Authorization' or 'Cookie'"
+      | hdrType == "CustomHeader" -> JHCustomHeader <$> o J..: "name"
+      | otherwise -> fail "expected 'type' is 'Authorization' or 'Cookie' or 'CustomHeader'"
 
 instance J.ToJSON JWTHeader where
   toJSON JHAuthorization = J.object ["type" J..= ("Authorization" :: String)]
   toJSON (JHCookie name) =
     J.object
       [ "type" J..= ("Cookie" :: String),
+        "name" J..= name
+      ]
+  toJSON (JHCustomHeader name) =
+    J.object
+      [ "type" J..= ("CustomHeader" :: String),
         "name" J..= name
       ]
 
@@ -537,6 +544,7 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
           case BC.words b' of
             ["Bearer", jwt] -> pure jwt
             _ -> throw400 InvalidHeaders "Malformed Authorization header"
+        (JHCustomHeader _, b') -> pure b'
 
       case (StringOrURI <$> jcxIssuer j, decodeIssuer $ RawJWT $ BLC.fromStrict b'') of
         (Nothing, _) -> pure $ Right (j, b'')
@@ -551,13 +559,22 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
     keyCtxOnAuthTypes :: [JWTCtx] -> HashMap.HashMap AuthTokenLocation [JWTCtx]
     keyCtxOnAuthTypes = HashMap.fromListWith (++) . fmap (expectedHeader &&& pure)
 
-    keyTokensOnAuthTypes :: [HTTP.Header] -> HashMap.HashMap AuthTokenLocation [(AuthTokenLocation, B.ByteString)]
-    keyTokensOnAuthTypes = HashMap.fromListWith (++) . map (fst &&& pure) . concatMap findTokensInHeader
+    getCustomHeaderName :: JWTHeader -> Maybe Text
+    getCustomHeaderName = \case
+      JHCustomHeader headerName -> Just headerName
+      _ -> Nothing
 
-    findTokensInHeader :: Header -> [(AuthTokenLocation, B.ByteString)]
-    findTokensInHeader (key, val)
+    getCustomHeaderNameList = mapMaybe (getCustomHeaderName . fGetHeaderType) jwtCtxs
+
+    keyTokensOnAuthTypes :: [HTTP.Header] -> HashMap.HashMap AuthTokenLocation [(AuthTokenLocation, B.ByteString)]
+    keyTokensOnAuthTypes = HashMap.fromListWith (++) . map (fst &&& pure) . concatMap (findTokensInHeader getCustomHeaderNameList)
+
+    findTokensInHeader :: [Text] -> Header -> [(AuthTokenLocation, B.ByteString)]
+    findTokensInHeader jwtCustomHeaderList (key, val)
       | key == CI.mk "Authorization" = [(JHAuthorization, val)]
       | key == CI.mk "Cookie" = bimap JHCookie T.encodeUtf8 <$> Spock.parseCookies val
+      | key `elem` (map (CI.mk . T.encodeUtf8) jwtCustomHeaderList) =
+          [(JHCustomHeader (T.toLower $ T.decodeUtf8 $ CI.original key), val)]
       | otherwise = []
 
     expectedHeader :: JWTCtx -> AuthTokenLocation
@@ -565,6 +582,7 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
       case fGetHeaderType jwtCtx of
         JHAuthorization -> JHAuthorization
         JHCookie name -> JHCookie name
+        JHCustomHeader name -> JHCustomHeader (T.toLower name)
 
     withAuthZ authzHeader jwtCtx = do
       authMode <- processJwtBytes jwtCtx $ BL.fromStrict authzHeader

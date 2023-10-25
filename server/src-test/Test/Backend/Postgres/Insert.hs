@@ -11,6 +11,7 @@ module Test.Backend.Postgres.Insert
   )
 where
 
+import Data.Aeson (toJSON)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Translate.Insert qualified as Insert
 import Hasura.Prelude
@@ -19,7 +20,7 @@ import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo)
 import Hasura.SQL.Types (toSQLTxt)
-import Test.Backend.Postgres.Misc (PG)
+import Test.Backend.Postgres.Misc (PG, dummyUserInfo)
 import Test.Hspec
 import Test.Parser.Insert qualified as Expect
 import Test.SIString qualified as SI
@@ -55,5 +56,7 @@ runTest TestBuilder {..} =
                 iqbOutput = mutationOutput,
                 iqbAllColumns = columns
               }
-    (SI.fromText . toSQLTxt . Insert.mkInsertCTE @'Vanilla $ ins)
+    insertCTE' <- runExceptT (Insert.mkInsertCTE @'Vanilla dummyUserInfo ins)
+    insertCTE <- onLeft insertCTE' $ error . show . toJSON
+    (SI.fromText . toSQLTxt $ insertCTE)
       `shouldBe` SI.fromText expectedSQL

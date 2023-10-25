@@ -60,6 +60,7 @@ export const MSSQLCreateConnection: StoryObj<typeof ConnectMssqlWidget> = {
       'configuration.connectionInfo.connectionString.connectionType-databaseUrl'
     );
     await expect(databaseUrlOption).toBeInTheDocument();
+    await userEvent.click(databaseUrlOption);
     await expect(databaseUrlOption).toBeChecked();
 
     // Expect the first option to have the following input fields

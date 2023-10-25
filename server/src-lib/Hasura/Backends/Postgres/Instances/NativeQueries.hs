@@ -43,16 +43,17 @@ import Hasura.RQL.Types.Common (SourceName)
 
 -- | Prepare a native query query against a postgres-like database to validate it.
 validateNativeQuery ::
-  forall m pgKind.
+  forall m pgKind sourceConfig.
   (MonadIO m, MonadError QErr m) =>
   InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   SourceName ->
   PG.PostgresConnConfiguration ->
+  sourceConfig ->
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (InterpolatedQuery ArgumentName)
-validateNativeQuery pgTypeOidMapping env sourceName connConf logicalModel nq = do
+validateNativeQuery pgTypeOidMapping env sourceName connConf _sourceConfig logicalModel nq = do
   validateArgumentDeclaration nq
   let nqmCode = trimQueryEnd (_nqmCode nq)
       model = nq {_nqmCode = nqmCode}

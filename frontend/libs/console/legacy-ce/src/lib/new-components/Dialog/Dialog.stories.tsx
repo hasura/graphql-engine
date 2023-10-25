@@ -37,6 +37,7 @@ export const Complete: StoryObj<DialogProps & FooterProps> = {
           onClose={args.onClose}
           onSubmit={args.onSubmit}
           isLoading={args.isLoading}
+          leftContent={args.leftContent}
         />
       </>
     </Dialog>
@@ -49,6 +50,7 @@ export const Complete: StoryObj<DialogProps & FooterProps> = {
     callToAction: 'Submit',
     hasBackdrop: true,
     isLoading: false,
+    leftContent: 'Learn more',
   },
 };
 

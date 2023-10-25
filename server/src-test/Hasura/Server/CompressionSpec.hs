@@ -1,5 +1,6 @@
 module Hasura.Server.CompressionSpec (spec) where
 
+-- reference implementation:
 import Codec.Compression.GZip qualified as GZ
 import Data.ByteString.Lazy qualified as BL
 import Data.Set qualified as Set

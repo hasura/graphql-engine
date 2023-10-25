@@ -14,7 +14,6 @@ module Hasura.Backends.BigQuery.FromIr
   )
 where
 
-import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HashMap
 import Data.Int qualified as Int
@@ -610,7 +609,7 @@ fromSelectArgsG selectArgsG = do
 fromAnnotatedOrderByItemG ::
   Ir.AnnotatedOrderByItemG 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
-  orderByFieldName <- unfurlAnnotatedOrderByElement obiColumn
+  (orderByFieldName, orderByExpression) <- unfurlAnnotatedOrderByElement obiColumn
   let morderByOrder =
         obiType
   let orderByNullsOrder =
@@ -623,10 +622,14 @@ fromAnnotatedOrderByItemG Ir.OrderByItemG {obiType, obiColumn, obiNulls} = do
 -- that are terminated by field name (Ir.AOCColumn and
 -- Ir.AOCArrayAggregation).
 unfurlAnnotatedOrderByElement ::
-  Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
+  Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Expression)
 unfurlAnnotatedOrderByElement =
   \case
-    Ir.AOCColumn columnInfo _redactionExp -> lift (fromColumnInfo columnInfo) -- TODO(redactionExp): Use this redaction expression
+    Ir.AOCColumn columnInfo redactionExp -> lift do
+      fieldName <- fromColumnInfo columnInfo
+      expression <- applyRedaction (Rql.ciColumn columnInfo) redactionExp
+
+      pure (fieldName, expression)
     Ir.AOCObjectRelation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
@@ -743,11 +746,12 @@ unfurlAnnotatedOrderByElement =
                 }
             )
         )
-      pure
-        FieldName
-          { fieldNameEntity = entityAliasText joinAlias,
-            fieldName = alias
-          }
+      let fieldName =
+            FieldName
+              { fieldNameEntity = entityAliasText joinAlias,
+                fieldName = alias
+              }
+      pure (fieldName, ColumnExpression fieldName)
     Ir.AOCComputedField {} -> refute $ pure ComputedFieldsOrderByNotSupported
 
 --------------------------------------------------------------------------------
@@ -822,13 +826,15 @@ fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVColumn columnInfo _redactionExp opExpGs -> do
-      -- TODO(redactionExp): Deal with the redaction expression
-      expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
+    Ir.AVColumn columnInfo redactionExp opExpGs -> do
+      expression <- applyRedaction (Rql.ciColumn columnInfo) redactionExp
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
+
       pure (AndExpression expressions)
     Ir.AVRelationship Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _ ->
       error "fromAnnBoolExpFld RelTargetNativeQuery"
+    Ir.AVRemoteRelationship _ ->
+      error "fromAnnBoolExpFld RemoteRelationship"
     Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
@@ -1010,11 +1016,11 @@ fromAggregateField :: Ir.AggregateField 'BigQuery Expression -> ReaderT EntityAl
 fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
-    Ir.AFCount countType ->
-      CountAggregate <$> case getConst countType of
+    Ir.AFCount (CountType countType) ->
+      CountAggregate <$> case countType of
         StarCountable -> pure StarCountable
-        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
-        DistinctCountable names -> DistinctCountable <$> traverse fromColumn names
+        NonNullFieldCountable names -> NonNullFieldCountable <$> traverse (uncurry applyRedaction) names
+        DistinctCountable names -> DistinctCountable <$> traverse (uncurry applyRedaction) names
     Ir.AFOp Ir.AggregateOp {_aoOp = op, _aoFields = fields} -> do
       fs <- NE.nonEmpty fields `onNothing` refute (pure MalformedAgg)
       args <-
@@ -1022,7 +1028,7 @@ fromAggregateField aggregateField =
           ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
                 case columnField of
-                  Ir.SFCol column _columnType _redactionExp -> fmap ColumnExpression (fromColumn column) -- TODO(redactionExp)
+                  Ir.SFCol column _columnType redactionExp -> applyRedaction column redactionExp
                   Ir.SFExp text -> pure (ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)))
                   -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
                   Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"
@@ -1569,10 +1575,10 @@ fromArrayRelationSelectG annRelationSelectG = do
                               selectProjections select
                                 <> joinFieldProjections
                                 `appendToNonEmpty` foldMap @Maybe
-                                  ( map \OrderBy {orderByFieldName} ->
-                                      FieldNameProjection
+                                  ( map \OrderBy {orderByExpression, orderByFieldName} ->
+                                      ExpressionProjection
                                         Aliased
-                                          { aliasedThing = orderByFieldName,
+                                          { aliasedThing = orderByExpression,
                                             aliasedAlias = fieldName orderByFieldName
                                           }
                                   )
@@ -1862,6 +1868,16 @@ selectProjectionsFromFieldSources keepJoinField fieldSources = do
 
 trueExpression :: Expression
 trueExpression = ValueExpression (TypedValue BoolScalarType (BoolValue True))
+
+applyRedaction :: ColumnName -> Ir.AnnRedactionExp 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
+applyRedaction columnName redaction = do
+  fieldName <- fromColumn columnName
+
+  case redaction of
+    Ir.NoRedaction -> pure (ColumnExpression fieldName)
+    Ir.RedactIfFalse predicate -> do
+      p <- fromAnnBoolExp predicate
+      pure (ConditionalProjection p fieldName)
 
 --------------------------------------------------------------------------------
 -- Constants

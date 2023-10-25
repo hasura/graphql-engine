@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types for BigQuery
 module Hasura.Backends.BigQuery.Types
@@ -12,6 +13,7 @@ module Hasura.Backends.BigQuery.Types
     Cardinality (..),
     ColumnName (ColumnName),
     Countable (..),
+    CountType (..),
     Date (..),
     Datetime (..),
     Decimal (..),
@@ -104,6 +106,8 @@ import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryName)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Backend qualified as Backend
+import Hasura.RQL.Types.BackendType (BackendType (BigQuery))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax hiding (location)
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
@@ -164,12 +168,13 @@ data Reselect = Reselect
   deriving anyclass (Hashable, NFData)
 
 data OrderBy = OrderBy
-  { orderByFieldName :: FieldName,
+  { orderByExpression :: Expression,
+    orderByFieldName :: FieldName,
     orderByOrder :: Order,
     orderByNullsOrder :: NullsOrder
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+  deriving anyclass (Hashable, NFData)
 
 data Order
   = AscOrder
@@ -213,7 +218,7 @@ data WindowFunction
   = -- | ROW_NUMBER() OVER(PARTITION BY field)
     RowNumberOverPartitionBy (NonEmpty FieldName) (Maybe (NonEmpty OrderBy))
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+  deriving anyclass (Hashable, NFData)
 
 data JoinType = LeftOuter | Inner
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
@@ -325,18 +330,45 @@ data JsonPath
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
 data Aggregate
-  = CountAggregate (Countable FieldName)
+  = CountAggregate (Countable Expression)
   | OpAggregates Text (NonEmpty (Text, Expression))
   | OpAggregate Text Expression
   | TextAggregate Text
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
   deriving anyclass (Hashable, NFData)
 
+newtype CountType field = CountType {getCountType :: Countable (ColumnName, AnnRedactionExp 'BigQuery field)}
+
+deriving stock instance (Backend.Backend 'BigQuery) => Foldable CountType
+
+deriving stock instance (Backend.Backend 'BigQuery) => Functor CountType
+
+deriving stock instance (Backend.Backend 'BigQuery) => Traversable CountType
+
+deriving stock instance
+  ( Backend.Backend 'BigQuery,
+    Eq field,
+    Eq (Backend.AggregationPredicates 'BigQuery field),
+    Eq (Backend.BooleanOperators 'BigQuery field),
+    Eq (Backend.FunctionArgumentExp 'BigQuery field)
+  ) =>
+  Eq (CountType field)
+
+deriving stock instance
+  ( Backend.Backend 'BigQuery,
+    Show field,
+    Show (Backend.AggregationPredicates 'BigQuery field),
+    Show (Backend.BooleanOperators 'BigQuery field),
+    Show (Backend.FunctionArgumentExp 'BigQuery field)
+  ) =>
+  Show (CountType field)
+
 data Countable fieldname
   = StarCountable
   | NonNullFieldCountable (NonEmpty fieldname)
   | DistinctCountable (NonEmpty fieldname)
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
+  deriving stock (Foldable, Functor, Traversable)
 
 deriving anyclass instance (FromJSON a) => FromJSON (Countable a)
 

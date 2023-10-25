@@ -131,6 +131,18 @@ If both Admin Secret and Admin Secrets are set, then only Admin Secrets will be 
 
 :::
 
+### Async Actions Fetch Batch Size
+
+The maximum number of async actions to be processed in a single batch.
+
+|                     |                                                 |
+| ------------------- | ----------------------------------------------- |
+| **Flag**            | `--async-actions-fetch-batch-size <BATCH_SIZE>` |
+| **Env var**         | `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_BATCH_SIZE` |
+| **Accepted values** | Integer                                         |
+| **Default**         | `10`                                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud                   |
+
 ### Async Actions Fetch Interval
 
 The interval, in milliseconds, to sleep before trying to fetch [async actions](/actions/async-actions.mdx) again after a
@@ -352,6 +364,18 @@ Sets the maximum cumulative length of all headers in bytes.
 | **Default**         | `1024*1024` (1MB)                        |
 | **Supported in**    | CE, Enterprise Edition                   |
 
+### Enable Error Log Level for Trigger Errors
+
+Sets the log-level as `error` for Trigger type error logs (Event Triggers, Scheduled Triggers, Cron Triggers).
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-triggers-error-log-level`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL` |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition                           |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).
@@ -395,7 +419,7 @@ Enable sending compressed logs to [metrics server](/observability/enterprise-edi
 
 ### Enable Maintenance Mode
 
-Enabling [maintenance mode](/hasura-cloud/projects/maintenance-mode.mdx) disables updating of Metadata on the server.
+Enabling maintenance mode disables updating of Metadata on the server.
 
 |                     |                                             |
 | ------------------- | ------------------------------------------- |
@@ -461,16 +485,17 @@ List of [APIs](/api-reference/overview.mdx) to be enabled on a Hasura GraphQL En
 
 ### Enabled Log Types
 
-List of [log types](/deployment/logging.mdx#log-types) to enable.
+The options below represent log types on the Community Edition. Enterprise-specific log types - and descriptions of all
+log types — can be found [here](/deployment/logging.mdx#log-types).
 
-|                     |                                                       |
-| ------------------- | ----------------------------------------------------- |
-| **Flag**            | `--enabled-log-types <LOG_TYPES>`                     |
-| **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                    |
-| **Accepted values** | String (Comma-separated)                              |
-| **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`       |
-| **Supported in**    | CE, Enterprise Edition                                |
+|                     |                                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flag**            | `--enabled-log-types <LOG_TYPES>`                                                                                                                                                                |
+| **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
+| **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
+| **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh`                                                                                                                                   |
+| **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
 
@@ -518,7 +543,7 @@ List of experimental features to be enabled.
 | **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
 | **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
 | **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
-| **Options**         | `inherited_roles`, `optimise_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
 | **Default**         | `null`                                                                                                                                                                                                                                                            |
 | **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
 
@@ -627,13 +652,13 @@ This variable sets the level for [Hasura's logs](/deployment/logging.mdx#logging
 
 The [maximum cache size](/caching/enterprise-caching.mdx), measured in MB, for queries.
 
-|                     |                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                                   |
-| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                                   |
-| **Accepted values** | Integer (Representing cache size measured in MB)                                                  |
-| **Default**         | `1`                                                                                               |
-| **Supported in**    | **Enterprise Edition**, **Cloud**: Standard / Professional tier is set to `100` MB as the default |
+|                     |                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                        |
+| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                        |
+| **Accepted values** | Integer (Representing cache size measured in MB)                                       |
+| **Default**         | `1`                                                                                    |
+| **Supported in**    | **Enterprise Edition**, **Cloud**: Professional tier is set to `100` MB as the default |
 
 ### Metadata Database Extension Schema
 

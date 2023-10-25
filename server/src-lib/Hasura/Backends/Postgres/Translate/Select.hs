@@ -16,15 +16,20 @@ module Hasura.Backends.Postgres.Translate.Select
     module Aggregate,
     module Connection,
     module Streaming,
-    PostgresAnnotatedFieldJSON,
+    PostgresTranslateSelect,
   )
 where
 
 import Hasura.Backends.Postgres.Translate.Select.Aggregate as Aggregate
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select.Connection as Connection
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect)
 import Hasura.Backends.Postgres.Translate.Select.Simple as Simple
 import Hasura.Backends.Postgres.Translate.Select.Streaming as Streaming
+
+-- This constraint alias makes it easier to add and remove internal SQL translation constraints without
+-- updating every single place this constraint is used upstream of the SQL translation logic.
+type PostgresTranslateSelect pgKind = (PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind)
 
 {- Note: [SQL generation for inherited roles]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

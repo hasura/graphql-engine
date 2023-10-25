@@ -10,7 +10,6 @@ import {
 } from './ClonePermissions';
 
 export default {
-  title: 'Features/Permissions/Form/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
@@ -23,7 +22,12 @@ export default {
 
 export const Default: StoryObj<ClonePermissionsSectionProps> = {
   args: {
-    tables: ['users', 'public'],
+    tables: [
+      {
+        name: 'users',
+        schema: 'public',
+      },
+    ],
     supportedQueryTypes: ['insert', 'select', 'update', 'delete'],
     roles: ['one', 'two'],
   },

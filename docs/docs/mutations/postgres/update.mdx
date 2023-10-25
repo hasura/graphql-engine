@@ -46,7 +46,7 @@ update_article_by_pk (
 As you can see from the schema:
 
 - The `where` argument is compulsory to filter rows to be updated. See
-  [Filter queries](/queries/postgres/query-filters.mdx) for filtering options. Objects can be updated based on filters
+  [Filter queries](/queries/postgres/filters/index.mdx) for filtering options. Objects can be updated based on filters
   on their own fields or those in their nested objects. The `{}` expression can be used to update all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
 
@@ -110,9 +110,8 @@ mutation returns the updated row object or `null` if the row does not exist.
 
 :::info Note
 
-`update_<table>_by_pk` will **only** be available if you have select
-permissions on at least the columns that make up the primary key as well as
-update permissions on at least one column.
+`update_<table>_by_pk` will **only** be available if you have select permissions on at least the columns that make up
+the primary key as well as update permissions on at least one column.
 
 :::
 

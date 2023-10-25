@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTableInfo) where
+module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTableTarget, genTableInfo) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
@@ -89,6 +89,9 @@ spec = do
 
 genTableName :: (MonadGen m) => m TableName
 genTableName = TableName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
+
+genTableTarget :: (MonadGen m) => m Target
+genTableTarget = TTable . TargetTable <$> genTableName
 
 genForeignKeys :: (MonadGen m) => m ForeignKeys
 genForeignKeys = ForeignKeys <$> genHashMap genConstraintName genConstraint defaultRange

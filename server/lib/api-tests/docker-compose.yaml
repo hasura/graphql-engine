@@ -52,14 +52,6 @@ services:
     volumes:
       - mssql-data:/var/opt/mssql
 
-  sqlserver-healthcheck:
-    extends:
-      file: ../../../docker-compose/databases.yaml
-      service: sqlserver-healthcheck
-    depends_on:
-      sqlserver:
-        condition: service_started
-
   dc-reference-agent:
     extends:
       file: ../../../dc-agents/docker-compose.yaml

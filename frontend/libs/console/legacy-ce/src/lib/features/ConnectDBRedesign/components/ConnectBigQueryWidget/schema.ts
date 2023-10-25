@@ -53,12 +53,12 @@ export const getDefaultValues = (
           envVar: '',
         },
         projectId: {
-          type: 'value',
-          value: '',
+          type: 'envVar',
+          envVar: '',
         },
         datasets: {
-          type: 'value',
-          value: '',
+          type: 'envVar',
+          envVar: '',
         },
       },
     };

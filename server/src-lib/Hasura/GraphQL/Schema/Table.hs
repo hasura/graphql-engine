@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema.Table
   )
 where
 
-import Control.Lens ((^?), _1)
+import Control.Lens ((^?))
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
@@ -30,7 +30,9 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel)
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnRedactionExpPartialSQL, AnnRedactionExpUnpreparedValue)
 import Hasura.RQL.Types.Backend
@@ -142,14 +144,14 @@ tableSelectColumnsPredEnum ::
   (ColumnType b -> Bool) ->
   GQLNameIdentifier ->
   TableInfo b ->
-  SchemaT r m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)))
 tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
   customization <- retrieve $ _siCustomization @b
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
       predName' = applyFieldNameCaseIdentifier tCase predName
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- filter (columnPredicate . ciType) . mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  columns <- filter (columnPredicate . ciType . fst) . mapMaybe (\(column, redactionExp) -> (,redactionExp) <$> (column ^? _SCIScalarColumn)) <$> tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
         Just
@@ -162,9 +164,9 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
     $ P.enum enumName description
     <$> nonEmpty
       [ ( define $ ciName column,
-          ciColumn column
+          (ciColumn column, redactionExp)
         )
-        | column <- columns
+        | (column, redactionExp) <- columns
       ]
   where
     define name =
@@ -249,7 +251,9 @@ tableSelectFields tableInfo = do
       canBeSelected role permissions (FIColumn _naiColumnInfo)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       case riTarget relationshipInfo of
-        RelTargetNativeQuery _ -> error "tableSelectFields RelTargetNativeQuery"
+        RelTargetNativeQuery nativeQueryName -> do
+          nativeQueryInfo <- askNativeQueryInfo nativeQueryName
+          pure $! isJust $ getSelPermInfoForLogicalModel @b role (_nqiReturns nativeQueryInfo)
         RelTargetTable tableName -> do
           tableInfo' <- askTableInfo tableName
           pure $! isJust $ tableSelectPermissions @b role tableInfo'

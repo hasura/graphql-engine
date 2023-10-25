@@ -1,0 +1,55 @@
+---
+description: Alerting on Hasura Cloud
+title: Alerting on Hasura Cloud
+sidebar_label: Alerts
+keywords:
+  - hasura
+  - docs
+  - observability
+  - alert
+sidebar_position: 1
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Alerts in Hasura Cloud
+
+<div className="badge-container">
+  <ProductBadge pro ee />
+  <div className="badge badge-gray heading-badge">Beta</div>
+</div>
+
+Hasura Alerts is a feature available to Cloud customers that proactively notifies you about important events and
+incidents in your Hasura infrastructure. It enables you to define specific conditions and thresholds to trigger alerts,
+ensuring you stay informed about critical changes and potential performance and reliability issues in real-time.
+
+:::tip Sign up for the beta
+
+If you want to try out Alerts, sign up for the beta on your [Hasura Cloud dashboard](https://cloud.hasura.io).
+
+:::
+
+### Key benefits
+
+- **Faster Incident Resolution** - By receiving timely alerts, users can quickly identify incidents and take immediate
+  action to address them. This reduces the time it takes to detect and respond to issues, minimizing their impact on
+  system performance and user experience.
+- **Improved Reliability** - By promptly detecting and resolving incidents, Hasura Alerts helps improve the overall
+  reliability. Users can proactively address potential issues before they impact end-users, resulting in enhanced system
+  stability and user satisfaction.
+- **Performance Issue Detection** - Performance issues can arise within or downstream from Hasura infrastructure. With
+  alerting, users can monitor important performance metrics and receive notifications when thresholds are breached. This
+  allows for timely intervention and optimization, ensuring optimal system performance.
+- **Root Cause Identification** - Incidents often have downstream causes that originate from outside the Hasura
+  infrastructure itself. Proactive alerting helps users quickly trace these issues to their root causes, enabling more
+  efficient troubleshooting and resolution.
+
+## Notification channels and integrations
+
+Hasura Alerts support email and Slack notifications. This allows you to receive alerts through preferred communication
+channels, increasing accessibility and response efficiency. The diagram below illustrates the architecture of how alerts
+can be configured. To learn more about how to configure alerts, see
+[this page](/observability/cloud-monitoring/alerting/configure-alerts.mdx).
+
+<Thumbnail src="/img/observability/alerting-architecture.png" alt="Hasura Cloud Alerts architecture" width="1000" />

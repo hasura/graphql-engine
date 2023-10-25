@@ -39,7 +39,6 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
-import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as HashMap
@@ -79,6 +78,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Endpoint as EP
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -142,6 +142,7 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
       MonadBaseControl b,
       MonadReader HandlerCtx,
       MonadError QErr,
+      Tracing.MonadTraceContext,
       MonadTrace,
       HasAppEnv,
       HasCacheStaticConfig,
@@ -166,12 +167,12 @@ instance MonadTrans Handler where
 instance (Monad m) => UserInfoM (Handler m) where
   askUserInfo = asks hcUser
 
-runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
+runHandler :: (MonadIO m, Tracing.MonadTraceContext m, HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
 runHandler logger ctx (Handler r) = do
   handlerLimit <- askHTTPHandlerLimit
   runExceptT (runReaderT (runResourceLimits handlerLimit r) ctx)
     `catch` \errorCallWithLoc@(ErrorCallWithLocation txt _) -> do
-      liftBase $ L.unLogger logger $ L.UnhandledInternalErrorLog errorCallWithLoc
+      L.unLoggerTracing logger $ L.UnhandledInternalErrorLog errorCallWithLoc
       pure
         $ throw500WithDetail "Internal Server Error"
         $ object [("error", fromString txt)]
@@ -301,40 +302,19 @@ mkSpockAction ::
 mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   AppEnv {..} <- lift askAppEnv
   AppContext {..} <- liftIO $ getAppContext appStateRef
+  SchemaCache {..} <- liftIO $ getSchemaCache appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
       pathInfo = Wai.rawPathInfo req
+      propagators = getOtelTracesPropagator scOpenTelemetryConfig
 
   -- Bytes are actually read from the socket here. Time this.
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO do
-    -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
-    -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
-    -- make them 128 bits long.
-    let traceIdMaybe =
-          lookup "X-B3-TraceId" headers >>= \rawTraceId ->
-            if
-              | Char8.length rawTraceId == 32 ->
-                  Tracing.traceIdFromHex rawTraceId
-              | Char8.length rawTraceId == 16 ->
-                  Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
-              | otherwise ->
-                  Nothing
 
-    case traceIdMaybe of
-      Just traceId -> do
-        freshSpanId <- Tracing.randomSpanId
-        let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
-            samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
-        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
-      Nothing -> do
-        freshTraceId <- Tracing.randomTraceId
-        freshSpanId <- Tracing.randomSpanId
-        let samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
-        pure $ Tracing.TraceContext freshTraceId freshSpanId Nothing samplingState
+  tracingCtx <- liftIO $ Tracing.extract propagators headers
 
   let runTrace ::
         forall m1 a1.
@@ -422,7 +402,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allHeaders = [contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
-      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
+      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata True
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
       Spock.lazyBytes jsonResponse
@@ -439,7 +419,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
-      lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
+      lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata True
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
@@ -489,7 +469,6 @@ v1MetadataHandler ::
     MonadEventLogCleanup m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     ProvidesNetwork m,
     MonadGetPolicies m,
     UserInfoM m
@@ -558,7 +537,8 @@ v1Alpha1GQHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   E.GraphQLQueryType ->
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
@@ -587,7 +567,8 @@ v1GQHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -607,7 +588,8 @@ v1GQRelayHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -756,6 +738,7 @@ configApiGetHandler appStateRef = do
                   acEnabledAPIs
                   acDefaultNamingConvention
                   featureFlagSettings
+                  acApolloFederationStatus
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
@@ -767,6 +750,7 @@ data HasuraApp = HasuraApp
 mkWaiApp ::
   forall m impl.
   ( MonadIO m,
+    MonadFail m, -- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681
     MonadFix m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
@@ -775,7 +759,6 @@ mkWaiApp ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -825,7 +808,6 @@ httpApp ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -1092,14 +1074,18 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       let headers = Wai.requestHeaders req
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
-      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+      -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+      -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
+      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m) False
 
     logError err = do
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
-      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
+      -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+      -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m) False
 
     spockAction ::
       forall a.
@@ -1169,7 +1155,9 @@ raiseGenericApiError logger loggingSetting headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
-  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr headers (emptyHttpLogMetadata @m)
+  -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+  -- transfer bytes for requests to undefined resources
+  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr headers (emptyHttpLogMetadata @m) False
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr

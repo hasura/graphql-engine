@@ -1,4 +1,4 @@
-import { FunctionInfo, SchemaResponse, TableName } from "@hasura/dc-api-types"
+import { SchemaRequest, SchemaResponse, TableInfo, TableName } from "@hasura/dc-api-types"
 import { Casing, Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"
@@ -26,7 +26,7 @@ const streamToBuffer = async (stream: stream.Readable): Promise<Buffer> => {
 // Only parse numeric columns as numbers, otherwise you get "number-like" columns like BillingPostCode
 // getting partially parsed as a number or a string depending on the individual postcode
 const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
-  const numericColumns = new Set(schema.tables.flatMap(table => table.columns.filter(c => c.type === "number").map(c => c.name)));
+  const numericColumns = new Set(schema.tables.flatMap(table => (table.columns ?? []).filter(c => c.type === "number").map(c => c.name)));
 
   return (value: string, name: string): any => {
     return numericColumns.has(name)
@@ -139,7 +139,7 @@ const applyCasing = (casing: Casing) => (str: string): string => {
   }
 }
 
-export const getSchema = (store: Record<string, StaticData>, config: Config): SchemaResponse => {
+export const getSchema = (store: Record<string, StaticData>, config: Config, request: SchemaRequest = {}): SchemaResponse => {
   const applyTableNameCasing = applyCasing(config.table_name_casing);
   const applyColumnNameCasing = applyCasing(config.column_name_casing);
 
@@ -155,11 +155,19 @@ export const getSchema = (store: Record<string, StaticData>, config: Config): Sc
     throw new Error(`Couldn't find db store for ${dbName}`);
   }
 
+  const filterForOnlyTheseTables = request.filters?.only_tables
+    // If we're using a schema, only use those table names that belong to that schema
+    ?.filter(n => config.schema ? n.length === 2 && n[0] === config.schema : true)
+    // But the schema is fake, so just keep the actual table name
+    ?.map(n => n[n.length - 1])
+
   const filteredTables = schema.tables.filter(table =>
-    config.tables === null ? true : config.tables.map(n => [n]).find(nameEquals(table.name)) !== undefined
+    config.tables || filterForOnlyTheseTables
+      ? (config.tables ?? []).concat(filterForOnlyTheseTables ?? []).map(n => [n]).find(nameEquals(table.name)) !== undefined
+      : true
   );
 
-  const prefixedTables = filteredTables.map(table => ({
+  const prefixedTables: TableInfo[] = filteredTables.map(table => ({
     ...table,
     name: prefixSchemaToTableName(table.name.map(applyTableNameCasing)),
     primary_key: table.primary_key?.map(applyColumnNameCasing),
@@ -170,17 +178,49 @@ export const getSchema = (store: Record<string, StaticData>, config: Config): Sc
         column_mapping: mapObject(constraint.column_mapping, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
       }))
       : table.foreign_keys,
-    columns: table.columns.map(column => ({
+    columns: table.columns?.map(column => ({
       ...column,
       name: applyColumnNameCasing(column.name),
     }))
   }));
 
-  const prefixedFunctions = (schema.functions ?? []); // TODO: Put some real prefixes here
+  const filterForOnlyTheseFunctions = request.filters?.only_functions
+    // If we're using a schema, only use those function names that belong to that schema
+    ?.filter(n => config.schema ? n.length === 2 && n[0] === config.schema : true)
+    // But the schema is fake, so just keep the actual function name
+    ?.map(n => n[n.length - 1])
 
-  return {
-    ...schema,
-    tables: prefixedTables,
-    functions: prefixedFunctions,
-  };
+  const filteredFunctions = (schema.functions ?? []).filter(func =>
+    filterForOnlyTheseFunctions
+      ? filterForOnlyTheseFunctions.map(n => [n]).find(nameEquals(func.name)) !== undefined
+      : true
+  )
+
+  const prefixedFunctions = filteredFunctions; // TODO: Put some real prefixes here
+
+  const detailLevel = request?.detail_level ?? "everything";
+  switch (detailLevel) {
+    case "everything":
+      return {
+        tables: prefixedTables,
+        functions: prefixedFunctions,
+      };
+
+    case "basic_info":
+      return {
+        tables: prefixedTables.map(table => ({
+          name: table.name,
+          type: table.type
+        })),
+        functions: prefixedFunctions.map(func => ({
+          name: func.name,
+          type: func.type,
+        })),
+      };
+
+    default:
+      return unreachable(detailLevel);
+  }
+
+
 };

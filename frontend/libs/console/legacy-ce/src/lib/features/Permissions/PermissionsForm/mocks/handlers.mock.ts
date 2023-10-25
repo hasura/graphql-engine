@@ -1,10 +1,20 @@
 import { rest } from 'msw';
-import { results } from '../components/RowPermissionsBuilder/mocks';
-import { metadata, metadataTable, capabilitiesResponse } from './dataStubs';
+import {
+  metadata,
+  capabilitiesResponse,
+  config,
+  sourceKinds,
+  tableInfo,
+  sourceTables,
+  introspection,
+} from './dataStubs';
 
 const baseUrl = 'http://localhost:8080';
 
 export const handlers = (url = baseUrl) => [
+  rest.get(`${url}/v1alpha1/config`, async (req, res, ctx) => {
+    return res(ctx.json(config));
+  }),
   rest.post(`${url}/v2/query`, async (req, res, ctx) => {
     const body = (await req.json()) as Record<string, any>;
 
@@ -49,15 +59,20 @@ export const handlers = (url = baseUrl) => [
   rest.post(`${url}/v1/metadata`, async (req, res, ctx) => {
     const body = (await req.json()) as Record<string, any>;
 
-    const getSourceKindCapabilities =
-      body.type === 'get_source_kind_capabilities';
-    if (getSourceKindCapabilities) {
+    if (body.type === 'get_source_kind_capabilities') {
       return res(ctx.json(capabilitiesResponse));
     }
 
-    const isGetTableInfo = body.type === 'get_table_info';
-    if (isGetTableInfo) {
-      return res(ctx.json(metadataTable));
+    if (body.type === 'list_source_kinds') {
+      return res(ctx.json(sourceKinds));
+    }
+
+    if (body.type === 'get_table_info') {
+      return res(ctx.json(tableInfo));
+    }
+
+    if (body.type === 'dataconnector_get_source_tables') {
+      return res(ctx.json(sourceTables));
     }
     if (body.type === 'export_metadata') {
       return res(ctx.json(metadata));
@@ -66,6 +81,6 @@ export const handlers = (url = baseUrl) => [
     return res(ctx.json([{ message: 'success' }]));
   }),
   rest.post(`${url}/v1/graphql`, (req, res, ctx) => {
-    return res(ctx.json(results));
+    return res(ctx.json(introspection));
   }),
 ];

@@ -1,17 +1,15 @@
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React, { useState } from 'react';
-import Skeleton from 'react-loading-skeleton';
-import { useListAllTableColumns } from '../..';
+import { ReactQueryStatusUI, useListAllTableColumns } from '../..';
 import { TableColumn } from '../../../DataSource';
+import { ModifyTableProps } from '../ModifyTable';
 import { ModifyTableColumn } from '../types';
 import { EditTableColumnDialog } from './EditTableColumnDialog/EditTableColumnDialog';
 import { TableColumnDescription } from './TableColumnDescription';
-import { ModifyTableProps } from '../ModifyTable';
 
 type TableColumnProps = ModifyTableProps;
 export const TableColumns: React.VFC<TableColumnProps> = props => {
   const { dataSourceName, table } = props;
-  const { columns, isLoading, isError } = useListAllTableColumns(
+  const { columns, combinedStatus, firstError } = useListAllTableColumns(
     dataSourceName,
     table
   );
@@ -24,13 +22,15 @@ export const TableColumns: React.VFC<TableColumnProps> = props => {
     setIsEditColumnFormActive(false);
   };
 
-  if (isLoading || !columns) return <Skeleton count={5} height={20} />;
-
-  if (isError)
+  // adding a "combinedStatus" as the loading variable before was not taking into account both queries and was not correctly showing a loader
+  if (combinedStatus !== 'success')
     return (
-      <IndicatorCard status="negative" headline="error">
-        Unable to fetch columns
-      </IndicatorCard>
+      <ReactQueryStatusUI
+        error={firstError}
+        status={combinedStatus}
+        loader="skeleton"
+        skeletonProps={{ count: 2, height: 28, width: 400 }}
+      />
     );
 
   return (

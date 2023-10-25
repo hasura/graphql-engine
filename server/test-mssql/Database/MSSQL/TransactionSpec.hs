@@ -253,7 +253,13 @@ runInConn connString query =
 
 createMinimalPool :: ConnectionString -> IO MSSQLPool
 createMinimalPool connString =
-  initMSSQLPool connString $ ConnectionOptions 1 1 5
+  initMSSQLPool connString
+    $ ConnectionOptionsPool
+    $ PoolOptions
+      { poConnections = 1,
+        poStripes = 1,
+        poIdleTime = 5
+      }
 
 invalidSyntaxError :: String
 invalidSyntaxError =

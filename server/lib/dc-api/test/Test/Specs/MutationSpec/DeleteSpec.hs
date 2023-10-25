@@ -12,7 +12,6 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
-import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
 import Test.Data (EdgeCasesTestData (..), TestData (..))
@@ -119,11 +118,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
       let deleteOperation =
             mkDeleteOperation _tdInvoiceLinesTableName
               & dmoWhere ?~ whereExp
-      let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+      let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [DeleteOperation deleteOperation]
-              & mrTableRelationships .~ tableRelationships
+              & mrRelationships .~ tableRelationships
 
       response <- mutationGuarded mutationRequest
 
@@ -139,7 +138,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                     pure $ track ^? Data.field "Composer" . Data._ColumnFieldString /= Just "Eric Clapton"
                 )
 
-      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrRelationships .~ Set.map API.RTable tableRelationships)
+      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrRelationships .~ tableRelationships)
       Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedRemainingRows
 
   for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
@@ -182,11 +181,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                           )
                         )
                       ]
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -246,13 +245,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                       ]
         let tableRelationships =
               Set.fromList
-                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                [ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
                 ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -307,13 +306,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                       ]
         let tableRelationships =
               Set.fromList
-                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                [ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
                 ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -371,13 +370,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                       ]
         let tableRelationships =
               Set.fromList
-                [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                  Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                [ RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
                 ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -453,7 +452,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"

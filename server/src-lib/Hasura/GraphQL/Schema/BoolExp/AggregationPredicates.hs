@@ -74,60 +74,59 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
     . succeedingBranchesNE
     $ arrayRelationships
     <&> \rel -> do
-      relTableName <- case riTarget rel of
-        RelTargetNativeQuery _ -> error "defaultAggregationPredicatesParser RelTargetNativeQuery"
-        RelTargetTable tn -> pure tn
-      relTable <- askTableInfo relTableName
-      selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
-      guard $ spiAllowAgg selectPermissions
-      let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
-      relGqlName <- textToName $ relNameToTxt $ riName rel
-      typeGqlName <- mkTableAggregateBoolExpTypeName <$> getTableIdentifierName relTable
+      case riTarget rel of
+        RelTargetNativeQuery _ -> hoistMaybe Nothing -- aggregations across native queries not implemented yet
+        RelTargetTable relTableName -> do
+          relTable <- askTableInfo relTableName
+          selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
+          guard $ spiAllowAgg selectPermissions
+          let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
+          relGqlName <- textToName $ relNameToTxt $ riName rel
+          typeGqlName <- mkTableAggregateBoolExpTypeName <$> getTableIdentifierName relTable
 
-      -- We only make a field for aggregations over a relation if at least
-      -- some aggregation predicates are callable.
-      relAggregateField rel (C.fromCustomName relGqlName) typeGqlName tCase rowPermissions
-        -- We only return an InputFieldsParser for aggregation predicates,
-        -- if we parse at least one aggregation predicate
-        <$> (collectOptionalFieldsNE . succeedingBranchesNE)
-          ( aggregationFunctions <&> \FunctionSignature {..} -> do
-              let relFunGqlName = mkRelationFunctionIdentifier typeGqlName fnGQLName
-              aggPredicateField fnGQLName typeGqlName tCase <$> unfuse do
-                aggPredArguments <-
-                  -- We only include an aggregation predicate if we are able to
-                  -- access columns all its arguments. This might fail due to
-                  -- permissions or due to no columns of suitable types
-                  -- existing on the table.
-                  case fnArguments of
-                    ArgumentsStar ->
-                      maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
-                        . nonEmpty
-                        -- TODO(redactionExp): Probably need to deal with the redaction expressions from tableSelectColumnsEnum here
-                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list . fmap fst <$> fails (tableSelectColumnsEnum relTable))
-                    SingleArgument typ ->
-                      AggregationPredicateArguments
-                        . (NE.:| [])
-                        <$> fuse
-                          ( P.field Name._arguments Nothing
-                              <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName relTable)
-                          )
-                    Arguments args ->
-                      AggregationPredicateArguments
-                        <$> fuse
-                          ( P.field Name._arguments Nothing
-                              . P.object (applyFieldNameCaseIdentifier tCase (mkRelationFunctionArgumentsFieldName typeGqlName fnGQLName)) Nothing
-                              <$> collectFieldsNE
-                                ( args `for` \ArgumentSignature {..} ->
-                                    P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName relTable)
-                                )
-                          )
+          -- We only make a field for aggregations over a relation if at least
+          -- some aggregation predicates are callable.
+          relAggregateField rel (C.fromCustomName relGqlName) typeGqlName tCase rowPermissions
+            -- We only return an InputFieldsParser for aggregation predicates,
+            -- if we parse at least one aggregation predicate
+            <$> (collectOptionalFieldsNE . succeedingBranchesNE)
+              ( aggregationFunctions <&> \FunctionSignature {..} -> do
+                  let relFunGqlName = mkRelationFunctionIdentifier typeGqlName fnGQLName
+                  aggPredicateField fnGQLName typeGqlName tCase <$> unfuse do
+                    aggPredArguments <-
+                      -- We only include an aggregation predicate if we are able to
+                      -- access columns all its arguments. This might fail due to
+                      -- permissions or due to no columns of suitable types
+                      -- existing on the table.
+                      case fnArguments of
+                        ArgumentsStar ->
+                          maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
+                            . nonEmpty
+                            <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
+                        SingleArgument typ ->
+                          AggregationPredicateArguments
+                            . (NE.:| [])
+                            <$> fuse
+                              ( P.field Name._arguments Nothing
+                                  <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName relTable)
+                              )
+                        Arguments args ->
+                          AggregationPredicateArguments
+                            <$> fuse
+                              ( P.field Name._arguments Nothing
+                                  . P.object (applyFieldNameCaseIdentifier tCase (mkRelationFunctionArgumentsFieldName typeGqlName fnGQLName)) Nothing
+                                  <$> collectFieldsNE
+                                    ( args `for` \ArgumentSignature {..} ->
+                                        P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName relTable)
+                                    )
+                              )
 
-                aggPredDistinct <- fuse $ return $ fieldOptionalDefault Name._distinct Nothing False P.boolean
-                let aggPredFunctionName = fnName
-                aggPredPredicate <- fuse $ P.field Name._predicate Nothing <$> lift (comparisonExps @b (ColumnScalar fnReturnType))
-                aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (tableBoolExp relTable)
-                pure $ AggregationPredicate {..}
-          )
+                    aggPredDistinct <- fuse $ return $ fieldOptionalDefault Name._distinct Nothing False P.boolean
+                    let aggPredFunctionName = fnName
+                    aggPredPredicate <- fuse $ P.field Name._predicate Nothing <$> lift (comparisonExps @b (ColumnScalar fnReturnType))
+                    aggPredFilter <- fuse $ P.fieldOptional Name._filter Nothing <$> lift (tableBoolExp relTable)
+                    pure $ AggregationPredicate {..}
+              )
   where
     -- Input field of the aggregation predicates for one array relation.
     relAggregateField ::

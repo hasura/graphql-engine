@@ -4,13 +4,18 @@
 -- with Postgres sources.
 module Harness.Services.Source.Postgres
   ( withPostgresSource,
+    withPostgresSourceCustomized,
     PostgresSource (..),
+    PostgresSourceCustomization (..),
+    NamingConvention (..),
     withPostgresSchema,
   )
 where
 
+import Control.Lens
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Lens
 import Data.Aeson.Types qualified as J
 import Data.Has
 import Harness.Logging
@@ -42,7 +47,35 @@ withPostgresSource sourceName =
     . ( aroundWith \action (freshDb, env) -> do
           liftIO $ testLogMessage env (logHarness ("adding source.." :: Text))
           let pgUrl = getter env
-          pg_add_source (freshDb, env) sourceName
+          pg_add_source (freshDb, env) sourceName Nothing
+          -- TODO assert that res is a success result
+          -- TODO: use 'managed'?
+          action (PostgresSource sourceName freshDb pgUrl, env)
+      )
+
+data PostgresSourceCustomization = PostgresSourceCustomization
+  { pscNamingConvention :: Maybe NamingConvention
+  }
+
+data NamingConvention = HasuraDefault | GraphQLDefault
+  deriving (Eq, Ord, Enum, Show)
+
+withPostgresSourceCustomized ::
+  ( Has Logger testEnvironment,
+    Has PostgresServerUrl testEnvironment,
+    Has HgeServerInstance testEnvironment
+  ) =>
+  Text ->
+  PostgresSourceCustomization ->
+  SpecWith (PostgresSource, testEnvironment) ->
+  SpecWith testEnvironment
+withPostgresSourceCustomized sourceName customization =
+  describe "Postgres"
+    . withFreshPostgresDb
+    . ( aroundWith \action (freshDb, env) -> do
+          liftIO $ testLogMessage env (logHarness ("adding source.." :: Text))
+          let pgUrl = getter env
+          pg_add_source (freshDb, env) sourceName (Just customization)
           -- TODO assert that res is a success result
           -- TODO: use 'managed'?
           action (PostgresSource sourceName freshDb pgUrl, env)
@@ -108,34 +141,6 @@ trackObjectRelationships (Schema.Table {tableName, tableReferences {-, tableManu
             foreign_key_constraint_on: *referenceLocalColumn
       |]
 
-{-
-for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-  let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-        Just schema -> schema
-        Nothing -> getSchemaName testEnvironment
-      relationshipName = mkObjectRelationshipName ref
-      targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-      manualConfiguration :: J.Value
-      manualConfiguration =
-        J.object
-          [ "remote_table" .= targetTableField,
-            "column_mapping"
-              .= J.object [K.fromText referenceLocalColumn .= referenceTargetColumn]
-          ]
-      payload =
-        [yaml|
-          type: *requestType
-          args:
-            source: *source
-            table: *tableField
-            name: *relationshipName
-            using:
-              manual_configuration: *manualConfiguration
-        |]
-
-  GraphqlEngine.postMetadata_ testEnvironment payload
-  -}
-
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Schema.Reference -> Text
 mkObjectRelationshipName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
@@ -155,22 +160,32 @@ trackArrayRelationships ::
   Schema.Table ->
   env ->
   IO ()
-trackArrayRelationships (Schema.Table {tableName, tableReferences {-, tableManualRelationships-}}) env = do
+trackArrayRelationships (Schema.Table {tableName, tableReferences}) env = do
   let localSchema = getter @SchemaName env
       source = postgresSourceName $ getter @PostgresSource env
       tableField = J.object ["schema" J..= J.String (unSchemaName localSchema), "name" J..= J.String tableName]
 
-  for_ tableReferences $ \Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = localSchema
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = J.object ["schema" J..= J.String (unSchemaName targetSchema), "name" J..= J.String referenceTargetTable]
+  for_ tableReferences
+    $ \Schema.Reference
+         { referenceLocalColumn,
+           referenceTargetTable,
+           referenceTargetColumn,
+           referenceTargetQualifiers
+         } -> do
+        let targetSchema = localSchema
+            relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+            targetTableField =
+              J.object
+                [ "schema" J..= J.String (unSchemaName targetSchema),
+                  "name" J..= J.String referenceTargetTable
+                ]
 
-    hgePost
-      env
-      200
-      "/v1/metadata"
-      []
-      [yaml|
+        hgePost
+          env
+          200
+          "/v1/metadata"
+          []
+          [yaml|
         type: pg_create_array_relationship
         args:
           source: *source
@@ -181,36 +196,6 @@ trackArrayRelationships (Schema.Table {tableName, tableReferences {-, tableManua
               table: *tableField
               column: *referenceLocalColumn
       |]
-
--- Unfinished implementation of manual relationships, to be completed when the need arises.
-{-
-  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-          Just schema -> schema
-          Nothing -> getSchemaName testEnvironment
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-        manualConfiguration :: J.Value
-        manualConfiguration =
-          J.object
-            [ "remote_table"
-                .= tableField,
-              "column_mapping"
-                .= J.object [K.fromText referenceTargetColumn .= referenceLocalColumn]
-            ]
-        payload =
-          [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *targetTableField
-  name: *relationshipName
-  using:
-    manual_configuration: *manualConfiguration
-\|]
-
-    GraphqlEngine.postMetadata_ testEnvironment payload
-    -}
 
 -- | Helper to create the array relationship name
 mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text
@@ -228,11 +213,10 @@ pg_add_source ::
   ) =>
   env ->
   Text ->
+  Maybe PostgresSourceCustomization ->
   IO ()
-pg_add_source env sourceName = do
-  let pgServerUrl = getter env
-      pgDb = getter env
-      pgUrl = mkFreshDbConnectionString pgServerUrl pgDb
+pg_add_source env sourceName maybeCustomization = do
+  let payload = pg_add_source_data env sourceName maybeCustomization
 
   _res <-
     hgePost
@@ -240,17 +224,56 @@ pg_add_source env sourceName = do
       200
       "/v1/metadata"
       []
-      [yaml|
-          args:
-            configuration:
-              connection_info:
-                database_url: *pgUrl
-            name: *sourceName
-          type: pg_add_source
-        |]
+      payload
 
   -- TODO assert that res is a success result
   return ()
+
+pg_add_source_data ::
+  ( Has Logger env,
+    Has PostgresServerUrl env,
+    Has FreshPostgresDb env,
+    Has HgeServerInstance env
+  ) =>
+  env ->
+  Text ->
+  Maybe PostgresSourceCustomization ->
+  J.Value
+pg_add_source_data env sourceName maybeCustomization =
+  let pgServerUrl = getter env
+      pgDb = getter env
+      pgUrl = mkFreshDbConnectionString pgServerUrl pgDb
+
+      configuration =
+        [yaml|
+              connection_info:
+                database_url: *pgUrl
+                |]
+
+      customizationObject :: PostgresSourceCustomization -> J.Value
+      customizationObject
+        PostgresSourceCustomization
+          { pscNamingConvention = maybeNamingConvention
+          } =
+          J.Object mempty
+            -- Set naming conventions if any is given.
+            & atKey "naming_convention" .~ (maybeNamingConvention <&> namingConventionObject)
+
+      namingConventionObject :: NamingConvention -> J.Value
+      namingConventionObject HasuraDefault = "hasura-default"
+      namingConventionObject GraphQLDefault = "graphql-default"
+
+      args =
+        [yaml|
+            configuration: *configuration
+            name: *sourceName
+            |]
+          -- Set the "customization" field if any is given.
+          & atKey "customization" .~ (maybeCustomization <&> customizationObject)
+   in [yaml|
+          args: *args
+          type: pg_add_source
+        |]
 
 pg_track_table ::
   ( HasCallStack,

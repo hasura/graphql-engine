@@ -58,7 +58,7 @@ export const BasicDisplayTest: StoryObj<typeof BrowseRows> = {
         const albumRows = await canvas.findAllByTestId(/^@table-row-.*$/);
         expect(albumRows.length).toBe(10);
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     );
 
     /**

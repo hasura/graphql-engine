@@ -26,6 +26,7 @@ export const DefaultView: StoryObj<typeof NativeQueryRelationshipWidget> = {
   render: () => {
     return (
       <NativeQueryRelationshipWidget
+        mode="create"
         fromNativeQuery="get_authors"
         dataSourceName="chinook"
       />
@@ -42,6 +43,7 @@ export const TestBasicInteraction: StoryObj<
     return (
       <div>
         <NativeQueryRelationshipWidget
+          mode="create"
           fromNativeQuery="get_authors"
           dataSourceName="chinook"
           onSubmit={data => setFormValues(data)}

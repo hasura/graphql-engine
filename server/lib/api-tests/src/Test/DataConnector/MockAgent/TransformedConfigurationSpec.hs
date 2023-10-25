@@ -139,8 +139,8 @@ tests = describe "Transformed Configuration Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                      ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
                     & API.qLimit
                   ?~ 1

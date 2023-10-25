@@ -6,7 +6,8 @@ module Hasura.Backends.DataConnector.Agent.Client
     AgentClientT,
     runAgentClientT,
     capabilities,
-    schema,
+    schemaGet,
+    schemaPost,
     query,
     explain,
     mutation,
@@ -26,7 +27,7 @@ import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
-import Hasura.Tracing (MonadTrace, traceHTTPRequest)
+import Hasura.Tracing (MonadTrace, MonadTraceContext, b3TraceContextPropagator, traceHTTPRequest)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types.Status (Status)
 import Servant.Client
@@ -48,7 +49,7 @@ data AgentClientContext = AgentClientContext
   }
 
 newtype AgentClientT m a = AgentClientT (ReaderT AgentClientContext m a)
-  deriving newtype (Functor, Applicative, Monad, MonadError e, MonadTrace, MonadIO)
+  deriving newtype (Functor, Applicative, Monad, MonadError e, MonadTraceContext, MonadTrace, MonadIO)
 
 runAgentClientT :: AgentClientT m a -> AgentClientContext -> m a
 runAgentClientT (AgentClientT action) ctx = runReaderT action ctx
@@ -72,7 +73,7 @@ runRequestAcceptStatus' acceptStatus req = do
           HTTP.headers
             %= \headers -> maybe headers (\(AgentLicenseKey key) -> ("X-Hasura-License", key) : headers) _accAgentLicenseKey
 
-  (tracedReq, responseOrException) <- traceHTTPRequest transformableReq' \tracedReq ->
+  (tracedReq, responseOrException) <- traceHTTPRequest b3TraceContextPropagator transformableReq' \tracedReq ->
     fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ HTTP.httpLbs tracedReq _accHttpManager
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
@@ -105,9 +106,17 @@ capabilities = do
     defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
     capabilitiesGuard = API.capabilitiesCase defaultAction pure errorAction
 
-schema :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> AgentClientT m API.SchemaResponse
-schema sourceName config = do
-  schemaGuard =<< (genericClient // API._schema) (toTxt sourceName) config
+schemaGet :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> AgentClientT m API.SchemaResponse
+schemaGet sourceName config = do
+  schemaGuard =<< (genericClient // API._schemaGet) (toTxt sourceName) config
+  where
+    errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
+    schemaGuard = API.schemaCase defaultAction pure errorAction
+
+schemaPost :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> API.SchemaRequest -> AgentClientT m API.SchemaResponse
+schemaPost sourceName config schemaRequest = do
+  schemaGuard =<< (genericClient // API._schemaPost) (toTxt sourceName) config schemaRequest
   where
     errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
     defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"

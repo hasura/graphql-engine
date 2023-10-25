@@ -15,6 +15,7 @@ import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { updateSchemaInfo } from '../DataActions';
 import _push from '../push';
 import { useTrackTablesState } from './useTrackTablesState';
+import { ManageTrackedFunctions } from '../../../../features/Data/TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 export const TrackTablesContainer = ({
   dataSourceName,
   schema,
@@ -66,7 +67,7 @@ export const TrackTablesContainer = ({
         title={<div>Untracked tables or views</div>}
         tooltip="Tables or views that are not exposed over the GraphQL API"
         defaultOpen
-        key={`${dataSourceName}-${schema}`}
+        key={`tables-${dataSourceName}-${schema}`}
       >
         <ExperimentalFeatureBanner
           githubIssueLink={
@@ -81,7 +82,7 @@ export const TrackTablesContainer = ({
           introText="Tracking tables adds them to your GraphQL API. All objects will be
           admin-only until permissions have been set."
           learnMoreLink={
-            '"https://hasura.io/docs/latest/schema/postgres/tables/#tracking-tables"'
+            'https://hasura.io/docs/latest/schema/postgres/tables/#tracking-tables'
           }
           isLoading={isMetaLoading || isIntroLoading}
           items={{
@@ -93,6 +94,7 @@ export const TrackTablesContainer = ({
                   dataSourceName={dataSourceName}
                   tables={untrackedTables}
                   onChange={onChange}
+                  trackMultipleEnabled
                   onSingleTableTrack={table => {
                     dispatch(
                       _push(
@@ -116,6 +118,7 @@ export const TrackTablesContainer = ({
                   dataSourceName={dataSourceName}
                   tables={trackedTables}
                   onChange={onChange}
+                  trackMultipleEnabled
                 />
               ),
             },
@@ -126,7 +129,7 @@ export const TrackTablesContainer = ({
         title={<div>Untracked Foreign-key relationships</div>}
         tooltip="Tables or views that are not exposed over the GraphQL API"
         defaultOpen
-        key={`${dataSourceName}-${schema}`}
+        key={`relationships-${dataSourceName}-${schema}`}
       >
         <ExperimentalFeatureBanner
           githubIssueLink={
@@ -134,6 +137,22 @@ export const TrackTablesContainer = ({
           }
         />
         <ManageSuggestedRelationships
+          dataSourceName={dataSourceName}
+          schema={schema}
+        />
+      </CollapsibleResource>
+      <CollapsibleResource
+        title={<div>Untracked custom functions</div>}
+        tooltip="Custom functions that are not exposed over the GraphQL APICustom"
+        defaultOpen
+        key={`${dataSourceName}-${schema}`}
+      >
+        <ExperimentalFeatureBanner
+          githubIssueLink={
+            'https://github.com/hasura/graphql-engine/discussions/9727'
+          }
+        />
+        <ManageTrackedFunctions
           dataSourceName={dataSourceName}
           schema={schema}
         />

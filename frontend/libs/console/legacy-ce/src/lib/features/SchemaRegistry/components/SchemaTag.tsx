@@ -25,12 +25,14 @@ export const SchemaTag: React.FC<TagProps> = props => {
   return (
     <div
       data-testid="tag"
-      className="inline-flex items-center px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold"
+      className="inline-flex items-center px-xs py-0.5 rounded text-sm tracking-wide font-semibold"
       style={{ backgroundColor: rgbaColorValue }}
     >
-      <div style={{ color: color }}>{name}</div>
+      <div style={{ color: color }} className="mr-xs">
+        {name}
+      </div>
       <FaTimes
-        className="fill-current cursor-pointer text-muted hover:text-gray-800 ml-2"
+        className="fill-current cursor-pointer text-muted hover:text-gray-800 mt-[1px]"
         onClick={onDelete}
       />
     </div>

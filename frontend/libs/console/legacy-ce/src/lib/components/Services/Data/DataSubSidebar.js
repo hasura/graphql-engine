@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -23,6 +23,8 @@ import { Button } from '../../../new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
+import useCustomCompareEffect from '../../../hooks/useCustomCompareEffect';
+import isEqual from 'lodash/isEqual';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -207,43 +209,80 @@ const DataSubSidebar = props => {
 
   const { handleClick } = useGDCTreeItemClick(dispatch);
 
-  useEffect(() => {
-    // skip api call, if the data is there in store
-    if (canReUseTableTypes(allSourcesSchemas, sources)) {
-      const newItems = getItems(allSourcesSchemas);
-      if (isFetching) setIsFetching(false);
-      if (preLoadState) setPreLoadState(false);
-      return setTreeViewItems(newItems);
-    }
+  useCustomCompareEffect(
+    () => {
+      // skip api call, if the data is there in store
+      if (canReUseTableTypes(allSourcesSchemas, sources)) {
+        const newItems = getItems(allSourcesSchemas);
+        if (isFetching) setIsFetching(false);
+        if (preLoadState) setPreLoadState(false);
+        return setTreeViewItems(newItems);
+      }
 
-    const schemaRequests = [];
-    sources.forEach(source => {
-      const currentSourceTables = sources
-        .filter(i => i.name === source.name)[0]
-        .tables.map(t => t.table);
-      schemaRequests.push({
-        sourceType: source.kind,
-        sourceName: source.name,
-        tables: currentSourceTables,
+      const schemaRequests = [];
+      sources.forEach(source => {
+        const currentSourceTables = sources
+          .filter(i => i.name === source.name)[0]
+          .tables.map(t => t.table);
+        schemaRequests.push({
+          sourceType: source.kind,
+          sourceName: source.name,
+          tables: currentSourceTables,
+        });
       });
-    });
-    setIsFetching(true);
+      setIsFetching(true);
 
-    if (schemaRequests.length === 0) {
-      setIsFetching(false);
-      setPreLoadState(false);
-      return;
-    }
-
-    dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
-      schemaInfo => {
+      if (schemaRequests.length === 0) {
         setIsFetching(false);
         setPreLoadState(false);
-        const newItems = getItems(schemaInfo);
-        setTreeViewItems(newItems);
+        return;
       }
-    );
-  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
+
+      dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
+        schemaInfo => {
+          setIsFetching(false);
+          setPreLoadState(false);
+          const newItems = getItems(schemaInfo);
+          setTreeViewItems(newItems);
+        }
+      );
+    },
+    {
+      sources,
+      tables,
+      functions,
+      enums,
+      schemaList,
+      currentTable,
+    },
+    (newValue, oldValue) => {
+      // Custom check for sources names
+      const newSourceNames = newValue?.sources?.map(i => i.name);
+      const oldSourceNames = oldValue?.sources?.map(i => i.name);
+      const sourcesNamesNotChanged = isEqual(newSourceNames, oldSourceNames);
+
+      // Standard checks for other values previously watched
+      const sourcesLengthNotChanged =
+        newValue?.sources?.length === oldValue?.sources?.length;
+      const tablesNotChanged = newValue?.tables === oldValue?.tables;
+      const functionsNotChanged = newValue?.functions === oldValue?.functions;
+      const enumsNotChanged = newValue?.enums === oldValue?.enums;
+      const schemaListNotChanged =
+        newValue?.schemaList === oldValue?.schemaList;
+      const currentTableNotChanged =
+        newValue?.currentTable === oldValue?.currentTable;
+
+      return (
+        sourcesNamesNotChanged &&
+        sourcesLengthNotChanged &&
+        tablesNotChanged &&
+        functionsNotChanged &&
+        enumsNotChanged &&
+        schemaListNotChanged &&
+        currentTableNotChanged
+      );
+    }
+  );
 
   const databasesCount = metadataSources.length;
 

@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import type { RelationshipType } from './RelationshipType';
-import type { TableName } from './TableName';
+import type { Target } from './Target';
 
 export type Relationship = {
   /**
@@ -11,6 +11,6 @@ export type Relationship = {
    */
   column_mapping: Record<string, string>;
   relationship_type: RelationshipType;
-  target_table: TableName;
+  target: Target;
 };
 

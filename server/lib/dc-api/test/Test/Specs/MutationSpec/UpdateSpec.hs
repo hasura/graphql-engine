@@ -13,7 +13,6 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (catMaybes, mapMaybe, maybeToList)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
-import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -100,11 +99,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
             mkUpdateOperation _tdArtistsTableName
               & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Metalika")]
               & umoWhere ?~ whereExp
-      let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+      let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [UpdateOperation updateOperation]
-              & mrTableRelationships .~ tableRelationships
+              & mrRelationships .~ tableRelationships
 
       response <- mutationGuarded mutationRequest
 
@@ -125,7 +124,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 )
               & fmap (\artist -> artist & Data.field "Name" . Data._ColumnFieldString .~ "Metalika")
 
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrRelationships .~ Set.map API.RTable tableRelationships)
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrRelationships .~ tableRelationships)
       Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "can set the value of a column differently using multiple operations" $ do
@@ -365,11 +364,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -386,7 +385,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let invoiceLineIds = expectedModifiedRows & mapMaybe (^? Data.field "InvoiceLineId" . Data._ColumnFieldNumber) & fmap J.Number
         let alternateWhereExp = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) invoiceLineIds invoiceLineIdScalarType
 
-        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrRelationships .~ Set.map API.RTable tableRelationships)
+        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrRelationships .~ tableRelationships)
         Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedModifiedRows
 
       usesDataset chinookTemplate $ it "fails to update when post update check against related table fails" $ do
@@ -399,11 +398,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationExpectError mutationRequest
 
@@ -474,11 +473,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -525,11 +524,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -568,11 +567,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -635,13 +634,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                       ]
         let tableRelationships =
               Set.fromList
-                [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                  Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                [ RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
                 ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -719,7 +718,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     artistsQueryRequest :: Expression -> QueryRequest
     artistsQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ artistsFields & qWhere ?~ whereExp
-       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     invoiceLinesFields :: HashMap FieldName Field
     invoiceLinesFields =
@@ -734,7 +733,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     invoiceLinesQueryRequest :: Expression -> QueryRequest
     invoiceLinesQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qWhere ?~ whereExp
-       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty mempty query Nothing
 
     incOperator :: UpdateColumnOperatorName
     incOperator = UpdateColumnOperatorName $ [G.name|inc|]

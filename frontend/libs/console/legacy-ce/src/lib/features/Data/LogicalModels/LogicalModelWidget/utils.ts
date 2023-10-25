@@ -7,8 +7,5 @@ export const supportsSchemaLessTables = (
   if (capabilities === Feature.NotImplemented) {
     return false;
   }
-  return (
-    // @ts-expect-error Remove once dc-api-types is updated
-    capabilities?.data_schema?.supports_schemaless_tables ?? false
-  );
+  return capabilities?.data_schema?.supports_schemaless_tables ?? false;
 };

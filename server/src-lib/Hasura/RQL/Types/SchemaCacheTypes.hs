@@ -29,7 +29,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Base.Error
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelLocation, LogicalModelName)
 import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (PartialSQLExp)
@@ -79,7 +79,6 @@ instance (Backend b) => Hashable (LogicalModelObjId b)
 -- that the two columns that join an array relationship actually exist.
 data NativeQueryObjId (b :: BackendType)
   = NQOCol (Column b)
-  | NQOReferencedLogicalModel LogicalModelName
   deriving (Generic)
 
 deriving instance (Backend b) => Eq (NativeQueryObjId b)
@@ -107,7 +106,7 @@ data SourceObjId (b :: BackendType)
   | SOIStoredProcedure (FunctionName b)
   | SOIStoredProcedureObj (FunctionName b) (StoredProcedureObjId b)
   | SOILogicalModel LogicalModelName
-  | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
+  | SOILogicalModelObj LogicalModelLocation (LogicalModelObjId b)
   deriving (Eq, Generic)
 
 instance (Backend b) => Hashable (SourceObjId b)
@@ -139,8 +138,6 @@ reportSchemaObj = \case
         SOINativeQuery nqn -> "native query " <> toTxt nqn
         SOINativeQueryObj nqn (NQOCol cn) ->
           "column " <> toTxt nqn <> "." <> toTxt cn
-        SOINativeQueryObj nqn (NQOReferencedLogicalModel inner) ->
-          "inner logical model " <> toTxt nqn <> "." <> toTxt inner
         SOIStoredProcedure spn -> "stored procedure " <> toTxt spn
         SOIStoredProcedureObj spn (SPOCol cn) ->
           "column " <> toTxt spn <> "." <> toTxt cn

@@ -81,10 +81,12 @@ export const useSuggestedRelationships = ({
 }) => {
   const httpClient = useHttpClient();
 
-  const { data: { source, fkRels = [] } = {} } = useMetadata(m => ({
-    fkRels: MetadataSelectors.getForeignKeyRelationships(dataSourceName)(m),
-    source: MetadataSelectors.findSource(dataSourceName)(m),
-  }));
+  const { data: { source, fkRels = [] } = {}, isFetching } = useMetadata(m => {
+    return {
+      fkRels: MetadataSelectors.getForeignKeyRelationships(dataSourceName)(m),
+      source: MetadataSelectors.findSource(dataSourceName)(m),
+    };
+  });
 
   const selector = useCallback(
     (data: QueryReturnType) => {
@@ -125,6 +127,7 @@ export const useSuggestedRelationships = ({
   const query = useConsoleQuery<QueryReturnType, SelectReturnType>({
     queryKey: [dataSourceName, QUERY_KEY],
     select: selector,
+    enabled: !isFetching,
     queryFn: async () => {
       if (!source)
         throw Error(`Unable to find source, "${dataSourceName}" in metadata`);

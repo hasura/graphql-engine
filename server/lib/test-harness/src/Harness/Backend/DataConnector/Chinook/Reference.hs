@@ -35,6 +35,7 @@ backendTypeConfig =
             data_schema:
               supports_primary_keys: true
               supports_foreign_keys: true
+            post_schema: {}
             queries:
               foreach: {}
             relationships: {}
@@ -79,7 +80,8 @@ backendTypeConfig =
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
       backendSchemaKeyword = "schema",
-      backendScalarType = const ""
+      backendScalarType = const "",
+      backendGraphQLType = const ""
     }
 
 --------------------------------------------------------------------------------

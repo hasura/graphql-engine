@@ -931,5 +931,6 @@ recreateSystemMetadata = do
     manualConfig schemaName tableName columns =
       RUManual
         $ RelManualTableConfig
+        $ RelManualTableConfigC
           (QualifiedObject schemaName tableName)
           (RelManualCommon (HashMap.fromList columns) Nothing)

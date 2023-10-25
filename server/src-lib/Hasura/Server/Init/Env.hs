@@ -378,3 +378,6 @@ instance FromEnv GranularPrometheusMetricsState where
 
 instance FromEnv Server.Types.CloseWebsocketsOnMetadataChangeStatus where
   fromEnv = fmap (bool Server.Types.CWMCDisabled Server.Types.CWMCEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.TriggersErrorLogLevelStatus where
+  fromEnv = fmap (bool Server.Types.TriggersErrorLogLevelDisabled Server.Types.TriggersErrorLogLevelEnabled) . fromEnv @Bool

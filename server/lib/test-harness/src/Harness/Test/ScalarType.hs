@@ -127,6 +127,7 @@ defaultBackendScalarValue =
 -- a future iteration.
 data ScalarType
   = TInt
+  | TDouble
   | TStr
   | TUTCTime
   | TBool
@@ -138,6 +139,7 @@ data ScalarType
 -- to 'ScalarType'
 data ScalarValue
   = VInt Int
+  | VDouble Double
   | VStr Text
   | VUTCTime UTCTime
   | VBool Bool

@@ -181,8 +181,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.singleton albumsInsertSchema
+                & mrRelationships .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships)
 
         response <- mutationGuarded mutationRequest
 
@@ -210,8 +210,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.singleton albumsInsertSchema
+                & mrRelationships .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships)
 
         response <- mutationExpectError mutationRequest
         _crType response `shouldBe` MutationPermissionCheckFailure
@@ -236,8 +236,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.singleton albumsInsertSchema
+                & mrRelationships .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships)
 
         response <- mutationGuarded mutationRequest
 
@@ -264,8 +264,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.singleton albumsInsertSchema
+                & mrRelationships .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships)
 
         response <- mutationExpectError mutationRequest
         _crType response `shouldBe` MutationPermissionCheckFailure
@@ -346,8 +346,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.singleton albumsInsertSchema
+                & mrRelationships .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships)
 
         response <- mutationGuarded mutationRequest
 
@@ -410,8 +410,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
                 & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
-                & mrTableRelationships
-                  .~ Set.fromList [Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]
+                & mrRelationships
+                  .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships)
 
         response <- mutationGuarded mutationRequest
 
@@ -475,8 +475,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
                 & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
-                & mrTableRelationships
-                  .~ Set.fromList [Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]
+                & mrRelationships
+                  .~ Set.singleton (RTable $ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships)
 
         response <- mutationGuarded mutationRequest
 
@@ -543,10 +543,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
                 & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
-                & mrTableRelationships
+                & mrRelationships
                   .~ Set.fromList
-                    [ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
-                      Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+                    [ RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
+                      RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
                     ]
 
         response <- mutationGuarded mutationRequest
@@ -717,7 +717,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdArtistsTableName (expectedInsertedArtists artistsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (J.Number . fromInteger <$> artistIds) artistIdScalarType
-       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     albumsQueryRequest :: [Integer] -> QueryRequest
     albumsQueryRequest albumIds =
@@ -725,7 +725,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdAlbumsTableName (expectedInsertedAcdcAlbums albumsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (J.Number . fromInteger <$> albumIds) albumIdScalarType
-       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
+       in TableQueryRequest _tdAlbumsTableName mempty mempty mempty query Nothing
 
     employeesQueryRequest :: [Integer] -> QueryRequest
     employeesQueryRequest employeeIds =
@@ -733,7 +733,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdEmployeesTableName (expectedInsertedEmployees employeesStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "EmployeeId" albumIdScalarType) (J.Number . fromInteger <$> employeeIds) employeeIdScalarType
-       in TableQueryRequest _tdEmployeesTableName mempty query Nothing
+       in TableQueryRequest _tdEmployeesTableName mempty mempty mempty query Nothing
 
     artistsInsertSchema :: TableInsertSchema
     artistsInsertSchema = _tdMkDefaultTableInsertSchema _tdArtistsTableName

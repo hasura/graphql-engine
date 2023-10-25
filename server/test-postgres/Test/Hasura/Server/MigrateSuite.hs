@@ -33,6 +33,7 @@ import Hasura.Server.Migrate
 import Hasura.Server.Types
 import Hasura.Services.Network
 import Hasura.Session
+import Hasura.Tracing qualified as Tracing
 import Test.Hspec.Core.Spec
 import Test.Hspec.Expectations.Lifted
 
@@ -61,6 +62,9 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: (CacheDynamicConfig, MVar Reb
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
 
+instance (Tracing.MonadTraceContext m) => Tracing.MonadTraceContext (CacheRefT m) where
+  currentContext = lift Tracing.currentContext
+
 instance MFunctor CacheRefT where
   hoist f (CacheRefT m) = CacheRefT (f . m)
 
@@ -74,7 +78,8 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRefT m) where
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
 instance
-  ( MonadIO m,
+  ( Tracing.MonadTraceContext m,
+    MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadMetadataStorage m,
@@ -107,7 +112,8 @@ singleTransaction = id
 
 suite ::
   forall m.
-  ( MonadIO m,
+  ( Tracing.MonadTraceContext m,
+    MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
     MonadResolveSource m,
@@ -125,7 +131,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
   let logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
         t <- liftIO $ getFormattedTime Nothing
-        liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
+        liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail Nothing Nothing
 
       migrateCatalogAndBuildCache env time = do
         dynamicConfig <- asks fst

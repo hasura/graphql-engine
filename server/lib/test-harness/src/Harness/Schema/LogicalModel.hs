@@ -7,6 +7,7 @@ module Harness.Schema.LogicalModel
     LogicalModelColumn (..),
     logicalModel,
     logicalModelScalar,
+    logicalModelArrayScalar,
     logicalModelArrayReference,
     logicalModelObjectReference,
     trackLogicalModel,
@@ -14,6 +15,7 @@ module Harness.Schema.LogicalModel
     untrackLogicalModel,
     untrackLogicalModelCommand,
     logicalModelColumnToJSON,
+    makeNullable,
   )
 where
 
@@ -29,57 +31,93 @@ import Harness.Test.ScalarType
 import Harness.TestEnvironment (TestEnvironment, getBackendTypeConfig)
 import Hasura.Prelude
 
-data ReferenceType = ArrayReference | ObjectReference
+data LogicalModelColumn = LogicalModelColumn
+  { logicalModelColumnName :: Text,
+    logicalModelColumnDescription :: Maybe Text,
+    logicalModelColumnType :: LogicalModelType
+  }
   deriving (Show, Eq)
 
-instance J.ToJSON ReferenceType where
-  toJSON ArrayReference = "array"
-  toJSON ObjectReference = "object"
-
--- | this no longer matches the internal shape of logical models, where arrays
--- can nest objects OR scalars
--- however, we can defer changing this abstraction until we need to express
--- that in our tests
-data LogicalModelColumn
+data LogicalModelType
   = LogicalModelScalar
-      { logicalModelColumnName :: Text,
-        logicalModelColumnType :: ScalarType,
-        logicalModelColumnNullable :: Bool,
-        logicalModelColumnDescription :: Maybe Text
+      { logicalModelTypeScalar :: ScalarType,
+        logicalModelTypeNullable :: Bool
       }
   | LogicalModelReference
-      { logicalModelColumnName :: Text,
-        logicalModelColumnReference :: Text,
-        logicalModelColumnNullable :: Bool,
-        logicalModelColumnReferenceType :: ReferenceType
+      { logicalModelTypeReference :: Text,
+        logicalModelTypeNullable :: Bool
+      }
+  | LogicalModelArray
+      { logicalModelTypeArray :: LogicalModelType,
+        logicalModelTypeNullable :: Bool
       }
   deriving (Show, Eq)
+
+makeNullable :: LogicalModelColumn -> LogicalModelColumn
+makeNullable (LogicalModelColumn {logicalModelColumnName, logicalModelColumnDescription, logicalModelColumnType}) =
+  LogicalModelColumn
+    { logicalModelColumnName,
+      logicalModelColumnDescription,
+      logicalModelColumnType = case logicalModelColumnType of
+        LogicalModelScalar scalar _ -> LogicalModelScalar scalar True
+        LogicalModelReference ref _ -> LogicalModelReference ref True
+        LogicalModelArray arr _ -> LogicalModelArray arr True
+    }
 
 logicalModelScalar :: Text -> ScalarType -> LogicalModelColumn
 logicalModelScalar name colType =
-  LogicalModelScalar
+  LogicalModelColumn
     { logicalModelColumnName = name,
-      logicalModelColumnType = colType,
-      logicalModelColumnNullable = False,
-      logicalModelColumnDescription = Nothing
+      logicalModelColumnDescription = Nothing,
+      logicalModelColumnType =
+        LogicalModelScalar
+          { logicalModelTypeScalar = colType,
+            logicalModelTypeNullable = False
+          }
+    }
+
+logicalModelArrayScalar :: Text -> ScalarType -> LogicalModelColumn
+logicalModelArrayScalar name colType =
+  LogicalModelColumn
+    { logicalModelColumnName = name,
+      logicalModelColumnDescription = Nothing,
+      logicalModelColumnType =
+        LogicalModelArray
+          { logicalModelTypeArray =
+              LogicalModelScalar
+                { logicalModelTypeScalar = colType,
+                  logicalModelTypeNullable = False
+                },
+            logicalModelTypeNullable = False
+          }
     }
 
 logicalModelArrayReference :: Text -> Text -> LogicalModelColumn
 logicalModelArrayReference name ref =
-  LogicalModelReference
+  LogicalModelColumn
     { logicalModelColumnName = name,
-      logicalModelColumnReference = ref,
-      logicalModelColumnNullable = False,
-      logicalModelColumnReferenceType = ArrayReference
+      logicalModelColumnDescription = Nothing,
+      logicalModelColumnType =
+        LogicalModelArray
+          { logicalModelTypeNullable = False,
+            logicalModelTypeArray =
+              LogicalModelReference
+                { logicalModelTypeReference = ref,
+                  logicalModelTypeNullable = False
+                }
+          }
     }
 
 logicalModelObjectReference :: Text -> Text -> LogicalModelColumn
 logicalModelObjectReference name ref =
-  LogicalModelReference
+  LogicalModelColumn
     { logicalModelColumnName = name,
-      logicalModelColumnReference = ref,
-      logicalModelColumnNullable = False,
-      logicalModelColumnReferenceType = ObjectReference
+      logicalModelColumnDescription = Nothing,
+      logicalModelColumnType =
+        LogicalModelReference
+          { logicalModelTypeReference = ref,
+            logicalModelTypeNullable = False
+          }
     }
 
 data LogicalModel = LogicalModel
@@ -98,55 +136,40 @@ logicalModel logicalModelName =
     }
 
 logicalModelColumnToJSON :: BackendTypeConfig -> LogicalModelColumn -> Value
-logicalModelColumnToJSON backendTypeConfig =
+logicalModelColumnToJSON backendTypeConfig (LogicalModelColumn {..}) =
+  let descriptionPair = case logicalModelColumnDescription of
+        Just desc -> [("description" .= desc)]
+        Nothing -> []
+   in J.object
+        $ [ ("name" .= logicalModelColumnName),
+            ("type" .= logicalModelTypeToJSON backendTypeConfig logicalModelColumnType)
+          ]
+        <> descriptionPair
+
+logicalModelTypeToJSON :: BackendTypeConfig -> LogicalModelType -> Value
+logicalModelTypeToJSON backendTypeConfig =
   ( \case
       LogicalModelReference
-        { logicalModelColumnReferenceType = ObjectReference,
-          logicalModelColumnReference,
-          logicalModelColumnName,
-          logicalModelColumnNullable
+        { logicalModelTypeReference,
+          logicalModelTypeNullable
         } ->
           J.object
-            $ [ ("name" .= logicalModelColumnName),
-                ( "type",
-                  J.object
-                    [ "logical_model" .= logicalModelColumnReference,
-                      "nullable" .= logicalModelColumnNullable
-                    ]
-                )
-              ]
-      LogicalModelReference
-        { logicalModelColumnReferenceType = ArrayReference,
-          logicalModelColumnReference,
-          logicalModelColumnName,
-          logicalModelColumnNullable
+            [ "logical_model" .= logicalModelTypeReference,
+              "nullable" .= logicalModelTypeNullable
+            ]
+      LogicalModelArray
+        { logicalModelTypeArray,
+          logicalModelTypeNullable
         } ->
           J.object
-            $ [ ("name" .= logicalModelColumnName),
-                ( "type",
-                  J.object
-                    $ [ ( "array",
-                          J.object
-                            $ [ ("logical_model" .= logicalModelColumnReference)
-                              ]
-                        ),
-                        "nullable" .= logicalModelColumnNullable
-                      ]
-                )
+            $ [ ("nullable" .= logicalModelTypeNullable),
+                ("array", logicalModelTypeToJSON backendTypeConfig logicalModelTypeArray)
               ]
-      LogicalModelScalar {..} ->
-        let descriptionPair = case logicalModelColumnDescription of
-              Just desc -> [("description" .= desc)]
-              Nothing -> []
-         in -- this is the old way to encode these, but we'll keep using
-            -- in the tests for now to ensure we remain backwards
-            -- compatible
-            J.object
-              $ [ ("name" .= logicalModelColumnName),
-                  ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
-                  ("nullable" .= logicalModelColumnNullable)
-                ]
-              <> descriptionPair
+      LogicalModelScalar {logicalModelTypeScalar, logicalModelTypeNullable} ->
+        J.object
+          $ [ ("scalar" .= (BackendType.backendScalarType backendTypeConfig) logicalModelTypeScalar),
+              ("nullable" .= logicalModelTypeNullable)
+            ]
   )
 
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value

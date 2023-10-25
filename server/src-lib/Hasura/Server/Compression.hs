@@ -12,7 +12,8 @@ module Hasura.Server.Compression
   )
 where
 
-import Codec.Compression.GZip qualified as GZ
+import Codec.Compression.LibDeflate.GZip qualified as GZ
+import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -53,10 +54,10 @@ compressResponse reqHeaders unCompressedResp
   | acceptedEncodings == Set.fromList [identityEncoding, Just CTGZip] =
       if shouldSkipCompression unCompressedResp
         then notCompressed
-        else (compressFast CTGZip unCompressedResp, Just CTGZip)
+        else (compressSmart CTGZip unCompressedResp, Just CTGZip)
   -- we MUST gzip:
   | acceptedEncodings == Set.fromList [Just CTGZip] =
-      (compressFast CTGZip unCompressedResp, Just CTGZip)
+      (compressSmart CTGZip unCompressedResp, Just CTGZip)
   -- we must ONLY return an uncompressed response:
   | acceptedEncodings == Set.fromList [identityEncoding] =
       notCompressed
@@ -68,14 +69,21 @@ compressResponse reqHeaders unCompressedResp
     acceptedEncodings = getAcceptedEncodings reqHeaders
     notCompressed = (unCompressedResp, identityEncoding)
 
--- | Compress the bytestring preferring speed over compression ratio
+-- | Compress the lazy bytestring preferring speed over compression ratio
 compressFast :: CompressionType -> BL.ByteString -> BL.ByteString
 compressFast = \case
-  CTGZip -> GZ.compressWith gzipCompressionParams
+  -- See Note [Compression ratios]
+  CTGZip -> BL.fromStrict . flip GZ.gzipCompressSimple 1 . BL.toStrict
+
+-- | Compress the lazy bytestring choosing a compression ratio based on size of input
+compressSmart :: CompressionType -> BL.ByteString -> BL.ByteString
+compressSmart CTGZip inpLBS
+  -- See Note [Compression ratios]
+  | BS.length inpBS > 20000 = gz 6
+  | otherwise = gz 1
   where
-    gzipCompressionParams =
-      -- See Note [Compression ratios]
-      GZ.defaultCompressParams {GZ.compressLevel = GZ.compressionLevel 1}
+    inpBS = BL.toStrict inpLBS
+    gz = BL.fromStrict . GZ.gzipCompressSimple inpBS
 
 -- | Assuming we have the option to compress or not (i.e. client accepts
 -- identity AND gzip), should we skip compression?
@@ -175,7 +183,7 @@ I didn't test higher compression levels much, but `gzip -4` for the most part
 resulted in less than 10% smaller output on random json, and ~30% on our highly
 compressible benchmark output.
 
-UPDATE (12/5):
+UPDATE (12/5/2022):
 ~~~~~~~~~~~~~
 
 Some recent data on compression ratios for graphql responsed (here as:
@@ -198,5 +206,16 @@ Aggregate across responses where uncompressed > 17K bytes (90th percentile):
     p75:    0.202
     p50:    0.172
     min:    0.005
+
+UPDATE (9/26/2023):
+~~~~~~~~~~~~~
+
+In last month...
+
+- 95% of response bodies > 20kB compress below 32%
+- The 10% of responses > 20kB comprise 75% egress traffic to clients
+- libdeflate at level 6 is comparable in performance to zlib level 1, and twice as fast as zlib level 6
+- We expect compressing 20kB+ response bodies at level 6 to reduce data transfer
+  to clients by 25% or so (although this is difficult to predict accurately)
 
 -}

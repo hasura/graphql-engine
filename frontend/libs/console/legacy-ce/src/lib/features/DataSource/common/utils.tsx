@@ -3,6 +3,7 @@ import React from 'react';
 import { MetadataTable, Source, Table } from '../../hasura-metadata-types';
 import { IntrospectedTable, TableFkRelationships, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
+import { getQualifiedTable } from '../../Data/ManageTable/utils';
 
 export const adaptIntrospectedTables = (
   runSqlResponse: RunSQLResponse
@@ -103,11 +104,8 @@ export const transformGraphqlResponse = ({
 };
 
 export function generateForeignKeyLabel(foreignKey: TableFkRelationships) {
-  // foreignKey.to.table can be any valid Json value
-  // Handle the case where it is an array of strings, otherwise use it's stringified value
-  const toTableLabel = Array.isArray(foreignKey.to.table)
-    ? foreignKey.to.table.join('.')
-    : foreignKey.to.table;
+  const toTableLabel = getQualifiedTable(foreignKey.to.table).join('.');
+
   return `${foreignKey.from.column
     .join(',')
     // Replace double quotes with empty string

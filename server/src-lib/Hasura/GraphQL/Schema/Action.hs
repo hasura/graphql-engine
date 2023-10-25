@@ -40,6 +40,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -207,7 +208,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
     -- values, nor do they have a selection set to process.
     mkOutputParser :: forall m'. (MonadError QErr m') => PGScalarType -> m' (Parser 'Both n ())
     mkOutputParser scalarType = do
-      gName <- mkScalarTypeName scalarType
+      gName <- mkScalarTypeName HasuraCase scalarType
       pure $ mkScalar gName $ const $ pure ()
 
     ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo

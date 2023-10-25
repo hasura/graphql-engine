@@ -284,7 +284,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",response_status=\"success\"}[$__range]))",
+          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",instance=~\"$instance\", response_status=\"success\"}[$__range]))",
           "legendFormat": "Success",
           "range": true,
           "refId": "A"
@@ -295,7 +295,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",job=~\"$job\"}[$__range]))",
+          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",job=~\"$job\",instance=~\"$instance\"}[$__range]))",
           "hide": false,
           "legendFormat": "Total",
           "range": true,
@@ -370,7 +370,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",operation_type=\"mutation\"}[$__range])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\"}[$__range])) by (le))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -800,7 +800,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "semi-dark-red",
@@ -893,7 +894,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "semi-dark-red",
@@ -1002,7 +1004,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1094,7 +1097,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1195,7 +1199,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1284,7 +1289,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1410,6 +1416,6 @@
   "timezone": "",
   "title": "Hasura HTTP GraphQL",
   "uid": "a6091fcc-d3f7-4094-8b54-54f3126a6790",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

@@ -309,6 +309,7 @@ export type SupportedFeaturesType = {
       enabled: boolean;
       frequentlyUsedColumns?: boolean;
       columnTypeSelector?: boolean;
+      arrayTypes: boolean;
     };
     browse: {
       enabled: boolean;

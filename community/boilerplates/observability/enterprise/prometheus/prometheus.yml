@@ -76,3 +76,14 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox_exporter:9115
+
+  - job_name: "otel-collector"
+    scrape_interval: 10s
+    static_configs:
+      - targets: ["otel-collector:8888"]
+
+  - job_name: "otel-collector-hasura"
+    scrape_interval: 10s
+    honor_labels: true
+    static_configs:
+      - targets: ["otel-collector:8889"]

@@ -23,38 +23,19 @@ export function openTelemetryToFormValues(
 ): FormValues {
   if (!openTelemetry) return defaultValues;
 
-  if (openTelemetry.status === 'disabled') {
-    return {
-      enabled: false,
-      endpoint: openTelemetry.exporter_otlp.otlp_traces_endpoint ?? '',
-      headers: metadataHeadersToFormHeaders(
-        openTelemetry.exporter_otlp.headers
-      ),
-      batchSize: openTelemetry.batch_span_processor.max_export_batch_size,
-
-      attributes: metadataAttributesToFormAttributes(
-        openTelemetry.exporter_otlp.resource_attributes
-      ),
-
-      // At the beginning, only one Data Type is available
-      dataType: ['traces'],
-      // At the beginning, only one Connection Type is available
-      connectionType: 'http/protobuf',
-    };
-  }
-
   return {
-    enabled: true,
-    endpoint: openTelemetry.exporter_otlp.otlp_traces_endpoint,
+    enabled: openTelemetry.status === 'enabled',
+    tracesEndpoint: openTelemetry.exporter_otlp.otlp_traces_endpoint ?? '',
+    metricsEndpoint: openTelemetry.exporter_otlp.otlp_metrics_endpoint ?? '',
+    logsEndpoint: openTelemetry.exporter_otlp.otlp_logs_endpoint ?? '',
     headers: metadataHeadersToFormHeaders(openTelemetry.exporter_otlp.headers),
     batchSize: openTelemetry.batch_span_processor.max_export_batch_size,
-
+    tracesPropagators: openTelemetry.exporter_otlp.traces_propagators,
     attributes: metadataAttributesToFormAttributes(
       openTelemetry.exporter_otlp.resource_attributes
     ),
 
-    // At the beginning, only one Data Type is available
-    dataType: ['traces'],
+    dataType: openTelemetry.data_types,
     // At the beginning, only one Connection Type is available
     connectionType: 'http/protobuf',
   };
@@ -66,9 +47,11 @@ export function openTelemetryToFormValues(
 export function formValuesToOpenTelemetry(
   formValues: FormValues
 ): OpenTelemetry {
-  const otlp_traces_endpoint = formValues.endpoint;
+  const otlp_traces_endpoint = formValues.tracesEndpoint;
+  const otlp_metrics_endpoint = formValues.metricsEndpoint;
+  const otlp_logs_endpoint = formValues.logsEndpoint;
   const max_export_batch_size = formValues.batchSize;
-
+  const traces_propagators = formValues.tracesPropagators;
   // At the beginning, only one Connection Type is available
   const protocol = 'http/protobuf';
 
@@ -76,47 +59,33 @@ export function formValuesToOpenTelemetry(
   const resource_attributes = formAttributesToMetadataAttributes(
     formValues.attributes
   );
+  const status = formValues.enabled ? 'enabled' : 'disabled';
+  const data_types = formValues.dataType;
 
-  if (!formValues.enabled) {
-    const disabledOpenTelemetry: OpenTelemetry = {
-      status: 'disabled',
-
-      // At the beginning, only one Data Type is available
-      data_types: ['traces'],
-
-      exporter_otlp: {
-        headers,
-        protocol,
-        resource_attributes,
-      },
-
-      batch_span_processor: {
-        max_export_batch_size,
-      },
-    };
-
-    if (otlp_traces_endpoint) {
-      disabledOpenTelemetry.exporter_otlp.otlp_traces_endpoint =
-        otlp_traces_endpoint;
-    }
-    return disabledOpenTelemetry;
-  }
-
-  return {
-    status: 'enabled',
-
-    // At the beginning, only one Data Type is available
-    data_types: ['traces'],
+  const ot: OpenTelemetry = {
+    status,
+    data_types,
 
     exporter_otlp: {
       headers,
       protocol,
       resource_attributes,
-      otlp_traces_endpoint,
+      traces_propagators,
     },
 
     batch_span_processor: {
       max_export_batch_size,
     },
   };
+
+  if (otlp_traces_endpoint) {
+    ot.exporter_otlp.otlp_traces_endpoint = otlp_traces_endpoint;
+  }
+  if (otlp_metrics_endpoint) {
+    ot.exporter_otlp.otlp_metrics_endpoint = otlp_metrics_endpoint;
+  }
+  if (otlp_logs_endpoint) {
+    ot.exporter_otlp.otlp_logs_endpoint = otlp_logs_endpoint;
+  }
+  return ot;
 }

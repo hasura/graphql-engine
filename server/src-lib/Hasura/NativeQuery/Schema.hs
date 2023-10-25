@@ -12,23 +12,27 @@ import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Set qualified as S
-import Hasura.Base.Error (throw500)
-import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
     BackendNativeQuerySelectSchema (..),
+    BackendTableSelectSchema (..),
     MonadBuildSchema,
+    tableSelectionSet,
   )
 import Hasura.GraphQL.Schema.Common
   ( AnnotatedField,
     AnnotatedFields,
     SchemaT,
     askNativeQueryInfo,
+    askTableInfo,
     parsedSelectionsToFields,
     retrieve,
+    scRole,
+    tablePermissionsInfo,
     textToName,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Schema (buildLogicalModelIR, buildLogicalModelPermissions, logicalModelFieldParsers, logicalModelSelectionList)
 import Hasura.LogicalModelResolver.Schema (argumentsSchema)
@@ -58,7 +62,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 defaultSelectNativeQueryObject ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendNativeQuerySelectSchema b
+    BackendNativeQuerySelectSchema b,
+    BackendTableSelectSchema b
   ) =>
   -- native query info
   NativeQueryInfo b ->
@@ -117,7 +122,7 @@ defaultSelectNativeQueryObject nqi@NativeQueryInfo {..} fieldName description = 
           (IR._tpFilter logicalModelPermissions)
 
 nativeQuerySelectionList ::
-  (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b) =>
+  (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b, BackendTableSelectSchema b) =>
   Nullable ->
   NativeQueryInfo b ->
   SchemaT r m (Maybe (P.Parser 'P.Output n (AnnotatedFields b)))
@@ -144,7 +149,8 @@ nativeQuerySelectionList nullability nativeQuery =
 defaultSelectNativeQuery ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendNativeQuerySelectSchema b
+    BackendNativeQuerySelectSchema b,
+    BackendTableSelectSchema b
   ) =>
   -- native query info
   NativeQueryInfo b ->
@@ -218,7 +224,8 @@ defaultSelectNativeQuery nqi@NativeQueryInfo {..} fieldName nullability descript
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendNativeQuerySelectSchema b
+    BackendNativeQuerySelectSchema b,
+    BackendTableSelectSchema b
   ) =>
   NativeQueryInfo b ->
   SchemaT
@@ -263,7 +270,8 @@ interpolatedQuery nqiCode nqArgs =
 nativeQuerySelectionSet ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendNativeQuerySelectSchema b
+    BackendNativeQuerySelectSchema b,
+    BackendTableSelectSchema b
   ) =>
   NativeQueryInfo b ->
   SchemaT r m (Maybe (P.Parser 'P.Output n (AnnotatedFields b)))
@@ -297,16 +305,17 @@ nativeQuerySelectionSet nativeQuery = runMaybeT do
 nativeQueryRelationshipField ::
   forall b r m n.
   ( BackendNativeQuerySelectSchema b,
+    BackendTableSelectSchema b,
     MonadBuildSchema b r m n
   ) =>
   RelInfo b ->
   SchemaT r m (Maybe (P.FieldParser n (AnnotatedField b)))
 nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+
   case riTarget ri of
     RelTargetNativeQuery nativeQueryName -> do
       nativeQueryInfo <- askNativeQueryInfo nativeQueryName
-
-      relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
 
       let objectRelDesc = Just $ G.Description "An object relationship"
 
@@ -315,23 +324,30 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
 
       -- this only affects the generated GraphQL type
       let nullability = Nullable
-      let nullabilityModifier =
-            case nullability of
-              Nullable -> id
-              NotNullable -> IP.nonNullableField
 
       pure
-        $ nullabilityModifier
         $ nativeQueryParser
         <&> \selectExp ->
           IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
-    RelTargetTable _otherTableName -> do
-      throw500 "Object relationships from native queries to tables are not implemented"
-nativeQueryRelationshipField ri = runMaybeT do
+    RelTargetTable otherTableName -> do
+      let desc = Just $ G.Description "An object relationship"
+      roleName <- retrieve scRole
+      otherTableInfo <- lift $ askTableInfo otherTableName
+      remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
+      selectionSetParser <- MaybeT $ tableSelectionSet otherTableInfo
+      pure
+        $ P.subselection_ relFieldName desc selectionSetParser
+        <&> \fields ->
+          IR.AFObjectRelation
+            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+            $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
+            $ IR._tpFilter
+            $ tablePermissionsInfo remotePerms
+nativeQueryRelationshipField ri = do
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
   case riTarget ri of
-    RelTargetNativeQuery nativeQueryName -> do
+    RelTargetNativeQuery nativeQueryName -> runMaybeT $ do
       nativeQueryInfo <- askNativeQueryInfo nativeQueryName
-      relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
 
       let objectRelDesc = Just $ G.Description "An array relationship"
           arrayNullability = Nullable
@@ -339,11 +355,22 @@ nativeQueryRelationshipField ri = runMaybeT do
 
       nativeQueryParser <-
         MaybeT $ selectNativeQuery nativeQueryInfo relFieldName arrayNullability objectRelDesc
+
       pure
         $ nativeQueryParser
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
             $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
-    RelTargetTable _otherTableName -> do
-      throw500 "Array relationships from logical models to tables are not implemented"
+    RelTargetTable otherTableName -> runMaybeT $ do
+      let arrayRelDesc = Just $ G.Description "An array relationship"
+
+      otherTableInfo <- lift $ askTableInfo otherTableName
+      otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
+      let arrayRelField =
+            otherTableParser <&> \selectExp ->
+              IR.AFArrayRelation
+                $ IR.ASSimple
+                $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+                $ selectExp
+      pure arrayRelField

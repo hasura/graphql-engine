@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { StoryFn, Meta, StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { waitFor, within, userEvent } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 import { DatabaseRelationships } from './DatabaseRelationships';
@@ -16,12 +16,17 @@ export default {
   },
 } as Meta<typeof DatabaseRelationships>;
 
-export const Basic: StoryFn<typeof DatabaseRelationships> = () => (
-  <DatabaseRelationships
-    dataSourceName="bikes"
-    table={{ name: 'products', schema: 'production' }}
-  />
-);
+export const Basic: StoryObj<typeof DatabaseRelationships> = {
+  render: () => (
+    <DatabaseRelationships
+      dataSourceName="aPostgres"
+      table={{ name: 'Album', schema: 'public' }}
+    />
+  ),
+  parameters: {
+    msw: trackedArrayRelationshipsHandlers(),
+  },
+};
 
 export const Testing: StoryObj<typeof DatabaseRelationships> = {
   name: '🧪 Test - Tracked array relationships',
@@ -37,7 +42,12 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    expect(await canvas.findByText('NAME')).toBeVisible();
+    await waitFor(
+      async () => {
+        expect(await canvas.findByText('NAME')).toBeVisible();
+      },
+      { timeout: 10000 }
+    );
 
     const firstRelationship = await canvas.findByText('albumAlbumCovers');
     expect(firstRelationship).toBeVisible();
@@ -59,9 +69,9 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
       expect(await canvas.findAllByText('RELATIONSHIP')).toHaveLength(2);
 
       expect(await canvas.findByText('SUGGESTED RELATIONSHIPS')).toBeVisible();
-      expect(await canvas.findByText('albumArtist')).toBeVisible();
-      expect(await canvas.findAllByText('Object')).toHaveLength(1);
-      expect(await canvas.findByText('Artist')).toBeVisible();
+      expect(await canvas.findByText('artist')).toBeVisible();
+      expect(await canvas.findAllByText('Object')).toHaveLength(2);
+      expect(await canvas.findAllByText('Artist')).toHaveLength(2);
 
       expect(await canvas.findByText('Add')).toBeVisible();
     });
@@ -86,9 +96,7 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
     // click "Add" button
     userEvent.click(await canvas.findByText('Add'));
 
-    expect(
-      await canvas.findByText('Track relationship: albumArtist')
-    ).toBeVisible();
+    expect(await canvas.findByText('Track relationship: artist')).toBeVisible();
     expect(await canvas.findByText('Track relationship')).toBeVisible();
 
     userEvent.click(await canvas.findByText('Cancel'));

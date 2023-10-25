@@ -13,20 +13,18 @@ import {
 import { getOperations } from './useRestEndpointDefinitions';
 
 const microfiberNoCustom = new Microfiber(introspectionNoCustom);
-const operationsWithoutCustom = getOperations(microfiberNoCustom);
+const operationsWithoutCustom = getOperations('', microfiberNoCustom);
 const microfiberCustom = new Microfiber(introspectionCustom);
-const operationsCustom = getOperations(microfiberCustom);
+const operationsCustom = getOperations('root_', microfiberCustom);
 
 describe('generateViewEndpoint', () => {
   it('should generate a query and a rest endpoint for a view operation without customizations', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateViewEndpoint(
-      operationsWithoutCustom?.root,
+      '',
       table,
-      operationsWithoutCustom?.operations?.find(
-        ({ name }) => name === 'user_by_pk'
-      ),
+      operationsWithoutCustom?.find(({ name }) => name === 'user_by_pk'),
       microfiberNoCustom
     );
 
@@ -62,11 +60,9 @@ describe('generateViewEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateViewEndpoint(
-      operationsCustom?.root,
+      'root_',
       table,
-      operationsCustom?.operations?.find(
-        ({ name }) => name === 'a_user_by_pk_b'
-      ),
+      operationsCustom?.find(({ name }) => name === 'a_user_by_pk_b'),
       microfiberCustom
     );
 
@@ -106,9 +102,9 @@ describe('generateViewAllEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateViewAllEndpoint(
-      operationsWithoutCustom?.root,
+      '',
       table,
-      operationsWithoutCustom?.operations?.find(({ name }) => name === 'user'),
+      operationsWithoutCustom?.find(({ name }) => name === 'user'),
       microfiberNoCustom
     );
 
@@ -144,9 +140,9 @@ describe('generateViewAllEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateViewAllEndpoint(
-      operationsCustom?.root,
+      'root_',
       table,
-      operationsCustom?.operations?.find(({ name }) => name === 'a_user_b'),
+      operationsCustom?.find(({ name }) => name === 'a_user_b'),
       microfiberCustom
     );
 
@@ -186,11 +182,9 @@ describe('generateDeleteEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateDeleteEndpoint(
-      operationsWithoutCustom?.root,
+      '',
       table,
-      operationsWithoutCustom?.operations?.find(
-        ({ name }) => name === 'delete_user_by_pk'
-      ),
+      operationsWithoutCustom?.find(({ name }) => name === 'delete_user_by_pk'),
       microfiberNoCustom
     );
 
@@ -226,11 +220,9 @@ describe('generateDeleteEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateDeleteEndpoint(
-      operationsCustom?.root,
+      'root_',
       table,
-      operationsCustom?.operations?.find(
-        ({ name }) => name === 'a_delete_user_by_pk_b'
-      ),
+      operationsCustom?.find(({ name }) => name === 'a_delete_user_by_pk_b'),
       microfiberCustom
     );
 
@@ -270,11 +262,9 @@ describe('generateUpdateEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateUpdateEndpoint(
-      operationsWithoutCustom?.root,
+      '',
       table,
-      operationsWithoutCustom?.operations?.find(
-        ({ name }) => name === 'update_user_by_pk'
-      ),
+      operationsWithoutCustom?.find(({ name }) => name === 'update_user_by_pk'),
       microfiberNoCustom
     );
 
@@ -311,11 +301,9 @@ describe('generateUpdateEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateUpdateEndpoint(
-      operationsCustom?.root,
+      'root_',
       table,
-      operationsCustom?.operations?.find(
-        ({ name }) => name === 'a_update_user_by_pk_b'
-      ),
+      operationsCustom?.find(({ name }) => name === 'a_update_user_by_pk_b'),
       microfiberCustom
     );
 
@@ -356,11 +344,9 @@ describe('generateInsertEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateInsertEndpoint(
-      operationsWithoutCustom?.root,
+      '',
       table,
-      operationsWithoutCustom?.operations?.find(
-        ({ name }) => name === 'insert_user_one'
-      ),
+      operationsWithoutCustom?.find(({ name }) => name === 'insert_user_one'),
       microfiberNoCustom
     );
 
@@ -396,11 +382,9 @@ describe('generateInsertEndpoint', () => {
     const table = 'user';
 
     const { query, restEndpoint } = generateInsertEndpoint(
-      operationsCustom?.root,
+      'root_',
       table,
-      operationsCustom?.operations?.find(
-        ({ name }) => name === 'a_insert_user_one_b'
-      ),
+      operationsCustom?.find(({ name }) => name === 'a_insert_user_one_b'),
       microfiberCustom
     );
 

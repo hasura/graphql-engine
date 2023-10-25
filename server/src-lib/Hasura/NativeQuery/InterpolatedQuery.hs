@@ -9,6 +9,7 @@ module Hasura.NativeQuery.InterpolatedQuery
     parseInterpolatedQuery,
     getUniqueVariables,
     trimQueryEnd,
+    ppInterpolatedQuery,
     module Hasura.LogicalModel.NullableScalarType,
   )
 where
@@ -80,6 +81,7 @@ instance (v ~ ArgumentName) => HasCodec (InterpolatedQuery v) where
         ppInterpolatedQuery
         textCodec
 
+-- This instance is for Metadata, do another instance for agents, or create a newtype.
 deriving via
   (Autodocodec (InterpolatedQuery ArgumentName))
   instance

@@ -50,10 +50,6 @@ instance Has Services.HgeBinPath GlobalTestEnvironment where
   getter = getter . getter @Services.TestServicesConfig
   modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
 
-instance Has Services.DcPgBinPath GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
-
 instance Has Services.PostgresServerUrl GlobalTestEnvironment where
   getter = getter . getter @Services.TestServicesConfig
   modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
@@ -76,10 +72,6 @@ instance Has Services.HgeServerInstance GlobalTestEnvironment where
           }
 
   modifier = error "GlobalTestEnvironment does not support modifying HgeServerInstance"
-
-instance Has Services.DcPgPool GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
 
 instance Show GlobalTestEnvironment where
   show GlobalTestEnvironment {server} =

@@ -19,6 +19,9 @@ import {
   getUntrackTableQuery,
 } from '../../../../metadata/queryUtils';
 import { setSidebarLoading } from '../DataSubSidebar';
+import { isFeatureFlagEnabled } from '../../../../features/FeatureFlags/hooks/useFeatureFlags';
+import { availableFeatureFlagIds } from '../../../../features/FeatureFlags';
+import { manageTableUrl } from '../../../../features/DataSidebar/navigation-utils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -29,6 +32,7 @@ const SET_COLNAME = 'AddTable/SET_COLNAME';
 const SET_COLTYPE = 'AddTable/SET_COLTYPE';
 const SET_COLDEFAULT = 'AddTable/SET_COLDEFAULT';
 const REMOVE_COLDEFAULT = 'AddTable/REMOVE_COLDEFAULT';
+const SET_COLARRAY = 'AddTable/SET_COLARRAY';
 const SET_COLNULLABLE = 'AddTable/SET_COLNULLABLE';
 const SET_COLUNIQUE = 'AddTable/SET_COLUNIQUE';
 const ADD_COL = 'AddTable/ADD_COL';
@@ -78,6 +82,11 @@ const removeColDefault = index => ({ type: REMOVE_COLDEFAULT, index });
 const setColNullable = (isNull, index) => ({
   type: SET_COLNULLABLE,
   isNull,
+  index,
+});
+const setColArray = (isArray, index) => ({
+  type: SET_COLARRAY,
+  isArray,
   index,
 });
 
@@ -170,10 +179,28 @@ export const trackTable = payload => (dispatch, getState) => {
   const successMsg = 'Table created successfully';
   const errorMsg = 'Tracking a created table failed';
 
+  const isPerformanceModeActive = isFeatureFlagEnabled(
+    availableFeatureFlagIds.performanceMode
+  );
+  // console.log('!!', ff);
+
   const customOnSuccess = () => {
+    if (isPerformanceModeActive) {
+      dispatch(
+        _push(
+          manageTableUrl({
+            table: { schema: payload.schema, name: payload.name },
+            dataSourceName: currentDataSource,
+          })
+        )
+      );
+      return;
+    }
+
     dispatch({ type: REQUEST_SUCCESS });
     dispatch({ type: SET_DEFAULTS });
     dispatch(setTable(payload.name));
+
     dispatch(updateSchemaInfo()).then(() => {
       dispatch(
         _push(
@@ -407,6 +434,16 @@ const addTableReducerCore = (state = defaultState, action) => {
       const dumyState = { ...state };
       delete dumyState.columns[ind].default;
       return dumyState;
+    case SET_COLARRAY:
+      const colIndex = action.index;
+      return {
+        ...state,
+        columns: [
+          ...state.columns.slice(0, colIndex),
+          { ...state.columns[k], array: action.isArray },
+          ...state.columns.slice(colIndex + 1),
+        ],
+      };
     case SET_COLNULLABLE:
       const k = action.index;
       return {
@@ -512,6 +549,7 @@ export {
   removeColumn,
   setColName,
   setColType,
+  setColArray,
   setColNullable,
   setColUnique,
   setColDefault,

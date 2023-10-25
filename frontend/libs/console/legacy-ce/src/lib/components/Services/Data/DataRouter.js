@@ -38,13 +38,11 @@ import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemConta
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
 import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidget.route';
-import {
-  ViewLogicalModelRoute,
-  LogicalModelPermissionsRoute,
-} from '../../../features/Data/LogicalModels';
 import { ManageFunction } from '../../../features/Data/ManageFunction/ManageFunction';
 import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery';
-import { NativeQueryLandingPage } from '../../../features/Data/LogicalModels/AddNativeQuery/NativeQueryLandingPage';
+import { NativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/NativeQueryLandingPage';
+import { LogicalModelRoute } from '../../../features/Data/LogicalModels/LogicalModel/LogicalModelLandingPage';
+import { ModelSummaryContainer } from './ModelSummary/ModelSummaryContainer';
 
 const makeDataRouter = (
   connect,
@@ -82,8 +80,10 @@ const makeDataRouter = (
       </Route>
 
       <Route path="manage" component={ConnectedDatabaseManagePage} />
+      <Route path="model-count-summary" component={ModelSummaryContainer} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path="sql" component={rawSQLConnector(connect)} />
+
       <Route path="native-queries">
         <IndexRoute component={NativeQueries} />
         <Route path="create" component={AddNativeQueryRoute} />
@@ -91,12 +91,9 @@ const makeDataRouter = (
         <Route path="logical-models">
           <IndexRoute component={NativeQueries} />
           <Redirect from=":source" to="/data/native-queries/logical-models" />
-          <Route path=":source">
-            <Route path=":name" component={ViewLogicalModelRoute} />
-            <Route
-              path=":name/permissions"
-              component={LogicalModelPermissionsRoute}
-            />
+          <Route path=":source/:name">
+            <IndexRedirect to="details" />
+            <Route path=":tabName" component={LogicalModelRoute} />
           </Route>
         </Route>
 
@@ -105,9 +102,9 @@ const makeDataRouter = (
           path="stored-procedures/track"
           component={TrackStoredProcedureRoute}
         />
-        <Route path=":source/:name" component={NativeQueryLandingPage}>
+        <Route path=":source/:name" component={NativeQueryRoute}>
           <IndexRedirect to="details" />
-          <Route path=":tabName" component={NativeQueryLandingPage} />
+          <Route path=":tabName" component={NativeQueryRoute} />
         </Route>
       </Route>
       <Route path="manage/connect" component={ConnectDatabase} />

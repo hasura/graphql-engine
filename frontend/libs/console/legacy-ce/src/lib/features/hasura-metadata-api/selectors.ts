@@ -34,6 +34,12 @@ export const findNativeQuery =
       .findMetadataSource(dataSourceName, m)
       ?.native_queries?.find(nq => nq.root_field_name === nativeQueryName);
 
+export const findLogicalModel =
+  (dataSourceName: string, logicalModelName: string) => (m: Metadata) =>
+    utils
+      .findMetadataSource(dataSourceName, m)
+      ?.logical_models?.find(lm => lm.name === logicalModelName);
+
 export const getTables = (dataSourceName: string) => (m: Metadata) =>
   utils.findMetadataSource(dataSourceName, m)?.tables;
 
@@ -83,3 +89,82 @@ export const getForeignKeyRelationships =
       .flat();
     return foreignKeyRelationships;
   };
+
+export const getRoles = (m: Metadata) => {
+  const roles: string[] = [];
+
+  /**
+   * Actions Permissions
+   */
+  m.metadata.actions?.forEach(action =>
+    action.permissions?.forEach(p => roles.push(p.role))
+  );
+
+  /**
+   * Table Permissions
+   */
+  m.metadata.sources.forEach(source => {
+    source.tables.forEach(table => {
+      table.select_permissions?.forEach(permission =>
+        roles.push(permission.role)
+      );
+
+      table.insert_permissions?.forEach(permission =>
+        roles.push(permission.role)
+      );
+
+      table.update_permissions?.forEach(permission =>
+        roles.push(permission.role)
+      );
+
+      table.delete_permissions?.forEach(permission =>
+        roles.push(permission.role)
+      );
+    });
+  });
+
+  /**
+   * Remote Schema Permissions
+   */
+  m.metadata.remote_schemas?.forEach(remoteSchema => {
+    remoteSchema?.permissions?.forEach(p => roles.push(p.role));
+  });
+
+  /**
+   * Allow List
+   */
+  m.metadata.allowlist?.forEach(al => {
+    if (al?.scope?.global === false) {
+      al?.scope?.roles?.forEach(role => roles.push(role));
+    }
+  });
+
+  /**
+   * API limits
+   */
+  Object.entries(m.metadata.api_limits ?? {}).forEach(([limit, value]) => {
+    if (limit !== 'disabled' && typeof value !== 'boolean') {
+      Object.keys(value?.per_role ?? {}).forEach(role => roles.push(role));
+    }
+  });
+
+  /**
+   * GraphQL introspection limits
+   */
+  m.metadata?.graphql_schema_introspection?.disabled_for_roles.forEach(role =>
+    roles.push(role)
+  );
+
+  /**
+   * Logical Model Permissions
+   */
+  m.metadata.sources.forEach(source => {
+    source.logical_models?.forEach(logicalModel => {
+      logicalModel.select_permissions?.forEach(permission =>
+        roles.push(permission.role)
+      );
+    });
+  });
+
+  return Array.from(new Set(roles));
+};

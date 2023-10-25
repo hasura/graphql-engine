@@ -31,6 +31,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -41,6 +42,7 @@ import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
@@ -70,7 +72,9 @@ class
     forall m.
     ( MonadError QErr m,
       MonadQueryTags m,
-      MonadReader QueryTagsComment m
+      MonadReader QueryTagsComment m,
+      MonadIO m,
+      MonadGetPolicies m
     ) =>
     UserInfo ->
     SourceName ->
@@ -78,7 +82,7 @@ class
     QueryDB b Void (UnpreparedValue b) ->
     [HTTP.Header] ->
     Maybe G.Name ->
-    m (DBStepInfo b)
+    m ((DBStepInfo b), [ModelInfoPart])
   mkDBMutationPlan ::
     forall m.
     ( MonadError QErr m,
@@ -98,7 +102,7 @@ class
     [HTTP.Header] ->
     Maybe G.Name ->
     Maybe (HashMap G.Name (G.Value G.Variable)) ->
-    m (DBStepInfo b)
+    m (DBStepInfo b, [ModelInfoPart])
   mkLiveQuerySubscriptionPlan ::
     forall m.
     ( MonadError QErr m,
@@ -113,7 +117,7 @@ class
     RootFieldMap (QueryDB b Void (UnpreparedValue b)) ->
     [HTTP.Header] ->
     Maybe G.Name ->
-    m (SubscriptionQueryPlan b (MultiplexedQuery b))
+    m (SubscriptionQueryPlan b (MultiplexedQuery b), [ModelInfoPart])
   mkDBStreamingSubscriptionPlan ::
     forall m.
     ( MonadError QErr m,
@@ -127,10 +131,11 @@ class
     (RootFieldAlias, (QueryDB b Void (UnpreparedValue b))) ->
     [HTTP.Header] ->
     Maybe G.Name ->
-    m (SubscriptionQueryPlan b (MultiplexedQuery b))
+    m (SubscriptionQueryPlan b (MultiplexedQuery b), [ModelInfoPart])
   mkDBQueryExplain ::
     forall m.
-    ( MonadError QErr m
+    ( MonadError QErr m,
+      MonadIO m
     ) =>
     RootFieldAlias ->
     UserInfo ->
@@ -151,7 +156,9 @@ class
   mkDBRemoteRelationshipPlan ::
     forall m.
     ( MonadError QErr m,
-      MonadQueryTags m
+      MonadQueryTags m,
+      MonadIO m,
+      MonadGetPolicies m
     ) =>
     UserInfo ->
     SourceName ->
@@ -170,7 +177,7 @@ class
     [HTTP.Header] ->
     Maybe G.Name ->
     Options.StringifyNumbers ->
-    m (DBStepInfo b)
+    m (DBStepInfo b, [ModelInfoPart])
 
 -- | This is a helper function to convert a remote source's relationship to a
 -- normal relationship to a temporary table. This function can be used to

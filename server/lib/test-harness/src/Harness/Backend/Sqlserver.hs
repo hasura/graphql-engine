@@ -38,7 +38,7 @@ import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
 import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Schema qualified as Schema
-import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..))
+import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..), postgresishGraphQLType)
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
@@ -57,7 +57,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------
@@ -159,6 +160,7 @@ createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryK
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "int"
+  Schema.TDouble -> "float(53)"
   Schema.TStr -> "nvarchar(127)"
   Schema.TUTCTime -> "time"
   Schema.TBool -> "bit"
@@ -184,22 +186,25 @@ mkPrimaryKey key =
     ]
 
 mkReference :: Schema.Reference -> Text
-mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceCascade} =
   T.unwords
-    [ "CONSTRAINT ",
-      constraintName,
-      "FOREIGN KEY ",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      T.pack Constants.sqlserverDb <> "." <> referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
-    ]
+    $ [ "CONSTRAINT ",
+        constraintName,
+        "FOREIGN KEY ",
+        "(",
+        wrapIdentifier referenceLocalColumn,
+        ")",
+        "REFERENCES",
+        T.pack Constants.sqlserverDb <> "." <> referenceTargetTable,
+        "(",
+        wrapIdentifier referenceTargetColumn,
+        ")"
+      ]
+    ++ [ x | referenceCascade, x <-
+                                 [ "ON DELETE CASCADE",
+                                   "ON UPDATE CASCADE"
+                                 ]
+       ]
   where
     constraintName :: Text
     constraintName =
@@ -240,6 +245,7 @@ wrapIdentifier identifier = "[" <> T.replace "]" "]]" identifier <> "]"
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt int -> tshow int
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0

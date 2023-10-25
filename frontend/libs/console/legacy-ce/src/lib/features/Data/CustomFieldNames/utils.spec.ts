@@ -1,7 +1,7 @@
 import {
-  getQualifiedTable,
   getTrackTableType,
   customFieldNamesPlaceholders,
+  getQualifiedTableForCustomFieldNames,
 } from './utils';
 
 import { CustomFieldNamesFormVals } from './types';
@@ -34,7 +34,7 @@ describe('getTableObjectType', () => {
     'Given a $driver driver, a $schema schema, and a $tableName table name, then returns the qualified table $expected',
     ({ driver, schema, tableName, expected }) => {
       expect(
-        getQualifiedTable({
+        getQualifiedTableForCustomFieldNames({
           driver,
           schema,
           tableName,

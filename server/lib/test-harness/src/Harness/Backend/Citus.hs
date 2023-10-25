@@ -47,7 +47,7 @@ import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Schema qualified as Schema
-import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType (BackendTypeConfig, postgresishGraphQLType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
@@ -67,7 +67,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------
@@ -169,6 +170,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
+  Schema.TDouble -> "double precision"
   Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
@@ -201,6 +203,7 @@ insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt n -> tshow n
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> if b then "TRUE" else "FALSE"

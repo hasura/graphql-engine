@@ -146,7 +146,7 @@ class (Monad m) => MonadMetadataStorage m where
     [HTTP.Header] ->
     Value ->
     m (Either QErr ActionId)
-  fetchUndeliveredActionEvents :: m (Either QErr [ActionLogItem])
+  fetchUndeliveredActionEvents :: Int -> m (Either QErr [ActionLogItem])
   setActionStatus :: ActionId -> AsyncActionStatus -> m (Either QErr ())
   fetchActionResponse :: ActionId -> m (Either QErr ActionLogResponse)
   clearActionData :: ActionName -> m (Either QErr ())
@@ -182,7 +182,7 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
-  fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
+  fetchUndeliveredActionEvents a = lift $ fetchUndeliveredActionEvents a
   setActionStatus a b = lift $ setActionStatus a b
   fetchActionResponse = lift . fetchActionResponse
   clearActionData = lift . clearActionData

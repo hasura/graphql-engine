@@ -33,7 +33,7 @@ export const PrimaryWithTest: StoryObj<RemoteSchemaToRemoteSchemaFormProps> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByText('Name');
+    await canvas.findByText('Relationship Name');
 
     const submitButton = (await canvas.findAllByText('Add Relationship'))[1];
 
@@ -49,19 +49,21 @@ export const PrimaryWithTest: StoryObj<RemoteSchemaToRemoteSchemaFormProps> = {
     expect(selectError).toBeInTheDocument();
 
     // update fields
-    const nameInput = await canvas.findByLabelText('Name');
+    const nameInput = await canvas.findByLabelText('Relationship Name');
     userEvent.type(nameInput, 'test');
 
-    const sourceType = await canvas.findByLabelText('Source Type');
+    const sourceType = await canvas.findByText('Select a type');
+    userEvent.click(sourceType);
+    await userEvent.click(await canvas.findByText('Continent'), undefined, {
+      skipHover: true,
+    });
 
-    userEvent.selectOptions(sourceType, 'Continent');
-    userEvent.click(submitButton);
+    const referenceSchema = await canvas.findByText('Select a remote schema');
+    userEvent.click(referenceSchema);
+    await userEvent.click(await canvas.findByText('remoteSchema2'), undefined, {
+      skipHover: true,
+    });
 
-    const referenceSchema = await canvas.findByLabelText(
-      'Reference Remote Schema'
-    );
-
-    userEvent.selectOptions(referenceSchema, 'remoteSchema2');
     userEvent.click(submitButton);
   },
 };

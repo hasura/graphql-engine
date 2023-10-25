@@ -36,6 +36,11 @@ import {
 } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
 import Skeleton from 'react-loading-skeleton';
 import { CommentSection } from './components/CommentSection';
+import {
+  InputValidation,
+  inputValidationEnabledSchema,
+} from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+import { z } from 'zod';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -46,6 +51,7 @@ export interface ComponentProps {
   handleClose: () => void;
   defaultValues: ReturnType<typeof createDefaultValues>;
   formData: ReturnType<typeof createFormData>;
+  kind: string;
 }
 
 const Component = (props: ComponentProps) => {
@@ -58,6 +64,7 @@ const Component = (props: ComponentProps) => {
     handleClose,
     defaultValues,
     formData,
+    kind,
   } = props;
   const permissionSectionRef = useRef(null);
 
@@ -75,6 +82,7 @@ const Component = (props: ComponentProps) => {
     queryType,
     roleName,
     accessType,
+    validateInput: defaultValues?.validateInput,
   });
   const { data: roles } = useRoles();
   const { data: supportedQueryTypes } = useSupportedQueryTypes({
@@ -84,6 +92,15 @@ const Component = (props: ComponentProps) => {
 
   const onSubmit = async (formData: PermissionsSchema) => {
     const newValues = getValues();
+    if (!formData?.validateInput?.enabled) {
+      delete formData.validateInput;
+    }
+    if (
+      formData?.validateInput?.enabled &&
+      formData?.validateInput?.definition?.timeout === undefined
+    ) {
+      formData.validateInput.definition.timeout = 10;
+    }
     try {
       await updatePermissions.submit(formData);
       handleClose();
@@ -127,6 +144,9 @@ const Component = (props: ComponentProps) => {
           </h3>
         </div>
         <CommentSection key={key} />
+        {queryType !== 'select' && kind === 'postgres' && (
+          <InputValidation formFieldsNamePrefix="validateInput." />
+        )}
         <RowPermissionsSectionWrapper
           roleName={roleName}
           queryType={queryType}
@@ -217,6 +237,7 @@ const Component = (props: ComponentProps) => {
           id="form-buttons-container"
         >
           <Button
+            data-testid="permissions-form-submit"
             type="submit"
             mode="primary"
             title={
@@ -273,6 +294,33 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     return <Skeleton width={'100%'} height={300} />;
   }
 
+  const dataSource = data.metadata.metadata.sources.find(
+    s => s.name === dataSourceName
+  );
+
+  const permissions = dataSource?.tables.find(
+    t => JSON.stringify(t.table) === JSON.stringify(table)
+  );
+
+  let validateInput = undefined;
+  switch (queryType) {
+    case 'insert':
+      validateInput = permissions?.insert_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+    case 'update':
+      validateInput = permissions?.update_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+    case 'delete':
+      validateInput = permissions?.delete_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+  }
+
   const defaultValues = createDefaultValues({
     queryType,
     roleName,
@@ -283,6 +331,25 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     defaultQueryRoot: data.defaultQueryRoot,
     metadataSource,
     supportedOperators: data.supportedOperators,
+    validateInput: validateInput
+      ? {
+          enabled: true,
+          type: 'http',
+          definition: {
+            url: (validateInput as z.infer<typeof inputValidationEnabledSchema>)
+              ?.definition?.url,
+            forward_client_headers: (
+              validateInput as z.infer<typeof inputValidationEnabledSchema>
+            )?.definition.forward_client_headers,
+            headers: (
+              validateInput as z.infer<typeof inputValidationEnabledSchema>
+            )?.definition.headers,
+            timeout:
+              (validateInput as z.infer<typeof inputValidationEnabledSchema>)
+                ?.definition.timeout ?? undefined,
+          },
+        }
+      : { enabled: false },
   });
 
   const formData = createFormData({
@@ -292,6 +359,9 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     tableColumns,
     trackedTables: metadataSource.tables,
     metadataSource,
+    validateInput: {
+      enabled: false,
+    },
   });
 
   if (isError) {
@@ -319,6 +389,7 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
       )}-${queryType}-${roleName}-${JSON.stringify(defaultValues)}`}
       defaultValues={defaultValues}
       formData={formData}
+      kind={dataSource?.kind || 'unknown'}
       {...props}
     />
   );

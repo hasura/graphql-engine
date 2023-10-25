@@ -18,7 +18,7 @@ import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
 import Hasura.Server.Init.Config (API (METRICS), AllowListStatus)
 import Hasura.Server.Init.FeatureFlag (FeatureFlag (..))
-import Hasura.Server.Types (ExperimentalFeature)
+import Hasura.Server.Types (ApolloFederationStatus, ExperimentalFeature)
 import Hasura.Server.Version (Version, currentVersion)
 
 data FeatureFlagInfo = FeatureFlagInfo
@@ -58,7 +58,8 @@ data ServerConfig = ServerConfig
     scfgExperimentalFeatures :: !(Set.HashSet ExperimentalFeature),
     scfgIsPrometheusMetricsEnabled :: !Bool,
     scfgDefaultNamingConvention :: !NamingCase,
-    scfgFeatureFlags :: !(Set.HashSet FeatureFlagInfo)
+    scfgFeatureFlags :: !(Set.HashSet FeatureFlagInfo),
+    scfgIsApolloFederationEnabled :: !ApolloFederationStatus
   }
   deriving (Show, Eq, Generic)
 
@@ -78,6 +79,7 @@ runGetConfig ::
   Set.HashSet API ->
   NamingCase ->
   [(FeatureFlag, Text, Bool)] ->
+  ApolloFederationStatus ->
   ServerConfig
 runGetConfig
   functionPermsCtx
@@ -90,7 +92,8 @@ runGetConfig
   experimentalFeatures
   enabledAPIs
   defaultNamingConvention
-  featureFlags =
+  featureFlags
+  apolloFederationStatus =
     ServerConfig
       currentVersion
       functionPermsCtx
@@ -107,6 +110,7 @@ runGetConfig
       isPrometheusMetricsEnabled
       defaultNamingConvention
       featureFlagSettings
+      apolloFederationStatus
     where
       isPrometheusMetricsEnabled = METRICS `Set.member` enabledAPIs
       featureFlagSettings =

@@ -6,7 +6,7 @@ import { IconTooltip } from '../../../new-components/Tooltip';
 import { SchemaRow } from './SchemaRow';
 import { ChangeSummary } from './ChangeSummary';
 import {
-  FindIfSubStringExists,
+  findIfSubStringExists,
   schemaTransformFn,
   getPublishTime,
 } from '../utils';
@@ -19,7 +19,7 @@ import AceEditor from 'react-ace';
 export const Breadcrumbs = () => (
   <div className="flex items-center space-x-xs mb-4">
     <Link
-      to="/settings/schema-registry"
+      to="/api/schema-registry"
       className="cursor-pointer flex items-center text-muted hover:text-gray-900"
     >
       <FaHome className="mr-1.5" />
@@ -42,7 +42,6 @@ type SchemaDetailsViewProps = {
 export const SchemaDetailsView = (props: SchemaDetailsViewProps) => {
   const { id: schemaId } = props.params;
   const fetchSchemaResponse = useGetSchema(schemaId);
-
   const { kind } = fetchSchemaResponse;
 
   switch (kind) {
@@ -75,7 +74,7 @@ const SchemasDetails: React.VFC<{
           {roleBasedSchema.role}:{schema.entry_hash}
         </span>
       </div>
-      <div className="border-neutral-200 bg-white border w-3/5">
+      <div className="border-neutral-200 bg-white border ">
         <div className="w-full flex bg-gray-100 px-4 py-2">
           <div className="flex text-base w-[69%] justify-start">
             <span className="text-sm font-bold">SCHEMA</span>
@@ -175,7 +174,7 @@ export const ChangesView: React.VFC<{
     if (!searchText) return changes;
 
     return changes?.filter(change =>
-      FindIfSubStringExists(change.message, searchText)
+      findIfSubStringExists(change.message, searchText)
     );
   }, [searchText, changes]);
 

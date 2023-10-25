@@ -26,8 +26,11 @@ export const getTrackableFunctions = async ({
         ELSE NULL::text
     END AS function_type 
   FROM 
-    pg_proc pgp JOIN pg_namespace pn ON pgp.pronamespace = pn.oid 
+    pg_proc pgp 
+  JOIN pg_namespace pn ON pgp.pronamespace = pn.oid 
+  JOIN pg_type ON pgp.prorettype = pg_type.oid
   WHERE 
+    pg_type.typtype = 'c' AND
     pn.nspname NOT IN ('information_schema') AND pn.nspname NOT LIKE 'pg_%';
   `;
 

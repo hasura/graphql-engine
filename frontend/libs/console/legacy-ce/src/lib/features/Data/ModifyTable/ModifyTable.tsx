@@ -10,6 +10,8 @@ import {
   ForeignKeys,
 } from './components';
 import { Section } from './parts';
+import { ApolloFederation } from './components/ApolloFederation';
+import { useApolloFederationSupportedDrivers } from './hooks/useApolloFederationSupportedDrivers';
 
 export type ModifyTableProps = {
   dataSourceName: string;
@@ -21,6 +23,9 @@ export const ModifyTable: React.VFC<ModifyTableProps> = props => {
   const { data: source } = useMetadata(
     MetadataSelectors.findSource(props.dataSourceName)
   );
+
+  const supportedDriversForApolloFederation =
+    useApolloFederationSupportedDrivers();
 
   const supportsForeignKeys = getSupportsForeignKeys(source);
 
@@ -48,6 +53,13 @@ export const ModifyTable: React.VFC<ModifyTableProps> = props => {
       >
         <TableRootFields {...props} />
       </Section>
+
+      {supportedDriversForApolloFederation.includes(source?.kind ?? '') && (
+        <ApolloFederation
+          dataSourceName={props.dataSourceName}
+          table={props.table}
+        />
+      )}
     </div>
   );
 };
