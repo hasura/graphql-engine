@@ -21,6 +21,11 @@ export const adaptDatabaseUrl = (
         connectionType: 'envVar',
         envVar: databaseUrl.from_env,
       }
+    : 'dynamic_from_file' in databaseUrl
+    ? {
+        connectionType: 'dynamicFromFile',
+        dynamicFromFile: databaseUrl.dynamic_from_file,
+      }
     : {
         connectionType: 'connectionParams',
         host: databaseUrl.host,

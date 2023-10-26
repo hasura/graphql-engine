@@ -5,6 +5,7 @@ interface PostgresConnectionInfo {
   database_url:
     | string
     | FromEnv
+    | { dynamic_from_file: string }
     | {
         username: string;
         password?: string;

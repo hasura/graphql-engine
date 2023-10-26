@@ -192,7 +192,7 @@ parseRawConnDetails = do
               <> Opt.help "PostgreSQL options"
           )
 
--- TODO(SOLOMON): Should we parse the URL here?
+-- Currently this MUST ultimately end up getting parsed in initBasicConnectionInfo
 parseMetadataDbUrl :: Opt.Parser (Maybe String)
 parseMetadataDbUrl =
   Opt.optional
@@ -207,7 +207,7 @@ metadataDbUrlOption =
   Config.Option
     { Config._default = (),
       Config._envVar = "HASURA_GRAPHQL_METADATA_DATABASE_URL",
-      Config._helpMessage = "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database"
+      Config._helpMessage = "Postgres database URL for Metadata storage. Example postgres://foo:bar@example.com:2345/database\nThis can also be a URI of the form ‘dynamic-from-file:///path/to/file’,  where the referenced file contains a postgres connection string, which will be read dynamically every time a new connection is established."
     }
 
 --------------------------------------------------------------------------------

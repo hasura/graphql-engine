@@ -52,13 +52,17 @@ above, databases can be connected using any custom environment variables of your
 ### Metadata Database URL
 
 This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata.
+`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the
+Metadata. This can also be a URI of the form `dynamic-from-file:///path/to/file`, where the referenced 
+file contains a postgres connection string, which will be read dynamically every time a new
+connection is established. This allows the server to be used in an environment where secrets are 
+rotated frequently.
 
 |                     |                                                                             |
 | ------------------- | --------------------------------------------------------------------------- |
 | **Flag**            | `--metadata-database-url <METADATA_DATABASE_URL>`                           |
 | **Env var**         | `HASURA_GRAPHQL_METADATA_DATABASE_URL`                                      |
-| **Accepted values** | String (PostgreSQL DB connection string)                                    |
+| **Accepted values** | String (PostgreSQL DB connection string, or `dynamic-from-file://` URI)     |
 | **Example**         | `postgres://<user>:<password>@<host>:<port>/<db-name>`                      |
 | **Default**         | **CE, Enterprise Edition**: `null` <br />**Cloud**: managed by Hasura Cloud |
 | **Supported in**    | CE, Enterprise Edition                                                      |

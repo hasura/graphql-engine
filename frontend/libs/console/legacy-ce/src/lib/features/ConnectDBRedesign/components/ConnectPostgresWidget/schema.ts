@@ -28,6 +28,10 @@ export const databaseUrlSchema = z.discriminatedUnion('connectionType', [
     envVar: z.string().min(1, 'Env variable cannot be empty'),
   }),
   z.object({
+    connectionType: z.literal('dynamicFromFile'),
+    dynamicFromFile: z.string().min(1, 'File path cannot be empty'),
+  }),
+  z.object({
     connectionType: z.literal('connectionParams'),
     username: z.string().min(1, 'Cannot be empty'),
     password: z.string().optional(),

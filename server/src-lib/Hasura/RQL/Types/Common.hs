@@ -74,6 +74,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
+import Data.List (isPrefixOf)
 import Data.Scientific (toBoundedInteger)
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -92,6 +93,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.URI
 import PostgreSQL.Binary.Decoding qualified as PD
+import System.Directory (canonicalizePath)
 
 newtype RelName = RelName {getRelTxt :: NonEmptyText}
   deriving
@@ -316,6 +318,7 @@ newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
 
 instance NFData ResolvedWebhook
 
+-- TODO this seems to be a "URL template"; rename
 newtype InputWebhook = InputWebhook {unInputWebhook :: Template}
   deriving (Show, Eq, Generic)
 
@@ -437,6 +440,7 @@ instance FromJSON PGConnectionParams where
       <*> o
       .: "database"
 
+-- | user PG connection configuration from which we'll eventually make a 'ConnInfo'
 data UrlConf
   = -- | the database connection string
     UrlValue InputWebhook
@@ -444,6 +448,13 @@ data UrlConf
     UrlFromEnv T.Text
   | -- | the minimum required `connection parameters` to construct a valid connection string
     UrlFromParams PGConnectionParams
+  | -- | Filepath to a file containing a connection string. This is read
+    -- before each connect, and when in use connection errors will force a
+    -- re-read. This can support e.g. environments where passwords are
+    -- frequently rotated (not supported on cloud)
+    --
+    -- This gets piped all the way through into the ConnInfo.
+    UrlDynamicFromFile FilePath
   deriving (Show, Eq, Generic)
 
 instance NFData UrlConf
@@ -461,26 +472,31 @@ instance HasCodec UrlConf where
 
       dec (Left w) = UrlValue w
       dec (Right (Left wEnv)) = UrlFromEnv wEnv
-      dec (Right (Right wParams)) = UrlFromParams wParams
+      dec (Right (Right (Left wParams))) = UrlFromParams wParams
+      dec (Right (Right (Right wPath))) = UrlDynamicFromFile wPath
 
       enc (UrlValue w) = Left w
       enc (UrlFromEnv wEnv) = Right $ Left wEnv
-      enc (UrlFromParams wParams) = Right $ Right wParams
+      enc (UrlFromParams wParams) = Right $ Right $ Left wParams
+      enc (UrlDynamicFromFile wPath) = Right $ Right $ Right wPath
 
 instance ToJSON UrlConf where
   toJSON (UrlValue w) = toJSON w
   toJSON (UrlFromEnv wEnv) = object ["from_env" .= wEnv]
   toJSON (UrlFromParams wParams) = object ["connection_parameters" .= wParams]
+  toJSON (UrlDynamicFromFile wPath) = object ["dynamic_from_file" .= wPath]
 
 instance FromJSON UrlConf where
   parseJSON (Object o) = do
     mFromEnv <- (fmap . fmap) UrlFromEnv (o .:? "from_env")
+    mDynamicFromFile <- (fmap . fmap) UrlDynamicFromFile (o .:? "dynamic_from_file")
     mFromParams <- (fmap . fmap) UrlFromParams (o .:? "connection_parameters")
-    case (mFromEnv, mFromParams) of
-      (Just fromEnv, Nothing) -> pure fromEnv
-      (Nothing, Just fromParams) -> pure fromParams
-      (Just _, Just _) -> fail $ commonJSONParseErrorMessage "Only one of "
-      (Nothing, Nothing) -> fail $ commonJSONParseErrorMessage "Either "
+    case (mFromEnv, mFromParams, mDynamicFromFile) of
+      (Just fromEnv, Nothing, Nothing) -> pure fromEnv
+      (Nothing, Just fromParams, Nothing) -> pure fromParams
+      (Nothing, Nothing, Just dynamicFromFile) -> pure dynamicFromFile
+      (Nothing, Nothing, Nothing) -> fail $ commonJSONParseErrorMessage "Either "
+      (_, _, _) -> fail $ commonJSONParseErrorMessage "Only one of "
     where
       -- NOTE(Sam): Maybe this could be put with other string manipulation utils
       -- helper to apply `dquote` for values of type `String`
@@ -549,12 +565,38 @@ getPGConnectionStringFromParams PGConnectionParams {..} =
       Nothing -> unpackEscape username
       Just password -> unpackEscape username <> ":" <> unpackEscape password
 
-resolveUrlConf :: (MonadError QErr m) => Env.Environment -> UrlConf -> m Text
+-- | NOTE: Because hasura admins are not necessarily trusted to be able to read
+-- arbitrary files on the machine running the server, we insist the file path
+-- supplied by the hasura admin be validated against an acceptable prefix
+-- (set only by an env var,  presumably only by someone with privileges to
+-- deploy).
+--
+-- Altering the value of HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX after
+-- adding a dynamic source can result in inconsistent metadata.
+resolveUrlConf :: (MonadIO m, MonadError QErr m) => Env.Environment -> UrlConf -> m PG.ConnDetails
 resolveUrlConf env = \case
-  UrlValue v -> unResolvedWebhook <$> resolveWebhook env v
-  UrlFromEnv envVar -> getEnv env envVar
+  UrlValue v -> toURI . unResolvedWebhook <$> resolveWebhook env v
+  UrlFromEnv envVar -> toURI <$> getEnv env envVar
   UrlFromParams connParams ->
-    pure . T.pack $ getPGConnectionStringFromParams connParams
+    pure . toURI . T.pack $ getPGConnectionStringFromParams connParams
+  UrlDynamicFromFile fpathDirty -> do
+    fpath <- case Env.lookupEnv env "HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX" of
+      Nothing -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable be set and non-empty"
+      -- Since this might be an accidental misconfiguration:
+      Just "" -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable be non-empty"
+      -- Canonicalize the supplied (untrusted) file path, in an
+      -- attempt to prevent escapes (like `..`).  canonicalize both
+      -- path  and allowed prefix, so that matching is robust.
+      Just allowedPrefixNonCanon -> do
+        allowedPrefixCanon <- liftIO $ canonicalizePath allowedPrefixNonCanon
+        fpathDirtyCanon <- liftIO $ canonicalizePath fpathDirty
+        if allowedPrefixCanon `isPrefixOf` fpathDirtyCanon
+          then pure fpathDirty
+          else -- I guess we'll avoid leaking info here too...
+            throw400 PermissionError $ "The supplied dynamic_from_file file path, when canonicalized, does not match the allowed prefix set by your administrator via the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable"
+    pure $ PG.CDDynamicDatabaseURI fpath
+  where
+    toURI = PG.CDDatabaseURI . txtToBs
 
 getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
 getEnv env k = do

@@ -7353,7 +7353,7 @@
                 "description": "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo",
                 "properties": {
                     "database_url": {
-                        "description": "The database connection URL as a string, as an environment variable, or as connection parameters.",
+                        "description": "The database connection URL as a string, from an environment variable, as connection parameters, or dynamically read from a file at connect time.",
                         "oneOf": [
                             {
                                 "type": "string"
@@ -9386,7 +9386,30 @@
             "UrlConfFromParams": {
                 "properties": {
                     "connection_parameters": {
-                        "$ref": "#/components/schemas/PGConnectionParams"
+                        "oneOf": [
+                            {
+                                "properties": {
+                                    "Left": {
+                                        "$ref": "#/components/schemas/PGConnectionParams"
+                                    }
+                                },
+                                "required": [
+                                    "Left"
+                                ],
+                                "type": "object"
+                            },
+                            {
+                                "properties": {
+                                    "Right": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "Right"
+                                ],
+                                "type": "object"
+                            }
+                        ]
                     }
                 },
                 "required": [
