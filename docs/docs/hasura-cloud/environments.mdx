@@ -23,11 +23,15 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 ## Introduction
 
-This guide will show how to configure your Hasura Project for easy switching between development environments.
+This guide is designed to teach you how to set up and modify Hasura in a local Docker environment, and then transfer
+those changes to your Cloud project.
 
 ## Moving from Hasura Cloud to local development
 
 ### Step 1: Setup local development of Hasura with Docker
+
+In this step, you'll establish a self-hosted version of Hasura. **Please note: if you intend to utilize Hasura EE for
+local development, secure a license by filing a ticket with [Hasura support](https://hasura.io/help/).**
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL Engine and
 Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as you'll be
