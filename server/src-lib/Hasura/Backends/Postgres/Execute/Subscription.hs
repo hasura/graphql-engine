@@ -131,12 +131,124 @@ toSQLFromItem ::
   S.TableAlias ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
   m S.FromItem
-toSQLFromItem userInfo tableAlias = \case
-  QDBSingleRow s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASSingleObject s <*> pure tableAlias
-  QDBMultipleRows s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASMultipleRows s <*> pure tableAlias
-  QDBAggregation s -> S.mkSelFromItem <$> DS.mkAggregateSelect userInfo s <*> pure tableAlias
-  QDBConnection s -> S.mkSelectWithFromItem <$> DS.mkConnectionSelect userInfo s <*> pure tableAlias
-  QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect userInfo s <*> pure tableAlias
+toSQLFromItem userInfo tableAlias query = do
+  -- Note: Remote relationship predicate in permission is not supported in subscriptions
+  -- as current implementation of multiplexing doesn't refetch the SQL query and hence the
+  -- query might be executed with stale values.
+  throwErrorForRemoteRelationshipInPermissionPredicate query
+  case query of
+    QDBSingleRow s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASSingleObject s <*> pure tableAlias
+    QDBMultipleRows s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASMultipleRows s <*> pure tableAlias
+    QDBAggregation s -> S.mkSelFromItem <$> DS.mkAggregateSelect userInfo s <*> pure tableAlias
+    QDBConnection s -> S.mkSelectWithFromItem <$> DS.mkConnectionSelect userInfo s <*> pure tableAlias
+    QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect userInfo s <*> pure tableAlias
+
+throwErrorForRemoteRelationshipInPermissionPredicate ::
+  ( MonadError QErr m
+  ) =>
+  QueryDB ('Postgres pgKind) Void S.SQLExp ->
+  m ()
+throwErrorForRemoteRelationshipInPermissionPredicate q = do
+  case q of
+    QDBSingleRow s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      for_ (_asnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    QDBMultipleRows s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      for_ (_asnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    QDBAggregation s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields (_asnFields s)
+    QDBConnection s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm (_csSelect s)))
+      throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields (_asnFields (_csSelect s))
+    QDBStreamMultipleRows s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_assnPerm s))
+      for_ (_assnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+  where
+    throwErrorForRemoteRelationshipInSelect :: (MonadError QErr f) => GBoolExp backend1 (AnnBoolExpFld backend2 leaf) -> f ()
+    throwErrorForRemoteRelationshipInSelect s = do
+      when (haveRemoteRelationshipPredicate s)
+        $ throw400 NotSupported "subscriptions on this field is not supported"
+
+    haveRemoteRelationshipPredicate :: GBoolExp backend1 (AnnBoolExpFld backend2 leaf) -> Bool
+    haveRemoteRelationshipPredicate (BoolAnd lst) = any haveRemoteRelationshipPredicate lst
+    haveRemoteRelationshipPredicate (BoolOr lst) = any haveRemoteRelationshipPredicate lst
+    haveRemoteRelationshipPredicate (BoolNot b) = haveRemoteRelationshipPredicate b
+    haveRemoteRelationshipPredicate (BoolExists e) = haveRemoteRelationshipPredicate (_geWhere e)
+    haveRemoteRelationshipPredicate (BoolField (AVRemoteRelationship _x)) = True
+    haveRemoteRelationshipPredicate _ = False
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInField ::
+      ( MonadError QErr m
+      ) =>
+      AnnFieldG ('Postgres pgKind) Void S.SQLExp ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFObjectRelation objRel) = do
+      throwErrorForRemoteRelationshipInSelect $ _aosTargetFilter (_aarAnnSelect objRel)
+      for_ (_aosFields (_aarAnnSelect objRel)) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFArrayRelation arraySelectG) = do
+      case arraySelectG of
+        ASSimple s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_aarAnnSelect s))
+          for_ (_asnFields (_aarAnnSelect s)) \(_, fld) ->
+            throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+        ASAggregate s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_aarAnnSelect s))
+          throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields (_asnFields (_aarAnnSelect s))
+        ASConnection s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_csSelect (_aarAnnSelect s)))
+          throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields (_asnFields (_csSelect (_aarAnnSelect s)))
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFColumn _) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFComputedField {}) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFNodeId {}) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFExpression _) = pure ()
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields ::
+      ( MonadError QErr m
+      ) =>
+      Fields (ConnectionField ('Postgres pgKind) Void S.SQLExp) ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields connFields =
+      for_ connFields \(_, fld) ->
+        case fld of
+          ConnectionEdges edgeFields ->
+            for_ edgeFields \(_, fld') ->
+              case fld' of
+                EdgeNode fields ->
+                  for_ fields \(_, fld'') ->
+                    throwErrorForRemoteRelationshipInPermissionPredicateInField fld''
+                EdgeTypename _ -> pure ()
+                EdgeCursor -> pure ()
+          ConnectionTypename _ -> pure ()
+          ConnectionPageInfo _ -> pure ()
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields ::
+      ( MonadError QErr m
+      ) =>
+      Fields (TableAggregateFieldG ('Postgres pgKind) Void S.SQLExp) ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields aggFields =
+      for_ aggFields \(_, fld) ->
+        case fld of
+          TAFNodes _ fields -> do
+            for_ fields \(_, fld') ->
+              throwErrorForRemoteRelationshipInPermissionPredicateInField fld'
+          TAFGroupBy _ groupByField ->
+            for_ (_gbgFields groupByField) \(_, fld') ->
+              case fld' of
+                GBFNodes fields ->
+                  for_ fields \(_, fld'') ->
+                    throwErrorForRemoteRelationshipInPermissionPredicateInField fld''
+                GBFGroupKey _ -> pure ()
+                GBFAggregate _ -> pure ()
+                GBFExp _ -> pure ()
+          TAFAgg _ -> pure ()
+          TAFExp _ -> pure ()
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),

@@ -7,19 +7,21 @@ module Test.Databases.Postgres.DataValidation.RemoteSourcePermissionPredicateSpe
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty qualified as NE
+import Harness.GlobalTestEnvironment (Protocol (WebSocket), requestProtocol)
 import Harness.GraphqlEngine
   ( postGraphqlWithHeaders,
+    postGraphqlYamlWithHeaders,
     postMetadata,
     postMetadataWithStatus,
     postMetadata_,
   )
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment
   ( GlobalTestEnvironment,
-    TestEnvironment,
+    TestEnvironment (..),
   )
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -274,3 +276,68 @@ tests = do
           type: select_permission
         path: $.args
       |]
+
+  describe "Subscriptions on fields with permission based on remote relationship" do
+    it "shouldn't be allowed" \(testEnvironment, _) -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+          userRoleHeaders :: ByteString -> [(HeaderName, ByteString)]
+          userRoleHeaders userId =
+            [ ("X-Hasura-Role", "user"),
+              ("x-hasura-user-id", userId)
+            ]
+          metadataQuery =
+            postMetadata
+              testEnvironment
+              [yaml|
+                type: pg_create_select_permission
+                args:
+                  source: source
+                  table:
+                    schema: *schemaName
+                    name: track
+                  role: user
+                  permission:
+                    filter:
+                      albums:
+                        id: 
+                          _eq: x-hasura-album-id
+                    columns: '*'
+              |]
+      shouldReturnYaml
+        testEnvironment
+        metadataQuery
+        [yaml|
+        message: success
+      |]
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              errors:
+              - extensions:
+                  code: not-supported
+                  path: $
+                message: subscriptions on this field is not supported
+            |]
+          websocketTestEnv =
+            testEnvironment
+              { globalEnvironment =
+                  (globalEnvironment testEnvironment)
+                    { requestProtocol = WebSocket
+                    }
+              }
+
+          actual :: IO Value
+          actual =
+            postGraphqlYamlWithHeaders
+              websocketTestEnv
+              (userRoleHeaders "1")
+              [interpolateYaml|
+                query: |
+                  subscription {
+                      #{schemaName}_track {
+                          id
+                      }
+                    }
+              |]
+      shouldReturnYaml websocketTestEnv actual expected
