@@ -290,7 +290,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
     toHashMap = HashMap.fromList . Map.toList
 
 resolveSourceConfig' ::
-  (Monad m) =>
+  (MonadIO m) =>
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
@@ -300,7 +300,7 @@ resolveSourceConfig' ::
   m (Either QErr DC.SourceConfig)
 resolveSourceConfig'
   sourceName
-  csc@DC.ConnSourceConfig {template, timeout, value = originalConfig}
+  csc@DC.ConnSourceConfig {_cscTemplate, _cscTemplateVariables, _cscTimeout, _cscValue = originalConfig}
   (DataConnectorKind dataConnectorName)
   backendInfo
   env
@@ -313,10 +313,11 @@ resolveSourceConfig'
       DC.SourceConfig
         { _scEndpoint = _dcoUri,
           _scConfig = originalConfig,
-          _scTemplate = template,
+          _scTemplate = _cscTemplate,
+          _scTemplateVariables = fromMaybe mempty _cscTemplateVariables,
           _scCapabilities = _dciCapabilities,
           _scManager = manager,
-          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
+          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> _cscTimeout),
           _scDataConnectorName = dataConnectorName,
           _scEnvironment = env
         }

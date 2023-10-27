@@ -53,9 +53,9 @@ above, databases can be connected using any custom environment variables of your
 
 This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
 `HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the
-Metadata. This can also be a URI of the form `dynamic-from-file:///path/to/file`, where the referenced 
+Metadata. This can also be a URI of the form `dynamic-from-file:///path/to/file`, where the referenced
 file contains a postgres connection string, which will be read dynamically every time a new
-connection is established. This allows the server to be used in an environment where secrets are 
+connection is established. This allows the server to be used in an environment where secrets are
 rotated frequently.
 
 |                     |                                                                             |
@@ -327,6 +327,22 @@ headers on any request.
 | **Options**         | `true` or `false`             |
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
+
+### Dynamic Secrets Allowed Path Prefix
+
+Enables the ability to source Postgres connection strings from files on disk using
+[DynamicFromFile](/api-reference/syntax-defs.mdx#pgsourceconnectioninfo), and the ability for
+[Template Variables](/databases/database-config/data-connector-config.mdx#template-variables) to
+use the contents of files in Data Connector configuration transforms. File paths used with these
+features must start with the prefix set in this environment variable.
+
+|                     |                                                                          |
+| ------------------- | ------------------------------------------------------------------------ |
+| **Flag**            | N/A                                                                      |
+| **Env var**         | `HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX`                     |
+| **Accepted values** | String (representing a filesystem path prefix, such as `/var/secrets/`)  |
+| **Default**         | `null`                                                                   |
+| **Supported in**    | CE, Enterprise Edition                                                   |
 
 ### Enable Allow List
 

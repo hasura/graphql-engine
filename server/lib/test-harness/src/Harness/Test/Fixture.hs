@@ -47,7 +47,7 @@ import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.Exceptions
-import Harness.GraphqlEngine (postGraphqlInternal, postMetadata_)
+import Harness.GraphqlEngine (postGraphqlInternal, postMetadataInternal, postMetadata_)
 import Harness.Logging
 import Harness.Permissions (Permission (..))
 import Harness.Permissions qualified as Permissions
@@ -282,6 +282,7 @@ setupTestEnvironment name globalTestEnvironment options = do
             permissions = Admin,
             _options = options,
             _postgraphqlInternal = postGraphqlInternal,
+            _postMetadataInternal = postMetadataInternal,
             _shouldReturnYamlFInternal = \testEnv -> withFrozenCallStack $ shouldReturnYamlFInternal (_options testEnv),
             _getSchemaNameInternal = getSchemaNameInternal
           }

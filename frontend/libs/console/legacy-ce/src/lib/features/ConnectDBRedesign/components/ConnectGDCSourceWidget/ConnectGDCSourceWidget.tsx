@@ -1,10 +1,8 @@
-import to from 'await-to-js';
 import { AxiosError } from 'axios';
 import get from 'lodash/get';
 import { useEffect, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
-import { useQuery } from 'react-query';
 import { ZodSchema, z } from 'zod';
 import { Button } from '../../../../new-components/Button';
 import { Collapsible } from '../../../../new-components/Collapsible';
@@ -13,60 +11,60 @@ import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { Tabs } from '../../../../new-components/Tabs';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useAvailableDrivers } from '../../../ConnectDB/hooks';
-import { DataSource, Feature } from '../../../DataSource';
-import { useHttpClient } from '../../../Network';
 import { OpenApi3Form } from '../../../OpenApi3Form';
-import { transformSchemaToZodObject } from '../../../OpenApi3Form/utils';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
-import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
 import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
-import { generateGDCRequestPayload } from './utils/generateRequest';
-import { Timeout } from './components/Timeout';
 import { Template } from './components/Template';
+import { TemplateVariables } from './components/TemplateVariables';
+import { Timeout } from './components/Timeout';
+import {
+  TemplateVariableMap,
+  useFormValidationSchema,
+} from './useFormValidationSchema';
+import { generateGDCRequestPayload } from './utils/generateRequest';
+import { Source } from '../../../hasura-metadata-types';
+import { cleanEmpty } from '../ConnectPostgresWidget/utils/helpers';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
   dataSourceName?: string;
 }
 
-const useFormValidationSchema = (driver: string) => {
-  const httpClient = useHttpClient();
-  return useQuery({
-    queryKey: ['form-schema', driver],
-    queryFn: async () => {
-      const [err, configSchemas] = await to(
-        DataSource(httpClient).connectDB.getConfigSchema(driver)
-      );
+function getExistingConnectionDetailsFromMetadata(source: Source) {
+  const configuration = source.configuration ?? ({} as any);
+  const customization = source.customization ?? {};
 
-      if (err) {
-        throw err;
-      }
+  const templateVariableMap = (configuration.template_variables ||
+    {}) as TemplateVariableMap;
 
-      if (!configSchemas || configSchemas === Feature.NotImplemented)
-        throw Error('Could not retrive config schema info for driver');
+  const templateVariableArray = Object.entries(templateVariableMap).map(
+    ([key, values]) => {
+      return { name: key, ...values };
+    }
+  );
+  return {
+    name: source.name,
+    // This is a particularly weird case with metadata only valid for GDC sources.
+    configuration: configuration.value,
+    timeout: configuration.timeout?.seconds as number | undefined,
+    template: (configuration.template ?? '') as string,
+    template_variables: templateVariableArray,
+    customization: adaptGraphQLCustomization(customization),
+  };
+}
 
-      const validationSchema = z.object({
-        name: z.string().min(1, 'Name is a required field!'),
-        configuration: transformSchemaToZodObject(
-          configSchemas.configSchema,
-          configSchemas.otherSchemas
-        ),
-        customization: graphQLCustomizationSchema.optional(),
-        timeout: z
-          .number()
-          .gte(0, { message: 'Timeout must be a postive number' })
-          .optional(),
-        template: z.string().optional(),
-      });
+function hasAdvancedSettings(source: Source | undefined) {
+  if (!source) return false;
 
-      return { validationSchema, configSchemas };
-    },
-    refetchOnWindowFocus: false,
-  });
-};
+  const details = cleanEmpty(getExistingConnectionDetailsFromMetadata(source));
+
+  return (
+    !!details.timeout || !!details.template || !!details.template_variables
+  );
+}
 
 export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   const { driver, dataSourceName } = props;
@@ -138,17 +136,9 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   }, [data?.validationSchema]);
 
   useEffect(() => {
-    if (metadataSource)
-      reset({
-        name: metadataSource?.name,
-        // This is a particularly weird case with metadata only valid for GDC sources.
-        configuration: (metadataSource?.configuration as any).value,
-        timeout: (metadataSource?.configuration as any)?.timeout?.seconds,
-        template: (metadataSource?.configuration as any)?.template ?? '',
-        customization: adaptGraphQLCustomization(
-          metadataSource?.customization ?? {}
-        ),
-      });
+    if (metadataSource) {
+      reset(getExistingConnectionDetailsFromMetadata(metadataSource));
+    }
   }, [metadataSource, reset]);
 
   if (isLoading) {
@@ -216,6 +206,8 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     get(formState.errors, 'configuration.connectionInfo'),
   ].filter(Boolean);
 
+  const openAdvanced = isEditMode && hasAdvancedSettings(metadataSource);
+
   return (
     <div>
       <div className="text-xl text-gray-600 font-semibold">
@@ -223,6 +215,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
           ? `Edit ${driverDisplayName} Connection`
           : `Connect ${driverDisplayName} Database`}
       </div>
+      <div className="my-3" />
       <Form onSubmit={handleSubmit}>
         <Tabs
           value={tab}
@@ -249,6 +242,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
 
                   <div className="mt-sm">
                     <Collapsible
+                      defaultOpen={openAdvanced}
                       triggerChildren={
                         <div className="font-semibold text-muted">
                           Advanced Settings
@@ -257,6 +251,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     >
                       <Timeout name="timeout" />
                       <Template name="template" />
+                      <TemplateVariables />
                     </Collapsible>
                   </div>
 

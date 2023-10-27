@@ -571,7 +571,7 @@ getPGConnectionStringFromParams PGConnectionParams {..} =
 -- (set only by an env var,  presumably only by someone with privileges to
 -- deploy).
 --
--- Altering the value of HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX after
+-- Altering the value of HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX after
 -- adding a dynamic source can result in inconsistent metadata.
 resolveUrlConf :: (MonadIO m, MonadError QErr m) => Env.Environment -> UrlConf -> m PG.ConnDetails
 resolveUrlConf env = \case
@@ -580,10 +580,10 @@ resolveUrlConf env = \case
   UrlFromParams connParams ->
     pure . toURI . T.pack $ getPGConnectionStringFromParams connParams
   UrlDynamicFromFile fpathDirty -> do
-    fpath <- case Env.lookupEnv env "HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX" of
-      Nothing -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable be set and non-empty"
+    fpath <- case Env.lookupEnv env "HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX" of
+      Nothing -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX environment variable be set and non-empty"
       -- Since this might be an accidental misconfiguration:
-      Just "" -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable be non-empty"
+      Just "" -> throw400 PermissionError $ "dynamic_from_file file path requires that the HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX environment variable be non-empty"
       -- Canonicalize the supplied (untrusted) file path, in an
       -- attempt to prevent escapes (like `..`).  canonicalize both
       -- path  and allowed prefix, so that matching is robust.
@@ -593,7 +593,7 @@ resolveUrlConf env = \case
         if allowedPrefixCanon `isPrefixOf` fpathDirtyCanon
           then pure fpathDirty
           else -- I guess we'll avoid leaking info here too...
-            throw400 PermissionError $ "The supplied dynamic_from_file file path, when canonicalized, does not match the allowed prefix set by your administrator via the HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX environment variable"
+            throw400 PermissionError $ "The supplied dynamic_from_file file path, when canonicalized, does not match the allowed prefix set by your administrator via the HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX environment variable"
     pure $ PG.CDDynamicDatabaseURI fpath
   where
     toURI = PG.CDDatabaseURI . txtToBs

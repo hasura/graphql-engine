@@ -319,7 +319,7 @@ initBasicConnectionInfo
     where
       -- Our own made up URI scheme corresponding to the dynamic_from_file feature
       -- NOTE: Since this can only be set by the administrator, there's no need
-      -- to validate against something like HASURA_DYNAMIC_DATA_SOURCE_ALLOWED_PATH_PREFIX
+      -- to validate against something like HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX
       dynamicScheme = "dynamic-from-file://"
       mkConnInfoFromMDB mdbURL =
         PG.ConnInfo

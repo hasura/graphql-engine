@@ -81,7 +81,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
     <td
       // style={{ maxWidth: '20ch' }}
-      className="px-sm py-xs text-muted overflow-hidden text-ellipsis"
+      className="px-sm py-xs overflow-hidden text-ellipsis"
       {...cellAttributes}
     >
       {children}
