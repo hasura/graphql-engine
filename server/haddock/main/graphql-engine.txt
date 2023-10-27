@@ -25294,22 +25294,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) TriggerOnReplication
-cteqCleanupConfig :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe Text)
-cetqWebhook :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe InputWebhook)
-cetqUpdate :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe (SubscribeOpSpec b_atqXo))
-cetqTable :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (TableName b_atqXo)
-cetqSource :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) SourceName
-cetqRetryConf :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe RequestTransform)
-cetqReplace :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) Bool
-cetqName :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) TriggerName
-cetqInsert :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe (SubscribeOpSpec b_atqXo))
-cetqHeaders :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe Bool)
-cetqDelete :: forall b_atqXo. Lens' (CreateEventTriggerQuery b_atqXo) (Maybe (SubscribeOpSpec b_atqXo))
+cteqTriggerOnReplication :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) TriggerOnReplication
+cteqCleanupConfig :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe Text)
+cetqWebhook :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe InputWebhook)
+cetqUpdate :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe (SubscribeOpSpec b_atrFC))
+cetqTable :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (TableName b_atrFC)
+cetqSource :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) SourceName
+cetqRetryConf :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe RequestTransform)
+cetqReplace :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) Bool
+cetqName :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) TriggerName
+cetqInsert :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe (SubscribeOpSpec b_atrFC))
+cetqHeaders :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe Bool)
+cetqDelete :: forall b_atrFC. Lens' (CreateEventTriggerQuery b_atrFC) (Maybe (SubscribeOpSpec b_atrFC))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)

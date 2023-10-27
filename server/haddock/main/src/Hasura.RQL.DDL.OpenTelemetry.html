@@ -28,15 +28,15 @@
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-f12a47f48162743632539cc464a2b525d35d922fe7c356b6739f0bd6631bff79/share/doc/html/src/Network.URI.html"><span class="hs-identifier">Network.URI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-f12a47f48162743632539cc464a2b525d35d922fe7c356b6739f0bd6631bff79/share/doc/html/src/Network.URI.html#parseURI"><span class="hs-identifier">parseURI</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
 </span><span id="line-30"></span><span class="annot"><span class="hs-comment">-- | Set the OpenTelemetry configuration to the provided value.</span></span><span>
-</span><span id="line-31"></span><span id="local-6989586621687775911"><span class="annot"><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryConfig"><span class="hs-identifier hs-type">runSetOpenTelemetryConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775911"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775911"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775911"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-31"></span><span id="local-6989586621687778653"><span class="annot"><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryConfig"><span class="hs-identifier hs-type">runSetOpenTelemetryConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778653"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778653"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778653"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-34"></span><span>  </span><span class="annot"><a href="#local-6989586621687775911"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="#local-6989586621687778653"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-35"></span><span id="runSetOpenTelemetryConfig"><span class="annot"><span class="annottext">runSetOpenTelemetryConfig :: forall (m :: * -&gt; *).
 (MonadError QErr m, MetadataM m, CacheRWM m) =&gt;
 OpenTelemetryConfig -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryConfig"><span class="hs-identifier hs-var hs-var">runSetOpenTelemetryConfig</span></a></span></span><span> </span><span id="local-6989586621687776086"><span class="annot"><span class="annottext">OpenTelemetryConfig
-</span><a href="#local-6989586621687776086"><span class="hs-identifier hs-var">otelConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryConfig"><span class="hs-identifier hs-var hs-var">runSetOpenTelemetryConfig</span></a></span></span><span> </span><span id="local-6989586621687778828"><span class="annot"><span class="annottext">OpenTelemetryConfig
+</span><a href="#local-6989586621687778828"><span class="hs-identifier hs-var">otelConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span>
@@ -65,7 +65,7 @@ Lens' Metadata OpenTelemetryConfig
 -&gt; OpenTelemetryConfig -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">OpenTelemetryConfig
-</span><a href="#local-6989586621687776086"><span class="hs-identifier hs-var">otelConfig</span></a></span><span>
+</span><a href="#local-6989586621687778828"><span class="hs-identifier hs-var">otelConfig</span></a></span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -73,15 +73,15 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="annot"><span class="hs-comment">-- | Set just the &quot;status&quot; field of the OpenTelemetry configuration.</span></span><span>
-</span><span id="line-44"></span><span id="local-6989586621687775942"><span class="annot"><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryStatus"><span class="hs-identifier hs-type">runSetOpenTelemetryStatus</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775942"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775942"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687775942"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span id="local-6989586621687778684"><span class="annot"><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryStatus"><span class="hs-identifier hs-type">runSetOpenTelemetryStatus</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778684"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778684"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778684"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-47"></span><span>  </span><span class="annot"><a href="#local-6989586621687775942"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="#local-6989586621687778684"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-48"></span><span id="runSetOpenTelemetryStatus"><span class="annot"><span class="annottext">runSetOpenTelemetryStatus :: forall (m :: * -&gt; *).
 (MonadError QErr m, MetadataM m, CacheRWM m) =&gt;
 OtelStatus -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryStatus"><span class="hs-identifier hs-var hs-var">runSetOpenTelemetryStatus</span></a></span></span><span> </span><span id="local-6989586621687776108"><span class="annot"><span class="annottext">OtelStatus
-</span><a href="#local-6989586621687776108"><span class="hs-identifier hs-var">otelStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#runSetOpenTelemetryStatus"><span class="hs-identifier hs-var hs-var">runSetOpenTelemetryStatus</span></a></span></span><span> </span><span id="local-6989586621687778850"><span class="annot"><span class="annottext">OtelStatus
+</span><a href="#local-6989586621687778850"><span class="hs-identifier hs-var">otelStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span>
@@ -122,7 +122,7 @@ Lens' OpenTelemetryConfig OtelStatus
 -&gt; OtelStatus -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">OtelStatus
-</span><a href="#local-6989586621687776108"><span class="hs-identifier hs-var">otelStatus</span></a></span><span>
+</span><a href="#local-6989586621687778850"><span class="hs-identifier hs-var">otelStatus</span></a></span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -144,9 +144,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; Set OtelDataType
 -&gt; OtelExporterConfig
 -&gt; Either QErr OtelExporterInfo
-</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#parseOtelExporterConfig"><span class="hs-identifier hs-var hs-var">parseOtelExporterConfig</span></a></span></span><span> </span><span id="local-6989586621687776113"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687776113"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687776114"><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687776116"><span id="local-6989586621687776117"><span id="local-6989586621687776118"><span id="local-6989586621687776119"><span id="local-6989586621687776120"><span id="local-6989586621687776121"><span id="local-6989586621687776122"><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#parseOtelExporterConfig"><span class="hs-identifier hs-var hs-var">parseOtelExporterConfig</span></a></span></span><span> </span><span id="local-6989586621687778855"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687778855"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687778856"><span class="annot"><span class="annottext">Set OtelDataType
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687778858"><span id="local-6989586621687778859"><span id="local-6989586621687778860"><span id="local-6989586621687778861"><span id="local-6989586621687778862"><span id="local-6989586621687778863"><span id="local-6989586621687778864"><span class="annot"><span class="annottext">[HeaderConf]
 [TracePropagator]
 [NameValue]
 Maybe Text
@@ -165,19 +165,19 @@ _oecProtocol :: OtelExporterConfig -&gt; OtlpProtocol
 _oecHeaders :: OtelExporterConfig -&gt; [HeaderConf]
 _oecResourceAttributes :: OtelExporterConfig -&gt; [NameValue]
 _oecTracesPropagators :: OtelExporterConfig -&gt; [TracePropagator]
-</span><a href="#local-6989586621687776116"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687778858"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-comment">-- First validate everything but the trace endpoint</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621687776130"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687776130"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; [HeaderConf] -&gt; Either QErr [Header]
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621687778872"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621687778872"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; [HeaderConf] -&gt; Either QErr [Header]
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Environment -&gt; [HeaderConf] -&gt; m [Header]
 </span><a href="Hasura.RQL.DDL.Headers.html#makeHeadersFromConf"><span class="hs-identifier hs-var">makeHeadersFromConf</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687776113"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621687776120"><span class="hs-identifier hs-var">_oecHeaders</span></a></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687776131"><span class="annot"><span class="annottext">mkExportReq :: Text -&gt; Either QErr (Maybe Request)
-</span><a href="#local-6989586621687776131"><span class="hs-identifier hs-var hs-var">mkExportReq</span></a></span></span><span> </span><span id="local-6989586621687776132"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776132"><span class="hs-identifier hs-var">rawEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; QErr)
+</span><a href="#local-6989586621687778855"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621687778862"><span class="hs-identifier hs-var">_oecHeaders</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687778873"><span class="annot"><span class="annottext">mkExportReq :: Text -&gt; Either QErr (Maybe Request)
+</span><a href="#local-6989586621687778873"><span class="hs-identifier hs-var hs-var">mkExportReq</span></a></span></span><span> </span><span id="local-6989586621687778874"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778874"><span class="hs-identifier hs-var">rawEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; QErr)
 -&gt; Either Text (Maybe Request) -&gt; Either QErr (Maybe Request)
 forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
@@ -186,8 +186,8 @@ forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 -&gt; Either Text (Maybe Request) -&gt; Either QErr (Maybe Request)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-72"></span><span>        </span><span id="local-6989586621687776136"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687776136"><span class="hs-identifier hs-var">rawTemplateEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String Template -&gt; Either Text Template
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621687778878"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687778878"><span class="hs-identifier hs-var">rawTemplateEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String Template -&gt; Either Text Template
 forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">Text.pack</span></a></span><span> </span><span class="annot"><span class="annottext">(Either String Template -&gt; Either Text Template)
@@ -195,14 +195,14 @@ forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Template
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#parseTemplate"><span class="hs-identifier hs-var">parseTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776132"><span class="hs-identifier hs-var">rawEndpoint</span></a></span><span>
-</span><span id="line-73"></span><span>        </span><span id="local-6989586621687776138"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776138"><span class="hs-identifier hs-var">rawUri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Template -&gt; Either Text Text
+</span><a href="#local-6989586621687778874"><span class="hs-identifier hs-var">rawEndpoint</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span id="local-6989586621687778880"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778880"><span class="hs-identifier hs-var">rawUri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Template -&gt; Either Text Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#renderTemplate"><span class="hs-identifier hs-var">renderTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687776113"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687776136"><span class="hs-identifier hs-var">rawTemplateEndpoint</span></a></span><span>
-</span><span id="line-74"></span><span>        </span><span id="local-6989586621687776139"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621687776139"><span class="hs-identifier hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe URI -&gt; Either Text URI
+</span><a href="#local-6989586621687778855"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687778878"><span class="hs-identifier hs-var">rawTemplateEndpoint</span></a></span><span>
+</span><span id="line-74"></span><span>        </span><span id="local-6989586621687778881"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621687778881"><span class="hs-identifier hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe URI -&gt; Either Text URI
 forall a b. a -&gt; Maybe b -&gt; Either a b
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#maybeToEither"><span class="hs-identifier hs-var">maybeToEither</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Invalid URL&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Maybe URI -&gt; Either Text URI) -&gt; Maybe URI -&gt; Either Text URI
@@ -210,9 +210,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe URI
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-f12a47f48162743632539cc464a2b525d35d922fe7c356b6739f0bd6631bff79/share/doc/html/src/Network.URI.html#parseURI"><span class="hs-identifier hs-var">parseURI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">Text.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776138"><span class="hs-identifier hs-var">rawUri</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-75"></span><span>        </span><span id="local-6989586621687776142"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687776142"><span class="hs-identifier hs-var">uriRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; Text)
+</span><a href="#local-6989586621687778880"><span class="hs-identifier hs-var">rawUri</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>        </span><span id="local-6989586621687778884"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621687778884"><span class="hs-identifier hs-var">uriRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; Text)
 -&gt; Either SomeException Request -&gt; Either Text Request
 forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 forall (p :: * -&gt; * -&gt; *) a b c.
@@ -226,7 +226,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">URI -&gt; Either SomeException Request
 forall (m :: * -&gt; *). MonadThrow m =&gt; URI -&gt; m Request
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-88628f48a025e46598ca658ea231eb27d6340417f49e950fbf8c438edb3ebbdc/share/doc/html/src/Network.HTTP.Client.Request.html#requestFromURI"><span class="hs-identifier hs-var">requestFromURI</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621687776139"><span class="hs-identifier hs-var">uri</span></a></span><span>
+</span><a href="#local-6989586621687778881"><span class="hs-identifier hs-var">uri</span></a></span><span>
 </span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">Maybe Request -&gt; Either Text (Maybe Request)
 forall a. a -&gt; Either Text a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -240,19 +240,19 @@ forall a. a -&gt; Maybe a
 </span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">(Request -&gt; Maybe Request) -&gt; Request -&gt; Maybe Request
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687776142"><span class="hs-identifier hs-var">uriRequest</span></a></span><span>
+</span><a href="#local-6989586621687778884"><span class="hs-identifier hs-var">uriRequest</span></a></span><span>
 </span><span id="line-79"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">requestHeaders :: [Header]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-88628f48a025e46598ca658ea231eb27d6340417f49e950fbf8c438edb3ebbdc/share/doc/html/src/Network.HTTP.Client.Types.html#requestHeaders"><span class="hs-identifier hs-var">requestHeaders</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687776130"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
+</span><a href="#local-6989586621687778872"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [Header]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-88628f48a025e46598ca658ea231eb27d6340417f49e950fbf8c438edb3ebbdc/share/doc/html/src/Network.HTTP.Client.Types.html#requestHeaders"><span class="hs-identifier hs-var">requestHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687776142"><span class="hs-identifier hs-var">uriRequest</span></a></span><span>
+</span><a href="#local-6989586621687778884"><span class="hs-identifier hs-var">uriRequest</span></a></span><span>
 </span><span id="line-80"></span><span>            </span><span class="hs-special">}</span><span>
-</span><span id="line-81"></span><span>      </span><span id="local-6989586621687776144"><span class="annot"><span class="annottext">mkAttribute :: NameValue -&gt; Either QErr (Text, Text)
-</span><a href="#local-6989586621687776144"><span class="hs-identifier hs-var hs-var">mkAttribute</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span><span> </span><span id="local-6989586621687776146"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776146"><span class="hs-identifier hs-var">nvName</span></a></span></span><span> </span><span id="local-6989586621687776147"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776147"><span class="hs-identifier hs-var">nvValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; QErr)
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621687778886"><span class="annot"><span class="annottext">mkAttribute :: NameValue -&gt; Either QErr (Text, Text)
+</span><a href="#local-6989586621687778886"><span class="hs-identifier hs-var hs-var">mkAttribute</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span><span> </span><span id="local-6989586621687778888"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778888"><span class="hs-identifier hs-var">nvName</span></a></span></span><span> </span><span id="local-6989586621687778889"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778889"><span class="hs-identifier hs-var">nvValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; QErr)
 -&gt; Either Text (Text, Text) -&gt; Either QErr (Text, Text)
 forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
@@ -261,8 +261,8 @@ forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 -&gt; Either Text (Text, Text) -&gt; Either QErr (Text, Text)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-82"></span><span>        </span><span id="local-6989586621687776148"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687776148"><span class="hs-identifier hs-var">rawValueTemplate</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String Template -&gt; Either Text Template
+</span><span id="line-82"></span><span>        </span><span id="local-6989586621687778890"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687778890"><span class="hs-identifier hs-var">rawValueTemplate</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String Template -&gt; Either Text Template
 forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#mapLeft"><span class="hs-identifier hs-var">mapLeft</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">Text.pack</span></a></span><span> </span><span class="annot"><span class="annottext">(Either String Template -&gt; Either Text Template)
@@ -270,46 +270,46 @@ forall e1 e2 a. (e1 -&gt; e2) -&gt; Either e1 a -&gt; Either e2 a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Template
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#parseTemplate"><span class="hs-identifier hs-var">parseTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776147"><span class="hs-identifier hs-var">nvValue</span></a></span><span>
-</span><span id="line-83"></span><span>        </span><span id="local-6989586621687776149"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776149"><span class="hs-identifier hs-var">renderedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Template -&gt; Either Text Text
+</span><a href="#local-6989586621687778889"><span class="hs-identifier hs-var">nvValue</span></a></span><span>
+</span><span id="line-83"></span><span>        </span><span id="local-6989586621687778891"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778891"><span class="hs-identifier hs-var">renderedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Template -&gt; Either Text Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#renderTemplate"><span class="hs-identifier hs-var">renderTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687776113"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687776148"><span class="hs-identifier hs-var">rawValueTemplate</span></a></span><span>
+</span><a href="#local-6989586621687778855"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687778890"><span class="hs-identifier hs-var">rawValueTemplate</span></a></span><span>
 </span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">(Text, Text) -&gt; Either Text (Text, Text)
 forall a. a -&gt; Either Text a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776146"><span class="hs-identifier hs-var">nvName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776149"><span class="hs-identifier hs-var">renderedValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687778888"><span class="hs-identifier hs-var">nvName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778891"><span class="hs-identifier hs-var">renderedValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-85"></span><span>
 </span><span id="line-86"></span><span>  </span><span class="hs-comment">-- Allow telemetry endpoints to be unset when not enabled</span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621687776150"><span class="annot"><span class="annottext">Maybe Request
-</span><a href="#local-6989586621687776150"><span class="hs-identifier hs-var">_oteleiTracesBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687776116"><span class="hs-identifier hs-var">_oecTracesEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621687778892"><span class="annot"><span class="annottext">Maybe Request
+</span><a href="#local-6989586621687778892"><span class="hs-identifier hs-var">_oteleiTracesBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687778858"><span class="hs-identifier hs-var">_oecTracesEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelTraces"><span class="hs-identifier hs-var">OtelTraces</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-90"></span><span>          </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr (Maybe Request)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Traces export is enabled but tracing endpoint missing&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-91"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687776153"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776153"><span class="hs-identifier hs-var">rawTracesEndpoint</span></a></span></span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687778895"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778895"><span class="hs-identifier hs-var">rawTracesEndpoint</span></a></span></span><span>
 </span><span id="line-92"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelTraces"><span class="hs-identifier hs-var">OtelTraces</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-93"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Either QErr (Maybe Request)
-</span><a href="#local-6989586621687776131"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776153"><span class="hs-identifier hs-var">rawTracesEndpoint</span></a></span><span>
+</span><a href="#local-6989586621687778873"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778895"><span class="hs-identifier hs-var">rawTracesEndpoint</span></a></span><span>
 </span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Request -&gt; Either QErr (Maybe Request)
 forall a. a -&gt; Either QErr a
@@ -317,32 +317,32 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Request
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-comment">-- disabled</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621687776154"><span class="annot"><span class="annottext">Maybe Request
-</span><a href="#local-6989586621687776154"><span class="hs-identifier hs-var">_oteleiMetricsBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687776117"><span class="hs-identifier hs-var">_oecMetricsEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621687778896"><span class="annot"><span class="annottext">Maybe Request
+</span><a href="#local-6989586621687778896"><span class="hs-identifier hs-var">_oteleiMetricsBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687778859"><span class="hs-identifier hs-var">_oecMetricsEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelMetrics"><span class="hs-identifier hs-var">OtelMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr (Maybe Request)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Metrics export is enabled but metrics endpoint missing&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-99"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687776156"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776156"><span class="hs-identifier hs-var">rawMetricsEndpoint</span></a></span></span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687778898"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778898"><span class="hs-identifier hs-var">rawMetricsEndpoint</span></a></span></span><span>
 </span><span id="line-100"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelMetrics"><span class="hs-identifier hs-var">OtelMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Either QErr (Maybe Request)
-</span><a href="#local-6989586621687776131"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776156"><span class="hs-identifier hs-var">rawMetricsEndpoint</span></a></span><span>
+</span><a href="#local-6989586621687778873"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778898"><span class="hs-identifier hs-var">rawMetricsEndpoint</span></a></span><span>
 </span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Request -&gt; Either QErr (Maybe Request)
 forall a. a -&gt; Either QErr a
@@ -350,32 +350,32 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Request
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-comment">-- disabled</span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621687776157"><span class="annot"><span class="annottext">Maybe Request
-</span><a href="#local-6989586621687776157"><span class="hs-identifier hs-var">_oteleiLogsBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687776118"><span class="hs-identifier hs-var">_oecLogsEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621687778899"><span class="annot"><span class="annottext">Maybe Request
+</span><a href="#local-6989586621687778899"><span class="hs-identifier hs-var">_oteleiLogsBaseRequest</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687778860"><span class="hs-identifier hs-var">_oecLogsEndpoint</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-105"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelLogs"><span class="hs-identifier hs-var">OtelLogs</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-106"></span><span>          </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr (Maybe Request)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Logs export is enabled but logs endpoint missing&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-107"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687776159"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776159"><span class="hs-identifier hs-var">rawLogsEndpoint</span></a></span></span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687778901"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778901"><span class="hs-identifier hs-var">rawLogsEndpoint</span></a></span></span><span>
 </span><span id="line-108"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelLogs"><span class="hs-identifier hs-var">OtelLogs</span></a></span><span> </span><span class="annot"><span class="annottext">OtelDataType -&gt; Set OtelDataType -&gt; Bool
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set OtelDataType
-</span><a href="#local-6989586621687776114"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687778856"><span class="hs-identifier hs-var">enabledDataTypes</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Either QErr (Maybe Request)
-</span><a href="#local-6989586621687776131"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687776159"><span class="hs-identifier hs-var">rawLogsEndpoint</span></a></span><span>
+</span><a href="#local-6989586621687778873"><span class="hs-identifier hs-var">mkExportReq</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778901"><span class="hs-identifier hs-var">rawLogsEndpoint</span></a></span><span>
 </span><span id="line-110"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe Request -&gt; Either QErr (Maybe Request)
 forall a. a -&gt; Either QErr a
@@ -383,8 +383,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe Request
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-comment">-- disabled</span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621687776160"><span class="annot"><span class="annottext">Map Text Text
-</span><a href="#local-6989586621687776160"><span class="hs-identifier hs-var">_oteleiResourceAttributes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[(Text, Text)] -&gt; Map Text Text
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621687778902"><span class="annot"><span class="annottext">Map Text Text
+</span><a href="#local-6989586621687778902"><span class="hs-identifier hs-var">_oteleiResourceAttributes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[(Text, Text)] -&gt; Map Text Text
 forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Text, Text)] -&gt; Map Text Text)
 -&gt; Either QErr [(Text, Text)] -&gt; Either QErr (Map Text Text)
@@ -396,8 +396,8 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; [a] -&gt; m [b]
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">NameValue -&gt; Either QErr (Text, Text)
-</span><a href="#local-6989586621687776144"><span class="hs-identifier hs-var">mkAttribute</span></a></span><span> </span><span class="annot"><span class="annottext">[NameValue]
-</span><a href="#local-6989586621687776121"><span class="hs-identifier hs-var">_oecResourceAttributes</span></a></span><span>
+</span><a href="#local-6989586621687778886"><span class="hs-identifier hs-var">mkAttribute</span></a></span><span> </span><span class="annot"><span class="annottext">[NameValue]
+</span><a href="#local-6989586621687778863"><span class="hs-identifier hs-var">_oecResourceAttributes</span></a></span><span>
 </span><span id="line-112"></span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="annottext">OtelExporterInfo -&gt; Either QErr OtelExporterInfo
 forall a. a -&gt; Either QErr a
@@ -410,19 +410,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-115"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe Request
 _oteleiMetricsBaseRequest :: Maybe Request
 _oteleiMetricsBaseRequest :: Maybe Request
-</span><a href="#local-6989586621687776154"><span class="hs-identifier hs-var hs-var">_oteleiMetricsBaseRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687778896"><span class="hs-identifier hs-var hs-var">_oteleiMetricsBaseRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">Maybe Request
 _oteleiTracesBaseRequest :: Maybe Request
 _oteleiTracesBaseRequest :: Maybe Request
-</span><a href="#local-6989586621687776150"><span class="hs-identifier hs-var hs-var">_oteleiTracesBaseRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687778892"><span class="hs-identifier hs-var hs-var">_oteleiTracesBaseRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">Maybe Request
 _oteleiLogsBaseRequest :: Maybe Request
 _oteleiLogsBaseRequest :: Maybe Request
-</span><a href="#local-6989586621687776157"><span class="hs-identifier hs-var hs-var">_oteleiLogsBaseRequest</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687778899"><span class="hs-identifier hs-var hs-var">_oteleiLogsBaseRequest</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">Map Text Text
 _oteleiResourceAttributes :: Map Text Text
 _oteleiResourceAttributes :: Map Text Text
-</span><a href="#local-6989586621687776160"><span class="hs-identifier hs-var hs-var">_oteleiResourceAttributes</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687778902"><span class="hs-identifier hs-var hs-var">_oteleiResourceAttributes</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-119"></span><span>        </span><span class="annot"><span class="annottext">_oteleiTracesPropagator :: Propagator [Header] [Header]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_oteleiTracesPropagator"><span class="hs-identifier hs-var">_oteleiTracesPropagator</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">[TracePropagator] -&gt; Propagator [Header] [Header]
@@ -433,7 +433,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[TracePropagator] -&gt; [TracePropagator]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.List.Extended.html#uniques"><span class="hs-identifier hs-var">uniques</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TracePropagator]
-</span><a href="#local-6989586621687776122"><span class="hs-identifier hs-var">_oecTracesPropagators</span></a></span><span> </span><span class="annot"><span class="annottext">[TracePropagator] -&gt; [TracePropagator] -&gt; [TracePropagator]
+</span><a href="#local-6989586621687778864"><span class="hs-identifier hs-var">_oecTracesPropagators</span></a></span><span> </span><span class="annot"><span class="annottext">[TracePropagator] -&gt; [TracePropagator] -&gt; [TracePropagator]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[TracePropagator]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterTracesPropagators"><span class="hs-identifier hs-var">defaultOtelExporterTracesPropagators</span></a></span><span class="hs-special">)</span><span>
@@ -444,33 +444,33 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-126"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorInfo"><span class="hs-identifier hs-type">OtelBatchSpanProcessorInfo</span></a></span><span>
 </span><span id="line-127"></span><span id="parseOtelBatchSpanProcessorConfig"><span class="annot"><span class="annottext">parseOtelBatchSpanProcessorConfig :: OtelBatchSpanProcessorConfig
 -&gt; Either QErr OtelBatchSpanProcessorInfo
-</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#parseOtelBatchSpanProcessorConfig"><span class="hs-identifier hs-var hs-var">parseOtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687776172"><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.RQL.DDL.OpenTelemetry.html#parseOtelBatchSpanProcessorConfig"><span class="hs-identifier hs-var hs-var">parseOtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687778914"><span class="annot"><span class="annottext">Int
 _obspcMaxExportBatchSize :: Int
 _obspcMaxExportBatchSize :: OtelBatchSpanProcessorConfig -&gt; Int
-</span><a href="#local-6989586621687776172"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621687776174"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687776174"><span class="hs-identifier hs-var">_obspiMaxExportBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687778914"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621687778916"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687778916"><span class="hs-identifier hs-var">_obspiMaxExportBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-129"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687776172"><span class="hs-identifier hs-var">_obspcMaxExportBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621687778914"><span class="hs-identifier hs-var">_obspcMaxExportBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-130"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Either QErr Int
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687776172"><span class="hs-identifier hs-var">_obspcMaxExportBatchSize</span></a></span><span>
+</span><a href="#local-6989586621687778914"><span class="hs-identifier hs-var">_obspcMaxExportBatchSize</span></a></span><span>
 </span><span id="line-131"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr Int
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max_export_batch_size must be a positive integer&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687776176"><span class="annot"><span class="annottext">_obspiMaxQueueSize :: Int
-</span><a href="#local-6989586621687776176"><span class="hs-identifier hs-var hs-var">_obspiMaxQueueSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687778918"><span class="annot"><span class="annottext">_obspiMaxQueueSize :: Int
+</span><a href="#local-6989586621687778918"><span class="hs-identifier hs-var hs-var">_obspiMaxQueueSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687776174"><span class="hs-identifier hs-var">_obspiMaxExportBatchSize</span></a></span><span> </span><span class="hs-comment">-- consistent with default value of 2048</span><span>
+</span><a href="#local-6989586621687778916"><span class="hs-identifier hs-var">_obspiMaxExportBatchSize</span></a></span><span> </span><span class="hs-comment">-- consistent with default value of 2048</span><span>
 </span><span id="line-133"></span><span>  </span><span class="annot"><span class="annottext">OtelBatchSpanProcessorInfo
 -&gt; Either QErr OtelBatchSpanProcessorInfo
 forall a. a -&gt; Either QErr a
@@ -480,5 +480,5 @@ _obspiMaxExportBatchSize :: Int
 _obspiMaxQueueSize :: Int
 _obspiMaxExportBatchSize :: Int
 _obspiMaxQueueSize :: Int
-</span><a href="#local-6989586621687776174"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621687778916"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-134"></span></pre></body></html>
