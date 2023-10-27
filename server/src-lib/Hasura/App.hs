@@ -499,7 +499,9 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvLicenseKeyCache = Nothing,
           appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
           appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus,
-          appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize
+          appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize,
+          appEnvPersistedQueries = soPersistedQueries,
+          appEnvPersistedQueriesTtl = soPersistedQueriesTtl
         }
     )
 
@@ -772,6 +774,13 @@ instance MonadGQLExecutionCheck AppM where
 instance MonadConfigApiHandler AppM where
   runConfigApiHandler = configApiGetHandler
 
+instance MonadGQLApiHandler AppM where
+  runPersistedQueriesGetHandler _ _ _ = throw400 NotSupported "PersistedQueryNotSupported"
+  runPersistedQueriesPostHandler _ _ query =
+    case query of
+      EqrGQLReq gqlReq -> v1GQHandler gqlReq
+      EqrAPQReq _ -> throw400 NotSupported "PersistedQueryNotSupported"
+
 instance MonadQueryLog AppM where
   logQueryLog logger = unLoggerTracing logger
 
@@ -933,7 +942,8 @@ runHGEServer ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
-    MonadGetPolicies m
+    MonadGetPolicies m,
+    MonadGQLApiHandler m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
@@ -1030,7 +1040,8 @@ mkHGEServer ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
-    MonadGetPolicies m
+    MonadGetPolicies m,
+    MonadGQLApiHandler m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->

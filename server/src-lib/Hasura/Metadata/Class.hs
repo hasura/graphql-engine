@@ -31,6 +31,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
 import Hasura.Session
+import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
 
 data SchemaSyncEventProcessResult = SchemaSyncEventProcessResult
@@ -197,6 +198,8 @@ deriving via (TransT (ExceptT e) m) instance (MonadMetadataStorage m) => MonadMe
 deriving via (TransT MetadataT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m)
 
 deriving via (TransT ManagedT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (ManagedT m)
+
+deriving via (TransT TraceT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (TraceT m)
 
 -- | Record a one-off event
 createOneOffScheduledEvent :: (MonadMetadataStorage m) => OneOffEvent -> m (Either QErr EventId)

@@ -325,7 +325,9 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoCloseWebsocketsOnMetadataChangeStatus :: Maybe Server.Types.CloseWebsocketsOnMetadataChangeStatus,
     rsoMaxTotalHeaderLength :: Maybe Int,
     rsoTriggersErrorLogLevelStatus :: Maybe Server.Types.TriggersErrorLogLevelStatus,
-    rsoAsyncActionsFetchBatchSize :: Maybe Int
+    rsoAsyncActionsFetchBatchSize :: Maybe Int,
+    rsoPersistedQueries :: Maybe Server.Types.PersistedQueriesState,
+    rsoPersistedQueriesTtl :: Maybe Int
   }
 
 -- | Whether or not to serve Console assets.
@@ -628,7 +630,9 @@ data ServeOptions impl = ServeOptions
     soCloseWebsocketsOnMetadataChangeStatus :: Server.Types.CloseWebsocketsOnMetadataChangeStatus,
     soMaxTotalHeaderLength :: Int,
     soTriggersErrorLogLevelStatus :: Server.Types.TriggersErrorLogLevelStatus,
-    soAsyncActionsFetchBatchSize :: Int
+    soAsyncActionsFetchBatchSize :: Int,
+    soPersistedQueries :: Server.Types.PersistedQueriesState,
+    soPersistedQueriesTtl :: Int
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

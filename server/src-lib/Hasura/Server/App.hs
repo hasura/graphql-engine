@@ -10,6 +10,7 @@ module Hasura.Server.App
     HandlerCtx (hcReqHeaders, hcAppContext, hcSchemaCache, hcUser),
     HasuraApp (HasuraApp),
     MonadConfigApiHandler (..),
+    MonadGQLApiHandler (..),
     MonadMetadataApiAuthorization (..),
     AppContext (..),
     boolToText,
@@ -22,6 +23,7 @@ module Hasura.Server.App
     onlyAdmin,
     renderHtmlTemplate,
     onlyWhenApiEnabled,
+    v1GQHandler,
   )
 where
 
@@ -118,6 +120,7 @@ import System.Mem (performMajorGC)
 import System.Metrics qualified as EKG
 import System.Metrics.Json qualified as EKG
 import Text.Mustache qualified as M
+import Web.Spock.Action qualified as Spock
 import Web.Spock.Core ((<//>))
 import Web.Spock.Core qualified as Spock
 
@@ -191,6 +194,7 @@ data APIHandler m a where
   -- is made available to the handler for authentication.
   -- This is a more specific version of the 'AHPost' constructor.
   AHGraphQLRequest :: !(GH.ReqsText -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m GH.ReqsText
+  AHPersistedGraphQLRequest :: !(ExtQueryReqs -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m ExtQueryReqs
 
 boolToText :: Bool -> Text
 boolToText = bool "false" "true"
@@ -207,6 +211,9 @@ mkPostHandler = AHPost
 
 mkGQLRequestHandler :: (GH.ReqsText -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m GH.ReqsText
 mkGQLRequestHandler = AHGraphQLRequest
+
+mkPersistedGQLRequestHandler :: (ExtQueryReqs -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m ExtQueryReqs
+mkPersistedGQLRequestHandler = AHPersistedGraphQLRequest
 
 mkAPIRespHandler :: (Functor m) => (a -> Handler m (HttpResponse EncJSON)) -> (a -> Handler m APIResp)
 mkAPIRespHandler = (fmap . fmap) JSONResp
@@ -280,6 +287,17 @@ class (Monad m) => MonadConfigApiHandler m where
   runConfigApiHandler ::
     AppStateRef impl ->
     Spock.SpockCtxT () m ()
+
+-- The graphql API (/graphql/v1) handler. It handles both persisted queries as well as graphql queries.
+class (Monad m) => MonadGQLApiHandler m where
+  -- the GET handler handles only persisted queries (containing the hash of the query to be fetched from the cache store)
+  runPersistedQueriesGetHandler ::
+    PersistedQueriesState -> Int -> [(Text, Text)] -> Handler m (HttpLogGraphQLInfo, APIResp)
+
+  -- the POST handler handler handles both persisted queries as well as graphql requests (without a hash associated with
+  -- them).
+  runPersistedQueriesPostHandler ::
+    PersistedQueriesState -> Int -> ExtQueryReqs -> Handler m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 
 mkSpockAction ::
   forall m a impl.
@@ -365,6 +383,24 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo (Just parsedReq)
+
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
+        pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
+      AHPersistedGraphQLRequest handler -> do
+        (queryJSON, parsedReq) <-
+          runExcept (parseBody reqBody) `onLeft` \e -> do
+            -- if the request fails to parse, call the webhook without a request body
+            -- TODO should we signal this to the webhook somehow?
+            (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
+        let newReq = case parsedReq of
+              EqrGQLReq reqText -> Just reqText
+              -- Note: We send only `ReqsText` to the webhook in case of `ExtPersistedQueryRequest` (persisted queries),
+              -- which does not contain the `extensions` field.
+              EqrAPQReq persistedQueryReq -> do
+                q <- _extQuery persistedQueryReq
+                Just $ GH.GQLSingleRequest $ GH.GQLReq (_extOperationName persistedQueryReq) q (_extVariables persistedQueryReq)
+        (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo newReq
 
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
@@ -774,7 +810,8 @@ mkWaiApp ::
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetPolicies m
+    MonadGetPolicies m,
+    MonadGQLApiHandler m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
@@ -822,7 +859,8 @@ httpApp ::
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetPolicies m
+    MonadGetPolicies m,
+    MonadGQLApiHandler m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
@@ -979,11 +1017,24 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       $ v1Alpha1GQHandler E.QueryHasura
 
   Spock.post "v1/graphql" $ do
+    let persistedQueriesState = appEnvPersistedQueries
+        persistedQueriesTtl = appEnvPersistedQueriesTtl
+    let apiHandler = runPersistedQueriesPostHandler persistedQueriesState persistedQueriesTtl
     onlyWhenApiEnabled isGraphQLEnabled appStateRef
       $ spockAction GH.encodeGQErr allMod200
-      $ mkGQLRequestHandler
+      $ mkPersistedGQLRequestHandler
       $ mkGQLAPIRespHandler
-      $ v1GQHandler
+      $ apiHandler
+
+  Spock.get "v1/graphql" $ do
+    let persistedQueriesState = appEnvPersistedQueries
+        persistedQueriesTtl = appEnvPersistedQueriesTtl
+    params <- Spock.paramsGet
+    let apiHandler = runPersistedQueriesGetHandler persistedQueriesState persistedQueriesTtl params
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr allMod200
+      $ mkGetHandler
+      $ apiHandler
 
   Spock.post "v1beta1/relay" $ do
     onlyWhenApiEnabled isGraphQLEnabled appStateRef

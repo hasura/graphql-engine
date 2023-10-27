@@ -143,7 +143,9 @@ data AppEnv = AppEnv
     appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
     appEnvMaxTotalHeaderLength :: Int,
     appEnvTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus,
-    appEnvAsyncActionsFetchBatchSize :: Int
+    appEnvAsyncActionsFetchBatchSize :: Int,
+    appEnvPersistedQueries :: PersistedQueriesState,
+    appEnvPersistedQueriesTtl :: Int
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

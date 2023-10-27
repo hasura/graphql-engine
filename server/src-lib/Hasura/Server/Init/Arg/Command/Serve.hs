@@ -65,6 +65,8 @@ module Hasura.Server.Init.Arg.Command.Serve
     closeWebsocketsOnMetadataChangeOption,
     maxTotalHeaderLengthOption,
     asyncActionsFetchBatchSizeOption,
+    persistedQueriesOption,
+    persistedQueriesTtlOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -156,6 +158,8 @@ serveCommandParser =
     <*> parseMaxTotalHeaderLength
     <*> parseTriggersErrorLoglevelStatus
     <*> parseAsyncActionsFetchBatchSize
+    <*> parsePersistedQueries
+    <*> parsePersistedQueriesTtl
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1252,6 +1256,39 @@ parseAsyncActionsFetchBatchSize =
           <> Opt.help (Config._helpMessage asyncActionsFetchBatchSizeOption)
       )
 
+persistedQueriesOption :: Config.Option (Types.PersistedQueriesState)
+persistedQueriesOption =
+  Config.Option
+    { Config._default = Types.PersistedQueriesDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES",
+      Config._helpMessage = "Enable automated persisted queries (default: false)."
+    }
+
+parsePersistedQueries :: Opt.Parser (Maybe Types.PersistedQueriesState)
+parsePersistedQueries =
+  (bool Nothing (Just Types.PersistedQueriesEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-persisted-queries"
+          <> Opt.help (Config._helpMessage persistedQueriesOption)
+      )
+
+persistedQueriesTtlOption :: Config.Option Int
+persistedQueriesTtlOption =
+  Config.Option
+    { Config._default = 5,
+      Config._envVar = "HASURA_GRAPHQL_PERSISTED_QUERIES_TTL",
+      Config._helpMessage = "TTL for queries in the cache store (default: 5 seconds)."
+    }
+
+parsePersistedQueriesTtl :: Opt.Parser (Maybe Int)
+parsePersistedQueriesTtl =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "persisted-queries-ttl"
+          <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1354,6 +1391,9 @@ serveCmdFooter =
         Config.optionPP closeWebsocketsOnMetadataChangeOption,
         Config.optionPP maxTotalHeaderLengthOption,
         Config.optionPP remoteNullForwardingPolicyOption,
-        Config.optionPP triggersErrorLogLevelStatusOption
+        Config.optionPP triggersErrorLogLevelStatusOption,
+        Config.optionPP asyncActionsFetchBatchSizeOption,
+        Config.optionPP persistedQueriesOption,
+        Config.optionPP persistedQueriesTtlOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]
