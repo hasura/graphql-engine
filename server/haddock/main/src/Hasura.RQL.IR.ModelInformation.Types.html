@@ -22,7 +22,7 @@
 </span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelTypeStoredProcedures"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelTypeStoredProcedures"><span class="hs-identifier hs-var">ModelTypeStoredProcedures</span></a></span></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelTypeRemoteSchema"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelTypeRemoteSchema"><span class="hs-identifier hs-var">ModelTypeRemoteSchema</span></a></span></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelTypeAction"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelTypeAction"><span class="hs-identifier hs-var">ModelTypeAction</span></a></span></span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687446842"><span id="local-6989586621687446844"><span class="annot"><span class="annottext">(forall x. ModelType -&gt; Rep ModelType x)
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687454289"><span id="local-6989586621687454291"><span class="annot"><span class="annottext">(forall x. ModelType -&gt; Rep ModelType x)
 -&gt; (forall x. Rep ModelType x -&gt; ModelType) -&gt; Generic ModelType
 forall x. Rep ModelType x -&gt; ModelType
 forall x. ModelType -&gt; Rep ModelType x
@@ -32,7 +32,7 @@ $cfrom :: forall x. ModelType -&gt; Rep ModelType x
 from :: forall x. ModelType -&gt; Rep ModelType x
 $cto :: forall x. Rep ModelType x -&gt; ModelType
 to :: forall x. Rep ModelType x -&gt; ModelType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687446848"><span id="local-6989586621687446850"><span id="local-6989586621687446854"><span class="annot"><span class="annottext">Int -&gt; ModelType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454295"><span id="local-6989586621687454297"><span id="local-6989586621687454301"><span class="annot"><span class="annottext">Int -&gt; ModelType -&gt; ShowS
 [ModelType] -&gt; ShowS
 ModelType -&gt; String
 (Int -&gt; ModelType -&gt; ShowS)
@@ -47,7 +47,7 @@ $cshow :: ModelType -&gt; String
 show :: ModelType -&gt; String
 $cshowList :: [ModelType] -&gt; ShowS
 showList :: [ModelType] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687446858"><span id="local-6989586621687446860"><span class="annot"><span class="annottext">ModelType -&gt; ModelType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454305"><span id="local-6989586621687454307"><span class="annot"><span class="annottext">ModelType -&gt; ModelType -&gt; Bool
 (ModelType -&gt; ModelType -&gt; Bool)
 -&gt; (ModelType -&gt; ModelType -&gt; Bool) -&gt; Eq ModelType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -58,8 +58,8 @@ $c/= :: ModelType -&gt; ModelType -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelType"><span class="hs-identifier hs-type">ModelType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621687446876"><span class="annot"><span class="annottext">toTxt :: ModelType -&gt; Text
-</span><a href="#local-6989586621687446876"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="annot"><span class="annottext">ModelType
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621687454323"><span class="annot"><span class="annottext">toTxt :: ModelType -&gt; Text
+</span><a href="#local-6989586621687454323"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="annot"><span class="annottext">ModelType
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelTypeTable"><span class="hs-identifier hs-var">ModelTypeTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ModelType
@@ -84,9 +84,9 @@ $c/= :: ModelType -&gt; ModelType -&gt; Bool
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelTypeAction"><span class="hs-identifier hs-var">ModelTypeAction</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;action&quot;</span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687446880"><span id="local-6989586621687446884"><span id="local-6989586621687446887"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelType"><span class="hs-identifier hs-type">ModelType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621687446891"><span class="annot"><span class="annottext">toJSON :: ModelType -&gt; Value
-</span><a href="#local-6989586621687446891"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687454327"><span id="local-6989586621687454331"><span id="local-6989586621687454334"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelType"><span class="hs-identifier hs-type">ModelType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621687454338"><span class="annot"><span class="annottext">toJSON :: ModelType -&gt; Value
+</span><a href="#local-6989586621687454338"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (ModelType -&gt; Text) -&gt; ModelType -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ModelType -&gt; Text
@@ -98,7 +98,7 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelSourceTypeMSSQL"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceTypeMSSQL"><span class="hs-identifier hs-var">ModelSourceTypeMSSQL</span></a></span></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelSourceTypeBigQuery"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceTypeBigQuery"><span class="hs-identifier hs-var">ModelSourceTypeBigQuery</span></a></span></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ModelSourceTypeDataConnector"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceTypeDataConnector"><span class="hs-identifier hs-var">ModelSourceTypeDataConnector</span></a></span></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687446900"><span id="local-6989586621687446902"><span class="annot"><span class="annottext">(forall x. ModelSourceType -&gt; Rep ModelSourceType x)
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687454347"><span id="local-6989586621687454349"><span class="annot"><span class="annottext">(forall x. ModelSourceType -&gt; Rep ModelSourceType x)
 -&gt; (forall x. Rep ModelSourceType x -&gt; ModelSourceType)
 -&gt; Generic ModelSourceType
 forall x. Rep ModelSourceType x -&gt; ModelSourceType
@@ -109,7 +109,7 @@ $cfrom :: forall x. ModelSourceType -&gt; Rep ModelSourceType x
 from :: forall x. ModelSourceType -&gt; Rep ModelSourceType x
 $cto :: forall x. Rep ModelSourceType x -&gt; ModelSourceType
 to :: forall x. Rep ModelSourceType x -&gt; ModelSourceType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687446905"><span id="local-6989586621687446907"><span id="local-6989586621687446911"><span class="annot"><span class="annottext">Int -&gt; ModelSourceType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454352"><span id="local-6989586621687454354"><span id="local-6989586621687454358"><span class="annot"><span class="annottext">Int -&gt; ModelSourceType -&gt; ShowS
 [ModelSourceType] -&gt; ShowS
 ModelSourceType -&gt; String
 (Int -&gt; ModelSourceType -&gt; ShowS)
@@ -124,7 +124,7 @@ $cshow :: ModelSourceType -&gt; String
 show :: ModelSourceType -&gt; String
 $cshowList :: [ModelSourceType] -&gt; ShowS
 showList :: [ModelSourceType] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687446914"><span id="local-6989586621687446916"><span class="annot"><span class="annottext">ModelSourceType -&gt; ModelSourceType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454361"><span id="local-6989586621687454363"><span class="annot"><span class="annottext">ModelSourceType -&gt; ModelSourceType -&gt; Bool
 (ModelSourceType -&gt; ModelSourceType -&gt; Bool)
 -&gt; (ModelSourceType -&gt; ModelSourceType -&gt; Bool)
 -&gt; Eq ModelSourceType
@@ -136,7 +136,7 @@ $c/= :: ModelSourceType -&gt; ModelSourceType -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>
 </span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceType"><span class="hs-identifier hs-type">ModelSourceType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621687446925"><span class="annot"><span class="annottext">toTxt :: ModelSourceType -&gt; Text
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621687454372"><span class="annot"><span class="annottext">toTxt :: ModelSourceType -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="annot"><span class="annottext">ModelSourceType
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceTypePostgres"><span class="hs-identifier hs-var">ModelSourceTypePostgres</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;database_postgres&quot;</span></span><span>
@@ -150,8 +150,8 @@ $c/= :: ModelSourceType -&gt; ModelSourceType -&gt; Bool
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceTypeDataConnector"><span class="hs-identifier hs-var">ModelSourceTypeDataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;database_data_connector&quot;</span></span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687446928"><span id="local-6989586621687446932"><span id="local-6989586621687446935"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceType"><span class="hs-identifier hs-type">ModelSourceType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621687446938"><span class="annot"><span class="annottext">toJSON :: ModelSourceType -&gt; Value
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687454375"><span id="local-6989586621687454379"><span id="local-6989586621687454382"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceType"><span class="hs-identifier hs-type">ModelSourceType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621687454385"><span class="annot"><span class="annottext">toJSON :: ModelSourceType -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; (ModelSourceType -&gt; Text) -&gt; ModelSourceType -&gt; Value
@@ -162,7 +162,7 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">newtype</span><span> </span><span id="ModelOperationType"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-var">ModelOperationType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ModelOperationType"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-var">ModelOperationType</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unModelOperationType"><span class="annot"><span class="annottext">ModelOperationType -&gt; OperationType
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#unModelOperationType"><span class="hs-identifier hs-var hs-var">unModelOperationType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#OperationType"><span class="hs-identifier hs-type">G.OperationType</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687446942"><span id="local-6989586621687446944"><span class="annot"><span class="annottext">(forall x. ModelOperationType -&gt; Rep ModelOperationType x)
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687454389"><span id="local-6989586621687454391"><span class="annot"><span class="annottext">(forall x. ModelOperationType -&gt; Rep ModelOperationType x)
 -&gt; (forall x. Rep ModelOperationType x -&gt; ModelOperationType)
 -&gt; Generic ModelOperationType
 forall x. Rep ModelOperationType x -&gt; ModelOperationType
@@ -173,7 +173,7 @@ $cfrom :: forall x. ModelOperationType -&gt; Rep ModelOperationType x
 from :: forall x. ModelOperationType -&gt; Rep ModelOperationType x
 $cto :: forall x. Rep ModelOperationType x -&gt; ModelOperationType
 to :: forall x. Rep ModelOperationType x -&gt; ModelOperationType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687446947"><span id="local-6989586621687446953"><span id="local-6989586621687446957"><span class="annot"><span class="annottext">Int -&gt; ModelOperationType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454394"><span id="local-6989586621687454400"><span id="local-6989586621687454404"><span class="annot"><span class="annottext">Int -&gt; ModelOperationType -&gt; ShowS
 [ModelOperationType] -&gt; ShowS
 ModelOperationType -&gt; String
 (Int -&gt; ModelOperationType -&gt; ShowS)
@@ -191,7 +191,7 @@ showList :: [ModelOperationType] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-type">ModelOperationType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621687446964"><span class="annot"><span class="annottext">toTxt :: ModelOperationType -&gt; Text
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687454411"><span class="annot"><span class="annottext">toTxt :: ModelOperationType -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-type">ModelOperationType</span></a></span><span> </span><span class="annot"><span class="annottext">OperationType
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#OperationTypeQuery"><span class="hs-identifier hs-var">G.OperationTypeQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;query&quot;</span></span><span>
@@ -202,8 +202,8 @@ showList :: [ModelOperationType] -&gt; ShowS
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#OperationTypeSubscription"><span class="hs-identifier hs-var">G.OperationTypeSubscription</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;subscription&quot;</span></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687446970"><span id="local-6989586621687446974"><span id="local-6989586621687446977"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-type">ModelOperationType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621687446980"><span class="annot"><span class="annottext">toJSON :: ModelOperationType -&gt; Value
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687454417"><span id="local-6989586621687454421"><span id="local-6989586621687454424"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-type">ModelOperationType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621687454427"><span class="annot"><span class="annottext">toJSON :: ModelOperationType -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; (ModelOperationType -&gt; Text) -&gt; ModelOperationType -&gt; Value
@@ -214,7 +214,7 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-keyword">newtype</span><span> </span><span id="ModelNameInfo"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelNameInfo"><span class="hs-identifier hs-var">ModelNameInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ModelNameInfo"><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelNameInfo"><span class="hs-identifier hs-var">ModelNameInfo</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unModelNameInfo"><span class="annot"><span class="annottext">ModelNameInfo -&gt; (Text, ModelType, SourceName, ModelSourceType)
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#unModelNameInfo"><span class="hs-identifier hs-var hs-var">unModelNameInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelType"><span class="hs-identifier hs-type">ModelType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelSourceType"><span class="hs-identifier hs-type">ModelSourceType</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687446984"><span id="local-6989586621687446993"><span id="local-6989586621687446997"><span class="annot"><span class="annottext">Int -&gt; ModelNameInfo -&gt; ShowS
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687454431"><span id="local-6989586621687454440"><span id="local-6989586621687454444"><span class="annot"><span class="annottext">Int -&gt; ModelNameInfo -&gt; ShowS
 [ModelNameInfo] -&gt; ShowS
 ModelNameInfo -&gt; String
 (Int -&gt; ModelNameInfo -&gt; ShowS)
@@ -229,7 +229,7 @@ $cshow :: ModelNameInfo -&gt; String
 show :: ModelNameInfo -&gt; String
 $cshowList :: [ModelNameInfo] -&gt; ShowS
 showList :: [ModelNameInfo] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687447002"><span id="local-6989586621687447011"><span class="annot"><span class="annottext">ModelNameInfo -&gt; ModelNameInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454449"><span id="local-6989586621687454458"><span class="annot"><span class="annottext">ModelNameInfo -&gt; ModelNameInfo -&gt; Bool
 (ModelNameInfo -&gt; ModelNameInfo -&gt; Bool)
 -&gt; (ModelNameInfo -&gt; ModelNameInfo -&gt; Bool) -&gt; Eq ModelNameInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -251,7 +251,7 @@ $c/= :: ModelNameInfo -&gt; ModelNameInfo -&gt; Bool
 </span><span id="line-75"></span><span>    </span><span id="mipQueryType"><span class="annot"><span class="annottext">ModelInfoPart -&gt; ModelOperationType
 </span><a href="Hasura.RQL.IR.ModelInformation.Types.html#mipQueryType"><span class="hs-identifier hs-var hs-var">mipQueryType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelOperationType"><span class="hs-identifier hs-type">ModelOperationType</span></a></span><span>
 </span><span id="line-76"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687447028"><span id="local-6989586621687447030"><span class="annot"><span class="annottext">(forall x. ModelInfoPart -&gt; Rep ModelInfoPart x)
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687454475"><span id="local-6989586621687454477"><span class="annot"><span class="annottext">(forall x. ModelInfoPart -&gt; Rep ModelInfoPart x)
 -&gt; (forall x. Rep ModelInfoPart x -&gt; ModelInfoPart)
 -&gt; Generic ModelInfoPart
 forall x. Rep ModelInfoPart x -&gt; ModelInfoPart
@@ -262,7 +262,7 @@ $cfrom :: forall x. ModelInfoPart -&gt; Rep ModelInfoPart x
 from :: forall x. ModelInfoPart -&gt; Rep ModelInfoPart x
 $cto :: forall x. Rep ModelInfoPart x -&gt; ModelInfoPart
 to :: forall x. Rep ModelInfoPart x -&gt; ModelInfoPart
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687447033"><span id="local-6989586621687447043"><span id="local-6989586621687447047"><span class="annot"><span class="annottext">Int -&gt; ModelInfoPart -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687454480"><span id="local-6989586621687454490"><span id="local-6989586621687454494"><span class="annot"><span class="annottext">Int -&gt; ModelInfoPart -&gt; ShowS
 [ModelInfoPart] -&gt; ShowS
 ModelInfoPart -&gt; String
 (Int -&gt; ModelInfoPart -&gt; ShowS)
@@ -279,14 +279,14 @@ $cshowList :: [ModelInfoPart] -&gt; ShowS
 showList :: [ModelInfoPart] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687447051"><span id="local-6989586621687447055"><span id="local-6989586621687447058"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelInfoPart"><span class="hs-identifier hs-type">ModelInfoPart</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621687447209"><span class="annot"><span class="annottext">toJSON :: ModelInfoPart -&gt; Value
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687454498"><span id="local-6989586621687454502"><span id="local-6989586621687454505"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.ModelInformation.Types.html#ModelInfoPart"><span class="hs-identifier hs-type">ModelInfoPart</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621687454656"><span class="annot"><span class="annottext">toJSON :: ModelInfoPart -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ModelInfoPart -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621687447212"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687454659"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-81"></span></pre></body></html>
