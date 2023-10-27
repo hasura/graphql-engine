@@ -23,9 +23,9 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 A relationship from one table/view to another can be created by defining a link between a column of the table/view to a
 column of the other table/view.
 
-Typically, relationships are defined using foreign-key constraints. But in some cases, it might not be possible to use
-foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view as
-foreign-keys can't be created on views.
+Typically, relationships between tables are defined using foreign-key constraints. But in some cases, it might not be
+possible to use foreign-key constraints to create the relationship. For example, while trying to create a relationship
+involving a view or Native Query since foreign-keys cannot be created on them.
 
 ## Using foreign keys {#ms-sql-server-relationships-using-fkey}
 
@@ -365,25 +365,26 @@ using a manual relationship:
 **Step 1: Open the manual relationship section**
 
 - Open the Console and navigate to the `Data -> authors -> Relationships` tab.
-- Click on the `Configure` button:
+- Click on the `Add Relationship` button:
 
-<Thumbnail src="/img/schema/manual-relationship-btn.png" alt="Open the manual relationship section" width="1100px" />
+<Thumbnail src="/img/schema/add-manual-rel-open-widget.png" alt="Open the manual relationship widget" width="1100px" />
 
-**Step 2: Define the relationship**
+**Step 2: Fill in the relationships details **
 
-The above step will open up a section as shown below:
+Once the widget is open, fill in the name of the relationship and pick a reference source
 
-<Thumbnail src="/img/schema/manual-relationship-create.png" alt="Define the relationship" width="700px" />
+<Thumbnail src="/img/schema/add-manual-rel-add-name-pick-source.png" alt="Define the relationship name and target" width="700px" />
 
-In this case:
+This will open up a "details" section below where you can fill in the rest of the relationship definition
 
-- **Relationship Type** will be: `Object Relationship`
-- **Relationship Name** can be: `avg_rating`
-- **Reference** will be: `id -> author_avg_rating . id` _(similar to defining a foreign-key)_
+<Thumbnail src="/img/schema/add-manual-rel-fill-details.png" alt="Fill the relationship details" width="700px" />
+
 
 **Step 3: Create the relationship**
 
-Now click on the `Save` button to create the relationship.
+Now click on the `Create Relationship` button to proceed.
+
+<Thumbnail src="/img/schema/add-manual-rel-create-final-step.png" alt="Fill the relationship details" width="700px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -577,6 +578,47 @@ X-Hasura-Role: admin
           "foreign_key_constraint_on" : {
             "table" : "articles",
             "column" : "author_id"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Tracking relationships between tables and Native Queries
+
+As mentioned in the Introduction section above, a relationship from a table to a Native Query can only be set up manually.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+Given a table named `articles` and an existing Native Query named `get_author`,
+we can set up a relationship between the two.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk",
+  "args": [
+    {
+      "type": "mssql_create_object_relationship",
+      "args": {
+        "source": "<db_name>",
+        "table": "articles",
+        "name": "author",
+        "using": {
+          "manual_configuration": {
+            "remote_native_query": "get_author",
+            "column_mapping": {
+              "id": "author_id"
+            }
           }
         }
       }

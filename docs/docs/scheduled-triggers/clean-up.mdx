@@ -8,7 +8,7 @@ keywords:
   - scheduled events
   - clean up
   - purge logs
-sidebar_position: 5
+sidebar_position: 6
 sidebar_label: Clean Up Scheduled Triggers data
 ---
 
@@ -16,9 +16,11 @@ sidebar_label: Clean Up Scheduled Triggers data
 
 ## Introduction
 
-Hasura stores event data associated with Scheduled Triggers in **the "hdb_catalog" schema of the Hasura Metadata database**.
+Hasura stores event data associated with Scheduled Triggers in **the "hdb_catalog" schema of the Hasura Metadata
+database**.
 
-If there are lots of events, the events tables can get huge and you may want to prune them. You can use any of the following options to prune your event data depending on your need.
+If there are lots of events, the events tables can get huge and you may want to prune them. You can use any of the
+following options to prune your event data depending on your need.
 
 :::info Note
 
@@ -31,12 +33,14 @@ For each project in Hasura Cloud the retention period for cron events and invoca
 Cron triggers have two tables managed by Hasura:
 
 1. `hdb_catalog.hdb_cron_events`: Table that stores all the cron events.
-2. `hdb_catalog.hdb_cron_event_invocation_logs`: Table that stores all the HTTP requests and their responses of the cron events invocations.
+2. `hdb_catalog.hdb_cron_event_invocation_logs`: Table that stores all the HTTP requests and their responses of the cron
+   events invocations.
 
 Similarly, scheduled events also have two tables managed by Hasura:
 
 1. `hdb_catalog.hdb_scheduled_events`: Table that stores all the scheduled events.
-2. `hdb_catalog.hdb_scheduled_event_invocation_logs`: Table that stores all the HTTP requests and their responses of the scheduled events invocations.
+2. `hdb_catalog.hdb_scheduled_event_invocation_logs`: Table that stores all the HTTP requests and their responses of the
+   scheduled events invocations.
 
 ## Option 1: Clear only HTTP logs
 
@@ -70,17 +74,14 @@ WHERE status IN ('delivered', 'error', 'dead');
 
 :::info Note
 
-Deleting a cron/scheduled event will also delete the invocations related
-to that event.
+Deleting a cron/scheduled event will also delete the invocations related to that event.
 
 :::
 
 :::caution Warning
 
-The below options will clear all events including yet to be delivered
-events. If the cron trigger exists in the metadata, then new events will
-be generated automatically by the graphql-engine, but this step can take
-upto a minute.
+The below options will clear all events including yet to be delivered events. If the cron trigger exists in the
+metadata, then new events will be generated automatically by the graphql-engine, but this step can take upto a minute.
 
 :::
 
@@ -107,7 +108,8 @@ DELETE FROM hdb_catalog.hdb_scheduled_events;
 
 ## Clearing data before a particular time period
 
-If you wish to keep recent data and only clear data before a particular time period you can add the following time clause to your query's where clause:
+If you wish to keep recent data and only clear data before a particular time period you can add the following time
+clause to your query's where clause:
 
 ```sql
 -- units can be 'minutes', 'hours', 'days', 'months', 'years'
@@ -132,4 +134,5 @@ WHERE status IN ('delivered', 'error', 'dead')
  AND scheduled_time < now() - interval '3 months';
 ```
 
-See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more details.
+See the [Postgres date/time functions](https://www.postgresql.org/docs/current/functions-datetime.html) for more
+details.

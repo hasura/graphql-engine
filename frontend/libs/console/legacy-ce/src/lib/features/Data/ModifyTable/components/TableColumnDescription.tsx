@@ -3,6 +3,7 @@ import { Button } from '../../../../new-components/Button';
 import React from 'react';
 import { FaKey, FaRegComment } from 'react-icons/fa';
 import { ModifyTableColumn } from '../types';
+import { columnDataType } from '../../../DataSource/utils';
 
 export const TableColumnDescription: React.VFC<{
   column: ModifyTableColumn;
@@ -13,7 +14,7 @@ export const TableColumnDescription: React.VFC<{
       {/* To assist with tests */}
       <input
         type="hidden"
-        data-data-type={column.dataType?.toLowerCase()}
+        data-data-type={columnDataType(column.dataType)}
         data-console-data-type={column.consoleDataType}
         data-testid={`${column.name}-data`}
       />
@@ -45,7 +46,7 @@ export const TableColumnDescription: React.VFC<{
       <div>
         <Badge color="gray">
           <span data-testid={`${column.name}-ui-data-type`}>
-            {column.dataType?.toLowerCase() || 'Unknown'}
+            {columnDataType(column.dataType || 'Unknown')}
           </span>
         </Badge>
       </div>

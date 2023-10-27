@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from 'react-query/devtools';
 import { PrometheusSettings } from '.';
 import { eeLicenseInfo } from '../EETrial/mocks/http';
 import { registerEETrialLicenseActiveMutation } from '../EETrial/mocks/registration.mock';
+import { ConsoleTypeDecorator } from '../../storybook/decorators';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +73,7 @@ export default {
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     ),
+    ConsoleTypeDecorator({ consoleType: 'pro-lite' }),
   ],
 } as Meta<typeof PrometheusSettings>;
 
@@ -86,7 +88,6 @@ export const DisabledWithoutLicense: StoryObj<typeof PrometheusSettings> = {
       registerEETrialLicenseActiveMutation,
       eeLicenseInfo.active,
     ],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -97,7 +98,6 @@ export const Loading: StoryObj<typeof PrometheusSettings> = {
 
   parameters: {
     msw: [mockConfigHandler(true, 'infinite'), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -108,7 +108,6 @@ export const Enabled: StoryObj<typeof PrometheusSettings> = {
 
   parameters: {
     msw: [mockConfigHandler(true, 1), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -119,7 +118,6 @@ export const Disabled: StoryObj<typeof PrometheusSettings> = {
 
   parameters: {
     msw: [mockConfigHandler(false, 1), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -130,6 +128,5 @@ export const Error: StoryObj<typeof PrometheusSettings> = {
 
   parameters: {
     msw: [mockConfigHandler(false, 1, 500), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };

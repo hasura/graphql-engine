@@ -1,12 +1,14 @@
 import { useQueryClient } from 'react-query';
 import { useMetadataMigration } from '../../../../MetadataAPI';
 import { exportMetadata } from '../../../../DataSource';
-import { useFireNotification } from '../../../../../new-components/Notifications';
-
 import { useHttpClient } from '../../../../Network';
-
 import { QueryType } from '../../../types';
 import { api } from '../../api';
+import { permissionsTableKey } from '../../../PermissionsTable/hooks';
+import { permissionsFormKey } from '../dataFetchingHooks';
+import { transformErrorResponse } from '../../../../Data/errorUtils';
+import { hasuraToast } from '../../../../../new-components/Toasts';
+import { DisplayToastErrorMessage } from '../../../../Data/components/DisplayErrorMessage';
 
 export interface UseDeletePermissionArgs {
   dataSourceName: string;
@@ -19,10 +21,11 @@ export const useDeletePermission = ({
   table,
   roleName,
 }: UseDeletePermissionArgs) => {
-  const mutate = useMetadataMigration();
+  const mutate = useMetadataMigration({
+    errorTransform: transformErrorResponse,
+  });
   const httpClient = useHttpClient();
   const queryClient = useQueryClient();
-  const { fireNotification } = useFireNotification();
 
   const submit = async (queries: QueryType[]) => {
     const { resource_version: resourceVersion, metadata } =
@@ -54,32 +57,33 @@ export const useDeletePermission = ({
       },
       {
         onSuccess: () => {
-          fireNotification({
+          hasuraToast({
             type: 'success',
             title: 'Success!',
             message: 'Permissions successfully deleted',
           });
         },
         onError: err => {
-          fireNotification({
+          hasuraToast({
             type: 'error',
             title: 'Error!',
-            message:
-              err?.message ?? 'Something went wrong while deleting permissions',
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
         onSettled: async () => {
-          await queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionFormData',
-            JSON.stringify(table),
-          ]);
+          await queryClient.invalidateQueries(
+            permissionsFormKey({
+              dataSourceName,
+              table,
+            })
+          );
 
-          await queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionsTable',
-            JSON.stringify(table),
-          ]);
+          await queryClient.invalidateQueries(
+            permissionsTableKey({
+              dataSourceName,
+              table,
+            })
+          );
         },
       }
     );

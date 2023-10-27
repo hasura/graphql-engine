@@ -14,13 +14,13 @@ module Hasura.Backends.Postgres.Translate.Returning
   )
 where
 
-import Control.Monad.Writer (Writer, runWriter)
 import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs)
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs)
+import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
@@ -31,6 +31,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.Table.Cache
 
 -- | The postgres common table expression (CTE) for mutation queries.
@@ -66,7 +67,7 @@ pgColsToSelFlds cols =
   flip map cols
     $ \pgColInfo ->
       ( fromCol @('Postgres pgKind) $ ciColumn pgColInfo,
-        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) Nothing Nothing
+        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) NoRedaction Nothing
         --  ^^ Nothing because mutations aren't supported
         --  with inherited role
       )
@@ -84,16 +85,19 @@ mkDefaultMutFlds =
 
 mkMutFldExp ::
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
-    MonadWriter CustomSQLCTEs m
+    PostgresTranslateSelect pgKind,
+    MonadWriter CustomSQLCTEs m,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   TableIdentifier ->
   Maybe Int ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
   MutFld ('Postgres pgKind) ->
   m S.SQLExp
-mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
+mkMutFldExp userInfo cteAlias preCalAffRows strfyNum tCase = \case
   MCount ->
     let countExp =
           S.SESelect
@@ -108,6 +112,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
         tabPerm = TablePerm annBoolExpTrue Nothing
      in S.SESelect
           <$> mkSQLSelect
+            userInfo
             JASMultipleRows
             ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
             )
@@ -143,8 +148,11 @@ WITH "mra__<table-name>" AS (
 -- See Note [Mutation output expression].
 mkMutationOutputExp ::
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   Maybe Int ->
@@ -152,16 +160,17 @@ mkMutationOutputExp ::
   MutationOutput ('Postgres pgKind) ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  S.SelectWith
-mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
-  let (sel, customSQLCTEs) = runWriter writerSelect
-   in S.SelectWith
-        ( [ (mutationResultAlias, getMutationCTE cte),
-            (allColumnsAlias, allColumnsSelect)
-          ]
-            <> customSQLToTopLevelCTEs customSQLCTEs
-        )
-        sel
+  m S.SelectWith
+mkMutationOutputExp userInfo qt allCols preCalAffRows cte mutOutput strfyNum tCase = do
+  (sel, customSQLCTEs) <- runWriterT writerSelect
+  pure
+    $ S.SelectWith
+      ( [ (mutationResultAlias, getMutationCTE cte),
+          (allColumnsAlias, allColumnsSelect)
+        ]
+          <> customSQLToTopLevelCTEs customSQLCTEs
+      )
+      sel
   where
     mutationResultAlias = S.mkTableAlias $ "mra__" <> snakeCaseQualifiedObject qt
     mutationResultIdentifier = S.tableAliasToIdentifier mutationResultAlias
@@ -186,23 +195,23 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
       where
         checkErrorExp = mkCheckErrorExp mutationResultIdentifier
 
-        writerExtrExp :: Writer CustomSQLCTEs S.SQLExp
+        writerExtrExp :: (MonadIO m, MonadError QErr m) => WriterT CustomSQLCTEs m S.SQLExp
         writerExtrExp = case mutOutput of
-          MOutMultirowFields mutFlds ->
-            let jsonBuildObjArgs =
-                  concat
-                    <$> traverse
-                      ( \(FieldName k, mutFld) -> do
-                          mutFldExp <- mkMutFldExp allColumnsIdentifier preCalAffRows strfyNum tCase mutFld
-                          pure [S.SELit k, mutFldExp]
-                      )
-                      mutFlds
-             in S.SEFnApp "json_build_object" <$> jsonBuildObjArgs <*> pure Nothing
+          MOutMultirowFields mutFlds -> do
+            jsonBuildObjArgs <-
+              traverse
+                ( \(FieldName k, mutFld) -> do
+                    mutFldExp <- mkMutFldExp userInfo allColumnsIdentifier preCalAffRows strfyNum tCase mutFld
+                    pure [S.SELit k, mutFldExp]
+                )
+                mutFlds
+            pure $ S.SEFnApp "json_build_object" (concat jsonBuildObjArgs) Nothing
           MOutSinglerowObject annFlds ->
             let tabFrom = FromIdentifier $ toFIIdentifier allColumnsIdentifier
                 tabPerm = TablePerm annBoolExpTrue Nothing
              in S.SESelect
                   <$> mkSQLSelect
+                    userInfo
                     JASSingleObject
                     ( AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
                     )

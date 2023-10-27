@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
@@ -17,6 +17,8 @@ import {
   RelationshipFields,
   RsToRsSchema,
 } from '../../types';
+import { RelationshipOverview } from './RelationshipOverview';
+import { refRemoteOperationSelectorKey } from '../RefRsSelector';
 
 export interface RemoteSchemaWidgetProps {
   schemaName: string;
@@ -30,11 +32,13 @@ export interface RemoteSchemaWidgetProps {
    */
   serverRelationship?: RemoteRelationship;
   rootFields?: AllowedRootFields;
+  showOnlySelectable?: boolean;
 }
 
 const resultSet = 'resultSet';
 
 export const RemoteSchemaWidget = ({
+  showOnlySelectable = false,
   schemaName,
   fields,
   rootFields = ['query'],
@@ -44,6 +48,7 @@ export const RemoteSchemaWidget = ({
   const { setValue, watch } = useFormContext<RsToRsSchema>();
   const resultSetValue = watch(resultSet);
   const relationship = watch('relationship');
+  const selectedOperation = watch(refRemoteOperationSelectorKey);
 
   const [relationshipFields, setRelationshipFields] = useState<
     RelationshipFields[]
@@ -59,6 +64,36 @@ export const RemoteSchemaWidget = ({
     const value = buildServerRemoteFieldObject(relationshipFields);
     setValue('resultSet', value);
   }, [relationshipFields, setValue]);
+
+  // if selected operation is passed from outside, we should
+  // skip the first update of relationshipFields. This happens for example
+  // in the modify relationship flow
+  const skipFirstUpdate = useRef(!!selectedOperation);
+
+  useEffect(() => {
+    if (skipFirstUpdate.current) {
+      // Skip the effect for the first render
+      skipFirstUpdate.current = false;
+      return;
+    }
+
+    setRelationshipFields([
+      {
+        key: '__query',
+        depth: 0,
+        checkable: false,
+        argValue: null,
+        type: 'field',
+      },
+      {
+        key: `__query.field.${selectedOperation}`,
+        depth: 1,
+        checkable: false,
+        argValue: null,
+        type: 'field',
+      },
+    ]);
+  }, [selectedOperation]);
 
   useEffect(() => {
     if (schemaName) {
@@ -76,9 +111,12 @@ export const RemoteSchemaWidget = ({
             Build a query mapping from your source schema type to a field
             argument in your reference schema{' '}
           </span>
+          <div className="my-xs">
+            <RelationshipOverview resultSet={resultSetValue} />
+          </div>
           <input
             type="text"
-            className="mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"
+            className="py-6 mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"
             value={JSON.stringify(resultSetValue ?? {})}
             disabled
           />
@@ -94,7 +132,9 @@ export const RemoteSchemaWidget = ({
           relationshipFields={relationshipFields}
           setRelationshipFields={setRelationshipFields}
           fields={fields}
+          selectedOperation={selectedOperation}
           rootFields={rootFields}
+          showOnlySelectable={showOnlySelectable}
         />
       )}
 

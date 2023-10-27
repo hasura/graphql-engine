@@ -60,7 +60,7 @@ instance ToEngineLog AgentCommunicationLog Hasura where
             ]
 
 logAgentRequest :: (MonadIO m, MonadTrace m) => Logger Hasura -> HTTP.Request -> Either HTTP.HttpException (HTTP.Response BSL.ByteString) -> m ()
-logAgentRequest (Logger writeLog) req responseOrError = do
+logAgentRequest (LoggerTracing writeLog) req responseOrError = do
   traceCtx <- Tracing.currentContext
   let _aclRequest = Just $ extractRequestLogInfoFromClientRequest req
       _aclResponseStatusCode = case responseOrError of
@@ -82,7 +82,7 @@ extractRequestLogInfoFromClientRequest req =
    in RequestLogInfo {..}
 
 logClientError :: (MonadIO m, MonadTrace m) => Logger Hasura -> ClientError -> m ()
-logClientError (Logger writeLog) clientError = do
+logClientError (LoggerTracing writeLog) clientError = do
   traceCtx <- Tracing.currentContext
   let _aclResponseStatusCode = case clientError of
         FailureResponse _ response -> Just . HTTP.statusCode $ responseStatusCode response

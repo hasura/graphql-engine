@@ -1,0 +1,67 @@
+---
+title: Configure alerts
+description: Configure Alerts for Hasura Cloud
+sidebar_label: Configure alerts
+keywords:
+  - hasura
+  - docs
+  - observability
+  - alert
+sidebar_position: 1
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Configure Alerts
+
+<div className="badge-container">
+  <ProductBadge pro ee />
+  <div className="badge badge-gray heading-badge">Beta</div>
+</div>
+
+## Configuration
+
+You can easily configure alerts for your Hasura Cloud project on the Cloud Dashboard. Navigate to the
+`Project Detail -> Alerting` menu and enable the feature in just a few clicks.
+
+In the screenshot below, we've toggled the `Enable Alert` option and added a single recipient's email address:
+
+<Thumbnail src="/img/observability/alerting-config.jpg" alt="Hasura Cloud alerting configuration" width="1000" />
+
+## Alert Rules
+
+Hasura Cloud supports a set of common alert rules for performance observability such as:
+
+- Metadata health
+- High latency
+- Error rates of GraphQL requests, subscriptions, and Event Triggers.
+
+To choose which alerts you receive, click on `Configure Alerts` to open the configuration dialog:
+
+<Thumbnail src="/img/observability/alerting-config-rules.png" alt="Alert rules configuration" width="1000" />
+
+## Notification services
+
+### Email
+
+Email is the default service. You can add email addresses that you want to receive alert notifications:
+
+<Thumbnail src="/img/observability/alerting-config-email.png" alt="Alert email configuration" width="1000" />
+
+Once you have completed the configuration, you will start receiving alert emails containing the specified content
+whenever there is any relevant information to be conveyed. An example is below:
+
+<Thumbnail src="/img/observability/alerting-email-template.png" alt="Alert email content" width="500" />
+
+### Slack
+
+To enable Slack notifications, click on `Sign in with Slack` to register the `Hasura Alert App` to your Slack workspace.
+Then, choose the channel that you want Hasura to send alert notifications to and click `Allow`.
+
+<Thumbnail src="/img/observability/alerting-config-slack.png" alt="Alert slack configuration" width="600" />
+
+Once you have completed the configuration, you will start receiving Slack messages containing the specified content
+whenever the alert is triggered. An example is below:
+
+<Thumbnail src="/img/observability/alerting-slack-template.png" alt="Alert Slack content" width="700" />

@@ -43,7 +43,7 @@ import Harness.Schema
     Table (..),
   )
 import Harness.Schema qualified as Schema
-import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType (BackendTypeConfig, postgresishGraphQLType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
@@ -65,7 +65,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "dataset",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------
@@ -149,6 +150,7 @@ tableInsertions (Schema.Table {tableColumns, tableData}) =
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "INT64"
+  Schema.TDouble -> "FLOAT64"
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
   Schema.TBool -> "BOOL"
@@ -168,6 +170,7 @@ mkColumn Schema.Column {columnName, columnType} =
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt i -> tshow i
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "DATETIME '%F %T'" t
   VBool b -> tshow b

@@ -7,12 +7,9 @@ import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import { useInvalidateMetadata } from '../../../../hasura-metadata-api';
 import { FunctionDisplayName } from './FunctionDisplayName';
-
 import React, { useState } from 'react';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
-import { useTrackedFunctions } from '../hooks/useTrackedFunctions';
-
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
 import { useTrackFunction } from '../../../hooks/useTrackFunction';
@@ -21,13 +18,15 @@ import { FaEdit } from 'react-icons/fa';
 
 export type TrackedFunctionsProps = {
   dataSourceName: string;
+  trackedFunctions: {
+    qualifiedFunction: unknown;
+    name: string;
+  }[];
+  isLoading?: boolean;
 };
 
 export const TrackedFunctions = (props: TrackedFunctionsProps) => {
-  const { dataSourceName } = props;
-
-  const { data: trackedFunctions = [], isLoading } =
-    useTrackedFunctions(dataSourceName);
+  const { dataSourceName, trackedFunctions, isLoading } = props;
 
   const [isConfigurationModalOpen, setIsConfigurationModalOpen] =
     useState(false);
@@ -68,7 +67,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
   const {
     checkData: { onCheck, checkedIds, reset, checkAllElement },
     paginatedData,
-    checkedItems,
+    getCheckedItems,
   } = listProps;
 
   if (isLoading) return <Skeleton count={5} height={20} className="mb-1" />;
@@ -84,17 +83,17 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
   return (
     <div className="space-y-4">
       <TrackableListMenu
-        checkActionText={`Untrack Selected (${checkedItems.length})`}
+        checkActionText={`Untrack Selected (${checkedIds.length})`}
         handleTrackButton={() => {
           untrackFunction({
-            functionsToBeUntracked: checkedItems.map(
+            functionsToBeUntracked: getCheckedItems().map(
               fn => fn.qualifiedFunction
             ),
             onSuccess: () => {
               hasuraToast({
                 type: 'success',
                 title: 'Success',
-                message: `Untracked ${checkedItems.length} objects`,
+                message: `Untracked ${checkedIds.length} objects`,
               });
               reset();
             },

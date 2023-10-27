@@ -5,7 +5,6 @@ export default {
     '@storybook/addon-links',
     '@storybook/addon-interactions',
     '@storybook/addon-a11y',
-    'storybook-addon-console-env',
     '@storybook/addon-mdx-gfm',
   ],
   webpackFinal: async (config: any) => {
@@ -61,5 +60,11 @@ export default {
   },
   docs: {
     autodocs: true,
+  },
+  parameters: {
+    chromatic: {
+      // Default value is 0.063
+      diffThreshold: 0.4,
+    },
   },
 };

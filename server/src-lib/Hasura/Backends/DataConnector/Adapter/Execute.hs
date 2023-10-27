@@ -25,12 +25,14 @@ import Hasura.EncJSON (EncJSON, encJFromJEncoding, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 
 data DataConnectorPreparedQuery
   = QueryRequest API.QueryRequest
@@ -53,19 +55,24 @@ instance BackendExecute 'DataConnector where
   type ExecutionMonad 'DataConnector = AgentClientT
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
+    queryPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkQueryPlan ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
+    modelNames <- irToModelInfoGen sourceName ModelSourceTypeDataConnector ir
+    let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
+
     pure
-      DBStepInfo
-        { dbsiSourceName = sourceName,
-          dbsiSourceConfig = transformedSourceConfig,
-          dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig queryPlan),
-          dbsiResolvedConnectionTemplate = ()
-        }
+      ( DBStepInfo
+          { dbsiSourceName = sourceName,
+            dbsiSourceConfig = transformedSourceConfig,
+            dbsiPreparedQuery = Just $ QueryRequest _pRequest,
+            dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig queryPlan),
+            dbsiResolvedConnectionTemplate = ()
+          },
+        modelInfo
+      )
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
+    queryPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkQueryPlan ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       $ mkAnyBackend @'DataConnector
@@ -78,16 +85,19 @@ instance BackendExecute 'DataConnector where
           }
 
   mkDBMutationPlan _env _manager _logger UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName _maybeSelSetArgs = do
-    mutationPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkMutationPlan _uiSession mutationDB
+    (mutationPlan@Plan {..}, modelNames) <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkMutationPlan sourceName ModelSourceTypeDataConnector mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
+    let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeMutation)
     pure
-      DBStepInfo
-        { dbsiSourceName = sourceName,
-          dbsiSourceConfig = transformedSourceConfig,
-          dbsiPreparedQuery = Just $ MutationRequest _pRequest,
-          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildMutationAction sourceName transformedSourceConfig mutationPlan),
-          dbsiResolvedConnectionTemplate = ()
-        }
+      ( DBStepInfo
+          { dbsiSourceName = sourceName,
+            dbsiSourceConfig = transformedSourceConfig,
+            dbsiPreparedQuery = Just $ MutationRequest _pRequest,
+            dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildMutationAction sourceName transformedSourceConfig mutationPlan),
+            dbsiResolvedConnectionTemplate = ()
+          },
+        modelInfo
+      )
 
   mkLiveQuerySubscriptionPlan _ _ _ _ _ _ _ =
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
@@ -96,16 +106,18 @@ instance BackendExecute 'DataConnector where
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
   mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
-    remoteRelationshipPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkRemoteRelationshipPlan _uiSession sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
+    (remoteRelationshipPlan@Plan {..}, modelInfo) <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkRemoteRelationshipPlan sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
-      DBStepInfo
-        { dbsiSourceName = sourceName,
-          dbsiSourceConfig = transformedSourceConfig,
-          dbsiPreparedQuery = Just $ QueryRequest _pRequest,
-          dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig remoteRelationshipPlan),
-          dbsiResolvedConnectionTemplate = ()
-        }
+      ( DBStepInfo
+          { dbsiSourceName = sourceName,
+            dbsiSourceConfig = transformedSourceConfig,
+            dbsiPreparedQuery = Just $ QueryRequest _pRequest,
+            dbsiAction = OnBaseMonad $ fmap withNoStatistics (buildQueryAction sourceName transformedSourceConfig remoteRelationshipPlan),
+            dbsiResolvedConnectionTemplate = ()
+          },
+        modelInfo
+      )
 
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."

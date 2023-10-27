@@ -9,20 +9,23 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
   )
 where
 
-import Data.Aeson
+import Data.Aeson (ToJSON (..))
 import Data.Environment qualified as Env
 import Data.Graph qualified as G
-import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
+import Hasura.LogicalModel.API (LogicalModelName)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT (..), LogicalModelFieldsRM (..), runLogicalModelFieldsLookup)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), WithLogicalModel (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation (..))
+import Hasura.NativeQuery.Metadata (WithNativeQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.IR.BoolExp (AnnRedactionExp (..))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
@@ -185,43 +188,91 @@ resolveCheckTablePermission inheritedRolePermission accumulatedRolePermInfo perm
       inconsistentRoleEntity = InconsistentTablePermission source (toTxt table) permType
   resolveCheckPermission checkPermission roleName inconsistentRoleEntity
 
+data SelectPermissionSource b
+  = SPSTable (TableName b)
+  | SPSLogicalModel (LogicalModelLocation)
+
+instance (Backend b) => ToTxt (SelectPermissionSource b) where
+  toTxt = \case
+    SPSTable tableName -> "table " <>> tableName
+    SPSLogicalModel (LMLLogicalModel name) -> "logical model " <>> name
+    SPSLogicalModel (LMLNativeQuery name) -> "native query " <>> name
+
+resolveSelectPermission ::
+  forall b m.
+  ( MonadWriter (Seq CollectItem) m,
+    BackendMetadata b
+  ) =>
+  SourceName ->
+  SourceConfig b ->
+  SelectPermissionSource b ->
+  Role ->
+  Maybe (CombinedSelPermInfo b) ->
+  Int ->
+  Maybe (SelPermInfo b) ->
+  m (Maybe (SelPermInfo b))
+resolveSelectPermission sourceName sourceConfig selectPermissionSource role@(Role roleName (ParentRoles parentRoles)) combinedParentRoleSelPermInfo selectPermissionsCount explicitSelectPermission = runMaybeT $ do
+  -- Prefer the explicitly defined select permissions over the inherited ones, if they exist
+  selPermInfo <- hoistMaybe $ explicitSelectPermission <|> computedInheritedSelPermInfo
+  if supportsRedaction || all (== NoRedaction) (spiCols selPermInfo)
+    then pure selPermInfo
+    else do
+      recordInconsistencyM Nothing errMetadataObj errReason
+      mzero -- Return no select permissions (ie. no select access)
+  where
+    supportsRedaction :: Bool
+    supportsRedaction = sourceSupportsColumnRedaction @b sourceConfig
+
+    computedInheritedSelPermInfo :: Maybe (SelPermInfo b)
+    computedInheritedSelPermInfo = combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> combinedParentRoleSelPermInfo
+
+    errMetadataObj :: MetadataObject
+    errMetadataObj = MetadataObject (MOInheritedRole roleName) (toJSON role)
+
+    errReason :: Text
+    errReason =
+      "The source "
+        <> sourceName
+        <<> " does not support inherited roles where the columns allowed are different in the column select permissions in the parent roles. This occurs for the column select permissions defined for the "
+        <> toTxt selectPermissionSource
+        <> " for the inherited role "
+        <> roleName
+        <<> ", which combines the roles "
+        <> commaSeparated (dquote <$> toList parentRoles)
+
 buildTablePermissions ::
-  forall b m r.
+  forall b m.
   ( MonadError QErr m,
     MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b,
-    MonadReader r m,
-    Has (ScalarTypeParsingContext b) r
+    GetAggregationPredicatesDeps b
   ) =>
   Env.Environment ->
   SourceName ->
+  SourceConfig b ->
   TableCoreCache b ->
+  TableName b ->
   FieldInfoMap (FieldInfo b) ->
   TablePermissionInputs b ->
   OrderedRoles ->
+  HashMap LogicalModelName (LogicalModelMetadata b) ->
   m (RolePermInfoMap b)
-buildTablePermissions env source tableCache tableFields tablePermissions orderedRoles = do
+buildTablePermissions env source sourceConfig tableCache tableName tableFields tablePermissions orderedRoles logicalModels = do
   let alignedPermissions = alignPermissions tablePermissions
-      go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
+      go accumulatedRolePermMap role@(Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
-          for (toList parentRoles) $ \role ->
-            onNothing (HashMap.lookup role accumulatedRolePermMap)
-              $ throw500
-              $
+          for (toList parentRoles) $ \parentRoleName ->
+            onNothing (HashMap.lookup parentRoleName accumulatedRolePermMap)
               -- this error will ideally never be thrown, but if it's thrown then
               -- it's possible that the permissions for the role do exist, but it's
               -- not yet built due to wrong ordering of the roles, check `orderRoles`
-              "buildTablePermissions: table role permissions for role: "
-              <> role
-              <<> " not found"
+              $ throw500 ("buildTablePermissions: table role permissions for role: " <> parentRoleName <<> " not found")
+
         let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
             selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
             accumulatedRolePermission = HashMap.lookup roleName accumulatedRolePermMap
-            roleSelectPermission =
-              onNothing (_permSel =<< accumulatedRolePermission)
-                $ combinedSelPermInfoToSelPermInfo selectPermissionsCount
-                <$> (crpiSelPerm combinedParentRolePermInfo)
+
+        roleSelectPermission <- resolveSelectPermission source sourceConfig (SPSTable tableName) role (crpiSelPerm combinedParentRolePermInfo) selectPermissionsCount (_permSel =<< accumulatedRolePermission)
         roleInsertPermission <- resolveCheckTablePermission (crpiInsPerm combinedParentRolePermInfo) accumulatedRolePermission _permIns roleName source table PTInsert
         roleUpdatePermission <- resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
         roleDeletePermission <- resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
@@ -266,16 +317,16 @@ buildTablePermissions env source tableCache tableFields tablePermissions ordered
         when (_pdRole permission == adminRoleName)
           $ throw400 ConstraintViolation "cannot define permission for admin role"
         (info, dependencies) <-
-          runTableCoreCacheRT
-            ( buildPermInfo
-                env
-                source
-                table
-                tableFields
-                (_pdRole permission)
-                (_pdPermission permission)
-            )
-            tableCache
+          flip runTableCoreCacheRT tableCache
+            . flip runReaderT sourceConfig
+            $ runLogicalModelFieldsLookup _lmmFields logicalModels
+            $ buildPermInfo
+              env
+              source
+              table
+              tableFields
+              (_pdRole permission)
+              (_pdPermission permission)
         recordDependenciesM metadataObject schemaObject dependencies
         pure info
 
@@ -293,31 +344,31 @@ buildTablePermissions env source tableCache tableFields tablePermissions ordered
 -- | Create the permission map for a native query based on the select
 -- permissions given in metadata. Compare with 'buildTablePermissions'.
 buildLogicalModelPermissions ::
-  forall b m r.
+  forall b m.
   ( MonadError QErr m,
     MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
-    MonadReader r m,
-    Has (ScalarTypeParsingContext b) r
+    LogicalModelFieldsRM b m
   ) =>
   SourceName ->
+  SourceConfig b ->
   TableCoreCache b ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap (Column b) (LogicalModelField b) ->
   InsOrdHashMap RoleName (SelPermDef b) ->
   OrderedRoles ->
   m (RolePermInfoMap b)
-buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModelFields selectPermissions orderedRoles = do
+buildLogicalModelPermissions sourceName sourceConfig tableCache logicalModelLocation logicalModelFields selectPermissions orderedRoles = do
   let combineRolePermissions :: RolePermInfoMap b -> Role -> m (RolePermInfoMap b)
-      combineRolePermissions acc (Role roleName (ParentRoles parentRoles)) = do
+      combineRolePermissions acc role@(Role roleName (ParentRoles parentRoles)) = do
         -- This error will ideally never be thrown, but if it's thrown then
         -- it's possible that the permissions for the role do exist, but it's
         -- not yet built due to wrong ordering of the roles, check `orderRoles`.
         parentRolePermissions <-
-          for (toList parentRoles) \role ->
-            HashMap.lookup role acc
-              `onNothing` throw500 ("buildTablePermissions: table role permissions for role: " <> role <<> " not found")
+          for (toList parentRoles) \parentRole ->
+            HashMap.lookup parentRole acc
+              `onNothing` throw500 ("buildTablePermissions: table role permissions for role: " <> parentRole <<> " not found")
 
         let -- What permissions are we inheriting?
             combinedParentRolePermInfo :: CombineRolePermInfo b
@@ -333,74 +384,102 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
             accumulatedRolePermission :: Maybe (RolePermInfo b)
             accumulatedRolePermission = HashMap.lookup roleName acc
 
-            -- If we have a permission, we'll use it. Otherwise, we'll fall
-            -- back to the inherited permission.
-            roleSelectPermission :: Maybe (SelPermInfo b)
-            roleSelectPermission =
-              onNothing (accumulatedRolePermission >>= _permSel)
-                $ fmap (combinedSelPermInfoToSelPermInfo selectPermissionsCount)
-                $ crpiSelPerm combinedParentRolePermInfo
+        -- If we have a permission, we'll use it. Otherwise, we'll fall
+        -- back to the inherited permission.
+        roleSelectPermission <- resolveSelectPermission sourceName sourceConfig (SPSLogicalModel logicalModelLocation) role (crpiSelPerm combinedParentRolePermInfo) selectPermissionsCount (_permSel =<< accumulatedRolePermission)
 
-            rolePermInfo :: RolePermInfo b
+        let rolePermInfo :: RolePermInfo b
             rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
 
         pure (HashMap.insert roleName rolePermInfo acc)
 
   -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
-    for (InsOrdHashMap.toHashMap selectPermissions) \selectPermission -> do
-      let role :: RoleName
-          role = _pdRole selectPermission
-
-          -- An identifier for the object on we're going to need to depend to
-          -- generate this permission.
-          sourceObjId :: MetadataObjId
-          sourceObjId =
-            MOSourceObjId sourceName
-              $ AB.mkAnyBackend
-              $ SMOLogicalModelObj @b logicalModelName
-              $ LMMOPerm role PTSelect
-
-          -- The object we're going to use to track the dependency and any
-          -- potential cache inconsistencies.
-          metadataObject :: MetadataObject
-          metadataObject =
-            MetadataObject sourceObjId
-              $ toJSON
-                WithLogicalModel
-                  { _wlmSource = sourceName,
-                    _wlmName = logicalModelName,
-                    _wlmInfo = selectPermission
-                  }
-
-          -- An identifier for this permission within the metadata structure.
-          schemaObject :: SchemaObjId
-          schemaObject =
-            SOSourceObj sourceName
-              $ AB.mkAnyBackend
-              $ SOILogicalModelObj @b logicalModelName
-              $ LMOPerm role PTSelect
-
-          modifyError :: ExceptT QErr m a -> ExceptT QErr m a
-          modifyError = modifyErr \err ->
-            addLogicalModelContext logicalModelName
-              $ "in permission for role "
-              <> role
-              <<> ": "
-              <> err
-
-      select <- withRecordInconsistencyM metadataObject $ modifyError do
-        when (role == adminRoleName)
-          $ throw400 ConstraintViolation "cannot define permission for admin role"
-
-        (permissionInformation, dependencies) <-
-          flip runTableCoreCacheRT tableCache
-            $ buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields
-            $ _pdPermission selectPermission
-
-        recordDependenciesM metadataObject schemaObject dependencies
-        pure permissionInformation
-
-      pure (RolePermInfo Nothing select Nothing Nothing)
+    for
+      (InsOrdHashMap.toHashMap selectPermissions)
+      (buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalModelLocation logicalModelFields)
 
   foldlM combineRolePermissions metadataRolePermissions (_unOrderedRoles orderedRoles)
+
+buildLogicalModelSelectPermission ::
+  forall b m.
+  ( MonadError QErr m,
+    MonadWriter (Seq CollectItem) m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b,
+    LogicalModelFieldsRM b m
+  ) =>
+  SourceName ->
+  SourceConfig b ->
+  TableCoreCache b ->
+  LogicalModelLocation ->
+  InsOrdHashMap (Column b) (LogicalModelField b) ->
+  SelPermDef b ->
+  m (RolePermInfo b)
+buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalModelLocation logicalModelFields selectPermission = do
+  let role :: RoleName
+      role = _pdRole selectPermission
+
+      -- An identifier for the object on we're going to need to depend to
+      -- generate this permission.
+      sourceObjId :: MetadataObjId
+      sourceObjId =
+        MOSourceObjId sourceName
+          $ AB.mkAnyBackend
+          $ SMOLogicalModelObj @b logicalModelLocation
+          $ LMMOPerm role PTSelect
+
+      -- The object we're going to use to track the dependency and any
+      -- potential cache inconsistencies.
+      -- we'll need to add one for each location a Logical Model can live in future (a Stored Procedure, etc)
+      metadataObject :: MetadataObject
+      metadataObject = case logicalModelLocation of
+        LMLLogicalModel logicalModelName ->
+          MetadataObject sourceObjId
+            $ toJSON
+              WithLogicalModel
+                { _wlmSource = sourceName,
+                  _wlmName = logicalModelName,
+                  _wlmInfo = selectPermission
+                }
+        LMLNativeQuery nativeQueryName ->
+          MetadataObject sourceObjId
+            $ toJSON
+              WithNativeQuery
+                { _wnqSource = sourceName,
+                  _wnqName = nativeQueryName,
+                  _wnqInfo = selectPermission
+                }
+
+      -- An identifier for this permission within the metadata structure.
+      schemaObject :: SchemaObjId
+      schemaObject =
+        SOSourceObj sourceName
+          $ AB.mkAnyBackend
+          $ SOILogicalModelObj @b logicalModelLocation
+          $ LMOPerm role PTSelect
+
+      modifyError :: ExceptT QErr m a -> ExceptT QErr m a
+      modifyError = modifyErr \err ->
+        addLogicalModelContext logicalModelLocation
+          $ "in permission for role "
+          <> role
+          <<> ": "
+          <> err
+
+  logicalModels <- getLogicalModelFieldsLookup @b
+  select <- withRecordInconsistencyM metadataObject $ modifyError do
+    when (role == adminRoleName)
+      $ throw400 ConstraintViolation "cannot define permission for admin role"
+
+    (permissionInformation, dependencies) <-
+      flip runTableCoreCacheRT tableCache
+        . flip runReaderT sourceConfig
+        $ flip runLogicalModelFieldsLookupRT logicalModels
+        $ buildLogicalModelPermInfo sourceName logicalModelLocation logicalModelFields
+        $ _pdPermission selectPermission
+
+    recordDependenciesM metadataObject schemaObject dependencies
+    pure permissionInformation
+
+  pure (RolePermInfo Nothing select Nothing Nothing)

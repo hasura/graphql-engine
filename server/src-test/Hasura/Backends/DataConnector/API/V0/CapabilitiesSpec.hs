@@ -64,15 +64,21 @@ genDataSchemaCapabilities =
     <*> genColumnNullability
     <*> Gen.bool
 
+genPostSchemaCapabilities :: (MonadGen m) => m PostSchemaCapabilities
+genPostSchemaCapabilities = pure PostSchemaCapabilities {}
+
 genColumnNullability :: (MonadGen m) => m ColumnNullability
 genColumnNullability =
   Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
 
 genQueryCapabilities :: (MonadGen m) => m QueryCapabilities
-genQueryCapabilities = QueryCapabilities <$> Gen.maybe genForeachCapabilities
+genQueryCapabilities = QueryCapabilities <$> Gen.maybe genForeachCapabilities <*> Gen.maybe genRedactionCapabilities
 
 genForeachCapabilities :: (MonadGen m) => m ForeachCapabilities
 genForeachCapabilities = pure ForeachCapabilities
+
+genRedactionCapabilities :: (MonadGen m) => m RedactionCapabilities
+genRedactionCapabilities = pure RedactionCapabilities
 
 genMutationCapabilities :: (MonadGen m) => m MutationCapabilities
 genMutationCapabilities =
@@ -137,6 +143,9 @@ genUpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition <$> genScalar
 genRelationshipCapabilities :: (MonadGen m) => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
 
+genInterpolatedQueryCapabilities :: (MonadGen m) => m InterpolatedQueryCapabilities
+genInterpolatedQueryCapabilities = pure InterpolatedQueryCapabilities {}
+
 genComparisonCapabilities :: (MonadGen m) => m ComparisonCapabilities
 genComparisonCapabilities =
   ComparisonCapabilities
@@ -169,11 +178,13 @@ genCapabilities :: Gen Capabilities
 genCapabilities =
   Capabilities
     <$> genDataSchemaCapabilities
+    <*> Gen.maybe genPostSchemaCapabilities
     <*> Gen.maybe genQueryCapabilities
     <*> Gen.maybe genMutationCapabilities
     <*> Gen.maybe genSubscriptionCapabilities
     <*> genScalarTypesCapabilities
     <*> Gen.maybe genRelationshipCapabilities
+    <*> Gen.maybe genInterpolatedQueryCapabilities
     <*> Gen.maybe genComparisonCapabilities
     <*> Gen.maybe genMetricsCapabilities
     <*> Gen.maybe genExplainCapabilities

@@ -1,80 +1,110 @@
 import React from 'react';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useMetadata } from '../../../hasura-metadata-api';
+import { Feature, IntrospectedTable } from '../../../DataSource';
+import { MetadataUtils, useMetadata } from '../../../hasura-metadata-api';
+import { supportsSchemaLessTables } from '../../LogicalModels/LogicalModelWidget/utils';
 import { TrackableResourceTabs } from '../../ManageDatabase/components/TrackableResourceTabs';
+import { useInvalidateSuggestedRelationships } from '../../TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import { ReactQueryStatusUI } from '../../components';
+import { multipleQueryUtils } from '../../components/ReactQueryWrappers/utils';
+import { useDriverCapabilities } from '../../hooks/useDriverCapabilities';
 import { useIntrospectedTables } from '../../hooks/useIntrospectedTables';
 import { TableList } from '../parts/TableList';
 import {
-  adaptTrackedTables,
-  adaptUntrackedTables,
+  PayloadTable,
   selectTrackedTables,
+  splitByTracked,
 } from '../selectors';
 
 type TabState = 'tracked' | 'untracked';
 
-export const ManageTrackedTables = ({
-  dataSourceName,
-}: {
-  dataSourceName: string;
-}) => {
-  const [tab, setTab] = React.useState<TabState>('tracked');
+const DataBound = ({ dataSourceName }: { dataSourceName: string }) => {
+  // we need both the tables and the source
+  const metadataResult = useMetadata(m => ({
+    metadataTables: selectTrackedTables(m)(dataSourceName),
+    dataSource: MetadataUtils.findMetadataSource(dataSourceName, m),
+  }));
 
   const {
-    data: metadataTables = [],
-    isFetched,
-    isError: isMetadataError,
-    error: introspectionError,
-  } = useMetadata(m => selectTrackedTables(m)(dataSourceName));
+    data: { metadataTables = [], dataSource } = {},
+    status: metadataStatus,
+  } = metadataResult;
 
-  const {
-    data: { trackedTables = [], untrackedTables = [] } = {},
-    isSuccess,
-    isError: isIntrospectionError,
-    error: metadataError,
-  } = useIntrospectedTables({
+  const introspectSelector = React.useCallback(
+    (introspectedTables: Feature | IntrospectedTable[]) =>
+      splitByTracked({ metadataTables, introspectedTables }),
+    [metadataTables]
+  );
+
+  const introspectedTablesResult = useIntrospectedTables({
     dataSourceName,
     options: {
-      select: introspectedTables => ({
-        trackedTables: adaptTrackedTables(metadataTables)(introspectedTables),
-        untrackedTables:
-          adaptUntrackedTables(metadataTables)(introspectedTables),
-      }),
-      enabled: isFetched,
+      select: introspectSelector,
+      enabled: metadataStatus === 'success',
       refetchOnWindowFocus: false,
-      onSuccess: data => {
-        if (data.trackedTables.length === 0) {
-          // if user has no tracked tables, switch to the untracked list
-          setTab('untracked');
-        }
-      },
     },
   });
 
-  if (isMetadataError || isIntrospectionError)
+  const { data: capabilities } = useDriverCapabilities({
+    dataSourceName: dataSourceName,
+  });
+
+  const areSchemaLessTablesSupported = supportsSchemaLessTables(capabilities);
+
+  const tablesLabel = dataSource?.kind === 'mongo' ? 'collections' : 'tables';
+
+  if (!introspectedTablesResult.isSuccess || !metadataResult.isSuccess) {
     return (
-      <IndicatorCard
-        status="negative"
-        headline="Error while fetching data"
-        showIcon
-      >
-        <div>
-          {metadataError?.message ??
-            (introspectionError as any)?.message ??
-            'Something went wrong'}
-        </div>
-      </IndicatorCard>
+      <ReactQueryStatusUI
+        status={multipleQueryUtils.status([
+          metadataResult,
+          introspectedTablesResult,
+        ])}
+        error={multipleQueryUtils.firstError([
+          metadataResult,
+          introspectedTablesResult,
+        ])}
+      />
     );
+  }
+
+  return (
+    <ManageTrackedTablesUI
+      dataSourceName={dataSourceName}
+      tablesLabel={tablesLabel}
+      trackMultipleEnabled={!areSchemaLessTablesSupported}
+      {...introspectedTablesResult.data}
+    />
+  );
+};
+
+const ManageTrackedTablesUI = ({
+  dataSourceName,
+  trackedTables,
+  untrackedTables,
+  tablesLabel = 'tables',
+  trackMultipleEnabled = true,
+  untrackMultipleEnabled = true,
+}: {
+  dataSourceName: string;
+  untrackedTables: PayloadTable[];
+  trackedTables: PayloadTable[];
+  tablesLabel?: string;
+  trackMultipleEnabled?: boolean;
+  untrackMultipleEnabled?: boolean;
+}) => {
+  const [tab, setTab] = React.useState<TabState>(
+    trackedTables.length === 0 ? 'untracked' : 'tracked'
+  );
+  const { invalidateSuggestedRelationships } =
+    useInvalidateSuggestedRelationships({ dataSourceName });
 
   return (
     <TrackableResourceTabs
-      introText={
-        'Tracking tables adds them to your GraphQL API. All objects will be admin-only until permissions have been set.'
-      }
+      introText={`Tracking ${tablesLabel} adds them to your GraphQL API. All objects will be admin-only until permissions have been set.`}
       value={tab}
       onValueChange={value => {
         setTab(value);
       }}
-      isLoading={!isSuccess}
       items={{
         untracked: {
           amount: untrackedTables.length,
@@ -83,6 +113,10 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'untracked'}
               dataSourceName={dataSourceName}
               tables={untrackedTables}
+              trackMultipleEnabled={trackMultipleEnabled}
+              onChange={() => {
+                invalidateSuggestedRelationships();
+              }}
             />
           ),
         },
@@ -93,6 +127,10 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'tracked'}
               dataSourceName={dataSourceName}
               tables={trackedTables}
+              trackMultipleEnabled={untrackMultipleEnabled}
+              onChange={() => {
+                invalidateSuggestedRelationships();
+              }}
             />
           ),
         },
@@ -100,3 +138,5 @@ export const ManageTrackedTables = ({
     />
   );
 };
+
+export const ManageTrackedTables = DataBound;

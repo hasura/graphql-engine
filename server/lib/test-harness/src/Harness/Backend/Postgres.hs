@@ -65,7 +65,7 @@ import Harness.Schema
   )
 import Harness.Schema qualified as Schema
 import Harness.Services.Database.Postgres qualified as Postgres
-import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType (BackendTypeConfig, postgresishGraphQLType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..))
@@ -86,7 +86,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------
@@ -279,6 +280,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
+  Schema.TDouble -> "double precision"
   Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
@@ -347,6 +349,7 @@ wrapIdentifier identifier = "\"" <> identifier <> "\""
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt n -> tshow n
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> if b then "TRUE" else "FALSE"

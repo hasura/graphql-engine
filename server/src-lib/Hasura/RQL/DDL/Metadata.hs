@@ -44,8 +44,10 @@ import Hasura.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.Function.API
 import Hasura.Logging qualified as HL
 import Hasura.LogicalModel.API
+import Hasura.LogicalModelResolver.Lenses (_LMIInlineLogicalModel)
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.API
+import Hasura.NativeQuery.Lenses (nqmReturns)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
 import Hasura.RQL.DDL.ApiLimit
@@ -625,7 +627,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
             ciDataConnectors = dataConnectorInvalidations
           }
 
-  buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
+  buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata Nothing
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   pure
     . encJFromJValue
@@ -723,15 +725,23 @@ purgeMetadataObj = \case
           $ nativeQueryMetadataSetter @b source nativeQueryName
           %~ case nativeQueryMetadataObjId of
             NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
-            NQMOReferencedLogicalModel _ -> id
       SMOStoredProcedure sp -> dropStoredProcedureInMetadata @b source sp
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
-      SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
+      SMOLogicalModelObj (LMLLogicalModel logicalModelName) logicalModelMetadataObjId ->
         MetadataModifier
           $ logicalModelMetadataSetter @b source logicalModelName
           %~ case logicalModelMetadataObjId of
             LMMOPerm roleName permType ->
               dropLogicalModelPermissionInMetadata roleName permType
+            LMMOReferencedLogicalModel _ -> id
+      SMOLogicalModelObj (LMLNativeQuery nativeQueryName) logicalModelMetadataObjId ->
+        MetadataModifier
+          $ nativeQueryMetadataSetter @b source nativeQueryName
+          . nqmReturns
+          . _LMIInlineLogicalModel
+          %~ case logicalModelMetadataObjId of
+            LMMOPerm roleName permType ->
+              dropInlineLogicalModelPermissionInMetadata roleName permType
             LMMOReferencedLogicalModel _ -> id
       SMOTableObj qt tableObj ->
         MetadataModifier

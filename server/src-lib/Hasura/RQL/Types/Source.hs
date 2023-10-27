@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceInfo,
     unsafeSourceName,
     unsafeSourceTables,
+    unsafeSourceLogicalModels,
     siConfiguration,
     siNativeQueries,
     siStoredProcedures,
@@ -136,6 +137,9 @@ unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
 unsafeSourceConfiguration :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
+
+unsafeSourceLogicalModels :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (LogicalModelCache b)
+unsafeSourceLogicalModels = fmap _siLogicalModels . unsafeSourceInfo @b
 
 --------------------------------------------------------------------------------
 -- Schema cache

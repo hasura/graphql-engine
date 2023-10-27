@@ -16,7 +16,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 # Getting Started with MySQL in Hasura Cloud
 
 <div className="badge-container">
-  <ProductBadge free standard pro ee />
+  <ProductBadge free pro ee />
 </div>
 
 ## Introduction
@@ -86,6 +86,14 @@ For more information see
 [MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
 
 Click `Connect Database`.
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
 
 ### Step 3: Track tables and run GraphQL API queries
 

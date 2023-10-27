@@ -39,6 +39,15 @@ Here is how you can get started with Hasura and BigQuery:
 
  -->
 
+## Minimum required IAM permissions
+
+* BigQuery queries through Hasura require the `bigquery.jobs.create` and `bigquery.jobs.get` permissions to send a job to the BigQuery servers.
+* The `bigquery.tables.getData` permission allows Hasura to query your BigQuery data source. Note that mutations are not currently supported for BigQuery, and so no corresponding `updateData` permission is required.
+* To use the Hasura Console to edit your data source, several different permissions may be required depending on your actions:
+  * `bigquery.datasets.create` and `bigquery.datasets.delete` for creating and deleting datasets.
+  * `bigquery.routines.create`, `bigquery.routines.update`, and `bigquery.routines.delete` for managing user-defined functions and stored procedures.
+  * `bigquery.table.create`, `bigquery.tables.list`, `bigquery.tables.get`, `bigquery.tables.delete`, and `bigquery.tables.update` to manage the dataset definition.
+
 ## Supported features
 
 Hasura currently supports queries and relationships on BigQuery.

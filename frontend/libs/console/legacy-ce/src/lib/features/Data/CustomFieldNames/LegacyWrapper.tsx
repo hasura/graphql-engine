@@ -22,7 +22,10 @@ import {
 } from './CustomFieldNamesModal';
 
 import { CustomFieldNamesFormVals } from './types';
-import { getQualifiedTable, getTrackTableType } from './utils';
+import {
+  getQualifiedTableForCustomFieldNames,
+  getTrackTableType,
+} from './utils';
 
 type LegacyWrapperProps = Omit<CustomFieldNamesModalProps, 'onSubmit'> & {
   dataSource: string;
@@ -66,7 +69,7 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
       type: getTrackTableType(driver) as allowedMetadataTypes,
       args: {
         source: dataSource,
-        table: getQualifiedTable({
+        table: getQualifiedTableForCustomFieldNames({
           driver,
           tableName,
           schema,
@@ -99,6 +102,7 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
       {...props}
       onSubmit={onCustomizationFormSubmit}
       isLoading={mutation.isLoading}
+      source={dataSource}
     />
   );
 };

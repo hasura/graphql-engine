@@ -44,7 +44,7 @@ import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Parser.Names
-import Hasura.Prelude
+import Hasura.Prelude hiding (runWriterT)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -122,70 +122,184 @@ instance ToTxt MultiplexedQuery where
 
 toSQLFromItem ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind,
-    MonadWriter CustomSQLCTEs m
+    DS.PostgresTranslateSelect pgKind,
+    MonadWriter CustomSQLCTEs m,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   S.TableAlias ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
   m S.FromItem
-toSQLFromItem tableAlias = \case
-  QDBSingleRow s -> S.mkSelFromItem <$> DS.mkSQLSelect JASSingleObject s <*> pure tableAlias
-  QDBMultipleRows s -> S.mkSelFromItem <$> DS.mkSQLSelect JASMultipleRows s <*> pure tableAlias
-  QDBAggregation s -> S.mkSelFromItem <$> DS.mkAggregateSelect s <*> pure tableAlias
-  QDBConnection s -> S.mkSelectWithFromItem <$> DS.mkConnectionSelect s <*> pure tableAlias
-  QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect s <*> pure tableAlias
+toSQLFromItem userInfo tableAlias query = do
+  -- Note: Remote relationship predicate in permission is not supported in subscriptions
+  -- as current implementation of multiplexing doesn't refetch the SQL query and hence the
+  -- query might be executed with stale values.
+  throwErrorForRemoteRelationshipInPermissionPredicate query
+  case query of
+    QDBSingleRow s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASSingleObject s <*> pure tableAlias
+    QDBMultipleRows s -> S.mkSelFromItem <$> DS.mkSQLSelect userInfo JASMultipleRows s <*> pure tableAlias
+    QDBAggregation s -> S.mkSelFromItem <$> DS.mkAggregateSelect userInfo s <*> pure tableAlias
+    QDBConnection s -> S.mkSelectWithFromItem <$> DS.mkConnectionSelect userInfo s <*> pure tableAlias
+    QDBStreamMultipleRows s -> S.mkSelFromItem <$> DS.mkStreamSQLSelect userInfo s <*> pure tableAlias
+
+throwErrorForRemoteRelationshipInPermissionPredicate ::
+  ( MonadError QErr m
+  ) =>
+  QueryDB ('Postgres pgKind) Void S.SQLExp ->
+  m ()
+throwErrorForRemoteRelationshipInPermissionPredicate q = do
+  case q of
+    QDBSingleRow s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      for_ (_asnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    QDBMultipleRows s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      for_ (_asnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    QDBAggregation s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm s))
+      throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields (_asnFields s)
+    QDBConnection s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_asnPerm (_csSelect s)))
+      throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields (_asnFields (_csSelect s))
+    QDBStreamMultipleRows s -> do
+      throwErrorForRemoteRelationshipInSelect (_tpFilter (_assnPerm s))
+      for_ (_assnFields s) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+  where
+    throwErrorForRemoteRelationshipInSelect :: (MonadError QErr f) => GBoolExp backend1 (AnnBoolExpFld backend2 leaf) -> f ()
+    throwErrorForRemoteRelationshipInSelect s = do
+      when (haveRemoteRelationshipPredicate s)
+        $ throw400 NotSupported "subscriptions on this field is not supported"
+
+    haveRemoteRelationshipPredicate :: GBoolExp backend1 (AnnBoolExpFld backend2 leaf) -> Bool
+    haveRemoteRelationshipPredicate (BoolAnd lst) = any haveRemoteRelationshipPredicate lst
+    haveRemoteRelationshipPredicate (BoolOr lst) = any haveRemoteRelationshipPredicate lst
+    haveRemoteRelationshipPredicate (BoolNot b) = haveRemoteRelationshipPredicate b
+    haveRemoteRelationshipPredicate (BoolExists e) = haveRemoteRelationshipPredicate (_geWhere e)
+    haveRemoteRelationshipPredicate (BoolField (AVRemoteRelationship _x)) = True
+    haveRemoteRelationshipPredicate _ = False
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInField ::
+      ( MonadError QErr m
+      ) =>
+      AnnFieldG ('Postgres pgKind) Void S.SQLExp ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFObjectRelation objRel) = do
+      throwErrorForRemoteRelationshipInSelect $ _aosTargetFilter (_aarAnnSelect objRel)
+      for_ (_aosFields (_aarAnnSelect objRel)) \(_, fld) ->
+        throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFArrayRelation arraySelectG) = do
+      case arraySelectG of
+        ASSimple s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_aarAnnSelect s))
+          for_ (_asnFields (_aarAnnSelect s)) \(_, fld) ->
+            throwErrorForRemoteRelationshipInPermissionPredicateInField fld
+        ASAggregate s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_aarAnnSelect s))
+          throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields (_asnFields (_aarAnnSelect s))
+        ASConnection s -> do
+          throwErrorForRemoteRelationshipInSelect $ _tpFilter (_asnPerm (_csSelect (_aarAnnSelect s)))
+          throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields (_asnFields (_csSelect (_aarAnnSelect s)))
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFColumn _) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFComputedField {}) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFNodeId {}) = pure ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInField (AFExpression _) = pure ()
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields ::
+      ( MonadError QErr m
+      ) =>
+      Fields (ConnectionField ('Postgres pgKind) Void S.SQLExp) ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInConnectionFields connFields =
+      for_ connFields \(_, fld) ->
+        case fld of
+          ConnectionEdges edgeFields ->
+            for_ edgeFields \(_, fld') ->
+              case fld' of
+                EdgeNode fields ->
+                  for_ fields \(_, fld'') ->
+                    throwErrorForRemoteRelationshipInPermissionPredicateInField fld''
+                EdgeTypename _ -> pure ()
+                EdgeCursor -> pure ()
+          ConnectionTypename _ -> pure ()
+          ConnectionPageInfo _ -> pure ()
+
+    throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields ::
+      ( MonadError QErr m
+      ) =>
+      Fields (TableAggregateFieldG ('Postgres pgKind) Void S.SQLExp) ->
+      m ()
+    throwErrorForRemoteRelationshipInPermissionPredicateInAggregateFields aggFields =
+      for_ aggFields \(_, fld) ->
+        case fld of
+          TAFNodes _ fields -> do
+            for_ fields \(_, fld') ->
+              throwErrorForRemoteRelationshipInPermissionPredicateInField fld'
+          TAFGroupBy _ groupByField ->
+            for_ (_gbgFields groupByField) \(_, fld') ->
+              case fld' of
+                GBFNodes fields ->
+                  for_ fields \(_, fld'') ->
+                    throwErrorForRemoteRelationshipInPermissionPredicateInField fld''
+                GBFGroupKey _ -> pure ()
+                GBFAggregate _ -> pure ()
+                GBFExp _ -> pure ()
+          TAFAgg _ -> pure ()
+          TAFExp _ -> pure ()
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    DS.PostgresTranslateSelect pgKind,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   InsOrdHashMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
-  MultiplexedQuery
-mkMultiplexedQuery rootFields =
-  MultiplexedQuery . toQuery $ selectWith
+  m MultiplexedQuery
+mkMultiplexedQuery userInfo rootFields = do
+  (sqlFrom, customSQLCTEs) <-
+    runWriterT
+      $ traverse
+        ( \(fieldAlias, resolvedAST) ->
+            toSQLFromItem userInfo (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
+        )
+        (InsOrdHashMap.toList rootFields)
+  -- multiplexed queries may only contain read only raw queries
+  let selectWith = S.SelectWith [] select
+      select =
+        S.mkSelect
+          { S.selExtr =
+              -- SELECT _subs.result_id, _fld_resp.root AS result
+              [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+                S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
+              ],
+            S.selFrom =
+              Just
+                $ S.FromExp
+                  [ S.FIJoin
+                      $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+                  ]
+          }
+      -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+      responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
+      selectRootFields =
+        S.mkSelect
+          { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
+            S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
+            S.selFrom =
+              Just $ S.FromExp sqlFrom
+          }
+  pure $ MultiplexedQuery . toQuery $ selectWith
   where
-    select =
-      S.mkSelect
-        { S.selExtr =
-            -- SELECT _subs.result_id, _fld_resp.root AS result
-            [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
-              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
-            ],
-          S.selFrom =
-            Just
-              $ S.FromExp
-                [ S.FIJoin
-                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
-                ]
-        }
-
-    -- multiplexed queries may only contain read only raw queries
-    selectWith = S.SelectWith [] select
-
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
         subsAlias
         [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
-
-    (sqlFrom, customSQLCTEs) =
-      runWriter
-        $ traverse
-          ( \(fieldAlias, resolvedAST) ->
-              toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
-          )
-          (InsOrdHashMap.toList rootFields)
-
-    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
-    selectRootFields =
-      S.mkSelect
-        { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
-          S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
-          S.selFrom =
-            Just $ S.FromExp sqlFrom
-        }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
@@ -199,50 +313,49 @@ mkMultiplexedQuery rootFields =
 
 mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    DS.PostgresTranslateSelect pgKind,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
-  MultiplexedQuery
-mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
-  MultiplexedQuery . toQuery $ selectWith
+  m MultiplexedQuery
+mkStreamingMultiplexedQuery userInfo (fieldAlias, resolvedAST) = do
+  (fromSQL, customSQLCTEs) <- runWriterT (toSQLFromItem userInfo (S.mkTableAlias $ G.unName fieldAlias) resolvedAST)
+  let selectWith = S.SelectWith [] select
+      select =
+        S.mkSelect
+          { S.selExtr =
+              -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
+              [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+                S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
+                S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
+              ],
+            S.selFrom =
+              Just
+                $ S.FromExp
+                  [ S.FIJoin
+                      $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+                  ]
+          }
+      -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
+      responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
+
+      selectRootFields =
+        S.mkSelect
+          { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
+            S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
+            S.selFrom =
+              Just $ S.FromExp [fromSQL]
+          }
+  pure $ MultiplexedQuery . toQuery $ selectWith
   where
-    selectWith = S.SelectWith [] select
-
-    select =
-      S.mkSelect
-        { S.selExtr =
-            -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
-            [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
-              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
-              S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
-            ],
-          S.selFrom =
-            Just
-              $ S.FromExp
-                [ S.FIJoin
-                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
-                ]
-        }
-
     -- FROM unnest($1::uuid[], $2::json[]) _subs (result_id, result_vars)
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
         subsAlias
         [resultIdAlias, resultVarsAlias]
-
-    -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
-
-    (fromSQL, customSQLCTEs) = runWriter (toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST)
-
-    selectRootFields =
-      S.mkSelect
-        { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
-          S.selCTEs = customSQLToInnerCTEs customSQLCTEs,
-          S.selFrom =
-            Just $ S.FromExp [fromSQL]
-        }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldJsonAggregate = S.SEFnApp "json_build_object" rootFieldJsonPair Nothing

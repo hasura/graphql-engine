@@ -29,6 +29,7 @@ import Hasura.Tracing.Sampling
 newtype TraceT m a = TraceT (ReaderT (Reporter, Maybe TraceEnv) m a)
   deriving
     ( Functor,
+      MonadFail, -- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681
       Applicative,
       Monad,
       MonadIO,
@@ -105,12 +106,13 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
           runReporter reporter subContext name (readIORef metadataRef)
             $ local (_2 .~ Just subTraceEnv) body
 
-  currentContext = TraceT $ asks $ fmap teTraceContext . snd
-
   attachMetadata metadata = TraceT do
     asks (fmap teMetadataRef . snd) >>= \case
       Nothing -> pure ()
       Just ref -> liftIO $ modifyIORef' ref (metadata ++)
+
+instance (MonadIO m, MonadBaseControl IO m) => MonadTraceContext (TraceT m) where
+  currentContext = TraceT $ asks $ fmap teTraceContext . snd
 
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
@@ -118,6 +120,7 @@ instance (UserInfoM m) => UserInfoM (TraceT m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (TraceT m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 --------------------------------------------------------------------------------
 -- Internal

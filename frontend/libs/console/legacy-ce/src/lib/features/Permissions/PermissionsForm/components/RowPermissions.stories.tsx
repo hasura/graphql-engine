@@ -12,7 +12,6 @@ import {
 } from './RowPermissions';
 
 export default {
-  title: 'Features/Permissions/Form/Row Section',
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (

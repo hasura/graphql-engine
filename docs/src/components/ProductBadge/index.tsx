@@ -5,7 +5,6 @@ import VersionedLink from '@site/src/components/VersionedLink';
 type ProductBadgeProps = {
   ce: boolean;
   free: boolean;
-  standard: boolean;
   pro: boolean;
   ee: boolean;
   self: boolean;
@@ -25,13 +24,6 @@ function createLinks(props: ProductBadgeProps) {
     links.push(
       <VersionedLink key="free" to="/hasura-cloud/overview/#cloud-free">
         Cloud Free
-      </VersionedLink>
-    );
-  }
-  if (props.standard) {
-    links.push(
-      <VersionedLink key="standard" to="/hasura-cloud/overview/#cloud-professional">
-        Cloud Standard
       </VersionedLink>
     );
   }

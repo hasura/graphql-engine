@@ -21,11 +21,16 @@
 #
 # Facts:
 #
-# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid bother
+# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid bothering
 #   existing instances of databases.
 #
 # * The login credentials are, where possible, all "hasura" to avoid unnecessary
 #   mental overhead.
+#
+# * The SQL Server image will only work on macOS if you enable the relevant
+#   settings. Open the Docker Desktop settings, enable "Use Virtualization
+#   framework" in the "General" tab, and "Use Rosetta for x86/amd64 emulation on
+#   Apple Silicon" in the "Features in development" tab.
 
 version: "3.6"
 
@@ -80,14 +85,6 @@ services:
       - "65003:1433"
     volumes:
       - mssql-data:/var/opt/mssql
-
-  sqlserver-healthcheck:
-    extends:
-      file: docker-compose/databases.yaml
-      service: sqlserver-healthcheck
-    depends_on:
-      sqlserver:
-        condition: service_started
 
   dc-reference-agent:
     extends:

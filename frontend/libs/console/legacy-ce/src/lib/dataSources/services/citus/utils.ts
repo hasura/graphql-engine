@@ -19,9 +19,11 @@ import {
   getColQuery,
   getFullQueryNameBase,
   getGraphQLQueryBase,
+  getQueryWithNamespace,
 } from '../../common';
 import { WhereClause } from '../../../components/Common/utils/v1QueryUtils';
 import { replaceAllStringOccurrences } from '../../common/index';
+import { SourceCustomization } from '../../../features/hasura-metadata-types';
 
 type Tables = ReduxState['tables'];
 
@@ -107,9 +109,11 @@ const getFullQueryName = getFullQueryNameBase('public');
 export const getRowsCountRequestBody = ({
   tables,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   tables: Tables;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const {
     currentTable: originalTable,
@@ -122,15 +126,22 @@ export const getRowsCountRequestBody = ({
       tableName: originalTable,
       schema: currentSchema,
       tableConfiguration,
+      dataSourceCustomization,
       operation: 'select_aggregate',
     });
-    return `query TableCount {
-      ${queryName} ${clauses && `(${clauses})`} {
-        aggregate {
-          count
+
+    const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+    return getQueryWithNamespace({
+      queryName: 'query TableCount',
+      namespace: namespace,
+      innerQuery: `
+        ${queryName} ${clauses && `(${clauses})`} {
+          aggregate {
+            count
+          }
         }
-      }
-    }`;
+      `,
+    });
   };
 
   return {
@@ -154,11 +165,13 @@ const processCount = (c: {
   currentSchema: string;
   originalTable: string;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }): number => {
   const key = getFullQueryName({
     tableName: c.originalTable,
     schema: c.currentSchema,
     tableConfiguration: c.tableConfiguration,
+    dataSourceCustomization: c.dataSourceCustomization,
     operation: 'select_aggregate',
   });
   return c.data?.data[key]?.aggregate?.count;
@@ -174,10 +187,12 @@ export const getTableRowRequestBody = ({
   tables,
   isExport,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   tables: Tables;
   isExport?: boolean;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const {
     currentTable: originalTable,
@@ -189,30 +204,41 @@ export const getTableRowRequestBody = ({
     tableName: originalTable,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'select',
   });
   const aggregateName = getFullQueryName({
     tableName: originalTable,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'select_aggregate',
   });
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
   const queryBody = ({ clauses, relationshipInfo }: QueryBody) => {
-    return `query TableRows {
-      ${queryName} ${clauses && `(${clauses})`} {
+    return getQueryWithNamespace({
+      queryName: 'query TableRows',
+      namespace: namespace,
+      innerQuery: `
+      ${queryName} ${clauses && `(${clauses})`}
+      {
           ${getColQuery(
             view.query.columns,
             view.curFilter.limit,
             relationshipInfo,
-            tableConfiguration
+            tableConfiguration,
+            dataSourceCustomization
           ).join('\n')}
-    }
-    ${aggregateName} {
-      aggregate {
-        count
       }
-    }
-  }`;
+      ${aggregateName}
+      {
+        aggregate {
+          count
+        }
+      }
+      `,
+    });
   };
 
   return {
@@ -237,10 +263,16 @@ export const processTableRowData = (
     originalTable: string;
     currentSchema: string;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }
 ) => {
   try {
-    const { originalTable, currentSchema, tableConfiguration } = config!;
+    const {
+      originalTable,
+      currentSchema,
+      tableConfiguration,
+      dataSourceCustomization,
+    } = config!;
 
     const reversedCustomColumns = Object.entries(
       tableConfiguration?.column_config ?? {}
@@ -253,9 +285,16 @@ export const processTableRowData = (
       tableName: originalTable,
       schema: currentSchema,
       tableConfiguration,
+      dataSourceCustomization,
       operation: 'select',
     });
-    const results = data?.data[queryName];
+
+    const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+    const hasNamespace = !!namespace;
+
+    const results = hasNamespace
+      ? data?.data[namespace][queryName]
+      : data?.data[queryName];
 
     const rows = isEmpty(reversedCustomColumns)
       ? results
@@ -273,6 +312,7 @@ export const processTableRowData = (
       tableName: originalTable,
       schema: currentSchema,
       tableConfiguration,
+      dataSourceCustomization,
       operation: 'select_aggregate',
     });
     const estimatedCount =
@@ -293,7 +333,7 @@ const getInsertRequestBody = (
   data: Parameters<generateInsertRequestType['getInsertRequestBody']>[0]
 ): ReturnType<generateInsertRequestType['getInsertRequestBody']> => {
   const { name: tableName, schema } = data.tableDef;
-  const { tableConfiguration } = data;
+  const { tableConfiguration, dataSourceCustomization } = data;
   const columnConfig = tableConfiguration?.column_config ?? {};
 
   const processedData: Record<string, any> = {};
@@ -316,18 +356,21 @@ const getInsertRequestBody = (
     tableName,
     schema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'insert',
   });
 
-  const query = `
-  mutation InsertRow {
-     ${queryName}(objects: { ${values} }){
-         returning {
-           ${returning}
-         }
-     }
-  }
-  `;
+  const query = getQueryWithNamespace({
+    queryName: 'mutation InsertRow',
+    namespace: dataSourceCustomization?.root_fields?.namespace ?? '',
+    innerQuery: `
+      ${queryName}(objects: { ${values} }){
+        returning {
+          ${returning}
+        }
+      }
+    `,
+  });
 
   return {
     query,
@@ -342,20 +385,31 @@ type processInsertDataParameter = Parameters<
 const processInsertData = (
   result: processInsertDataParameter[0],
   tableConfiguration: TableConfig,
-  config: processInsertDataParameter[2]
+  dataSourceCustomization: SourceCustomization,
+  config: processInsertDataParameter[3]
 ) => {
   const { currentTable, currentSchema } = config!;
   const index = getFullQueryName({
     tableName: currentTable,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'insert',
   });
-  const returnedFields = (
-    result as {
-      data: Record<string, Record<string, any>>;
-    }
-  )?.data?.[index]?.returning;
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const hasNamespace = !!namespace;
+
+  const _result = result as {
+    data: Record<string, Record<string, any>>;
+  };
+
+  const data = hasNamespace
+    ? _result?.data[namespace][index]
+    : _result?.data[index];
+
+  const returnedFields = data?.returning;
+
   return {
     affectedRows: 1,
     returnedFields:
@@ -410,10 +464,11 @@ const getEditRowRequestBody = (data: {
   source: string;
   tableDef: QualifiedTable;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
   set: Record<string, any>;
   where: Record<string, any>;
 }) => {
-  const { tableConfiguration } = data;
+  const { tableConfiguration, dataSourceCustomization } = data;
   const columnConfig = tableConfiguration?.column_config || {};
   const whereClause = Object.entries(data.where)
     .map(
@@ -437,14 +492,21 @@ const getEditRowRequestBody = (data: {
     tableName,
     schema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'update',
   });
 
-  const query = `mutation {
-    ${operationName}(where: {${whereClause}}, _set: {${setClause}}) {
-      affected_rows
-    }
-  }`;
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const query = getQueryWithNamespace({
+    queryName: 'mutation EditRow',
+    namespace,
+    innerQuery: `
+      ${operationName}(where: {${whereClause}}, _set: {${setClause}}) {
+        affected_rows
+      }
+    `,
+  });
+
   return {
     query,
     variables: null,
@@ -455,19 +517,30 @@ const processEditData = ({
   data,
   tableDef,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   tableDef: QualifiedTable;
   data: any;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }): number => {
   const { name: tableName, schema } = tableDef;
   const operationName = getFullQueryName({
     tableName,
     schema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'update',
   });
-  return data?.data[operationName].affected_rows;
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const hasNamespace = !!namespace;
+
+  const results = hasNamespace
+    ? data?.data[namespace][operationName]
+    : data?.data[operationName];
+
+  return results.affected_rows;
 };
 
 export const generateEditRowRequest = () => ({
@@ -482,12 +555,14 @@ const getDeleteRowRequestBody = ({
   schemaName,
   columnInfo,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   pkClause: WhereClause;
   tableName: string;
   schemaName: string;
   columnInfo: BaseTableColumn[];
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const columnConfig = tableConfiguration?.column_config || {};
 
@@ -504,25 +579,46 @@ const getDeleteRowRequestBody = ({
     tableName,
     schema: schemaName,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'delete',
   });
-  const query = `mutation DeleteRows {
-    delete_row: ${identifier}(where: {${args}}) {
-      affected_rows
-    }
-  }`;
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const query = getQueryWithNamespace({
+    queryName: 'mutation DeleteRows',
+    namespace,
+    innerQuery: `
+      delete_row: ${identifier}(where: {${args}}) {
+        affected_rows
+      }
+    `,
+  });
+
   return {
     query,
     variables: null,
   };
 };
 
-const processDeleteRowData = (data: Record<string, any>) => {
+const processDeleteRowData = (
+  data: Record<string, any>,
+  config: {
+    dataSourceCustomization: SourceCustomization;
+  }
+) => {
   try {
     if (data.errors) throw new Error(data.errors[0].message);
-    if (data?.data?.delete_row?.affected_rows) {
-      return data?.data?.delete_row?.affected_rows;
-    }
+
+    const namespace =
+      config.dataSourceCustomization?.root_fields?.namespace ?? '';
+    const hasNamespace = !!namespace;
+
+    const results = hasNamespace
+      ? data?.data[namespace]?.delete_row
+      : data?.data?.delete_row;
+
+    if (results?.affected_rows) return results?.affected_rows;
+
     throw new Error('Invalid response');
   } catch (err) {
     if (isConsoleError(err)) {
@@ -543,18 +639,21 @@ const getBulkDeleteRowRequestBody = ({
   schemaName,
   columnInfo,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   pkClauses: WhereClause[];
   tableName: string;
   schemaName: string;
   columnInfo: BaseTableColumn[];
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const columnConfig = tableConfiguration?.column_config || {};
   const identifier = getFullQueryName({
     tableName,
     schema: schemaName,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'delete',
   });
   const topLevelFields = pkClauses.map((pkClause, i) => {
@@ -570,25 +669,43 @@ const getBulkDeleteRowRequestBody = ({
 
     return `delete_row_${i}: ${identifier}(where: {${args}}) { affected_rows }`;
   });
-  const query = `mutation MyMutation {
-    ${topLevelFields.join('\n')}
-  }`;
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const query = getQueryWithNamespace({
+    queryName: 'mutation BulkDeleteRows',
+    namespace,
+    innerQuery: `
+      ${topLevelFields.join('\n')}
+    `,
+  });
+
   return {
     query,
     variables: null,
   };
 };
 
-const processBulkDeleteRowData = (data: Record<string, any>) => {
+const processBulkDeleteRowData = (
+  data: Record<string, any>,
+  config: {
+    dataSourceCustomization: SourceCustomization;
+  }
+) => {
   try {
     if (data.errors) {
       throw new Error(data.errors[0].message);
     }
 
     if (data.data) {
-      const res = Object.keys(data.data)
-        .filter(key => data.data[key])
-        .map(key => data.data[key].affected_rows)
+      const namespace =
+        config.dataSourceCustomization?.root_fields?.namespace ?? '';
+      const hasNamespace = !!namespace;
+
+      const results = hasNamespace ? data?.data[namespace] : data?.data;
+
+      const res = Object.keys(results)
+        .filter(key => results[key])
+        .map(key => results[key].affected_rows)
         .reduce((a, b) => a + b, 0);
       return res;
     }

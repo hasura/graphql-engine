@@ -24,7 +24,6 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Services.GraphqlEngine
 import Harness.Services.Schema
-import Harness.Services.Source.DCPostgres qualified as DC
 import Harness.Services.Source.Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
@@ -39,11 +38,6 @@ spec = do
     withPostgresSource "postgres-source"
       $ withSchemaName "test_schema"
       $ withPostgresSchema schema
-      $ tests
-
-    DC.withDcPostgresSource "dc-postgres-source"
-      $ withSchemaName "test_schema"
-      $ DC.withDcPostgresSchema schema
       $ tests
 
   withEachProtocol

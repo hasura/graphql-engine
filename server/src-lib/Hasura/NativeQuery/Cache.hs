@@ -30,7 +30,7 @@ data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
     _nqiRelationships :: InsOrdHashMap RelName (RelInfo b),
     _nqiDescription :: Maybe Text
   }
-  deriving stock (Generic)
+  deriving stock (Show, Generic)
 
 instance
   (Backend b, ToJSON (RolePermInfoMap b)) =>

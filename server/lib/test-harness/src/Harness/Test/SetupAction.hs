@@ -55,7 +55,7 @@ setupPermissionsAction permissions testEnvironment =
     { setupAction = for_ permissions \permission ->
         GraphqlEngine.postMetadata_ testEnvironment do
           createPermissionMetadata testEnvironment permission,
-      teardownAction = const $ for_ permissions \permission ->
+      teardownAction = const $ for_ (reverse permissions) \permission ->
         GraphqlEngine.postMetadata_ testEnvironment do
           dropPermissionMetadata testEnvironment permission
     }

@@ -3,6 +3,7 @@
 
 module Hasura.RQL.IR.Select.OrderBy
   ( AnnotatedAggregateOrderBy (..),
+    AggregateOrderByColumn (..),
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
     AnnotatedOrderByItemG,
@@ -22,7 +23,14 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 
 data AnnotatedOrderByElement (b :: BackendType) v
-  = AOCColumn (ColumnInfo b)
+  = AOCColumn
+      (ColumnInfo b)
+      -- | This type is used to determine whether the column should be redacted
+      -- before being ordered over
+      (AnnRedactionExp b v)
+  | AOCNestedObject
+      (NestedObjectInfo b)
+      (AnnotatedOrderByElement b v)
   | AOCObjectRelation
       (RelInfo b)
       -- | Permission filter of the remote table to which the relationship is defined
@@ -32,46 +40,64 @@ data AnnotatedOrderByElement (b :: BackendType) v
       (RelInfo b)
       -- | Permission filter of the remote table to which the relationship is defined
       (AnnBoolExp b v)
-      (AnnotatedAggregateOrderBy b)
+      (AnnotatedAggregateOrderBy b v)
   | AOCComputedField (ComputedFieldOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
     Eq (AnnBoolExp b v),
-    Eq (AnnotatedAggregateOrderBy b),
-    Eq (ComputedFieldOrderBy b v)
+    Eq (AnnotatedAggregateOrderBy b v),
+    Eq (ComputedFieldOrderBy b v),
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (AnnotatedOrderByElement b v)
 
 deriving stock instance
   ( Backend b,
     Show (AnnBoolExp b v),
-    Show (AnnotatedAggregateOrderBy b),
-    Show (ComputedFieldOrderBy b v)
+    Show (AnnotatedAggregateOrderBy b v),
+    Show (ComputedFieldOrderBy b v),
+    Show (AnnRedactionExp b v)
   ) =>
   Show (AnnotatedOrderByElement b v)
 
 instance
   ( Backend b,
     Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedAggregateOrderBy b),
-    Hashable (ComputedFieldOrderBy b v)
+    Hashable (AnnotatedAggregateOrderBy b v),
+    Hashable (ComputedFieldOrderBy b v),
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (AnnotatedOrderByElement b v)
 
-data AnnotatedAggregateOrderBy (b :: BackendType)
+data AnnotatedAggregateOrderBy (b :: BackendType) v
   = AAOCount
   | -- | Order by an aggregate function applied to a column
-    -- Fields are: Aggregate function name, aggregate function return type, column being aggregated
-    AAOOp Text (ColumnType b) (ColumnInfo b)
-  deriving stock (Generic)
+    AAOOp (AggregateOrderByColumn b v)
+  deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
+deriving stock instance (Backend b, Eq (AggregateOrderByColumn b v)) => Eq (AnnotatedAggregateOrderBy b v)
 
-deriving stock instance (Backend b) => Show (AnnotatedAggregateOrderBy b)
+deriving stock instance (Backend b, Show (AggregateOrderByColumn b v)) => Show (AnnotatedAggregateOrderBy b v)
 
-instance (Backend b) => Hashable (AnnotatedAggregateOrderBy b)
+instance (Backend b, Hashable (AggregateOrderByColumn b v)) => Hashable (AnnotatedAggregateOrderBy b v)
+
+data AggregateOrderByColumn b v = AggregateOrderByColumn
+  { _aobcAggregateFunctionName :: Text,
+    _aobcAggregateFunctionReturnType :: ColumnType b,
+    _aobcColumn :: ColumnInfo b,
+    -- | This type is used to determine whether the column should be redacted
+    -- before being aggregated and then ordered over
+    _aobcRedactionExpression :: AnnRedactionExp b v
+  }
+  deriving stock (Generic, Functor, Foldable, Traversable)
+
+deriving stock instance (Backend b, Eq (AnnRedactionExp b v)) => Eq (AggregateOrderByColumn b v)
+
+deriving stock instance (Backend b, Show (AnnRedactionExp b v)) => Show (AggregateOrderByColumn b v)
+
+instance (Backend b, Hashable (AnnRedactionExp b v)) => Hashable (AggregateOrderByColumn b v)
 
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
@@ -80,19 +106,24 @@ type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 -- | The order by element for a computed field based on its return type
 data ComputedFieldOrderByElement (b :: BackendType) v
   = -- | Sort by the scalar computed field
-    CFOBEScalar (ScalarType b)
+    CFOBEScalar
+      (ScalarType b)
+      -- | This type is used to determine whether the computed field should be redacted
+      -- before being ordered over
+      (AnnRedactionExp b v)
   | CFOBETableAggregation
       (TableName b)
       -- | Permission filter of the retuning table
       (AnnBoolExp b v)
       -- | Sort by aggregation fields of table rows returned by computed field
-      (AnnotatedAggregateOrderBy b)
+      (AnnotatedAggregateOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
     Eq (AnnBoolExp b v),
-    Eq (AnnotatedAggregateOrderBy b)
+    Eq (AnnotatedAggregateOrderBy b v),
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (ComputedFieldOrderByElement b v)
 
@@ -100,14 +131,16 @@ deriving stock instance
   ( Backend b,
     Show v,
     Show (AnnBoolExp b v),
-    Show (AnnotatedAggregateOrderBy b)
+    Show (AnnotatedAggregateOrderBy b v),
+    Show (AnnRedactionExp b v)
   ) =>
   Show (ComputedFieldOrderByElement b v)
 
 instance
   ( Backend b,
     Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedAggregateOrderBy b)
+    Hashable (AnnotatedAggregateOrderBy b v),
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (ComputedFieldOrderByElement b v)
 

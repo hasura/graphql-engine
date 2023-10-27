@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
 import { FETCH_ALERT_CONFIG } from '../queries';
-import { schemaRegsitryControlPlaneClient } from '../utils';
-import { GetAlertConfigResponseWithError } from '../types';
+import { GetAlertConfigResponseWithError, AlertType } from '../types';
 import { FETCH_ALERT_CONFIG_QUERY_NAME } from '../constants';
+import { controlPlaneClient } from '../../ControlPlane';
 
 type FetchAlertResponse =
   | {
@@ -18,13 +18,17 @@ type FetchAlertResponse =
       response: NonNullable<GetAlertConfigResponseWithError['data']>;
     };
 
-export const useGetAlertConfig = (projectId: string): FetchAlertResponse => {
+export const useGetAlertConfig = (
+  projectId: string,
+  type: AlertType
+): FetchAlertResponse => {
   const fetchAlertConfigQueryFn = (projectId: string) => {
-    return schemaRegsitryControlPlaneClient.query<
+    return controlPlaneClient.query<
       GetAlertConfigResponseWithError,
-      { projectId: string }
+      { projectId: string; type: AlertType }
     >(FETCH_ALERT_CONFIG, {
       projectId: projectId,
+      type: type,
     });
   };
 

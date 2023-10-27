@@ -153,6 +153,9 @@ export { OpenTelemetryFeature } from './lib/features/OpenTelemetry';
 
 export { FeatureFlags } from './lib/features/FeatureFlags';
 
+export { isFeatureFlagEnabled } from './lib/features/FeatureFlags/hooks/useFeatureFlags';
+export { availableFeatureFlagIds } from './lib/features/FeatureFlags';
+
 export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
@@ -176,6 +179,8 @@ export {
   getLSItem,
   removeLSItem,
 } from './lib/utils/localStorage';
+
+export * from './lib/features/RestEndpoints';
 
 export { reduxStoreListener } from './lib/store/utils/';
 

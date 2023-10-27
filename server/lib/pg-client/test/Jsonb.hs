@@ -93,7 +93,7 @@ instance FromPGConnErr String where
 
 runTxT :: forall a. ConnInfo -> TxET String IO a -> IO (Either String a)
 runTxT conn q = do
-  pool <- initPGPool conn defaultConnParams (const (return ()))
+  pool <- initPGPool conn J.Null defaultConnParams (const (return ()))
   x <- runExceptT $ runTx' pool q
   destroyPGPool pool
   pure x

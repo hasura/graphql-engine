@@ -44,17 +44,24 @@ export const dismissToast = (delay = 300) => {
 };
 
 // confirms a hasuraAlert by button text
-export const confirmAlert = async (
+export const confirmAlert = async ({
   confirmText = 'Confirm',
-  removalTimout = 3000
-) => {
+  removalTimeout = 3000,
+  async,
+}: {
+  confirmText: string;
+  removalTimeout?: number;
+  async: boolean;
+}) => {
   const alert = await screen.findByRole('alertdialog');
   await userEvent.click(await within(alert).findByText(confirmText));
 
-  // this is important b/c in successfull async workflows, the alert remains on screen to indicate success
-  await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {
-    timeout: removalTimout,
-  });
+  if (async) {
+    // this is important b/c in successfull async workflows, the alert remains on screen to indicate success
+    await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {
+      timeout: removalTimeout,
+    });
+  }
 };
 
 // confirms a hasuraAlert by button text
@@ -69,4 +76,10 @@ export const cancelAlert = async (
   await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {
     timeout: removalTimout,
   });
+};
+
+export const useIsStorybook = () => {
+  return {
+    isStorybook: !!process.env.STORYBOOK,
+  };
 };

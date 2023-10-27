@@ -68,8 +68,8 @@ export const Tabs = (props: TabsProps) => {
   const {
     headerTabBackgroundColor = 'grey',
     items,
-    color = 'yellow',
-    accentStyle = 'underline',
+    color = 'gray',
+    accentStyle = 'background',
     ...rest
   } = props;
 

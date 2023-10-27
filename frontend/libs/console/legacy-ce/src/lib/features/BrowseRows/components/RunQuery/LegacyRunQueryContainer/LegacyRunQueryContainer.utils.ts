@@ -5,6 +5,7 @@ import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { ReduxState } from '../../../../../types';
 import { NormalizedTable } from '../../../../../dataSources/types';
+import { columnDataType as getColumnDataType } from '../../../../DataSource/utils';
 import {
   Integers,
   Reals,
@@ -56,7 +57,10 @@ export const adaptFormValuesToQuery = (
       }
       const value = !columnDataType
         ? filter.value
-        : convertValue(partialValue, columnDataType.dataType);
+        : convertValue(
+            partialValue,
+            getColumnDataType(columnDataType.dataType)
+          );
 
       return {
         [filter.column]: {

@@ -16,16 +16,16 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genAggregate)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genRedactionExpressionName, genTargetRedactionExpressions)
+import Hasura.Backends.DataConnector.API.V0.FunctionSpec (genFunctionArgument, genFunctionName)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
-import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableTarget)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
-import Hedgehog.Internal.Range (linear)
 import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -34,11 +34,12 @@ spec = do
   describe "Field" $ do
     describe "ColumnField"
       $ testToFromJSONToSchema
-        (ColumnField (ColumnName "my_column_name") (ScalarType "string"))
+        (ColumnField (ColumnName "my_column_name") (ScalarType "string") (Just $ RedactionExpressionName "RedactionExp0"))
         [aesonQQ|
           { "type": "column",
             "column": "my_column_name",
-            "column_type": "string"
+            "column_type": "string",
+            "redaction_expression": "RedactionExp0"
           }
         |]
     describe "RelationshipField" $ do
@@ -56,13 +57,13 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string"))],
+            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") (ScalarType "string") Nothing)],
               _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
               _qAggregatesLimit = Just 5,
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
-              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (ColumnName "my_column_name")) Ascending :| [])
+              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") Nothing) Ascending :| [])
             }
     testToFromJSONToSchema
       query
@@ -91,19 +92,22 @@ spec = do
 
   describe "TableRequest" $ do
     let queryRequest =
-          QRTable
-            $ TableRequest
-              { _trTable = TableName ["my_table"],
-                _trRelationships = [],
-                _trQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
-                _trForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
-              }
+          QueryRequest
+            { _qrTarget = TTable (TargetTable (TableName ["my_table"])),
+              _qrRelationships = [],
+              _qrRedactionExpressions = [],
+              _qrInterpolatedQueries = mempty,
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
+              _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
+            }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "type": "table",
-          "table": ["my_table"],
-          "table_relationships": [],
+        { "target": {
+            "type": "table",
+            "name": ["my_table"]
+          },
+          "relationships": [],
           "query": { "fields": {} },
           "foreach": [
             { "my_id": { "value": 666, "value_type": "number" } }
@@ -114,19 +118,22 @@ spec = do
 
   describe "FunctionRequest" $ do
     let queryRequest =
-          QRFunction
-            $ FunctionRequest
-              { _frFunction = FunctionName ["my_function"],
-                _frFunctionArguments = [],
-                _frRelationships = [],
-                _frQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
-              }
+          QueryRequest
+            { _qrTarget = TFunction (TargetFunction (FunctionName ["my_function"]) []),
+              _qrRelationships = [],
+              _qrRedactionExpressions = [],
+              _qrInterpolatedQueries = mempty,
+              _qrForeach = Nothing,
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
+            }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "type": "function",
-          "function": ["my_function"],
-          "function_arguments": [],
+        { "target": {
+            "type": "function",
+              "name": ["my_function"],
+              "arguments": []
+          },
           "relationships": [],
           "query": { "fields": {} }
         }
@@ -185,7 +192,7 @@ genField :: Gen Field
 genField =
   Gen.recursive
     Gen.choice
-    [ColumnField <$> genColumnName <*> genScalarType]
+    [ColumnField <$> genColumnName <*> genScalarType <*> Gen.maybe genRedactionExpressionName]
     [RelField <$> genRelationshipField]
 
 genFieldName :: Gen FieldName
@@ -214,35 +221,31 @@ genQuery =
 genQueryRequest :: Gen QueryRequest
 genQueryRequest = genTableRequest <|> genFunctionRequest -- NOTE: We should probably weight tables more than functions...
 
+genFunctionTarget :: Gen Target
+genFunctionTarget =
+  TFunction
+    <$> ( TargetFunction
+            <$> genFunctionName
+            <*> Gen.list defaultRange genFunctionArgument
+        )
+
 genFunctionRequest :: Gen QueryRequest
 genFunctionRequest =
-  FunctionQueryRequest
-    <$> genFunctionName
-    <*> Gen.list defaultRange genFunctionArgument
+  QueryRequest
+    <$> genFunctionTarget
     <*> Gen.set defaultRange genRelationships
+    <*> Gen.set defaultRange genTargetRedactionExpressions
+    <*> pure mempty
     <*> genQuery
-
-genFunctionName :: (MonadGen m) => m FunctionName
-genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
-
-genFunctionArgument :: Gen FunctionArgument
-genFunctionArgument =
-  NamedArgument
-    <$> genArbitraryAlphaNumText defaultRange
-    <*> genArgumentValue
-
-genArgumentValue :: Gen ArgumentValue
-genArgumentValue =
-  fmap ScalarArgumentValue
-    $ ScalarValue
-    <$> genValue
-    <*> genScalarType
+    <*> pure Nothing
 
 genTableRequest :: Gen QueryRequest
 genTableRequest =
-  TableQueryRequest
-    <$> genTableName
+  QueryRequest
+    <$> genTableTarget
     <*> Gen.set defaultRange genRelationships
+    <*> Gen.set defaultRange genTargetRedactionExpressions
+    <*> pure mempty
     <*> genQuery
     <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
 

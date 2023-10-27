@@ -66,7 +66,7 @@ const DisplayWhereClauses = ({
                 <FaFilter />
               </span>
               <span className={twFlexCenter}>
-                {columnName} {operatorMap[operator]} {value}
+                {columnName} {operatorMap[operator]} "{value}"
               </span>
               <span className={`min-h-3 ${twFlexCenter}`}>
                 <FaRegTimesCircle

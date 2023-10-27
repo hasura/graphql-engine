@@ -17,6 +17,7 @@ module Hasura.RQL.Types.SchemaCache
     askTableInfo,
     askTableCoreInfo,
     askTableFieldInfoMap,
+    askLogicalModelCache,
     askTableMetadata,
     askFunctionInfo,
     askFieldInfoMapSource,
@@ -125,9 +126,12 @@ import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT)
+import Hasura.LogicalModel.Types (LogicalModelLocation (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (rrrfweColumnFieldName)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -200,14 +204,20 @@ mkLogicalModelParentDep ::
   forall b.
   (Backend b) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   SchemaDependency
-mkLogicalModelParentDep source logicalModelName = do
+mkLogicalModelParentDep source logicalModelLocation = do
   let sourceObject :: SchemaObjId
       sourceObject =
-        SOSourceObj source
-          $ AB.mkAnyBackend @b
-          $ SOILogicalModel logicalModelName
+        case logicalModelLocation of
+          LMLLogicalModel logicalModelName ->
+            SOSourceObj source
+              $ AB.mkAnyBackend @b
+              $ SOILogicalModel logicalModelName
+          LMLNativeQuery nativeQueryName ->
+            SOSourceObj source
+              $ AB.mkAnyBackend @b
+              $ SOINativeQuery nativeQueryName
 
   SchemaDependency sourceObject DRTable
 
@@ -232,15 +242,15 @@ mkLogicalModelColDep ::
   (Backend b) =>
   DependencyReason ->
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   Column b ->
   SchemaDependency
-mkLogicalModelColDep reason source logicalModelName column = do
+mkLogicalModelColDep reason source logicalModelLocation column = do
   let sourceObject :: SchemaObjId
       sourceObject =
         SOSourceObj source
           $ AB.mkAnyBackend
-          $ SOILogicalModelObj @b logicalModelName
+          $ SOILogicalModelObj @b logicalModelLocation
           $ LMOCol @b column
 
   SchemaDependency sourceObject reason
@@ -455,6 +465,15 @@ askTableFieldInfoMap ::
 askTableFieldInfoMap sourceName tableName =
   _tciFieldInfoMap <$> askTableCoreInfo sourceName tableName
 
+askLogicalModelCache ::
+  forall b m.
+  (Backend b, CacheRM m) =>
+  SourceName ->
+  m (Maybe (LogicalModelCache b))
+askLogicalModelCache sourceName = do
+  sources <- scSources <$> askSchemaCache
+  pure $ unsafeSourceLogicalModels =<< HashMap.lookup sourceName sources
+
 -- | Retrieves the metadata information about a table for a given source name
 -- and table name.
 --
@@ -623,6 +642,9 @@ instance (Monoid w, TableCoreInfoRM b m) => TableCoreInfoRM b (WriterT w m) wher
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
+instance (TableCoreInfoRM b m) => TableCoreInfoRM b (LogicalModelFieldsLookupRT b m) where
+  lookupTableCoreInfo = lift . lookupTableCoreInfo
+
 newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: TableCoreCache b -> m a}
   deriving
     (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
@@ -652,6 +674,9 @@ instance (Monoid w, TableInfoRM b m) => TableInfoRM b (WriterT w m) where
 
 instance (TableInfoRM b m) => TableInfoRM b (TraceT m) where
   lookupTableInfo tableName = lift $ lookupTableInfo tableName
+
+instance (TableInfoRM b m) => TableInfoRM b (LogicalModelFieldsLookupRT b m) where
+  lookupTableInfo = lift . lookupTableInfo
 
 newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m a}
   deriving
@@ -753,14 +778,14 @@ getLogicalModelBoolExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   AnnBoolExpPartialSQL b ->
   [SchemaDependency]
-getLogicalModelBoolExpDeps source logicalModelName = \case
-  BoolAnd exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
-  BoolOr exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
-  BoolNot e -> getLogicalModelBoolExpDeps source logicalModelName e
-  BoolField fld -> getLogicalModelColExpDeps source logicalModelName fld
+getLogicalModelBoolExpDeps source logicalModelLocation = \case
+  BoolAnd exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelLocation) exps
+  BoolOr exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelLocation) exps
+  BoolNot e -> getLogicalModelBoolExpDeps source logicalModelLocation e
+  BoolField fld -> getLogicalModelColExpDeps source logicalModelLocation fld
   BoolExists (GExists refqt whereExp) -> do
     let table :: SchemaObjId
         table = SOSourceObj source $ AB.mkAnyBackend $ SOITable @b refqt
@@ -776,14 +801,16 @@ getLogicalModelColExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   AnnBoolExpFld b (PartialSQLExp b) ->
   [SchemaDependency]
-getLogicalModelColExpDeps source logicalModelName = \case
+getLogicalModelColExpDeps source logicalModelLocation = \case
   AVRelationship {} -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
-  AVColumn colInfo opExps -> do
+  AVNestedObject NestedObjectInfo {..} boolExp ->
+    getLogicalModelBoolExpDeps source (LMLLogicalModel _noiType) boolExp
+  AVColumn colInfo _redactionExp opExps -> do
     let columnName :: Column b
         columnName = ciColumn colInfo
 
@@ -793,9 +820,10 @@ getLogicalModelColExpDeps source logicalModelName = \case
         colDepReason = bool DRSessionVariable DROnType (any hasStaticExp opExps)
 
         colDep :: SchemaDependency
-        colDep = mkLogicalModelColDep @b colDepReason source logicalModelName columnName
+        colDep = mkLogicalModelColDep @b colDepReason source logicalModelLocation columnName
 
-    colDep : getLogicalModelOpExpDeps source logicalModelName opExps
+    colDep : getLogicalModelOpExpDeps source logicalModelLocation opExps
+  AVRemoteRelationship {} -> []
 
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
@@ -840,11 +868,13 @@ getColExpDeps ::
 getColExpDeps bexp = do
   BoolExpCtx {source, currTable} <- ask
   case bexp of
-    AVColumn colInfo opExps ->
+    AVColumn colInfo _redactionExp opExps ->
       let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> getOpExpDeps opExps
+    AVNestedObject NestedObjectInfo {..} boolExp ->
+      pure $ getLogicalModelBoolExpDeps source (LMLLogicalModel _noiType) boolExp
     AVRelationship relInfo RelationshipFilters {rfTargetTablePermissions, rfFilter} ->
       case riTarget relInfo of
         RelTargetNativeQuery _ -> error "getColExpDeps RelTargetNativeQuery"
@@ -873,7 +903,7 @@ getColExpDeps bexp = do
       let mkComputedFieldDep' r =
             mkComputedFieldDep @b r source currTable $ _acfbName computedFieldBoolExp
        in case _acfbBoolExp computedFieldBoolExp of
-            CFBEScalar opExps ->
+            CFBEScalar _redactionExp opExps ->
               let computedFieldDep =
                     mkComputedFieldDep'
                       $ bool DRSessionVariable DROnType
@@ -882,6 +912,16 @@ getColExpDeps bexp = do
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
     AVAggregationPredicates aggPreds -> getAggregationPredicateDeps aggPreds
+    AVRemoteRelationship remoteRelPermBoolExp -> do
+      sourceName <- AB.dispatchAnyBackend @Backend (rhsFetchInfo remoteRelPermBoolExp) \(RemoteRelRHSFetchInfo {..}) -> pure rrrfiSource
+      let sourceColumnObject =
+            AB.mapBackend
+              (rhsFetchInfo remoteRelPermBoolExp)
+              ( \RemoteRelRHSFetchInfo {..} ->
+                  SOITableObj rrrfiTable (TOCol (rrrfweColumnFieldName rrrfiWhere))
+              )
+      pure
+        $ [SchemaDependency (SOSourceObj sourceName sourceColumnObject) DRRemoteRelationship]
 
 getOpExpDeps ::
   forall b.
@@ -904,12 +944,12 @@ getLogicalModelOpExpDeps ::
   forall b.
   (Backend b) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   [OpExpG b (PartialSQLExp b)] ->
   [SchemaDependency]
-getLogicalModelOpExpDeps source logicalModelName operatorExpressions = do
+getLogicalModelOpExpDeps source logicalModelLocation operatorExpressions = do
   RootOrCurrentColumn _ column <- mapMaybe opExpDepCol operatorExpressions
-  pure (mkLogicalModelColDep @b DROnType source logicalModelName column)
+  pure (mkLogicalModelColDep @b DROnType source logicalModelLocation column)
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

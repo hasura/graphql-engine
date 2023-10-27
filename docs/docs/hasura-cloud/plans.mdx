@@ -11,12 +11,13 @@ sidebar_position: 10
 
 import VersionedLink from '@site/src/components/VersionedLink';
 import ProductBadge from '@site/src/components/ProductBadge';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Plans and Pricing
 
-<ProductBadge free standard pro ee />
+<ProductBadge free pro ee />
 
-## Overview
+## Introduction
 
 [Hasura Cloud](https://cloud.hasura.io) offers three plans: Hasura Cloud Free, Hasura Cloud Professional, and Hasura
 Cloud Enterprise.
@@ -145,6 +146,9 @@ add**.
 | CockroachDB        | $3.00/active-hr |
 | Google AlloyDB     | $3.00/active-hr |
 | Citus / Hyperscale | $3.00/active-hr |
+| MySQL              | $3.00/active-hr |
+| Oracle             | $3.00/active-hr |
+| MariaDB            | $3.00/active-hr |
 
 :::info Active-hr
 
@@ -187,3 +191,28 @@ Let's assume the data passthrough for the entire month is 100 GB:
 `100 GB * $0.13/GB = $13 Total`
 
 The total cost for the month is $493.
+
+## Usage Reports
+
+### Hasura Cloud Professional usage reports
+
+You can find the usage reports for your Hasura Cloud Professional plan in the Hasura Cloud dashboard. From the
+`Projects` page, locate the project you want to view the usage report for, click the `Settings` icon on the top right of
+the project's card, then select `Usage` from the sidenav.
+
+<Thumbnail
+  src="/img/account-management/billing/billing-usage-professional.png"
+  alt="Professional Plan Usage Reports Navigation"
+  width="1000px"
+/>
+
+### Hasura Cloud Enterprise usage reports
+
+From the Hasura Cloud dashboard, click on `Enterprise` in the left sidebar. You will be able to see the usage reports
+for your Hasura Cloud Enterprise plan.
+
+<Thumbnail
+  src="/img/account-management/billing/billing-usage-EE.png"
+  alt="Cloud Enterprise Plan Usage Reports Navigation"
+  width="500px"
+/>

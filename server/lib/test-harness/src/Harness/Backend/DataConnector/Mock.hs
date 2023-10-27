@@ -8,6 +8,7 @@ module Harness.Backend.DataConnector.Mock
     setup,
     teardown,
     agentConfig,
+    withMockAgent,
     mkLocalTestEnvironment,
     mkLocalTestEnvironment',
 
@@ -31,20 +32,23 @@ where
 
 import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
+import Control.Monad.Managed (runManaged)
 import Data.Aeson qualified as J
+import Data.Has
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.Mock.Server
 import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Services.GraphqlEngine (PostGraphql, PostMetadata)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (Arg, Expectation, SpecWith, it)
+import Test.Hspec (Arg, Expectation, SpecWith, aroundWith, it)
 
 --------------------------------------------------------------------------------
 
@@ -59,7 +63,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65006",
       backendSchemaKeyword = "schema",
-      backendScalarType = const ""
+      backendScalarType = const "",
+      backendGraphQLType = const ""
     }
 
 --------------------------------------------------------------------------------
@@ -136,11 +141,20 @@ data MockAgentEnvironment = MockAgentEnvironment
     maeRecordedRequestConfig :: I.IORef (Maybe API.Config)
   }
 
+withMockAgent ::
+  SpecWith (testEnvironment, MockAgentEnvironment) ->
+  SpecWith testEnvironment
+withMockAgent specs = do
+  flip aroundWith specs \action testEnvironment -> runManaged do
+    agentEnv <- mkLocalTestEnvironment' chinookMock testEnvironment
+    liftIO
+      $ action (testEnvironment, agentEnv)
+
 -- | Create the 'I.IORef's and launch the servant mock agent.
-mkLocalTestEnvironment :: TestEnvironment -> Managed MockAgentEnvironment
+mkLocalTestEnvironment :: testEnvironment -> Managed MockAgentEnvironment
 mkLocalTestEnvironment = mkLocalTestEnvironment' chinookMock
 
-mkLocalTestEnvironment' :: MockConfig -> TestEnvironment -> Managed MockAgentEnvironment
+mkLocalTestEnvironment' :: MockConfig -> testEnvironment -> Managed MockAgentEnvironment
 mkLocalTestEnvironment' mockConfig _ = mkTestResource do
   maeConfig <- I.newIORef mockConfig
   maeRecordedRequest <- I.newIORef Nothing
@@ -167,16 +181,16 @@ mockMutationResponse :: API.MutationResponse -> MockRequestConfig
 mockMutationResponse mutationResponse =
   defaultMockRequestConfig {_mutationResponse = \_ -> Right mutationResponse}
 
-mockAgentGraphqlTest :: (HasCallStack) => String -> (TestEnvironment -> (MockRequestConfig -> RequestHeaders -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentGraphqlTest :: (HasCallStack, Has PostGraphql testEnvironment) => String -> (testEnvironment -> (MockRequestConfig -> RequestHeaders -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((testEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentGraphqlTest name testBody =
   it name $ \(env, agentEnv) ->
-    let performGraphqlRequest mockRequestConfig requestHeaders graphqlRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postGraphqlWithHeaders env requestHeaders graphqlRequest)
+    let performGraphqlRequest mockRequestConfig requestHeaders graphqlRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postGraphqlWithReqHeaders env requestHeaders graphqlRequest)
      in testBody env performGraphqlRequest
 
-mockAgentMetadataTest :: (HasCallStack) => String -> (TestEnvironment -> (MockRequestConfig -> Int -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentMetadataTest :: (HasCallStack, Has PostMetadata testEnvironment) => String -> (testEnvironment -> (MockRequestConfig -> Int -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((testEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentMetadataTest name testBody =
   it name $ \(env, agentEnv) ->
-    let performMetadataRequest mockRequestConfig status metadataRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postMetadataWithStatus status env metadataRequest)
+    let performMetadataRequest mockRequestConfig status metadataRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postMetadataWithStatusAndReqHeaders env status [] metadataRequest)
      in testBody env performMetadataRequest
 
 performRecordedRequest :: (HasCallStack) => MockAgentEnvironment -> MockRequestConfig -> IO J.Value -> IO MockRequestResults

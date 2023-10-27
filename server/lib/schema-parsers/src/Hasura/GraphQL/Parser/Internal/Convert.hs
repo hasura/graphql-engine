@@ -48,9 +48,11 @@ graphQLToJSON = \case
   G.VEnum (G.EnumValue n) -> J.toJSON n
   G.VList values -> J.toJSON $ graphQLToJSON <$> values
   G.VObject objects -> J.toJSON $ graphQLToJSON <$> objects
-  G.VVariable variable -> case absurd <$> vValue variable of
-    JSONValue j -> j
-    GraphQLValue g -> graphQLToJSON g
+  G.VVariable variable -> case vValue variable of
+    -- TODO: Absent values can be encoded as nulls, but this arguably breaks GraphQL spec June 2018, section 2.9.5.
+    Nothing -> J.Null
+    Just (JSONValue j) -> j
+    Just (GraphQLValue g) -> graphQLToJSON (absurd <$> g)
 
 jsonToGraphQL :: J.Value -> Either ErrorMessage (G.Value Void)
 jsonToGraphQL = \case

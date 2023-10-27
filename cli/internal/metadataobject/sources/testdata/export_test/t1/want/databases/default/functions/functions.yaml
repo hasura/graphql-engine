@@ -1,2 +1,3 @@
 - "!include public_get_t1.yaml"
 - "!include public_get_t2.yaml"
+- "!include test1_test2.yaml"

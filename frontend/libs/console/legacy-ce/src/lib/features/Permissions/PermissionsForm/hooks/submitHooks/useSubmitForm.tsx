@@ -1,7 +1,5 @@
 import { AxiosInstance } from 'axios';
 import { useQueryClient } from 'react-query';
-
-import { useFireNotification } from '../../../../../new-components/Notifications';
 import { exportMetadata } from '../../../../DataSource';
 import { useMetadataMigration } from '../../../../MetadataAPI';
 import { useHttpClient } from '../../../../Network';
@@ -10,6 +8,13 @@ import { PermissionsSchema } from '../../../schema';
 import { AccessType, QueryType } from '../../../types';
 import { isPermission, keyToPermission } from '../../../utils';
 import { api } from '../../api';
+import { permissionsTableKey } from '../../../PermissionsTable/hooks';
+import { permissionsFormKey } from '../dataFetchingHooks';
+import { transformErrorResponse } from '../../../../Data/errorUtils';
+import { hasuraToast } from '../../../../../new-components/Toasts';
+import { DisplayToastErrorMessage } from '../../../../Data/components/DisplayErrorMessage';
+import { inputValidationSchema } from '../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+import { z } from 'zod';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;
@@ -18,6 +23,7 @@ export interface UseSubmitFormArgs {
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
+  validateInput?: z.infer<typeof inputValidationSchema>;
 }
 
 interface ExistingPermissions {
@@ -71,9 +77,12 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
 
   const httpClient = useHttpClient();
 
-  const { fireNotification } = useFireNotification();
-
-  const mutate = useMetadataMigration(undefined, ['roles']);
+  const mutate = useMetadataMigration(
+    {
+      errorTransform: transformErrorResponse,
+    },
+    ['roles']
+  );
 
   const submit = async (formData: PermissionsSchema) => {
     const { metadata, resource_version } = await exportMetadata({
@@ -112,7 +121,7 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
       },
       {
         onSuccess: () => {
-          fireNotification({
+          hasuraToast({
             type: 'success',
             title: 'Success!',
             message: 'Permissions saved successfully!',
@@ -122,25 +131,25 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
           });
         },
         onError: err => {
-          fireNotification({
+          hasuraToast({
             type: 'error',
             title: 'Error!',
-            message:
-              err?.message ?? 'Something went wrong while saving permissions',
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
         onSettled: () => {
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionFormData',
-            JSON.stringify(table),
-            roleName,
-          ]);
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionsTable',
-            JSON.stringify(table),
-          ]);
+          queryClient.invalidateQueries(
+            permissionsFormKey({
+              dataSourceName,
+              table,
+            })
+          );
+          queryClient.invalidateQueries(
+            permissionsTableKey({
+              dataSourceName,
+              table,
+            })
+          );
         },
       }
     );

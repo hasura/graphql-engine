@@ -1,5 +1,6 @@
 import React from 'react';
 import { Choose, PathInto } from '../types';
+import { ManageTableTabs } from '../features/Data/ManageTable/ManageTable';
 
 type StringBool = 'y' | 'n';
 
@@ -17,6 +18,9 @@ type SessionStorageKeys = {
       errors: StringBool;
     };
     position: 'top' | 'bottom';
+  };
+  manageTable: {
+    lastTab: ManageTableTabs;
   };
 };
 

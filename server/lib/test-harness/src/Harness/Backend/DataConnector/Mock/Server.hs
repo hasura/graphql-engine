@@ -57,10 +57,12 @@ capabilities =
     { _crCapabilities =
         API.Capabilities
           { API._cDataSchema = API.defaultDataSchemaCapabilities,
+            API._cPostSchema = Just API.defaultPostSchemaCapabilities,
             API._cQueries =
               Just
                 API.QueryCapabilities
-                  { _qcForeach = Just API.ForeachCapabilities
+                  { _qcForeach = Just API.ForeachCapabilities,
+                    _qcRedaction = Just API.RedactionCapabilities
                   },
             API._cMutations =
               Just
@@ -74,6 +76,7 @@ capabilities =
             API._cSubscriptions = Nothing,
             API._cScalarTypes = scalarTypesCapabilities,
             API._cRelationships = Just API.RelationshipCapabilities {},
+            API._cInterpolatedQueries = Just API.InterpolatedQueryCapabilities {},
             API._cComparisons =
               Just
                 API.ComparisonCapabilities
@@ -864,8 +867,15 @@ mockCapabilitiesHandler mcfg = liftIO $ do
   cfg <- I.readIORef mcfg
   pure $ inject $ SOP.I $ _capabilitiesResponse cfg
 
-mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler (Union API.SchemaResponses)
-mockSchemaHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig = liftIO $ do
+mockSchemaGetHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler (Union API.SchemaResponses)
+mockSchemaGetHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig = liftIO $ do
+  cfg <- I.readIORef mcfg
+  I.writeIORef mRecordedRequest (Just Schema)
+  I.writeIORef mRecordedRequestConfig (Just requestConfig)
+  pure $ inject $ SOP.I $ _schemaResponse cfg
+
+mockSchemaPostHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.SchemaRequest -> Handler (Union API.SchemaResponses)
+mockSchemaPostHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig _schemaRequest = liftIO $ do
   cfg <- I.readIORef mcfg
   I.writeIORef mRecordedRequest (Just Schema)
   I.writeIORef mRecordedRequestConfig (Just requestConfig)
@@ -912,7 +922,8 @@ datasetHandler = datasetGetHandler :<|> datasetPostHandler :<|> datasetDeleteHan
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mRecordedRequest mRecordedRequestConfig =
   mockCapabilitiesHandler mcfg
-    :<|> mockSchemaHandler mcfg mRecordedRequest mRecordedRequestConfig
+    :<|> mockSchemaGetHandler mcfg mRecordedRequest mRecordedRequestConfig
+    :<|> mockSchemaPostHandler mcfg mRecordedRequest mRecordedRequestConfig
     :<|> mockQueryHandler mcfg mRecordedRequest mRecordedRequestConfig
     :<|> explainHandler
     :<|> mockMutationHandler mcfg mRecordedRequest mRecordedRequestConfig

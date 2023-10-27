@@ -54,3 +54,6 @@ export const isCachingEnabled = (env: ProConsoleEnv) =>
 export const isEEClassicConsole = () => {
   return window.__env.eeMode || false;
 };
+
+export const isOpenTelemetrySupported = (env: ProConsoleEnv) =>
+  isProConsole(env) || env.consoleType === 'pro-lite';

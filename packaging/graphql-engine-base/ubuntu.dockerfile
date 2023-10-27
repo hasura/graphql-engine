@@ -1,7 +1,7 @@
-# DATE VERSION: 2023-06-13
+# DATE VERSION: 2023-07-11
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM ubuntu:jammy-20230605
+FROM ubuntu:jammy-20230624
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -17,8 +17,12 @@ RUN set -ex; \
 RUN set -ex; \
     apt-get update; \
     apt-get upgrade -y; \
-    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release; \
-    apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev
+    # basic deps
+    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release;  \
+    # deps needed for graphql-engine
+    apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
+    # deps needed for cli-migrations
+    apt-get install -y netcat
 
 RUN set -ex; \
     curl -fsS "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" > /etc/apt/sources.list.d/mssql-release.list; \

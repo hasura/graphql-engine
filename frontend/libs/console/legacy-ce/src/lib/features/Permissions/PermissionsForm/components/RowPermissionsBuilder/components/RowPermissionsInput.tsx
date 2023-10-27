@@ -1,5 +1,11 @@
 import { LogicalModel, Table } from '../../../../../hasura-metadata-types';
-import { Tables, Operators, Permissions, Comparators } from './types';
+import {
+  Tables,
+  Operators,
+  Permissions,
+  Comparators,
+  Relationships,
+} from './types';
 import { RowPermissionsProvider } from './RowPermissionsProvider';
 import { TypesProvider } from './TypesProvider';
 import { TableProvider } from './TableProvider';
@@ -7,11 +13,11 @@ import { RootInput } from './RootInput';
 import { JsonEditor } from './JsonEditor';
 import { RootTableProvider } from './RootTableProvider';
 import { RootLogicalModelProvider } from './RootLogicalModelProvider';
-import { LogicalModelWithSourceName } from '../../../../../Data/LogicalModels/LogicalModelPermissions/components/types';
 import {
   ForbiddenFeaturesProvider,
   Feature,
 } from './ForbiddenFeaturesProvider';
+import { LogicalModelWithSourceName } from '../../../../LogicalModelPermissions/components/types';
 
 export const RowPermissionsInput = ({
   permissions,
@@ -20,8 +26,10 @@ export const RowPermissionsInput = ({
   logicalModel,
   logicalModels,
   onPermissionsChange,
+  onLoadRelationships,
   comparators,
   forbidden,
+  isLoading,
 }: {
   permissions: Permissions;
   tables: Tables;
@@ -29,8 +37,10 @@ export const RowPermissionsInput = ({
   logicalModels: LogicalModelWithSourceName[];
   logicalModel: LogicalModel['name'] | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
+  onLoadRelationships?: (relationships: Relationships) => void;
   comparators: Comparators;
   forbidden?: Feature[];
+  isLoading?: boolean;
 }) => {
   const operators: Operators = {
     boolean: {
@@ -58,6 +68,8 @@ export const RowPermissionsInput = ({
             permissions={permissions}
             comparators={comparators}
             onPermissionsChange={onPermissionsChange}
+            loadRelationships={onLoadRelationships}
+            isLoading={isLoading}
           >
             <TypesProvider>
               <TableProvider table={table}>

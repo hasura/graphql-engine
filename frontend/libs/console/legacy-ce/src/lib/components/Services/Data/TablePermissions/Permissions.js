@@ -29,6 +29,7 @@ import {
   permSetApplySamePerm,
   permDelApplySamePerm,
   permToggleBackendOnly,
+  permSetComment,
   applySamePermissionsBulk,
   isQueryTypeBackendOnlyCompatible,
   SET_PRESET_VALUE,
@@ -107,6 +108,7 @@ import {
   useMetadata,
 } from '../../../../features/hasura-metadata-api';
 import { ReduxInputValidation } from './InputValidation/ReduxInputValidation';
+import { CommentInput } from '../../../../features/Permissions/PermissionsForm/components/CommentInput';
 
 const getPermissionModalEnabled = () => {
   const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
@@ -140,6 +142,8 @@ class Permissions extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
+
+    dispatch(updateSchemaInfo());
 
     if (!isFeatureSupported('tables.permissions.enabled')) return;
 
@@ -627,6 +631,17 @@ class Permissions extends Component {
           <div className="flex">
             {addTooltip(title, toolTip)} {learnMoreHtml} {sectionStatusHtml}
           </div>
+        );
+      };
+
+      const getCommentSection = () => {
+        return (
+          <CommentInput
+            comment={permissionsState[query]?.comment}
+            setComment={value => {
+              dispatch(permSetComment(value));
+            }}
+          />
         );
       };
 
@@ -1936,6 +1951,7 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
+            {getCommentSection()}
             {permissionsState?.query !== 'select' && (
               <ReduxInputValidation
                 dispatch={dispatch}

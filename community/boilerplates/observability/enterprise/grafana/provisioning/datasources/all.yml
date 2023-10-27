@@ -1,0 +1,54 @@
+# config file version
+apiVersion: 1
+
+# list of datasources that should be deleted from the database
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
+# list of datasources to insert/update depending
+# whats available in the database
+datasources:
+  # <string, required> name of the datasource. Required
+  - name: "Prometheus"
+    type: "prometheus"
+    access: "proxy"
+    org_id: 1
+    url: "http://prometheus:9090"
+    is_default: true
+    version: 1
+    editable: true
+
+  - name: Jaeger
+    type: jaeger
+    # access: proxy
+    url: http://jaeger:16686/
+    # basicAuth: true
+    # basicAuthUser: my_user
+    editable: true
+    isDefault: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'Loki'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: "{exporter=\"OTLP\"} | json | traceid=`$${__span.traceId}`"
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+      spanBar:
+        type: 'None'
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    version: 1
+    editable: false
+    isDefault: false

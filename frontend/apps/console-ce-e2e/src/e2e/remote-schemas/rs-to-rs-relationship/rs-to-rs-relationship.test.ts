@@ -61,15 +61,26 @@ describe('check if remote schema to remote schema relationships are created prop
     });
   });
 
+  after(() => {
+    // delete the table
+    postgres.helpers.deleteTable('destination_table');
+  });
+
   it('verify creating a new rs-to-db relationship', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.findByText('Add a new relationship').click();
     cy.findByText('Remote Schema').click();
     cy.get('[name=name]').type('RelationshipName');
-    cy.get('[name=rsSourceType]').select('Pokemon');
-    cy.get('[name=referenceRemoteSchema]').select('ref_rs');
-    cy.get('.ant-tree-switcher').click();
-    cy.get('.ant-tree-switcher_close').first().click();
+    cy.get('[aria-labelledby=rsSourceType]')
+      .focus() // workaround for selecting things with react-select
+      .type('Pokemon{enter}', { force: true });
+    cy.get('[aria-labelledby=referenceRemoteSchema]')
+      .focus() // workaround for selecting things with react-select
+      .type('ref_rs{enter}', { force: true });
+    cy.get('[aria-labelledby=selectedOperation]')
+      .focus() // workaround for selecting things with react-select
+      .type('continents{enter}', { force: true });
+
     cy.findByRole('button', { name: 'Add Relationship' }).click();
 
     cy.get('[data-test=remote-schema-relationships-table').should('exist');
@@ -111,8 +122,5 @@ describe('check if remote schema to remote schema relationships are created prop
       },
     });
     cy.findByRole('button', { name: 'Delete' }).click();
-
-    // delete the table
-    postgres.helpers.deleteTable('destination_table');
   });
 });

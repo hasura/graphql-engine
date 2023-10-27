@@ -119,6 +119,7 @@ library
     , graphql-parser
     , hashable
     , hasura-error-message
+    , hasura-prelude
     , insert-ordered-containers
     , lens
     , mtl

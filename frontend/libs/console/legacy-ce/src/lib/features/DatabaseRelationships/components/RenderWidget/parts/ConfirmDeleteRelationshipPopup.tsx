@@ -1,15 +1,17 @@
 import { Dialog } from '../../../../../new-components/Dialog';
 import React from 'react';
 import { Relationship } from '../../../types';
-import { useManageLocalRelationship } from '../../../hooks/useManageLocalRelationship';
-import { useManageRemoteDatabaseRelationship } from '../../../hooks/useManageRemoteDatabaseRelationship';
-import { useManageRemoteSchemaRelationship } from '../../../hooks/useManageRemoteSchemaRelationship';
+import { useCreateTableRelationships } from '../../../hooks/useCreateTableRelationships/useCreateTableRelationships';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+} from '../../../../hasura-metadata-types';
 
 interface ConfirmDeleteRelationshipPopupProps {
   relationship: Relationship;
   onCancel: () => void;
   onError: (err: Error) => void;
-  onSuccess: () => void;
+  onSuccess: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
 }
 
 export const ConfirmDeleteRelationshipPopup = (
@@ -17,33 +19,13 @@ export const ConfirmDeleteRelationshipPopup = (
 ) => {
   const { relationship, onCancel, onSuccess, onError } = props;
 
-  const {
-    deleteRelationship: deleteLocalRelationship,
-    isLoading: isDeleteLocalRelationshipLoading,
-  } = useManageLocalRelationship({
-    dataSourceName: relationship.fromSource,
-    table: relationship.fromTable,
-    onSuccess,
-    onError,
-  });
-
-  const {
-    deleteRelationship: deleteRemoteDatabaseRelationship,
-    isLoading: isDeleteRemoteDatabaseRelationshipLoading,
-  } = useManageRemoteDatabaseRelationship({
-    dataSourceName: relationship.fromSource,
-    onSuccess,
-    onError,
-  });
-
-  const {
-    deleteRelationship: deleteRemoteSchemaRelationship,
-    isLoading: isDeleteRemoteSchemaRelationshipLoading,
-  } = useManageRemoteSchemaRelationship({
-    dataSourceName: relationship.fromSource,
-    onSuccess,
-    onError,
-  });
+  const { deleteRelationships, isLoading } = useCreateTableRelationships(
+    relationship.fromSource,
+    {
+      onSuccess,
+      onError,
+    }
+  );
 
   return (
     <Dialog
@@ -55,21 +37,20 @@ export const ConfirmDeleteRelationshipPopup = (
       footer={
         <Dialog.Footer
           onSubmit={() => {
-            if (relationship.type === 'localRelationship') {
-              deleteLocalRelationship(relationship);
-            } else if (relationship.type === 'remoteDatabaseRelationship') {
-              deleteRemoteDatabaseRelationship(relationship);
-            } else if (relationship.type === 'remoteSchemaRelationship')
-              deleteRemoteSchemaRelationship(relationship);
+            deleteRelationships({
+              data: [
+                {
+                  name: relationship.name,
+                  source: relationship.fromSource,
+                  table: relationship.fromTable,
+                },
+              ],
+            });
           }}
           onClose={onCancel}
           callToDeny="Cancel"
           callToAction="Drop Relationship"
-          isLoading={
-            isDeleteLocalRelationshipLoading ||
-            isDeleteRemoteDatabaseRelationshipLoading ||
-            isDeleteRemoteSchemaRelationshipLoading
-          }
+          isLoading={isLoading}
         />
       }
     >

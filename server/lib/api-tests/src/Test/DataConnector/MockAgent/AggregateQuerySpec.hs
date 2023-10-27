@@ -150,15 +150,15 @@ tests = describe "Aggregate Query Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number")),
-                      ("ArtistNames_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+                    [ ("ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                      ("ArtistNames_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing),
                       ( "nodes_Albums",
                         API.RelField
                           ( API.RelationshipField
                               (API.RelationshipName "Albums")
                               ( emptyQuery
                                   & API.qFields
-                                  ?~ mkFieldsMap [("nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))]
+                                  ?~ mkFieldsMap [("nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)]
                               )
                           )
                       )
@@ -175,7 +175,7 @@ tests = describe "Aggregate Query Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Albums",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Album",
+                                { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                 }
@@ -280,7 +280,7 @@ tests = describe "Aggregate Query Tests" $ do
                     & API.qAggregates
                   ?~ mkFieldsMap
                     [ ("counts_count", API.StarCount),
-                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
+                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") Nothing True)),
                       ("ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId") (API.ScalarType "number"))),
                       ("ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId") (API.ScalarType "number")))
                     ]
@@ -298,7 +298,7 @@ tests = describe "Aggregate Query Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "InvoiceLines",
                               API.Relationship
-                                { _rTargetTable = mkTableName "InvoiceLine",
+                                { _rTarget = mkTableTarget "InvoiceLine",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
                                 }
@@ -309,7 +309,7 @@ tests = describe "Aggregate Query Tests" $ do
         )
 
 singleColumnAggregateMax :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate
-singleColumnAggregateMax = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|max|]
+singleColumnAggregateMax columnName scalarType = API.SingleColumnAggregate (API.SingleColumnAggregateFunction [G.name|max|]) columnName Nothing scalarType
 
 singleColumnAggregateMin :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate
-singleColumnAggregateMin = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|min|]
+singleColumnAggregateMin columnName scalarType = API.SingleColumnAggregate (API.SingleColumnAggregateFunction [G.name|min|]) columnName Nothing scalarType

@@ -6,23 +6,29 @@ import { CardedTable } from '../../../../new-components/CardedTable';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { manageTableUrl } from '../../../DataSidebar/navigation-utils';
 import { PostgresTable } from '../../../DataSource';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '../../../FeatureFlags';
 import { TrackableListMenu } from '../../TrackResources/components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../TrackResources/hooks';
+import { filterByTableType, filterByText } from '../../TrackResources/utils';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { TrackableTable } from '../types';
-import { filterByTableType, filterByText } from '../utils';
 import { TableRow } from './TableRow';
 
 interface TableListProps {
   dataSourceName: string;
   tables: TrackableTable[];
   viewingTablesThatAre: 'tracked' | 'untracked';
-  onTrackedTable?: () => void;
+  onChange?: () => void;
   onMultipleTablesTrack?: () => void;
   defaultFilter?: string;
   onSingleTableTrack?: (table: TrackableTable) => void;
+  trackMultipleEnabled: boolean;
 }
 
 // const getDefaultSelectedTableType = (availableTableTypes: string[]) => {
@@ -41,18 +47,16 @@ const countByType = (tables: TrackableTable[]) =>
     return prev;
   }, {});
 
-export const TableList = (props: TableListProps) => {
-  const {
-    viewingTablesThatAre,
-    dataSourceName,
-    tables,
-    onTrackedTable,
-    defaultFilter,
-    onMultipleTablesTrack,
-  } = props;
-
-  //const availableTableTypes = getUniqueTableTypes(tables);
-
+export const TableList = ({
+  viewingTablesThatAre,
+  dataSourceName,
+  tables,
+  onChange,
+  defaultFilter,
+  onMultipleTablesTrack,
+  onSingleTableTrack,
+  trackMultipleEnabled,
+}: TableListProps) => {
   const typeCounts = React.useMemo(() => countByType(tables), [tables]);
 
   const availableTableTypes = React.useMemo(
@@ -81,7 +85,7 @@ export const TableList = (props: TableListProps) => {
   const {
     checkData: { onCheck, checkedIds, reset: resetCheckboxes, checkAllElement },
     paginatedData: paginatedTables,
-    checkedItems: checkedTables,
+    getCheckedItems: getCheckedTables,
   } = listProps;
 
   const { trackTables, isLoading, untrackTables } = useTrackTables({
@@ -96,10 +100,10 @@ export const TableList = (props: TableListProps) => {
     //make a copy of the current counts to have an accurate copy of what it was prior to the track/untrack
     const currentCounts = { ...typeCounts };
     // count the items by type in the payload
-    const actionCounts = countByType(checkedTables);
+    const actionCounts = countByType(getCheckedTables());
 
     action({
-      tables: checkedTables,
+      tables: getCheckedTables(),
       onSuccess: () => {
         // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
         const toRemove = Object.entries(actionCounts).reduce<string[]>(
@@ -119,17 +123,17 @@ export const TableList = (props: TableListProps) => {
           );
         }
 
-        onTrackedTable?.();
         resetCheckboxes();
 
         hasuraToast({
           type: 'success',
           title: `Successfully ${verb}`,
-          message: `${checkedTables.length} ${
-            checkedTables.length <= 1 ? 'table' : 'tables'
+          message: `${getCheckedTables().length} ${
+            getCheckedTables().length <= 1 ? 'table' : 'tables'
           } ${verb}!`,
         });
         onMultipleTablesTrack?.();
+        onChange?.();
       },
       onError: err => {
         hasuraToast({
@@ -142,6 +146,29 @@ export const TableList = (props: TableListProps) => {
   };
 
   const pushRoute = usePushRoute();
+
+  const onTableRowTableTrack = (table: TrackableTable) => {
+    onSingleTableTrack?.(table);
+    onChange?.();
+  };
+
+  const { enabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.performanceMode
+  );
+
+  const onTableRowTableNameClick = (table: TrackableTable) =>
+    viewingTablesThatAre === 'tracked'
+      ? () => {
+          if (!enabled && 'schema' in (table.table as any)) {
+            const { name, schema } = table.table as PostgresTable;
+
+            pushRoute(
+              `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
+            );
+          } else
+            pushRoute(manageTableUrl({ dataSourceName, table: table.table }));
+        }
+      : undefined;
 
   if (!tables.length) {
     return (
@@ -158,11 +185,11 @@ export const TableList = (props: TableListProps) => {
       <TrackableListMenu
         checkActionText={`${
           viewingTablesThatAre === 'tracked' ? 'Untrack' : 'Track'
-        } Selected (${checkedTables.length})`}
+        } Selected (${getCheckedTables().length})`}
         handleTrackButton={() => {
           handleCheckAction();
         }}
-        showButton
+        showButton={trackMultipleEnabled}
         isLoading={isLoading}
         searchChildren={
           <DropDown.Root
@@ -211,9 +238,11 @@ export const TableList = (props: TableListProps) => {
         <CardedTable.Table>
           <CardedTable.TableHead>
             <CardedTable.TableHeadRow>
-              <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                {checkAllElement()}
-              </th>
+              {trackMultipleEnabled && (
+                <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
+                  {checkAllElement()}
+                </th>
+              )}
               <CardedTable.TableHeadCell>Table</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Type</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Actions</CardedTable.TableHeadCell>
@@ -229,25 +258,9 @@ export const TableList = (props: TableListProps) => {
                 checked={checkedIds.includes(table.id)}
                 reset={resetCheckboxes}
                 onChange={() => onCheck(table.id)}
-                onTableTrack={props.onSingleTableTrack}
-                onTableNameClick={
-                  viewingTablesThatAre === 'tracked'
-                    ? () => {
-                        if ('schema' in (table.table as any)) {
-                          const { name, schema } = table.table as PostgresTable;
-
-                          pushRoute(
-                            `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
-                          );
-                        } else
-                          pushRoute(
-                            `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
-                              JSON.stringify(table.table)
-                            )}`
-                          );
-                      }
-                    : undefined
-                }
+                onTableTrack={onTableRowTableTrack}
+                onTableNameClick={onTableRowTableNameClick(table)}
+                isRowSelectionEnabled={trackMultipleEnabled}
               />
             ))}
           </CardedTable.TableBody>

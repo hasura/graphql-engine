@@ -1,11 +1,13 @@
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import isChromatic from 'chromatic/isChromatic';
 import { expect } from '@storybook/jest';
+import { Meta, StoryObj } from '@storybook/react';
 import { screen, userEvent, within } from '@storybook/testing-library';
+import isChromatic from 'chromatic/isChromatic';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { confirmAlert, dismissToast } from '../../../../utils/StoryUtils';
 import { nativeQueryHandlers } from '../AddNativeQuery/mocks';
+import { Routes } from '../constants';
 import { LandingPage } from './LandingPage';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 
 export default {
   component: LandingPage,
@@ -18,11 +20,10 @@ export default {
 
 export const Basic: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -36,11 +37,10 @@ export const Basic: StoryObj<typeof LandingPage> = {
 
 export const NoQueries: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: { postgres: { models: true, queries: false } },
     }),
@@ -49,11 +49,10 @@ export const NoQueries: StoryObj<typeof LandingPage> = {
 
 export const NoModels: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: { postgres: { models: false, queries: true } },
     }),
@@ -63,11 +62,27 @@ export const NoModels: StoryObj<typeof LandingPage> = {
 const testRemoveQueryAndModel = async ({
   canvasElement,
   removeResponse,
+  removeButtonIndex = {
+    logicalModels: 0,
+    nativeQueries: 0,
+  },
+  skipConfirm = {
+    logicalModels: false,
+    nativeQueries: false,
+  },
 }: {
   canvasElement: HTMLElement;
   removeResponse?: {
     nativeQueries?: string;
     logicalModels?: string;
+  };
+  removeButtonIndex?: {
+    logicalModels: number;
+    nativeQueries: number;
+  };
+  skipConfirm?: {
+    logicalModels: boolean;
+    nativeQueries: boolean;
   };
 }) => {
   if (isChromatic()) {
@@ -81,14 +96,16 @@ const testRemoveQueryAndModel = async ({
   await userEvent.click(
     (
       await c.findAllByText('Remove', undefined, { timeout: 3000 })
-    )[0]
+    )[removeButtonIndex.nativeQueries]
   );
 
-  await confirmAlert('Remove');
+  if (!skipConfirm.nativeQueries) {
+    await confirmAlert({ confirmText: 'Remove', async: true });
+  }
 
   if (removeResponse?.nativeQueries) {
     await expect(
-      await screen.findByText(removeResponse.nativeQueries)
+      await screen.findByText(removeResponse.nativeQueries, { exact: false })
     ).toBeInTheDocument();
 
     await dismissToast();
@@ -96,13 +113,19 @@ const testRemoveQueryAndModel = async ({
 
   await userEvent.click(await c.findByText('Logical Models', { exact: false }));
 
-  await userEvent.click((await c.findAllByText('Remove'))[0]);
+  await userEvent.click(
+    (
+      await c.findAllByText('Remove')
+    )[removeButtonIndex.logicalModels]
+  );
 
-  await confirmAlert('Remove');
+  if (!skipConfirm.logicalModels) {
+    await confirmAlert({ confirmText: 'Remove', async: true });
+  }
 
   if (removeResponse?.logicalModels) {
     await expect(
-      await screen.findByText(removeResponse.logicalModels)
+      await screen.findByText(removeResponse.logicalModels, { exact: false })
     ).toBeInTheDocument();
 
     await dismissToast();
@@ -111,13 +134,12 @@ const testRemoveQueryAndModel = async ({
 
 export const HappyPath: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '😊 Happy Path',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -135,15 +157,51 @@ export const HappyPath: StoryObj<typeof LandingPage> = {
   },
 };
 
+export const Referenced: StoryObj<typeof LandingPage> = {
+  render: args => {
+    return <LandingPage pathname={Routes.NativeQueries} />;
+  },
+  name: '🚨 Cannot Remove Referenced Logical Model',
+  parameters: {
+    consoleType: 'pro',
+    msw: nativeQueryHandlers({
+      metadataOptions: {
+        postgres: { models: true, queries: true },
+        mssql: { models: true, queries: true },
+      },
+      untrackNativeQueryResult: 'success',
+      untrackLogicalModelResult: 'success',
+    }),
+  },
+
+  play: async ({ canvasElement }) => {
+    await testRemoveQueryAndModel({
+      canvasElement,
+      removeButtonIndex: {
+        nativeQueries: 0,
+        logicalModels: 1, //select the 2nd one in the list
+      },
+      skipConfirm: {
+        logicalModels: true,
+        nativeQueries: false,
+      },
+      removeResponse: {
+        logicalModels: `is referenced by 1 other entity(s).`,
+      },
+    });
+
+    await confirmAlert({ confirmText: 'Ok', async: false });
+  },
+};
+
 export const NotFound: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Not found',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -159,7 +217,11 @@ export const NotFound: StoryObj<typeof LandingPage> = {
       canvasElement,
       removeResponse: {
         nativeQueries: `Native query "hello_mssql_function" not found in source "mssql".`,
-        logicalModels: `Logical model "hello_mssql" not found in source "mssql".`,
+        logicalModels: `Logical model "hello_mssql_unused" not found in source "mssql".`,
+      },
+      removeButtonIndex: {
+        nativeQueries: 0,
+        logicalModels: 0,
       },
     });
   },
@@ -167,13 +229,12 @@ export const NotFound: StoryObj<typeof LandingPage> = {
 
 export const Disabled: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Native Queries Disabled',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -197,11 +258,11 @@ export const Disabled: StoryObj<typeof LandingPage> = {
 
 export const Oss: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Native Queries Oss',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'oss' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -211,17 +272,16 @@ export const Oss: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'oss',
   },
 };
 
 export const Pro: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Native Queries Pro',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -231,17 +291,16 @@ export const Pro: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'pro',
   },
 };
 
 export const ProLite: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Native Queries ProLite',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -251,17 +310,16 @@ export const ProLite: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'pro-lite',
   },
 };
 
 export const FeatureFlagDisabled: StoryObj<typeof LandingPage> = {
   render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
+    return <LandingPage pathname={Routes.NativeQueries} />;
   },
 
   name: '🚨 Native Queries FeatureFlagDisabled',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -272,35 +330,5 @@ export const FeatureFlagDisabled: StoryObj<typeof LandingPage> = {
       untrackLogicalModelResult: 'native_queries_disabled',
       enabledFeatureFlag: false,
     }),
-    consoleType: 'pro',
-  },
-};
-
-export const StillBeingUsed: StoryObj<typeof LandingPage> = {
-  render: args => {
-    return <LandingPage pathname="/data/native-queries" />;
-  },
-
-  name: '🚨 Logical Model Remove Conflict',
-
-  parameters: {
-    msw: nativeQueryHandlers({
-      metadataOptions: {
-        postgres: { models: true, queries: true },
-        mssql: { models: true, queries: true },
-      },
-      untrackLogicalModelResult: 'still_being_used',
-    }),
-    consoleType: 'pro',
-  },
-
-  play: async ({ canvasElement }) => {
-    await testRemoveQueryAndModel({
-      canvasElement,
-      removeResponse: {
-        logicalModels:
-          'Custom type "hello_mssql" still being used by native query "hello_mssql_function".',
-      },
-    });
   },
 };

@@ -1,7 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.GraphQL.Schema.Common
   ( SchemaContext (..),
+    SchemaSampledFeatureFlags (..),
+    sampleFeatureFlags,
+    WithSchemaSampledFeatureFlags,
+    withSchemaSampledFeatureFlags,
     SchemaKind (..),
     RemoteRelationshipParserBuilder (..),
     NodeInterfaceParserBuilder (..),
@@ -45,6 +50,8 @@ module Hasura.GraphQL.Schema.Common
     optionalFieldParser,
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
+    getRedactionExprForColumn,
+    getRedactionExprForComputedField,
     requiredFieldParser,
     takeValidNativeQueries,
     takeValidStoredProcedures,
@@ -57,9 +64,11 @@ module Hasura.GraphQL.Schema.Common
     addEnumSuffix,
     peelWithOrigin,
     getIntrospectionResult,
+    tablePermissionsInfo,
   )
 where
 
+import Control.Monad.Trans.Control
 import Data.Either (isRight)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -79,13 +88,14 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
 import Hasura.LogicalModel.Types (LogicalModelName)
-import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo)
+import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
 import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions)
@@ -95,7 +105,9 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.StoredProcedure.Cache (StoredProcedureCache)
+import Hasura.Table.Cache (SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -107,8 +119,49 @@ data SchemaContext = SchemaContext
     -- | how to process remote relationships
     scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder,
     -- | the role for which the schema is being built
-    scRole :: RoleName
+    scRole :: RoleName,
+    scSampledFeatureFlags :: SchemaSampledFeatureFlags
   }
+
+-- | We want to be able to probe feature flags in the schema parsers, but we also
+-- want to be able to run schema actions without requiring IO, in part because we
+-- want to be able to run them in tests and in part because we want some assurance
+-- that the schema we parse doesn't change without our knowledge, as that precludes
+-- safely caching schema introspection.
+newtype SchemaSampledFeatureFlags = SchemaSampledFeatureFlags [(FF.FeatureFlag, Bool)]
+  deriving (Eq, Show)
+
+sampleFeatureFlags :: FF.CheckFeatureFlag -> IO SchemaSampledFeatureFlags
+sampleFeatureFlags checkFeatureFlag = do
+  let ffs = map fst $ FF.listKnownFeatureFlags checkFeatureFlag
+  SchemaSampledFeatureFlags <$> mapM (\ff -> (ff,) <$> FF.runCheckFeatureFlag checkFeatureFlag ff) ffs
+
+-- | Monad transformer that lets you use the sampled feature flags from a reader environment.
+-- This is necessary because we want 'ReaderT r m` to be transparent wrt. 'HasFeatureFlagChecker m'.
+newtype WithSchemaSampledFeatureFlags m a = WithSchemaSampledFeatureFlags {unWithSchemaSampledFeatureFlags :: ReaderT SchemaSampledFeatureFlags m a}
+  deriving (Functor, Applicative, Monad, MonadIO)
+
+deriving instance (MonadBase IO m) => MonadBase IO (WithSchemaSampledFeatureFlags m)
+
+deriving instance (MonadBaseControl IO m, MonadBase IO m) => MonadBaseControl IO (WithSchemaSampledFeatureFlags m)
+
+instance MonadTrans WithSchemaSampledFeatureFlags where
+  lift = WithSchemaSampledFeatureFlags . lift
+
+instance (MonadResolveSource m) => MonadResolveSource (WithSchemaSampledFeatureFlags m) where
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
+
+withSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags -> WithSchemaSampledFeatureFlags m a -> m a
+withSchemaSampledFeatureFlags ffs = flip runReaderT ffs . unWithSchemaSampledFeatureFlags
+
+instance (Monad m) => FF.HasFeatureFlagChecker (WithSchemaSampledFeatureFlags m) where
+  checkFlag ff = do
+    flags <- WithSchemaSampledFeatureFlags $ ask
+    pure $ sampledCheckFlag flags ff
+
+sampledCheckFlag :: SchemaSampledFeatureFlags -> FF.FeatureFlag -> Bool
+sampledCheckFlag (SchemaSampledFeatureFlags flags) ff = fromMaybe False (lookup ff flags)
 
 -- | The kind of schema we're building, and its associated options.
 data SchemaKind
@@ -230,6 +283,11 @@ calling monad with a simple `lift`, as demonstrated in
 newtype SchemaT r m a = SchemaT {runSchemaT :: ReaderT r m a}
   deriving newtype (Functor, Applicative, Monad, MonadReader r, P.MonadMemoize, MonadTrans, MonadError e)
 
+instance (Has SchemaContext r, Monad m) => FF.HasFeatureFlagChecker (SchemaT r m) where
+  checkFlag ff = do
+    flags <- asks (scSampledFeatureFlags . getter)
+    pure $ sampledCheckFlag flags ff
+
 type MonadBuildSourceSchema b r m n =
   ( MonadBuildSchemaBase m n,
     Has SchemaContext r,
@@ -256,6 +314,7 @@ runSourceSchema context options sourceInfo (SchemaT action) = runReaderT action 
 type MonadBuildRemoteSchema r m n =
   ( MonadBuildSchemaBase m n,
     Has SchemaContext r,
+    Has Options.RemoteNullForwardingPolicy r,
     Has CustomizeRemoteFieldName r,
     Has MkTypename r
   )
@@ -263,15 +322,17 @@ type MonadBuildRemoteSchema r m n =
 -- | Runs a schema-building computation with all the context required to build a remote schema.
 runRemoteSchema ::
   SchemaContext ->
+  Options.RemoteNullForwardingPolicy ->
   SchemaT
     ( SchemaContext,
+      Options.RemoteNullForwardingPolicy,
       MkTypename,
       CustomizeRemoteFieldName
     )
     m
     a ->
   m a
-runRemoteSchema context (SchemaT action) = runReaderT action (context, mempty, mempty)
+runRemoteSchema context nullForwarding (SchemaT action) = runReaderT action (context, nullForwarding, mempty, mempty)
 
 type MonadBuildActionSchema r m n =
   ( MonadBuildSchemaBase m n,
@@ -340,7 +401,10 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
 getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
+    go si =
+      let namedLogicalModelRoles = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
+          inlineLogicalModelRoles = HashMap.keys . _lmiPermissions . _nqiReturns =<< HashMap.elems (_siNativeQueries si)
+       in namedLogicalModelRoles <> inlineLogicalModelRoles
 
 askScalarTypeParsingContext ::
   forall b r m.
@@ -424,6 +488,16 @@ partialSQLExpToUnpreparedValue :: PartialSQLExp b -> IR.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = IR.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue PSESession = IR.UVSession
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = IR.UVLiteral sqlExp
+
+getRedactionExprForColumn :: (Backend b) => SelPermInfo b -> Column b -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
+getRedactionExprForColumn selectPermissions columnName =
+  let redactionExp = HashMap.lookup columnName (spiCols selectPermissions)
+   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
+
+getRedactionExprForComputedField :: (Backend b) => SelPermInfo b -> ComputedFieldName -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
+getRedactionExprForComputedField selectPermissions cfName =
+  let redactionExp = HashMap.lookup cfName (spiComputedFields selectPermissions)
+   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
 
 mapField ::
   (Functor m) =>
@@ -531,7 +605,12 @@ peelWithOrigin parser =
         P.GraphQLValue (G.VVariable var@P.Variable {vInfo, vValue}) -> do
           -- Check types c.f. 5.8.5 of the June 2018 GraphQL spec
           P.typeCheck False (P.toGraphQLType $ P.pType parser) var
-          IR.ValueWithOrigin vInfo <$> P.pParser parser (absurd <$> vValue)
+          fmap (IR.ValueWithOrigin vInfo)
+            $ P.pParser parser
+            $ case vValue of
+              -- TODO: why is faking a null value here semantically correct? RE: GraphQL spec June 2018, section 2.9.5
+              Nothing -> P.GraphQLValue G.VNull
+              Just val -> absurd <$> val
         value -> IR.ValueNoOrigin <$> P.pParser parser value
     }
 
@@ -547,3 +626,10 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
     | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
       otherwise ->
         HashMap.lookup role (_rscPermissions remoteSchemaContext)
+
+tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b
+tablePermissionsInfo selectPermissions =
+  IR.TablePerm
+    { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
+      IR._tpLimit = spiLimit selectPermissions
+    }

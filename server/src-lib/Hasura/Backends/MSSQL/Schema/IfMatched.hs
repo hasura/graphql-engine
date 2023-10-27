@@ -140,7 +140,8 @@ tableInsertMatchColumnsEnum tableInfo = do
       [ ( define $ ciName column,
           ciColumn column
         )
-        | SCIScalarColumn column <- columns,
+        | -- TODO(redactionExp): Does the redaction expression need to be considered here?
+          (SCIScalarColumn column, _redactionExp) <- columns,
           isMatchColumnValid column
       ]
   where

@@ -4,7 +4,7 @@ import { useConsoleForm } from '../../../../../new-components/Form';
 import { InputValidation, inputValidationSchema } from './InputValidation';
 import { ValidationInput } from '../../../../../metadata/types';
 
-type UpdateFunction = (vaues: z.infer<typeof inputValidationSchema>) => void;
+type UpdateFunction = (values: z.infer<typeof inputValidationSchema>) => void;
 
 type ReduxInputValidationProps = {
   updateFunction: UpdateFunction;

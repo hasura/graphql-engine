@@ -6,7 +6,6 @@ import { SimpleForm } from '../../../../new-components/Form';
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 
 export default {
-  title: 'Features/Permissions/Form/Backend Only Section',
   component: BackendOnlySection,
   parameters: {
     // Disable storybook for playground stories

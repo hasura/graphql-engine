@@ -393,18 +393,18 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
 msCountTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column 'MSSQL)) ->
-  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
+  Maybe (Parser 'Both n (Column 'MSSQL, AnnRedactionExpUnpreparedValue 'MSSQL)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL (UnpreparedValue 'MSSQL))
 msCountTypeInput = \case
   Just columnEnum -> do
     column <- P.fieldOptional Name._column Nothing columnEnum
     pure $ flip mkCountType column
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL) -> CountType 'MSSQL
-    mkCountType _ Nothing = MSSQL.StarCountable
-    mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
-    mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col
+    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, AnnRedactionExpUnpreparedValue 'MSSQL) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
+    mkCountType _ Nothing = MSSQL.CountType MSSQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just (col, redactionExp)) = MSSQL.CountType $ MSSQL.DistinctCountable (col, redactionExp)
+    mkCountType IR.SelectCountNonDistinct (Just (col, redactionExp)) = MSSQL.CountType $ MSSQL.NonNullFieldCountable (col, redactionExp)
 
 msParseUpdateOperators ::
   forall m n r.

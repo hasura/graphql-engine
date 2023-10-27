@@ -3,12 +3,13 @@ import { Table } from '../../../hasura-metadata-types';
 import { Dialog } from '../../../../new-components/Dialog';
 import { useConsoleForm } from '../../../../new-components/Form';
 import React from 'react';
-import { UseFormTrigger } from 'react-hook-form';
+import { FieldValues, UseFormTrigger } from 'react-hook-form';
 import { z } from 'zod';
 import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
 import { useTableColumns } from '../../hooks/useTableColumns';
+import { columnDataType } from '../../../DataSource/utils';
 
 interface QueryDialogProps {
   table: Table;
@@ -42,31 +43,27 @@ const transformFilterValues = (
 
   const dataType = column?.graphQLProperties?.scalarType ?? column.dataType;
 
-  if (['boolean', 'Boolean'].includes(dataType)) return filter;
+  if (['boolean', 'Boolean'].includes(columnDataType(dataType))) return filter;
 
-  if (['String', 'string'].includes(dataType)) return filter;
+  if (['String', 'string'].includes(columnDataType(dataType))) return filter;
 
   return { ...filter, value: parseInt(filter.value, 10) };
 };
 
 const schema = z.object({
-  filters: z
-    .array(
-      z.object({
-        column: z.string(),
-        operator: z.string(),
-        value: z.any(),
-      })
-    )
-    .optional(),
-  sorts: z
-    .array(
-      z.object({
-        column: z.string(),
-        type: z.literal('asc').or(z.literal('desc')),
-      })
-    )
-    .optional(),
+  filters: z.array(
+    z.object({
+      column: z.string().min(1, 'Column is required'),
+      operator: z.string().min(1, 'Operator is required'),
+      value: z.any(),
+    })
+  ),
+  sorts: z.array(
+    z.object({
+      column: z.string().min(1, 'Column is required'),
+      type: z.literal('asc').or(z.literal('desc')),
+    })
+  ),
 });
 
 type Schema = z.infer<typeof schema>;
@@ -102,7 +99,7 @@ export const QueryDialog = ({
 
   const handleSubmitQuery = async (
     filters: Schema['filters'],
-    triggerValidation: UseFormTrigger<Schema>,
+    triggerValidation: UseFormTrigger<FieldValues>,
     sorts: Schema['sorts']
   ) => {
     if (await triggerValidation()) {
@@ -121,36 +118,25 @@ export const QueryDialog = ({
   return (
     <div className="m-4">
       <Dialog hasBackdrop title="Query Data" onClose={onClose}>
-        <>
-          <Form onSubmit={() => {}}>
-            <>
-              <div className="p-4">
-                <FilterRows
-                  name="filters"
-                  columns={columns}
-                  operators={supportedOperators}
-                  onRemove={() => onSubmitHandler()}
-                />
-
-                <hr className="my-4" />
-
-                <SortRows
-                  name="sorts"
-                  columns={columns}
-                  onRemove={() => onSubmitHandler()}
-                />
-              </div>
-              <Dialog.Footer
-                callToAction="Run Query"
-                callToActionIconPosition="start"
-                callToActionIcon={<RiPlayFill />}
-                callToDeny="Cancel"
-                onClose={onClose}
-                onSubmit={() => onSubmitHandler()}
-              />
-            </>
-          </Form>
-        </>
+        <Form onSubmit={() => {}}>
+          <div className="p-md pt-3">
+            <FilterRows
+              name="filters"
+              columns={columns}
+              operators={supportedOperators}
+            />
+            <hr className="my-4" />
+            <SortRows name="sorts" columns={columns} />
+          </div>
+          <Dialog.Footer
+            callToAction="Run Query"
+            callToActionIconPosition="start"
+            callToActionIcon={<RiPlayFill />}
+            callToDeny="Cancel"
+            onClose={onClose}
+            onSubmit={() => onSubmitHandler()}
+          />
+        </Form>
       </Dialog>
     </div>
   );

@@ -11,16 +11,13 @@ export const PermissionsIcon = ({
   type,
   selected = false,
 }: PermissionsIconProps) => {
-  const selectedTextColour = 'text-white';
   if (type === 'fullAccess') {
-    return (
-      <FaCheck className={selected ? selectedTextColour : 'text-green-600'} />
-    );
+    return <FaCheck className={'text-green-600'} />;
   }
 
   if (type === 'partialAccess') {
     return (
-      <FaFilter className={selected ? selectedTextColour : 'text-gray-400'} />
+      <FaFilter className={selected ? 'text-blue-900' : 'text-gray-600'} />
     );
   }
 
@@ -28,5 +25,5 @@ export const PermissionsIcon = ({
     return <FaExclamation />;
   }
 
-  return <FaTimes className={selected ? selectedTextColour : 'text-red-600'} />;
+  return <FaTimes className={'text-red-600'} />;
 };

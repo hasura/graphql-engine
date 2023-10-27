@@ -1,7 +1,12 @@
 import { Microfiber } from 'microfiber';
 import { useIntrospectionSchema } from '../../../components/Services/Actions/Common/components/ImportTypesModal/useIntrospectionSchema';
 import { useEffect, useState } from 'react';
-import { Query, RestEndpoint } from '../../hasura-metadata-types';
+import {
+  MetadataTable,
+  Query,
+  RestEndpoint,
+  Source,
+} from '../../hasura-metadata-types';
 import {
   Operation,
   generateDeleteEndpoint,
@@ -11,7 +16,19 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { formatSdl } from 'format-graphql';
-import { useMetadata } from '../../MetadataAPI';
+import { useMetadata } from '../../hasura-metadata-api';
+import camelCase from 'lodash/camelCase';
+
+const toPascalCase = (str: string) => {
+  return str
+    .split('_')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('');
+};
+
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
 export type EndpointType = 'READ' | 'READ_ALL' | 'CREATE' | 'UPDATE' | 'DELETE';
 
@@ -26,8 +43,23 @@ type EndpointDefinitions = {
   >;
 };
 
+type Table = MetadataTable & { table: { name: string; schema: string } };
+
+const getGraphqlBaseOperationName = (schemaPrefix: string, table: Table) => {
+  if (table.configuration?.custom_name) {
+    return schemaPrefix
+      ? `${schemaPrefix}${capitalizeFirstLetter(
+          table.configuration?.custom_name
+        )}`
+      : table.configuration?.custom_name;
+  }
+  return schemaPrefix
+    ? `${schemaPrefix}${toPascalCase(table?.table?.name)}`
+    : `${camelCase(table?.table?.name)}`;
+};
+
 export type Generator = {
-  regExp: RegExp;
+  operationName: (source: Source, table: Table) => string;
   generator: (
     root: string,
     table: string,
@@ -36,7 +68,27 @@ export type Generator = {
   ) => EndpointDefinition;
 };
 
-export const getOperations = (microfiber: any) => {
+export const getSchemaPrefix = (source: Source, table: Table) => {
+  const schemaName = table.table.schema;
+  if (table.configuration?.custom_name) {
+    return '';
+  }
+  if (source.kind === 'mssql' && schemaName === 'dbo') {
+    return '';
+  }
+  if (
+    ['cockroach', 'postgres', 'citus'].includes(source.kind) &&
+    schemaName === 'public'
+  ) {
+    return '';
+  }
+
+  return source.customization?.naming_convention === 'graphql-default'
+    ? `${table?.table?.schema}`
+    : `${table?.table?.schema}_`;
+};
+
+export const getOperations = (root: string, microfiber: any) => {
   const queryType = microfiber.getQueryType();
   const mutationType = microfiber.getMutationType();
 
@@ -48,29 +100,18 @@ export const getOperations = (microfiber: any) => {
   let queryTypeName: string = queryType.name;
   let mutationTypeName: string = mutationType.name;
 
-  let root = '';
-
   if (queryType.fields[0].name === 'no_queries_available') {
-    return {
-      root: '',
-      operations: [],
-    };
+    return [];
   }
 
-  if (
-    queryType.fields.length === 1 &&
-    queryType.fields[0].type.name.includes('query')
-  ) {
-    queryTypeName = queryType.fields[0].type.name;
-    root = queryType.fields[0].name;
+  if (root) {
+    queryTypeName = queryType.fields.find((f: any) => f.name === root)?.type
+      .name;
   }
 
-  if (
-    mutationType.fields.length === 1 &&
-    mutationType.fields[0].type.name.includes('mutation')
-  ) {
-    mutationTypeName = mutationType.fields[0].type.name;
-    root = mutationType.fields[0].name;
+  if (root) {
+    mutationTypeName = mutationType.fields.find((f: any) => f.name === root)
+      ?.type.name;
   }
 
   const queries = microfiber.getType({
@@ -82,32 +123,99 @@ export const getOperations = (microfiber: any) => {
     name: mutationTypeName,
   }).fields;
 
-  return {
-    root,
-    operations: [...queries, ...mutations],
-  };
+  return [...queries, ...mutations];
 };
 
 const generators: Record<EndpointType, Generator> = {
   READ: {
-    regExp: /fetch data from the table: "(.+)" using primary key columns$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.select_by_pk) {
+        return table?.configuration?.custom_root_fields?.select_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `${baseOperationName}ByPk`;
+      }
+      return `${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateViewEndpoint,
   },
   READ_ALL: {
-    regExp: /fetch data from the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.select) {
+        return table?.configuration?.custom_root_fields?.select;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return baseOperationName;
+      }
+      return `${schemaPrefix}${tableName}`;
+    },
     generator: generateViewAllEndpoint,
   },
   CREATE: {
-    regExp: /insert a single row into the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.insert_one) {
+        return table?.configuration?.custom_root_fields?.insert_one;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `insert${capitalizeFirstLetter(baseOperationName)}One`;
+      }
+      return `insert_${schemaPrefix}${tableName}_one`;
+    },
     generator: generateInsertEndpoint,
   },
   UPDATE: {
-    regExp: /update single row of the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.update_by_pk) {
+        return table?.configuration?.custom_root_fields?.update_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `update${capitalizeFirstLetter(baseOperationName)}ByPk`;
+      }
+      return `update_${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateUpdateEndpoint,
   },
 
   DELETE: {
-    regExp: /delete single row from the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.delete_by_pk) {
+        return table?.configuration?.custom_root_fields?.delete_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `delete${capitalizeFirstLetter(baseOperationName)}ByPk`;
+      }
+      return `delete_${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateDeleteEndpoint,
   },
 };
@@ -119,43 +227,63 @@ export const useRestEndpointDefinitions = () => {
     error,
   } = useIntrospectionSchema();
 
-  const { data: metadata } = useMetadata();
+  const { data: metadata } = useMetadata(m => ({
+    restEndpoints: m.metadata?.rest_endpoints,
+    sources: m.metadata?.sources,
+  }));
 
   const [data, setData] = useState<EndpointDefinitions>();
 
   useEffect(() => {
-    const existingRestEndpoints = metadata?.metadata?.rest_endpoints || [];
+    const existingRestEndpoints = metadata?.restEndpoints || [];
 
     if (introspectionSchema) {
       const response: EndpointDefinitions = {};
       const microfiber = new Microfiber(introspectionSchema);
 
-      const operations = getOperations(microfiber);
+      for (const source of metadata?.sources || []) {
+        const root = source?.customization?.root_fields?.namespace ?? '';
+        const operations = getOperations(root, microfiber);
 
-      if (!operations) {
-        setData({});
-        return;
-      }
+        const sourcePrefix = source.customization?.root_fields?.prefix || '';
 
-      for (const operation of operations.operations) {
-        for (const endpointType in generators) {
-          const match = operation.description?.match(
-            generators[endpointType as EndpointType].regExp
-          );
-          const table = match?.[1];
+        const sourceSuffix = source.customization?.root_fields?.suffix || '';
+        for (const table of source.tables as Table[]) {
+          for (const [type, generator] of Object.entries(generators)) {
+            let baseOperationName = generator.operationName(source, table);
+            if (
+              sourcePrefix &&
+              source.customization?.naming_convention === 'graphql-default'
+            ) {
+              baseOperationName =
+                baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
+            }
+            const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
 
-          if (match) {
-            const definition = generators[
-              endpointType as EndpointType
-            ].generator(operations.root, table, operation, microfiber);
+            const operation = operations.find(
+              operation => operation.name === operationName
+            );
+
+            if (!operation) {
+              continue;
+            }
+
+            const tableName = table?.table?.name;
+
+            const definition = generators[type as EndpointType].generator(
+              root,
+              tableName,
+              operation,
+              microfiber
+            );
 
             if (definition.query.query) {
               definition.query.query = formatSdl(definition.query.query);
             }
 
-            response[table] = {
-              ...(response[table] || {}),
-              [endpointType]: {
+            response[tableName] = {
+              ...(response[tableName] || {}),
+              [type]: {
                 ...definition,
                 exists: existingRestEndpoints.some(
                   endpoint =>
@@ -167,6 +295,7 @@ export const useRestEndpointDefinitions = () => {
           }
         }
       }
+
       setData(response);
     }
   }, [introspectionSchema, metadata]);

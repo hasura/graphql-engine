@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import clsx from 'clsx';
-import { ThemeClassNames, useThemeConfig, usePrevious, Collapsible, useCollapsible } from '@docusaurus/theme-common';
+import {
+  ThemeClassNames,
+  useThemeConfig,
+  usePrevious,
+  Collapsible,
+  useCollapsible,
+} from '@docusaurus/theme-common';
 import {
   isActiveSidebarItem,
   findFirstCategoryLink,
@@ -11,12 +17,8 @@ import Link from '@docusaurus/Link';
 import { translate } from '@docusaurus/Translate';
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import DocSidebarItems from '@theme/DocSidebarItems';
-import { useColorMode } from '@docusaurus/theme-common';
 import styles from './styles.module.scss';
-import EnterpriseLight from '@site/static/icons/enterprise-dark.svg';
-import EnterpriseDark from '@site/static/icons/enterprise-light.svg';
-import CloudLight from '@site/static/icons/cloud-dark.svg';
-import CloudDark from '@site/static/icons/cloud-light.svg';
+import { addIconsToLabel } from '../utils';
 
 // If we navigate to a category and it becomes active, it should automatically
 // expand itself
@@ -29,6 +31,7 @@ function useAutoExpandActiveCategory({ isActive, collapsed, updateCollapsed }) {
     }
   }, [isActive, wasActive, collapsed, updateCollapsed]);
 }
+
 /**
  * When a collapsible category has no link, we still link it to its first child
  * during SSR as a temporary fallback. This allows to be able to navigate inside
@@ -51,6 +54,7 @@ function useCategoryHrefWithSSRFallback(item) {
     return findFirstCategoryLink(item);
   }, [item, isBrowser]);
 }
+
 function CollapseButton({ categoryLabel, onClick }) {
   return (
     <button
@@ -58,7 +62,8 @@ function CollapseButton({ categoryLabel, onClick }) {
         {
           id: 'theme.DocSidebarItem.toggleCollapsedCategoryAriaLabel',
           message: "Toggle the collapsible sidebar category '{label}'",
-          description: 'The ARIA label to toggle the collapsible sidebar category',
+          description:
+            'The ARIA label to toggle the collapsible sidebar category',
         },
         { label: categoryLabel }
       )}
@@ -68,49 +73,27 @@ function CollapseButton({ categoryLabel, onClick }) {
     />
   );
 }
-export default function DocSidebarItemCategory({ item, onItemClick, activePath, level, index, ...props }) {
+
+export default function DocSidebarItemCategory({
+  item,
+  onItemClick,
+  activePath,
+  level,
+  index,
+  ...props
+}) {
   const { items, label, collapsible, className, href } = item;
-  const { colorMode } = useColorMode();
-  const [definedColorMode, setDefinedColorMode] = useState('');
-
-  useEffect(() => {
-    setDefinedColorMode(colorMode);
-  }, [colorMode]);
-
-  // Conditional rendering for sidebar icons
-  function addIcons(className) {
-    switch (className) {
-      case 'enterprise-icon':
-        return definedColorMode === 'dark' ? <EnterpriseDark /> : <EnterpriseLight />;
-      case 'cloud-icon':
-        return definedColorMode === 'dark' ? <CloudDark /> : <CloudLight />;
-      case 'cloud-and-enterprise-icon':
-        return (
-          <div className={styles['cloud-ee-container']}>
-            {definedColorMode === 'dark' ? (
-              <>
-                <CloudDark /> <EnterpriseDark />{' '}
-              </>
-            ) : (
-              <>
-                <CloudLight /> <EnterpriseLight />
-              </>
-            )}
-          </div>
-        );
-      default:
-        return null;
-    }
-  }
 
   const {
     docs: {
       sidebar: { autoCollapseCategories },
     },
   } = useThemeConfig();
+
   const hrefWithSSRFallback = useCategoryHrefWithSSRFallback(item);
   const isActive = isActiveSidebarItem(item, activePath);
   const isCurrentPage = isSamePath(href, activePath);
+
   const { collapsed, setCollapsed } = useCollapsible({
     // Active categories are always initialized as expanded. The default
     // (`item.collapsed`) is only used for non-active categories.
@@ -121,18 +104,29 @@ export default function DocSidebarItemCategory({ item, onItemClick, activePath, 
       return isActive ? false : item.collapsed;
     },
   });
+
   const { expandedItem, setExpandedItem } = useDocSidebarItemsExpandedState();
   // Use this instead of `setCollapsed`, because it is also reactive
   const updateCollapsed = (toCollapsed = !collapsed) => {
     setExpandedItem(toCollapsed ? null : index);
     setCollapsed(toCollapsed);
   };
+
   useAutoExpandActiveCategory({ isActive, collapsed, updateCollapsed });
+
   useEffect(() => {
-    if (collapsible && expandedItem != null && expandedItem !== index && autoCollapseCategories) {
+    if (
+      collapsible &&
+      expandedItem != null &&
+      expandedItem !== index &&
+      autoCollapseCategories
+    ) {
       setCollapsed(true);
     }
   }, [collapsible, expandedItem, index, setCollapsed, autoCollapseCategories]);
+
+  const labelWithIcons = addIconsToLabel(label, className);
+
   return (
     <li
       className={clsx(
@@ -180,8 +174,7 @@ export default function DocSidebarItemCategory({ item, onItemClick, activePath, 
           href={collapsible ? hrefWithSSRFallback ?? '#' : hrefWithSSRFallback}
           {...props}
         >
-          {label}
-          {addIcons(className)}
+          {labelWithIcons}
         </Link>
         {href && collapsible && (
           <CollapseButton

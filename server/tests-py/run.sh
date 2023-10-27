@@ -14,7 +14,7 @@ set -o pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
-DATABASES=(postgres citus sqlserver sqlserver-healthcheck)
+DATABASES=(postgres citus sqlserver)
 
 (
   cd ../..
@@ -28,12 +28,6 @@ DATABASES=(postgres citus sqlserver sqlserver-healthcheck)
 
 # shellcheck disable=SC1091
 source .hasura-dev-python-venv/bin/activate
-
-# Use the Azure SQL Edge image instead of the SQL Server image on arm64.
-# The latter doesn't work yet.
-if [[ "$(uname -m)" == 'arm64' ]]; then
-  export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
-fi
 
 echo
 echo '*** Starting databases ***'

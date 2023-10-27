@@ -198,7 +198,7 @@ class GraphiQLWrapper extends Component {
         );
         return;
       }
-      dispatch(_push('/api/rest/create'));
+      dispatch(_push('/api/rest/create?from=graphiql'));
     };
 
     const _toggleCacheDirective = () => {

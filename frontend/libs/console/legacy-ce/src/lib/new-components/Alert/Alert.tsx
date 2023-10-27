@@ -2,10 +2,14 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import clsx from 'clsx';
 import React from 'react';
 import { BsCheckCircleFill } from 'react-icons/bs';
-import useUpdateEffect from '../../hooks/useUpdateEffect';
-import { sanitizeGraphQLFieldNames } from '../../utils';
+import { z } from 'zod';
+import { reqString } from '../../utils/zodUtils';
 import { Button } from '../Button';
-import { Input } from '../Form';
+import {
+  GraphQLSanitizedInputField,
+  InputField,
+  useConsoleForm,
+} from '../Form';
 import { AlertComponentProps } from './component-types';
 
 const buttonMode = (props: AlertComponentProps) => {
@@ -16,12 +20,12 @@ const buttonMode = (props: AlertComponentProps) => {
     : 'primary';
 };
 
-function Buttons(props: AlertComponentProps & { promptValue: string }) {
+function Buttons(props: AlertComponentProps) {
   const {
     confirmText,
     onClose,
     onCloseAsync,
-    promptValue,
+
     mode,
     isLoading,
     success,
@@ -33,14 +37,11 @@ function Buttons(props: AlertComponentProps & { promptValue: string }) {
         <AlertDialog.Cancel asChild>
           {/* CANCEL BUTTON: */}
           <Button
+            type={'reset'}
             autoFocus
             disabled={isLoading}
             onClick={() => {
-              if (mode === 'prompt') {
-                (onClose ?? onCloseAsync)?.({ confirmed: false });
-              } else {
-                (onClose ?? onCloseAsync)?.({ confirmed: false });
-              }
+              (onClose ?? onCloseAsync)?.({ confirmed: false });
             }}
           >
             {props?.cancelText ?? 'Cancel'}
@@ -52,17 +53,14 @@ function Buttons(props: AlertComponentProps & { promptValue: string }) {
         <Button
           autoFocus
           disabled={isLoading}
+          type={mode === 'prompt' ? 'submit' : 'button'}
           className={clsx(success && 'pointer-events-none select-none')}
           onClick={() => {
             // pointer-events-none should handle this, but just in case...
             if (success) return;
 
-            if (mode === 'prompt') {
-              (onClose ?? onCloseAsync)?.({
-                confirmed: true,
-                promptValue,
-              });
-            } else {
+            //prompt is handled in the form submission
+            if (mode !== 'prompt') {
               (onClose ?? onCloseAsync)?.({ confirmed: true });
             }
           }}
@@ -70,6 +68,7 @@ function Buttons(props: AlertComponentProps & { promptValue: string }) {
           icon={success ? <BsCheckCircleFill /> : undefined}
           mode={buttonMode(props)}
           isLoading={isLoading}
+          data-testid={'alert-confirm-button'}
         >
           {confirmText ?? 'Ok'}
         </Button>
@@ -79,7 +78,16 @@ function Buttons(props: AlertComponentProps & { promptValue: string }) {
 }
 
 export const Alert = (props: AlertComponentProps) => {
-  const { title, message, mode, open, isLoading, success } = props;
+  const {
+    title,
+    message,
+    mode,
+    open,
+    isLoading,
+    success,
+    onClose,
+    onCloseAsync,
+  } = props;
   // we only want to apply an open prop if it's supplied as true/false, but NOT undefined. which likely means the trigger element is in use.
   const openProps = React.useMemo(
     () => ({
@@ -88,14 +96,23 @@ export const Alert = (props: AlertComponentProps) => {
     [open]
   );
 
-  // makes sure the prompt values are cleared after close
-  useUpdateEffect(() => {
-    if (open === false) {
-      setPromptValue('');
-    }
-  }, [open]);
+  const defaultInputValue =
+    mode === 'prompt' && props?.defaultValue ? props.defaultValue : '';
+  const inputFieldName =
+    mode === 'prompt' && props?.inputFieldName ? props.inputFieldName : 'value';
 
-  const [promptValue, setPromptValue] = React.useState('');
+  const inputId = 'prompt_value' as const;
+
+  const { Form } = useConsoleForm({
+    schema: z.object({ [inputId]: reqString(inputFieldName) }),
+    options: {
+      mode: 'all',
+      defaultValues: {
+        [inputId]: defaultInputValue,
+      },
+    },
+  });
+
   return (
     <AlertDialog.Root {...openProps}>
       <AlertDialog.Portal>
@@ -112,35 +129,42 @@ export const Alert = (props: AlertComponentProps) => {
           >
             {message}
           </AlertDialog.Description>
-          {mode === 'prompt' && (
-            <div className="mb-5">
-              {!!props.promptLabel && (
-                <label
-                  className={clsx('block pt-1 text-muted mb-1')}
-                  htmlFor="prompt-input"
-                >
-                  {props.promptLabel}
-                </label>
-              )}
-              <Input
-                disabled={isLoading || success}
-                placeholder={props?.promptPlaceholder ?? ''}
-                name="prompt-input"
-                //disabled={isLoading || success}
-                fieldProps={{ value: promptValue, autoFocus: true }}
-                onChange={e => {
-                  let value = e.target.value;
+          <Form
+            onSubmit={values => {
+              (onClose ?? onCloseAsync)?.({
+                confirmed: true,
+                promptValue: values[inputId],
+              });
+            }}
+          >
+            {mode === 'prompt' && (
+              <div className="mb-5">
+                {!!props.promptLabel && (
+                  <label
+                    className={clsx('block pt-1 text-muted mb-1')}
+                    htmlFor={inputId}
+                  >
+                    {props.promptLabel}
+                  </label>
+                )}
 
-                  if (props.sanitizeGraphQL) {
-                    value = sanitizeGraphQLFieldNames(e.target.value);
-                  }
-
-                  setPromptValue(value);
-                }}
-              />
-            </div>
-          )}
-          <Buttons {...props} promptValue={promptValue} />
+                {props.sanitizeGraphQL ? (
+                  <GraphQLSanitizedInputField
+                    disabled={isLoading || success}
+                    placeholder={props?.promptPlaceholder ?? ''}
+                    name={inputId}
+                  />
+                ) : (
+                  <InputField
+                    disabled={isLoading || success}
+                    placeholder={props?.promptPlaceholder ?? ''}
+                    name={inputId}
+                  />
+                )}
+              </div>
+            )}
+            <Buttons {...props} />
+          </Form>
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>

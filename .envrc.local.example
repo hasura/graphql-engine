@@ -24,10 +24,6 @@
 # HASURA_BIGQUERY_SERVICE_KEY=$(cat ../bigquery-service-account.json)
 # export HASURA_BIGQUERY_SERVICE_KEY
 
-### Enable to use the correct image for SQLServer on an M1
-### (the env var is used in our Docker Compose files)
-# export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
-
 ### Export EE license key for running pro tests locally
 ### This depends on a `ee-license-key.txt` living in the directory above
 ### the `graphql-engine` repository

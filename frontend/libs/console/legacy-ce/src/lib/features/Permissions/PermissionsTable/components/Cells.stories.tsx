@@ -12,7 +12,6 @@ import {
 } from './Cells';
 
 export default {
-  title: 'Features/Permissions/Table/Cells',
   component: InputCell,
   decorators: [
     (StoryComponent: React.FC) => (

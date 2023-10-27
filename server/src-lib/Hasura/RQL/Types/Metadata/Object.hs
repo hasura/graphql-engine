@@ -84,7 +84,6 @@ instance Hashable LogicalModelMetadataObjId
 -- | the native query should probably also link to its logical model
 data NativeQueryMetadataObjId
   = NQMORel RelName RelType
-  | NQMOReferencedLogicalModel LogicalModelName
   deriving (Show, Eq, Ord, Generic)
 
 instance Hashable NativeQueryMetadataObjId
@@ -98,7 +97,7 @@ data SourceMetadataObjId b
   | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
   | SMOStoredProcedure (FunctionName b)
   | SMOLogicalModel LogicalModelName
-  | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
+  | SMOLogicalModelObj LogicalModelLocation LogicalModelMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -162,7 +161,6 @@ moiTypeName = \case
       SMONativeQuery _ -> "native_query"
       SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
         NQMORel _ relType -> relTypeToTxt relType <> "_relation"
-        NQMOReferencedLogicalModel name -> "inner_logical_model_" <> toTxt name
       SMOStoredProcedure _ -> "stored_procedure"
       SMOLogicalModel _ -> "logical_model"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
@@ -223,10 +221,9 @@ moiName objectId =
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         case nativeQueryObjId of
           NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
-          NQMOReferencedLogicalModel name -> toTxt name <> " in " <> toTxt nativeQueryName
       SMOStoredProcedure name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
-      SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
+      SMOLogicalModelObj (LMLLogicalModel logicalModelName) logicalModelObjectId -> do
         let objectName :: Text
             objectName = case logicalModelObjectId of
               LMMOPerm name _ -> toTxt name
@@ -237,6 +234,19 @@ moiName objectId =
               MOSourceObjId source
                 $ AB.mkAnyBackend
                 $ SMOLogicalModel @b logicalModelName
+
+        objectName <> " in " <> moiName sourceObjectId
+      SMOLogicalModelObj (LMLNativeQuery nativeQueryName) logicalModelObjectId -> do
+        let objectName :: Text
+            objectName = case logicalModelObjectId of
+              LMMOPerm name _ -> toTxt name
+              LMMOReferencedLogicalModel name -> toTxt name
+
+            sourceObjectId :: MetadataObjId
+            sourceObjectId =
+              MOSourceObjId source
+                $ AB.mkAnyBackend
+                $ SMONativeQuery @b nativeQueryName
 
         objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->

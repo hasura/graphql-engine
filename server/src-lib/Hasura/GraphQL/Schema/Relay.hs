@@ -26,7 +26,6 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -167,7 +166,7 @@ nodeField sourceCache context options = do
       NESeq.NESeq J.Value ->
       n (IR.QueryRootField IR.UnpreparedValue)
     createRootField stringifyNumbers tableName (NodeInfo sourceInfo perms pKeys fields) columnValues = do
-      whereExp <- buildNodeIdBoolExp (getter $ _siConfiguration sourceInfo) columnValues pKeys
+      whereExp <- buildNodeIdBoolExp (getter $ _siConfiguration sourceInfo) perms columnValues pKeys
       pure
         $ IR.RFDB (_siName sourceInfo)
         $ AB.mkAnyBackend
@@ -196,10 +195,11 @@ nodeField sourceCache context options = do
     buildNodeIdBoolExp ::
       (Backend b) =>
       ScalarTypeParsingContext b ->
+      SelPermInfo b ->
       NESeq.NESeq J.Value ->
       NESeq.NESeq (ColumnInfo b) ->
       n (IR.AnnBoolExp b (IR.UnpreparedValue b))
-    buildNodeIdBoolExp scalarTypeParsingContext columnValues pkeyColumns = do
+    buildNodeIdBoolExp scalarTypeParsingContext selectPermissions columnValues pkeyColumns = do
       let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
           firstColumnValue NESeq.:<|| remainingColumns = columnValues
           (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
@@ -219,6 +219,7 @@ nodeField sourceCache context options = do
       let allTuples = (firstPkColumn, firstColumnValue) : alignedTuples
       IR.BoolAnd <$> for allTuples \(columnInfo, columnValue) -> do
         let columnType = ciType columnInfo
+        let redactionExp = fromMaybe IR.NoRedaction $ getRedactionExprForColumn selectPermissions (ciColumn columnInfo)
         parsedValue <-
           parseScalarValueColumnTypeWithContext scalarTypeParsingContext columnType columnValue `onLeft` \e ->
             P.parseErrorWith P.ParseFailed $ "value of column " <> toErrorValue (ciColumn columnInfo) <> " in node id: " <> toErrorMessage (qeError e)
@@ -226,4 +227,5 @@ nodeField sourceCache context options = do
           $ IR.BoolField
           $ IR.AVColumn
             columnInfo
+            redactionExp
             [IR.AEQ IR.NonNullableComparison $ IR.UVParameter IR.FreshVar $ ColumnValue columnType parsedValue]

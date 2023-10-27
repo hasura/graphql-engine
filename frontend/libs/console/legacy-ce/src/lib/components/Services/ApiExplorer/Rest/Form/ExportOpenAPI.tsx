@@ -50,12 +50,11 @@ export const ExportOpenApiButton = () => {
   );
 
   return (
-    <Analytics name="export-open-api-spec-btn">
+    <Analytics name="export-open-api-spec-btn" passHtmlAttributesToChildren>
       <Button
         icon={<FaFileExport />}
         className="ml-2"
         onClick={() => refetch()}
-        size="sm"
         isLoading={isLoading || isRefetching}
       >
         Export OpenAPI Spec

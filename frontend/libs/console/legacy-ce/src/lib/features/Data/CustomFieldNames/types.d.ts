@@ -3,6 +3,7 @@ import { Driver } from '../../../dataSources';
 
 export type CustomFieldNamesFormVals = {
   custom_name: string;
+  logical_model: string;
 } & Required<MetadataTableConfig['custom_root_fields']>;
 
 type GetTablePayloadArgs = {

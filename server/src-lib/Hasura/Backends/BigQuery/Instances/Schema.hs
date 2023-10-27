@@ -363,20 +363,18 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
 
 bqCountTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column 'BigQuery)) ->
-  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
+  Maybe (Parser 'Both n (Column 'BigQuery, AnnRedactionExpUnpreparedValue 'BigQuery)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery))
 bqCountTypeInput = \case
   Just columnEnum -> do
     columns <- P.fieldOptional Name._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe [Column 'BigQuery] -> CountType 'BigQuery
-    mkCountType _ Nothing = BigQuery.StarCountable
-    mkCountType IR.SelectCountDistinct (Just cols) =
-      maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
-    mkCountType IR.SelectCountNonDistinct (Just cols) =
-      maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
+    mkCountType :: IR.CountDistinct -> Maybe [(Column 'BigQuery, AnnRedactionExpUnpreparedValue 'BigQuery)] -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery)
+    mkCountType IR.SelectCountDistinct (Just (col : cols)) = BigQuery.CountType (BigQuery.DistinctCountable (col :| cols))
+    mkCountType IR.SelectCountNonDistinct (Just (col : cols)) = BigQuery.CountType (BigQuery.NonNullFieldCountable (col :| cols))
+    mkCountType _ _ = BigQuery.CountType BigQuery.StarCountable
 
 geographyWithinDistanceInput ::
   forall m n r.
@@ -468,7 +466,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
       field <- columnParser @'BigQuery (ColumnScalar columnType) (G.Nullability True)
       pure
         $ P.selection_ graphQLName Nothing field
-        $> IR.mkAnnColumnField columnName (ColumnScalar columnType) Nothing Nothing
+        $> IR.mkAnnColumnField columnName (ColumnScalar columnType) NoRedaction Nothing
 
     computedFieldFunctionArgs ::
       (G.Name -> G.Name) ->

@@ -16,6 +16,7 @@ import Globals from '../../../../../../Globals';
 import {
   controlPlaneClient,
   FETCH_CONFIG_STATUS,
+  FetchConfigStatusSubscription,
 } from '../../../../../../features/ControlPlane';
 
 type HasuraDBCreationPayload = {
@@ -162,46 +163,50 @@ export function useCreateHasuraCloudDatasource(
            * If the change has not propagated to a worker to which the `pg_add_source` request is routed to,
            * the server would throw an `inconsistent_object` error as the new env var will not be found.
            *
-           * To handle this, we wait for the changes to be propagated to all
+           * To handle this, we wait for the changes to be propagated to all the live hasura
            * workers of a tenant before attempting to connect the DB.
            *
            * We do that by verifying that the new config hash has been set
-           * for all workers of the tenant using the `config_status` table.
+           * for all the live workers of the tenant using the `config_status` table
+           *
+           * Hash is compared against the `config_status` table and worker status
+           * is checked against the `hasura_worker` table
            *
            * Additionally add a timeout interval with retries as an additional
            * redundancy since it throws CORS error locally
            */
-          const { unsubscribe } = controlPlaneClient.subscribe(
-            FETCH_CONFIG_STATUS,
-            {
-              tenantId: Globals.hasuraCloudTenantId,
-            },
-            data => {
-              if (
-                // check if all workers are successfully configured with the new hash
-                data.config_status.every(
-                  (config: { hash: string; message: string }) =>
-                    config.message === 'Service configured successfully' &&
-                    config.hash !== oldConfigHash
-                )
-              ) {
-                verifyProjectHealthAndConnectDataSource(
-                  successCallback,
-                  errorCallback
-                );
+          const { unsubscribe } =
+            controlPlaneClient.subscribe<FetchConfigStatusSubscription>(
+              FETCH_CONFIG_STATUS,
+              {
+                tenantId: Globals.hasuraCloudTenantId,
+              },
+              data => {
+                if (
+                  // check if all workers are successfully configured with the new hash
+                  data.config_status.every(
+                    config =>
+                      config.message === 'Service configured successfully' &&
+                      config.hash !== oldConfigHash
+                  )
+                ) {
+                  verifyProjectHealthAndConnectDataSource(
+                    successCallback,
+                    errorCallback
+                  );
+                  unsubscribe();
+                }
+              },
+              error => {
+                programmaticallyTraceError({
+                  error:
+                    'failed subscribing to fetch_config_status while connecting neon database',
+                  cause: error,
+                });
+                errorCallback();
                 unsubscribe();
               }
-            },
-            error => {
-              programmaticallyTraceError({
-                error:
-                  'failed subscribing to fetch_config_status while connecting neon database',
-                cause: error,
-              });
-              errorCallback();
-              unsubscribe();
-            }
-          );
+            );
         })
         .catch(error => {
           // if adding env var fails unexpectedly, set the error state

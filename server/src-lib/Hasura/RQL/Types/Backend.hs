@@ -29,11 +29,14 @@ import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelSessionVariableORLiteralValue, RemoteRelSupportedOp)
+import Hasura.RQL.IR.ModelInformation.Types
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary)
+import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -159,6 +162,7 @@ class
     Typeable (Column b),
     Typeable b,
     HasTag b,
+    Traversable (CountType b),
     -- constraints of function argument
     Traversable (FunctionArgumentExp b),
     -- Type constraints.
@@ -167,8 +171,6 @@ class
     Eq (BackendInfo b),
     Show (BackendInfo b),
     Monoid (BackendInfo b),
-    Eq (CountType b),
-    Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
     -- Extension constraints.
@@ -220,7 +222,12 @@ class
 
   type BasicOrderType b :: Type
   type NullsOrderType b :: Type
-  type CountType b :: Type
+
+  -- | The type that captures how count aggregations are modelled
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type CountType b :: Type -> Type
 
   -- Name of a 'column'
   type Column b :: Type
@@ -269,8 +276,8 @@ class
   healthCheckImplementation = Nothing
 
   -- | An Implementation for version checking when adding a source.
-  versionCheckImplementation :: Env.Environment -> SourceConnConfiguration b -> IO (Either QErr ())
-  versionCheckImplementation = const (const (pure $ Right ()))
+  versionCheckImplementation :: Env.Environment -> SourceName -> SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation _ _ _ = pure (Right ())
 
   -- | A backend type can opt into providing an implementation for
   -- fingerprinted pings to the source,
@@ -421,12 +428,30 @@ class
   -- metadata.
   defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
 
+  -- | Get values from a column in a table with some filters. This function is used in evaluating remote relationship
+  --   predicate in permissions
+  --
+  -- TODO (paritosh): This function should return a JSON array of column values. We shouldn't have to parse the column
+  -- values as Text. The database's JSON serialize/deserialize can take care of correct casting of values (GS-642).
+  getColVals ::
+    (MonadIO m, MonadError QErr m) =>
+    SessionVariables ->
+    SourceName ->
+    SourceConfig b ->
+    TableName b ->
+    (ScalarType b, Column b) ->
+    (Column b, [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]) ->
+    m [Text]
+
   backendSupportsNestedObjects :: Either QErr (XNestedObjects b)
   default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)
   backendSupportsNestedObjects = throw400 InvalidConfiguration "Nested objects not supported"
 
   sourceSupportsSchemalessTables :: SourceConfig b -> Bool
   sourceSupportsSchemalessTables = const False
+
+  getAggregationPredicatesModels :: (MonadState [ModelNameInfo] m) => SourceName -> ModelSourceType -> AggregationPredicates b a -> m ()
+  getAggregationPredicatesModels _ _ _ = pure ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

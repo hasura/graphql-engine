@@ -15,7 +15,10 @@ import globals from '../../../../../Globals';
 import { FaArrowRight, FaMagic } from 'react-icons/fa';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import clsx from 'clsx';
-import { Link } from 'react-router';
+import { openInGraphiQL } from '../../../../../features/RestEndpoints/components/RestEndpointDetails/utils';
+import { Analytics } from '../../../../../features/Analytics';
+import { parse } from 'graphql';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 const editorOptions = {
   minLines: 10,
@@ -77,7 +80,7 @@ const validationSchema = z.object({
   request: z
     .string()
     .min(1, { message: 'Please add a GraphQL query' })
-    .refine(val => isQueryValid(val), 'Please add a valid GraphQL query'),
+    .refine(val => isQueryValid(val), 'Please add a valid named GraphQL query'),
 });
 
 export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
@@ -92,6 +95,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
       setFocus,
       watch,
       formState: { errors },
+      setValue,
     },
     Form,
   } = useConsoleForm({
@@ -106,6 +110,40 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
   }, []);
 
   const request = watch('request');
+
+  const [userChangedName, setUserChangedName] = React.useState(false);
+  const [userChangedUrl, setUserChangedUrl] = React.useState(false);
+
+  useDebouncedEffect(
+    () => {
+      if (request) {
+        try {
+          const parsedQuery = parse(request);
+          if (parsedQuery?.definitions?.length > 0) {
+            const operation = parsedQuery.definitions[0];
+            if ('name' in operation) {
+              if (!userChangedName && mode === 'create') {
+                setValue('name', operation.name?.value);
+              }
+              if (!userChangedUrl && mode === 'create') {
+                setValue(
+                  'url',
+                  operation.name?.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)+/g, '')
+                );
+              }
+            }
+          }
+        } catch (e) {
+          // do nothing
+        }
+      }
+    },
+    500,
+    [request]
+  );
 
   const prependLabel = `${globals.dataApiUrl}/api/rest/`.replace(/\/\//, '/');
 
@@ -131,14 +169,33 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             description="Support GraphQL queries and mutations."
             editorOptions={editorOptions}
           />
-          <div className="text-sm absolute top-6 right-0 mt-2 mr-2">
-            <Link to="/api/api-explorer?mode=rest">
-              {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
-              <FaArrowRight />
-            </Link>
+          <div className="text-sm absolute top-3 right-0 mt-2">
+            <Analytics
+              name="api-tab-rest-endpoint-form-graphiql-link"
+              passHtmlAttributesToChildren
+            >
+              <Button
+                icon={<FaArrowRight />}
+                iconPosition="end"
+                size="sm"
+                onClick={e => {
+                  openInGraphiQL(request);
+                }}
+              >
+                {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
+              </Button>
+            </Analytics>
           </div>
         </div>
-        <InputField name="name" label="Name" placeholder="Name" />
+        <InputField
+          name="name"
+          label="Name"
+          placeholder="Name"
+          inputTransform={str => {
+            setUserChangedName(true);
+            return str;
+          }}
+        />
         <Textarea
           name="comment"
           label="Description (Optional)"
@@ -151,7 +208,12 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             placeholder="Location"
             description={`This is the location of your endpoint (must be unique).`}
             prependLabel={prependLabel}
+            inputTransform={str => {
+              setUserChangedUrl(true);
+              return str;
+            }}
           />
+
           <IndicatorCard
             className={clsx(errors?.url ? 'mt-1' : '-mt-4', 'py-3')}
             showIcon
@@ -159,8 +221,8 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             customIcon={FaMagic}
             headline="No Parameterized variable specification needed"
           >
-            All parameterized variables in your GraphQL query will be
-            auto-specifed in the URL
+            All parameterized variables (e.g. {prependLabel}example/:id) in your
+            GraphQL query will be auto-specifed in the URL
           </IndicatorCard>
         </div>
         <CheckboxesField
@@ -179,14 +241,21 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           <Button type="button" onClick={onCancel} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={loading}
-            loadingText={{ create: 'Creating...', edit: 'Modifying ..' }[mode]}
+          <Analytics
+            name={`api-tab-rest-endpoint-form-${mode}-button`}
+            passHtmlAttributesToChildren
           >
-            {{ create: 'Create', edit: 'Modify' }[mode]}
-          </Button>
+            <Button
+              type="submit"
+              mode="primary"
+              isLoading={loading}
+              loadingText={
+                { create: 'Creating...', edit: 'Modifying ..' }[mode]
+              }
+            >
+              {{ create: 'Create', edit: 'Modify' }[mode]}
+            </Button>
+          </Analytics>
         </div>
       </div>
     </Form>

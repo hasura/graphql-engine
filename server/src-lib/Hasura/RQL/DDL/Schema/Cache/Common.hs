@@ -53,7 +53,7 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelLocation (..), LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.SchemaRegistry (SchemaRegistryAction)
@@ -389,5 +389,6 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
-addLogicalModelContext :: LogicalModelName -> Text -> Text
-addLogicalModelContext logicalModelName e = "in logical model " <> logicalModelName <<> ": " <> e
+addLogicalModelContext :: LogicalModelLocation -> Text -> Text
+addLogicalModelContext (LMLLogicalModel logicalModelName) e = "in logical model " <> logicalModelName <<> ": " <> e
+addLogicalModelContext (LMLNativeQuery nativeQueryName) e = "in logical model for native query" <> nativeQueryName <<> ": " <> e

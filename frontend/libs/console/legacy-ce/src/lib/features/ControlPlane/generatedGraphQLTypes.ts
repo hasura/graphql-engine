@@ -1,5 +1,5 @@
-export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
+export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
@@ -16,9 +16,10 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
-  jsonb: any;
   timestamptz: any;
+  json: any;
   uuid: any;
+  jsonb: any;
   project_activity_status_enum: any;
   citext: any;
   bigint: any;
@@ -30,8 +31,10 @@ export type Scalars = {
   _text: any;
   opentelemetry_connection_type_enum: any;
   date: any;
-  json: any;
   _uuid: any;
+  connector_timestamptz: any;
+  connector_uuid: any;
+  connector_deployment_status: any;
   bytea: any;
   _json: any;
   smallint: any;
@@ -96,6 +99,1123 @@ export type AddProjectResponse = {
   __typename?: 'AddProjectResponse';
   hasura_pro_key: Scalars['String'];
   id: Scalars['uuid'];
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_Config = {
+  __typename?: 'alert_config';
+  /** An array relationship */
+  alert_config_services: Array<Alert_Config_Service>;
+  /** An aggregate relationship */
+  alert_config_services_aggregate: Alert_Config_Service_Aggregate;
+  /** An array relationship */
+  alert_types: Array<Alert_Config_Alert_Type>;
+  /** An aggregate relationship */
+  alert_types_aggregate: Alert_Config_Alert_Type_Aggregate;
+  created_at: Scalars['timestamptz'];
+  enabled: Scalars['Boolean'];
+  /** An object relationship */
+  project: Projects;
+  project_id: Scalars['uuid'];
+  /** An array relationship */
+  slack_alert_configs: Array<Slack_Config>;
+  /** An aggregate relationship */
+  slack_alert_configs_aggregate: Slack_Config_Aggregate;
+  /** An object relationship */
+  tenant?: Maybe<Tenant>;
+  updated_at: Scalars['timestamptz'];
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigAlert_Config_ServicesArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigAlert_Config_Services_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigAlert_TypesArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigAlert_Types_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigSlack_Alert_ConfigsArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+/** Alert configuration for Hasura Cloud projects */
+export type Alert_ConfigSlack_Alert_Configs_AggregateArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+/** aggregated selection of "alert_config" */
+export type Alert_Config_Aggregate = {
+  __typename?: 'alert_config_aggregate';
+  aggregate?: Maybe<Alert_Config_Aggregate_Fields>;
+  nodes: Array<Alert_Config>;
+};
+
+/** aggregate fields of "alert_config" */
+export type Alert_Config_Aggregate_Fields = {
+  __typename?: 'alert_config_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Alert_Config_Max_Fields>;
+  min?: Maybe<Alert_Config_Min_Fields>;
+};
+
+/** aggregate fields of "alert_config" */
+export type Alert_Config_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Alert_Config_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Enabled alert types for Hasura Cloud projects */
+export type Alert_Config_Alert_Type = {
+  __typename?: 'alert_config_alert_type';
+  /** An object relationship */
+  alert_config: Alert_Config;
+  /** An object relationship */
+  alert_type: Alert_Type;
+  created_at: Scalars['timestamptz'];
+  /** An object relationship */
+  project?: Maybe<Projects>;
+  project_id: Scalars['uuid'];
+  rules?: Maybe<Scalars['json']>;
+  /** An object relationship */
+  slack_config?: Maybe<Slack_Config>;
+  type: Scalars['String'];
+};
+
+/** Enabled alert types for Hasura Cloud projects */
+export type Alert_Config_Alert_TypeRulesArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Aggregate = {
+  __typename?: 'alert_config_alert_type_aggregate';
+  aggregate?: Maybe<Alert_Config_Alert_Type_Aggregate_Fields>;
+  nodes: Array<Alert_Config_Alert_Type>;
+};
+
+export type Alert_Config_Alert_Type_Aggregate_Bool_Exp = {
+  count?: Maybe<Alert_Config_Alert_Type_Aggregate_Bool_Exp_Count>;
+};
+
+export type Alert_Config_Alert_Type_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Aggregate_Fields = {
+  __typename?: 'alert_config_alert_type_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Alert_Config_Alert_Type_Max_Fields>;
+  min?: Maybe<Alert_Config_Alert_Type_Min_Fields>;
+};
+
+/** aggregate fields of "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Aggregate_Order_By = {
+  count?: Maybe<Order_By>;
+  max?: Maybe<Alert_Config_Alert_Type_Max_Order_By>;
+  min?: Maybe<Alert_Config_Alert_Type_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Arr_Rel_Insert_Input = {
+  data: Array<Alert_Config_Alert_Type_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Alert_Config_Alert_Type_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "alert_config_alert_type". All fields are combined with a logical 'AND'. */
+export type Alert_Config_Alert_Type_Bool_Exp = {
+  _and?: Maybe<Array<Alert_Config_Alert_Type_Bool_Exp>>;
+  _not?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+  _or?: Maybe<Array<Alert_Config_Alert_Type_Bool_Exp>>;
+  alert_config?: Maybe<Alert_Config_Bool_Exp>;
+  alert_type?: Maybe<Alert_Type_Bool_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  project?: Maybe<Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  rules?: Maybe<Json_Comparison_Exp>;
+  slack_config?: Maybe<Slack_Config_Bool_Exp>;
+  type?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "alert_config_alert_type" */
+export enum Alert_Config_Alert_Type_Constraint {
+  /** unique or primary key constraint on columns "type", "project_id" */
+  AlertConfigAlertTypePkey = 'alert_config_alert_type_pkey',
+}
+
+/** input type for inserting data into table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Insert_Input = {
+  alert_config?: Maybe<Alert_Config_Obj_Rel_Insert_Input>;
+  alert_type?: Maybe<Alert_Type_Obj_Rel_Insert_Input>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project?: Maybe<Projects_Obj_Rel_Insert_Input>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['json']>;
+  slack_config?: Maybe<Slack_Config_Obj_Rel_Insert_Input>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Alert_Config_Alert_Type_Max_Fields = {
+  __typename?: 'alert_config_alert_type_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** order by max() on columns of table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  type?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Alert_Config_Alert_Type_Min_Fields = {
+  __typename?: 'alert_config_alert_type_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** order by min() on columns of table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  type?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Mutation_Response = {
+  __typename?: 'alert_config_alert_type_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Alert_Config_Alert_Type>;
+};
+
+/** on_conflict condition type for table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_On_Conflict = {
+  constraint: Alert_Config_Alert_Type_Constraint;
+  update_columns?: Array<Alert_Config_Alert_Type_Update_Column>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "alert_config_alert_type". */
+export type Alert_Config_Alert_Type_Order_By = {
+  alert_config?: Maybe<Alert_Config_Order_By>;
+  alert_type?: Maybe<Alert_Type_Order_By>;
+  created_at?: Maybe<Order_By>;
+  project?: Maybe<Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  rules?: Maybe<Order_By>;
+  slack_config?: Maybe<Slack_Config_Order_By>;
+  type?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: alert_config_alert_type */
+export type Alert_Config_Alert_Type_Pk_Columns_Input = {
+  project_id: Scalars['uuid'];
+  type: Scalars['String'];
+};
+
+/** select columns of table "alert_config_alert_type" */
+export enum Alert_Config_Alert_Type_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  Rules = 'rules',
+  /** column name */
+  Type = 'type',
+}
+
+/** input type for updating data in table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['json']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** Streaming cursor of the table "alert_config_alert_type" */
+export type Alert_Config_Alert_Type_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Alert_Config_Alert_Type_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Alert_Config_Alert_Type_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['json']>;
+  type?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "alert_config_alert_type" */
+export enum Alert_Config_Alert_Type_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  Rules = 'rules',
+  /** column name */
+  Type = 'type',
+}
+
+export type Alert_Config_Alert_Type_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Alert_Config_Alert_Type_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Alert_Config_Alert_Type_Bool_Exp;
+};
+
+/** Boolean expression to filter rows from the table "alert_config". All fields are combined with a logical 'AND'. */
+export type Alert_Config_Bool_Exp = {
+  _and?: Maybe<Array<Alert_Config_Bool_Exp>>;
+  _not?: Maybe<Alert_Config_Bool_Exp>;
+  _or?: Maybe<Array<Alert_Config_Bool_Exp>>;
+  alert_config_services?: Maybe<Alert_Config_Service_Bool_Exp>;
+  alert_config_services_aggregate?: Maybe<Alert_Config_Service_Aggregate_Bool_Exp>;
+  alert_types?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+  alert_types_aggregate?: Maybe<Alert_Config_Alert_Type_Aggregate_Bool_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  enabled?: Maybe<Boolean_Comparison_Exp>;
+  project?: Maybe<Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  slack_alert_configs?: Maybe<Slack_Config_Bool_Exp>;
+  slack_alert_configs_aggregate?: Maybe<Slack_Config_Aggregate_Bool_Exp>;
+  tenant?: Maybe<Tenant_Bool_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "alert_config" */
+export enum Alert_Config_Constraint {
+  /** unique or primary key constraint on columns "project_id" */
+  AlertConfigPkey = 'alert_config_pkey',
+}
+
+/** input type for inserting data into table "alert_config" */
+export type Alert_Config_Insert_Input = {
+  alert_config_services?: Maybe<Alert_Config_Service_Arr_Rel_Insert_Input>;
+  alert_types?: Maybe<Alert_Config_Alert_Type_Arr_Rel_Insert_Input>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  project?: Maybe<Projects_Obj_Rel_Insert_Input>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_alert_configs?: Maybe<Slack_Config_Arr_Rel_Insert_Input>;
+  tenant?: Maybe<Tenant_Obj_Rel_Insert_Input>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate max on columns */
+export type Alert_Config_Max_Fields = {
+  __typename?: 'alert_config_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate min on columns */
+export type Alert_Config_Min_Fields = {
+  __typename?: 'alert_config_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** response of any mutation on the table "alert_config" */
+export type Alert_Config_Mutation_Response = {
+  __typename?: 'alert_config_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Alert_Config>;
+};
+
+/** input type for inserting object relation for remote table "alert_config" */
+export type Alert_Config_Obj_Rel_Insert_Input = {
+  data: Alert_Config_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<Alert_Config_On_Conflict>;
+};
+
+/** on_conflict condition type for table "alert_config" */
+export type Alert_Config_On_Conflict = {
+  constraint: Alert_Config_Constraint;
+  update_columns?: Array<Alert_Config_Update_Column>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "alert_config". */
+export type Alert_Config_Order_By = {
+  alert_config_services_aggregate?: Maybe<Alert_Config_Service_Aggregate_Order_By>;
+  alert_types_aggregate?: Maybe<Alert_Config_Alert_Type_Aggregate_Order_By>;
+  created_at?: Maybe<Order_By>;
+  enabled?: Maybe<Order_By>;
+  project?: Maybe<Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  slack_alert_configs_aggregate?: Maybe<Slack_Config_Aggregate_Order_By>;
+  tenant?: Maybe<Tenant_Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: alert_config */
+export type Alert_Config_Pk_Columns_Input = {
+  project_id: Scalars['uuid'];
+};
+
+/** select columns of table "alert_config" */
+export enum Alert_Config_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Enabled = 'enabled',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** Alert notification service configs for Hasura Cloud projects */
+export type Alert_Config_Service = {
+  __typename?: 'alert_config_service';
+  /** An object relationship */
+  alert_config: Alert_Config;
+  created_at: Scalars['timestamptz'];
+  enabled: Scalars['Boolean'];
+  metadata?: Maybe<Scalars['json']>;
+  /** An object relationship */
+  project?: Maybe<Projects>;
+  project_id: Scalars['uuid'];
+  rules?: Maybe<Scalars['jsonb']>;
+  type: Alert_Service_Type_Enum;
+  updated_at: Scalars['timestamptz'];
+};
+
+/** Alert notification service configs for Hasura Cloud projects */
+export type Alert_Config_ServiceMetadataArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** Alert notification service configs for Hasura Cloud projects */
+export type Alert_Config_ServiceRulesArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "alert_config_service" */
+export type Alert_Config_Service_Aggregate = {
+  __typename?: 'alert_config_service_aggregate';
+  aggregate?: Maybe<Alert_Config_Service_Aggregate_Fields>;
+  nodes: Array<Alert_Config_Service>;
+};
+
+export type Alert_Config_Service_Aggregate_Bool_Exp = {
+  bool_and?: Maybe<Alert_Config_Service_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: Maybe<Alert_Config_Service_Aggregate_Bool_Exp_Bool_Or>;
+  count?: Maybe<Alert_Config_Service_Aggregate_Bool_Exp_Count>;
+};
+
+export type Alert_Config_Service_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Alert_Config_Service_Select_Column_Alert_Config_Service_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Alert_Config_Service_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Alert_Config_Service_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Alert_Config_Service_Select_Column_Alert_Config_Service_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Alert_Config_Service_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Alert_Config_Service_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Alert_Config_Service_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "alert_config_service" */
+export type Alert_Config_Service_Aggregate_Fields = {
+  __typename?: 'alert_config_service_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Alert_Config_Service_Max_Fields>;
+  min?: Maybe<Alert_Config_Service_Min_Fields>;
+};
+
+/** aggregate fields of "alert_config_service" */
+export type Alert_Config_Service_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "alert_config_service" */
+export type Alert_Config_Service_Aggregate_Order_By = {
+  count?: Maybe<Order_By>;
+  max?: Maybe<Alert_Config_Service_Max_Order_By>;
+  min?: Maybe<Alert_Config_Service_Min_Order_By>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Alert_Config_Service_Append_Input = {
+  rules?: Maybe<Scalars['jsonb']>;
+};
+
+/** input type for inserting array relation for remote table "alert_config_service" */
+export type Alert_Config_Service_Arr_Rel_Insert_Input = {
+  data: Array<Alert_Config_Service_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Alert_Config_Service_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "alert_config_service". All fields are combined with a logical 'AND'. */
+export type Alert_Config_Service_Bool_Exp = {
+  _and?: Maybe<Array<Alert_Config_Service_Bool_Exp>>;
+  _not?: Maybe<Alert_Config_Service_Bool_Exp>;
+  _or?: Maybe<Array<Alert_Config_Service_Bool_Exp>>;
+  alert_config?: Maybe<Alert_Config_Bool_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  enabled?: Maybe<Boolean_Comparison_Exp>;
+  metadata?: Maybe<Json_Comparison_Exp>;
+  project?: Maybe<Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  rules?: Maybe<Jsonb_Comparison_Exp>;
+  type?: Maybe<Alert_Service_Type_Enum_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "alert_config_service" */
+export enum Alert_Config_Service_Constraint {
+  /** unique or primary key constraint on columns "type", "project_id" */
+  AlertConfigServicePkey = 'alert_config_service_pkey',
+}
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Alert_Config_Service_Delete_At_Path_Input = {
+  rules?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type Alert_Config_Service_Delete_Elem_Input = {
+  rules?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Alert_Config_Service_Delete_Key_Input = {
+  rules?: Maybe<Scalars['String']>;
+};
+
+/** input type for inserting data into table "alert_config_service" */
+export type Alert_Config_Service_Insert_Input = {
+  alert_config?: Maybe<Alert_Config_Obj_Rel_Insert_Input>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  metadata?: Maybe<Scalars['json']>;
+  project?: Maybe<Projects_Obj_Rel_Insert_Input>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['jsonb']>;
+  type?: Maybe<Alert_Service_Type_Enum>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate max on columns */
+export type Alert_Config_Service_Max_Fields = {
+  __typename?: 'alert_config_service_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** order by max() on columns of table "alert_config_service" */
+export type Alert_Config_Service_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Alert_Config_Service_Min_Fields = {
+  __typename?: 'alert_config_service_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** order by min() on columns of table "alert_config_service" */
+export type Alert_Config_Service_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "alert_config_service" */
+export type Alert_Config_Service_Mutation_Response = {
+  __typename?: 'alert_config_service_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Alert_Config_Service>;
+};
+
+/** on_conflict condition type for table "alert_config_service" */
+export type Alert_Config_Service_On_Conflict = {
+  constraint: Alert_Config_Service_Constraint;
+  update_columns?: Array<Alert_Config_Service_Update_Column>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "alert_config_service". */
+export type Alert_Config_Service_Order_By = {
+  alert_config?: Maybe<Alert_Config_Order_By>;
+  created_at?: Maybe<Order_By>;
+  enabled?: Maybe<Order_By>;
+  metadata?: Maybe<Order_By>;
+  project?: Maybe<Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  rules?: Maybe<Order_By>;
+  type?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: alert_config_service */
+export type Alert_Config_Service_Pk_Columns_Input = {
+  project_id: Scalars['uuid'];
+  type: Alert_Service_Type_Enum;
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Alert_Config_Service_Prepend_Input = {
+  rules?: Maybe<Scalars['jsonb']>;
+};
+
+/** select columns of table "alert_config_service" */
+export enum Alert_Config_Service_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Enabled = 'enabled',
+  /** column name */
+  Metadata = 'metadata',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  Rules = 'rules',
+  /** column name */
+  Type = 'type',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** select "alert_config_service_aggregate_bool_exp_bool_and_arguments_columns" columns of table "alert_config_service" */
+export enum Alert_Config_Service_Select_Column_Alert_Config_Service_Aggregate_Bool_Exp_Bool_And_Arguments_Columns {
+  /** column name */
+  Enabled = 'enabled',
+}
+
+/** select "alert_config_service_aggregate_bool_exp_bool_or_arguments_columns" columns of table "alert_config_service" */
+export enum Alert_Config_Service_Select_Column_Alert_Config_Service_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns {
+  /** column name */
+  Enabled = 'enabled',
+}
+
+/** input type for updating data in table "alert_config_service" */
+export type Alert_Config_Service_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  metadata?: Maybe<Scalars['json']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['jsonb']>;
+  type?: Maybe<Alert_Service_Type_Enum>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** Streaming cursor of the table "alert_config_service" */
+export type Alert_Config_Service_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Alert_Config_Service_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Alert_Config_Service_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  metadata?: Maybe<Scalars['json']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  rules?: Maybe<Scalars['jsonb']>;
+  type?: Maybe<Alert_Service_Type_Enum>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** update columns of table "alert_config_service" */
+export enum Alert_Config_Service_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Enabled = 'enabled',
+  /** column name */
+  Metadata = 'metadata',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  Rules = 'rules',
+  /** column name */
+  Type = 'type',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Alert_Config_Service_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: Maybe<Alert_Config_Service_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: Maybe<Alert_Config_Service_Delete_At_Path_Input>;
+  /**
+   * delete the array element with specified index (negative integers count from
+   * the end). throws an error if top level container is not an array
+   */
+  _delete_elem?: Maybe<Alert_Config_Service_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: Maybe<Alert_Config_Service_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: Maybe<Alert_Config_Service_Prepend_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Alert_Config_Service_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Alert_Config_Service_Bool_Exp;
+};
+
+/** input type for updating data in table "alert_config" */
+export type Alert_Config_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** Streaming cursor of the table "alert_config" */
+export type Alert_Config_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Alert_Config_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Alert_Config_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  enabled?: Maybe<Scalars['Boolean']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** update columns of table "alert_config" */
+export enum Alert_Config_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Enabled = 'enabled',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Alert_Config_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Alert_Config_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Alert_Config_Bool_Exp;
+};
+
+/** Alert notification service type enum */
+export type Alert_Service_Type = {
+  __typename?: 'alert_service_type';
+  description: Scalars['String'];
+  name: Scalars['String'];
+};
+
+/** aggregated selection of "alert_service_type" */
+export type Alert_Service_Type_Aggregate = {
+  __typename?: 'alert_service_type_aggregate';
+  aggregate?: Maybe<Alert_Service_Type_Aggregate_Fields>;
+  nodes: Array<Alert_Service_Type>;
+};
+
+/** aggregate fields of "alert_service_type" */
+export type Alert_Service_Type_Aggregate_Fields = {
+  __typename?: 'alert_service_type_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Alert_Service_Type_Max_Fields>;
+  min?: Maybe<Alert_Service_Type_Min_Fields>;
+};
+
+/** aggregate fields of "alert_service_type" */
+export type Alert_Service_Type_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Alert_Service_Type_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "alert_service_type". All fields are combined with a logical 'AND'. */
+export type Alert_Service_Type_Bool_Exp = {
+  _and?: Maybe<Array<Alert_Service_Type_Bool_Exp>>;
+  _not?: Maybe<Alert_Service_Type_Bool_Exp>;
+  _or?: Maybe<Array<Alert_Service_Type_Bool_Exp>>;
+  description?: Maybe<String_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "alert_service_type" */
+export enum Alert_Service_Type_Constraint {
+  /** unique or primary key constraint on columns "name" */
+  AlertServiceTypePkey = 'alert_service_type_pkey',
+}
+
+export enum Alert_Service_Type_Enum {
+  /** Mail */
+  Mail = 'mail',
+  /** Slack Notifier */
+  Slack = 'slack',
+}
+
+/** Boolean expression to compare columns of type "alert_service_type_enum". All fields are combined with logical 'AND'. */
+export type Alert_Service_Type_Enum_Comparison_Exp = {
+  _eq?: Maybe<Alert_Service_Type_Enum>;
+  _in?: Maybe<Array<Alert_Service_Type_Enum>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _neq?: Maybe<Alert_Service_Type_Enum>;
+  _nin?: Maybe<Array<Alert_Service_Type_Enum>>;
+};
+
+/** input type for inserting data into table "alert_service_type" */
+export type Alert_Service_Type_Insert_Input = {
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Alert_Service_Type_Max_Fields = {
+  __typename?: 'alert_service_type_max_fields';
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type Alert_Service_Type_Min_Fields = {
+  __typename?: 'alert_service_type_min_fields';
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** response of any mutation on the table "alert_service_type" */
+export type Alert_Service_Type_Mutation_Response = {
+  __typename?: 'alert_service_type_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Alert_Service_Type>;
+};
+
+/** on_conflict condition type for table "alert_service_type" */
+export type Alert_Service_Type_On_Conflict = {
+  constraint: Alert_Service_Type_Constraint;
+  update_columns?: Array<Alert_Service_Type_Update_Column>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "alert_service_type". */
+export type Alert_Service_Type_Order_By = {
+  description?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: alert_service_type */
+export type Alert_Service_Type_Pk_Columns_Input = {
+  name: Scalars['String'];
+};
+
+/** select columns of table "alert_service_type" */
+export enum Alert_Service_Type_Select_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Name = 'name',
+}
+
+/** input type for updating data in table "alert_service_type" */
+export type Alert_Service_Type_Set_Input = {
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** Streaming cursor of the table "alert_service_type" */
+export type Alert_Service_Type_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Alert_Service_Type_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Alert_Service_Type_Stream_Cursor_Value_Input = {
+  description?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "alert_service_type" */
+export enum Alert_Service_Type_Update_Column {
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Name = 'name',
+}
+
+export type Alert_Service_Type_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Alert_Service_Type_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Alert_Service_Type_Bool_Exp;
+};
+
+/** Alert type enum for alert configuration */
+export type Alert_Type = {
+  __typename?: 'alert_type';
+  always_enabled: Scalars['Boolean'];
+  description: Scalars['String'];
+  hidden: Scalars['Boolean'];
+  id: Scalars['String'];
+  name: Scalars['String'];
+  template?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "alert_type" */
+export type Alert_Type_Aggregate = {
+  __typename?: 'alert_type_aggregate';
+  aggregate?: Maybe<Alert_Type_Aggregate_Fields>;
+  nodes: Array<Alert_Type>;
+};
+
+/** aggregate fields of "alert_type" */
+export type Alert_Type_Aggregate_Fields = {
+  __typename?: 'alert_type_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Alert_Type_Max_Fields>;
+  min?: Maybe<Alert_Type_Min_Fields>;
+};
+
+/** aggregate fields of "alert_type" */
+export type Alert_Type_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Alert_Type_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "alert_type". All fields are combined with a logical 'AND'. */
+export type Alert_Type_Bool_Exp = {
+  _and?: Maybe<Array<Alert_Type_Bool_Exp>>;
+  _not?: Maybe<Alert_Type_Bool_Exp>;
+  _or?: Maybe<Array<Alert_Type_Bool_Exp>>;
+  always_enabled?: Maybe<Boolean_Comparison_Exp>;
+  description?: Maybe<String_Comparison_Exp>;
+  hidden?: Maybe<Boolean_Comparison_Exp>;
+  id?: Maybe<String_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+  template?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "alert_type" */
+export enum Alert_Type_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  AlertTypePkey = 'alert_type_pkey',
+}
+
+/** input type for inserting data into table "alert_type" */
+export type Alert_Type_Insert_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
+  description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
+  id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  template?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Alert_Type_Max_Fields = {
+  __typename?: 'alert_type_max_fields';
+  description?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  template?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type Alert_Type_Min_Fields = {
+  __typename?: 'alert_type_min_fields';
+  description?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  template?: Maybe<Scalars['String']>;
+};
+
+/** response of any mutation on the table "alert_type" */
+export type Alert_Type_Mutation_Response = {
+  __typename?: 'alert_type_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Alert_Type>;
+};
+
+/** input type for inserting object relation for remote table "alert_type" */
+export type Alert_Type_Obj_Rel_Insert_Input = {
+  data: Alert_Type_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<Alert_Type_On_Conflict>;
+};
+
+/** on_conflict condition type for table "alert_type" */
+export type Alert_Type_On_Conflict = {
+  constraint: Alert_Type_Constraint;
+  update_columns?: Array<Alert_Type_Update_Column>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "alert_type". */
+export type Alert_Type_Order_By = {
+  always_enabled?: Maybe<Order_By>;
+  description?: Maybe<Order_By>;
+  hidden?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+  template?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: alert_type */
+export type Alert_Type_Pk_Columns_Input = {
+  id: Scalars['String'];
+};
+
+/** select columns of table "alert_type" */
+export enum Alert_Type_Select_Column {
+  /** column name */
+  AlwaysEnabled = 'always_enabled',
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Hidden = 'hidden',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  Template = 'template',
+}
+
+/** input type for updating data in table "alert_type" */
+export type Alert_Type_Set_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
+  description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
+  id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  template?: Maybe<Scalars['String']>;
+};
+
+/** Streaming cursor of the table "alert_type" */
+export type Alert_Type_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Alert_Type_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Alert_Type_Stream_Cursor_Value_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
+  description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
+  id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  template?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "alert_type" */
+export enum Alert_Type_Update_Column {
+  /** column name */
+  AlwaysEnabled = 'always_enabled',
+  /** column name */
+  Description = 'description',
+  /** column name */
+  Hidden = 'hidden',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  Template = 'template',
+}
+
+export type Alert_Type_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Alert_Type_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Alert_Type_Bool_Exp;
 };
 
 export type AllowedProjectResponse = {
@@ -2328,6 +3448,149 @@ export type Cloud_Pk_Columns_Input = {
   name: Scalars['String'];
 };
 
+/** columns and relationships of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_Plan = {
+  __typename?: 'cloud_regions_by_plan';
+  cloud?: Maybe<Scalars['String']>;
+  infra_status?: Maybe<Scalars['String']>;
+  input_variables?: Maybe<Scalars['jsonb']>;
+  is_active?: Maybe<Scalars['Boolean']>;
+  metrics_fqdn?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  nat_ip?: Maybe<Scalars['String']>;
+  output_variables?: Maybe<Scalars['jsonb']>;
+  plan_name?: Maybe<Scalars['String']>;
+  /** An object relationship */
+  region?: Maybe<Region>;
+};
+
+/** columns and relationships of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_PlanInput_VariablesArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** columns and relationships of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_PlanOutput_VariablesArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_Plan_Aggregate = {
+  __typename?: 'cloud_regions_by_plan_aggregate';
+  aggregate?: Maybe<Cloud_Regions_By_Plan_Aggregate_Fields>;
+  nodes: Array<Cloud_Regions_By_Plan>;
+};
+
+/** aggregate fields of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_Plan_Aggregate_Fields = {
+  __typename?: 'cloud_regions_by_plan_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Cloud_Regions_By_Plan_Max_Fields>;
+  min?: Maybe<Cloud_Regions_By_Plan_Min_Fields>;
+};
+
+/** aggregate fields of "cloud_regions_by_plan" */
+export type Cloud_Regions_By_Plan_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Cloud_Regions_By_Plan_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "cloud_regions_by_plan". All fields are combined with a logical 'AND'. */
+export type Cloud_Regions_By_Plan_Bool_Exp = {
+  _and?: Maybe<Array<Cloud_Regions_By_Plan_Bool_Exp>>;
+  _not?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+  _or?: Maybe<Array<Cloud_Regions_By_Plan_Bool_Exp>>;
+  cloud?: Maybe<String_Comparison_Exp>;
+  infra_status?: Maybe<String_Comparison_Exp>;
+  input_variables?: Maybe<Jsonb_Comparison_Exp>;
+  is_active?: Maybe<Boolean_Comparison_Exp>;
+  metrics_fqdn?: Maybe<String_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+  nat_ip?: Maybe<String_Comparison_Exp>;
+  output_variables?: Maybe<Jsonb_Comparison_Exp>;
+  plan_name?: Maybe<String_Comparison_Exp>;
+  region?: Maybe<Region_Bool_Exp>;
+};
+
+/** aggregate max on columns */
+export type Cloud_Regions_By_Plan_Max_Fields = {
+  __typename?: 'cloud_regions_by_plan_max_fields';
+  cloud?: Maybe<Scalars['String']>;
+  infra_status?: Maybe<Scalars['String']>;
+  metrics_fqdn?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  nat_ip?: Maybe<Scalars['String']>;
+  plan_name?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type Cloud_Regions_By_Plan_Min_Fields = {
+  __typename?: 'cloud_regions_by_plan_min_fields';
+  cloud?: Maybe<Scalars['String']>;
+  infra_status?: Maybe<Scalars['String']>;
+  metrics_fqdn?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  nat_ip?: Maybe<Scalars['String']>;
+  plan_name?: Maybe<Scalars['String']>;
+};
+
+/** Ordering options when selecting data from "cloud_regions_by_plan". */
+export type Cloud_Regions_By_Plan_Order_By = {
+  cloud?: Maybe<Order_By>;
+  infra_status?: Maybe<Order_By>;
+  input_variables?: Maybe<Order_By>;
+  is_active?: Maybe<Order_By>;
+  metrics_fqdn?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+  nat_ip?: Maybe<Order_By>;
+  output_variables?: Maybe<Order_By>;
+  plan_name?: Maybe<Order_By>;
+  region?: Maybe<Region_Order_By>;
+};
+
+/** select columns of table "cloud_regions_by_plan" */
+export enum Cloud_Regions_By_Plan_Select_Column {
+  /** column name */
+  Cloud = 'cloud',
+  /** column name */
+  InfraStatus = 'infra_status',
+  /** column name */
+  InputVariables = 'input_variables',
+  /** column name */
+  IsActive = 'is_active',
+  /** column name */
+  MetricsFqdn = 'metrics_fqdn',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  NatIp = 'nat_ip',
+  /** column name */
+  OutputVariables = 'output_variables',
+  /** column name */
+  PlanName = 'plan_name',
+}
+
+/** Streaming cursor of the table "cloud_regions_by_plan" */
+export type Cloud_Regions_By_Plan_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Cloud_Regions_By_Plan_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Cloud_Regions_By_Plan_Stream_Cursor_Value_Input = {
+  cloud?: Maybe<Scalars['String']>;
+  infra_status?: Maybe<Scalars['String']>;
+  input_variables?: Maybe<Scalars['jsonb']>;
+  is_active?: Maybe<Scalars['Boolean']>;
+  metrics_fqdn?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  nat_ip?: Maybe<Scalars['String']>;
+  output_variables?: Maybe<Scalars['jsonb']>;
+  plan_name?: Maybe<Scalars['String']>;
+};
+
 /** select columns of table "cloud" */
 export enum Cloud_Select_Column {
   /** column name */
@@ -2850,6 +4113,8 @@ export type Config_Status = {
   tenant_id: Scalars['uuid'];
   updated_at: Scalars['timestamptz'];
   worker_id: Scalars['uuid'];
+  /** A computed field, executes function "config_status_worker_state" */
+  worker_state?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "config_status" */
@@ -2926,6 +4191,7 @@ export type Config_Status_Bool_Exp = {
   tenant_id?: Maybe<Uuid_Comparison_Exp>;
   updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   worker_id?: Maybe<Uuid_Comparison_Exp>;
+  worker_state?: Maybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "config_status" */
@@ -3008,6 +4274,7 @@ export type Config_Status_Order_By = {
   tenant_id?: Maybe<Order_By>;
   updated_at?: Maybe<Order_By>;
   worker_id?: Maybe<Order_By>;
+  worker_state?: Maybe<Order_By>;
 };
 
 /** primary key columns input for table: config_status */
@@ -3129,6 +4396,803 @@ export type Config_Updates = {
   _set?: Maybe<Config_Set_Input>;
   /** filter the rows which have to be updated */
   where: Config_Bool_Exp;
+};
+
+/** This table contains configuration of custom connectors added by users.  */
+export type Connector_Config = {
+  __typename?: 'connector_config';
+  created_at: Scalars['timestamptz'];
+  created_by: Scalars['uuid'];
+  deployment_url?: Maybe<Scalars['String']>;
+  id: Scalars['uuid'];
+  is_deleted: Scalars['Boolean'];
+  name: Scalars['String'];
+  project_id: Scalars['uuid'];
+  source_url: Scalars['String'];
+  updated_at: Scalars['timestamptz'];
+};
+
+/** aggregated selection of "connector_config" */
+export type Connector_Config_Aggregate = {
+  __typename?: 'connector_config_aggregate';
+  aggregate?: Maybe<Connector_Config_Aggregate_Fields>;
+  nodes: Array<Connector_Config>;
+};
+
+/** aggregate fields of "connector_config" */
+export type Connector_Config_Aggregate_Fields = {
+  __typename?: 'connector_config_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Connector_Config_Max_Fields>;
+  min?: Maybe<Connector_Config_Min_Fields>;
+};
+
+/** aggregate fields of "connector_config" */
+export type Connector_Config_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Connector_Config_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "connector_config". All fields are combined with a logical 'AND'. */
+export type Connector_Config_Bool_Exp = {
+  _and?: Maybe<Array<Connector_Config_Bool_Exp>>;
+  _not?: Maybe<Connector_Config_Bool_Exp>;
+  _or?: Maybe<Array<Connector_Config_Bool_Exp>>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  created_by?: Maybe<Uuid_Comparison_Exp>;
+  deployment_url?: Maybe<String_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  is_deleted?: Maybe<Boolean_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  source_url?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "connector_config" */
+export enum Connector_Config_Constraint {
+  /** unique or primary key constraint on columns "name" */
+  ConnectorConfigNameKey = 'connector_config_name_key',
+  /** unique or primary key constraint on columns "id" */
+  ConnectorConfigPkey = 'connector_config_pkey',
+}
+
+/** input type for inserting data into table "connector_config" */
+export type Connector_Config_Insert_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  deployment_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  is_deleted?: Maybe<Scalars['Boolean']>;
+  name?: Maybe<Scalars['String']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  source_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate max on columns */
+export type Connector_Config_Max_Fields = {
+  __typename?: 'connector_config_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  deployment_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  source_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate min on columns */
+export type Connector_Config_Min_Fields = {
+  __typename?: 'connector_config_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  deployment_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  source_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** response of any mutation on the table "connector_config" */
+export type Connector_Config_Mutation_Response = {
+  __typename?: 'connector_config_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Connector_Config>;
+};
+
+/** on_conflict condition type for table "connector_config" */
+export type Connector_Config_On_Conflict = {
+  constraint: Connector_Config_Constraint;
+  update_columns?: Array<Connector_Config_Update_Column>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "connector_config". */
+export type Connector_Config_Order_By = {
+  created_at?: Maybe<Order_By>;
+  created_by?: Maybe<Order_By>;
+  deployment_url?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  is_deleted?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  source_url?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: connector_config */
+export type Connector_Config_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** select columns of table "connector_config" */
+export enum Connector_Config_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  DeploymentUrl = 'deployment_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  IsDeleted = 'is_deleted',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  SourceUrl = 'source_url',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** input type for updating data in table "connector_config" */
+export type Connector_Config_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  deployment_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  is_deleted?: Maybe<Scalars['Boolean']>;
+  name?: Maybe<Scalars['String']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  source_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** Streaming cursor of the table "connector_config" */
+export type Connector_Config_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Connector_Config_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Connector_Config_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  deployment_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  is_deleted?: Maybe<Scalars['Boolean']>;
+  name?: Maybe<Scalars['String']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  source_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** update columns of table "connector_config" */
+export enum Connector_Config_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  DeploymentUrl = 'deployment_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  IsDeleted = 'is_deleted',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  SourceUrl = 'source_url',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Connector_Config_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Connector_Config_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Connector_Config_Bool_Exp;
+};
+
+/** This table contains configuration of custom connectors deployed by users.  */
+export type Connector_Connector_Deployment = {
+  __typename?: 'connector_connector_deployment';
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at: Scalars['connector_timestamptz'];
+  created_by: Scalars['connector_uuid'];
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id: Scalars['connector_uuid'];
+  image_url?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  source_url: Scalars['String'];
+  status: Scalars['connector_deployment_status'];
+  updated_at: Scalars['connector_timestamptz'];
+  user_id: Scalars['connector_uuid'];
+};
+
+/** aggregated selection of "connector_deployment" */
+export type Connector_Connector_Deployment_Aggregate = {
+  __typename?: 'connector_connector_deployment_aggregate';
+  aggregate?: Maybe<Connector_Connector_Deployment_Aggregate_Fields>;
+  nodes: Array<Connector_Connector_Deployment>;
+};
+
+/** aggregate fields of "connector_deployment" */
+export type Connector_Connector_Deployment_Aggregate_Fields = {
+  __typename?: 'connector_connector_deployment_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Connector_Connector_Deployment_Max_Fields>;
+  min?: Maybe<Connector_Connector_Deployment_Min_Fields>;
+};
+
+/** aggregate fields of "connector_deployment" */
+export type Connector_Connector_Deployment_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Connector_Connector_Deployment_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "connector_deployment". All fields are combined with a logical 'AND'. */
+export type Connector_Connector_Deployment_Bool_Exp = {
+  _and?: Maybe<Array<Connector_Connector_Deployment_Bool_Exp>>;
+  _not?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+  _or?: Maybe<Array<Connector_Connector_Deployment_Bool_Exp>>;
+  build_logs_url?: Maybe<Connector_String_Comparison_Exp>;
+  cloud_run_url?: Maybe<Connector_String_Comparison_Exp>;
+  config_file?: Maybe<Connector_String_Comparison_Exp>;
+  created_at?: Maybe<Connector_Timestamptz_Comparison_Exp>;
+  created_by?: Maybe<Connector_Uuid_Comparison_Exp>;
+  error?: Maybe<Connector_String_Comparison_Exp>;
+  gcs_url?: Maybe<Connector_String_Comparison_Exp>;
+  id?: Maybe<Connector_Uuid_Comparison_Exp>;
+  image_url?: Maybe<Connector_String_Comparison_Exp>;
+  name?: Maybe<Connector_String_Comparison_Exp>;
+  source_url?: Maybe<Connector_String_Comparison_Exp>;
+  status?: Maybe<Connector_Deployment_Status_Comparison_Exp>;
+  updated_at?: Maybe<Connector_Timestamptz_Comparison_Exp>;
+  user_id?: Maybe<Connector_Uuid_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "connector_deployment" */
+export enum Connector_Connector_Deployment_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  ConnectorDeploymentPkey = 'connector_deployment_pkey',
+  /** unique or primary key constraint on columns "user_id", "name" */
+  UniqueNameWithinUser = 'unique_name_within_user',
+}
+
+/** input type for inserting data into table "connector_deployment" */
+export type Connector_Connector_Deployment_Insert_Input = {
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['connector_timestamptz']>;
+  created_by?: Maybe<Scalars['connector_uuid']>;
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['connector_uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  source_url?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['connector_deployment_status']>;
+  updated_at?: Maybe<Scalars['connector_timestamptz']>;
+  user_id?: Maybe<Scalars['connector_uuid']>;
+};
+
+/** aggregate max on columns */
+export type Connector_Connector_Deployment_Max_Fields = {
+  __typename?: 'connector_connector_deployment_max_fields';
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['connector_timestamptz']>;
+  created_by?: Maybe<Scalars['connector_uuid']>;
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['connector_uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  source_url?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['connector_deployment_status']>;
+  updated_at?: Maybe<Scalars['connector_timestamptz']>;
+  user_id?: Maybe<Scalars['connector_uuid']>;
+};
+
+/** aggregate min on columns */
+export type Connector_Connector_Deployment_Min_Fields = {
+  __typename?: 'connector_connector_deployment_min_fields';
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['connector_timestamptz']>;
+  created_by?: Maybe<Scalars['connector_uuid']>;
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['connector_uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  source_url?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['connector_deployment_status']>;
+  updated_at?: Maybe<Scalars['connector_timestamptz']>;
+  user_id?: Maybe<Scalars['connector_uuid']>;
+};
+
+/** response of any mutation on the table "connector_deployment" */
+export type Connector_Connector_Deployment_Mutation_Response = {
+  __typename?: 'connector_connector_deployment_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Connector_Connector_Deployment>;
+};
+
+/** on_conflict condition type for table "connector_deployment" */
+export type Connector_Connector_Deployment_On_Conflict = {
+  constraint: Connector_Connector_Deployment_Constraint;
+  update_columns?: Array<Connector_Connector_Deployment_Update_Column>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "connector_deployment". */
+export type Connector_Connector_Deployment_Order_By = {
+  build_logs_url?: Maybe<Connector_Order_By>;
+  cloud_run_url?: Maybe<Connector_Order_By>;
+  config_file?: Maybe<Connector_Order_By>;
+  created_at?: Maybe<Connector_Order_By>;
+  created_by?: Maybe<Connector_Order_By>;
+  error?: Maybe<Connector_Order_By>;
+  gcs_url?: Maybe<Connector_Order_By>;
+  id?: Maybe<Connector_Order_By>;
+  image_url?: Maybe<Connector_Order_By>;
+  name?: Maybe<Connector_Order_By>;
+  source_url?: Maybe<Connector_Order_By>;
+  status?: Maybe<Connector_Order_By>;
+  updated_at?: Maybe<Connector_Order_By>;
+  user_id?: Maybe<Connector_Order_By>;
+};
+
+/** primary key columns input for table: connector_deployment */
+export type Connector_Connector_Deployment_Pk_Columns_Input = {
+  id: Scalars['connector_uuid'];
+};
+
+/** select columns of table "connector_deployment" */
+export enum Connector_Connector_Deployment_Select_Column {
+  /** column name */
+  BuildLogsUrl = 'build_logs_url',
+  /** column name */
+  CloudRunUrl = 'cloud_run_url',
+  /** column name */
+  ConfigFile = 'config_file',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  Error = 'error',
+  /** column name */
+  GcsUrl = 'gcs_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ImageUrl = 'image_url',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  SourceUrl = 'source_url',
+  /** column name */
+  Status = 'status',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  UserId = 'user_id',
+}
+
+/** input type for updating data in table "connector_deployment" */
+export type Connector_Connector_Deployment_Set_Input = {
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['connector_timestamptz']>;
+  created_by?: Maybe<Scalars['connector_uuid']>;
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['connector_uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  source_url?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['connector_deployment_status']>;
+  updated_at?: Maybe<Scalars['connector_timestamptz']>;
+  user_id?: Maybe<Scalars['connector_uuid']>;
+};
+
+/** Streaming cursor of the table "connector_deployment" */
+export type Connector_Connector_Deployment_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Connector_Connector_Deployment_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Connector_Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Connector_Connector_Deployment_Stream_Cursor_Value_Input = {
+  build_logs_url?: Maybe<Scalars['String']>;
+  cloud_run_url?: Maybe<Scalars['String']>;
+  config_file?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['connector_timestamptz']>;
+  created_by?: Maybe<Scalars['connector_uuid']>;
+  error?: Maybe<Scalars['String']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['connector_uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
+  source_url?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['connector_deployment_status']>;
+  updated_at?: Maybe<Scalars['connector_timestamptz']>;
+  user_id?: Maybe<Scalars['connector_uuid']>;
+};
+
+/** update columns of table "connector_deployment" */
+export enum Connector_Connector_Deployment_Update_Column {
+  /** column name */
+  BuildLogsUrl = 'build_logs_url',
+  /** column name */
+  CloudRunUrl = 'cloud_run_url',
+  /** column name */
+  ConfigFile = 'config_file',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  Error = 'error',
+  /** column name */
+  GcsUrl = 'gcs_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ImageUrl = 'image_url',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  SourceUrl = 'source_url',
+  /** column name */
+  Status = 'status',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  UserId = 'user_id',
+}
+
+export type Connector_Connector_Deployment_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Connector_Connector_Deployment_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Connector_Connector_Deployment_Bool_Exp;
+};
+
+/** ordering argument of a cursor */
+export enum Connector_Cursor_Ordering {
+  /** ascending ordering of the cursor */
+  Asc = 'ASC',
+  /** descending ordering of the cursor */
+  Desc = 'DESC',
+}
+
+/** Boolean expression to compare columns of type "deployment_status". All fields are combined with logical 'AND'. */
+export type Connector_Deployment_Status_Comparison_Exp = {
+  _eq?: Maybe<Scalars['connector_deployment_status']>;
+  _gt?: Maybe<Scalars['connector_deployment_status']>;
+  _gte?: Maybe<Scalars['connector_deployment_status']>;
+  _in?: Maybe<Array<Scalars['connector_deployment_status']>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _lt?: Maybe<Scalars['connector_deployment_status']>;
+  _lte?: Maybe<Scalars['connector_deployment_status']>;
+  _neq?: Maybe<Scalars['connector_deployment_status']>;
+  _nin?: Maybe<Array<Scalars['connector_deployment_status']>>;
+};
+
+/** Each entry in this table corresponds to a deployment made for a custom connector configure by the user. */
+export type Connector_Deployments = {
+  __typename?: 'connector_deployments';
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id: Scalars['uuid'];
+  created_at: Scalars['timestamptz'];
+  created_by: Scalars['uuid'];
+  gcs_url?: Maybe<Scalars['String']>;
+  id: Scalars['uuid'];
+  image_url?: Maybe<Scalars['String']>;
+  updated_at: Scalars['timestamptz'];
+};
+
+/** aggregated selection of "connector_deployments" */
+export type Connector_Deployments_Aggregate = {
+  __typename?: 'connector_deployments_aggregate';
+  aggregate?: Maybe<Connector_Deployments_Aggregate_Fields>;
+  nodes: Array<Connector_Deployments>;
+};
+
+/** aggregate fields of "connector_deployments" */
+export type Connector_Deployments_Aggregate_Fields = {
+  __typename?: 'connector_deployments_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Connector_Deployments_Max_Fields>;
+  min?: Maybe<Connector_Deployments_Min_Fields>;
+};
+
+/** aggregate fields of "connector_deployments" */
+export type Connector_Deployments_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Connector_Deployments_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "connector_deployments". All fields are combined with a logical 'AND'. */
+export type Connector_Deployments_Bool_Exp = {
+  _and?: Maybe<Array<Connector_Deployments_Bool_Exp>>;
+  _not?: Maybe<Connector_Deployments_Bool_Exp>;
+  _or?: Maybe<Array<Connector_Deployments_Bool_Exp>>;
+  cloud_run_url?: Maybe<String_Comparison_Exp>;
+  connector_id?: Maybe<Uuid_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  created_by?: Maybe<Uuid_Comparison_Exp>;
+  gcs_url?: Maybe<String_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  image_url?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "connector_deployments" */
+export enum Connector_Deployments_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  ConnectorDeploymentsPkey = 'connector_deployments_pkey',
+}
+
+/** input type for inserting data into table "connector_deployments" */
+export type Connector_Deployments_Insert_Input = {
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate max on columns */
+export type Connector_Deployments_Max_Fields = {
+  __typename?: 'connector_deployments_max_fields';
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** aggregate min on columns */
+export type Connector_Deployments_Min_Fields = {
+  __typename?: 'connector_deployments_min_fields';
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** response of any mutation on the table "connector_deployments" */
+export type Connector_Deployments_Mutation_Response = {
+  __typename?: 'connector_deployments_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Connector_Deployments>;
+};
+
+/** on_conflict condition type for table "connector_deployments" */
+export type Connector_Deployments_On_Conflict = {
+  constraint: Connector_Deployments_Constraint;
+  update_columns?: Array<Connector_Deployments_Update_Column>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "connector_deployments". */
+export type Connector_Deployments_Order_By = {
+  cloud_run_url?: Maybe<Order_By>;
+  connector_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  created_by?: Maybe<Order_By>;
+  gcs_url?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  image_url?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: connector_deployments */
+export type Connector_Deployments_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** select columns of table "connector_deployments" */
+export enum Connector_Deployments_Select_Column {
+  /** column name */
+  CloudRunUrl = 'cloud_run_url',
+  /** column name */
+  ConnectorId = 'connector_id',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  GcsUrl = 'gcs_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ImageUrl = 'image_url',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** input type for updating data in table "connector_deployments" */
+export type Connector_Deployments_Set_Input = {
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** Streaming cursor of the table "connector_deployments" */
+export type Connector_Deployments_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Connector_Deployments_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Connector_Deployments_Stream_Cursor_Value_Input = {
+  cloud_run_url?: Maybe<Scalars['String']>;
+  connector_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  created_by?: Maybe<Scalars['uuid']>;
+  gcs_url?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['uuid']>;
+  image_url?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+};
+
+/** update columns of table "connector_deployments" */
+export enum Connector_Deployments_Update_Column {
+  /** column name */
+  CloudRunUrl = 'cloud_run_url',
+  /** column name */
+  ConnectorId = 'connector_id',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  CreatedBy = 'created_by',
+  /** column name */
+  GcsUrl = 'gcs_url',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ImageUrl = 'image_url',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Connector_Deployments_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Connector_Deployments_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Connector_Deployments_Bool_Exp;
+};
+
+/** column ordering options */
+export enum Connector_Order_By {
+  /** in ascending order, nulls last */
+  Asc = 'asc',
+  /** in ascending order, nulls first */
+  AscNullsFirst = 'asc_nulls_first',
+  /** in ascending order, nulls last */
+  AscNullsLast = 'asc_nulls_last',
+  /** in descending order, nulls first */
+  Desc = 'desc',
+  /** in descending order, nulls first */
+  DescNullsFirst = 'desc_nulls_first',
+  /** in descending order, nulls last */
+  DescNullsLast = 'desc_nulls_last',
+}
+
+/** Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'. */
+export type Connector_String_Comparison_Exp = {
+  _eq?: Maybe<Scalars['String']>;
+  _gt?: Maybe<Scalars['String']>;
+  _gte?: Maybe<Scalars['String']>;
+  /** does the column match the given case-insensitive pattern */
+  _ilike?: Maybe<Scalars['String']>;
+  _in?: Maybe<Array<Scalars['String']>>;
+  /** does the column match the given POSIX regular expression, case insensitive */
+  _iregex?: Maybe<Scalars['String']>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  /** does the column match the given pattern */
+  _like?: Maybe<Scalars['String']>;
+  _lt?: Maybe<Scalars['String']>;
+  _lte?: Maybe<Scalars['String']>;
+  _neq?: Maybe<Scalars['String']>;
+  /** does the column NOT match the given case-insensitive pattern */
+  _nilike?: Maybe<Scalars['String']>;
+  _nin?: Maybe<Array<Scalars['String']>>;
+  /** does the column NOT match the given POSIX regular expression, case insensitive */
+  _niregex?: Maybe<Scalars['String']>;
+  /** does the column NOT match the given pattern */
+  _nlike?: Maybe<Scalars['String']>;
+  /** does the column NOT match the given POSIX regular expression, case sensitive */
+  _nregex?: Maybe<Scalars['String']>;
+  /** does the column NOT match the given SQL regular expression */
+  _nsimilar?: Maybe<Scalars['String']>;
+  /** does the column match the given POSIX regular expression, case sensitive */
+  _regex?: Maybe<Scalars['String']>;
+  /** does the column match the given SQL regular expression */
+  _similar?: Maybe<Scalars['String']>;
+};
+
+/** Boolean expression to compare columns of type "timestamptz". All fields are combined with logical 'AND'. */
+export type Connector_Timestamptz_Comparison_Exp = {
+  _eq?: Maybe<Scalars['connector_timestamptz']>;
+  _gt?: Maybe<Scalars['connector_timestamptz']>;
+  _gte?: Maybe<Scalars['connector_timestamptz']>;
+  _in?: Maybe<Array<Scalars['connector_timestamptz']>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _lt?: Maybe<Scalars['connector_timestamptz']>;
+  _lte?: Maybe<Scalars['connector_timestamptz']>;
+  _neq?: Maybe<Scalars['connector_timestamptz']>;
+  _nin?: Maybe<Array<Scalars['connector_timestamptz']>>;
+};
+
+/** Boolean expression to compare columns of type "uuid". All fields are combined with logical 'AND'. */
+export type Connector_Uuid_Comparison_Exp = {
+  _eq?: Maybe<Scalars['connector_uuid']>;
+  _gt?: Maybe<Scalars['connector_uuid']>;
+  _gte?: Maybe<Scalars['connector_uuid']>;
+  _in?: Maybe<Array<Scalars['connector_uuid']>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _lt?: Maybe<Scalars['connector_uuid']>;
+  _lte?: Maybe<Scalars['connector_uuid']>;
+  _neq?: Maybe<Scalars['connector_uuid']>;
+  _nin?: Maybe<Array<Scalars['connector_uuid']>>;
 };
 
 export type ConvertPlanResponse = {
@@ -6011,6 +8075,7 @@ export enum Data_Connector_Type_Constraint {
 }
 
 export enum Data_Connector_Type_Enum {
+  MongodbConnector = 'mongodb_connector',
   SuperConnector = 'super_connector',
 }
 
@@ -6780,7 +8845,8 @@ export type Ddn_Build = {
   build_sync_statuses: Array<Ddn_Build_Sync_Status>;
   /** An aggregate relationship */
   build_sync_statuses_aggregate: Ddn_Build_Sync_Status_Aggregate;
-  created_at: Scalars['timestamp'];
+  created_at: Scalars['timestamptz'];
+  description?: Maybe<Scalars['String']>;
   /** An array relationship */
   environments: Array<Ddn_Environment>;
   /** An aggregate relationship */
@@ -6790,10 +8856,13 @@ export type Ddn_Build = {
   /** this will be later moved to a blob storage */
   metadata_binary?: Maybe<Scalars['bytea']>;
   metadata_raw: Scalars['String'];
+  ndc_configs: Scalars['jsonb'];
+  parent_span_id?: Maybe<Scalars['String']>;
   /** An object relationship */
   project: Ddn_Projects;
   project_id: Scalars['uuid'];
-  updated_at: Scalars['timestamp'];
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at: Scalars['timestamptz'];
   version: Scalars['String'];
 };
 
@@ -6831,6 +8900,11 @@ export type Ddn_BuildEnvironments_AggregateArgs = {
   offset?: Maybe<Scalars['Int']>;
   order_by?: Maybe<Array<Ddn_Environment_Order_By>>;
   where?: Maybe<Ddn_Environment_Bool_Exp>;
+};
+
+/** columns and relationships of "ddn.build" */
+export type Ddn_BuildNdc_ConfigsArgs = {
+  path?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "ddn.build" */
@@ -6872,6 +8946,11 @@ export type Ddn_Build_Aggregate_Order_By = {
   min?: Maybe<Ddn_Build_Min_Order_By>;
 };
 
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Ddn_Build_Append_Input = {
+  ndc_configs?: Maybe<Scalars['jsonb']>;
+};
+
 /** input type for inserting array relation for remote table "ddn.build" */
 export type Ddn_Build_Arr_Rel_Insert_Input = {
   data: Array<Ddn_Build_Insert_Input>;
@@ -6886,16 +8965,20 @@ export type Ddn_Build_Bool_Exp = {
   _or?: Maybe<Array<Ddn_Build_Bool_Exp>>;
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Bool_Exp>;
   build_sync_statuses_aggregate?: Maybe<Ddn_Build_Sync_Status_Aggregate_Bool_Exp>;
-  created_at?: Maybe<Timestamp_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  description?: Maybe<String_Comparison_Exp>;
   environments?: Maybe<Ddn_Environment_Bool_Exp>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Bool_Exp>;
   fqdn?: Maybe<String_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   metadata_binary?: Maybe<Bytea_Comparison_Exp>;
   metadata_raw?: Maybe<String_Comparison_Exp>;
+  ndc_configs?: Maybe<Jsonb_Comparison_Exp>;
+  parent_span_id?: Maybe<String_Comparison_Exp>;
   project?: Maybe<Ddn_Projects_Bool_Exp>;
   project_id?: Maybe<Uuid_Comparison_Exp>;
-  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+  trace_id?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   version?: Maybe<String_Comparison_Exp>;
 };
 
@@ -6905,43 +8988,73 @@ export enum Ddn_Build_Constraint {
   BuildFqdnKey = 'build_fqdn_key',
   /** unique or primary key constraint on columns "id" */
   BuildPkey = 'build_pkey',
+  /** unique or primary key constraint on columns "project_id", "id" */
+  UniqueProjectAndBuild = 'unique_project_and_build',
 }
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Ddn_Build_Delete_At_Path_Input = {
+  ndc_configs?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type Ddn_Build_Delete_Elem_Input = {
+  ndc_configs?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Ddn_Build_Delete_Key_Input = {
+  ndc_configs?: Maybe<Scalars['String']>;
+};
 
 /** input type for inserting data into table "ddn.build" */
 export type Ddn_Build_Insert_Input = {
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Arr_Rel_Insert_Input>;
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  description?: Maybe<Scalars['String']>;
   environments?: Maybe<Ddn_Environment_Arr_Rel_Insert_Input>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   /** this will be later moved to a blob storage */
   metadata_binary?: Maybe<Scalars['bytea']>;
   metadata_raw?: Maybe<Scalars['String']>;
+  ndc_configs?: Maybe<Scalars['jsonb']>;
+  parent_span_id?: Maybe<Scalars['String']>;
   project?: Maybe<Ddn_Projects_Obj_Rel_Insert_Input>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   version?: Maybe<Scalars['String']>;
 };
 
 /** aggregate max on columns */
 export type Ddn_Build_Max_Fields = {
   __typename?: 'ddn_build_max_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  description?: Maybe<Scalars['String']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   metadata_raw?: Maybe<Scalars['String']>;
+  parent_span_id?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   version?: Maybe<Scalars['String']>;
 };
 
 /** order by max() on columns of table "ddn.build" */
 export type Ddn_Build_Max_Order_By = {
   created_at?: Maybe<Order_By>;
+  description?: Maybe<Order_By>;
   fqdn?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   metadata_raw?: Maybe<Order_By>;
+  parent_span_id?: Maybe<Order_By>;
   project_id?: Maybe<Order_By>;
+  trace_id?: Maybe<Order_By>;
   updated_at?: Maybe<Order_By>;
   version?: Maybe<Order_By>;
 };
@@ -6949,22 +9062,28 @@ export type Ddn_Build_Max_Order_By = {
 /** aggregate min on columns */
 export type Ddn_Build_Min_Fields = {
   __typename?: 'ddn_build_min_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  description?: Maybe<Scalars['String']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   metadata_raw?: Maybe<Scalars['String']>;
+  parent_span_id?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   version?: Maybe<Scalars['String']>;
 };
 
 /** order by min() on columns of table "ddn.build" */
 export type Ddn_Build_Min_Order_By = {
   created_at?: Maybe<Order_By>;
+  description?: Maybe<Order_By>;
   fqdn?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   metadata_raw?: Maybe<Order_By>;
+  parent_span_id?: Maybe<Order_By>;
   project_id?: Maybe<Order_By>;
+  trace_id?: Maybe<Order_By>;
   updated_at?: Maybe<Order_By>;
   version?: Maybe<Order_By>;
 };
@@ -6996,13 +9115,17 @@ export type Ddn_Build_On_Conflict = {
 export type Ddn_Build_Order_By = {
   build_sync_statuses_aggregate?: Maybe<Ddn_Build_Sync_Status_Aggregate_Order_By>;
   created_at?: Maybe<Order_By>;
+  description?: Maybe<Order_By>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Order_By>;
   fqdn?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   metadata_binary?: Maybe<Order_By>;
   metadata_raw?: Maybe<Order_By>;
+  ndc_configs?: Maybe<Order_By>;
+  parent_span_id?: Maybe<Order_By>;
   project?: Maybe<Ddn_Projects_Order_By>;
   project_id?: Maybe<Order_By>;
+  trace_id?: Maybe<Order_By>;
   updated_at?: Maybe<Order_By>;
   version?: Maybe<Order_By>;
 };
@@ -7012,10 +9135,17 @@ export type Ddn_Build_Pk_Columns_Input = {
   id: Scalars['uuid'];
 };
 
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Ddn_Build_Prepend_Input = {
+  ndc_configs?: Maybe<Scalars['jsonb']>;
+};
+
 /** select columns of table "ddn.build" */
 export enum Ddn_Build_Select_Column {
   /** column name */
   CreatedAt = 'created_at',
+  /** column name */
+  Description = 'description',
   /** column name */
   Fqdn = 'fqdn',
   /** column name */
@@ -7025,7 +9155,13 @@ export enum Ddn_Build_Select_Column {
   /** column name */
   MetadataRaw = 'metadata_raw',
   /** column name */
+  NdcConfigs = 'ndc_configs',
+  /** column name */
+  ParentSpanId = 'parent_span_id',
+  /** column name */
   ProjectId = 'project_id',
+  /** column name */
+  TraceId = 'trace_id',
   /** column name */
   UpdatedAt = 'updated_at',
   /** column name */
@@ -7034,14 +9170,18 @@ export enum Ddn_Build_Select_Column {
 
 /** input type for updating data in table "ddn.build" */
 export type Ddn_Build_Set_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  description?: Maybe<Scalars['String']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   /** this will be later moved to a blob storage */
   metadata_binary?: Maybe<Scalars['bytea']>;
   metadata_raw?: Maybe<Scalars['String']>;
+  ndc_configs?: Maybe<Scalars['jsonb']>;
+  parent_span_id?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   version?: Maybe<Scalars['String']>;
 };
 
@@ -7055,14 +9195,18 @@ export type Ddn_Build_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Build_Stream_Cursor_Value_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  description?: Maybe<Scalars['String']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   /** this will be later moved to a blob storage */
   metadata_binary?: Maybe<Scalars['bytea']>;
   metadata_raw?: Maybe<Scalars['String']>;
+  ndc_configs?: Maybe<Scalars['jsonb']>;
+  parent_span_id?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  trace_id?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   version?: Maybe<Scalars['String']>;
 };
 
@@ -7074,12 +9218,13 @@ export type Ddn_Build_Sync_Status = {
   build_id: Scalars['uuid'];
   /** An object relationship */
   build_sync_worker: Ddn_Build_Sync_Worker;
+  created_at?: Maybe<Scalars['timestamptz']>;
   /** An object relationship */
   environment?: Maybe<Ddn_Environment>;
   environment_id?: Maybe<Scalars['uuid']>;
   id: Scalars['uuid'];
   status?: Maybe<Scalars['String']>;
-  updated_at: Scalars['timestamp'];
+  updated_at: Scalars['timestamptz'];
   worker_id: Scalars['uuid'];
 };
 
@@ -7137,11 +9282,12 @@ export type Ddn_Build_Sync_Status_Bool_Exp = {
   build?: Maybe<Ddn_Build_Bool_Exp>;
   build_id?: Maybe<Uuid_Comparison_Exp>;
   build_sync_worker?: Maybe<Ddn_Build_Sync_Worker_Bool_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   environment?: Maybe<Ddn_Environment_Bool_Exp>;
   environment_id?: Maybe<Uuid_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   status?: Maybe<String_Comparison_Exp>;
-  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   worker_id?: Maybe<Uuid_Comparison_Exp>;
 };
 
@@ -7158,11 +9304,12 @@ export type Ddn_Build_Sync_Status_Insert_Input = {
   build?: Maybe<Ddn_Build_Obj_Rel_Insert_Input>;
   build_id?: Maybe<Scalars['uuid']>;
   build_sync_worker?: Maybe<Ddn_Build_Sync_Worker_Obj_Rel_Insert_Input>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   environment?: Maybe<Ddn_Environment_Obj_Rel_Insert_Input>;
   environment_id?: Maybe<Scalars['uuid']>;
   id?: Maybe<Scalars['uuid']>;
   status?: Maybe<Scalars['String']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   worker_id?: Maybe<Scalars['uuid']>;
 };
 
@@ -7170,16 +9317,18 @@ export type Ddn_Build_Sync_Status_Insert_Input = {
 export type Ddn_Build_Sync_Status_Max_Fields = {
   __typename?: 'ddn_build_sync_status_max_fields';
   build_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   environment_id?: Maybe<Scalars['uuid']>;
   id?: Maybe<Scalars['uuid']>;
   status?: Maybe<Scalars['String']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   worker_id?: Maybe<Scalars['uuid']>;
 };
 
 /** order by max() on columns of table "ddn.build_sync_status" */
 export type Ddn_Build_Sync_Status_Max_Order_By = {
   build_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
   environment_id?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   status?: Maybe<Order_By>;
@@ -7191,16 +9340,18 @@ export type Ddn_Build_Sync_Status_Max_Order_By = {
 export type Ddn_Build_Sync_Status_Min_Fields = {
   __typename?: 'ddn_build_sync_status_min_fields';
   build_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   environment_id?: Maybe<Scalars['uuid']>;
   id?: Maybe<Scalars['uuid']>;
   status?: Maybe<Scalars['String']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   worker_id?: Maybe<Scalars['uuid']>;
 };
 
 /** order by min() on columns of table "ddn.build_sync_status" */
 export type Ddn_Build_Sync_Status_Min_Order_By = {
   build_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
   environment_id?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   status?: Maybe<Order_By>;
@@ -7229,6 +9380,7 @@ export type Ddn_Build_Sync_Status_Order_By = {
   build?: Maybe<Ddn_Build_Order_By>;
   build_id?: Maybe<Order_By>;
   build_sync_worker?: Maybe<Ddn_Build_Sync_Worker_Order_By>;
+  created_at?: Maybe<Order_By>;
   environment?: Maybe<Ddn_Environment_Order_By>;
   environment_id?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
@@ -7247,6 +9399,8 @@ export enum Ddn_Build_Sync_Status_Select_Column {
   /** column name */
   BuildId = 'build_id',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   EnvironmentId = 'environment_id',
   /** column name */
   Id = 'id',
@@ -7261,10 +9415,11 @@ export enum Ddn_Build_Sync_Status_Select_Column {
 /** input type for updating data in table "ddn.build_sync_status" */
 export type Ddn_Build_Sync_Status_Set_Input = {
   build_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   environment_id?: Maybe<Scalars['uuid']>;
   id?: Maybe<Scalars['uuid']>;
   status?: Maybe<Scalars['String']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   worker_id?: Maybe<Scalars['uuid']>;
 };
 
@@ -7279,10 +9434,11 @@ export type Ddn_Build_Sync_Status_Stream_Cursor_Input = {
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Build_Sync_Status_Stream_Cursor_Value_Input = {
   build_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   environment_id?: Maybe<Scalars['uuid']>;
   id?: Maybe<Scalars['uuid']>;
   status?: Maybe<Scalars['String']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   worker_id?: Maybe<Scalars['uuid']>;
 };
 
@@ -7290,6 +9446,8 @@ export type Ddn_Build_Sync_Status_Stream_Cursor_Value_Input = {
 export enum Ddn_Build_Sync_Status_Update_Column {
   /** column name */
   BuildId = 'build_id',
+  /** column name */
+  CreatedAt = 'created_at',
   /** column name */
   EnvironmentId = 'environment_id',
   /** column name */
@@ -7317,11 +9475,13 @@ export type Ddn_Build_Sync_Worker = {
   /** An aggregate relationship */
   build_sync_statuses_aggregate: Ddn_Build_Sync_Status_Aggregate;
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id: Scalars['uuid'];
   is_active: Scalars['Boolean'];
   region?: Maybe<Scalars['String']>;
   /** An object relationship */
   regionByCloudRegion?: Maybe<Region>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** columns and relationships of "ddn.build_sync_worker" */
@@ -7371,10 +9531,12 @@ export type Ddn_Build_Sync_Worker_Bool_Exp = {
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Bool_Exp>;
   build_sync_statuses_aggregate?: Maybe<Ddn_Build_Sync_Status_Aggregate_Bool_Exp>;
   cloud?: Maybe<String_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   is_active?: Maybe<Boolean_Comparison_Exp>;
   region?: Maybe<String_Comparison_Exp>;
   regionByCloudRegion?: Maybe<Region_Bool_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "ddn.build_sync_worker" */
@@ -7387,26 +9549,32 @@ export enum Ddn_Build_Sync_Worker_Constraint {
 export type Ddn_Build_Sync_Worker_Insert_Input = {
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Arr_Rel_Insert_Input>;
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   is_active?: Maybe<Scalars['Boolean']>;
   region?: Maybe<Scalars['String']>;
   regionByCloudRegion?: Maybe<Region_Obj_Rel_Insert_Input>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** aggregate max on columns */
 export type Ddn_Build_Sync_Worker_Max_Fields = {
   __typename?: 'ddn_build_sync_worker_max_fields';
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** aggregate min on columns */
 export type Ddn_Build_Sync_Worker_Min_Fields = {
   __typename?: 'ddn_build_sync_worker_min_fields';
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** response of any mutation on the table "ddn.build_sync_worker" */
@@ -7436,10 +9604,12 @@ export type Ddn_Build_Sync_Worker_On_Conflict = {
 export type Ddn_Build_Sync_Worker_Order_By = {
   build_sync_statuses_aggregate?: Maybe<Ddn_Build_Sync_Status_Aggregate_Order_By>;
   cloud?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   is_active?: Maybe<Order_By>;
   region?: Maybe<Order_By>;
   regionByCloudRegion?: Maybe<Region_Order_By>;
+  updated_at?: Maybe<Order_By>;
 };
 
 /** primary key columns input for table: ddn.build_sync_worker */
@@ -7452,19 +9622,25 @@ export enum Ddn_Build_Sync_Worker_Select_Column {
   /** column name */
   Cloud = 'cloud',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   Id = 'id',
   /** column name */
   IsActive = 'is_active',
   /** column name */
   Region = 'region',
+  /** column name */
+  UpdatedAt = 'updated_at',
 }
 
 /** input type for updating data in table "ddn.build_sync_worker" */
 export type Ddn_Build_Sync_Worker_Set_Input = {
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   is_active?: Maybe<Scalars['Boolean']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** Streaming cursor of the table "ddn_build_sync_worker" */
@@ -7478,9 +9654,11 @@ export type Ddn_Build_Sync_Worker_Stream_Cursor_Input = {
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Build_Sync_Worker_Stream_Cursor_Value_Input = {
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   is_active?: Maybe<Scalars['Boolean']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** update columns of table "ddn.build_sync_worker" */
@@ -7488,11 +9666,15 @@ export enum Ddn_Build_Sync_Worker_Update_Column {
   /** column name */
   Cloud = 'cloud',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   Id = 'id',
   /** column name */
   IsActive = 'is_active',
   /** column name */
   Region = 'region',
+  /** column name */
+  UpdatedAt = 'updated_at',
 }
 
 export type Ddn_Build_Sync_Worker_Updates = {
@@ -7507,6 +9689,8 @@ export enum Ddn_Build_Update_Column {
   /** column name */
   CreatedAt = 'created_at',
   /** column name */
+  Description = 'description',
+  /** column name */
   Fqdn = 'fqdn',
   /** column name */
   Id = 'id',
@@ -7515,7 +9699,13 @@ export enum Ddn_Build_Update_Column {
   /** column name */
   MetadataRaw = 'metadata_raw',
   /** column name */
+  NdcConfigs = 'ndc_configs',
+  /** column name */
+  ParentSpanId = 'parent_span_id',
+  /** column name */
   ProjectId = 'project_id',
+  /** column name */
+  TraceId = 'trace_id',
   /** column name */
   UpdatedAt = 'updated_at',
   /** column name */
@@ -7523,6 +9713,19 @@ export enum Ddn_Build_Update_Column {
 }
 
 export type Ddn_Build_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: Maybe<Ddn_Build_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: Maybe<Ddn_Build_Delete_At_Path_Input>;
+  /**
+   * delete the array element with specified index (negative integers count from
+   * the end). throws an error if top level container is not an array
+   */
+  _delete_elem?: Maybe<Ddn_Build_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: Maybe<Ddn_Build_Delete_Key_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: Maybe<Ddn_Build_Prepend_Input>;
   /** sets the columns of the filtered rows to the given values */
   _set?: Maybe<Ddn_Build_Set_Input>;
   /** filter the rows which have to be updated */
@@ -7538,7 +9741,7 @@ export type Ddn_Environment = {
   build_sync_statuses: Array<Ddn_Build_Sync_Status>;
   /** An aggregate relationship */
   build_sync_statuses_aggregate: Ddn_Build_Sync_Status_Aggregate;
-  created_at: Scalars['timestamp'];
+  created_at: Scalars['timestamptz'];
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn: Scalars['String'];
   id: Scalars['uuid'];
@@ -7546,7 +9749,7 @@ export type Ddn_Environment = {
   /** An object relationship */
   project: Ddn_Projects;
   project_id: Scalars['uuid'];
-  updated_at: Scalars['timestamp'];
+  updated_at: Scalars['timestamptz'];
 };
 
 /** columns and relationships of "ddn.environment" */
@@ -7621,14 +9824,14 @@ export type Ddn_Environment_Bool_Exp = {
   build?: Maybe<Ddn_Build_Bool_Exp>;
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Bool_Exp>;
   build_sync_statuses_aggregate?: Maybe<Ddn_Build_Sync_Status_Aggregate_Bool_Exp>;
-  created_at?: Maybe<Timestamp_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   current_build_id?: Maybe<Uuid_Comparison_Exp>;
   fqdn?: Maybe<String_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   name?: Maybe<String_Comparison_Exp>;
   project?: Maybe<Ddn_Projects_Bool_Exp>;
   project_id?: Maybe<Uuid_Comparison_Exp>;
-  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "ddn.environment" */
@@ -7641,26 +9844,26 @@ export enum Ddn_Environment_Constraint {
 export type Ddn_Environment_Insert_Input = {
   build?: Maybe<Ddn_Build_Obj_Rel_Insert_Input>;
   build_sync_statuses?: Maybe<Ddn_Build_Sync_Status_Arr_Rel_Insert_Input>;
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   project?: Maybe<Ddn_Projects_Obj_Rel_Insert_Input>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** aggregate max on columns */
 export type Ddn_Environment_Max_Fields = {
   __typename?: 'ddn_environment_max_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** order by max() on columns of table "ddn.environment" */
@@ -7677,13 +9880,13 @@ export type Ddn_Environment_Max_Order_By = {
 /** aggregate min on columns */
 export type Ddn_Environment_Min_Fields = {
   __typename?: 'ddn_environment_min_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** order by min() on columns of table "ddn.environment" */
@@ -7759,13 +9962,13 @@ export enum Ddn_Environment_Select_Column {
 
 /** input type for updating data in table "ddn.environment" */
 export type Ddn_Environment_Set_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** Streaming cursor of the table "ddn_environment" */
@@ -7778,13 +9981,13 @@ export type Ddn_Environment_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Environment_Stream_Cursor_Value_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   current_build_id?: Maybe<Scalars['uuid']>;
   fqdn?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   project_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** update columns of table "ddn.environment" */
@@ -7812,6 +10015,652 @@ export type Ddn_Environment_Updates = {
   where: Ddn_Environment_Bool_Exp;
 };
 
+/** columns and relationships of "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access = {
+  __typename?: 'ddn_project_entitlement_access';
+  created_at: Scalars['timestamp'];
+  /** An object relationship */
+  entitlement: Ddn_Project_Entitlement_Catalogue;
+  entitlement_id: Scalars['uuid'];
+  id: Scalars['uuid'];
+  /** An object relationship */
+  project: Ddn_Projects;
+  project_id: Scalars['uuid'];
+  updated_at: Scalars['timestamp'];
+};
+
+/** aggregated selection of "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Aggregate = {
+  __typename?: 'ddn_project_entitlement_access_aggregate';
+  aggregate?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Fields>;
+  nodes: Array<Ddn_Project_Entitlement_Access>;
+};
+
+export type Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp = {
+  count?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp_Count>;
+};
+
+export type Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Aggregate_Fields = {
+  __typename?: 'ddn_project_entitlement_access_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Ddn_Project_Entitlement_Access_Max_Fields>;
+  min?: Maybe<Ddn_Project_Entitlement_Access_Min_Fields>;
+};
+
+/** aggregate fields of "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Aggregate_Order_By = {
+  count?: Maybe<Order_By>;
+  max?: Maybe<Ddn_Project_Entitlement_Access_Max_Order_By>;
+  min?: Maybe<Ddn_Project_Entitlement_Access_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Arr_Rel_Insert_Input = {
+  data: Array<Ddn_Project_Entitlement_Access_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Access_On_Conflict>;
+};
+
+/**
+ * Boolean expression to filter rows from the table
+ * "ddn.project_entitlement_access". All fields are combined with a logical 'AND'.
+ */
+export type Ddn_Project_Entitlement_Access_Bool_Exp = {
+  _and?: Maybe<Array<Ddn_Project_Entitlement_Access_Bool_Exp>>;
+  _not?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+  _or?: Maybe<Array<Ddn_Project_Entitlement_Access_Bool_Exp>>;
+  created_at?: Maybe<Timestamp_Comparison_Exp>;
+  entitlement?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+  entitlement_id?: Maybe<Uuid_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  project?: Maybe<Ddn_Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "ddn.project_entitlement_access" */
+export enum Ddn_Project_Entitlement_Access_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  ProjectEntitlementAccessPkey = 'project_entitlement_access_pkey',
+}
+
+/** input type for inserting data into table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Insert_Input = {
+  created_at?: Maybe<Scalars['timestamp']>;
+  entitlement?: Maybe<Ddn_Project_Entitlement_Catalogue_Obj_Rel_Insert_Input>;
+  entitlement_id?: Maybe<Scalars['uuid']>;
+  id?: Maybe<Scalars['uuid']>;
+  project?: Maybe<Ddn_Projects_Obj_Rel_Insert_Input>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** aggregate max on columns */
+export type Ddn_Project_Entitlement_Access_Max_Fields = {
+  __typename?: 'ddn_project_entitlement_access_max_fields';
+  created_at?: Maybe<Scalars['timestamp']>;
+  entitlement_id?: Maybe<Scalars['uuid']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** order by max() on columns of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
+  entitlement_id?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Ddn_Project_Entitlement_Access_Min_Fields = {
+  __typename?: 'ddn_project_entitlement_access_min_fields';
+  created_at?: Maybe<Scalars['timestamp']>;
+  entitlement_id?: Maybe<Scalars['uuid']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** order by min() on columns of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
+  entitlement_id?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Mutation_Response = {
+  __typename?: 'ddn_project_entitlement_access_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Ddn_Project_Entitlement_Access>;
+};
+
+/** on_conflict condition type for table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_On_Conflict = {
+  constraint: Ddn_Project_Entitlement_Access_Constraint;
+  update_columns?: Array<Ddn_Project_Entitlement_Access_Update_Column>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "ddn.project_entitlement_access". */
+export type Ddn_Project_Entitlement_Access_Order_By = {
+  created_at?: Maybe<Order_By>;
+  entitlement?: Maybe<Ddn_Project_Entitlement_Catalogue_Order_By>;
+  entitlement_id?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project?: Maybe<Ddn_Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: ddn.project_entitlement_access */
+export type Ddn_Project_Entitlement_Access_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** select columns of table "ddn.project_entitlement_access" */
+export enum Ddn_Project_Entitlement_Access_Select_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  EntitlementId = 'entitlement_id',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** input type for updating data in table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Set_Input = {
+  created_at?: Maybe<Scalars['timestamp']>;
+  entitlement_id?: Maybe<Scalars['uuid']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** Streaming cursor of the table "ddn_project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Ddn_Project_Entitlement_Access_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Ddn_Project_Entitlement_Access_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamp']>;
+  entitlement_id?: Maybe<Scalars['uuid']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** update columns of table "ddn.project_entitlement_access" */
+export enum Ddn_Project_Entitlement_Access_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  EntitlementId = 'entitlement_id',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Ddn_Project_Entitlement_Access_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Ddn_Project_Entitlement_Access_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Ddn_Project_Entitlement_Access_Bool_Exp;
+};
+
+/** Stores all versions of all types of v3 project entitlements. */
+export type Ddn_Project_Entitlement_Catalogue = {
+  __typename?: 'ddn_project_entitlement_catalogue';
+  config_is_enabled: Scalars['Boolean'];
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at: Scalars['timestamp'];
+  id: Scalars['uuid'];
+  name: Scalars['String'];
+  type: Ddn_Project_Entitlement_Types_Enum;
+  updated_at: Scalars['timestamp'];
+};
+
+/** aggregated selection of "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Aggregate = {
+  __typename?: 'ddn_project_entitlement_catalogue_aggregate';
+  aggregate?: Maybe<Ddn_Project_Entitlement_Catalogue_Aggregate_Fields>;
+  nodes: Array<Ddn_Project_Entitlement_Catalogue>;
+};
+
+/** aggregate fields of "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Aggregate_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_aggregate_fields';
+  avg?: Maybe<Ddn_Project_Entitlement_Catalogue_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<Ddn_Project_Entitlement_Catalogue_Max_Fields>;
+  min?: Maybe<Ddn_Project_Entitlement_Catalogue_Min_Fields>;
+  stddev?: Maybe<Ddn_Project_Entitlement_Catalogue_Stddev_Fields>;
+  stddev_pop?: Maybe<Ddn_Project_Entitlement_Catalogue_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Ddn_Project_Entitlement_Catalogue_Stddev_Samp_Fields>;
+  sum?: Maybe<Ddn_Project_Entitlement_Catalogue_Sum_Fields>;
+  var_pop?: Maybe<Ddn_Project_Entitlement_Catalogue_Var_Pop_Fields>;
+  var_samp?: Maybe<Ddn_Project_Entitlement_Catalogue_Var_Samp_Fields>;
+  variance?: Maybe<Ddn_Project_Entitlement_Catalogue_Variance_Fields>;
+};
+
+/** aggregate fields of "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** aggregate avg on columns */
+export type Ddn_Project_Entitlement_Catalogue_Avg_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_avg_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/**
+ * Boolean expression to filter rows from the table
+ * "ddn.project_entitlement_catalogue". All fields are combined with a logical 'AND'.
+ */
+export type Ddn_Project_Entitlement_Catalogue_Bool_Exp = {
+  _and?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Bool_Exp>>;
+  _not?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+  _or?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Bool_Exp>>;
+  config_is_enabled?: Maybe<Boolean_Comparison_Exp>;
+  config_limit?: Maybe<Int_Comparison_Exp>;
+  created_at?: Maybe<Timestamp_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  name?: Maybe<String_Comparison_Exp>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum_Comparison_Exp>;
+  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "ddn.project_entitlement_catalogue" */
+export enum Ddn_Project_Entitlement_Catalogue_Constraint {
+  /** unique or primary key constraint on columns "name" */
+  ProjectEntitlementCatalogueNameKey = 'project_entitlement_catalogue_name_key',
+  /** unique or primary key constraint on columns "id" */
+  ProjectEntitlementCataloguePkey = 'project_entitlement_catalogue_pkey',
+}
+
+/** input type for incrementing numeric columns in table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Inc_Input = {
+  config_limit?: Maybe<Scalars['Int']>;
+};
+
+/** input type for inserting data into table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Insert_Input = {
+  config_is_enabled?: Maybe<Scalars['Boolean']>;
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at?: Maybe<Scalars['timestamp']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** aggregate max on columns */
+export type Ddn_Project_Entitlement_Catalogue_Max_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_max_fields';
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at?: Maybe<Scalars['timestamp']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** aggregate min on columns */
+export type Ddn_Project_Entitlement_Catalogue_Min_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_min_fields';
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at?: Maybe<Scalars['timestamp']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** response of any mutation on the table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Mutation_Response = {
+  __typename?: 'ddn_project_entitlement_catalogue_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Ddn_Project_Entitlement_Catalogue>;
+};
+
+/** input type for inserting object relation for remote table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Obj_Rel_Insert_Input = {
+  data: Ddn_Project_Entitlement_Catalogue_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Catalogue_On_Conflict>;
+};
+
+/** on_conflict condition type for table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_On_Conflict = {
+  constraint: Ddn_Project_Entitlement_Catalogue_Constraint;
+  update_columns?: Array<Ddn_Project_Entitlement_Catalogue_Update_Column>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "ddn.project_entitlement_catalogue". */
+export type Ddn_Project_Entitlement_Catalogue_Order_By = {
+  config_is_enabled?: Maybe<Order_By>;
+  config_limit?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  name?: Maybe<Order_By>;
+  type?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: ddn.project_entitlement_catalogue */
+export type Ddn_Project_Entitlement_Catalogue_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** select columns of table "ddn.project_entitlement_catalogue" */
+export enum Ddn_Project_Entitlement_Catalogue_Select_Column {
+  /** column name */
+  ConfigIsEnabled = 'config_is_enabled',
+  /** column name */
+  ConfigLimit = 'config_limit',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  Type = 'type',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+/** input type for updating data in table "ddn.project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Set_Input = {
+  config_is_enabled?: Maybe<Scalars['Boolean']>;
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at?: Maybe<Scalars['timestamp']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** aggregate stddev on columns */
+export type Ddn_Project_Entitlement_Catalogue_Stddev_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_stddev_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Ddn_Project_Entitlement_Catalogue_Stddev_Pop_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_stddev_pop_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Ddn_Project_Entitlement_Catalogue_Stddev_Samp_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_stddev_samp_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** Streaming cursor of the table "ddn_project_entitlement_catalogue" */
+export type Ddn_Project_Entitlement_Catalogue_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Ddn_Project_Entitlement_Catalogue_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Ddn_Project_Entitlement_Catalogue_Stream_Cursor_Value_Input = {
+  config_is_enabled?: Maybe<Scalars['Boolean']>;
+  config_limit?: Maybe<Scalars['Int']>;
+  created_at?: Maybe<Scalars['timestamp']>;
+  id?: Maybe<Scalars['uuid']>;
+  name?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** aggregate sum on columns */
+export type Ddn_Project_Entitlement_Catalogue_Sum_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_sum_fields';
+  config_limit?: Maybe<Scalars['Int']>;
+};
+
+/** update columns of table "ddn.project_entitlement_catalogue" */
+export enum Ddn_Project_Entitlement_Catalogue_Update_Column {
+  /** column name */
+  ConfigIsEnabled = 'config_is_enabled',
+  /** column name */
+  ConfigLimit = 'config_limit',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Name = 'name',
+  /** column name */
+  Type = 'type',
+  /** column name */
+  UpdatedAt = 'updated_at',
+}
+
+export type Ddn_Project_Entitlement_Catalogue_Updates = {
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: Maybe<Ddn_Project_Entitlement_Catalogue_Inc_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Ddn_Project_Entitlement_Catalogue_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Ddn_Project_Entitlement_Catalogue_Bool_Exp;
+};
+
+/** aggregate var_pop on columns */
+export type Ddn_Project_Entitlement_Catalogue_Var_Pop_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_var_pop_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate var_samp on columns */
+export type Ddn_Project_Entitlement_Catalogue_Var_Samp_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_var_samp_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** aggregate variance on columns */
+export type Ddn_Project_Entitlement_Catalogue_Variance_Fields = {
+  __typename?: 'ddn_project_entitlement_catalogue_variance_fields';
+  config_limit?: Maybe<Scalars['Float']>;
+};
+
+/** Enums representing types/categories of entitlements for a Hasura v3 project */
+export type Ddn_Project_Entitlement_Types = {
+  __typename?: 'ddn_project_entitlement_types';
+  comment: Scalars['String'];
+  value: Scalars['String'];
+};
+
+/** aggregated selection of "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Aggregate = {
+  __typename?: 'ddn_project_entitlement_types_aggregate';
+  aggregate?: Maybe<Ddn_Project_Entitlement_Types_Aggregate_Fields>;
+  nodes: Array<Ddn_Project_Entitlement_Types>;
+};
+
+/** aggregate fields of "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Aggregate_Fields = {
+  __typename?: 'ddn_project_entitlement_types_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Ddn_Project_Entitlement_Types_Max_Fields>;
+  min?: Maybe<Ddn_Project_Entitlement_Types_Min_Fields>;
+};
+
+/** aggregate fields of "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Ddn_Project_Entitlement_Types_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/**
+ * Boolean expression to filter rows from the table
+ * "ddn.project_entitlement_types". All fields are combined with a logical 'AND'.
+ */
+export type Ddn_Project_Entitlement_Types_Bool_Exp = {
+  _and?: Maybe<Array<Ddn_Project_Entitlement_Types_Bool_Exp>>;
+  _not?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+  _or?: Maybe<Array<Ddn_Project_Entitlement_Types_Bool_Exp>>;
+  comment?: Maybe<String_Comparison_Exp>;
+  value?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "ddn.project_entitlement_types" */
+export enum Ddn_Project_Entitlement_Types_Constraint {
+  /** unique or primary key constraint on columns "value" */
+  ProjectEntitlementTypesPkey = 'project_entitlement_types_pkey',
+}
+
+export enum Ddn_Project_Entitlement_Types_Enum {
+  /** Maximum number of builds a v3 project can have at once */
+  BuildLimit = 'build_limit',
+  /** Maximum number of builds a v3 project can have at once */
+  EnvironmentLimit = 'environment_limit',
+  /** Maximum size in for a serialized metadata artifact */
+  MetadataSizeLimit = 'metadata_size_limit',
+}
+
+/**
+ * Boolean expression to compare columns of type
+ * "ddn_project_entitlement_types_enum". All fields are combined with logical 'AND'.
+ */
+export type Ddn_Project_Entitlement_Types_Enum_Comparison_Exp = {
+  _eq?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  _in?: Maybe<Array<Ddn_Project_Entitlement_Types_Enum>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _neq?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  _nin?: Maybe<Array<Ddn_Project_Entitlement_Types_Enum>>;
+};
+
+/** input type for inserting data into table "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Insert_Input = {
+  comment?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Ddn_Project_Entitlement_Types_Max_Fields = {
+  __typename?: 'ddn_project_entitlement_types_max_fields';
+  comment?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** aggregate min on columns */
+export type Ddn_Project_Entitlement_Types_Min_Fields = {
+  __typename?: 'ddn_project_entitlement_types_min_fields';
+  comment?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** response of any mutation on the table "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Mutation_Response = {
+  __typename?: 'ddn_project_entitlement_types_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Ddn_Project_Entitlement_Types>;
+};
+
+/** on_conflict condition type for table "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_On_Conflict = {
+  constraint: Ddn_Project_Entitlement_Types_Constraint;
+  update_columns?: Array<Ddn_Project_Entitlement_Types_Update_Column>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "ddn.project_entitlement_types". */
+export type Ddn_Project_Entitlement_Types_Order_By = {
+  comment?: Maybe<Order_By>;
+  value?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: ddn.project_entitlement_types */
+export type Ddn_Project_Entitlement_Types_Pk_Columns_Input = {
+  value: Scalars['String'];
+};
+
+/** select columns of table "ddn.project_entitlement_types" */
+export enum Ddn_Project_Entitlement_Types_Select_Column {
+  /** column name */
+  Comment = 'comment',
+  /** column name */
+  Value = 'value',
+}
+
+/** input type for updating data in table "ddn.project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Set_Input = {
+  comment?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** Streaming cursor of the table "ddn_project_entitlement_types" */
+export type Ddn_Project_Entitlement_Types_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Ddn_Project_Entitlement_Types_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Ddn_Project_Entitlement_Types_Stream_Cursor_Value_Input = {
+  comment?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "ddn.project_entitlement_types" */
+export enum Ddn_Project_Entitlement_Types_Update_Column {
+  /** column name */
+  Comment = 'comment',
+  /** column name */
+  Value = 'value',
+}
+
+export type Ddn_Project_Entitlement_Types_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Ddn_Project_Entitlement_Types_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Ddn_Project_Entitlement_Types_Bool_Exp;
+};
+
 /** columns and relationships of "ddn.projects" */
 export type Ddn_Projects = {
   __typename?: 'ddn_projects';
@@ -7819,7 +10668,11 @@ export type Ddn_Projects = {
   builds: Array<Ddn_Build>;
   /** An aggregate relationship */
   builds_aggregate: Ddn_Build_Aggregate;
-  created_at: Scalars['timestamp'];
+  created_at: Scalars['timestamptz'];
+  /** An array relationship */
+  entitlements: Array<Ddn_Project_Entitlement_Access>;
+  /** An aggregate relationship */
+  entitlements_aggregate: Ddn_Project_Entitlement_Access_Aggregate;
   /** An array relationship */
   environments: Array<Ddn_Environment>;
   /** An aggregate relationship */
@@ -7827,7 +10680,7 @@ export type Ddn_Projects = {
   id: Scalars['uuid'];
   name: Scalars['String'];
   owner_id: Scalars['uuid'];
-  updated_at: Scalars['timestamp'];
+  updated_at: Scalars['timestamptz'];
   /** An object relationship */
   user: Users;
 };
@@ -7848,6 +10701,24 @@ export type Ddn_ProjectsBuilds_AggregateArgs = {
   offset?: Maybe<Scalars['Int']>;
   order_by?: Maybe<Array<Ddn_Build_Order_By>>;
   where?: Maybe<Ddn_Build_Bool_Exp>;
+};
+
+/** columns and relationships of "ddn.projects" */
+export type Ddn_ProjectsEntitlementsArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+/** columns and relationships of "ddn.projects" */
+export type Ddn_ProjectsEntitlements_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
 };
 
 /** columns and relationships of "ddn.projects" */
@@ -7896,13 +10767,15 @@ export type Ddn_Projects_Bool_Exp = {
   _or?: Maybe<Array<Ddn_Projects_Bool_Exp>>;
   builds?: Maybe<Ddn_Build_Bool_Exp>;
   builds_aggregate?: Maybe<Ddn_Build_Aggregate_Bool_Exp>;
-  created_at?: Maybe<Timestamp_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  entitlements?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+  entitlements_aggregate?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp>;
   environments?: Maybe<Ddn_Environment_Bool_Exp>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Bool_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   name?: Maybe<String_Comparison_Exp>;
   owner_id?: Maybe<Uuid_Comparison_Exp>;
-  updated_at?: Maybe<Timestamp_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   user?: Maybe<Users_Bool_Exp>;
 };
 
@@ -7917,33 +10790,34 @@ export enum Ddn_Projects_Constraint {
 /** input type for inserting data into table "ddn.projects" */
 export type Ddn_Projects_Insert_Input = {
   builds?: Maybe<Ddn_Build_Arr_Rel_Insert_Input>;
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  entitlements?: Maybe<Ddn_Project_Entitlement_Access_Arr_Rel_Insert_Input>;
   environments?: Maybe<Ddn_Environment_Arr_Rel_Insert_Input>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   owner_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   user?: Maybe<Users_Obj_Rel_Insert_Input>;
 };
 
 /** aggregate max on columns */
 export type Ddn_Projects_Max_Fields = {
   __typename?: 'ddn_projects_max_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   owner_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** aggregate min on columns */
 export type Ddn_Projects_Min_Fields = {
   __typename?: 'ddn_projects_min_fields';
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   owner_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** response of any mutation on the table "ddn.projects" */
@@ -7973,6 +10847,7 @@ export type Ddn_Projects_On_Conflict = {
 export type Ddn_Projects_Order_By = {
   builds_aggregate?: Maybe<Ddn_Build_Aggregate_Order_By>;
   created_at?: Maybe<Order_By>;
+  entitlements_aggregate?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Order_By>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Order_By>;
   id?: Maybe<Order_By>;
   name?: Maybe<Order_By>;
@@ -8002,11 +10877,11 @@ export enum Ddn_Projects_Select_Column {
 
 /** input type for updating data in table "ddn.projects" */
 export type Ddn_Projects_Set_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   owner_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** Streaming cursor of the table "ddn_projects" */
@@ -8019,11 +10894,11 @@ export type Ddn_Projects_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Projects_Stream_Cursor_Value_Input = {
-  created_at?: Maybe<Scalars['timestamp']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
   owner_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamp']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
 };
 
 /** update columns of table "ddn.projects" */
@@ -8050,6 +10925,7 @@ export type Ddn_Projects_Updates = {
 /** columns and relationships of "ddn.tunnel" */
 export type Ddn_Tunnel = {
   __typename?: 'ddn_tunnel';
+  created_at?: Maybe<Scalars['timestamptz']>;
   id: Scalars['uuid'];
   last_connection_at: Scalars['timestamptz'];
   owner_id: Scalars['uuid'];
@@ -8139,6 +11015,7 @@ export type Ddn_Tunnel_Bool_Exp = {
   _and?: Maybe<Array<Ddn_Tunnel_Bool_Exp>>;
   _not?: Maybe<Ddn_Tunnel_Bool_Exp>;
   _or?: Maybe<Array<Ddn_Tunnel_Bool_Exp>>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   last_connection_at?: Maybe<Timestamptz_Comparison_Exp>;
   owner_id?: Maybe<Uuid_Comparison_Exp>;
@@ -8152,6 +11029,7 @@ export type Ddn_Tunnel_Bool_Exp = {
 export type Ddn_Tunnel_Cluster = {
   __typename?: 'ddn_tunnel_cluster';
   cloud: Scalars['String'];
+  created_at?: Maybe<Scalars['timestamptz']>;
   id: Scalars['uuid'];
   internal_fqdn: Scalars['String'];
   machine_type: Scalars['String'];
@@ -8164,6 +11042,7 @@ export type Ddn_Tunnel_Cluster = {
   tunnels: Array<Ddn_Tunnel>;
   /** An aggregate relationship */
   tunnels_aggregate: Ddn_Tunnel_Aggregate;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone: Scalars['String'];
 };
 
@@ -8212,6 +11091,7 @@ export type Ddn_Tunnel_Cluster_Bool_Exp = {
   _not?: Maybe<Ddn_Tunnel_Cluster_Bool_Exp>;
   _or?: Maybe<Array<Ddn_Tunnel_Cluster_Bool_Exp>>;
   cloud?: Maybe<String_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   internal_fqdn?: Maybe<String_Comparison_Exp>;
   machine_type?: Maybe<String_Comparison_Exp>;
@@ -8221,6 +11101,7 @@ export type Ddn_Tunnel_Cluster_Bool_Exp = {
   regionByRegionCloud?: Maybe<Region_Bool_Exp>;
   tunnels?: Maybe<Ddn_Tunnel_Bool_Exp>;
   tunnels_aggregate?: Maybe<Ddn_Tunnel_Aggregate_Bool_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   zone?: Maybe<String_Comparison_Exp>;
 };
 
@@ -8239,6 +11120,7 @@ export enum Ddn_Tunnel_Cluster_Constraint {
 /** input type for inserting data into table "ddn.tunnel_cluster" */
 export type Ddn_Tunnel_Cluster_Insert_Input = {
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   internal_fqdn?: Maybe<Scalars['String']>;
   machine_type?: Maybe<Scalars['String']>;
@@ -8247,6 +11129,7 @@ export type Ddn_Tunnel_Cluster_Insert_Input = {
   region?: Maybe<Scalars['String']>;
   regionByRegionCloud?: Maybe<Region_Obj_Rel_Insert_Input>;
   tunnels?: Maybe<Ddn_Tunnel_Arr_Rel_Insert_Input>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone?: Maybe<Scalars['String']>;
 };
 
@@ -8254,12 +11137,14 @@ export type Ddn_Tunnel_Cluster_Insert_Input = {
 export type Ddn_Tunnel_Cluster_Max_Fields = {
   __typename?: 'ddn_tunnel_cluster_max_fields';
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   internal_fqdn?: Maybe<Scalars['String']>;
   machine_type?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   public_fqdn?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone?: Maybe<Scalars['String']>;
 };
 
@@ -8267,12 +11152,14 @@ export type Ddn_Tunnel_Cluster_Max_Fields = {
 export type Ddn_Tunnel_Cluster_Min_Fields = {
   __typename?: 'ddn_tunnel_cluster_min_fields';
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   internal_fqdn?: Maybe<Scalars['String']>;
   machine_type?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   public_fqdn?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone?: Maybe<Scalars['String']>;
 };
 
@@ -8302,6 +11189,7 @@ export type Ddn_Tunnel_Cluster_On_Conflict = {
 /** Ordering options when selecting data from "ddn.tunnel_cluster". */
 export type Ddn_Tunnel_Cluster_Order_By = {
   cloud?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   internal_fqdn?: Maybe<Order_By>;
   machine_type?: Maybe<Order_By>;
@@ -8310,6 +11198,7 @@ export type Ddn_Tunnel_Cluster_Order_By = {
   region?: Maybe<Order_By>;
   regionByRegionCloud?: Maybe<Region_Order_By>;
   tunnels_aggregate?: Maybe<Ddn_Tunnel_Aggregate_Order_By>;
+  updated_at?: Maybe<Order_By>;
   zone?: Maybe<Order_By>;
 };
 
@@ -8323,6 +11212,8 @@ export enum Ddn_Tunnel_Cluster_Select_Column {
   /** column name */
   Cloud = 'cloud',
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   Id = 'id',
   /** column name */
   InternalFqdn = 'internal_fqdn',
@@ -8335,18 +11226,22 @@ export enum Ddn_Tunnel_Cluster_Select_Column {
   /** column name */
   Region = 'region',
   /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
   Zone = 'zone',
 }
 
 /** input type for updating data in table "ddn.tunnel_cluster" */
 export type Ddn_Tunnel_Cluster_Set_Input = {
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   internal_fqdn?: Maybe<Scalars['String']>;
   machine_type?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   public_fqdn?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone?: Maybe<Scalars['String']>;
 };
 
@@ -8361,12 +11256,14 @@ export type Ddn_Tunnel_Cluster_Stream_Cursor_Input = {
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Tunnel_Cluster_Stream_Cursor_Value_Input = {
   cloud?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   internal_fqdn?: Maybe<Scalars['String']>;
   machine_type?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   public_fqdn?: Maybe<Scalars['String']>;
   region?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
   zone?: Maybe<Scalars['String']>;
 };
 
@@ -8374,6 +11271,8 @@ export type Ddn_Tunnel_Cluster_Stream_Cursor_Value_Input = {
 export enum Ddn_Tunnel_Cluster_Update_Column {
   /** column name */
   Cloud = 'cloud',
+  /** column name */
+  CreatedAt = 'created_at',
   /** column name */
   Id = 'id',
   /** column name */
@@ -8386,6 +11285,8 @@ export enum Ddn_Tunnel_Cluster_Update_Column {
   PublicFqdn = 'public_fqdn',
   /** column name */
   Region = 'region',
+  /** column name */
+  UpdatedAt = 'updated_at',
   /** column name */
   Zone = 'zone',
 }
@@ -8412,6 +11313,7 @@ export type Ddn_Tunnel_Inc_Input = {
 
 /** input type for inserting data into table "ddn.tunnel" */
 export type Ddn_Tunnel_Insert_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   last_connection_at?: Maybe<Scalars['timestamptz']>;
   owner_id?: Maybe<Scalars['uuid']>;
@@ -8424,6 +11326,7 @@ export type Ddn_Tunnel_Insert_Input = {
 /** aggregate max on columns */
 export type Ddn_Tunnel_Max_Fields = {
   __typename?: 'ddn_tunnel_max_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   last_connection_at?: Maybe<Scalars['timestamptz']>;
   owner_id?: Maybe<Scalars['uuid']>;
@@ -8433,6 +11336,7 @@ export type Ddn_Tunnel_Max_Fields = {
 
 /** order by max() on columns of table "ddn.tunnel" */
 export type Ddn_Tunnel_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   last_connection_at?: Maybe<Order_By>;
   owner_id?: Maybe<Order_By>;
@@ -8443,6 +11347,7 @@ export type Ddn_Tunnel_Max_Order_By = {
 /** aggregate min on columns */
 export type Ddn_Tunnel_Min_Fields = {
   __typename?: 'ddn_tunnel_min_fields';
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   last_connection_at?: Maybe<Scalars['timestamptz']>;
   owner_id?: Maybe<Scalars['uuid']>;
@@ -8452,6 +11357,7 @@ export type Ddn_Tunnel_Min_Fields = {
 
 /** order by min() on columns of table "ddn.tunnel" */
 export type Ddn_Tunnel_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   last_connection_at?: Maybe<Order_By>;
   owner_id?: Maybe<Order_By>;
@@ -8477,6 +11383,7 @@ export type Ddn_Tunnel_On_Conflict = {
 
 /** Ordering options when selecting data from "ddn.tunnel". */
 export type Ddn_Tunnel_Order_By = {
+  created_at?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   last_connection_at?: Maybe<Order_By>;
   owner_id?: Maybe<Order_By>;
@@ -8494,6 +11401,8 @@ export type Ddn_Tunnel_Pk_Columns_Input = {
 /** select columns of table "ddn.tunnel" */
 export enum Ddn_Tunnel_Select_Column {
   /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
   Id = 'id',
   /** column name */
   LastConnectionAt = 'last_connection_at',
@@ -8507,6 +11416,7 @@ export enum Ddn_Tunnel_Select_Column {
 
 /** input type for updating data in table "ddn.tunnel" */
 export type Ddn_Tunnel_Set_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   last_connection_at?: Maybe<Scalars['timestamptz']>;
   owner_id?: Maybe<Scalars['uuid']>;
@@ -8557,6 +11467,7 @@ export type Ddn_Tunnel_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Ddn_Tunnel_Stream_Cursor_Value_Input = {
+  created_at?: Maybe<Scalars['timestamptz']>;
   id?: Maybe<Scalars['uuid']>;
   last_connection_at?: Maybe<Scalars['timestamptz']>;
   owner_id?: Maybe<Scalars['uuid']>;
@@ -8577,6 +11488,8 @@ export type Ddn_Tunnel_Sum_Order_By = {
 
 /** update columns of table "ddn.tunnel" */
 export enum Ddn_Tunnel_Update_Column {
+  /** column name */
+  CreatedAt = 'created_at',
   /** column name */
   Id = 'id',
   /** column name */
@@ -8631,26 +11544,6 @@ export type Ddn_Tunnel_Variance_Order_By = {
   reserved_port?: Maybe<Order_By>;
 };
 
-export type DdnApplyMetadataOutput = {
-  __typename?: 'DDNApplyMetadataOutput';
-  build?: Maybe<Ddn_Build>;
-  build_id?: Maybe<Scalars['String']>;
-  graphql_api_endpoint: Scalars['String'];
-};
-
-export type DdnCreateBuildOutput = {
-  __typename?: 'ddnCreateBuildOutput';
-  build_id: Scalars['String'];
-  build_version: Scalars['String'];
-  graphql_api_endpoint: Scalars['String'];
-};
-
-export type DdnCreateProjectResponse = {
-  __typename?: 'DDNCreateProjectResponse';
-  id: Scalars['uuid'];
-  name: Scalars['String'];
-};
-
 /** Table to keep track of dedicated cloud bills. These are not part of automated Stripe invoicing.  */
 export type Dedicated_Cloud_Bills = {
   __typename?: 'dedicated_cloud_bills';
@@ -8658,12 +11551,34 @@ export type Dedicated_Cloud_Bills = {
   created_at: Scalars['timestamptz'];
   cu_cost: Scalars['Int'];
   data_passthrough_cost: Scalars['Int'];
+  /** An array relationship */
+  details: Array<Dedicated_Cloud_Bills_Details>;
+  /** An aggregate relationship */
+  details_aggregate: Dedicated_Cloud_Bills_Details_Aggregate;
   id: Scalars['uuid'];
   metadata?: Maybe<Scalars['jsonb']>;
   month: Scalars['Int'];
   updated_at: Scalars['timestamptz'];
   user_id: Scalars['uuid'];
   year: Scalars['Int'];
+};
+
+/** Table to keep track of dedicated cloud bills. These are not part of automated Stripe invoicing.  */
+export type Dedicated_Cloud_BillsDetailsArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+/** Table to keep track of dedicated cloud bills. These are not part of automated Stripe invoicing.  */
+export type Dedicated_Cloud_BillsDetails_AggregateArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
 };
 
 /** Table to keep track of dedicated cloud bills. These are not part of automated Stripe invoicing.  */
@@ -8764,6 +11679,8 @@ export type Dedicated_Cloud_Bills_Bool_Exp = {
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   cu_cost?: Maybe<Int_Comparison_Exp>;
   data_passthrough_cost?: Maybe<Int_Comparison_Exp>;
+  details?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+  details_aggregate?: Maybe<Dedicated_Cloud_Bills_Details_Aggregate_Bool_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   metadata?: Maybe<Jsonb_Comparison_Exp>;
   month?: Maybe<Int_Comparison_Exp>;
@@ -8798,6 +11715,419 @@ export type Dedicated_Cloud_Bills_Delete_Key_Input = {
   metadata?: Maybe<Scalars['String']>;
 };
 
+/** Granular details about compute unit usage based bills  */
+export type Dedicated_Cloud_Bills_Details = {
+  __typename?: 'dedicated_cloud_bills_details';
+  bill_id: Scalars['uuid'];
+  created_at: Scalars['timestamptz'];
+  details?: Maybe<Scalars['jsonb']>;
+  id: Scalars['uuid'];
+  month: Scalars['Int'];
+  updated_at: Scalars['timestamptz'];
+  year: Scalars['Int'];
+};
+
+/** Granular details about compute unit usage based bills  */
+export type Dedicated_Cloud_Bills_DetailsDetailsArgs = {
+  path?: Maybe<Scalars['String']>;
+};
+
+/** aggregated selection of "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Aggregate = {
+  __typename?: 'dedicated_cloud_bills_details_aggregate';
+  aggregate?: Maybe<Dedicated_Cloud_Bills_Details_Aggregate_Fields>;
+  nodes: Array<Dedicated_Cloud_Bills_Details>;
+};
+
+export type Dedicated_Cloud_Bills_Details_Aggregate_Bool_Exp = {
+  count?: Maybe<Dedicated_Cloud_Bills_Details_Aggregate_Bool_Exp_Count>;
+};
+
+export type Dedicated_Cloud_Bills_Details_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Aggregate_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_aggregate_fields';
+  avg?: Maybe<Dedicated_Cloud_Bills_Details_Avg_Fields>;
+  count: Scalars['Int'];
+  max?: Maybe<Dedicated_Cloud_Bills_Details_Max_Fields>;
+  min?: Maybe<Dedicated_Cloud_Bills_Details_Min_Fields>;
+  stddev?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Fields>;
+  stddev_pop?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Pop_Fields>;
+  stddev_samp?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Samp_Fields>;
+  sum?: Maybe<Dedicated_Cloud_Bills_Details_Sum_Fields>;
+  var_pop?: Maybe<Dedicated_Cloud_Bills_Details_Var_Pop_Fields>;
+  var_samp?: Maybe<Dedicated_Cloud_Bills_Details_Var_Samp_Fields>;
+  variance?: Maybe<Dedicated_Cloud_Bills_Details_Variance_Fields>;
+};
+
+/** aggregate fields of "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Aggregate_Order_By = {
+  avg?: Maybe<Dedicated_Cloud_Bills_Details_Avg_Order_By>;
+  count?: Maybe<Order_By>;
+  max?: Maybe<Dedicated_Cloud_Bills_Details_Max_Order_By>;
+  min?: Maybe<Dedicated_Cloud_Bills_Details_Min_Order_By>;
+  stddev?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Order_By>;
+  stddev_pop?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Pop_Order_By>;
+  stddev_samp?: Maybe<Dedicated_Cloud_Bills_Details_Stddev_Samp_Order_By>;
+  sum?: Maybe<Dedicated_Cloud_Bills_Details_Sum_Order_By>;
+  var_pop?: Maybe<Dedicated_Cloud_Bills_Details_Var_Pop_Order_By>;
+  var_samp?: Maybe<Dedicated_Cloud_Bills_Details_Var_Samp_Order_By>;
+  variance?: Maybe<Dedicated_Cloud_Bills_Details_Variance_Order_By>;
+};
+
+/** append existing jsonb value of filtered columns with new jsonb value */
+export type Dedicated_Cloud_Bills_Details_Append_Input = {
+  details?: Maybe<Scalars['jsonb']>;
+};
+
+/** input type for inserting array relation for remote table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Arr_Rel_Insert_Input = {
+  data: Array<Dedicated_Cloud_Bills_Details_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Dedicated_Cloud_Bills_Details_On_Conflict>;
+};
+
+/** aggregate avg on columns */
+export type Dedicated_Cloud_Bills_Details_Avg_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_avg_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by avg() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Avg_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/**
+ * Boolean expression to filter rows from the table
+ * "dedicated_cloud_bills_details". All fields are combined with a logical 'AND'.
+ */
+export type Dedicated_Cloud_Bills_Details_Bool_Exp = {
+  _and?: Maybe<Array<Dedicated_Cloud_Bills_Details_Bool_Exp>>;
+  _not?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+  _or?: Maybe<Array<Dedicated_Cloud_Bills_Details_Bool_Exp>>;
+  bill_id?: Maybe<Uuid_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  details?: Maybe<Jsonb_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  month?: Maybe<Int_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+  year?: Maybe<Int_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "dedicated_cloud_bills_details" */
+export enum Dedicated_Cloud_Bills_Details_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  DedicatedCloudBillsDetailsPkey = 'dedicated_cloud_bills_details_pkey',
+}
+
+/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+export type Dedicated_Cloud_Bills_Details_Delete_At_Path_Input = {
+  details?: Maybe<Array<Scalars['String']>>;
+};
+
+/**
+ * delete the array element with specified index (negative integers count from the
+ * end). throws an error if top level container is not an array
+ */
+export type Dedicated_Cloud_Bills_Details_Delete_Elem_Input = {
+  details?: Maybe<Scalars['Int']>;
+};
+
+/** delete key/value pair or string element. key/value pairs are matched based on their key value */
+export type Dedicated_Cloud_Bills_Details_Delete_Key_Input = {
+  details?: Maybe<Scalars['String']>;
+};
+
+/** input type for incrementing numeric columns in table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Inc_Input = {
+  month?: Maybe<Scalars['Int']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** input type for inserting data into table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Insert_Input = {
+  bill_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  details?: Maybe<Scalars['jsonb']>;
+  id?: Maybe<Scalars['uuid']>;
+  month?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** aggregate max on columns */
+export type Dedicated_Cloud_Bills_Details_Max_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_max_fields';
+  bill_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  month?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** order by max() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Max_Order_By = {
+  bill_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  month?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Dedicated_Cloud_Bills_Details_Min_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_min_fields';
+  bill_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  month?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** order by min() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Min_Order_By = {
+  bill_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  month?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Mutation_Response = {
+  __typename?: 'dedicated_cloud_bills_details_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Dedicated_Cloud_Bills_Details>;
+};
+
+/** on_conflict condition type for table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_On_Conflict = {
+  constraint: Dedicated_Cloud_Bills_Details_Constraint;
+  update_columns?: Array<Dedicated_Cloud_Bills_Details_Update_Column>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "dedicated_cloud_bills_details". */
+export type Dedicated_Cloud_Bills_Details_Order_By = {
+  bill_id?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  details?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  month?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: dedicated_cloud_bills_details */
+export type Dedicated_Cloud_Bills_Details_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** prepend existing jsonb value of filtered columns with new jsonb value */
+export type Dedicated_Cloud_Bills_Details_Prepend_Input = {
+  details?: Maybe<Scalars['jsonb']>;
+};
+
+/** select columns of table "dedicated_cloud_bills_details" */
+export enum Dedicated_Cloud_Bills_Details_Select_Column {
+  /** column name */
+  BillId = 'bill_id',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Details = 'details',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Month = 'month',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  Year = 'year',
+}
+
+/** input type for updating data in table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Set_Input = {
+  bill_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  details?: Maybe<Scalars['jsonb']>;
+  id?: Maybe<Scalars['uuid']>;
+  month?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** aggregate stddev on columns */
+export type Dedicated_Cloud_Bills_Details_Stddev_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_stddev_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Stddev_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** aggregate stddev_pop on columns */
+export type Dedicated_Cloud_Bills_Details_Stddev_Pop_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_stddev_pop_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_pop() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Stddev_Pop_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** aggregate stddev_samp on columns */
+export type Dedicated_Cloud_Bills_Details_Stddev_Samp_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_stddev_samp_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by stddev_samp() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Stddev_Samp_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** Streaming cursor of the table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Dedicated_Cloud_Bills_Details_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Dedicated_Cloud_Bills_Details_Stream_Cursor_Value_Input = {
+  bill_id?: Maybe<Scalars['uuid']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  details?: Maybe<Scalars['jsonb']>;
+  id?: Maybe<Scalars['uuid']>;
+  month?: Maybe<Scalars['Int']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** aggregate sum on columns */
+export type Dedicated_Cloud_Bills_Details_Sum_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_sum_fields';
+  month?: Maybe<Scalars['Int']>;
+  year?: Maybe<Scalars['Int']>;
+};
+
+/** order by sum() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Sum_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** update columns of table "dedicated_cloud_bills_details" */
+export enum Dedicated_Cloud_Bills_Details_Update_Column {
+  /** column name */
+  BillId = 'bill_id',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Details = 'details',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  Month = 'month',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  Year = 'year',
+}
+
+export type Dedicated_Cloud_Bills_Details_Updates = {
+  /** append existing jsonb value of filtered columns with new jsonb value */
+  _append?: Maybe<Dedicated_Cloud_Bills_Details_Append_Input>;
+  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
+  _delete_at_path?: Maybe<Dedicated_Cloud_Bills_Details_Delete_At_Path_Input>;
+  /**
+   * delete the array element with specified index (negative integers count from
+   * the end). throws an error if top level container is not an array
+   */
+  _delete_elem?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Elem_Input>;
+  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
+  _delete_key?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Key_Input>;
+  /** increments the numeric columns with given value of the filtered values */
+  _inc?: Maybe<Dedicated_Cloud_Bills_Details_Inc_Input>;
+  /** prepend existing jsonb value of filtered columns with new jsonb value */
+  _prepend?: Maybe<Dedicated_Cloud_Bills_Details_Prepend_Input>;
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Dedicated_Cloud_Bills_Details_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Dedicated_Cloud_Bills_Details_Bool_Exp;
+};
+
+/** aggregate var_pop on columns */
+export type Dedicated_Cloud_Bills_Details_Var_Pop_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_var_pop_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_pop() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Var_Pop_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** aggregate var_samp on columns */
+export type Dedicated_Cloud_Bills_Details_Var_Samp_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_var_samp_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by var_samp() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Var_Samp_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
+/** aggregate variance on columns */
+export type Dedicated_Cloud_Bills_Details_Variance_Fields = {
+  __typename?: 'dedicated_cloud_bills_details_variance_fields';
+  month?: Maybe<Scalars['Float']>;
+  year?: Maybe<Scalars['Float']>;
+};
+
+/** order by variance() on columns of table "dedicated_cloud_bills_details" */
+export type Dedicated_Cloud_Bills_Details_Variance_Order_By = {
+  month?: Maybe<Order_By>;
+  year?: Maybe<Order_By>;
+};
+
 /** input type for incrementing numeric columns in table "dedicated_cloud_bills" */
 export type Dedicated_Cloud_Bills_Inc_Input = {
   cu_cost?: Maybe<Scalars['Int']>;
@@ -8812,6 +12142,7 @@ export type Dedicated_Cloud_Bills_Insert_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   cu_cost?: Maybe<Scalars['Int']>;
   data_passthrough_cost?: Maybe<Scalars['Int']>;
+  details?: Maybe<Dedicated_Cloud_Bills_Details_Arr_Rel_Insert_Input>;
   id?: Maybe<Scalars['uuid']>;
   metadata?: Maybe<Scalars['jsonb']>;
   month?: Maybe<Scalars['Int']>;
@@ -8896,6 +12227,7 @@ export type Dedicated_Cloud_Bills_Order_By = {
   created_at?: Maybe<Order_By>;
   cu_cost?: Maybe<Order_By>;
   data_passthrough_cost?: Maybe<Order_By>;
+  details_aggregate?: Maybe<Dedicated_Cloud_Bills_Details_Aggregate_Order_By>;
   id?: Maybe<Order_By>;
   metadata?: Maybe<Order_By>;
   month?: Maybe<Order_By>;
@@ -10805,9 +14137,18 @@ export type DeleteProjectResponse = {
   id: Scalars['uuid'];
 };
 
+export type DeleteSlackAppOutput = {
+  __typename?: 'DeleteSlackAppOutput';
+  status: Scalars['String'];
+};
+
 export type DeleteUserResponse = {
   __typename?: 'deleteUserResponse';
   status: Scalars['String'];
+};
+
+export type DelteSlackAppPayload = {
+  projectID: Scalars['uuid'];
 };
 
 export type DeployLatestCommitStatus = {
@@ -12636,6 +15977,8 @@ export enum Feature_Enum {
   GcpSupport = 'GCPSupport',
   /** Allows user to automatically deploy metadata/migrations to the project from github repo */
   GithubIntegration = 'GithubIntegration',
+  /** Allows users to have access to GraphQL Schema Registry */
+  GraphQlSchemaRegistry = 'GraphQLSchemaRegistry',
   /** Neon DB Integration through Hasura Console */
   NeonDatabaseIntegration = 'NeonDatabaseIntegration',
   /** Allows user to create Hasura Pro Project */
@@ -13694,13 +17037,6 @@ export type Get_Aggregated_Cost_For_Project_On_Shared_Plan_Args = {
   fromdate?: Maybe<Scalars['date']>;
   projectid?: Maybe<Scalars['String']>;
   todate?: Maybe<Scalars['date']>;
-};
-
-export type Get_Previous_Schema_Change_For_Role_Args = {
-  current_change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  search_project_id?: Maybe<Scalars['uuid']>;
-  search_schema_id?: Maybe<Scalars['uuid']>;
-  search_schema_role?: Maybe<Scalars['String']>;
 };
 
 export type GetReportUrlResponse = {
@@ -15766,214 +19102,6 @@ export type Hasura_Cluster_Updates = {
   where: Hasura_Cluster_Bool_Exp;
 };
 
-/** Many-to-many relationship table between schemas and tags */
-export type Hasura_Graphql_Schema_Tags = {
-  __typename?: 'hasura_graphql_schema_tags';
-  /** An object relationship */
-  hasura_graphql_schema: Schema_Diff_Data;
-  hasura_graphql_schema_id: Scalars['uuid'];
-  id: Scalars['uuid'];
-  /** An object relationship */
-  tag: Tag;
-  tag_id: Scalars['uuid'];
-  user_id: Scalars['uuid'];
-};
-
-/** aggregated selection of "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Aggregate = {
-  __typename?: 'hasura_graphql_schema_tags_aggregate';
-  aggregate?: Maybe<Hasura_Graphql_Schema_Tags_Aggregate_Fields>;
-  nodes: Array<Hasura_Graphql_Schema_Tags>;
-};
-
-export type Hasura_Graphql_Schema_Tags_Aggregate_Bool_Exp = {
-  count?: Maybe<Hasura_Graphql_Schema_Tags_Aggregate_Bool_Exp_Count>;
-};
-
-export type Hasura_Graphql_Schema_Tags_Aggregate_Bool_Exp_Count = {
-  arguments?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-  predicate: Int_Comparison_Exp;
-};
-
-/** aggregate fields of "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Aggregate_Fields = {
-  __typename?: 'hasura_graphql_schema_tags_aggregate_fields';
-  count: Scalars['Int'];
-  max?: Maybe<Hasura_Graphql_Schema_Tags_Max_Fields>;
-  min?: Maybe<Hasura_Graphql_Schema_Tags_Min_Fields>;
-};
-
-/** aggregate fields of "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Aggregate_FieldsCountArgs = {
-  columns?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-};
-
-/** order by aggregate values of table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Aggregate_Order_By = {
-  count?: Maybe<Order_By>;
-  max?: Maybe<Hasura_Graphql_Schema_Tags_Max_Order_By>;
-  min?: Maybe<Hasura_Graphql_Schema_Tags_Min_Order_By>;
-};
-
-/** input type for inserting array relation for remote table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Arr_Rel_Insert_Input = {
-  data: Array<Hasura_Graphql_Schema_Tags_Insert_Input>;
-  /** upsert condition */
-  on_conflict?: Maybe<Hasura_Graphql_Schema_Tags_On_Conflict>;
-};
-
-/** Boolean expression to filter rows from the table "hasura_graphql_schema_tags". All fields are combined with a logical 'AND'. */
-export type Hasura_Graphql_Schema_Tags_Bool_Exp = {
-  _and?: Maybe<Array<Hasura_Graphql_Schema_Tags_Bool_Exp>>;
-  _not?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-  _or?: Maybe<Array<Hasura_Graphql_Schema_Tags_Bool_Exp>>;
-  hasura_graphql_schema?: Maybe<Schema_Diff_Data_Bool_Exp>;
-  hasura_graphql_schema_id?: Maybe<Uuid_Comparison_Exp>;
-  id?: Maybe<Uuid_Comparison_Exp>;
-  tag?: Maybe<Tag_Bool_Exp>;
-  tag_id?: Maybe<Uuid_Comparison_Exp>;
-  user_id?: Maybe<Uuid_Comparison_Exp>;
-};
-
-/** unique or primary key constraints on table "hasura_graphql_schema_tags" */
-export enum Hasura_Graphql_Schema_Tags_Constraint {
-  /** unique or primary key constraint on columns "id" */
-  HasuraGraphqlSchemaTagsPkey = 'hasura_graphql_schema_tags_pkey',
-}
-
-/** input type for inserting data into table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Insert_Input = {
-  hasura_graphql_schema?: Maybe<Schema_Diff_Data_Obj_Rel_Insert_Input>;
-  hasura_graphql_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  tag?: Maybe<Tag_Obj_Rel_Insert_Input>;
-  tag_id?: Maybe<Scalars['uuid']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate max on columns */
-export type Hasura_Graphql_Schema_Tags_Max_Fields = {
-  __typename?: 'hasura_graphql_schema_tags_max_fields';
-  hasura_graphql_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  tag_id?: Maybe<Scalars['uuid']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** order by max() on columns of table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Max_Order_By = {
-  hasura_graphql_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  tag_id?: Maybe<Order_By>;
-  user_id?: Maybe<Order_By>;
-};
-
-/** aggregate min on columns */
-export type Hasura_Graphql_Schema_Tags_Min_Fields = {
-  __typename?: 'hasura_graphql_schema_tags_min_fields';
-  hasura_graphql_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  tag_id?: Maybe<Scalars['uuid']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** order by min() on columns of table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Min_Order_By = {
-  hasura_graphql_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  tag_id?: Maybe<Order_By>;
-  user_id?: Maybe<Order_By>;
-};
-
-/** response of any mutation on the table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Mutation_Response = {
-  __typename?: 'hasura_graphql_schema_tags_mutation_response';
-  /** number of rows affected by the mutation */
-  affected_rows: Scalars['Int'];
-  /** data from the rows affected by the mutation */
-  returning: Array<Hasura_Graphql_Schema_Tags>;
-};
-
-/** on_conflict condition type for table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_On_Conflict = {
-  constraint: Hasura_Graphql_Schema_Tags_Constraint;
-  update_columns?: Array<Hasura_Graphql_Schema_Tags_Update_Column>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-/** Ordering options when selecting data from "hasura_graphql_schema_tags". */
-export type Hasura_Graphql_Schema_Tags_Order_By = {
-  hasura_graphql_schema?: Maybe<Schema_Diff_Data_Order_By>;
-  hasura_graphql_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  tag?: Maybe<Tag_Order_By>;
-  tag_id?: Maybe<Order_By>;
-  user_id?: Maybe<Order_By>;
-};
-
-/** primary key columns input for table: hasura_graphql_schema_tags */
-export type Hasura_Graphql_Schema_Tags_Pk_Columns_Input = {
-  id: Scalars['uuid'];
-};
-
-/** select columns of table "hasura_graphql_schema_tags" */
-export enum Hasura_Graphql_Schema_Tags_Select_Column {
-  /** column name */
-  HasuraGraphqlSchemaId = 'hasura_graphql_schema_id',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  TagId = 'tag_id',
-  /** column name */
-  UserId = 'user_id',
-}
-
-/** input type for updating data in table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Set_Input = {
-  hasura_graphql_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  tag_id?: Maybe<Scalars['uuid']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** Streaming cursor of the table "hasura_graphql_schema_tags" */
-export type Hasura_Graphql_Schema_Tags_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Hasura_Graphql_Schema_Tags_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: Maybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Hasura_Graphql_Schema_Tags_Stream_Cursor_Value_Input = {
-  hasura_graphql_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  tag_id?: Maybe<Scalars['uuid']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** update columns of table "hasura_graphql_schema_tags" */
-export enum Hasura_Graphql_Schema_Tags_Update_Column {
-  /** column name */
-  HasuraGraphqlSchemaId = 'hasura_graphql_schema_id',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  TagId = 'tag_id',
-  /** column name */
-  UserId = 'user_id',
-}
-
-export type Hasura_Graphql_Schema_Tags_Updates = {
-  /** sets the columns of the filtered rows to the given values */
-  _set?: Maybe<Hasura_Graphql_Schema_Tags_Set_Input>;
-  /** filter the rows which have to be updated */
-  where: Hasura_Graphql_Schema_Tags_Bool_Exp;
-};
-
 /** Multi-tenant Hasura process capable of providing GraphQL APIs */
 export type Hasura_Worker = {
   __typename?: 'hasura_worker';
@@ -16598,17 +19726,6 @@ export type Hasura_Worker_Updates = {
   _set?: Maybe<Hasura_Worker_Set_Input>;
   /** filter the rows which have to be updated */
   where: Hasura_Worker_Bool_Exp;
-};
-
-export type HasuraSecretList = {
-  __typename?: 'HasuraSecretList';
-  key: Scalars['String'];
-  value: Scalars['String'];
-};
-
-export type HasuraSecretMessage = {
-  __typename?: 'HasuraSecretMessage';
-  message: Scalars['String'];
 };
 
 /** heroku integration metadata (1.4+) */
@@ -17790,17 +20907,6 @@ export type Insert_Db_Usage_Args = {
   pg_usages?: Maybe<Scalars['_int4']>;
   prices?: Maybe<Scalars['_int8']>;
   project_ids?: Maybe<Scalars['_uuid']>;
-};
-
-export type Insert_Schema_Registry_Changes_Input = {
-  admin_schema_hash: Scalars['String'];
-  change_recorded_at: Scalars['String'];
-  is_metadata_inconsistent: Scalars['Boolean'];
-  metadata_resource_version: Scalars['Int'];
-  project_id: Scalars['uuid'];
-  schema_details: Array<Maybe<SchemaDetails>>;
-  tenant_id?: Maybe<Scalars['String']>;
-  worker_id?: Maybe<Scalars['String']>;
 };
 
 /** Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'. */
@@ -21644,6 +24750,22 @@ export type Mutation_Root = {
   changeUserEmail: ChangeUserEmailRequest;
   checkDBLatency?: Maybe<CheckDbLatencyOutput>;
   completeChangeUserEmailRequest: ChangeUserEmailRequest;
+  /** delete data from the table: "connector_deployment" */
+  connector_delete_connector_deployment?: Maybe<Connector_Connector_Deployment_Mutation_Response>;
+  /** delete single row from the table: "connector_deployment" */
+  connector_delete_connector_deployment_by_pk?: Maybe<Connector_Connector_Deployment>;
+  /** insert data into the table: "connector_deployment" */
+  connector_insert_connector_deployment?: Maybe<Connector_Connector_Deployment_Mutation_Response>;
+  /** insert a single row into the table: "connector_deployment" */
+  connector_insert_connector_deployment_one?: Maybe<Connector_Connector_Deployment>;
+  /** update data of the table: "connector_deployment" */
+  connector_update_connector_deployment?: Maybe<Connector_Connector_Deployment_Mutation_Response>;
+  /** update single row of the table: "connector_deployment" */
+  connector_update_connector_deployment_by_pk?: Maybe<Connector_Connector_Deployment>;
+  /** update multiples rows of table: "connector_deployment" */
+  connector_update_connector_deployment_many?: Maybe<
+    Array<Maybe<Connector_Connector_Deployment_Mutation_Response>>
+  >;
   /** Internal utility action to convert a project's entitlements and plan to dedicated_cloud */
   convertToDedicatedCloud?: Maybe<ConvertPlanResponse>;
   createDedicatedVPC?: Maybe<CreateDedicatedVpcResponse>;
@@ -21655,15 +24777,29 @@ export type Mutation_Root = {
   createPersonalAccessToken: PersonalAccessToken;
   createTenant?: Maybe<CreateTenantResponse>;
   createZendeskSupportTicket: SuccessOrError;
-  ddnApplyMetadata?: Maybe<DdnApplyMetadataOutput>;
-  /** ddnCreateBuild */
-  ddnCreateBuild?: Maybe<DdnCreateBuildOutput>;
-  ddnCreateProject?: Maybe<DdnCreateProjectResponse>;
-  ddnHasuraSecretDelete: HasuraSecretMessage;
-  ddnHasuraSecretSet: HasuraSecretMessage;
   declineBillingManagerInvite?: Maybe<BillingManagerInvitation>;
   declineInvite: ProjectCollaboratorInvitation;
   declineTransferOwnershipInvite: ProjectOwnershipTransferInvitation;
+  /** delete data from the table: "alert_config" */
+  delete_alert_config?: Maybe<Alert_Config_Mutation_Response>;
+  /** delete data from the table: "alert_config_alert_type" */
+  delete_alert_config_alert_type?: Maybe<Alert_Config_Alert_Type_Mutation_Response>;
+  /** delete single row from the table: "alert_config_alert_type" */
+  delete_alert_config_alert_type_by_pk?: Maybe<Alert_Config_Alert_Type>;
+  /** delete single row from the table: "alert_config" */
+  delete_alert_config_by_pk?: Maybe<Alert_Config>;
+  /** delete data from the table: "alert_config_service" */
+  delete_alert_config_service?: Maybe<Alert_Config_Service_Mutation_Response>;
+  /** delete single row from the table: "alert_config_service" */
+  delete_alert_config_service_by_pk?: Maybe<Alert_Config_Service>;
+  /** delete data from the table: "alert_service_type" */
+  delete_alert_service_type?: Maybe<Alert_Service_Type_Mutation_Response>;
+  /** delete single row from the table: "alert_service_type" */
+  delete_alert_service_type_by_pk?: Maybe<Alert_Service_Type>;
+  /** delete data from the table: "alert_type" */
+  delete_alert_type?: Maybe<Alert_Type_Mutation_Response>;
+  /** delete single row from the table: "alert_type" */
+  delete_alert_type_by_pk?: Maybe<Alert_Type>;
   /** delete data from the table: "azuremonitor_config" */
   delete_azuremonitor_config?: Maybe<Azuremonitor_Config_Mutation_Response>;
   /** delete single row from the table: "azuremonitor_config" */
@@ -21708,6 +24844,14 @@ export type Mutation_Root = {
   delete_config_status?: Maybe<Config_Status_Mutation_Response>;
   /** delete single row from the table: "config_status" */
   delete_config_status_by_pk?: Maybe<Config_Status>;
+  /** delete data from the table: "connector_config" */
+  delete_connector_config?: Maybe<Connector_Config_Mutation_Response>;
+  /** delete single row from the table: "connector_config" */
+  delete_connector_config_by_pk?: Maybe<Connector_Config>;
+  /** delete data from the table: "connector_deployments" */
+  delete_connector_deployments?: Maybe<Connector_Deployments_Mutation_Response>;
+  /** delete single row from the table: "connector_deployments" */
+  delete_connector_deployments_by_pk?: Maybe<Connector_Deployments>;
   /** delete data from the table: "coupon" */
   delete_coupon?: Maybe<Coupon_Mutation_Response>;
   /** delete single row from the table: "coupon" */
@@ -21764,6 +24908,18 @@ export type Mutation_Root = {
   delete_ddn_environment?: Maybe<Ddn_Environment_Mutation_Response>;
   /** delete single row from the table: "ddn.environment" */
   delete_ddn_environment_by_pk?: Maybe<Ddn_Environment>;
+  /** delete data from the table: "ddn.project_entitlement_access" */
+  delete_ddn_project_entitlement_access?: Maybe<Ddn_Project_Entitlement_Access_Mutation_Response>;
+  /** delete single row from the table: "ddn.project_entitlement_access" */
+  delete_ddn_project_entitlement_access_by_pk?: Maybe<Ddn_Project_Entitlement_Access>;
+  /** delete data from the table: "ddn.project_entitlement_catalogue" */
+  delete_ddn_project_entitlement_catalogue?: Maybe<Ddn_Project_Entitlement_Catalogue_Mutation_Response>;
+  /** delete single row from the table: "ddn.project_entitlement_catalogue" */
+  delete_ddn_project_entitlement_catalogue_by_pk?: Maybe<Ddn_Project_Entitlement_Catalogue>;
+  /** delete data from the table: "ddn.project_entitlement_types" */
+  delete_ddn_project_entitlement_types?: Maybe<Ddn_Project_Entitlement_Types_Mutation_Response>;
+  /** delete single row from the table: "ddn.project_entitlement_types" */
+  delete_ddn_project_entitlement_types_by_pk?: Maybe<Ddn_Project_Entitlement_Types>;
   /** delete data from the table: "ddn.projects" */
   delete_ddn_projects?: Maybe<Ddn_Projects_Mutation_Response>;
   /** delete single row from the table: "ddn.projects" */
@@ -21780,6 +24936,10 @@ export type Mutation_Root = {
   delete_dedicated_cloud_bills?: Maybe<Dedicated_Cloud_Bills_Mutation_Response>;
   /** delete single row from the table: "dedicated_cloud_bills" */
   delete_dedicated_cloud_bills_by_pk?: Maybe<Dedicated_Cloud_Bills>;
+  /** delete data from the table: "dedicated_cloud_bills_details" */
+  delete_dedicated_cloud_bills_details?: Maybe<Dedicated_Cloud_Bills_Details_Mutation_Response>;
+  /** delete single row from the table: "dedicated_cloud_bills_details" */
+  delete_dedicated_cloud_bills_details_by_pk?: Maybe<Dedicated_Cloud_Bills_Details>;
   /** delete data from the table: "dedicated_cloud_commitments" */
   delete_dedicated_cloud_commitments?: Maybe<Dedicated_Cloud_Commitments_Mutation_Response>;
   /** delete single row from the table: "dedicated_cloud_commitments" */
@@ -21872,10 +25032,6 @@ export type Mutation_Root = {
   delete_hasura_cluster?: Maybe<Hasura_Cluster_Mutation_Response>;
   /** delete single row from the table: "hasura_cluster" */
   delete_hasura_cluster_by_pk?: Maybe<Hasura_Cluster>;
-  /** delete data from the table: "hasura_graphql_schema_tags" */
-  delete_hasura_graphql_schema_tags?: Maybe<Hasura_Graphql_Schema_Tags_Mutation_Response>;
-  /** delete single row from the table: "hasura_graphql_schema_tags" */
-  delete_hasura_graphql_schema_tags_by_pk?: Maybe<Hasura_Graphql_Schema_Tags>;
   /** delete data from the table: "hasura_worker" */
   delete_hasura_worker?: Maybe<Hasura_Worker_Mutation_Response>;
   /** delete single row from the table: "hasura_worker" */
@@ -22162,16 +25318,12 @@ export type Mutation_Root = {
   delete_saml_idp?: Maybe<Saml_Idp_Mutation_Response>;
   /** delete single row from the table: "saml_idp" */
   delete_saml_idp_by_pk?: Maybe<Saml_Idp>;
-  /** delete data from the table: "schema_diff_data" */
-  delete_schema_diff_data?: Maybe<Schema_Diff_Data_Mutation_Response>;
-  /** delete single row from the table: "schema_diff_data" */
-  delete_schema_diff_data_by_pk?: Maybe<Schema_Diff_Data>;
-  /** delete data from the table: "schema_registry_dumps" */
-  delete_schema_registry_dumps?: Maybe<Schema_Registry_Dumps_Mutation_Response>;
-  /** delete single row from the table: "schema_registry_dumps" */
-  delete_schema_registry_dumps_by_pk?: Maybe<Schema_Registry_Dumps>;
   /** delete data from the table: "search_project_login_status_results" */
   delete_search_project_login_status_results?: Maybe<Search_Project_Login_Status_Results_Mutation_Response>;
+  /** delete data from the table: "slack_config" */
+  delete_slack_config?: Maybe<Slack_Config_Mutation_Response>;
+  /** delete single row from the table: "slack_config" */
+  delete_slack_config_by_pk?: Maybe<Slack_Config>;
   /** delete data from the table: "stripe_subscription" */
   delete_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
   /** delete single row from the table: "stripe_subscription" */
@@ -22244,10 +25396,6 @@ export type Mutation_Root = {
   delete_survey_v2_response_answer_option_by_pk?: Maybe<Survey_V2_Response_Answer_Option>;
   /** delete single row from the table: "survey_v2_response" */
   delete_survey_v2_response_by_pk?: Maybe<Survey_V2_Response>;
-  /** delete data from the table: "tag" */
-  delete_tag?: Maybe<Tag_Mutation_Response>;
-  /** delete single row from the table: "tag" */
-  delete_tag_by_pk?: Maybe<Tag>;
   /** delete data from the table: "task_event" */
   delete_task_event?: Maybe<Task_Event_Mutation_Response>;
   /** delete single row from the table: "task_event" */
@@ -22364,14 +25512,13 @@ export type Mutation_Root = {
   delete_zendesk_support_tickets_by_pk?: Maybe<Zendesk_Support_Tickets>;
   deleteCard?: Maybe<DeleteCardResponse>;
   deleteProject: DeleteProjectResponse;
+  /** deletes the slack app integrated with the project ID. */
+  deleteSlackApp?: Maybe<DeleteSlackAppOutput>;
   deleteTenant?: Maybe<TenantDeleteResponse>;
   deleteTenantEnv?: Maybe<TenantEnv>;
   deleteUser?: Maybe<DeleteUserResponse>;
   deployLatestGithubCommit?: Maybe<DeployLatestCommitStatus>;
   enableCloudflareProxy?: Maybe<EnableCloudflareProxyResponse>;
-  fetchDedicatedCloudClusterBills?: Maybe<
-    Array<DedicatedCloudClusterBillsOutput>
-  >;
   getGithubSession?: Maybe<GithubSession>;
   getHerokuSession?: Maybe<HerokuSession>;
   githubTokenExchange?: Maybe<GithubSession>;
@@ -22382,6 +25529,26 @@ export type Mutation_Root = {
   herokuUnregisterWebhook: WebhookUnregisterStatus;
   herokuUnregisterWebhookVar: WebhookUnregisterStatus;
   initiateStripeAddCardProcess: ClientSecretInfo;
+  /** insert data into the table: "alert_config" */
+  insert_alert_config?: Maybe<Alert_Config_Mutation_Response>;
+  /** insert data into the table: "alert_config_alert_type" */
+  insert_alert_config_alert_type?: Maybe<Alert_Config_Alert_Type_Mutation_Response>;
+  /** insert a single row into the table: "alert_config_alert_type" */
+  insert_alert_config_alert_type_one?: Maybe<Alert_Config_Alert_Type>;
+  /** insert a single row into the table: "alert_config" */
+  insert_alert_config_one?: Maybe<Alert_Config>;
+  /** insert data into the table: "alert_config_service" */
+  insert_alert_config_service?: Maybe<Alert_Config_Service_Mutation_Response>;
+  /** insert a single row into the table: "alert_config_service" */
+  insert_alert_config_service_one?: Maybe<Alert_Config_Service>;
+  /** insert data into the table: "alert_service_type" */
+  insert_alert_service_type?: Maybe<Alert_Service_Type_Mutation_Response>;
+  /** insert a single row into the table: "alert_service_type" */
+  insert_alert_service_type_one?: Maybe<Alert_Service_Type>;
+  /** insert data into the table: "alert_type" */
+  insert_alert_type?: Maybe<Alert_Type_Mutation_Response>;
+  /** insert a single row into the table: "alert_type" */
+  insert_alert_type_one?: Maybe<Alert_Type>;
   /** insert data into the table: "azuremonitor_config" */
   insert_azuremonitor_config?: Maybe<Azuremonitor_Config_Mutation_Response>;
   /** insert a single row into the table: "azuremonitor_config" */
@@ -22430,6 +25597,14 @@ export type Mutation_Root = {
   insert_config_status?: Maybe<Config_Status_Mutation_Response>;
   /** insert a single row into the table: "config_status" */
   insert_config_status_one?: Maybe<Config_Status>;
+  /** insert data into the table: "connector_config" */
+  insert_connector_config?: Maybe<Connector_Config_Mutation_Response>;
+  /** insert a single row into the table: "connector_config" */
+  insert_connector_config_one?: Maybe<Connector_Config>;
+  /** insert data into the table: "connector_deployments" */
+  insert_connector_deployments?: Maybe<Connector_Deployments_Mutation_Response>;
+  /** insert a single row into the table: "connector_deployments" */
+  insert_connector_deployments_one?: Maybe<Connector_Deployments>;
   /** insert data into the table: "coupon" */
   insert_coupon?: Maybe<Coupon_Mutation_Response>;
   /** insert data into the table: "coupon_duration" */
@@ -22488,6 +25663,18 @@ export type Mutation_Root = {
   insert_ddn_environment?: Maybe<Ddn_Environment_Mutation_Response>;
   /** insert a single row into the table: "ddn.environment" */
   insert_ddn_environment_one?: Maybe<Ddn_Environment>;
+  /** insert data into the table: "ddn.project_entitlement_access" */
+  insert_ddn_project_entitlement_access?: Maybe<Ddn_Project_Entitlement_Access_Mutation_Response>;
+  /** insert a single row into the table: "ddn.project_entitlement_access" */
+  insert_ddn_project_entitlement_access_one?: Maybe<Ddn_Project_Entitlement_Access>;
+  /** insert data into the table: "ddn.project_entitlement_catalogue" */
+  insert_ddn_project_entitlement_catalogue?: Maybe<Ddn_Project_Entitlement_Catalogue_Mutation_Response>;
+  /** insert a single row into the table: "ddn.project_entitlement_catalogue" */
+  insert_ddn_project_entitlement_catalogue_one?: Maybe<Ddn_Project_Entitlement_Catalogue>;
+  /** insert data into the table: "ddn.project_entitlement_types" */
+  insert_ddn_project_entitlement_types?: Maybe<Ddn_Project_Entitlement_Types_Mutation_Response>;
+  /** insert a single row into the table: "ddn.project_entitlement_types" */
+  insert_ddn_project_entitlement_types_one?: Maybe<Ddn_Project_Entitlement_Types>;
   /** insert data into the table: "ddn.projects" */
   insert_ddn_projects?: Maybe<Ddn_Projects_Mutation_Response>;
   /** insert a single row into the table: "ddn.projects" */
@@ -22502,6 +25689,10 @@ export type Mutation_Root = {
   insert_ddn_tunnel_one?: Maybe<Ddn_Tunnel>;
   /** insert data into the table: "dedicated_cloud_bills" */
   insert_dedicated_cloud_bills?: Maybe<Dedicated_Cloud_Bills_Mutation_Response>;
+  /** insert data into the table: "dedicated_cloud_bills_details" */
+  insert_dedicated_cloud_bills_details?: Maybe<Dedicated_Cloud_Bills_Details_Mutation_Response>;
+  /** insert a single row into the table: "dedicated_cloud_bills_details" */
+  insert_dedicated_cloud_bills_details_one?: Maybe<Dedicated_Cloud_Bills_Details>;
   /** insert a single row into the table: "dedicated_cloud_bills" */
   insert_dedicated_cloud_bills_one?: Maybe<Dedicated_Cloud_Bills>;
   /** insert data into the table: "dedicated_cloud_commitments" */
@@ -22596,10 +25787,6 @@ export type Mutation_Root = {
   insert_hasura_cluster?: Maybe<Hasura_Cluster_Mutation_Response>;
   /** insert a single row into the table: "hasura_cluster" */
   insert_hasura_cluster_one?: Maybe<Hasura_Cluster>;
-  /** insert data into the table: "hasura_graphql_schema_tags" */
-  insert_hasura_graphql_schema_tags?: Maybe<Hasura_Graphql_Schema_Tags_Mutation_Response>;
-  /** insert a single row into the table: "hasura_graphql_schema_tags" */
-  insert_hasura_graphql_schema_tags_one?: Maybe<Hasura_Graphql_Schema_Tags>;
   /** insert data into the table: "hasura_worker" */
   insert_hasura_worker?: Maybe<Hasura_Worker_Mutation_Response>;
   /** insert a single row into the table: "hasura_worker" */
@@ -22904,18 +26091,14 @@ export type Mutation_Root = {
   insert_saml_idp?: Maybe<Saml_Idp_Mutation_Response>;
   /** insert a single row into the table: "saml_idp" */
   insert_saml_idp_one?: Maybe<Saml_Idp>;
-  /** insert data into the table: "schema_diff_data" */
-  insert_schema_diff_data?: Maybe<Schema_Diff_Data_Mutation_Response>;
-  /** insert a single row into the table: "schema_diff_data" */
-  insert_schema_diff_data_one?: Maybe<Schema_Diff_Data>;
-  /** insert data into the table: "schema_registry_dumps" */
-  insert_schema_registry_dumps?: Maybe<Schema_Registry_Dumps_Mutation_Response>;
-  /** insert a single row into the table: "schema_registry_dumps" */
-  insert_schema_registry_dumps_one?: Maybe<Schema_Registry_Dumps>;
   /** insert data into the table: "search_project_login_status_results" */
   insert_search_project_login_status_results?: Maybe<Search_Project_Login_Status_Results_Mutation_Response>;
   /** insert a single row into the table: "search_project_login_status_results" */
   insert_search_project_login_status_results_one?: Maybe<Search_Project_Login_Status_Results>;
+  /** insert data into the table: "slack_config" */
+  insert_slack_config?: Maybe<Slack_Config_Mutation_Response>;
+  /** insert a single row into the table: "slack_config" */
+  insert_slack_config_one?: Maybe<Slack_Config>;
   /** insert data into the table: "stripe_subscription" */
   insert_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
   /** insert a single row into the table: "stripe_subscription" */
@@ -22988,10 +26171,6 @@ export type Mutation_Root = {
   insert_survey_v2_response_answer_option_one?: Maybe<Survey_V2_Response_Answer_Option>;
   /** insert a single row into the table: "survey_v2_response" */
   insert_survey_v2_response_one?: Maybe<Survey_V2_Response>;
-  /** insert data into the table: "tag" */
-  insert_tag?: Maybe<Tag_Mutation_Response>;
-  /** insert a single row into the table: "tag" */
-  insert_tag_one?: Maybe<Tag>;
   /** insert data into the table: "task_event" */
   insert_task_event?: Maybe<Task_Event_Mutation_Response>;
   /** insert a single row into the table: "task_event" */
@@ -23108,7 +26287,6 @@ export type Mutation_Root = {
   insert_zendesk_support_tickets?: Maybe<Zendesk_Support_Tickets_Mutation_Response>;
   /** insert a single row into the table: "zendesk_support_tickets" */
   insert_zendesk_support_tickets_one?: Maybe<Zendesk_Support_Tickets>;
-  insertSchemaRegistryChanges?: Maybe<SchemaRegistryReadsOutput>;
   inviteBillingManager?: Maybe<BillingManagerInvitation>;
   inviteCollaborator?: Maybe<ProjectCollaboratorInvitation>;
   lastMonthProjectUsage: Array<ProjectUsage>;
@@ -23140,6 +26318,8 @@ export type Mutation_Root = {
   /** Action to save survey question's answer */
   saveSurveyAnswerV2?: Maybe<SuccessOrError>;
   setDefaultPaymentMethod?: Maybe<DefaultPaymentResponse>;
+  /** Action to exchange granted code for access token */
+  slackExchangeOAuthToken: SlackExchangeTokenResponse;
   /** Action to track activity of experiments cohort users */
   trackExperimentsCohortActivity?: Maybe<SuccessOrError>;
   /** Action to track the onboarding activity */
@@ -23168,6 +26348,47 @@ export type Mutation_Root = {
   triggerRegionModule?: Maybe<BuildKiteBuild>;
   triggerRegionMonitoringModule?: Maybe<BuildKiteBuild>;
   triggerTaskqModule?: Maybe<BuildKiteBuild>;
+  triggerV3CentralModule?: Maybe<BuildKiteBuild>;
+  triggerV3ServerModule?: Maybe<BuildKiteBuild>;
+  triggerV3SyncModule?: Maybe<BuildKiteBuild>;
+  /** update data of the table: "alert_config" */
+  update_alert_config?: Maybe<Alert_Config_Mutation_Response>;
+  /** update data of the table: "alert_config_alert_type" */
+  update_alert_config_alert_type?: Maybe<Alert_Config_Alert_Type_Mutation_Response>;
+  /** update single row of the table: "alert_config_alert_type" */
+  update_alert_config_alert_type_by_pk?: Maybe<Alert_Config_Alert_Type>;
+  /** update multiples rows of table: "alert_config_alert_type" */
+  update_alert_config_alert_type_many?: Maybe<
+    Array<Maybe<Alert_Config_Alert_Type_Mutation_Response>>
+  >;
+  /** update single row of the table: "alert_config" */
+  update_alert_config_by_pk?: Maybe<Alert_Config>;
+  /** update multiples rows of table: "alert_config" */
+  update_alert_config_many?: Maybe<
+    Array<Maybe<Alert_Config_Mutation_Response>>
+  >;
+  /** update data of the table: "alert_config_service" */
+  update_alert_config_service?: Maybe<Alert_Config_Service_Mutation_Response>;
+  /** update single row of the table: "alert_config_service" */
+  update_alert_config_service_by_pk?: Maybe<Alert_Config_Service>;
+  /** update multiples rows of table: "alert_config_service" */
+  update_alert_config_service_many?: Maybe<
+    Array<Maybe<Alert_Config_Service_Mutation_Response>>
+  >;
+  /** update data of the table: "alert_service_type" */
+  update_alert_service_type?: Maybe<Alert_Service_Type_Mutation_Response>;
+  /** update single row of the table: "alert_service_type" */
+  update_alert_service_type_by_pk?: Maybe<Alert_Service_Type>;
+  /** update multiples rows of table: "alert_service_type" */
+  update_alert_service_type_many?: Maybe<
+    Array<Maybe<Alert_Service_Type_Mutation_Response>>
+  >;
+  /** update data of the table: "alert_type" */
+  update_alert_type?: Maybe<Alert_Type_Mutation_Response>;
+  /** update single row of the table: "alert_type" */
+  update_alert_type_by_pk?: Maybe<Alert_Type>;
+  /** update multiples rows of table: "alert_type" */
+  update_alert_type_many?: Maybe<Array<Maybe<Alert_Type_Mutation_Response>>>;
   /** update data of the table: "azuremonitor_config" */
   update_azuremonitor_config?: Maybe<Azuremonitor_Config_Mutation_Response>;
   /** update single row of the table: "azuremonitor_config" */
@@ -23255,6 +26476,22 @@ export type Mutation_Root = {
   /** update multiples rows of table: "config_status" */
   update_config_status_many?: Maybe<
     Array<Maybe<Config_Status_Mutation_Response>>
+  >;
+  /** update data of the table: "connector_config" */
+  update_connector_config?: Maybe<Connector_Config_Mutation_Response>;
+  /** update single row of the table: "connector_config" */
+  update_connector_config_by_pk?: Maybe<Connector_Config>;
+  /** update multiples rows of table: "connector_config" */
+  update_connector_config_many?: Maybe<
+    Array<Maybe<Connector_Config_Mutation_Response>>
+  >;
+  /** update data of the table: "connector_deployments" */
+  update_connector_deployments?: Maybe<Connector_Deployments_Mutation_Response>;
+  /** update single row of the table: "connector_deployments" */
+  update_connector_deployments_by_pk?: Maybe<Connector_Deployments>;
+  /** update multiples rows of table: "connector_deployments" */
+  update_connector_deployments_many?: Maybe<
+    Array<Maybe<Connector_Deployments_Mutation_Response>>
   >;
   /** update data of the table: "coupon" */
   update_coupon?: Maybe<Coupon_Mutation_Response>;
@@ -23360,6 +26597,30 @@ export type Mutation_Root = {
   update_ddn_environment_many?: Maybe<
     Array<Maybe<Ddn_Environment_Mutation_Response>>
   >;
+  /** update data of the table: "ddn.project_entitlement_access" */
+  update_ddn_project_entitlement_access?: Maybe<Ddn_Project_Entitlement_Access_Mutation_Response>;
+  /** update single row of the table: "ddn.project_entitlement_access" */
+  update_ddn_project_entitlement_access_by_pk?: Maybe<Ddn_Project_Entitlement_Access>;
+  /** update multiples rows of table: "ddn.project_entitlement_access" */
+  update_ddn_project_entitlement_access_many?: Maybe<
+    Array<Maybe<Ddn_Project_Entitlement_Access_Mutation_Response>>
+  >;
+  /** update data of the table: "ddn.project_entitlement_catalogue" */
+  update_ddn_project_entitlement_catalogue?: Maybe<Ddn_Project_Entitlement_Catalogue_Mutation_Response>;
+  /** update single row of the table: "ddn.project_entitlement_catalogue" */
+  update_ddn_project_entitlement_catalogue_by_pk?: Maybe<Ddn_Project_Entitlement_Catalogue>;
+  /** update multiples rows of table: "ddn.project_entitlement_catalogue" */
+  update_ddn_project_entitlement_catalogue_many?: Maybe<
+    Array<Maybe<Ddn_Project_Entitlement_Catalogue_Mutation_Response>>
+  >;
+  /** update data of the table: "ddn.project_entitlement_types" */
+  update_ddn_project_entitlement_types?: Maybe<Ddn_Project_Entitlement_Types_Mutation_Response>;
+  /** update single row of the table: "ddn.project_entitlement_types" */
+  update_ddn_project_entitlement_types_by_pk?: Maybe<Ddn_Project_Entitlement_Types>;
+  /** update multiples rows of table: "ddn.project_entitlement_types" */
+  update_ddn_project_entitlement_types_many?: Maybe<
+    Array<Maybe<Ddn_Project_Entitlement_Types_Mutation_Response>>
+  >;
   /** update data of the table: "ddn.projects" */
   update_ddn_projects?: Maybe<Ddn_Projects_Mutation_Response>;
   /** update single row of the table: "ddn.projects" */
@@ -23386,6 +26647,14 @@ export type Mutation_Root = {
   update_dedicated_cloud_bills?: Maybe<Dedicated_Cloud_Bills_Mutation_Response>;
   /** update single row of the table: "dedicated_cloud_bills" */
   update_dedicated_cloud_bills_by_pk?: Maybe<Dedicated_Cloud_Bills>;
+  /** update data of the table: "dedicated_cloud_bills_details" */
+  update_dedicated_cloud_bills_details?: Maybe<Dedicated_Cloud_Bills_Details_Mutation_Response>;
+  /** update single row of the table: "dedicated_cloud_bills_details" */
+  update_dedicated_cloud_bills_details_by_pk?: Maybe<Dedicated_Cloud_Bills_Details>;
+  /** update multiples rows of table: "dedicated_cloud_bills_details" */
+  update_dedicated_cloud_bills_details_many?: Maybe<
+    Array<Maybe<Dedicated_Cloud_Bills_Details_Mutation_Response>>
+  >;
   /** update multiples rows of table: "dedicated_cloud_bills" */
   update_dedicated_cloud_bills_many?: Maybe<
     Array<Maybe<Dedicated_Cloud_Bills_Mutation_Response>>
@@ -23561,14 +26830,6 @@ export type Mutation_Root = {
   /** update multiples rows of table: "hasura_cluster" */
   update_hasura_cluster_many?: Maybe<
     Array<Maybe<Hasura_Cluster_Mutation_Response>>
-  >;
-  /** update data of the table: "hasura_graphql_schema_tags" */
-  update_hasura_graphql_schema_tags?: Maybe<Hasura_Graphql_Schema_Tags_Mutation_Response>;
-  /** update single row of the table: "hasura_graphql_schema_tags" */
-  update_hasura_graphql_schema_tags_by_pk?: Maybe<Hasura_Graphql_Schema_Tags>;
-  /** update multiples rows of table: "hasura_graphql_schema_tags" */
-  update_hasura_graphql_schema_tags_many?: Maybe<
-    Array<Maybe<Hasura_Graphql_Schema_Tags_Mutation_Response>>
   >;
   /** update data of the table: "hasura_worker" */
   update_hasura_worker?: Maybe<Hasura_Worker_Mutation_Response>;
@@ -24134,27 +27395,19 @@ export type Mutation_Root = {
   update_saml_idp_by_pk?: Maybe<Saml_Idp>;
   /** update multiples rows of table: "saml_idp" */
   update_saml_idp_many?: Maybe<Array<Maybe<Saml_Idp_Mutation_Response>>>;
-  /** update data of the table: "schema_diff_data" */
-  update_schema_diff_data?: Maybe<Schema_Diff_Data_Mutation_Response>;
-  /** update single row of the table: "schema_diff_data" */
-  update_schema_diff_data_by_pk?: Maybe<Schema_Diff_Data>;
-  /** update multiples rows of table: "schema_diff_data" */
-  update_schema_diff_data_many?: Maybe<
-    Array<Maybe<Schema_Diff_Data_Mutation_Response>>
-  >;
-  /** update data of the table: "schema_registry_dumps" */
-  update_schema_registry_dumps?: Maybe<Schema_Registry_Dumps_Mutation_Response>;
-  /** update single row of the table: "schema_registry_dumps" */
-  update_schema_registry_dumps_by_pk?: Maybe<Schema_Registry_Dumps>;
-  /** update multiples rows of table: "schema_registry_dumps" */
-  update_schema_registry_dumps_many?: Maybe<
-    Array<Maybe<Schema_Registry_Dumps_Mutation_Response>>
-  >;
   /** update data of the table: "search_project_login_status_results" */
   update_search_project_login_status_results?: Maybe<Search_Project_Login_Status_Results_Mutation_Response>;
   /** update multiples rows of table: "search_project_login_status_results" */
   update_search_project_login_status_results_many?: Maybe<
     Array<Maybe<Search_Project_Login_Status_Results_Mutation_Response>>
+  >;
+  /** update data of the table: "slack_config" */
+  update_slack_config?: Maybe<Slack_Config_Mutation_Response>;
+  /** update single row of the table: "slack_config" */
+  update_slack_config_by_pk?: Maybe<Slack_Config>;
+  /** update multiples rows of table: "slack_config" */
+  update_slack_config_many?: Maybe<
+    Array<Maybe<Slack_Config_Mutation_Response>>
   >;
   /** update data of the table: "stripe_subscription" */
   update_stripe_subscription?: Maybe<Stripe_Subscription_Mutation_Response>;
@@ -24298,12 +27551,6 @@ export type Mutation_Root = {
   update_survey_v2_response_many?: Maybe<
     Array<Maybe<Survey_V2_Response_Mutation_Response>>
   >;
-  /** update data of the table: "tag" */
-  update_tag?: Maybe<Tag_Mutation_Response>;
-  /** update single row of the table: "tag" */
-  update_tag_by_pk?: Maybe<Tag>;
-  /** update multiples rows of table: "tag" */
-  update_tag_many?: Maybe<Array<Maybe<Tag_Mutation_Response>>>;
   /** update data of the table: "task_event" */
   update_task_event?: Maybe<Task_Event_Mutation_Response>;
   /** update single row of the table: "task_event" */
@@ -24653,6 +27900,45 @@ export type Mutation_RootCompleteChangeUserEmailRequestArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootConnector_Delete_Connector_DeploymentArgs = {
+  where: Connector_Connector_Deployment_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Delete_Connector_Deployment_By_PkArgs = {
+  id: Scalars['connector_uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Insert_Connector_DeploymentArgs = {
+  objects: Array<Connector_Connector_Deployment_Insert_Input>;
+  on_conflict?: Maybe<Connector_Connector_Deployment_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Insert_Connector_Deployment_OneArgs = {
+  object: Connector_Connector_Deployment_Insert_Input;
+  on_conflict?: Maybe<Connector_Connector_Deployment_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Update_Connector_DeploymentArgs = {
+  _set?: Maybe<Connector_Connector_Deployment_Set_Input>;
+  where: Connector_Connector_Deployment_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Update_Connector_Deployment_By_PkArgs = {
+  _set?: Maybe<Connector_Connector_Deployment_Set_Input>;
+  pk_columns: Connector_Connector_Deployment_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootConnector_Update_Connector_Deployment_ManyArgs = {
+  updates: Array<Connector_Connector_Deployment_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootConvertToDedicatedCloudArgs = {
   projectId: Scalars['uuid'];
 };
@@ -24715,40 +28001,6 @@ export type Mutation_RootCreateZendeskSupportTicketArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootDdnApplyMetadataArgs = {
-  build_id?: Maybe<Scalars['String']>;
-  environment?: Maybe<Scalars['String']>;
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnCreateBuildArgs = {
-  metadata_json: Scalars['String'];
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnCreateProjectArgs = {
-  cloud?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  plan?: Maybe<Scalars['String']>;
-  region?: Maybe<Scalars['String']>;
-};
-
-/** mutation root */
-export type Mutation_RootDdnHasuraSecretDeleteArgs = {
-  key: Scalars['String'];
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnHasuraSecretSetArgs = {
-  key: Scalars['String'];
-  project_id: Scalars['String'];
-  value: Scalars['String'];
-};
-
-/** mutation root */
 export type Mutation_RootDeclineBillingManagerInviteArgs = {
   project_id: Scalars['uuid'];
 };
@@ -24761,6 +28013,58 @@ export type Mutation_RootDeclineInviteArgs = {
 /** mutation root */
 export type Mutation_RootDeclineTransferOwnershipInviteArgs = {
   inviteKey: Scalars['String'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_ConfigArgs = {
+  where: Alert_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Config_Alert_TypeArgs = {
+  where: Alert_Config_Alert_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Config_Alert_Type_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Scalars['String'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Config_By_PkArgs = {
+  project_id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Config_ServiceArgs = {
+  where: Alert_Config_Service_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Config_Service_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Alert_Service_Type_Enum;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Service_TypeArgs = {
+  where: Alert_Service_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Service_Type_By_PkArgs = {
+  name: Scalars['String'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_TypeArgs = {
+  where: Alert_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Alert_Type_By_PkArgs = {
+  id: Scalars['String'];
 };
 
 /** mutation root */
@@ -24873,6 +28177,26 @@ export type Mutation_RootDelete_Config_Status_By_PkArgs = {
   hash: Scalars['String'];
   tenant_id: Scalars['uuid'];
   worker_id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Connector_ConfigArgs = {
+  where: Connector_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Connector_Config_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Connector_DeploymentsArgs = {
+  where: Connector_Deployments_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Connector_Deployments_By_PkArgs = {
+  id: Scalars['uuid'];
 };
 
 /** mutation root */
@@ -25016,6 +28340,36 @@ export type Mutation_RootDelete_Ddn_Environment_By_PkArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_AccessArgs = {
+  where: Ddn_Project_Entitlement_Access_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_Access_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_CatalogueArgs = {
+  where: Ddn_Project_Entitlement_Catalogue_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_Catalogue_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_TypesArgs = {
+  where: Ddn_Project_Entitlement_Types_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Ddn_Project_Entitlement_Types_By_PkArgs = {
+  value: Scalars['String'];
+};
+
+/** mutation root */
 export type Mutation_RootDelete_Ddn_ProjectsArgs = {
   where: Ddn_Projects_Bool_Exp;
 };
@@ -25052,6 +28406,16 @@ export type Mutation_RootDelete_Dedicated_Cloud_BillsArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Dedicated_Cloud_Bills_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Dedicated_Cloud_Bills_DetailsArgs = {
+  where: Dedicated_Cloud_Bills_Details_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Dedicated_Cloud_Bills_Details_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -25289,16 +28653,6 @@ export type Mutation_RootDelete_Hasura_ClusterArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Hasura_Cluster_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Hasura_Graphql_Schema_TagsArgs = {
-  where: Hasura_Graphql_Schema_Tags_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Hasura_Graphql_Schema_Tags_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -26044,28 +29398,18 @@ export type Mutation_RootDelete_Saml_Idp_By_PkArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootDelete_Schema_Diff_DataArgs = {
-  where: Schema_Diff_Data_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Schema_Diff_Data_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Schema_Registry_DumpsArgs = {
-  where: Schema_Registry_Dumps_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Schema_Registry_Dumps_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-/** mutation root */
 export type Mutation_RootDelete_Search_Project_Login_Status_ResultsArgs = {
   where: Search_Project_Login_Status_Results_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Slack_ConfigArgs = {
+  where: Slack_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootDelete_Slack_Config_By_PkArgs = {
+  id: Scalars['uuid'];
 };
 
 /** mutation root */
@@ -26248,16 +29592,6 @@ export type Mutation_RootDelete_Survey_V2_Response_Answer_Option_By_PkArgs = {
 
 /** mutation root */
 export type Mutation_RootDelete_Survey_V2_Response_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-/** mutation root */
-export type Mutation_RootDelete_TagArgs = {
-  where: Tag_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootDelete_Tag_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -26560,6 +29894,11 @@ export type Mutation_RootDeleteProjectArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootDeleteSlackAppArgs = {
+  args: DelteSlackAppPayload;
+};
+
+/** mutation root */
 export type Mutation_RootDeleteTenantArgs = {
   tenantId: Scalars['uuid'];
 };
@@ -26579,13 +29918,6 @@ export type Mutation_RootDeployLatestGithubCommitArgs = {
 /** mutation root */
 export type Mutation_RootEnableCloudflareProxyArgs = {
   tenant_id: Scalars['uuid'];
-};
-
-/** mutation root */
-export type Mutation_RootFetchDedicatedCloudClusterBillsArgs = {
-  month: Scalars['Int'];
-  user_id: Scalars['uuid'];
-  year: Scalars['Int'];
 };
 
 /** mutation root */
@@ -26629,6 +29961,66 @@ export type Mutation_RootHerokuUnregisterWebhookArgs = {
 export type Mutation_RootHerokuUnregisterWebhookVarArgs = {
   projectID: Scalars['uuid'];
   varName: Scalars['String'];
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_ConfigArgs = {
+  objects: Array<Alert_Config_Insert_Input>;
+  on_conflict?: Maybe<Alert_Config_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Config_Alert_TypeArgs = {
+  objects: Array<Alert_Config_Alert_Type_Insert_Input>;
+  on_conflict?: Maybe<Alert_Config_Alert_Type_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Config_Alert_Type_OneArgs = {
+  object: Alert_Config_Alert_Type_Insert_Input;
+  on_conflict?: Maybe<Alert_Config_Alert_Type_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Config_OneArgs = {
+  object: Alert_Config_Insert_Input;
+  on_conflict?: Maybe<Alert_Config_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Config_ServiceArgs = {
+  objects: Array<Alert_Config_Service_Insert_Input>;
+  on_conflict?: Maybe<Alert_Config_Service_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Config_Service_OneArgs = {
+  object: Alert_Config_Service_Insert_Input;
+  on_conflict?: Maybe<Alert_Config_Service_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Service_TypeArgs = {
+  objects: Array<Alert_Service_Type_Insert_Input>;
+  on_conflict?: Maybe<Alert_Service_Type_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Service_Type_OneArgs = {
+  object: Alert_Service_Type_Insert_Input;
+  on_conflict?: Maybe<Alert_Service_Type_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_TypeArgs = {
+  objects: Array<Alert_Type_Insert_Input>;
+  on_conflict?: Maybe<Alert_Type_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Alert_Type_OneArgs = {
+  object: Alert_Type_Insert_Input;
+  on_conflict?: Maybe<Alert_Type_On_Conflict>;
 };
 
 /** mutation root */
@@ -26769,6 +30161,30 @@ export type Mutation_RootInsert_Config_StatusArgs = {
 export type Mutation_RootInsert_Config_Status_OneArgs = {
   object: Config_Status_Insert_Input;
   on_conflict?: Maybe<Config_Status_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Connector_ConfigArgs = {
+  objects: Array<Connector_Config_Insert_Input>;
+  on_conflict?: Maybe<Connector_Config_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Connector_Config_OneArgs = {
+  object: Connector_Config_Insert_Input;
+  on_conflict?: Maybe<Connector_Config_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Connector_DeploymentsArgs = {
+  objects: Array<Connector_Deployments_Insert_Input>;
+  on_conflict?: Maybe<Connector_Deployments_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Connector_Deployments_OneArgs = {
+  object: Connector_Deployments_Insert_Input;
+  on_conflict?: Maybe<Connector_Deployments_On_Conflict>;
 };
 
 /** mutation root */
@@ -26950,6 +30366,42 @@ export type Mutation_RootInsert_Ddn_Environment_OneArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_AccessArgs = {
+  objects: Array<Ddn_Project_Entitlement_Access_Insert_Input>;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Access_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_Access_OneArgs = {
+  object: Ddn_Project_Entitlement_Access_Insert_Input;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Access_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_CatalogueArgs = {
+  objects: Array<Ddn_Project_Entitlement_Catalogue_Insert_Input>;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Catalogue_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_Catalogue_OneArgs = {
+  object: Ddn_Project_Entitlement_Catalogue_Insert_Input;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Catalogue_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_TypesArgs = {
+  objects: Array<Ddn_Project_Entitlement_Types_Insert_Input>;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Types_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Ddn_Project_Entitlement_Types_OneArgs = {
+  object: Ddn_Project_Entitlement_Types_Insert_Input;
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Types_On_Conflict>;
+};
+
+/** mutation root */
 export type Mutation_RootInsert_Ddn_ProjectsArgs = {
   objects: Array<Ddn_Projects_Insert_Input>;
   on_conflict?: Maybe<Ddn_Projects_On_Conflict>;
@@ -26989,6 +30441,18 @@ export type Mutation_RootInsert_Ddn_Tunnel_OneArgs = {
 export type Mutation_RootInsert_Dedicated_Cloud_BillsArgs = {
   objects: Array<Dedicated_Cloud_Bills_Insert_Input>;
   on_conflict?: Maybe<Dedicated_Cloud_Bills_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Dedicated_Cloud_Bills_DetailsArgs = {
+  objects: Array<Dedicated_Cloud_Bills_Details_Insert_Input>;
+  on_conflict?: Maybe<Dedicated_Cloud_Bills_Details_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Dedicated_Cloud_Bills_Details_OneArgs = {
+  object: Dedicated_Cloud_Bills_Details_Insert_Input;
+  on_conflict?: Maybe<Dedicated_Cloud_Bills_Details_On_Conflict>;
 };
 
 /** mutation root */
@@ -27271,18 +30735,6 @@ export type Mutation_RootInsert_Hasura_ClusterArgs = {
 export type Mutation_RootInsert_Hasura_Cluster_OneArgs = {
   object: Hasura_Cluster_Insert_Input;
   on_conflict?: Maybe<Hasura_Cluster_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Hasura_Graphql_Schema_TagsArgs = {
-  objects: Array<Hasura_Graphql_Schema_Tags_Insert_Input>;
-  on_conflict?: Maybe<Hasura_Graphql_Schema_Tags_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Hasura_Graphql_Schema_Tags_OneArgs = {
-  object: Hasura_Graphql_Schema_Tags_Insert_Input;
-  on_conflict?: Maybe<Hasura_Graphql_Schema_Tags_On_Conflict>;
 };
 
 /** mutation root */
@@ -28188,30 +31640,6 @@ export type Mutation_RootInsert_Saml_Idp_OneArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootInsert_Schema_Diff_DataArgs = {
-  objects: Array<Schema_Diff_Data_Insert_Input>;
-  on_conflict?: Maybe<Schema_Diff_Data_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Schema_Diff_Data_OneArgs = {
-  object: Schema_Diff_Data_Insert_Input;
-  on_conflict?: Maybe<Schema_Diff_Data_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Schema_Registry_DumpsArgs = {
-  objects: Array<Schema_Registry_Dumps_Insert_Input>;
-  on_conflict?: Maybe<Schema_Registry_Dumps_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Schema_Registry_Dumps_OneArgs = {
-  object: Schema_Registry_Dumps_Insert_Input;
-  on_conflict?: Maybe<Schema_Registry_Dumps_On_Conflict>;
-};
-
-/** mutation root */
 export type Mutation_RootInsert_Search_Project_Login_Status_ResultsArgs = {
   objects: Array<Search_Project_Login_Status_Results_Insert_Input>;
 };
@@ -28219,6 +31647,18 @@ export type Mutation_RootInsert_Search_Project_Login_Status_ResultsArgs = {
 /** mutation root */
 export type Mutation_RootInsert_Search_Project_Login_Status_Results_OneArgs = {
   object: Search_Project_Login_Status_Results_Insert_Input;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Slack_ConfigArgs = {
+  objects: Array<Slack_Config_Insert_Input>;
+  on_conflict?: Maybe<Slack_Config_On_Conflict>;
+};
+
+/** mutation root */
+export type Mutation_RootInsert_Slack_Config_OneArgs = {
+  object: Slack_Config_Insert_Input;
+  on_conflict?: Maybe<Slack_Config_On_Conflict>;
 };
 
 /** mutation root */
@@ -28437,18 +31877,6 @@ export type Mutation_RootInsert_Survey_V2_Response_Answer_Option_OneArgs = {
 export type Mutation_RootInsert_Survey_V2_Response_OneArgs = {
   object: Survey_V2_Response_Insert_Input;
   on_conflict?: Maybe<Survey_V2_Response_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_TagArgs = {
-  objects: Array<Tag_Insert_Input>;
-  on_conflict?: Maybe<Tag_On_Conflict>;
-};
-
-/** mutation root */
-export type Mutation_RootInsert_Tag_OneArgs = {
-  object: Tag_Insert_Input;
-  on_conflict?: Maybe<Tag_On_Conflict>;
 };
 
 /** mutation root */
@@ -28798,11 +32226,6 @@ export type Mutation_RootInsert_Zendesk_Support_Tickets_OneArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootInsertSchemaRegistryChangesArgs = {
-  changes: Insert_Schema_Registry_Changes_Input;
-};
-
-/** mutation root */
 export type Mutation_RootInviteBillingManagerArgs = {
   manager_email: Scalars['String'];
   project_id: Scalars['uuid'];
@@ -28921,6 +32344,12 @@ export type Mutation_RootSetDefaultPaymentMethodArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootSlackExchangeOAuthTokenArgs = {
+  code: Scalars['String'];
+  projectId: Scalars['uuid'];
+};
+
+/** mutation root */
 export type Mutation_RootTrackExperimentsCohortActivityArgs = {
   experiment: Scalars['String'];
   payload: ExperimentsCohortActivityPayload;
@@ -28955,7 +32384,7 @@ export type Mutation_RootTriggerAnalyticsInfraModuleArgs = {
 /** mutation root */
 export type Mutation_RootTriggerCentralModuleArgs = {
   branch?: Maybe<Scalars['String']>;
-  cloud: Scalars['String'];
+  cloud: CloudProvider;
   commit?: Maybe<Scalars['String']>;
   mode: PulumiMode;
   targets?: Maybe<Array<Maybe<Scalars['String']>>>;
@@ -29065,7 +32494,7 @@ export type Mutation_RootTriggerLogsModuleArgs = {
 /** mutation root */
 export type Mutation_RootTriggerLuxProxyModuleArgs = {
   branch?: Maybe<Scalars['String']>;
-  cloud: Scalars['String'];
+  cloud: CloudProvider;
   commit?: Maybe<Scalars['String']>;
   mode: PulumiMode;
   region: Scalars['String'];
@@ -29134,6 +32563,130 @@ export type Mutation_RootTriggerTaskqModuleArgs = {
   mode: PulumiMode;
   region: Scalars['String'];
   targets?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+/** mutation root */
+export type Mutation_RootTriggerV3CentralModuleArgs = {
+  branch?: Maybe<Scalars['String']>;
+  cloud: CloudProvider;
+  commit?: Maybe<Scalars['String']>;
+  mode: PulumiMode;
+  targets?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+/** mutation root */
+export type Mutation_RootTriggerV3ServerModuleArgs = {
+  branch?: Maybe<Scalars['String']>;
+  cloud: CloudProvider;
+  commit?: Maybe<Scalars['String']>;
+  mode: PulumiMode;
+  region: Scalars['String'];
+  targets?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+/** mutation root */
+export type Mutation_RootTriggerV3SyncModuleArgs = {
+  branch?: Maybe<Scalars['String']>;
+  cloud: CloudProvider;
+  commit?: Maybe<Scalars['String']>;
+  mode: PulumiMode;
+  region: Scalars['String'];
+  targets?: Maybe<Array<Maybe<Scalars['String']>>>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_ConfigArgs = {
+  _set?: Maybe<Alert_Config_Set_Input>;
+  where: Alert_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_Alert_TypeArgs = {
+  _set?: Maybe<Alert_Config_Alert_Type_Set_Input>;
+  where: Alert_Config_Alert_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_Alert_Type_By_PkArgs = {
+  _set?: Maybe<Alert_Config_Alert_Type_Set_Input>;
+  pk_columns: Alert_Config_Alert_Type_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_Alert_Type_ManyArgs = {
+  updates: Array<Alert_Config_Alert_Type_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_By_PkArgs = {
+  _set?: Maybe<Alert_Config_Set_Input>;
+  pk_columns: Alert_Config_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_ManyArgs = {
+  updates: Array<Alert_Config_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_ServiceArgs = {
+  _append?: Maybe<Alert_Config_Service_Append_Input>;
+  _delete_at_path?: Maybe<Alert_Config_Service_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Alert_Config_Service_Delete_Elem_Input>;
+  _delete_key?: Maybe<Alert_Config_Service_Delete_Key_Input>;
+  _prepend?: Maybe<Alert_Config_Service_Prepend_Input>;
+  _set?: Maybe<Alert_Config_Service_Set_Input>;
+  where: Alert_Config_Service_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_Service_By_PkArgs = {
+  _append?: Maybe<Alert_Config_Service_Append_Input>;
+  _delete_at_path?: Maybe<Alert_Config_Service_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Alert_Config_Service_Delete_Elem_Input>;
+  _delete_key?: Maybe<Alert_Config_Service_Delete_Key_Input>;
+  _prepend?: Maybe<Alert_Config_Service_Prepend_Input>;
+  _set?: Maybe<Alert_Config_Service_Set_Input>;
+  pk_columns: Alert_Config_Service_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Config_Service_ManyArgs = {
+  updates: Array<Alert_Config_Service_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Service_TypeArgs = {
+  _set?: Maybe<Alert_Service_Type_Set_Input>;
+  where: Alert_Service_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Service_Type_By_PkArgs = {
+  _set?: Maybe<Alert_Service_Type_Set_Input>;
+  pk_columns: Alert_Service_Type_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Service_Type_ManyArgs = {
+  updates: Array<Alert_Service_Type_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_TypeArgs = {
+  _set?: Maybe<Alert_Type_Set_Input>;
+  where: Alert_Type_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Type_By_PkArgs = {
+  _set?: Maybe<Alert_Type_Set_Input>;
+  pk_columns: Alert_Type_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Alert_Type_ManyArgs = {
+  updates: Array<Alert_Type_Updates>;
 };
 
 /** mutation root */
@@ -29373,6 +32926,40 @@ export type Mutation_RootUpdate_Config_Status_ManyArgs = {
 };
 
 /** mutation root */
+export type Mutation_RootUpdate_Connector_ConfigArgs = {
+  _set?: Maybe<Connector_Config_Set_Input>;
+  where: Connector_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Connector_Config_By_PkArgs = {
+  _set?: Maybe<Connector_Config_Set_Input>;
+  pk_columns: Connector_Config_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Connector_Config_ManyArgs = {
+  updates: Array<Connector_Config_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Connector_DeploymentsArgs = {
+  _set?: Maybe<Connector_Deployments_Set_Input>;
+  where: Connector_Deployments_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Connector_Deployments_By_PkArgs = {
+  _set?: Maybe<Connector_Deployments_Set_Input>;
+  pk_columns: Connector_Deployments_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Connector_Deployments_ManyArgs = {
+  updates: Array<Connector_Deployments_Updates>;
+};
+
+/** mutation root */
 export type Mutation_RootUpdate_CouponArgs = {
   _append?: Maybe<Coupon_Append_Input>;
   _delete_at_path?: Maybe<Coupon_Delete_At_Path_Input>;
@@ -29572,12 +33159,22 @@ export type Mutation_RootUpdate_Db_Latency_ManyArgs = {
 
 /** mutation root */
 export type Mutation_RootUpdate_Ddn_BuildArgs = {
+  _append?: Maybe<Ddn_Build_Append_Input>;
+  _delete_at_path?: Maybe<Ddn_Build_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Ddn_Build_Delete_Elem_Input>;
+  _delete_key?: Maybe<Ddn_Build_Delete_Key_Input>;
+  _prepend?: Maybe<Ddn_Build_Prepend_Input>;
   _set?: Maybe<Ddn_Build_Set_Input>;
   where: Ddn_Build_Bool_Exp;
 };
 
 /** mutation root */
 export type Mutation_RootUpdate_Ddn_Build_By_PkArgs = {
+  _append?: Maybe<Ddn_Build_Append_Input>;
+  _delete_at_path?: Maybe<Ddn_Build_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Ddn_Build_Delete_Elem_Input>;
+  _delete_key?: Maybe<Ddn_Build_Delete_Key_Input>;
+  _prepend?: Maybe<Ddn_Build_Prepend_Input>;
   _set?: Maybe<Ddn_Build_Set_Input>;
   pk_columns: Ddn_Build_Pk_Columns_Input;
 };
@@ -29636,6 +33233,59 @@ export type Mutation_RootUpdate_Ddn_Environment_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Ddn_Environment_ManyArgs = {
   updates: Array<Ddn_Environment_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_AccessArgs = {
+  _set?: Maybe<Ddn_Project_Entitlement_Access_Set_Input>;
+  where: Ddn_Project_Entitlement_Access_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Access_By_PkArgs = {
+  _set?: Maybe<Ddn_Project_Entitlement_Access_Set_Input>;
+  pk_columns: Ddn_Project_Entitlement_Access_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Access_ManyArgs = {
+  updates: Array<Ddn_Project_Entitlement_Access_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_CatalogueArgs = {
+  _inc?: Maybe<Ddn_Project_Entitlement_Catalogue_Inc_Input>;
+  _set?: Maybe<Ddn_Project_Entitlement_Catalogue_Set_Input>;
+  where: Ddn_Project_Entitlement_Catalogue_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Catalogue_By_PkArgs = {
+  _inc?: Maybe<Ddn_Project_Entitlement_Catalogue_Inc_Input>;
+  _set?: Maybe<Ddn_Project_Entitlement_Catalogue_Set_Input>;
+  pk_columns: Ddn_Project_Entitlement_Catalogue_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Catalogue_ManyArgs = {
+  updates: Array<Ddn_Project_Entitlement_Catalogue_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_TypesArgs = {
+  _set?: Maybe<Ddn_Project_Entitlement_Types_Set_Input>;
+  where: Ddn_Project_Entitlement_Types_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Types_By_PkArgs = {
+  _set?: Maybe<Ddn_Project_Entitlement_Types_Set_Input>;
+  pk_columns: Ddn_Project_Entitlement_Types_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Ddn_Project_Entitlement_Types_ManyArgs = {
+  updates: Array<Ddn_Project_Entitlement_Types_Updates>;
 };
 
 /** mutation root */
@@ -29713,6 +33363,35 @@ export type Mutation_RootUpdate_Dedicated_Cloud_Bills_By_PkArgs = {
   _prepend?: Maybe<Dedicated_Cloud_Bills_Prepend_Input>;
   _set?: Maybe<Dedicated_Cloud_Bills_Set_Input>;
   pk_columns: Dedicated_Cloud_Bills_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Dedicated_Cloud_Bills_DetailsArgs = {
+  _append?: Maybe<Dedicated_Cloud_Bills_Details_Append_Input>;
+  _delete_at_path?: Maybe<Dedicated_Cloud_Bills_Details_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Elem_Input>;
+  _delete_key?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Key_Input>;
+  _inc?: Maybe<Dedicated_Cloud_Bills_Details_Inc_Input>;
+  _prepend?: Maybe<Dedicated_Cloud_Bills_Details_Prepend_Input>;
+  _set?: Maybe<Dedicated_Cloud_Bills_Details_Set_Input>;
+  where: Dedicated_Cloud_Bills_Details_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Dedicated_Cloud_Bills_Details_By_PkArgs = {
+  _append?: Maybe<Dedicated_Cloud_Bills_Details_Append_Input>;
+  _delete_at_path?: Maybe<Dedicated_Cloud_Bills_Details_Delete_At_Path_Input>;
+  _delete_elem?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Elem_Input>;
+  _delete_key?: Maybe<Dedicated_Cloud_Bills_Details_Delete_Key_Input>;
+  _inc?: Maybe<Dedicated_Cloud_Bills_Details_Inc_Input>;
+  _prepend?: Maybe<Dedicated_Cloud_Bills_Details_Prepend_Input>;
+  _set?: Maybe<Dedicated_Cloud_Bills_Details_Set_Input>;
+  pk_columns: Dedicated_Cloud_Bills_Details_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Dedicated_Cloud_Bills_Details_ManyArgs = {
+  updates: Array<Dedicated_Cloud_Bills_Details_Updates>;
 };
 
 /** mutation root */
@@ -30225,23 +33904,6 @@ export type Mutation_RootUpdate_Hasura_Cluster_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Hasura_Cluster_ManyArgs = {
   updates: Array<Hasura_Cluster_Updates>;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Hasura_Graphql_Schema_TagsArgs = {
-  _set?: Maybe<Hasura_Graphql_Schema_Tags_Set_Input>;
-  where: Hasura_Graphql_Schema_Tags_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Hasura_Graphql_Schema_Tags_By_PkArgs = {
-  _set?: Maybe<Hasura_Graphql_Schema_Tags_Set_Input>;
-  pk_columns: Hasura_Graphql_Schema_Tags_Pk_Columns_Input;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Hasura_Graphql_Schema_Tags_ManyArgs = {
-  updates: Array<Hasura_Graphql_Schema_Tags_Updates>;
 };
 
 /** mutation root */
@@ -31728,52 +35390,6 @@ export type Mutation_RootUpdate_Saml_Idp_ManyArgs = {
 };
 
 /** mutation root */
-export type Mutation_RootUpdate_Schema_Diff_DataArgs = {
-  _append?: Maybe<Schema_Diff_Data_Append_Input>;
-  _delete_at_path?: Maybe<Schema_Diff_Data_Delete_At_Path_Input>;
-  _delete_elem?: Maybe<Schema_Diff_Data_Delete_Elem_Input>;
-  _delete_key?: Maybe<Schema_Diff_Data_Delete_Key_Input>;
-  _prepend?: Maybe<Schema_Diff_Data_Prepend_Input>;
-  _set?: Maybe<Schema_Diff_Data_Set_Input>;
-  where: Schema_Diff_Data_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Schema_Diff_Data_By_PkArgs = {
-  _append?: Maybe<Schema_Diff_Data_Append_Input>;
-  _delete_at_path?: Maybe<Schema_Diff_Data_Delete_At_Path_Input>;
-  _delete_elem?: Maybe<Schema_Diff_Data_Delete_Elem_Input>;
-  _delete_key?: Maybe<Schema_Diff_Data_Delete_Key_Input>;
-  _prepend?: Maybe<Schema_Diff_Data_Prepend_Input>;
-  _set?: Maybe<Schema_Diff_Data_Set_Input>;
-  pk_columns: Schema_Diff_Data_Pk_Columns_Input;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Schema_Diff_Data_ManyArgs = {
-  updates: Array<Schema_Diff_Data_Updates>;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Schema_Registry_DumpsArgs = {
-  _inc?: Maybe<Schema_Registry_Dumps_Inc_Input>;
-  _set?: Maybe<Schema_Registry_Dumps_Set_Input>;
-  where: Schema_Registry_Dumps_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Schema_Registry_Dumps_By_PkArgs = {
-  _inc?: Maybe<Schema_Registry_Dumps_Inc_Input>;
-  _set?: Maybe<Schema_Registry_Dumps_Set_Input>;
-  pk_columns: Schema_Registry_Dumps_Pk_Columns_Input;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Schema_Registry_Dumps_ManyArgs = {
-  updates: Array<Schema_Registry_Dumps_Updates>;
-};
-
-/** mutation root */
 export type Mutation_RootUpdate_Search_Project_Login_Status_ResultsArgs = {
   _inc?: Maybe<Search_Project_Login_Status_Results_Inc_Input>;
   _set?: Maybe<Search_Project_Login_Status_Results_Set_Input>;
@@ -31783,6 +35399,23 @@ export type Mutation_RootUpdate_Search_Project_Login_Status_ResultsArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Search_Project_Login_Status_Results_ManyArgs = {
   updates: Array<Search_Project_Login_Status_Results_Updates>;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Slack_ConfigArgs = {
+  _set?: Maybe<Slack_Config_Set_Input>;
+  where: Slack_Config_Bool_Exp;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Slack_Config_By_PkArgs = {
+  _set?: Maybe<Slack_Config_Set_Input>;
+  pk_columns: Slack_Config_Pk_Columns_Input;
+};
+
+/** mutation root */
+export type Mutation_RootUpdate_Slack_Config_ManyArgs = {
+  updates: Array<Slack_Config_Updates>;
 };
 
 /** mutation root */
@@ -32136,23 +35769,6 @@ export type Mutation_RootUpdate_Survey_V2_Response_By_PkArgs = {
 /** mutation root */
 export type Mutation_RootUpdate_Survey_V2_Response_ManyArgs = {
   updates: Array<Survey_V2_Response_Updates>;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_TagArgs = {
-  _set?: Maybe<Tag_Set_Input>;
-  where: Tag_Bool_Exp;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Tag_By_PkArgs = {
-  _set?: Maybe<Tag_Set_Input>;
-  pk_columns: Tag_Pk_Columns_Input;
-};
-
-/** mutation root */
-export type Mutation_RootUpdate_Tag_ManyArgs = {
-  updates: Array<Tag_Updates>;
 };
 
 /** mutation root */
@@ -37693,6 +41309,7 @@ export type Plans = {
   created_at: Scalars['timestamptz'];
   description: Scalars['String'];
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter: Scalars['Boolean'];
   /** An array relationship */
   entitlements: Array<Plan_Entitlements>;
   /** An aggregate relationship */
@@ -37798,6 +41415,7 @@ export type Plans_Bool_Exp = {
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   description?: Maybe<String_Comparison_Exp>;
   enable_granular_metrics?: Maybe<Boolean_Comparison_Exp>;
+  enable_otel_exporter?: Maybe<Boolean_Comparison_Exp>;
   entitlements?: Maybe<Plan_Entitlements_Bool_Exp>;
   entitlements_aggregate?: Maybe<Plan_Entitlements_Aggregate_Bool_Exp>;
   high_availability_enabled?: Maybe<Boolean_Comparison_Exp>;
@@ -37856,6 +41474,7 @@ export type Plans_Insert_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   description?: Maybe<Scalars['String']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   entitlements?: Maybe<Plan_Entitlements_Arr_Rel_Insert_Input>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
@@ -37957,6 +41576,7 @@ export type Plans_Order_By = {
   created_at?: Maybe<Order_By>;
   description?: Maybe<Order_By>;
   enable_granular_metrics?: Maybe<Order_By>;
+  enable_otel_exporter?: Maybe<Order_By>;
   entitlements_aggregate?: Maybe<Plan_Entitlements_Aggregate_Order_By>;
   high_availability_enabled?: Maybe<Order_By>;
   log_retention?: Maybe<Order_By>;
@@ -38008,6 +41628,8 @@ export enum Plans_Select_Column {
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
   /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
+  /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
   LogRetention = 'log_retention',
@@ -38058,6 +41680,7 @@ export type Plans_Set_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   description?: Maybe<Scalars['String']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -38153,6 +41776,7 @@ export type Plans_Stream_Cursor_Value_Input = {
   created_at?: Maybe<Scalars['timestamptz']>;
   description?: Maybe<Scalars['String']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -38215,6 +41839,8 @@ export enum Plans_Update_Column {
   Description = 'description',
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
+  /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
   /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
@@ -38329,6 +41955,7 @@ export type Policies = {
   collaborators_enabled: Scalars['Boolean'];
   created_at: Scalars['timestamptz'];
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter: Scalars['Boolean'];
   high_availability_enabled: Scalars['Boolean'];
   log_retention: Scalars['Int'];
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -38479,6 +42106,7 @@ export type Policies_Bool_Exp = {
   collaborators_enabled?: Maybe<Boolean_Comparison_Exp>;
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   enable_granular_metrics?: Maybe<Boolean_Comparison_Exp>;
+  enable_otel_exporter?: Maybe<Boolean_Comparison_Exp>;
   high_availability_enabled?: Maybe<Boolean_Comparison_Exp>;
   log_retention?: Maybe<Int_Comparison_Exp>;
   max_api_limit_roles?: Maybe<Int_Comparison_Exp>;
@@ -38535,6 +42163,7 @@ export type Policies_Insert_Input = {
   collaborators_enabled?: Maybe<Scalars['Boolean']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -38673,6 +42302,7 @@ export type Policies_Order_By = {
   collaborators_enabled?: Maybe<Order_By>;
   created_at?: Maybe<Order_By>;
   enable_granular_metrics?: Maybe<Order_By>;
+  enable_otel_exporter?: Maybe<Order_By>;
   high_availability_enabled?: Maybe<Order_By>;
   log_retention?: Maybe<Order_By>;
   max_api_limit_roles?: Maybe<Order_By>;
@@ -38721,6 +42351,8 @@ export enum Policies_Select_Column {
   CreatedAt = 'created_at',
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
+  /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
   /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
@@ -38774,6 +42406,8 @@ export enum Policies_Select_Column_Policies_Aggregate_Bool_Exp_Bool_And_Argument
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
   /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
+  /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
   MetricsEnabled = 'metrics_enabled',
@@ -38802,6 +42436,8 @@ export enum Policies_Select_Column_Policies_Aggregate_Bool_Exp_Bool_Or_Arguments
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
   /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
+  /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
   MetricsEnabled = 'metrics_enabled',
@@ -38827,6 +42463,7 @@ export type Policies_Set_Input = {
   collaborators_enabled?: Maybe<Scalars['Boolean']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -38972,6 +42609,7 @@ export type Policies_Stream_Cursor_Value_Input = {
   collaborators_enabled?: Maybe<Scalars['Boolean']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   enable_granular_metrics?: Maybe<Scalars['Boolean']>;
+  enable_otel_exporter?: Maybe<Scalars['Boolean']>;
   high_availability_enabled?: Maybe<Scalars['Boolean']>;
   log_retention?: Maybe<Scalars['Int']>;
   max_api_limit_roles?: Maybe<Scalars['Int']>;
@@ -39049,6 +42687,8 @@ export enum Policies_Update_Column {
   CreatedAt = 'created_at',
   /** column name */
   EnableGranularMetrics = 'enable_granular_metrics',
+  /** column name */
+  EnableOtelExporter = 'enable_otel_exporter',
   /** column name */
   HighAvailabilityEnabled = 'high_availability_enabled',
   /** column name */
@@ -44507,7 +48147,11 @@ export type Project_Db_Usage_Variance_Fields = {
   price?: Maybe<Scalars['Float']>;
 };
 
-/** Each entry in this table represents entitlements a project has access to. */
+/**
+ * Each entry in this table represents a specific project entitlement from
+ * project_entitlement_catalogue that a project has access to. A project can only
+ * have one version of a given type of entitlement at a time.
+ */
 export type Project_Entitlement_Access = {
   __typename?: 'project_entitlement_access';
   created_at: Scalars['timestamp'];
@@ -47633,6 +51277,8 @@ export type Projects = {
   activities: Array<Project_Activity>;
   /** An aggregate relationship */
   activities_aggregate: Project_Activity_Aggregate;
+  /** An object relationship */
+  alert_config?: Maybe<Alert_Config>;
   assigned_at?: Maybe<Scalars['timestamptz']>;
   /** An object relationship */
   azuremonitor_config?: Maybe<Azuremonitor_Config>;
@@ -48066,6 +51712,7 @@ export type Projects_Bool_Exp = {
   _or?: Maybe<Array<Projects_Bool_Exp>>;
   activities?: Maybe<Project_Activity_Bool_Exp>;
   activities_aggregate?: Maybe<Project_Activity_Aggregate_Bool_Exp>;
+  alert_config?: Maybe<Alert_Config_Bool_Exp>;
   assigned_at?: Maybe<Timestamptz_Comparison_Exp>;
   azuremonitor_config?: Maybe<Azuremonitor_Config_Bool_Exp>;
   billing_manager?: Maybe<Users_Public_Bool_Exp>;
@@ -48136,6 +51783,7 @@ export enum Projects_Constraint {
 /** input type for inserting data into table "projects" */
 export type Projects_Insert_Input = {
   activities?: Maybe<Project_Activity_Arr_Rel_Insert_Input>;
+  alert_config?: Maybe<Alert_Config_Obj_Rel_Insert_Input>;
   assigned_at?: Maybe<Scalars['timestamptz']>;
   azuremonitor_config?: Maybe<Azuremonitor_Config_Obj_Rel_Insert_Input>;
   billing_manager?: Maybe<Users_Public_Obj_Rel_Insert_Input>;
@@ -48262,6 +51910,7 @@ export type Projects_On_Conflict = {
 /** Ordering options when selecting data from "projects". */
 export type Projects_Order_By = {
   activities_aggregate?: Maybe<Project_Activity_Aggregate_Order_By>;
+  alert_config?: Maybe<Alert_Config_Order_By>;
   assigned_at?: Maybe<Order_By>;
   azuremonitor_config?: Maybe<Azuremonitor_Config_Order_By>;
   billing_manager?: Maybe<Users_Public_Order_By>;
@@ -49926,6 +53575,36 @@ export enum PulumiMode {
 
 export type Query_Root = {
   __typename?: 'query_root';
+  /** fetch data from the table: "alert_config" */
+  alert_config: Array<Alert_Config>;
+  /** fetch aggregated fields from the table: "alert_config" */
+  alert_config_aggregate: Alert_Config_Aggregate;
+  /** fetch data from the table: "alert_config_alert_type" */
+  alert_config_alert_type: Array<Alert_Config_Alert_Type>;
+  /** fetch aggregated fields from the table: "alert_config_alert_type" */
+  alert_config_alert_type_aggregate: Alert_Config_Alert_Type_Aggregate;
+  /** fetch data from the table: "alert_config_alert_type" using primary key columns */
+  alert_config_alert_type_by_pk?: Maybe<Alert_Config_Alert_Type>;
+  /** fetch data from the table: "alert_config" using primary key columns */
+  alert_config_by_pk?: Maybe<Alert_Config>;
+  /** fetch data from the table: "alert_config_service" */
+  alert_config_service: Array<Alert_Config_Service>;
+  /** fetch aggregated fields from the table: "alert_config_service" */
+  alert_config_service_aggregate: Alert_Config_Service_Aggregate;
+  /** fetch data from the table: "alert_config_service" using primary key columns */
+  alert_config_service_by_pk?: Maybe<Alert_Config_Service>;
+  /** fetch data from the table: "alert_service_type" */
+  alert_service_type: Array<Alert_Service_Type>;
+  /** fetch aggregated fields from the table: "alert_service_type" */
+  alert_service_type_aggregate: Alert_Service_Type_Aggregate;
+  /** fetch data from the table: "alert_service_type" using primary key columns */
+  alert_service_type_by_pk?: Maybe<Alert_Service_Type>;
+  /** fetch data from the table: "alert_type" */
+  alert_type: Array<Alert_Type>;
+  /** fetch aggregated fields from the table: "alert_type" */
+  alert_type_aggregate: Alert_Type_Aggregate;
+  /** fetch data from the table: "alert_type" using primary key columns */
+  alert_type_by_pk?: Maybe<Alert_Type>;
   /** fetch data from the table: "azuremonitor_config" */
   azuremonitor_config: Array<Azuremonitor_Config>;
   /** fetch aggregated fields from the table: "azuremonitor_config" */
@@ -49983,6 +53662,10 @@ export type Query_Root = {
   cloud_metadata_aggregate: Cloud_Metadata_Aggregate;
   /** fetch data from the table: "cloud_metadata" using primary key columns */
   cloud_metadata_by_pk?: Maybe<Cloud_Metadata>;
+  /** fetch data from the table: "cloud_regions_by_plan" */
+  cloud_regions_by_plan: Array<Cloud_Regions_By_Plan>;
+  /** fetch aggregated fields from the table: "cloud_regions_by_plan" */
+  cloud_regions_by_plan_aggregate: Cloud_Regions_By_Plan_Aggregate;
   /** execute function "compute_project_agg_db_usage_user" which returns "project_db_usage_agg_user" */
   compute_project_agg_db_usage_user: Array<Project_Db_Usage_Agg_User>;
   /**
@@ -50033,6 +53716,24 @@ export type Query_Root = {
   config_status_aggregate: Config_Status_Aggregate;
   /** fetch data from the table: "config_status" using primary key columns */
   config_status_by_pk?: Maybe<Config_Status>;
+  /** fetch data from the table: "connector_config" */
+  connector_config: Array<Connector_Config>;
+  /** fetch aggregated fields from the table: "connector_config" */
+  connector_config_aggregate: Connector_Config_Aggregate;
+  /** fetch data from the table: "connector_config" using primary key columns */
+  connector_config_by_pk?: Maybe<Connector_Config>;
+  /** fetch data from the table: "connector_deployment" */
+  connector_connector_deployment: Array<Connector_Connector_Deployment>;
+  /** fetch aggregated fields from the table: "connector_deployment" */
+  connector_connector_deployment_aggregate: Connector_Connector_Deployment_Aggregate;
+  /** fetch data from the table: "connector_deployment" using primary key columns */
+  connector_connector_deployment_by_pk?: Maybe<Connector_Connector_Deployment>;
+  /** fetch data from the table: "connector_deployments" */
+  connector_deployments: Array<Connector_Deployments>;
+  /** fetch aggregated fields from the table: "connector_deployments" */
+  connector_deployments_aggregate: Connector_Deployments_Aggregate;
+  /** fetch data from the table: "connector_deployments" using primary key columns */
+  connector_deployments_by_pk?: Maybe<Connector_Deployments>;
   /** fetch data from the table: "coupon" */
   coupon: Array<Coupon>;
   /** fetch aggregated fields from the table: "coupon" */
@@ -50117,6 +53818,24 @@ export type Query_Root = {
   ddn_environment_aggregate: Ddn_Environment_Aggregate;
   /** fetch data from the table: "ddn.environment" using primary key columns */
   ddn_environment_by_pk?: Maybe<Ddn_Environment>;
+  /** fetch data from the table: "ddn.project_entitlement_access" */
+  ddn_project_entitlement_access: Array<Ddn_Project_Entitlement_Access>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_access" */
+  ddn_project_entitlement_access_aggregate: Ddn_Project_Entitlement_Access_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_access" using primary key columns */
+  ddn_project_entitlement_access_by_pk?: Maybe<Ddn_Project_Entitlement_Access>;
+  /** fetch data from the table: "ddn.project_entitlement_catalogue" */
+  ddn_project_entitlement_catalogue: Array<Ddn_Project_Entitlement_Catalogue>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_catalogue" */
+  ddn_project_entitlement_catalogue_aggregate: Ddn_Project_Entitlement_Catalogue_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_catalogue" using primary key columns */
+  ddn_project_entitlement_catalogue_by_pk?: Maybe<Ddn_Project_Entitlement_Catalogue>;
+  /** fetch data from the table: "ddn.project_entitlement_types" */
+  ddn_project_entitlement_types: Array<Ddn_Project_Entitlement_Types>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_types" */
+  ddn_project_entitlement_types_aggregate: Ddn_Project_Entitlement_Types_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_types" using primary key columns */
+  ddn_project_entitlement_types_by_pk?: Maybe<Ddn_Project_Entitlement_Types>;
   /** fetch data from the table: "ddn.projects" */
   ddn_projects: Array<Ddn_Projects>;
   /** fetch aggregated fields from the table: "ddn.projects" */
@@ -50135,13 +53854,18 @@ export type Query_Root = {
   ddn_tunnel_cluster_aggregate: Ddn_Tunnel_Cluster_Aggregate;
   /** fetch data from the table: "ddn.tunnel_cluster" using primary key columns */
   ddn_tunnel_cluster_by_pk?: Maybe<Ddn_Tunnel_Cluster>;
-  ddnHasuraSecretList: Array<HasuraSecretList>;
   /** fetch data from the table: "dedicated_cloud_bills" */
   dedicated_cloud_bills: Array<Dedicated_Cloud_Bills>;
   /** fetch aggregated fields from the table: "dedicated_cloud_bills" */
   dedicated_cloud_bills_aggregate: Dedicated_Cloud_Bills_Aggregate;
   /** fetch data from the table: "dedicated_cloud_bills" using primary key columns */
   dedicated_cloud_bills_by_pk?: Maybe<Dedicated_Cloud_Bills>;
+  /** fetch data from the table: "dedicated_cloud_bills_details" */
+  dedicated_cloud_bills_details: Array<Dedicated_Cloud_Bills_Details>;
+  /** fetch aggregated fields from the table: "dedicated_cloud_bills_details" */
+  dedicated_cloud_bills_details_aggregate: Dedicated_Cloud_Bills_Details_Aggregate;
+  /** fetch data from the table: "dedicated_cloud_bills_details" using primary key columns */
+  dedicated_cloud_bills_details_by_pk?: Maybe<Dedicated_Cloud_Bills_Details>;
   /** fetch data from the table: "dedicated_cloud_commitments" */
   dedicated_cloud_commitments: Array<Dedicated_Cloud_Commitments>;
   /** fetch aggregated fields from the table: "dedicated_cloud_commitments" */
@@ -50220,6 +53944,9 @@ export type Query_Root = {
   feature_config_aggregate: Feature_Config_Aggregate;
   /** fetch data from the table: "feature_config" using primary key columns */
   feature_config_by_pk?: Maybe<Feature_Config>;
+  fetchDedicatedCloudClusterBills?: Maybe<
+    Array<DedicatedCloudClusterBillsOutput>
+  >;
   fetchPendingInvitations: Array<UserInvitation>;
   fetchPendingOwnershipInvitations: Array<ProjectOwnershipInvitation>;
   fetchUserSupportTicketDetails?: Maybe<Array<SupportTicketDetails>>;
@@ -50252,13 +53979,6 @@ export type Query_Root = {
    * aggregates on result of table type "project_total_db_usage_agg"
    */
   get_aggregated_cost_for_project_on_shared_plan_aggregate: Project_Total_Db_Usage_Agg_Aggregate;
-  /** execute function "get_previous_schema_change_for_role" which returns "schema_registry_dumps" */
-  get_previous_schema_change_for_role: Array<Schema_Registry_Dumps>;
-  /**
-   * execute function "get_previous_schema_change_for_role" and query aggregates on
-   * result of table type "schema_registry_dumps"
-   */
-  get_previous_schema_change_for_role_aggregate: Schema_Registry_Dumps_Aggregate;
   getBuildVersion: BuildVersion;
   getComputeUnitAllocation?: Maybe<ComputeUnitCountResponse>;
   getComputeUnitUsage?: Maybe<ComputeUnitUsageResponse>;
@@ -50273,8 +53993,6 @@ export type Query_Root = {
   getNumberOfConnectedSources?: Maybe<NumberOfConnectedSourcesOutput>;
   getProjectMigrationStatus?: Maybe<Array<Maybe<ProjectMigrationStatus>>>;
   getReportURL?: Maybe<GetReportUrlResponse>;
-  /** action gets the diff between two schema */
-  getSchemaDiff?: Maybe<SchemaDiffOutput>;
   getTenantEnv?: Maybe<TenantEnv>;
   getTenantEnvConfigInfo?: Maybe<TenantEnvConfigInfo>;
   /** fetch data from the table: "github_email_type" */
@@ -50319,12 +54037,6 @@ export type Query_Root = {
   hasura_cluster_aggregate: Hasura_Cluster_Aggregate;
   /** fetch data from the table: "hasura_cluster" using primary key columns */
   hasura_cluster_by_pk?: Maybe<Hasura_Cluster>;
-  /** An array relationship */
-  hasura_graphql_schema_tags: Array<Hasura_Graphql_Schema_Tags>;
-  /** An aggregate relationship */
-  hasura_graphql_schema_tags_aggregate: Hasura_Graphql_Schema_Tags_Aggregate;
-  /** fetch data from the table: "hasura_graphql_schema_tags" using primary key columns */
-  hasura_graphql_schema_tags_by_pk?: Maybe<Hasura_Graphql_Schema_Tags>;
   /** fetch data from the table: "hasura_worker" */
   hasura_worker: Array<Hasura_Worker>;
   /** fetch aggregated fields from the table: "hasura_worker" */
@@ -50793,18 +54505,6 @@ export type Query_Root = {
   saml_idp_aggregate: Saml_Idp_Aggregate;
   /** fetch data from the table: "saml_idp" using primary key columns */
   saml_idp_by_pk?: Maybe<Saml_Idp>;
-  /** fetch data from the table: "schema_diff_data" */
-  schema_diff_data: Array<Schema_Diff_Data>;
-  /** fetch aggregated fields from the table: "schema_diff_data" */
-  schema_diff_data_aggregate: Schema_Diff_Data_Aggregate;
-  /** fetch data from the table: "schema_diff_data" using primary key columns */
-  schema_diff_data_by_pk?: Maybe<Schema_Diff_Data>;
-  /** fetch data from the table: "schema_registry_dumps" */
-  schema_registry_dumps: Array<Schema_Registry_Dumps>;
-  /** fetch aggregated fields from the table: "schema_registry_dumps" */
-  schema_registry_dumps_aggregate: Schema_Registry_Dumps_Aggregate;
-  /** fetch data from the table: "schema_registry_dumps" using primary key columns */
-  schema_registry_dumps_by_pk?: Maybe<Schema_Registry_Dumps>;
   /** execute function "search_project_login_status" which returns "search_project_login_status_results" */
   search_project_login_status: Array<Search_Project_Login_Status_Results>;
   /**
@@ -50820,6 +54520,12 @@ export type Query_Root = {
   search_tenant_group_has_least_members: Array<Tenant_Group>;
   /** execute function "search_tenant_group_has_least_members" and query aggregates on result of table type "tenant_group" */
   search_tenant_group_has_least_members_aggregate: Tenant_Group_Aggregate;
+  /** fetch data from the table: "slack_config" */
+  slack_config: Array<Slack_Config>;
+  /** fetch aggregated fields from the table: "slack_config" */
+  slack_config_aggregate: Slack_Config_Aggregate;
+  /** fetch data from the table: "slack_config" using primary key columns */
+  slack_config_by_pk?: Maybe<Slack_Config>;
   status: Scalars['String'];
   /** fetch data from the table: "stripe_subscription" */
   stripe_subscription: Array<Stripe_Subscription>;
@@ -50929,12 +54635,6 @@ export type Query_Root = {
   survey_v2_response_answer_option_by_pk?: Maybe<Survey_V2_Response_Answer_Option>;
   /** fetch data from the table: "survey_v2_response" using primary key columns */
   survey_v2_response_by_pk?: Maybe<Survey_V2_Response>;
-  /** fetch data from the table: "tag" */
-  tag: Array<Tag>;
-  /** fetch aggregated fields from the table: "tag" */
-  tag_aggregate: Tag_Aggregate;
-  /** fetch data from the table: "tag" using primary key columns */
-  tag_by_pk?: Maybe<Tag>;
   /** fetch data from the table: "task_event" */
   task_event: Array<Task_Event>;
   /** fetch aggregated fields from the table: "task_event" */
@@ -51047,6 +54747,10 @@ export type Query_Root = {
   user_profile_aggregate: User_Profile_Aggregate;
   /** fetch data from the table: "user_profile" using primary key columns */
   user_profile_by_pk?: Maybe<User_Profile>;
+  /** fetch data from the table: "user_project_map" */
+  user_project_map: Array<User_Project_Map>;
+  /** fetch aggregated fields from the table: "user_project_map" */
+  user_project_map_aggregate: User_Project_Map_Aggregate;
   /** fetch data from the table: "user_roles" */
   user_roles: Array<User_Roles>;
   /** fetch aggregated fields from the table: "user_roles" */
@@ -51113,6 +54817,108 @@ export type Query_Root = {
   zendesk_support_tickets_aggregate: Zendesk_Support_Tickets_Aggregate;
   /** fetch data from the table: "zendesk_support_tickets" using primary key columns */
   zendesk_support_tickets_by_pk?: Maybe<Zendesk_Support_Tickets>;
+};
+
+export type Query_RootAlert_ConfigArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Order_By>>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Order_By>>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_Alert_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_Alert_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_Alert_Type_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Scalars['String'];
+};
+
+export type Query_RootAlert_Config_By_PkArgs = {
+  project_id: Scalars['uuid'];
+};
+
+export type Query_RootAlert_Config_ServiceArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_Service_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+export type Query_RootAlert_Config_Service_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Alert_Service_Type_Enum;
+};
+
+export type Query_RootAlert_Service_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Service_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Service_Type_Order_By>>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Service_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Service_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Service_Type_Order_By>>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Service_Type_By_PkArgs = {
+  name: Scalars['String'];
+};
+
+export type Query_RootAlert_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
+};
+
+export type Query_RootAlert_Type_By_PkArgs = {
+  id: Scalars['String'];
 };
 
 export type Query_RootAzuremonitor_ConfigArgs = {
@@ -51305,6 +55111,22 @@ export type Query_RootCloud_Metadata_By_PkArgs = {
   cloud: Cloud_Enum;
 };
 
+export type Query_RootCloud_Regions_By_PlanArgs = {
+  distinct_on?: Maybe<Array<Cloud_Regions_By_Plan_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Cloud_Regions_By_Plan_Order_By>>;
+  where?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+};
+
+export type Query_RootCloud_Regions_By_Plan_AggregateArgs = {
+  distinct_on?: Maybe<Array<Cloud_Regions_By_Plan_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Cloud_Regions_By_Plan_Order_By>>;
+  where?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+};
+
 export type Query_RootCompute_Project_Agg_Db_Usage_UserArgs = {
   args: Compute_Project_Agg_Db_Usage_User_Args;
   distinct_on?: Maybe<Array<Project_Db_Usage_Agg_User_Select_Column>>;
@@ -51460,6 +55282,66 @@ export type Query_RootConfig_Status_By_PkArgs = {
   hash: Scalars['String'];
   tenant_id: Scalars['uuid'];
   worker_id: Scalars['uuid'];
+};
+
+export type Query_RootConnector_ConfigArgs = {
+  distinct_on?: Maybe<Array<Connector_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Config_Order_By>>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+export type Query_RootConnector_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Config_Order_By>>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+export type Query_RootConnector_Config_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Query_RootConnector_Connector_DeploymentArgs = {
+  distinct_on?: Maybe<Array<Connector_Connector_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Connector_Deployment_Order_By>>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+export type Query_RootConnector_Connector_Deployment_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Connector_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Connector_Deployment_Order_By>>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+export type Query_RootConnector_Connector_Deployment_By_PkArgs = {
+  id: Scalars['connector_uuid'];
+};
+
+export type Query_RootConnector_DeploymentsArgs = {
+  distinct_on?: Maybe<Array<Connector_Deployments_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Deployments_Order_By>>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
+};
+
+export type Query_RootConnector_Deployments_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Deployments_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Deployments_Order_By>>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
+};
+
+export type Query_RootConnector_Deployments_By_PkArgs = {
+  id: Scalars['uuid'];
 };
 
 export type Query_RootCouponArgs = {
@@ -51742,6 +55624,66 @@ export type Query_RootDdn_Environment_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
+export type Query_RootDdn_Project_Entitlement_AccessArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Access_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Access_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Query_RootDdn_Project_Entitlement_CatalogueArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Catalogue_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Catalogue_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Query_RootDdn_Project_Entitlement_TypesArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Types_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Types_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Types_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
+export type Query_RootDdn_Project_Entitlement_Types_By_PkArgs = {
+  value: Scalars['String'];
+};
+
 export type Query_RootDdn_ProjectsArgs = {
   distinct_on?: Maybe<Array<Ddn_Projects_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -51802,10 +55744,6 @@ export type Query_RootDdn_Tunnel_Cluster_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
-export type Query_RootDdnHasuraSecretListArgs = {
-  project_id: Scalars['String'];
-};
-
 export type Query_RootDedicated_Cloud_BillsArgs = {
   distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -51823,6 +55761,26 @@ export type Query_RootDedicated_Cloud_Bills_AggregateArgs = {
 };
 
 export type Query_RootDedicated_Cloud_Bills_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Query_RootDedicated_Cloud_Bills_DetailsArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+export type Query_RootDedicated_Cloud_Bills_Details_AggregateArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+export type Query_RootDedicated_Cloud_Bills_Details_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -52089,6 +56047,12 @@ export type Query_RootFeature_Config_By_PkArgs = {
   feature: Feature_Enum;
 };
 
+export type Query_RootFetchDedicatedCloudClusterBillsArgs = {
+  month: Scalars['Int'];
+  user_id: Scalars['uuid'];
+  year: Scalars['Int'];
+};
+
 export type Query_RootFetchUserSupportTicketDetailsArgs = {
   limit?: Maybe<Scalars['Int']>;
   offset?: Maybe<Scalars['Int']>;
@@ -52191,24 +56155,6 @@ export type Query_RootGet_Aggregated_Cost_For_Project_On_Shared_Plan_AggregateAr
     where?: Maybe<Project_Total_Db_Usage_Agg_Bool_Exp>;
   };
 
-export type Query_RootGet_Previous_Schema_Change_For_RoleArgs = {
-  args: Get_Previous_Schema_Change_For_Role_Args;
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Query_RootGet_Previous_Schema_Change_For_Role_AggregateArgs = {
-  args: Get_Previous_Schema_Change_For_Role_Args;
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
 export type Query_RootGetComputeUnitAllocationArgs = {
   cloud: CloudProvider;
   cluster_id: Scalars['String'];
@@ -52241,10 +56187,6 @@ export type Query_RootGetProjectMigrationStatusArgs = {
 
 export type Query_RootGetReportUrlArgs = {
   key: Scalars['String'];
-};
-
-export type Query_RootGetSchemaDiffArgs = {
-  args: SchemaDiffInput;
 };
 
 export type Query_RootGetTenantEnvArgs = {
@@ -52394,26 +56336,6 @@ export type Query_RootHasura_Cluster_AggregateArgs = {
 };
 
 export type Query_RootHasura_Cluster_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Query_RootHasura_Graphql_Schema_TagsArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-export type Query_RootHasura_Graphql_Schema_Tags_AggregateArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-export type Query_RootHasura_Graphql_Schema_Tags_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -54060,46 +57982,6 @@ export type Query_RootSaml_Idp_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
-export type Query_RootSchema_Diff_DataArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-export type Query_RootSchema_Diff_Data_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-export type Query_RootSchema_Diff_Data_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Query_RootSchema_Registry_DumpsArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Query_RootSchema_Registry_Dumps_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Query_RootSchema_Registry_Dumps_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
 export type Query_RootSearch_Project_Login_StatusArgs = {
   args: Search_Project_Login_Status_Args;
   distinct_on?: Maybe<Array<Search_Project_Login_Status_Results_Select_Column>>;
@@ -54150,6 +58032,26 @@ export type Query_RootSearch_Tenant_Group_Has_Least_Members_AggregateArgs = {
   offset?: Maybe<Scalars['Int']>;
   order_by?: Maybe<Array<Tenant_Group_Order_By>>;
   where?: Maybe<Tenant_Group_Bool_Exp>;
+};
+
+export type Query_RootSlack_ConfigArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+export type Query_RootSlack_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+export type Query_RootSlack_Config_By_PkArgs = {
+  id: Scalars['uuid'];
 };
 
 export type Query_RootStripe_SubscriptionArgs = {
@@ -54520,26 +58422,6 @@ export type Query_RootSurvey_V2_Response_Answer_Option_By_PkArgs = {
 };
 
 export type Query_RootSurvey_V2_Response_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Query_RootTagArgs = {
-  distinct_on?: Maybe<Array<Tag_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Tag_Order_By>>;
-  where?: Maybe<Tag_Bool_Exp>;
-};
-
-export type Query_RootTag_AggregateArgs = {
-  distinct_on?: Maybe<Array<Tag_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Tag_Order_By>>;
-  where?: Maybe<Tag_Bool_Exp>;
-};
-
-export type Query_RootTag_By_PkArgs = {
   id: Scalars['uuid'];
 };
 
@@ -54920,6 +58802,22 @@ export type Query_RootUser_Profile_AggregateArgs = {
 
 export type Query_RootUser_Profile_By_PkArgs = {
   id: Scalars['uuid'];
+};
+
+export type Query_RootUser_Project_MapArgs = {
+  distinct_on?: Maybe<Array<User_Project_Map_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<User_Project_Map_Order_By>>;
+  where?: Maybe<User_Project_Map_Bool_Exp>;
+};
+
+export type Query_RootUser_Project_Map_AggregateArgs = {
+  distinct_on?: Maybe<Array<User_Project_Map_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<User_Project_Map_Order_By>>;
+  where?: Maybe<User_Project_Map_Bool_Exp>;
 };
 
 export type Query_RootUser_RolesArgs = {
@@ -56471,6 +60369,8 @@ export type Saml_Idp_Bool_Exp = {
 
 /** unique or primary key constraints on table "saml_idp" */
 export enum Saml_Idp_Constraint {
+  /** unique or primary key constraint on columns "domain" */
+  SamlIdpDomainKey = 'saml_idp_domain_key',
   /** unique or primary key constraint on columns "id" */
   SamlIdpPkey = 'saml_idp_pkey',
 }
@@ -56610,875 +60510,6 @@ export type SaveSurveyAnswerV2Payload = {
   projectID?: Maybe<Scalars['uuid']>;
   responses: Array<Maybe<SurveyResponseV2>>;
   surveyName: Scalars['String'];
-};
-
-/** stores the schema diff for the user to read the diff on their schemas */
-export type Schema_Diff_Data = {
-  __typename?: 'schema_diff_data';
-  created_at: Scalars['timestamptz'];
-  current_schema_hash: Scalars['String'];
-  current_schema_id: Scalars['uuid'];
-  former_schema_hash: Scalars['String'];
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id: Scalars['uuid'];
-  schema_diff_data: Scalars['jsonb'];
-  /** An object relationship */
-  schema_registry_dump_data: Schema_Registry_Dumps;
-  updated_at: Scalars['timestamptz'];
-};
-
-/** stores the schema diff for the user to read the diff on their schemas */
-export type Schema_Diff_DataSchema_Diff_DataArgs = {
-  path?: Maybe<Scalars['String']>;
-};
-
-/** aggregated selection of "schema_diff_data" */
-export type Schema_Diff_Data_Aggregate = {
-  __typename?: 'schema_diff_data_aggregate';
-  aggregate?: Maybe<Schema_Diff_Data_Aggregate_Fields>;
-  nodes: Array<Schema_Diff_Data>;
-};
-
-export type Schema_Diff_Data_Aggregate_Bool_Exp = {
-  count?: Maybe<Schema_Diff_Data_Aggregate_Bool_Exp_Count>;
-};
-
-export type Schema_Diff_Data_Aggregate_Bool_Exp_Count = {
-  arguments?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<Schema_Diff_Data_Bool_Exp>;
-  predicate: Int_Comparison_Exp;
-};
-
-/** aggregate fields of "schema_diff_data" */
-export type Schema_Diff_Data_Aggregate_Fields = {
-  __typename?: 'schema_diff_data_aggregate_fields';
-  count: Scalars['Int'];
-  max?: Maybe<Schema_Diff_Data_Max_Fields>;
-  min?: Maybe<Schema_Diff_Data_Min_Fields>;
-};
-
-/** aggregate fields of "schema_diff_data" */
-export type Schema_Diff_Data_Aggregate_FieldsCountArgs = {
-  columns?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-};
-
-/** order by aggregate values of table "schema_diff_data" */
-export type Schema_Diff_Data_Aggregate_Order_By = {
-  count?: Maybe<Order_By>;
-  max?: Maybe<Schema_Diff_Data_Max_Order_By>;
-  min?: Maybe<Schema_Diff_Data_Min_Order_By>;
-};
-
-/** append existing jsonb value of filtered columns with new jsonb value */
-export type Schema_Diff_Data_Append_Input = {
-  schema_diff_data?: Maybe<Scalars['jsonb']>;
-};
-
-/** input type for inserting array relation for remote table "schema_diff_data" */
-export type Schema_Diff_Data_Arr_Rel_Insert_Input = {
-  data: Array<Schema_Diff_Data_Insert_Input>;
-  /** upsert condition */
-  on_conflict?: Maybe<Schema_Diff_Data_On_Conflict>;
-};
-
-/** Boolean expression to filter rows from the table "schema_diff_data". All fields are combined with a logical 'AND'. */
-export type Schema_Diff_Data_Bool_Exp = {
-  _and?: Maybe<Array<Schema_Diff_Data_Bool_Exp>>;
-  _not?: Maybe<Schema_Diff_Data_Bool_Exp>;
-  _or?: Maybe<Array<Schema_Diff_Data_Bool_Exp>>;
-  created_at?: Maybe<Timestamptz_Comparison_Exp>;
-  current_schema_hash?: Maybe<String_Comparison_Exp>;
-  current_schema_id?: Maybe<Uuid_Comparison_Exp>;
-  former_schema_hash?: Maybe<String_Comparison_Exp>;
-  former_schema_id?: Maybe<Uuid_Comparison_Exp>;
-  id?: Maybe<Uuid_Comparison_Exp>;
-  schema_diff_data?: Maybe<Jsonb_Comparison_Exp>;
-  schema_registry_dump_data?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
-};
-
-/** unique or primary key constraints on table "schema_diff_data" */
-export enum Schema_Diff_Data_Constraint {
-  /** unique or primary key constraint on columns "id" */
-  HasuraGraphqlSchemaPkey = 'hasura_graphql_schema_pkey',
-  /** unique or primary key constraint on columns "former_schema_id", "current_schema_id" */
-  SchemaDiffDataCurrentSchemaIdFormerSchemaIdKey = 'schema_diff_data_current_schema_id_former_schema_id_key',
-}
-
-/** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
-export type Schema_Diff_Data_Delete_At_Path_Input = {
-  schema_diff_data?: Maybe<Array<Scalars['String']>>;
-};
-
-/**
- * delete the array element with specified index (negative integers count from the
- * end). throws an error if top level container is not an array
- */
-export type Schema_Diff_Data_Delete_Elem_Input = {
-  schema_diff_data?: Maybe<Scalars['Int']>;
-};
-
-/** delete key/value pair or string element. key/value pairs are matched based on their key value */
-export type Schema_Diff_Data_Delete_Key_Input = {
-  schema_diff_data?: Maybe<Scalars['String']>;
-};
-
-/** input type for inserting data into table "schema_diff_data" */
-export type Schema_Diff_Data_Insert_Input = {
-  created_at?: Maybe<Scalars['timestamptz']>;
-  current_schema_hash?: Maybe<Scalars['String']>;
-  current_schema_id?: Maybe<Scalars['uuid']>;
-  former_schema_hash?: Maybe<Scalars['String']>;
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  schema_diff_data?: Maybe<Scalars['jsonb']>;
-  schema_registry_dump_data?: Maybe<Schema_Registry_Dumps_Obj_Rel_Insert_Input>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-};
-
-/** aggregate max on columns */
-export type Schema_Diff_Data_Max_Fields = {
-  __typename?: 'schema_diff_data_max_fields';
-  created_at?: Maybe<Scalars['timestamptz']>;
-  current_schema_hash?: Maybe<Scalars['String']>;
-  current_schema_id?: Maybe<Scalars['uuid']>;
-  former_schema_hash?: Maybe<Scalars['String']>;
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-};
-
-/** order by max() on columns of table "schema_diff_data" */
-export type Schema_Diff_Data_Max_Order_By = {
-  created_at?: Maybe<Order_By>;
-  current_schema_hash?: Maybe<Order_By>;
-  current_schema_id?: Maybe<Order_By>;
-  former_schema_hash?: Maybe<Order_By>;
-  former_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  updated_at?: Maybe<Order_By>;
-};
-
-/** aggregate min on columns */
-export type Schema_Diff_Data_Min_Fields = {
-  __typename?: 'schema_diff_data_min_fields';
-  created_at?: Maybe<Scalars['timestamptz']>;
-  current_schema_hash?: Maybe<Scalars['String']>;
-  current_schema_id?: Maybe<Scalars['uuid']>;
-  former_schema_hash?: Maybe<Scalars['String']>;
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-};
-
-/** order by min() on columns of table "schema_diff_data" */
-export type Schema_Diff_Data_Min_Order_By = {
-  created_at?: Maybe<Order_By>;
-  current_schema_hash?: Maybe<Order_By>;
-  current_schema_id?: Maybe<Order_By>;
-  former_schema_hash?: Maybe<Order_By>;
-  former_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  updated_at?: Maybe<Order_By>;
-};
-
-/** response of any mutation on the table "schema_diff_data" */
-export type Schema_Diff_Data_Mutation_Response = {
-  __typename?: 'schema_diff_data_mutation_response';
-  /** number of rows affected by the mutation */
-  affected_rows: Scalars['Int'];
-  /** data from the rows affected by the mutation */
-  returning: Array<Schema_Diff_Data>;
-};
-
-/** input type for inserting object relation for remote table "schema_diff_data" */
-export type Schema_Diff_Data_Obj_Rel_Insert_Input = {
-  data: Schema_Diff_Data_Insert_Input;
-  /** upsert condition */
-  on_conflict?: Maybe<Schema_Diff_Data_On_Conflict>;
-};
-
-/** on_conflict condition type for table "schema_diff_data" */
-export type Schema_Diff_Data_On_Conflict = {
-  constraint: Schema_Diff_Data_Constraint;
-  update_columns?: Array<Schema_Diff_Data_Update_Column>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-/** Ordering options when selecting data from "schema_diff_data". */
-export type Schema_Diff_Data_Order_By = {
-  created_at?: Maybe<Order_By>;
-  current_schema_hash?: Maybe<Order_By>;
-  current_schema_id?: Maybe<Order_By>;
-  former_schema_hash?: Maybe<Order_By>;
-  former_schema_id?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  schema_diff_data?: Maybe<Order_By>;
-  schema_registry_dump_data?: Maybe<Schema_Registry_Dumps_Order_By>;
-  updated_at?: Maybe<Order_By>;
-};
-
-/** primary key columns input for table: schema_diff_data */
-export type Schema_Diff_Data_Pk_Columns_Input = {
-  id: Scalars['uuid'];
-};
-
-/** prepend existing jsonb value of filtered columns with new jsonb value */
-export type Schema_Diff_Data_Prepend_Input = {
-  schema_diff_data?: Maybe<Scalars['jsonb']>;
-};
-
-/** select columns of table "schema_diff_data" */
-export enum Schema_Diff_Data_Select_Column {
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  CurrentSchemaHash = 'current_schema_hash',
-  /** column name */
-  CurrentSchemaId = 'current_schema_id',
-  /** column name */
-  FormerSchemaHash = 'former_schema_hash',
-  /** column name */
-  FormerSchemaId = 'former_schema_id',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  SchemaDiffData = 'schema_diff_data',
-  /** column name */
-  UpdatedAt = 'updated_at',
-}
-
-/** input type for updating data in table "schema_diff_data" */
-export type Schema_Diff_Data_Set_Input = {
-  created_at?: Maybe<Scalars['timestamptz']>;
-  current_schema_hash?: Maybe<Scalars['String']>;
-  current_schema_id?: Maybe<Scalars['uuid']>;
-  former_schema_hash?: Maybe<Scalars['String']>;
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  schema_diff_data?: Maybe<Scalars['jsonb']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-};
-
-/** Streaming cursor of the table "schema_diff_data" */
-export type Schema_Diff_Data_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Schema_Diff_Data_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: Maybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Schema_Diff_Data_Stream_Cursor_Value_Input = {
-  created_at?: Maybe<Scalars['timestamptz']>;
-  current_schema_hash?: Maybe<Scalars['String']>;
-  current_schema_id?: Maybe<Scalars['uuid']>;
-  former_schema_hash?: Maybe<Scalars['String']>;
-  former_schema_id?: Maybe<Scalars['uuid']>;
-  id?: Maybe<Scalars['uuid']>;
-  schema_diff_data?: Maybe<Scalars['jsonb']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-};
-
-/** update columns of table "schema_diff_data" */
-export enum Schema_Diff_Data_Update_Column {
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  CurrentSchemaHash = 'current_schema_hash',
-  /** column name */
-  CurrentSchemaId = 'current_schema_id',
-  /** column name */
-  FormerSchemaHash = 'former_schema_hash',
-  /** column name */
-  FormerSchemaId = 'former_schema_id',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  SchemaDiffData = 'schema_diff_data',
-  /** column name */
-  UpdatedAt = 'updated_at',
-}
-
-export type Schema_Diff_Data_Updates = {
-  /** append existing jsonb value of filtered columns with new jsonb value */
-  _append?: Maybe<Schema_Diff_Data_Append_Input>;
-  /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
-  _delete_at_path?: Maybe<Schema_Diff_Data_Delete_At_Path_Input>;
-  /**
-   * delete the array element with specified index (negative integers count from
-   * the end). throws an error if top level container is not an array
-   */
-  _delete_elem?: Maybe<Schema_Diff_Data_Delete_Elem_Input>;
-  /** delete key/value pair or string element. key/value pairs are matched based on their key value */
-  _delete_key?: Maybe<Schema_Diff_Data_Delete_Key_Input>;
-  /** prepend existing jsonb value of filtered columns with new jsonb value */
-  _prepend?: Maybe<Schema_Diff_Data_Prepend_Input>;
-  /** sets the columns of the filtered rows to the given values */
-  _set?: Maybe<Schema_Diff_Data_Set_Input>;
-  /** filter the rows which have to be updated */
-  where: Schema_Diff_Data_Bool_Exp;
-};
-
-/** holds the schema changes for the database */
-export type Schema_Registry_Dumps = {
-  __typename?: 'schema_registry_dumps';
-  change_recorded_at: Scalars['timestamptz'];
-  created_at: Scalars['timestamptz'];
-  /** An array relationship */
-  diff_with_previous_schema: Array<Schema_Diff_Data>;
-  /** An aggregate relationship */
-  diff_with_previous_schema_aggregate: Schema_Diff_Data_Aggregate;
-  entry_hash: Scalars['String'];
-  hasura_schema_role: Scalars['String'];
-  id: Scalars['uuid'];
-  is_metadata_inconsistent: Scalars['Boolean'];
-  metadata_resource_version: Scalars['bigint'];
-  project_id: Scalars['uuid'];
-  schema_hash: Scalars['String'];
-  schema_sdl: Scalars['String'];
-  /** An array relationship */
-  sibling_schemas: Array<Schema_Registry_Dumps>;
-  /** An aggregate relationship */
-  sibling_schemas_aggregate: Schema_Registry_Dumps_Aggregate;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at: Scalars['timestamptz'];
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** holds the schema changes for the database */
-export type Schema_Registry_DumpsDiff_With_Previous_SchemaArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-/** holds the schema changes for the database */
-export type Schema_Registry_DumpsDiff_With_Previous_Schema_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-/** holds the schema changes for the database */
-export type Schema_Registry_DumpsSibling_SchemasArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-/** holds the schema changes for the database */
-export type Schema_Registry_DumpsSibling_Schemas_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-/** aggregated selection of "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Aggregate = {
-  __typename?: 'schema_registry_dumps_aggregate';
-  aggregate?: Maybe<Schema_Registry_Dumps_Aggregate_Fields>;
-  nodes: Array<Schema_Registry_Dumps>;
-};
-
-export type Schema_Registry_Dumps_Aggregate_Bool_Exp = {
-  bool_and?: Maybe<Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_And>;
-  bool_or?: Maybe<Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_Or>;
-  count?: Maybe<Schema_Registry_Dumps_Aggregate_Bool_Exp_Count>;
-};
-
-export type Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_And = {
-  arguments: Schema_Registry_Dumps_Select_Column_Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
-  distinct?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  predicate: Boolean_Comparison_Exp;
-};
-
-export type Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_Or = {
-  arguments: Schema_Registry_Dumps_Select_Column_Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
-  distinct?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  predicate: Boolean_Comparison_Exp;
-};
-
-export type Schema_Registry_Dumps_Aggregate_Bool_Exp_Count = {
-  arguments?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-  filter?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  predicate: Int_Comparison_Exp;
-};
-
-/** aggregate fields of "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Aggregate_Fields = {
-  __typename?: 'schema_registry_dumps_aggregate_fields';
-  avg?: Maybe<Schema_Registry_Dumps_Avg_Fields>;
-  count: Scalars['Int'];
-  max?: Maybe<Schema_Registry_Dumps_Max_Fields>;
-  min?: Maybe<Schema_Registry_Dumps_Min_Fields>;
-  stddev?: Maybe<Schema_Registry_Dumps_Stddev_Fields>;
-  stddev_pop?: Maybe<Schema_Registry_Dumps_Stddev_Pop_Fields>;
-  stddev_samp?: Maybe<Schema_Registry_Dumps_Stddev_Samp_Fields>;
-  sum?: Maybe<Schema_Registry_Dumps_Sum_Fields>;
-  var_pop?: Maybe<Schema_Registry_Dumps_Var_Pop_Fields>;
-  var_samp?: Maybe<Schema_Registry_Dumps_Var_Samp_Fields>;
-  variance?: Maybe<Schema_Registry_Dumps_Variance_Fields>;
-};
-
-/** aggregate fields of "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Aggregate_FieldsCountArgs = {
-  columns?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-};
-
-/** order by aggregate values of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Aggregate_Order_By = {
-  avg?: Maybe<Schema_Registry_Dumps_Avg_Order_By>;
-  count?: Maybe<Order_By>;
-  max?: Maybe<Schema_Registry_Dumps_Max_Order_By>;
-  min?: Maybe<Schema_Registry_Dumps_Min_Order_By>;
-  stddev?: Maybe<Schema_Registry_Dumps_Stddev_Order_By>;
-  stddev_pop?: Maybe<Schema_Registry_Dumps_Stddev_Pop_Order_By>;
-  stddev_samp?: Maybe<Schema_Registry_Dumps_Stddev_Samp_Order_By>;
-  sum?: Maybe<Schema_Registry_Dumps_Sum_Order_By>;
-  var_pop?: Maybe<Schema_Registry_Dumps_Var_Pop_Order_By>;
-  var_samp?: Maybe<Schema_Registry_Dumps_Var_Samp_Order_By>;
-  variance?: Maybe<Schema_Registry_Dumps_Variance_Order_By>;
-};
-
-/** input type for inserting array relation for remote table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Arr_Rel_Insert_Input = {
-  data: Array<Schema_Registry_Dumps_Insert_Input>;
-  /** upsert condition */
-  on_conflict?: Maybe<Schema_Registry_Dumps_On_Conflict>;
-};
-
-/** aggregate avg on columns */
-export type Schema_Registry_Dumps_Avg_Fields = {
-  __typename?: 'schema_registry_dumps_avg_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by avg() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Avg_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** Boolean expression to filter rows from the table "schema_registry_dumps". All fields are combined with a logical 'AND'. */
-export type Schema_Registry_Dumps_Bool_Exp = {
-  _and?: Maybe<Array<Schema_Registry_Dumps_Bool_Exp>>;
-  _not?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  _or?: Maybe<Array<Schema_Registry_Dumps_Bool_Exp>>;
-  change_recorded_at?: Maybe<Timestamptz_Comparison_Exp>;
-  created_at?: Maybe<Timestamptz_Comparison_Exp>;
-  diff_with_previous_schema?: Maybe<Schema_Diff_Data_Bool_Exp>;
-  diff_with_previous_schema_aggregate?: Maybe<Schema_Diff_Data_Aggregate_Bool_Exp>;
-  entry_hash?: Maybe<String_Comparison_Exp>;
-  hasura_schema_role?: Maybe<String_Comparison_Exp>;
-  id?: Maybe<Uuid_Comparison_Exp>;
-  is_metadata_inconsistent?: Maybe<Boolean_Comparison_Exp>;
-  metadata_resource_version?: Maybe<Bigint_Comparison_Exp>;
-  project_id?: Maybe<Uuid_Comparison_Exp>;
-  schema_hash?: Maybe<String_Comparison_Exp>;
-  schema_sdl?: Maybe<String_Comparison_Exp>;
-  sibling_schemas?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  sibling_schemas_aggregate?: Maybe<Schema_Registry_Dumps_Aggregate_Bool_Exp>;
-  tenant_id?: Maybe<Uuid_Comparison_Exp>;
-  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
-  worker_id?: Maybe<Uuid_Comparison_Exp>;
-};
-
-/** unique or primary key constraints on table "schema_registry_dumps" */
-export enum Schema_Registry_Dumps_Constraint {
-  /**
-   * unique or primary key constraint on columns "project_id", "schema_hash",
-   * "entry_hash", "metadata_resource_version", "hasura_schema_role"
-   */
-  SchemaRegistryDumpsDedupKey = 'schema_registry_dumps_dedup_key',
-  /** unique or primary key constraint on columns "id" */
-  SchemaRegistryDumpsPkey = 'schema_registry_dumps_pkey',
-  /** unique or primary key constraint on columns "schema_hash", "change_recorded_at" */
-  SchemaRegistryDumpsSchemaHashChangeRecordedAtKey = 'schema_registry_dumps_schema_hash_change_recorded_at_key',
-}
-
-/** input type for incrementing numeric columns in table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Inc_Input = {
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-};
-
-/** input type for inserting data into table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Insert_Input = {
-  change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  diff_with_previous_schema?: Maybe<Schema_Diff_Data_Arr_Rel_Insert_Input>;
-  entry_hash?: Maybe<Scalars['String']>;
-  hasura_schema_role?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['uuid']>;
-  is_metadata_inconsistent?: Maybe<Scalars['Boolean']>;
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-  project_id?: Maybe<Scalars['uuid']>;
-  schema_hash?: Maybe<Scalars['String']>;
-  schema_sdl?: Maybe<Scalars['String']>;
-  sibling_schemas?: Maybe<Schema_Registry_Dumps_Arr_Rel_Insert_Input>;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate max on columns */
-export type Schema_Registry_Dumps_Max_Fields = {
-  __typename?: 'schema_registry_dumps_max_fields';
-  change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  entry_hash?: Maybe<Scalars['String']>;
-  hasura_schema_role?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['uuid']>;
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-  project_id?: Maybe<Scalars['uuid']>;
-  schema_hash?: Maybe<Scalars['String']>;
-  schema_sdl?: Maybe<Scalars['String']>;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** order by max() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Max_Order_By = {
-  change_recorded_at?: Maybe<Order_By>;
-  created_at?: Maybe<Order_By>;
-  entry_hash?: Maybe<Order_By>;
-  hasura_schema_role?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  metadata_resource_version?: Maybe<Order_By>;
-  project_id?: Maybe<Order_By>;
-  schema_hash?: Maybe<Order_By>;
-  schema_sdl?: Maybe<Order_By>;
-  tenant_id?: Maybe<Order_By>;
-  updated_at?: Maybe<Order_By>;
-  worker_id?: Maybe<Order_By>;
-};
-
-/** aggregate min on columns */
-export type Schema_Registry_Dumps_Min_Fields = {
-  __typename?: 'schema_registry_dumps_min_fields';
-  change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  entry_hash?: Maybe<Scalars['String']>;
-  hasura_schema_role?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['uuid']>;
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-  project_id?: Maybe<Scalars['uuid']>;
-  schema_hash?: Maybe<Scalars['String']>;
-  schema_sdl?: Maybe<Scalars['String']>;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** order by min() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Min_Order_By = {
-  change_recorded_at?: Maybe<Order_By>;
-  created_at?: Maybe<Order_By>;
-  entry_hash?: Maybe<Order_By>;
-  hasura_schema_role?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  metadata_resource_version?: Maybe<Order_By>;
-  project_id?: Maybe<Order_By>;
-  schema_hash?: Maybe<Order_By>;
-  schema_sdl?: Maybe<Order_By>;
-  tenant_id?: Maybe<Order_By>;
-  updated_at?: Maybe<Order_By>;
-  worker_id?: Maybe<Order_By>;
-};
-
-/** response of any mutation on the table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Mutation_Response = {
-  __typename?: 'schema_registry_dumps_mutation_response';
-  /** number of rows affected by the mutation */
-  affected_rows: Scalars['Int'];
-  /** data from the rows affected by the mutation */
-  returning: Array<Schema_Registry_Dumps>;
-};
-
-/** input type for inserting object relation for remote table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Obj_Rel_Insert_Input = {
-  data: Schema_Registry_Dumps_Insert_Input;
-  /** upsert condition */
-  on_conflict?: Maybe<Schema_Registry_Dumps_On_Conflict>;
-};
-
-/** on_conflict condition type for table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_On_Conflict = {
-  constraint: Schema_Registry_Dumps_Constraint;
-  update_columns?: Array<Schema_Registry_Dumps_Update_Column>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-/** Ordering options when selecting data from "schema_registry_dumps". */
-export type Schema_Registry_Dumps_Order_By = {
-  change_recorded_at?: Maybe<Order_By>;
-  created_at?: Maybe<Order_By>;
-  diff_with_previous_schema_aggregate?: Maybe<Schema_Diff_Data_Aggregate_Order_By>;
-  entry_hash?: Maybe<Order_By>;
-  hasura_schema_role?: Maybe<Order_By>;
-  id?: Maybe<Order_By>;
-  is_metadata_inconsistent?: Maybe<Order_By>;
-  metadata_resource_version?: Maybe<Order_By>;
-  project_id?: Maybe<Order_By>;
-  schema_hash?: Maybe<Order_By>;
-  schema_sdl?: Maybe<Order_By>;
-  sibling_schemas_aggregate?: Maybe<Schema_Registry_Dumps_Aggregate_Order_By>;
-  tenant_id?: Maybe<Order_By>;
-  updated_at?: Maybe<Order_By>;
-  worker_id?: Maybe<Order_By>;
-};
-
-/** primary key columns input for table: schema_registry_dumps */
-export type Schema_Registry_Dumps_Pk_Columns_Input = {
-  id: Scalars['uuid'];
-};
-
-/** select columns of table "schema_registry_dumps" */
-export enum Schema_Registry_Dumps_Select_Column {
-  /** column name */
-  ChangeRecordedAt = 'change_recorded_at',
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  EntryHash = 'entry_hash',
-  /** column name */
-  HasuraSchemaRole = 'hasura_schema_role',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  IsMetadataInconsistent = 'is_metadata_inconsistent',
-  /** column name */
-  MetadataResourceVersion = 'metadata_resource_version',
-  /** column name */
-  ProjectId = 'project_id',
-  /** column name */
-  SchemaHash = 'schema_hash',
-  /** column name */
-  SchemaSdl = 'schema_sdl',
-  /** column name */
-  TenantId = 'tenant_id',
-  /** column name */
-  UpdatedAt = 'updated_at',
-  /** column name */
-  WorkerId = 'worker_id',
-}
-
-/** select "schema_registry_dumps_aggregate_bool_exp_bool_and_arguments_columns" columns of table "schema_registry_dumps" */
-export enum Schema_Registry_Dumps_Select_Column_Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_And_Arguments_Columns {
-  /** column name */
-  IsMetadataInconsistent = 'is_metadata_inconsistent',
-}
-
-/** select "schema_registry_dumps_aggregate_bool_exp_bool_or_arguments_columns" columns of table "schema_registry_dumps" */
-export enum Schema_Registry_Dumps_Select_Column_Schema_Registry_Dumps_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns {
-  /** column name */
-  IsMetadataInconsistent = 'is_metadata_inconsistent',
-}
-
-/** input type for updating data in table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Set_Input = {
-  change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  entry_hash?: Maybe<Scalars['String']>;
-  hasura_schema_role?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['uuid']>;
-  is_metadata_inconsistent?: Maybe<Scalars['Boolean']>;
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-  project_id?: Maybe<Scalars['uuid']>;
-  schema_hash?: Maybe<Scalars['String']>;
-  schema_sdl?: Maybe<Scalars['String']>;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate stddev on columns */
-export type Schema_Registry_Dumps_Stddev_Fields = {
-  __typename?: 'schema_registry_dumps_stddev_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Stddev_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** aggregate stddev_pop on columns */
-export type Schema_Registry_Dumps_Stddev_Pop_Fields = {
-  __typename?: 'schema_registry_dumps_stddev_pop_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev_pop() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Stddev_Pop_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** aggregate stddev_samp on columns */
-export type Schema_Registry_Dumps_Stddev_Samp_Fields = {
-  __typename?: 'schema_registry_dumps_stddev_samp_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by stddev_samp() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Stddev_Samp_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** Streaming cursor of the table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Schema_Registry_Dumps_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: Maybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Schema_Registry_Dumps_Stream_Cursor_Value_Input = {
-  change_recorded_at?: Maybe<Scalars['timestamptz']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  entry_hash?: Maybe<Scalars['String']>;
-  hasura_schema_role?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['uuid']>;
-  is_metadata_inconsistent?: Maybe<Scalars['Boolean']>;
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-  project_id?: Maybe<Scalars['uuid']>;
-  schema_hash?: Maybe<Scalars['String']>;
-  schema_sdl?: Maybe<Scalars['String']>;
-  tenant_id?: Maybe<Scalars['uuid']>;
-  updated_at?: Maybe<Scalars['timestamptz']>;
-  worker_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate sum on columns */
-export type Schema_Registry_Dumps_Sum_Fields = {
-  __typename?: 'schema_registry_dumps_sum_fields';
-  metadata_resource_version?: Maybe<Scalars['bigint']>;
-};
-
-/** order by sum() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Sum_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** update columns of table "schema_registry_dumps" */
-export enum Schema_Registry_Dumps_Update_Column {
-  /** column name */
-  ChangeRecordedAt = 'change_recorded_at',
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  EntryHash = 'entry_hash',
-  /** column name */
-  HasuraSchemaRole = 'hasura_schema_role',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  IsMetadataInconsistent = 'is_metadata_inconsistent',
-  /** column name */
-  MetadataResourceVersion = 'metadata_resource_version',
-  /** column name */
-  ProjectId = 'project_id',
-  /** column name */
-  SchemaHash = 'schema_hash',
-  /** column name */
-  SchemaSdl = 'schema_sdl',
-  /** column name */
-  TenantId = 'tenant_id',
-  /** column name */
-  UpdatedAt = 'updated_at',
-  /** column name */
-  WorkerId = 'worker_id',
-}
-
-export type Schema_Registry_Dumps_Updates = {
-  /** increments the numeric columns with given value of the filtered values */
-  _inc?: Maybe<Schema_Registry_Dumps_Inc_Input>;
-  /** sets the columns of the filtered rows to the given values */
-  _set?: Maybe<Schema_Registry_Dumps_Set_Input>;
-  /** filter the rows which have to be updated */
-  where: Schema_Registry_Dumps_Bool_Exp;
-};
-
-/** aggregate var_pop on columns */
-export type Schema_Registry_Dumps_Var_Pop_Fields = {
-  __typename?: 'schema_registry_dumps_var_pop_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by var_pop() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Var_Pop_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** aggregate var_samp on columns */
-export type Schema_Registry_Dumps_Var_Samp_Fields = {
-  __typename?: 'schema_registry_dumps_var_samp_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by var_samp() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Var_Samp_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-/** aggregate variance on columns */
-export type Schema_Registry_Dumps_Variance_Fields = {
-  __typename?: 'schema_registry_dumps_variance_fields';
-  metadata_resource_version?: Maybe<Scalars['Float']>;
-};
-
-/** order by variance() on columns of table "schema_registry_dumps" */
-export type Schema_Registry_Dumps_Variance_Order_By = {
-  metadata_resource_version?: Maybe<Order_By>;
-};
-
-export type SchemaDetails = {
-  hasura_schema_role: Scalars['String'];
-  schema_info: SchemaInfo;
-};
-
-export type SchemaDiffInput = {
-  currentSchemaID: Scalars['uuid'];
-  previousSchemaID: Scalars['uuid'];
-};
-
-export type SchemaDiffOutput = {
-  __typename?: 'SchemaDiffOutput';
-  schemaDiff: Scalars['jsonb'];
-  schemaDiffID: Scalars['uuid'];
-  schemaID: Scalars['uuid'];
-};
-
-export type SchemaInfo = {
-  schema_hash: Scalars['String'];
-  schema_sdl: Scalars['String'];
-};
-
-export enum SchemaRegistryInputStatus {
-  Accepted = 'accepted',
-  Failed = 'failed',
-  Rejected = 'rejected',
-}
-
-export type SchemaRegistryReadsOutput = {
-  __typename?: 'SchemaRegistryReadsOutput';
-  message?: Maybe<Scalars['String']>;
-  status: SchemaRegistryInputStatus;
 };
 
 export type Search_Project_Login_Status_Args = {
@@ -57727,6 +60758,294 @@ export type SetVercelIntegrationInput = {
 export type SetVercelIntegrationOutput = {
   __typename?: 'SetVercelIntegrationOutput';
   id: Scalars['String'];
+};
+
+/** stores the configuration for slack which user has configured */
+export type Slack_Config = {
+  __typename?: 'slack_config';
+  /** An object relationship */
+  alert_config?: Maybe<Alert_Config>;
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at: Scalars['timestamptz'];
+  id: Scalars['uuid'];
+  project_id: Scalars['uuid'];
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at: Scalars['timestamptz'];
+  webhook_url: Scalars['String'];
+};
+
+/** aggregated selection of "slack_config" */
+export type Slack_Config_Aggregate = {
+  __typename?: 'slack_config_aggregate';
+  aggregate?: Maybe<Slack_Config_Aggregate_Fields>;
+  nodes: Array<Slack_Config>;
+};
+
+export type Slack_Config_Aggregate_Bool_Exp = {
+  count?: Maybe<Slack_Config_Aggregate_Bool_Exp_Count>;
+};
+
+export type Slack_Config_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Slack_Config_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Slack_Config_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
+/** aggregate fields of "slack_config" */
+export type Slack_Config_Aggregate_Fields = {
+  __typename?: 'slack_config_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<Slack_Config_Max_Fields>;
+  min?: Maybe<Slack_Config_Min_Fields>;
+};
+
+/** aggregate fields of "slack_config" */
+export type Slack_Config_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<Slack_Config_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "slack_config" */
+export type Slack_Config_Aggregate_Order_By = {
+  count?: Maybe<Order_By>;
+  max?: Maybe<Slack_Config_Max_Order_By>;
+  min?: Maybe<Slack_Config_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "slack_config" */
+export type Slack_Config_Arr_Rel_Insert_Input = {
+  data: Array<Slack_Config_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Slack_Config_On_Conflict>;
+};
+
+/** Boolean expression to filter rows from the table "slack_config". All fields are combined with a logical 'AND'. */
+export type Slack_Config_Bool_Exp = {
+  _and?: Maybe<Array<Slack_Config_Bool_Exp>>;
+  _not?: Maybe<Slack_Config_Bool_Exp>;
+  _or?: Maybe<Array<Slack_Config_Bool_Exp>>;
+  alert_config?: Maybe<Alert_Config_Bool_Exp>;
+  channel_id?: Maybe<String_Comparison_Exp>;
+  channel_name?: Maybe<String_Comparison_Exp>;
+  created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  id?: Maybe<Uuid_Comparison_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  slack_team_id?: Maybe<String_Comparison_Exp>;
+  team_name?: Maybe<String_Comparison_Exp>;
+  updated_at?: Maybe<Timestamptz_Comparison_Exp>;
+  webhook_url?: Maybe<String_Comparison_Exp>;
+};
+
+/** unique or primary key constraints on table "slack_config" */
+export enum Slack_Config_Constraint {
+  /** unique or primary key constraint on columns "id" */
+  SlackConfigPkey = 'slack_config_pkey',
+  /** unique or primary key constraint on columns "project_id" */
+  SlackConfigProjectIdKey = 'slack_config_project_id_key',
+}
+
+/** input type for inserting data into table "slack_config" */
+export type Slack_Config_Insert_Input = {
+  alert_config?: Maybe<Alert_Config_Obj_Rel_Insert_Input>;
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  webhook_url?: Maybe<Scalars['String']>;
+};
+
+/** aggregate max on columns */
+export type Slack_Config_Max_Fields = {
+  __typename?: 'slack_config_max_fields';
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  webhook_url?: Maybe<Scalars['String']>;
+};
+
+/** order by max() on columns of table "slack_config" */
+export type Slack_Config_Max_Order_By = {
+  channel_id?: Maybe<Order_By>;
+  channel_name?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  slack_team_id?: Maybe<Order_By>;
+  team_name?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  webhook_url?: Maybe<Order_By>;
+};
+
+/** aggregate min on columns */
+export type Slack_Config_Min_Fields = {
+  __typename?: 'slack_config_min_fields';
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  webhook_url?: Maybe<Scalars['String']>;
+};
+
+/** order by min() on columns of table "slack_config" */
+export type Slack_Config_Min_Order_By = {
+  channel_id?: Maybe<Order_By>;
+  channel_name?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  slack_team_id?: Maybe<Order_By>;
+  team_name?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  webhook_url?: Maybe<Order_By>;
+};
+
+/** response of any mutation on the table "slack_config" */
+export type Slack_Config_Mutation_Response = {
+  __typename?: 'slack_config_mutation_response';
+  /** number of rows affected by the mutation */
+  affected_rows: Scalars['Int'];
+  /** data from the rows affected by the mutation */
+  returning: Array<Slack_Config>;
+};
+
+/** input type for inserting object relation for remote table "slack_config" */
+export type Slack_Config_Obj_Rel_Insert_Input = {
+  data: Slack_Config_Insert_Input;
+  /** upsert condition */
+  on_conflict?: Maybe<Slack_Config_On_Conflict>;
+};
+
+/** on_conflict condition type for table "slack_config" */
+export type Slack_Config_On_Conflict = {
+  constraint: Slack_Config_Constraint;
+  update_columns?: Array<Slack_Config_Update_Column>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+/** Ordering options when selecting data from "slack_config". */
+export type Slack_Config_Order_By = {
+  alert_config?: Maybe<Alert_Config_Order_By>;
+  channel_id?: Maybe<Order_By>;
+  channel_name?: Maybe<Order_By>;
+  created_at?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  slack_team_id?: Maybe<Order_By>;
+  team_name?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+  webhook_url?: Maybe<Order_By>;
+};
+
+/** primary key columns input for table: slack_config */
+export type Slack_Config_Pk_Columns_Input = {
+  id: Scalars['uuid'];
+};
+
+/** select columns of table "slack_config" */
+export enum Slack_Config_Select_Column {
+  /** column name */
+  ChannelId = 'channel_id',
+  /** column name */
+  ChannelName = 'channel_name',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  SlackTeamId = 'slack_team_id',
+  /** column name */
+  TeamName = 'team_name',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  WebhookUrl = 'webhook_url',
+}
+
+/** input type for updating data in table "slack_config" */
+export type Slack_Config_Set_Input = {
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  webhook_url?: Maybe<Scalars['String']>;
+};
+
+/** Streaming cursor of the table "slack_config" */
+export type Slack_Config_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: Slack_Config_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type Slack_Config_Stream_Cursor_Value_Input = {
+  channel_id?: Maybe<Scalars['String']>;
+  channel_name?: Maybe<Scalars['String']>;
+  created_at?: Maybe<Scalars['timestamptz']>;
+  id?: Maybe<Scalars['uuid']>;
+  project_id?: Maybe<Scalars['uuid']>;
+  slack_team_id?: Maybe<Scalars['String']>;
+  team_name?: Maybe<Scalars['String']>;
+  updated_at?: Maybe<Scalars['timestamptz']>;
+  webhook_url?: Maybe<Scalars['String']>;
+};
+
+/** update columns of table "slack_config" */
+export enum Slack_Config_Update_Column {
+  /** column name */
+  ChannelId = 'channel_id',
+  /** column name */
+  ChannelName = 'channel_name',
+  /** column name */
+  CreatedAt = 'created_at',
+  /** column name */
+  Id = 'id',
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  SlackTeamId = 'slack_team_id',
+  /** column name */
+  TeamName = 'team_name',
+  /** column name */
+  UpdatedAt = 'updated_at',
+  /** column name */
+  WebhookUrl = 'webhook_url',
+}
+
+export type Slack_Config_Updates = {
+  /** sets the columns of the filtered rows to the given values */
+  _set?: Maybe<Slack_Config_Set_Input>;
+  /** filter the rows which have to be updated */
+  where: Slack_Config_Bool_Exp;
+};
+
+export type SlackExchangeTokenResponse = {
+  __typename?: 'SlackExchangeTokenResponse';
+  channel_name: Scalars['String'];
+  team_name: Scalars['String'];
 };
 
 /** Boolean expression to compare columns of type "smallint". All fields are combined with logical 'AND'. */
@@ -58257,6 +61576,46 @@ export type StripeCardResponse = {
 
 export type Subscription_Root = {
   __typename?: 'subscription_root';
+  /** fetch data from the table: "alert_config" */
+  alert_config: Array<Alert_Config>;
+  /** fetch aggregated fields from the table: "alert_config" */
+  alert_config_aggregate: Alert_Config_Aggregate;
+  /** fetch data from the table: "alert_config_alert_type" */
+  alert_config_alert_type: Array<Alert_Config_Alert_Type>;
+  /** fetch aggregated fields from the table: "alert_config_alert_type" */
+  alert_config_alert_type_aggregate: Alert_Config_Alert_Type_Aggregate;
+  /** fetch data from the table: "alert_config_alert_type" using primary key columns */
+  alert_config_alert_type_by_pk?: Maybe<Alert_Config_Alert_Type>;
+  /** fetch data from the table in a streaming manner: "alert_config_alert_type" */
+  alert_config_alert_type_stream: Array<Alert_Config_Alert_Type>;
+  /** fetch data from the table: "alert_config" using primary key columns */
+  alert_config_by_pk?: Maybe<Alert_Config>;
+  /** fetch data from the table: "alert_config_service" */
+  alert_config_service: Array<Alert_Config_Service>;
+  /** fetch aggregated fields from the table: "alert_config_service" */
+  alert_config_service_aggregate: Alert_Config_Service_Aggregate;
+  /** fetch data from the table: "alert_config_service" using primary key columns */
+  alert_config_service_by_pk?: Maybe<Alert_Config_Service>;
+  /** fetch data from the table in a streaming manner: "alert_config_service" */
+  alert_config_service_stream: Array<Alert_Config_Service>;
+  /** fetch data from the table in a streaming manner: "alert_config" */
+  alert_config_stream: Array<Alert_Config>;
+  /** fetch data from the table: "alert_service_type" */
+  alert_service_type: Array<Alert_Service_Type>;
+  /** fetch aggregated fields from the table: "alert_service_type" */
+  alert_service_type_aggregate: Alert_Service_Type_Aggregate;
+  /** fetch data from the table: "alert_service_type" using primary key columns */
+  alert_service_type_by_pk?: Maybe<Alert_Service_Type>;
+  /** fetch data from the table in a streaming manner: "alert_service_type" */
+  alert_service_type_stream: Array<Alert_Service_Type>;
+  /** fetch data from the table: "alert_type" */
+  alert_type: Array<Alert_Type>;
+  /** fetch aggregated fields from the table: "alert_type" */
+  alert_type_aggregate: Alert_Type_Aggregate;
+  /** fetch data from the table: "alert_type" using primary key columns */
+  alert_type_by_pk?: Maybe<Alert_Type>;
+  /** fetch data from the table in a streaming manner: "alert_type" */
+  alert_type_stream: Array<Alert_Type>;
   /** fetch data from the table: "azuremonitor_config" */
   azuremonitor_config: Array<Azuremonitor_Config>;
   /** fetch aggregated fields from the table: "azuremonitor_config" */
@@ -58330,6 +61689,12 @@ export type Subscription_Root = {
   cloud_metadata_by_pk?: Maybe<Cloud_Metadata>;
   /** fetch data from the table in a streaming manner: "cloud_metadata" */
   cloud_metadata_stream: Array<Cloud_Metadata>;
+  /** fetch data from the table: "cloud_regions_by_plan" */
+  cloud_regions_by_plan: Array<Cloud_Regions_By_Plan>;
+  /** fetch aggregated fields from the table: "cloud_regions_by_plan" */
+  cloud_regions_by_plan_aggregate: Cloud_Regions_By_Plan_Aggregate;
+  /** fetch data from the table in a streaming manner: "cloud_regions_by_plan" */
+  cloud_regions_by_plan_stream: Array<Cloud_Regions_By_Plan>;
   /** fetch data from the table in a streaming manner: "cloud" */
   cloud_stream: Array<Cloud>;
   /** execute function "compute_project_agg_db_usage_user" which returns "project_db_usage_agg_user" */
@@ -58388,6 +61753,30 @@ export type Subscription_Root = {
   config_status_stream: Array<Config_Status>;
   /** fetch data from the table in a streaming manner: "config" */
   config_stream: Array<Config>;
+  /** fetch data from the table: "connector_config" */
+  connector_config: Array<Connector_Config>;
+  /** fetch aggregated fields from the table: "connector_config" */
+  connector_config_aggregate: Connector_Config_Aggregate;
+  /** fetch data from the table: "connector_config" using primary key columns */
+  connector_config_by_pk?: Maybe<Connector_Config>;
+  /** fetch data from the table in a streaming manner: "connector_config" */
+  connector_config_stream: Array<Connector_Config>;
+  /** fetch data from the table: "connector_deployment" */
+  connector_deployment: Array<Connector_Connector_Deployment>;
+  /** fetch aggregated fields from the table: "connector_deployment" */
+  connector_deployment_aggregate: Connector_Connector_Deployment_Aggregate;
+  /** fetch data from the table: "connector_deployment" using primary key columns */
+  connector_deployment_by_pk?: Maybe<Connector_Connector_Deployment>;
+  /** fetch data from the table in a streaming manner: "connector_deployment" */
+  connector_deployment_stream: Array<Connector_Connector_Deployment>;
+  /** fetch data from the table: "connector_deployments" */
+  connector_deployments: Array<Connector_Deployments>;
+  /** fetch aggregated fields from the table: "connector_deployments" */
+  connector_deployments_aggregate: Connector_Deployments_Aggregate;
+  /** fetch data from the table: "connector_deployments" using primary key columns */
+  connector_deployments_by_pk?: Maybe<Connector_Deployments>;
+  /** fetch data from the table in a streaming manner: "connector_deployments" */
+  connector_deployments_stream: Array<Connector_Deployments>;
   /** fetch data from the table: "coupon" */
   coupon: Array<Coupon>;
   /** fetch aggregated fields from the table: "coupon" */
@@ -58500,6 +61889,30 @@ export type Subscription_Root = {
   ddn_environment_by_pk?: Maybe<Ddn_Environment>;
   /** fetch data from the table in a streaming manner: "ddn.environment" */
   ddn_environment_stream: Array<Ddn_Environment>;
+  /** fetch data from the table: "ddn.project_entitlement_access" */
+  ddn_project_entitlement_access: Array<Ddn_Project_Entitlement_Access>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_access" */
+  ddn_project_entitlement_access_aggregate: Ddn_Project_Entitlement_Access_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_access" using primary key columns */
+  ddn_project_entitlement_access_by_pk?: Maybe<Ddn_Project_Entitlement_Access>;
+  /** fetch data from the table in a streaming manner: "ddn.project_entitlement_access" */
+  ddn_project_entitlement_access_stream: Array<Ddn_Project_Entitlement_Access>;
+  /** fetch data from the table: "ddn.project_entitlement_catalogue" */
+  ddn_project_entitlement_catalogue: Array<Ddn_Project_Entitlement_Catalogue>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_catalogue" */
+  ddn_project_entitlement_catalogue_aggregate: Ddn_Project_Entitlement_Catalogue_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_catalogue" using primary key columns */
+  ddn_project_entitlement_catalogue_by_pk?: Maybe<Ddn_Project_Entitlement_Catalogue>;
+  /** fetch data from the table in a streaming manner: "ddn.project_entitlement_catalogue" */
+  ddn_project_entitlement_catalogue_stream: Array<Ddn_Project_Entitlement_Catalogue>;
+  /** fetch data from the table: "ddn.project_entitlement_types" */
+  ddn_project_entitlement_types: Array<Ddn_Project_Entitlement_Types>;
+  /** fetch aggregated fields from the table: "ddn.project_entitlement_types" */
+  ddn_project_entitlement_types_aggregate: Ddn_Project_Entitlement_Types_Aggregate;
+  /** fetch data from the table: "ddn.project_entitlement_types" using primary key columns */
+  ddn_project_entitlement_types_by_pk?: Maybe<Ddn_Project_Entitlement_Types>;
+  /** fetch data from the table in a streaming manner: "ddn.project_entitlement_types" */
+  ddn_project_entitlement_types_stream: Array<Ddn_Project_Entitlement_Types>;
   /** fetch data from the table: "ddn.projects" */
   ddn_projects: Array<Ddn_Projects>;
   /** fetch aggregated fields from the table: "ddn.projects" */
@@ -58530,6 +61943,14 @@ export type Subscription_Root = {
   dedicated_cloud_bills_aggregate: Dedicated_Cloud_Bills_Aggregate;
   /** fetch data from the table: "dedicated_cloud_bills" using primary key columns */
   dedicated_cloud_bills_by_pk?: Maybe<Dedicated_Cloud_Bills>;
+  /** fetch data from the table: "dedicated_cloud_bills_details" */
+  dedicated_cloud_bills_details: Array<Dedicated_Cloud_Bills_Details>;
+  /** fetch aggregated fields from the table: "dedicated_cloud_bills_details" */
+  dedicated_cloud_bills_details_aggregate: Dedicated_Cloud_Bills_Details_Aggregate;
+  /** fetch data from the table: "dedicated_cloud_bills_details" using primary key columns */
+  dedicated_cloud_bills_details_by_pk?: Maybe<Dedicated_Cloud_Bills_Details>;
+  /** fetch data from the table in a streaming manner: "dedicated_cloud_bills_details" */
+  dedicated_cloud_bills_details_stream: Array<Dedicated_Cloud_Bills_Details>;
   /** fetch data from the table in a streaming manner: "dedicated_cloud_bills" */
   dedicated_cloud_bills_stream: Array<Dedicated_Cloud_Bills>;
   /** fetch data from the table: "dedicated_cloud_commitments" */
@@ -58673,13 +62094,6 @@ export type Subscription_Root = {
    * aggregates on result of table type "project_total_db_usage_agg"
    */
   get_aggregated_cost_for_project_on_shared_plan_aggregate: Project_Total_Db_Usage_Agg_Aggregate;
-  /** execute function "get_previous_schema_change_for_role" which returns "schema_registry_dumps" */
-  get_previous_schema_change_for_role: Array<Schema_Registry_Dumps>;
-  /**
-   * execute function "get_previous_schema_change_for_role" and query aggregates on
-   * result of table type "schema_registry_dumps"
-   */
-  get_previous_schema_change_for_role_aggregate: Schema_Registry_Dumps_Aggregate;
   /** fetch data from the table: "github_email_type" */
   github_email_type: Array<Github_Email_Type>;
   /** fetch aggregated fields from the table: "github_email_type" */
@@ -58736,14 +62150,6 @@ export type Subscription_Root = {
   hasura_cluster_by_pk?: Maybe<Hasura_Cluster>;
   /** fetch data from the table in a streaming manner: "hasura_cluster" */
   hasura_cluster_stream: Array<Hasura_Cluster>;
-  /** An array relationship */
-  hasura_graphql_schema_tags: Array<Hasura_Graphql_Schema_Tags>;
-  /** An aggregate relationship */
-  hasura_graphql_schema_tags_aggregate: Hasura_Graphql_Schema_Tags_Aggregate;
-  /** fetch data from the table: "hasura_graphql_schema_tags" using primary key columns */
-  hasura_graphql_schema_tags_by_pk?: Maybe<Hasura_Graphql_Schema_Tags>;
-  /** fetch data from the table in a streaming manner: "hasura_graphql_schema_tags" */
-  hasura_graphql_schema_tags_stream: Array<Hasura_Graphql_Schema_Tags>;
   /** fetch data from the table: "hasura_worker" */
   hasura_worker: Array<Hasura_Worker>;
   /** fetch aggregated fields from the table: "hasura_worker" */
@@ -59371,22 +62777,6 @@ export type Subscription_Root = {
   saml_idp_by_pk?: Maybe<Saml_Idp>;
   /** fetch data from the table in a streaming manner: "saml_idp" */
   saml_idp_stream: Array<Saml_Idp>;
-  /** fetch data from the table: "schema_diff_data" */
-  schema_diff_data: Array<Schema_Diff_Data>;
-  /** fetch aggregated fields from the table: "schema_diff_data" */
-  schema_diff_data_aggregate: Schema_Diff_Data_Aggregate;
-  /** fetch data from the table: "schema_diff_data" using primary key columns */
-  schema_diff_data_by_pk?: Maybe<Schema_Diff_Data>;
-  /** fetch data from the table in a streaming manner: "schema_diff_data" */
-  schema_diff_data_stream: Array<Schema_Diff_Data>;
-  /** fetch data from the table: "schema_registry_dumps" */
-  schema_registry_dumps: Array<Schema_Registry_Dumps>;
-  /** fetch aggregated fields from the table: "schema_registry_dumps" */
-  schema_registry_dumps_aggregate: Schema_Registry_Dumps_Aggregate;
-  /** fetch data from the table: "schema_registry_dumps" using primary key columns */
-  schema_registry_dumps_by_pk?: Maybe<Schema_Registry_Dumps>;
-  /** fetch data from the table in a streaming manner: "schema_registry_dumps" */
-  schema_registry_dumps_stream: Array<Schema_Registry_Dumps>;
   /** execute function "search_project_login_status" which returns "search_project_login_status_results" */
   search_project_login_status: Array<Search_Project_Login_Status_Results>;
   /**
@@ -59404,6 +62794,14 @@ export type Subscription_Root = {
   search_tenant_group_has_least_members: Array<Tenant_Group>;
   /** execute function "search_tenant_group_has_least_members" and query aggregates on result of table type "tenant_group" */
   search_tenant_group_has_least_members_aggregate: Tenant_Group_Aggregate;
+  /** fetch data from the table: "slack_config" */
+  slack_config: Array<Slack_Config>;
+  /** fetch aggregated fields from the table: "slack_config" */
+  slack_config_aggregate: Slack_Config_Aggregate;
+  /** fetch data from the table: "slack_config" using primary key columns */
+  slack_config_by_pk?: Maybe<Slack_Config>;
+  /** fetch data from the table in a streaming manner: "slack_config" */
+  slack_config_stream: Array<Slack_Config>;
   /** fetch data from the table: "stripe_subscription" */
   stripe_subscription: Array<Stripe_Subscription>;
   /** fetch aggregated fields from the table: "stripe_subscription" */
@@ -59548,14 +62946,6 @@ export type Subscription_Root = {
   survey_v2_response_stream: Array<Survey_V2_Response>;
   /** fetch data from the table in a streaming manner: "survey_v2" */
   survey_v2_stream: Array<Survey_V2>;
-  /** fetch data from the table: "tag" */
-  tag: Array<Tag>;
-  /** fetch aggregated fields from the table: "tag" */
-  tag_aggregate: Tag_Aggregate;
-  /** fetch data from the table: "tag" using primary key columns */
-  tag_by_pk?: Maybe<Tag>;
-  /** fetch data from the table in a streaming manner: "tag" */
-  tag_stream: Array<Tag>;
   /** fetch data from the table: "task_event" */
   task_event: Array<Task_Event>;
   /** fetch aggregated fields from the table: "task_event" */
@@ -59706,6 +63096,12 @@ export type Subscription_Root = {
   user_profile_by_pk?: Maybe<User_Profile>;
   /** fetch data from the table in a streaming manner: "user_profile" */
   user_profile_stream: Array<User_Profile>;
+  /** fetch data from the table: "user_project_map" */
+  user_project_map: Array<User_Project_Map>;
+  /** fetch aggregated fields from the table: "user_project_map" */
+  user_project_map_aggregate: User_Project_Map_Aggregate;
+  /** fetch data from the table in a streaming manner: "user_project_map" */
+  user_project_map_stream: Array<User_Project_Map>;
   /** fetch data from the table: "user_roles" */
   user_roles: Array<User_Roles>;
   /** fetch aggregated fields from the table: "user_roles" */
@@ -59792,6 +63188,138 @@ export type Subscription_Root = {
   zendesk_support_tickets_by_pk?: Maybe<Zendesk_Support_Tickets>;
   /** fetch data from the table in a streaming manner: "zendesk_support_tickets" */
   zendesk_support_tickets_stream: Array<Zendesk_Support_Tickets>;
+};
+
+export type Subscription_RootAlert_ConfigArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Order_By>>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Order_By>>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_Alert_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_Alert_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_Alert_Type_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Scalars['String'];
+};
+
+export type Subscription_RootAlert_Config_Alert_Type_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Alert_Config_Alert_Type_Stream_Cursor_Input>>;
+  where?: Maybe<Alert_Config_Alert_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_By_PkArgs = {
+  project_id: Scalars['uuid'];
+};
+
+export type Subscription_RootAlert_Config_ServiceArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_Service_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Config_Service_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Config_Service_Order_By>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_Service_By_PkArgs = {
+  project_id: Scalars['uuid'];
+  type: Alert_Service_Type_Enum;
+};
+
+export type Subscription_RootAlert_Config_Service_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Alert_Config_Service_Stream_Cursor_Input>>;
+  where?: Maybe<Alert_Config_Service_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Config_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Alert_Config_Stream_Cursor_Input>>;
+  where?: Maybe<Alert_Config_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Service_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Service_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Service_Type_Order_By>>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Service_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Service_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Service_Type_Order_By>>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Service_Type_By_PkArgs = {
+  name: Scalars['String'];
+};
+
+export type Subscription_RootAlert_Service_Type_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Alert_Service_Type_Stream_Cursor_Input>>;
+  where?: Maybe<Alert_Service_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_TypeArgs = {
+  distinct_on?: Maybe<Array<Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Type_AggregateArgs = {
+  distinct_on?: Maybe<Array<Alert_Type_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Alert_Type_Order_By>>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
+};
+
+export type Subscription_RootAlert_Type_By_PkArgs = {
+  id: Scalars['String'];
+};
+
+export type Subscription_RootAlert_Type_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Alert_Type_Stream_Cursor_Input>>;
+  where?: Maybe<Alert_Type_Bool_Exp>;
 };
 
 export type Subscription_RootAzuremonitor_ConfigArgs = {
@@ -60032,6 +63560,28 @@ export type Subscription_RootCloud_Metadata_StreamArgs = {
   where?: Maybe<Cloud_Metadata_Bool_Exp>;
 };
 
+export type Subscription_RootCloud_Regions_By_PlanArgs = {
+  distinct_on?: Maybe<Array<Cloud_Regions_By_Plan_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Cloud_Regions_By_Plan_Order_By>>;
+  where?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+};
+
+export type Subscription_RootCloud_Regions_By_Plan_AggregateArgs = {
+  distinct_on?: Maybe<Array<Cloud_Regions_By_Plan_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Cloud_Regions_By_Plan_Order_By>>;
+  where?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+};
+
+export type Subscription_RootCloud_Regions_By_Plan_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Cloud_Regions_By_Plan_Stream_Cursor_Input>>;
+  where?: Maybe<Cloud_Regions_By_Plan_Bool_Exp>;
+};
+
 export type Subscription_RootCloud_StreamArgs = {
   batch_size: Scalars['Int'];
   cursor: Array<Maybe<Cloud_Stream_Cursor_Input>>;
@@ -60212,6 +63762,84 @@ export type Subscription_RootConfig_StreamArgs = {
   batch_size: Scalars['Int'];
   cursor: Array<Maybe<Config_Stream_Cursor_Input>>;
   where?: Maybe<Config_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_ConfigArgs = {
+  distinct_on?: Maybe<Array<Connector_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Config_Order_By>>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Config_Order_By>>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Config_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootConnector_Config_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Connector_Config_Stream_Cursor_Input>>;
+  where?: Maybe<Connector_Config_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_DeploymentArgs = {
+  distinct_on?: Maybe<Array<Connector_Connector_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Connector_Deployment_Order_By>>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Deployment_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Connector_Deployment_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Connector_Deployment_Order_By>>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Deployment_By_PkArgs = {
+  id: Scalars['connector_uuid'];
+};
+
+export type Subscription_RootConnector_Deployment_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Connector_Connector_Deployment_Stream_Cursor_Input>>;
+  where?: Maybe<Connector_Connector_Deployment_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_DeploymentsArgs = {
+  distinct_on?: Maybe<Array<Connector_Deployments_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Deployments_Order_By>>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Deployments_AggregateArgs = {
+  distinct_on?: Maybe<Array<Connector_Deployments_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Connector_Deployments_Order_By>>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
+};
+
+export type Subscription_RootConnector_Deployments_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootConnector_Deployments_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Connector_Deployments_Stream_Cursor_Input>>;
+  where?: Maybe<Connector_Deployments_Bool_Exp>;
 };
 
 export type Subscription_RootCouponArgs = {
@@ -60578,6 +64206,84 @@ export type Subscription_RootDdn_Environment_StreamArgs = {
   where?: Maybe<Ddn_Environment_Bool_Exp>;
 };
 
+export type Subscription_RootDdn_Project_Entitlement_AccessArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Access_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Access_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Access_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Ddn_Project_Entitlement_Access_Stream_Cursor_Input>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_CatalogueArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Catalogue_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Catalogue_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Catalogue_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Catalogue_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Ddn_Project_Entitlement_Catalogue_Stream_Cursor_Input>>;
+  where?: Maybe<Ddn_Project_Entitlement_Catalogue_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_TypesArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Types_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Types_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Types_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Types_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Types_By_PkArgs = {
+  value: Scalars['String'];
+};
+
+export type Subscription_RootDdn_Project_Entitlement_Types_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Ddn_Project_Entitlement_Types_Stream_Cursor_Input>>;
+  where?: Maybe<Ddn_Project_Entitlement_Types_Bool_Exp>;
+};
+
 export type Subscription_RootDdn_ProjectsArgs = {
   distinct_on?: Maybe<Array<Ddn_Projects_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -60674,6 +64380,32 @@ export type Subscription_RootDedicated_Cloud_Bills_AggregateArgs = {
 
 export type Subscription_RootDedicated_Cloud_Bills_By_PkArgs = {
   id: Scalars['uuid'];
+};
+
+export type Subscription_RootDedicated_Cloud_Bills_DetailsArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+export type Subscription_RootDedicated_Cloud_Bills_Details_AggregateArgs = {
+  distinct_on?: Maybe<Array<Dedicated_Cloud_Bills_Details_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Dedicated_Cloud_Bills_Details_Order_By>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
+};
+
+export type Subscription_RootDedicated_Cloud_Bills_Details_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootDedicated_Cloud_Bills_Details_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Dedicated_Cloud_Bills_Details_Stream_Cursor_Input>>;
+  where?: Maybe<Dedicated_Cloud_Bills_Details_Bool_Exp>;
 };
 
 export type Subscription_RootDedicated_Cloud_Bills_StreamArgs = {
@@ -61145,25 +64877,6 @@ export type Subscription_RootGet_Aggregated_Cost_For_Project_On_Shared_Plan_Aggr
     where?: Maybe<Project_Total_Db_Usage_Agg_Bool_Exp>;
   };
 
-export type Subscription_RootGet_Previous_Schema_Change_For_RoleArgs = {
-  args: Get_Previous_Schema_Change_For_Role_Args;
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Subscription_RootGet_Previous_Schema_Change_For_Role_AggregateArgs =
-  {
-    args: Get_Previous_Schema_Change_For_Role_Args;
-    distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-    limit?: Maybe<Scalars['Int']>;
-    offset?: Maybe<Scalars['Int']>;
-    order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-    where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-  };
-
 export type Subscription_RootGithub_Email_TypeArgs = {
   distinct_on?: Maybe<Array<Github_Email_Type_Select_Column>>;
   limit?: Maybe<Scalars['Int']>;
@@ -61346,32 +65059,6 @@ export type Subscription_RootHasura_Cluster_StreamArgs = {
   batch_size: Scalars['Int'];
   cursor: Array<Maybe<Hasura_Cluster_Stream_Cursor_Input>>;
   where?: Maybe<Hasura_Cluster_Bool_Exp>;
-};
-
-export type Subscription_RootHasura_Graphql_Schema_TagsArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-export type Subscription_RootHasura_Graphql_Schema_Tags_AggregateArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-export type Subscription_RootHasura_Graphql_Schema_Tags_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Subscription_RootHasura_Graphql_Schema_Tags_StreamArgs = {
-  batch_size: Scalars['Int'];
-  cursor: Array<Maybe<Hasura_Graphql_Schema_Tags_Stream_Cursor_Input>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
 };
 
 export type Subscription_RootHasura_WorkerArgs = {
@@ -63531,58 +67218,6 @@ export type Subscription_RootSaml_Idp_StreamArgs = {
   where?: Maybe<Saml_Idp_Bool_Exp>;
 };
 
-export type Subscription_RootSchema_Diff_DataArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-export type Subscription_RootSchema_Diff_Data_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Diff_Data_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Diff_Data_Order_By>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-export type Subscription_RootSchema_Diff_Data_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Subscription_RootSchema_Diff_Data_StreamArgs = {
-  batch_size: Scalars['Int'];
-  cursor: Array<Maybe<Schema_Diff_Data_Stream_Cursor_Input>>;
-  where?: Maybe<Schema_Diff_Data_Bool_Exp>;
-};
-
-export type Subscription_RootSchema_Registry_DumpsArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Subscription_RootSchema_Registry_Dumps_AggregateArgs = {
-  distinct_on?: Maybe<Array<Schema_Registry_Dumps_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Schema_Registry_Dumps_Order_By>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
-export type Subscription_RootSchema_Registry_Dumps_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Subscription_RootSchema_Registry_Dumps_StreamArgs = {
-  batch_size: Scalars['Int'];
-  cursor: Array<Maybe<Schema_Registry_Dumps_Stream_Cursor_Input>>;
-  where?: Maybe<Schema_Registry_Dumps_Bool_Exp>;
-};
-
 export type Subscription_RootSearch_Project_Login_StatusArgs = {
   args: Search_Project_Login_Status_Args;
   distinct_on?: Maybe<Array<Search_Project_Login_Status_Results_Select_Column>>;
@@ -63644,6 +67279,32 @@ export type Subscription_RootSearch_Tenant_Group_Has_Least_Members_AggregateArgs
     order_by?: Maybe<Array<Tenant_Group_Order_By>>;
     where?: Maybe<Tenant_Group_Bool_Exp>;
   };
+
+export type Subscription_RootSlack_ConfigArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+export type Subscription_RootSlack_Config_AggregateArgs = {
+  distinct_on?: Maybe<Array<Slack_Config_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Slack_Config_Order_By>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
+
+export type Subscription_RootSlack_Config_By_PkArgs = {
+  id: Scalars['uuid'];
+};
+
+export type Subscription_RootSlack_Config_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<Slack_Config_Stream_Cursor_Input>>;
+  where?: Maybe<Slack_Config_Bool_Exp>;
+};
 
 export type Subscription_RootStripe_SubscriptionArgs = {
   distinct_on?: Maybe<Array<Stripe_Subscription_Select_Column>>;
@@ -64126,32 +67787,6 @@ export type Subscription_RootSurvey_V2_StreamArgs = {
   batch_size: Scalars['Int'];
   cursor: Array<Maybe<Survey_V2_Stream_Cursor_Input>>;
   where?: Maybe<Survey_V2_Bool_Exp>;
-};
-
-export type Subscription_RootTagArgs = {
-  distinct_on?: Maybe<Array<Tag_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Tag_Order_By>>;
-  where?: Maybe<Tag_Bool_Exp>;
-};
-
-export type Subscription_RootTag_AggregateArgs = {
-  distinct_on?: Maybe<Array<Tag_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Tag_Order_By>>;
-  where?: Maybe<Tag_Bool_Exp>;
-};
-
-export type Subscription_RootTag_By_PkArgs = {
-  id: Scalars['uuid'];
-};
-
-export type Subscription_RootTag_StreamArgs = {
-  batch_size: Scalars['Int'];
-  cursor: Array<Maybe<Tag_Stream_Cursor_Input>>;
-  where?: Maybe<Tag_Bool_Exp>;
 };
 
 export type Subscription_RootTask_EventArgs = {
@@ -64645,6 +68280,28 @@ export type Subscription_RootUser_Profile_StreamArgs = {
   batch_size: Scalars['Int'];
   cursor: Array<Maybe<User_Profile_Stream_Cursor_Input>>;
   where?: Maybe<User_Profile_Bool_Exp>;
+};
+
+export type Subscription_RootUser_Project_MapArgs = {
+  distinct_on?: Maybe<Array<User_Project_Map_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<User_Project_Map_Order_By>>;
+  where?: Maybe<User_Project_Map_Bool_Exp>;
+};
+
+export type Subscription_RootUser_Project_Map_AggregateArgs = {
+  distinct_on?: Maybe<Array<User_Project_Map_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<User_Project_Map_Order_By>>;
+  where?: Maybe<User_Project_Map_Bool_Exp>;
+};
+
+export type Subscription_RootUser_Project_Map_StreamArgs = {
+  batch_size: Scalars['Int'];
+  cursor: Array<Maybe<User_Project_Map_Stream_Cursor_Input>>;
+  where?: Maybe<User_Project_Map_Bool_Exp>;
 };
 
 export type Subscription_RootUser_RolesArgs = {
@@ -69098,208 +72755,6 @@ export type SurveyResponseV2 = {
   answer?: Maybe<Scalars['String']>;
   optionSelected?: Maybe<Scalars['uuid']>;
   questionId: Scalars['uuid'];
-};
-
-/** Tags for schema changes */
-export type Tag = {
-  __typename?: 'tag';
-  color?: Maybe<Scalars['String']>;
-  created_at: Scalars['timestamptz'];
-  /** An array relationship */
-  hasura_graphql_schema_tags: Array<Hasura_Graphql_Schema_Tags>;
-  /** An aggregate relationship */
-  hasura_graphql_schema_tags_aggregate: Hasura_Graphql_Schema_Tags_Aggregate;
-  id: Scalars['uuid'];
-  name: Scalars['String'];
-  user_id: Scalars['uuid'];
-};
-
-/** Tags for schema changes */
-export type TagHasura_Graphql_Schema_TagsArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-/** Tags for schema changes */
-export type TagHasura_Graphql_Schema_Tags_AggregateArgs = {
-  distinct_on?: Maybe<Array<Hasura_Graphql_Schema_Tags_Select_Column>>;
-  limit?: Maybe<Scalars['Int']>;
-  offset?: Maybe<Scalars['Int']>;
-  order_by?: Maybe<Array<Hasura_Graphql_Schema_Tags_Order_By>>;
-  where?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-};
-
-/** aggregated selection of "tag" */
-export type Tag_Aggregate = {
-  __typename?: 'tag_aggregate';
-  aggregate?: Maybe<Tag_Aggregate_Fields>;
-  nodes: Array<Tag>;
-};
-
-/** aggregate fields of "tag" */
-export type Tag_Aggregate_Fields = {
-  __typename?: 'tag_aggregate_fields';
-  count: Scalars['Int'];
-  max?: Maybe<Tag_Max_Fields>;
-  min?: Maybe<Tag_Min_Fields>;
-};
-
-/** aggregate fields of "tag" */
-export type Tag_Aggregate_FieldsCountArgs = {
-  columns?: Maybe<Array<Tag_Select_Column>>;
-  distinct?: Maybe<Scalars['Boolean']>;
-};
-
-/** Boolean expression to filter rows from the table "tag". All fields are combined with a logical 'AND'. */
-export type Tag_Bool_Exp = {
-  _and?: Maybe<Array<Tag_Bool_Exp>>;
-  _not?: Maybe<Tag_Bool_Exp>;
-  _or?: Maybe<Array<Tag_Bool_Exp>>;
-  color?: Maybe<String_Comparison_Exp>;
-  created_at?: Maybe<Timestamptz_Comparison_Exp>;
-  hasura_graphql_schema_tags?: Maybe<Hasura_Graphql_Schema_Tags_Bool_Exp>;
-  hasura_graphql_schema_tags_aggregate?: Maybe<Hasura_Graphql_Schema_Tags_Aggregate_Bool_Exp>;
-  id?: Maybe<Uuid_Comparison_Exp>;
-  name?: Maybe<String_Comparison_Exp>;
-  user_id?: Maybe<Uuid_Comparison_Exp>;
-};
-
-/** unique or primary key constraints on table "tag" */
-export enum Tag_Constraint {
-  /** unique or primary key constraint on columns "id" */
-  TagPkey = 'tag_pkey',
-}
-
-/** input type for inserting data into table "tag" */
-export type Tag_Insert_Input = {
-  color?: Maybe<Scalars['String']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  hasura_graphql_schema_tags?: Maybe<Hasura_Graphql_Schema_Tags_Arr_Rel_Insert_Input>;
-  id?: Maybe<Scalars['uuid']>;
-  name?: Maybe<Scalars['String']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate max on columns */
-export type Tag_Max_Fields = {
-  __typename?: 'tag_max_fields';
-  color?: Maybe<Scalars['String']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  id?: Maybe<Scalars['uuid']>;
-  name?: Maybe<Scalars['String']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** aggregate min on columns */
-export type Tag_Min_Fields = {
-  __typename?: 'tag_min_fields';
-  color?: Maybe<Scalars['String']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  id?: Maybe<Scalars['uuid']>;
-  name?: Maybe<Scalars['String']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** response of any mutation on the table "tag" */
-export type Tag_Mutation_Response = {
-  __typename?: 'tag_mutation_response';
-  /** number of rows affected by the mutation */
-  affected_rows: Scalars['Int'];
-  /** data from the rows affected by the mutation */
-  returning: Array<Tag>;
-};
-
-/** input type for inserting object relation for remote table "tag" */
-export type Tag_Obj_Rel_Insert_Input = {
-  data: Tag_Insert_Input;
-  /** upsert condition */
-  on_conflict?: Maybe<Tag_On_Conflict>;
-};
-
-/** on_conflict condition type for table "tag" */
-export type Tag_On_Conflict = {
-  constraint: Tag_Constraint;
-  update_columns?: Array<Tag_Update_Column>;
-  where?: Maybe<Tag_Bool_Exp>;
-};
-
-/** Ordering options when selecting data from "tag". */
-export type Tag_Order_By = {
-  color?: Maybe<Order_By>;
-  created_at?: Maybe<Order_By>;
-  hasura_graphql_schema_tags_aggregate?: Maybe<Hasura_Graphql_Schema_Tags_Aggregate_Order_By>;
-  id?: Maybe<Order_By>;
-  name?: Maybe<Order_By>;
-  user_id?: Maybe<Order_By>;
-};
-
-/** primary key columns input for table: tag */
-export type Tag_Pk_Columns_Input = {
-  id: Scalars['uuid'];
-};
-
-/** select columns of table "tag" */
-export enum Tag_Select_Column {
-  /** column name */
-  Color = 'color',
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  Name = 'name',
-  /** column name */
-  UserId = 'user_id',
-}
-
-/** input type for updating data in table "tag" */
-export type Tag_Set_Input = {
-  color?: Maybe<Scalars['String']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  id?: Maybe<Scalars['uuid']>;
-  name?: Maybe<Scalars['String']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** Streaming cursor of the table "tag" */
-export type Tag_Stream_Cursor_Input = {
-  /** Stream column input with initial value */
-  initial_value: Tag_Stream_Cursor_Value_Input;
-  /** cursor ordering */
-  ordering?: Maybe<Cursor_Ordering>;
-};
-
-/** Initial value of the column from where the streaming should start */
-export type Tag_Stream_Cursor_Value_Input = {
-  color?: Maybe<Scalars['String']>;
-  created_at?: Maybe<Scalars['timestamptz']>;
-  id?: Maybe<Scalars['uuid']>;
-  name?: Maybe<Scalars['String']>;
-  user_id?: Maybe<Scalars['uuid']>;
-};
-
-/** update columns of table "tag" */
-export enum Tag_Update_Column {
-  /** column name */
-  Color = 'color',
-  /** column name */
-  CreatedAt = 'created_at',
-  /** column name */
-  Id = 'id',
-  /** column name */
-  Name = 'name',
-  /** column name */
-  UserId = 'user_id',
-}
-
-export type Tag_Updates = {
-  /** sets the columns of the filtered rows to the given values */
-  _set?: Maybe<Tag_Set_Input>;
-  /** filter the rows which have to be updated */
-  where: Tag_Bool_Exp;
 };
 
 /** columns and relationships of "task_event" */
@@ -74235,6 +77690,12 @@ export enum User_Entitlement_Types_Enum {
   DedicatedCloudNonPgDb = 'dedicated_cloud_non_pg_db',
   /** Access and unit cost correpsonding Postgres database on the Dedicated Cloud Plan. */
   DedicatedCloudPgDb = 'dedicated_cloud_pg_db',
+  /** Configure access to user assumption related features */
+  UserAssumptionAccess = 'user_assumption_access',
+  /** Hard limit for the number of v3 projects a user can own */
+  V3MaxProjectLimit = 'v3_max_project_limit',
+  /** Hard limit for the number of v3 tunnels a user can own */
+  V3MaxTunnelLimit = 'v3_max_tunnel_limit',
 }
 
 /** Boolean expression to compare columns of type "user_entitlement_types_enum". All fields are combined with logical 'AND'. */
@@ -75222,6 +78683,89 @@ export type User_Profile_Updates = {
   _set?: Maybe<User_Profile_Set_Input>;
   /** filter the rows which have to be updated */
   where: User_Profile_Bool_Exp;
+};
+
+/** This view is created to query all the projects a user is associated to. */
+export type User_Project_Map = {
+  __typename?: 'user_project_map';
+  /** An object relationship */
+  project?: Maybe<Projects>;
+  project_id?: Maybe<Scalars['uuid']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** aggregated selection of "user_project_map" */
+export type User_Project_Map_Aggregate = {
+  __typename?: 'user_project_map_aggregate';
+  aggregate?: Maybe<User_Project_Map_Aggregate_Fields>;
+  nodes: Array<User_Project_Map>;
+};
+
+/** aggregate fields of "user_project_map" */
+export type User_Project_Map_Aggregate_Fields = {
+  __typename?: 'user_project_map_aggregate_fields';
+  count: Scalars['Int'];
+  max?: Maybe<User_Project_Map_Max_Fields>;
+  min?: Maybe<User_Project_Map_Min_Fields>;
+};
+
+/** aggregate fields of "user_project_map" */
+export type User_Project_Map_Aggregate_FieldsCountArgs = {
+  columns?: Maybe<Array<User_Project_Map_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** Boolean expression to filter rows from the table "user_project_map". All fields are combined with a logical 'AND'. */
+export type User_Project_Map_Bool_Exp = {
+  _and?: Maybe<Array<User_Project_Map_Bool_Exp>>;
+  _not?: Maybe<User_Project_Map_Bool_Exp>;
+  _or?: Maybe<Array<User_Project_Map_Bool_Exp>>;
+  project?: Maybe<Projects_Bool_Exp>;
+  project_id?: Maybe<Uuid_Comparison_Exp>;
+  user_id?: Maybe<Uuid_Comparison_Exp>;
+};
+
+/** aggregate max on columns */
+export type User_Project_Map_Max_Fields = {
+  __typename?: 'user_project_map_max_fields';
+  project_id?: Maybe<Scalars['uuid']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** aggregate min on columns */
+export type User_Project_Map_Min_Fields = {
+  __typename?: 'user_project_map_min_fields';
+  project_id?: Maybe<Scalars['uuid']>;
+  user_id?: Maybe<Scalars['uuid']>;
+};
+
+/** Ordering options when selecting data from "user_project_map". */
+export type User_Project_Map_Order_By = {
+  project?: Maybe<Projects_Order_By>;
+  project_id?: Maybe<Order_By>;
+  user_id?: Maybe<Order_By>;
+};
+
+/** select columns of table "user_project_map" */
+export enum User_Project_Map_Select_Column {
+  /** column name */
+  ProjectId = 'project_id',
+  /** column name */
+  UserId = 'user_id',
+}
+
+/** Streaming cursor of the table "user_project_map" */
+export type User_Project_Map_Stream_Cursor_Input = {
+  /** Stream column input with initial value */
+  initial_value: User_Project_Map_Stream_Cursor_Value_Input;
+  /** cursor ordering */
+  ordering?: Maybe<Cursor_Ordering>;
+};
+
+/** Initial value of the column from where the streaming should start */
+export type User_Project_Map_Stream_Cursor_Value_Input = {
+  project_id?: Maybe<Scalars['uuid']>;
+  user_id?: Maybe<Scalars['uuid']>;
 };
 
 /** Users roles */
@@ -77394,6 +80938,7 @@ export type Vpc_Peering = {
   aws_customer_vpc_cidr?: Maybe<Scalars['String']>;
   aws_customer_vpc_id?: Maybe<Scalars['String']>;
   aws_customer_vpc_region?: Maybe<Scalars['String']>;
+  azure_input?: Maybe<Scalars['jsonb']>;
   comments?: Maybe<Scalars['String']>;
   created_at: Scalars['timestamptz'];
   /** An object relationship */
@@ -77413,6 +80958,11 @@ export type Vpc_Peering = {
   /** update the value manually by referring to the infra status field */
   status: Vpc_Status_Enum;
   updated_at: Scalars['timestamptz'];
+};
+
+/** Peering connections for a dedicated VPC */
+export type Vpc_PeeringAzure_InputArgs = {
+  path?: Maybe<Scalars['String']>;
 };
 
 /** Peering connections for a dedicated VPC */
@@ -77477,6 +81027,7 @@ export type Vpc_Peering_Aggregate_Order_By = {
 
 /** append existing jsonb value of filtered columns with new jsonb value */
 export type Vpc_Peering_Append_Input = {
+  azure_input?: Maybe<Scalars['jsonb']>;
   output_variables?: Maybe<Scalars['jsonb']>;
 };
 
@@ -77497,6 +81048,7 @@ export type Vpc_Peering_Bool_Exp = {
   aws_customer_vpc_cidr?: Maybe<String_Comparison_Exp>;
   aws_customer_vpc_id?: Maybe<String_Comparison_Exp>;
   aws_customer_vpc_region?: Maybe<String_Comparison_Exp>;
+  azure_input?: Maybe<Jsonb_Comparison_Exp>;
   comments?: Maybe<String_Comparison_Exp>;
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
   dedicated_vpc?: Maybe<Dedicated_Vpc_Bool_Exp>;
@@ -77524,6 +81076,7 @@ export enum Vpc_Peering_Constraint {
 
 /** delete the field or element with specified path (for JSON arrays, negative integers count from the end) */
 export type Vpc_Peering_Delete_At_Path_Input = {
+  azure_input?: Maybe<Array<Scalars['String']>>;
   output_variables?: Maybe<Array<Scalars['String']>>;
 };
 
@@ -77532,11 +81085,13 @@ export type Vpc_Peering_Delete_At_Path_Input = {
  * end). throws an error if top level container is not an array
  */
 export type Vpc_Peering_Delete_Elem_Input = {
+  azure_input?: Maybe<Scalars['Int']>;
   output_variables?: Maybe<Scalars['Int']>;
 };
 
 /** delete key/value pair or string element. key/value pairs are matched based on their key value */
 export type Vpc_Peering_Delete_Key_Input = {
+  azure_input?: Maybe<Scalars['String']>;
   output_variables?: Maybe<Scalars['String']>;
 };
 
@@ -77696,6 +81251,7 @@ export type Vpc_Peering_Insert_Input = {
   aws_customer_vpc_cidr?: Maybe<Scalars['String']>;
   aws_customer_vpc_id?: Maybe<Scalars['String']>;
   aws_customer_vpc_region?: Maybe<Scalars['String']>;
+  azure_input?: Maybe<Scalars['jsonb']>;
   comments?: Maybe<Scalars['String']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   dedicated_vpc?: Maybe<Dedicated_Vpc_Obj_Rel_Insert_Input>;
@@ -77809,6 +81365,7 @@ export type Vpc_Peering_Order_By = {
   aws_customer_vpc_cidr?: Maybe<Order_By>;
   aws_customer_vpc_id?: Maybe<Order_By>;
   aws_customer_vpc_region?: Maybe<Order_By>;
+  azure_input?: Maybe<Order_By>;
   comments?: Maybe<Order_By>;
   created_at?: Maybe<Order_By>;
   dedicated_vpc?: Maybe<Dedicated_Vpc_Order_By>;
@@ -77835,6 +81392,7 @@ export type Vpc_Peering_Pk_Columns_Input = {
 
 /** prepend existing jsonb value of filtered columns with new jsonb value */
 export type Vpc_Peering_Prepend_Input = {
+  azure_input?: Maybe<Scalars['jsonb']>;
   output_variables?: Maybe<Scalars['jsonb']>;
 };
 
@@ -77850,6 +81408,8 @@ export enum Vpc_Peering_Select_Column {
   AwsCustomerVpcId = 'aws_customer_vpc_id',
   /** column name */
   AwsCustomerVpcRegion = 'aws_customer_vpc_region',
+  /** column name */
+  AzureInput = 'azure_input',
   /** column name */
   Comments = 'comments',
   /** column name */
@@ -77907,6 +81467,7 @@ export type Vpc_Peering_Set_Input = {
   aws_customer_vpc_cidr?: Maybe<Scalars['String']>;
   aws_customer_vpc_id?: Maybe<Scalars['String']>;
   aws_customer_vpc_region?: Maybe<Scalars['String']>;
+  azure_input?: Maybe<Scalars['jsonb']>;
   comments?: Maybe<Scalars['String']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   dedicated_vpc_id?: Maybe<Scalars['uuid']>;
@@ -77941,6 +81502,7 @@ export type Vpc_Peering_Stream_Cursor_Value_Input = {
   aws_customer_vpc_cidr?: Maybe<Scalars['String']>;
   aws_customer_vpc_id?: Maybe<Scalars['String']>;
   aws_customer_vpc_region?: Maybe<Scalars['String']>;
+  azure_input?: Maybe<Scalars['jsonb']>;
   comments?: Maybe<Scalars['String']>;
   created_at?: Maybe<Scalars['timestamptz']>;
   dedicated_vpc_id?: Maybe<Scalars['uuid']>;
@@ -77972,6 +81534,8 @@ export enum Vpc_Peering_Update_Column {
   AwsCustomerVpcId = 'aws_customer_vpc_id',
   /** column name */
   AwsCustomerVpcRegion = 'aws_customer_vpc_region',
+  /** column name */
+  AzureInput = 'azure_input',
   /** column name */
   Comments = 'comments',
   /** column name */
@@ -78900,4 +82464,17 @@ export type AddSchemaRegistryFeatureRequestMutation = {
     __typename?: 'FeatureRequestResponse';
     status: string;
   } | null;
+};
+
+export type FetchConfigStatusSubscriptionVariables = Exact<{
+  tenantId: Scalars['uuid'];
+}>;
+
+export type FetchConfigStatusSubscription = {
+  __typename?: 'subscription_root';
+  config_status: Array<{
+    __typename?: 'config_status';
+    hash: string;
+    message?: string | null;
+  }>;
 };

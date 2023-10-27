@@ -80,6 +80,7 @@ module Hasura.Table.Cache
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
+    tciRawColumns,
     tiAdminRolePermInfo,
     tiCoreInfo,
     tiEventTriggerInfoMap,
@@ -89,6 +90,7 @@ module Hasura.Table.Cache
     _FIComputedField,
     _FIRelationship,
     _FIRemoteRelationship,
+    setFieldNameCase,
   )
 where
 
@@ -120,12 +122,14 @@ import Data.List.Extended (duplicates)
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp.Lenses (_RedactIfFalse)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
@@ -133,10 +137,12 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..), ValidateInput (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (runBackend)
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
@@ -470,8 +476,8 @@ instance
 -- | This type is only used as an intermediate type
 --   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
-  { cspiCols :: [(HashMap.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
-    cspiComputedFields :: [(HashMap.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+  { cspiCols :: [(HashMap.HashMap (Column b) (AnnRedactionExpPartialSQL b))],
+    cspiComputedFields :: [(HashMap.HashMap ComputedFieldName (AnnRedactionExpPartialSQL b))],
     cspiFilter :: [(AnnBoolExpPartialSQL b)],
     cspiLimit :: Maybe (Max Int),
     cspiAllowAgg :: Any,
@@ -510,43 +516,43 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
     cspiAllowedSubscriptionRootFieldTypes
   where
     mergeColumnsWithBoolExp ::
-      NonEmpty (Maybe (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b)))) ->
-      Maybe (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b)))
-    mergeColumnsWithBoolExp booleanExpressions
+      NonEmpty (AnnRedactionExp b (PartialSQLExp b)) ->
+      AnnRedactionExp b (PartialSQLExp b)
+    mergeColumnsWithBoolExp redactionExpressions
       -- when all the parent roles have a select permission, then we set
-      -- the case boolean expression to `Nothing`. Suppose this were not done, then
-      -- the resulting boolean expression will an expression which will always evaluate to
+      -- the redaction expression to `NoRedaction`. Suppose this were not done, then
+      -- the resulting boolean expression will be an expression which will always evaluate to
       -- `True`. So, to avoid additional computations, we just set the case boolean expression
-      -- to `Nothing`.
+      -- to `NoRedaction`.
       --
       -- Suppose, an inherited role, `inherited_role` inherits from two roles `role1` and `role2`.
       -- `role1` has the filter: `{"published": {"eq": true}}` and `role2` has the filter:
       -- `{"early_preview": {"eq": true}}` then the filter boolean expression of the inherited select permission will be
       -- the boolean OR of the parent roles filters.
 
-      --  Now, let's say both `role1` and `role2` allow access to
-      -- the `title` column of the table, the case boolean expression of the `title` column will be
+      -- Now, let's say both `role1` and `role2` allow access to
+      -- the `title` column of the table, the `RedactIfFalse` boolean expression of the `title` column will be
       -- the boolean OR of the parent roles filters i.e. same as the filter of the select permission. Since,
-      -- the column case boolean expression is equal to the row filter boolean expression, the column
-      -- case boolean expression will always evaluate to `True`, since the column case boolean expression
-      -- will always evaluate to `True`, we simply remove the boolean case expression when for a column all
-      -- the select permissions exists.
-      | selPermsCount == length booleanExpressions = Nothing
+      -- the `RedactIfFalse` boolean expression is equal to the row filter boolean expression, the `RedactIfFalse`
+      -- boolean expression will always evaluate to `True`; and since the `RedactIfFalse` boolean expression
+      -- will always evaluate to `True`, we simply change the `RedactIfFalse` to a `NoRedaction` redaction expression
+      -- when for a column all the select permissions exists.
+      | selPermsCount == length redactionExpressions = NoRedaction
       | otherwise =
-          let nonNothingBoolExps = catMaybes $ toList booleanExpressions
-           in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
+          let redactionBoolExps = mapMaybe (^? _RedactIfFalse) $ toList redactionExpressions
+           in bool (RedactIfFalse $ BoolOr redactionBoolExps) NoRedaction $ null redactionBoolExps
 
 data SelPermInfo (b :: BackendType) = SelPermInfo
   { -- | HashMap of accessible columns to the role, the `Column` may be mapped to
-    -- an `AnnColumnCaseBoolExpPartialSQL`, which happens only in the case of an
-    -- inherited role, for a non-inherited role, it will be `Nothing`. The above
+    -- an `AnnRedactionExpPartialSQL`, which is `RedactIfFalse` only in the case of an
+    -- inherited role, for a non-inherited role, it will always be `NoRedaction`. The `RedactIfFalse`
     -- bool exp will determine if the column should be nullified in a row, when
     -- there aren't requisite permissions.
-    spiCols :: HashMap.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
+    spiCols :: HashMap.HashMap (Column b) (AnnRedactionExpPartialSQL b),
     -- | HashMap of accessible computed fields to the role, mapped to
-    -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`.
+    -- `AnnRedactionExpPartialSQL`, simililar to `spiCols`.
     -- These computed fields do not return rows of existing table.
-    spiComputedFields :: HashMap.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
+    spiComputedFields :: HashMap.HashMap ComputedFieldName (AnnRedactionExpPartialSQL b),
     spiFilter :: AnnBoolExpPartialSQL b,
     spiLimit :: Maybe Int,
     spiAllowAgg :: Bool,
@@ -560,29 +566,25 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
 
 deriving instance
   ( Backend b,
-    Eq (AnnBoolExpPartialSQL b),
-    Eq (AnnColumnCaseBoolExpPartialSQL b)
+    Eq (AnnBoolExpPartialSQL b)
   ) =>
   Eq (SelPermInfo b)
 
 deriving instance
   ( Backend b,
-    Show (AnnBoolExpPartialSQL b),
-    Show (AnnColumnCaseBoolExpPartialSQL b)
+    Show (AnnBoolExpPartialSQL b)
   ) =>
   Show (SelPermInfo b)
 
 instance
   ( Backend b,
-    NFData (AnnBoolExpPartialSQL b),
-    NFData (AnnColumnCaseBoolExpPartialSQL b)
+    NFData (AnnBoolExpPartialSQL b)
   ) =>
   NFData (SelPermInfo b)
 
 instance
   ( Backend b,
-    ToJSON (AnnBoolExpPartialSQL b),
-    ToJSON (AnnColumnCaseBoolExpPartialSQL b)
+    ToJSON (AnnBoolExpPartialSQL b)
   ) =>
   ToJSON (SelPermInfo b)
   where
@@ -669,6 +671,9 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
     _permDel :: Maybe (DelPermInfo b)
   }
   deriving (Generic)
+
+instance Show (RolePermInfo b) where
+  show _ = "Debugging Show instance for data RolePermInfo (b :: BackendType) = RolePermInfo"
 
 instance
   ( Backend b,
@@ -1011,7 +1016,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
     _tciExtraTableMetadata :: ExtraTableMetadata b,
-    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tciRawColumns :: [RawColumnInfo b]
   }
   deriving (Generic)
 
@@ -1244,7 +1250,24 @@ assertColumnExists ::
   Column backend ->
   m ()
 assertColumnExists m msg c = do
-  void $ askColInfo m c msg
+  fieldInfo <-
+    modifyErr ("column " <>)
+      $ askFieldInfo m (fromCol @backend c)
+  case fieldInfo of
+    (FIColumn _) -> pure ()
+    (FIRelationship _) -> throwErr "relationship"
+    (FIComputedField _) -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
+  where
+    throwErr fieldType =
+      throwError
+        $ err400 UnexpectedPayload
+        $ "expecting a database column; but, "
+        <> c
+        <<> " is a "
+        <> fieldType
+        <> "; "
+        <> msg
 
 askRelType ::
   (MonadError QErr m) =>
@@ -1284,16 +1307,33 @@ mkAdminRolePermInfo tableInfo =
   where
     fields = _tciFieldInfoMap tableInfo
     pgCols = map structuredColumnInfoColumn $ getCols fields
-    pgColsWithFilter = HashMap.fromList $ map (,Nothing) pgCols
+    pgColsWithFilter = HashMap.fromList $ map (,NoRedaction) pgCols
     computedFields =
       -- Fetch the list of computed fields not returning rows of existing table.
       -- For other computed fields returning existing table rows, the admin role can query them
       -- as their permissions are derived from returning table permissions.
       HS.fromList $ map _cfiName $ removeComputedFieldsReturningExistingTable $ getComputedFieldInfos fields
-    computedFields' = HS.toMap computedFields $> Nothing
+    computedFields' = HS.toMap computedFields $> NoRedaction
 
     tableName = _tciName tableInfo
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty Nothing
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
     u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty Nothing
     d = DelPermInfo tableName annBoolExpTrue False mempty Nothing
+
+-- | Builds field name with proper case. Please note that this is a pure
+--   function as all the validation has already been done while preparing
+--   @GQLNameIdentifier@.
+setFieldNameCase ::
+  NamingCase ->
+  TableInfo b ->
+  CustomRootField ->
+  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
+  C.GQLNameIdentifier ->
+  G.Name
+setFieldNameCase tCase tInfo crf getFieldName tableName =
+  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
+  where
+    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
+    crfName = fmap C.fromCustomName (_crfName crf)
+    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName

@@ -10,6 +10,8 @@ module Hasura.Backends.DataConnector.API.V0.Function
     FunctionInfo (..),
     FunctionType (..),
     FunctionArg (..),
+    FunctionArgument (..),
+    ArgumentValue (..),
     FunctionReturnType (..),
     FunctionArity (..),
     functionNameToText,
@@ -22,6 +24,9 @@ module Hasura.Backends.DataConnector.API.V0.Function
     faInputArgOptional,
     faInputArgName,
     faInputArgType,
+    faName,
+    faValue,
+    savValue,
     _FunctionReturnsTable,
     _FunctionReturnsUnknown,
   )
@@ -80,16 +85,17 @@ data FunctionType = FRead | FWrite
 instance HasCodec FunctionType where
   codec = named "FunctionType" $ stringConstCodec [(FRead, "read"), (FWrite, "write")]
 
+-- | FunctionArg represents the args exposed in the agent schema
+--
 -- TODO: This should be extended to support positional args, etc. in future
 -- Example: `data FunctionArgIdentifier = NamedArg Text | PositionalArg Int`
 -- Serialized: `{ "type": "name", "name": "arg1" }` or `{ "type": "positional", "index": 0 }`
---
 data FunctionArg = FunctionArg
   { _faInputArgName :: Text,
     _faInputArgType :: API.ScalarType,
     _faInputArgOptional :: Bool
   }
-  deriving stock (Eq, Ord, Show, Generic)
+  deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec FunctionArg
 
@@ -127,6 +133,49 @@ instance HasCodec FunctionReturnType where
             ("unknown", ("FunctionReturnsUnknown", pure FunctionReturnsUnknown))
           ]
 
+-- | FunctionArgument represent arguments sent via Request IR to the agent.
+data FunctionArgument = NamedArgument
+  { _faName :: Text,
+    _faValue :: ArgumentValue
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+-- | This type wrapper exists to allow easy extension to different types in the future.
+newtype ArgumentValue = ScalarArgumentValue
+  { _savValue :: API.ScalarValue
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+instance HasCodec ArgumentValue where
+  codec =
+    object "ArgumentValue" $
+      discriminatedUnionCodec "type" enc dec
+    where
+      enc = \case
+        (ScalarArgumentValue n) -> ("scalar", mapToEncoder n objectCodec)
+      dec =
+        HashMap.fromList
+          [ ("scalar", ("ScalarArgumentValue", mapToDecoder ScalarArgumentValue objectCodec))
+          ]
+
+namedArgumentObjectCodec :: JSONObjectCodec FunctionArgument
+namedArgumentObjectCodec =
+  NamedArgument
+    <$> requiredField "name" "The name of the named argument" .= _faName
+    <*> requiredField "value" "The value of the named argument" .= _faValue
+
+instance HasCodec FunctionArgument where
+  codec =
+    object "FunctionRequestArgument" $
+      discriminatedUnionCodec "type" enc dec
+    where
+      enc = \case
+        n -> ("named", mapToEncoder n namedArgumentObjectCodec)
+      dec =
+        HashMap.fromList
+          [ ("named", ("NamedArgument", mapToDecoder id namedArgumentObjectCodec))
+          ]
+
 data FunctionArity = FunctionArityOne | FunctionArityMany
   deriving stock (Eq, Show, Ord, Generic)
   deriving anyclass (NFData, Hashable)
@@ -145,8 +194,8 @@ data FunctionInfo = FunctionInfo
   { -- NOTE: Some fields from PG are omitted here due to initial implementation, or non-generality.
     _fiName :: FunctionName,
     _fiFunctionType :: FunctionType,
-    _fiReturns :: FunctionReturnType, -- Functions must currently return tables as per PG.
-    _fiResponseCardinality :: FunctionArity,
+    _fiReturns :: Maybe FunctionReturnType, -- Functions must currently return tables as per PG.
+    _fiResponseCardinality :: Maybe FunctionArity,
     _fiInputArgs :: [FunctionArg], -- Args info is listed grouped unlike PG.
     _fiDescription :: Maybe Text
   }
@@ -160,15 +209,17 @@ instance HasCodec FunctionInfo where
       FunctionInfo
         <$> requiredField "name" "The name of the table" .= _fiName
         <*> requiredField "type" "read/write classification of the function" .= _fiFunctionType
-        <*> requiredField "returns" "table listed in schema that matches the return type of the function - to relax later" .= _fiReturns
-        <*> requiredField "response_cardinality" "object response if false, rows if true" .= _fiResponseCardinality
-        <*> requiredField "args" "argument info - name/types" .= _fiInputArgs
+        <*> optionalFieldOrNull "returns" "table listed in schema that matches the return type of the function - to relax later" .= _fiReturns
+        <*> optionalFieldOrNull "response_cardinality" "object response if false, rows if true" .= _fiResponseCardinality
+        <*> optionalFieldWithOmittedDefault "args" [] "argument info - name/types" .= _fiInputArgs
         <*> optionalFieldOrNull "description" "Description of the table" .= _fiDescription
 
 --------------------------------------------------------------------------------
 
 $(makeLenses ''FunctionInfo)
 $(makeLenses ''FunctionArg)
+$(makeLenses ''FunctionArgument)
+$(makeLenses ''ArgumentValue)
 $(makePrisms ''FunctionReturnType)
 $(makePrisms ''FunctionArity)
 $(makePrisms ''FunctionType)

@@ -30,8 +30,11 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel)
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (AnnRedactionExpPartialSQL, AnnRedactionExpUnpreparedValue)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
@@ -91,13 +94,14 @@ tableSelectColumnsEnum ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
   TableInfo b ->
-  SchemaT r m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)))
 tableSelectColumnsEnum tableInfo = do
   customization <- retrieve $ _siCustomization @b
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- tableSelectColumns tableInfo
+  columnsWithRedactionExps <- tableSelectColumns tableInfo
+  let columns = fst <$> columnsWithRedactionExps
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
       description =
         Just
@@ -106,16 +110,22 @@ tableSelectColumnsEnum tableInfo = do
           <>> tableInfoName tableInfo
   -- We noticed many 'Definition's allocated, from 'define' below, so memoize
   -- to gain more sharing and lower memory residency.
-  case nonEmpty $ map (define . structuredColumnInfoName &&& structuredColumnInfoColumn) columns of
+  let columnDefinitions =
+        columnsWithRedactionExps
+          <&> ( \(structuredColumnInfo, redactionExp) ->
+                  let definition = define $ structuredColumnInfoName structuredColumnInfo
+                      column = structuredColumnInfoColumn structuredColumnInfo
+                   in (definition, (column, redactionExp))
+              )
+          & nonEmpty
+  case columnDefinitions of
     Nothing -> pure Nothing
-    Just columnDefinitions ->
+    Just columnDefinitions' ->
       Just
         <$> P.memoizeOn
           'tableSelectColumnsEnum
           (enumName, description, columns)
-          ( pure
-              $ P.enum enumName description columnDefinitions
-          )
+          (pure $ P.enum enumName description columnDefinitions')
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
@@ -134,14 +144,14 @@ tableSelectColumnsPredEnum ::
   (ColumnType b -> Bool) ->
   GQLNameIdentifier ->
   TableInfo b ->
-  SchemaT r m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)))
 tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
   customization <- retrieve $ _siCustomization @b
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
       predName' = applyFieldNameCaseIdentifier tCase predName
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- filter (columnPredicate . ciType) . mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  columns <- filter (columnPredicate . ciType . fst) . mapMaybe (\(column, redactionExp) -> (,redactionExp) <$> (column ^? _SCIScalarColumn)) <$> tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
         Just
@@ -154,9 +164,9 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
     $ P.enum enumName description
     <$> nonEmpty
       [ ( define $ ciName column,
-          ciColumn column
+          (ciColumn column, redactionExp)
         )
-        | column <- columns
+        | (column, redactionExp) <- columns
       ]
   where
     define name =
@@ -241,7 +251,9 @@ tableSelectFields tableInfo = do
       canBeSelected role permissions (FIColumn _naiColumnInfo)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       case riTarget relationshipInfo of
-        RelTargetNativeQuery _ -> error "tableSelectFields RelTargetNativeQuery"
+        RelTargetNativeQuery nativeQueryName -> do
+          nativeQueryInfo <- askNativeQueryInfo nativeQueryName
+          pure $! isJust $ getSelPermInfoForLogicalModel @b role (_nqiReturns nativeQueryInfo)
         RelTargetTable tableName -> do
           tableInfo' <- askTableInfo tableName
           pure $! isJust $ tableSelectPermissions @b role tableInfo'
@@ -274,12 +286,24 @@ tableSelectColumns ::
     Has (SourceInfo b) r
   ) =>
   TableInfo b ->
-  m [StructuredColumnInfo b]
-tableSelectColumns tableInfo =
-  mapMaybe columnInfo <$> tableSelectFields tableInfo
+  m [(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)]
+tableSelectColumns tableInfo = do
+  roleName <- retrieve scRole
+  case spiCols <$> tableSelectPermissions roleName tableInfo of
+    Nothing -> pure []
+    Just columnPermissions ->
+      mapMaybe (getColumnsAndRedactionExps columnPermissions) <$> tableSelectFields tableInfo
   where
-    columnInfo (FIColumn ci) = Just ci
-    columnInfo _ = Nothing
+    getColumnsAndRedactionExps ::
+      HashMap (Column b) (AnnRedactionExpPartialSQL b) ->
+      FieldInfo b ->
+      Maybe ((StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b))
+    getColumnsAndRedactionExps columnPermissions = \case
+      FIColumn structuredColumnInfo -> do
+        redactionExp <- HashMap.lookup (structuredColumnInfoColumn structuredColumnInfo) columnPermissions
+        pure (structuredColumnInfo, partialSQLExpToUnpreparedValue <$> redactionExp)
+      _ ->
+        Nothing
 
 -- | Get the computed fields of a table that may be selected under the given
 -- select permissions.

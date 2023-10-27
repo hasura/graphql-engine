@@ -1,7 +1,7 @@
 import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import { ConnectBigQueryWidget } from './ConnectBigQueryWidget';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { userEvent, within } from '@storybook/testing-library';
+import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
 export default {
@@ -60,15 +60,10 @@ export const Test: StoryObj<typeof ConnectBigQueryWidget> = {
     );
     await expect(serviceAccountKeyOption).toBeInTheDocument();
 
-    // click on the environment variable option and verify if the correct fields are shown
-    const environmentVariableOption = await canvas.findByTestId(
-      'configuration.serviceAccount.type-envVar'
+    const placeholders = await canvas.findAllByPlaceholderText(
+      'HASURA_GRAPHQL_DB_URL_FROM_ENV'
     );
-    await expect(environmentVariableOption).toBeChecked();
-    await userEvent.click(environmentVariableOption);
-    await expect(
-      await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV')
-    ).toBeInTheDocument();
+    await expect(placeholders.length).toBe(3);
 
     await expect(
       await canvas.findByTestId('configuration.projectId.type-value')

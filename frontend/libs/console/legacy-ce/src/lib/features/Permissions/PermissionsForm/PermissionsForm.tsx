@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useConsoleForm } from '../../../new-components/Form';
 import { Button } from '../../../new-components/Button';
 import { IndicatorCard } from '../../../new-components/IndicatorCard';
@@ -21,13 +21,26 @@ import {
   RowPermissionsSectionWrapper,
 } from './components';
 
-import { useFormData, useUpdatePermissions } from './hooks';
+import {
+  createDefaultValues,
+  useFormData,
+  useUpdatePermissions,
+} from './hooks';
 import ColumnRootFieldPermissions from './components/RootFieldPermissions/RootFieldPermissions';
 import { useListAllTableColumns } from '../../Data';
 import { useMetadataSource } from '../../MetadataAPI';
 import useScrollIntoView from './hooks/useScrollIntoView';
-import { getAllowedFilterKeys } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
+import {
+  createFormData,
+  getAllowedFilterKeys,
+} from './hooks/dataFetchingHooks/useFormData/createFormData/index';
 import Skeleton from 'react-loading-skeleton';
+import { CommentSection } from './components/CommentSection';
+import {
+  InputValidation,
+  inputValidationEnabledSchema,
+} from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+import { z } from 'zod';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -36,7 +49,9 @@ export interface ComponentProps {
   roleName: string;
   accessType: AccessType;
   handleClose: () => void;
-  data: ReturnType<typeof useFormData>['data'];
+  defaultValues: ReturnType<typeof createDefaultValues>;
+  formData: ReturnType<typeof createFormData>;
+  kind: string;
 }
 
 const Component = (props: ComponentProps) => {
@@ -47,9 +62,12 @@ const Component = (props: ComponentProps) => {
     roleName,
     accessType,
     handleClose,
-    data,
+    defaultValues,
+    formData,
+    kind,
   } = props;
   const permissionSectionRef = useRef(null);
+
   useScrollIntoView(permissionSectionRef, [roleName], { behavior: 'smooth' });
 
   const { data: metadataTables } = useMetadata(
@@ -64,6 +82,7 @@ const Component = (props: ComponentProps) => {
     queryType,
     roleName,
     accessType,
+    validateInput: defaultValues?.validateInput,
   });
   const { data: roles } = useRoles();
   const { data: supportedQueryTypes } = useSupportedQueryTypes({
@@ -73,11 +92,19 @@ const Component = (props: ComponentProps) => {
 
   const onSubmit = async (formData: PermissionsSchema) => {
     const newValues = getValues();
+    if (!formData?.validateInput?.enabled) {
+      delete formData.validateInput;
+    }
+    if (
+      formData?.validateInput?.enabled &&
+      formData?.validateInput?.definition?.timeout === undefined
+    ) {
+      formData.validateInput.definition.timeout = 10;
+    }
     try {
       await updatePermissions.submit(formData);
       handleClose();
     } catch (e) {
-      reset();
       reset(newValues);
     }
   };
@@ -86,8 +113,6 @@ const Component = (props: ComponentProps) => {
     await deletePermissions.submit([queryType]);
     handleClose();
   };
-
-  const { formData, defaultValues } = data || {};
 
   const {
     methods: { getValues, reset },
@@ -98,13 +123,6 @@ const Component = (props: ComponentProps) => {
       defaultValues,
     },
   });
-
-  // Reset form when default values change
-  // E.g. when switching tables
-  useEffect(() => {
-    const newValues = getValues();
-    reset({ ...newValues, ...defaultValues, clonePermissions: [] });
-  }, [roleName, defaultValues]);
 
   const key = `${JSON.stringify(table)}-${queryType}-${roleName}`;
 
@@ -125,6 +143,10 @@ const Component = (props: ComponentProps) => {
             {queryType}
           </h3>
         </div>
+        <CommentSection key={key} />
+        {queryType !== 'select' && kind === 'postgres' && (
+          <InputValidation formFieldsNamePrefix="validateInput." />
+        )}
         <RowPermissionsSectionWrapper
           roleName={roleName}
           queryType={queryType}
@@ -144,7 +166,7 @@ const Component = (props: ComponentProps) => {
               subQueryType={queryType === 'update' ? 'pre_update' : undefined}
               permissionsKey={filterKeys[0]}
               dataSourceName={dataSourceName}
-              supportedOperators={data?.defaultValues?.supportedOperators ?? []}
+              supportedOperators={defaultValues?.supportedOperators ?? []}
               defaultValues={defaultValues}
             />
             {queryType === 'update' && (
@@ -163,9 +185,7 @@ const Component = (props: ComponentProps) => {
                   }
                   permissionsKey={filterKeys[1]}
                   dataSourceName={dataSourceName}
-                  supportedOperators={
-                    data?.defaultValues?.supportedOperators ?? []
-                  }
+                  supportedOperators={defaultValues?.supportedOperators ?? []}
                   defaultValues={defaultValues}
                 />
               </div>
@@ -217,6 +237,7 @@ const Component = (props: ComponentProps) => {
           id="form-buttons-container"
         >
           <Button
+            data-testid="permissions-form-submit"
             type="submit"
             mode="primary"
             title={
@@ -267,8 +288,80 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     table,
     queryType,
     roleName,
+  });
+
+  if (!data || !metadataSource) {
+    return <Skeleton width={'100%'} height={300} />;
+  }
+
+  const dataSource = data.metadata.metadata.sources.find(
+    s => s.name === dataSourceName
+  );
+
+  const permissions = dataSource?.tables.find(
+    t => JSON.stringify(t.table) === JSON.stringify(table)
+  );
+
+  let validateInput = undefined;
+  switch (queryType) {
+    case 'insert':
+      validateInput = permissions?.insert_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+    case 'update':
+      validateInput = permissions?.update_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+    case 'delete':
+      validateInput = permissions?.delete_permissions?.find(
+        permission => permission.role === roleName
+      )?.permission?.validate_input;
+      break;
+  }
+
+  const defaultValues = createDefaultValues({
+    queryType,
+    roleName,
+    dataSourceName,
+    metadata: data?.metadata,
+    table,
     tableColumns,
+    defaultQueryRoot: data.defaultQueryRoot,
     metadataSource,
+    supportedOperators: data.supportedOperators,
+    validateInput: validateInput
+      ? {
+          enabled: true,
+          type: 'http',
+          definition: {
+            url: (validateInput as z.infer<typeof inputValidationEnabledSchema>)
+              ?.definition?.url,
+            forward_client_headers: (
+              validateInput as z.infer<typeof inputValidationEnabledSchema>
+            )?.definition.forward_client_headers,
+            headers: (
+              validateInput as z.infer<typeof inputValidationEnabledSchema>
+            )?.definition.headers,
+            timeout:
+              (validateInput as z.infer<typeof inputValidationEnabledSchema>)
+                ?.definition.timeout ?? undefined,
+          },
+        }
+      : { enabled: false },
+  });
+
+  const formData = createFormData({
+    dataSourceName,
+    table,
+    metadata: data.metadata,
+    tableColumns,
+    trackedTables: metadataSource.tables,
+    metadataSource,
+    validateInput: {
+      enabled: false,
+    },
   });
 
   if (isError) {
@@ -279,15 +372,25 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
 
   if (
     isLoading ||
-    !data ||
     isLoadingTables ||
     !tableColumns ||
-    tableColumns?.length === 0 ||
-    !metadataSource ||
-    !data.defaultValues
+    tableColumns?.length === 0
   ) {
     return <Skeleton width={'100%'} height={300} />;
   }
 
-  return <Component data={data} {...props} />;
+  return (
+    <Component
+      // Reset component when defaultValues change
+      // Otherwise the form keeps the old values
+      // Tried using react-hook-form's `reset` but it's overwritten by old default values (before submitting)
+      key={`${dataSourceName}-${JSON.stringify(
+        table
+      )}-${queryType}-${roleName}-${JSON.stringify(defaultValues)}`}
+      defaultValues={defaultValues}
+      formData={formData}
+      kind={dataSource?.kind || 'unknown'}
+      {...props}
+    />
+  );
 };

@@ -31,6 +31,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     wsReadCookieOption,
     stringifyNumOption,
     dangerousBooleanCollapseOption,
+    remoteNullForwardingPolicyOption,
     enabledAPIsOption,
     mxRefetchDelayOption,
     mxBatchSizeOption,
@@ -60,8 +61,12 @@ module Hasura.Server.Init.Arg.Command.Serve
     parseMetadataDefaults,
     metadataDefaultsOption,
     apolloFederationStatusOption,
+    triggersErrorLogLevelStatusOption,
     closeWebsocketsOnMetadataChangeOption,
     maxTotalHeaderLengthOption,
+    asyncActionsFetchBatchSizeOption,
+    persistedQueriesOption,
+    persistedQueriesTtlOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -119,6 +124,7 @@ serveCommandParser =
     <*> parseWsReadCookie
     <*> parseStringifyNum
     <*> parseDangerousBooleanCollapse
+    <*> parseRemoteNullForwardingPolicy
     <*> parseEnabledAPIs
     <*> parseMxRefetchDelay
     <*> parseMxBatchSize
@@ -150,6 +156,10 @@ serveCommandParser =
     <*> parseApolloFederationStatus
     <*> parseEnableCloseWebsocketsOnMetadataChange
     <*> parseMaxTotalHeaderLength
+    <*> parseTriggersErrorLoglevelStatus
+    <*> parseAsyncActionsFetchBatchSize
+    <*> parsePersistedQueries
+    <*> parsePersistedQueriesTtl
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -626,6 +636,24 @@ dangerousBooleanCollapseOption =
         "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
           <> " value will be interpreted to mean that the field should be ignored"
           <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+    }
+
+parseRemoteNullForwardingPolicy :: Opt.Parser (Maybe Options.RemoteNullForwardingPolicy)
+parseRemoteNullForwardingPolicy =
+  fmap (bool Nothing (Just Options.RemoteOnlyForwardNonNull))
+    $ Opt.switch
+      ( Opt.long "remote-schema-skip-nulls"
+          <> Opt.help (Config._helpMessage remoteNullForwardingPolicyOption)
+      )
+
+remoteNullForwardingPolicyOption :: Config.Option Options.RemoteNullForwardingPolicy
+remoteNullForwardingPolicyOption =
+  Config.Option
+    { Config._default = Options.RemoteForwardAccurately,
+      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_SKIP_NULLS",
+      Config._helpMessage =
+        "Skip null values from arguments while resolving fields from remote schemas. (default: false, i.e."
+          <> " forward null values in argument as well)"
     }
 
 parseEnabledAPIs :: Opt.Parser (Maybe (HashSet Config.API))
@@ -1195,6 +1223,72 @@ maxTotalHeaderLengthOption =
       Config._helpMessage = "Max cumulative length of all headers in bytes (Default: 1MB)"
     }
 
+triggersErrorLogLevelStatusOption :: Config.Option (Types.TriggersErrorLogLevelStatus)
+triggersErrorLogLevelStatusOption =
+  Config.Option
+    { Config._default = Types.TriggersErrorLogLevelDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL",
+      Config._helpMessage = "Set log-level as error for Trigger error logs (Event Triggers, Scheduled Triggers, Cron Triggers) (default: false)."
+    }
+
+parseTriggersErrorLoglevelStatus :: Opt.Parser (Maybe Types.TriggersErrorLogLevelStatus)
+parseTriggersErrorLoglevelStatus =
+  (bool Nothing (Just Types.TriggersErrorLogLevelEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-triggers-error-log-level"
+          <> Opt.help (Config._helpMessage triggersErrorLogLevelStatusOption)
+      )
+
+asyncActionsFetchBatchSizeOption :: Config.Option Int
+asyncActionsFetchBatchSizeOption =
+  Config.Option
+    { Config._default = 10,
+      Config._envVar = "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_BATCH_SIZE",
+      Config._helpMessage = "Number of requests processed at a time in asynchronous actions (Default: 10)"
+    }
+
+parseAsyncActionsFetchBatchSize :: Opt.Parser (Maybe Int)
+parseAsyncActionsFetchBatchSize =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "async-actions-fetch-batch-size"
+          <> Opt.help (Config._helpMessage asyncActionsFetchBatchSizeOption)
+      )
+
+persistedQueriesOption :: Config.Option (Types.PersistedQueriesState)
+persistedQueriesOption =
+  Config.Option
+    { Config._default = Types.PersistedQueriesDisabled,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES",
+      Config._helpMessage = "Enable automated persisted queries (default: false)."
+    }
+
+parsePersistedQueries :: Opt.Parser (Maybe Types.PersistedQueriesState)
+parsePersistedQueries =
+  (bool Nothing (Just Types.PersistedQueriesEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-persisted-queries"
+          <> Opt.help (Config._helpMessage persistedQueriesOption)
+      )
+
+persistedQueriesTtlOption :: Config.Option Int
+persistedQueriesTtlOption =
+  Config.Option
+    { Config._default = 5,
+      Config._envVar = "HASURA_GRAPHQL_PERSISTED_QUERIES_TTL",
+      Config._helpMessage = "TTL for queries in the cache store (default: 5 seconds)."
+    }
+
+parsePersistedQueriesTtl :: Opt.Parser (Maybe Int)
+parsePersistedQueriesTtl =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "persisted-queries-ttl"
+          <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1295,6 +1389,11 @@ serveCmdFooter =
         Config.optionPP metadataDBExtensionsSchemaOption,
         Config.optionPP apolloFederationStatusOption,
         Config.optionPP closeWebsocketsOnMetadataChangeOption,
-        Config.optionPP maxTotalHeaderLengthOption
+        Config.optionPP maxTotalHeaderLengthOption,
+        Config.optionPP remoteNullForwardingPolicyOption,
+        Config.optionPP triggersErrorLogLevelStatusOption,
+        Config.optionPP asyncActionsFetchBatchSizeOption,
+        Config.optionPP persistedQueriesOption,
+        Config.optionPP persistedQueriesTtlOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

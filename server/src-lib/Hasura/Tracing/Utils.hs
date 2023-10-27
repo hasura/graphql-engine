@@ -15,8 +15,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.SourceConfiguration (HasSourceConfiguration (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context
-import Hasura.Tracing.Sampling
-import Hasura.Tracing.TraceId
+import Hasura.Tracing.Propagator (HttpPropagator, inject)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | Wrap the execution of an HTTP request in a span in the current
@@ -28,12 +27,13 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 -- created span, and injects the trace context into the HTTP header.
 traceHTTPRequest ::
   (MonadIO m, MonadTrace m) =>
+  HttpPropagator ->
   -- | http request that needs to be made
   HTTP.Request ->
   -- | a function that takes the traced request and executes it
   (HTTP.Request -> m a) ->
   m a
-traceHTTPRequest req f = do
+traceHTTPRequest propagator req f = do
   let method = bsToTxt (view HTTP.method req)
       uri = view HTTP.url req
   newSpan (method <> " " <> uri) do
@@ -43,13 +43,7 @@ traceHTTPRequest req f = do
     f $ over HTTP.headers (headers <>) req
   where
     toHeaders :: TraceContext -> [HTTP.Header]
-    toHeaders TraceContext {..} =
-      catMaybes
-        [ Just ("X-B3-TraceId", traceIdToHex tcCurrentTrace),
-          Just ("X-B3-SpanId", spanIdToHex tcCurrentSpan),
-          ("X-B3-ParentSpanId",) . spanIdToHex <$> tcCurrentParent,
-          ("X-B3-Sampled",) <$> samplingStateToHeader tcSamplingState
-        ]
+    toHeaders context = inject propagator context []
 
 attachSourceConfigAttributes :: forall b m. (HasSourceConfiguration b, MonadTrace m) => SourceConfig b -> m ()
 attachSourceConfigAttributes sourceConfig = do

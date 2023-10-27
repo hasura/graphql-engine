@@ -1,42 +1,31 @@
 import { UseQueryOptions, useQuery } from 'react-query';
-import { DataSource, Feature, TableColumn } from '../../DataSource';
+import { DataSource, Feature } from '../../DataSource';
 import { useHttpClient } from '../../Network';
 import { APIError } from '../../../hooks/error';
 import { getDefaultQueryOptions } from '../reactQueryUtils';
 
-export const useSupportedDataTypes = <
-  FinalResult = Feature | Record<TableColumn['consoleDataType'], string[]>
->({
+export const useSupportedDataTypes = <FinalResult = string[]>({
   dataSourceName,
-  select,
   options = {},
 }: {
   dataSourceName: string;
-  select?: (
-    data: Feature | Record<TableColumn['consoleDataType'], string[]>
-  ) => FinalResult;
-  options?: UseQueryOptions<
-    Feature | Record<TableColumn['consoleDataType'], string[]>,
-    APIError,
-    FinalResult
-  >;
+  options?: UseQueryOptions<Feature | string[], APIError, FinalResult>;
 }) => {
   const httpClient = useHttpClient();
 
-  return useQuery<
-    Feature | Record<TableColumn['consoleDataType'], string[]>,
-    APIError,
-    FinalResult
-  >(
+  return useQuery<Feature | string[], APIError, FinalResult>(
     [dataSourceName, 'supported_data_types'],
     async () => {
-      const result = await DataSource(httpClient).getSupportedDataTypes({
+      const result = await DataSource(httpClient).getSupportedScalars({
         dataSourceName,
       });
-      return result;
+      if (result === Feature.NotImplemented) {
+        return [];
+      }
+      // using Set to remove duplicates that result from the way the data types are flattened from definition object
+      return Array.from(new Set(result));
     },
     {
-      select,
       ...getDefaultQueryOptions(),
       ...options,
     }

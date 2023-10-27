@@ -29,9 +29,12 @@ import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.IR.ModelInformation
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.IR.Update.Batch qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
@@ -40,16 +43,32 @@ executeUpdate ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   Options.StringifyNumbers ->
+  SourceName ->
+  ModelSourceType ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (OnBaseMonad (ExceptT QErr) EncJSON)
-executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
+  m (OnBaseMonad (ExceptT QErr) EncJSON, [ModelNameInfo])
+executeUpdate userInfo stringifyNum sourceName modelSourceType sourceConfig updateOperation = do
   queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
+
+  let (modelName, modelType) = (tableName (_auTable updateOperation), ModelTypeTable)
+  let returnModels = getMutationOutputModelNamesGen sourceName modelSourceType (_auOutput updateOperation)
+  let mutationUpdateVariant = IR._ubWhere $ _auUpdateVariant updateOperation
+  argModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ mutationUpdateVariant
+    pure res
+  preUpdatePermissionModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ _auUpdatePermissions updateOperation
+    pure res
+  postUpdateCheckModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ _auCheck updateOperation
+    pure res
+  let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> preUpdatePermissionModelNames <> postUpdateCheckModelNames <> (argModelNames) <> (returnModels)
   if IR.updateBatchIsEmpty $ _auUpdateVariant updateOperation
-    then pure $ OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
+    then pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate, modelNames)
+    else pure $ (OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags), modelNames)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --

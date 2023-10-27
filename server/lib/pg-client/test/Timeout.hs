@@ -7,6 +7,7 @@ module Timeout (specTimeout) where
 
 import Control.Concurrent.Async (async, wait)
 import Control.Monad.Trans.Except (runExceptT)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BS
 import Data.Functor.Identity (Identity (..), runIdentity)
 import Data.Int (Int32)
@@ -81,7 +82,7 @@ specTimeout = before initDB $ do
 mkPool :: Bool -> IO PGPool
 mkPool cancelable = do
   dbUri <- BS.pack <$> Env.getEnv "DATABASE_URL"
-  initPGPool (connInfo dbUri) connParams logger
+  initPGPool (connInfo dbUri) J.Null connParams logger
   where
     logger = print
     connInfo uri =

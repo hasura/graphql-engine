@@ -7,17 +7,27 @@ import EditThisPage from '@theme/EditThisPage';
 import TagsListInline from '@theme/TagsListInline';
 import styles from './styles.module.css';
 import { Feedback } from '@site/src/components/Feedback/Feedback';
-import {HasuraReleaseNotification} from "@site/src/components/HasuraReleaseNotification/HasuraReleaseNotification";
+import { HasuraReleaseNotification } from '@site/src/components/HasuraReleaseNotification/HasuraReleaseNotification';
 function TagsRow(props) {
   return (
-    <div className={clsx(ThemeClassNames.docs.docFooterTagsRow, 'row margin-bottom--sm')}>
+    <div
+      className={clsx(
+        ThemeClassNames.docs.docFooterTagsRow,
+        'row margin-bottom--sm'
+      )}
+    >
       <div className="col">
         <TagsListInline {...props} />
       </div>
     </div>
   );
 }
-function EditMetaRow({ editUrl, lastUpdatedAt, lastUpdatedBy, formattedLastUpdatedAt }) {
+function EditMetaRow({
+  editUrl,
+  lastUpdatedAt,
+  lastUpdatedBy,
+  formattedLastUpdatedAt,
+}) {
   return (
     <div className={clsx(ThemeClassNames.docs.docFooterEditMetaRow, 'row')}>
       <div className="col">{editUrl && <EditThisPage editUrl={editUrl} />}</div>
@@ -36,7 +46,13 @@ function EditMetaRow({ editUrl, lastUpdatedAt, lastUpdatedBy, formattedLastUpdat
 }
 export default function DocItemFooter() {
   const { metadata } = useDoc();
-  const { editUrl, lastUpdatedAt, formattedLastUpdatedAt, lastUpdatedBy, tags } = metadata;
+  const {
+    editUrl,
+    lastUpdatedAt,
+    formattedLastUpdatedAt,
+    lastUpdatedBy,
+    tags,
+  } = metadata;
   const canDisplayTagsRow = tags.length > 0;
   const canDisplayEditMetaRow = !!(editUrl || lastUpdatedAt || lastUpdatedBy);
   const canDisplayFooter = canDisplayTagsRow || canDisplayEditMetaRow;
@@ -45,9 +61,11 @@ export default function DocItemFooter() {
   }
   return (
     <>
-      <Feedback metadata={metadata}/>
-      <HasuraReleaseNotification/>
-      <footer className={clsx(ThemeClassNames.docs.docFooter, 'docusaurus-mt-lg')}>
+      <Feedback metadata={metadata} />
+      <HasuraReleaseNotification />
+      <footer
+        className={clsx(ThemeClassNames.docs.docFooter, 'docusaurus-mt-lg')}
+      >
         {canDisplayTagsRow && <TagsRow tags={tags} />}
         {canDisplayEditMetaRow && (
           <EditMetaRow

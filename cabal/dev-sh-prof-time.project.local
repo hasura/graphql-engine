@@ -1,6 +1,25 @@
 -- Enable lower distortion time profiling, powers `dev.sh graphql-engine --prof-time`
 --  See: https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html?highlight=fprof%20late#ghc-flag--fprof-late
-import: cabal/dev-sh-optimized.project.local
+
+-- Formerly we had:
+-- import: cabal/dev-sh-optimized.project.local
+-- ...but cabal 3.10 broke it. See: TODO
+-- ...so now we need to copy-paste that configuration here to avoid import chains
+-- -------------------------- START dev-sh-optimized.project.local ------------------------------------
+import: dev-sh.project.local
+
+---- (reminder: top-level means apply these to all local packages)
+flags: +optimize-hasura
+-- be faster:
+documentation: false
+
+-- coverage inhibits performance. NOTE: we can't just put this at the top level
+-- to override, since it seems package-specific configuration takes precedence...
+package graphql-engine
+  coverage: false
+package graphql-engine-pro
+  coverage: false
+-- -------------------------- END dev-sh-optimized.project.local   ------------------------------------
 
 profiling: True
 flags: +profiling

@@ -2,22 +2,20 @@ import React from 'react';
 import { TrackableResourceTabs } from '../../../../features/Data/ManageDatabase/components';
 import { CollapsibleResource } from '../../../../features/Data/ManageDatabase/parts';
 import { TableList } from '../../../../features/Data/ManageTable/parts/TableList';
+import { ManageSuggestedRelationships } from '../../../../features/Data/TrackResources/TrackRelationships/ManageSuggestedRelationships';
+import { useInvalidateSuggestedRelationships } from '../../../../features/Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
 import { PostgresTable } from '../../../../features/DataSource';
 import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
 } from '../../../../features/FeatureFlags';
-import { exportMetadata } from '../../../../metadata/actions';
+import { ExperimentalFeatureBanner } from '../../../../features/components';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import {
-  getSchemaBaseRoute,
-  getTableModifyRoute,
-} from '../../../Common/utils/routesUtils';
+import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 import { updateSchemaInfo } from '../DataActions';
 import _push from '../push';
-import { ExperimentalFeatureBanner } from '../../../../features/components';
 import { useTrackTablesState } from './useTrackTablesState';
-
+import { ManageTrackedFunctions } from '../../../../features/Data/TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 export const TrackTablesContainer = ({
   dataSourceName,
   schema,
@@ -40,13 +38,13 @@ export const TrackTablesContainer = ({
     metadataError,
   } = useTrackTablesState(dataSourceName, schema);
 
-  const onMultiple = React.useCallback(() => {
-    dispatch(exportMetadata()).then(
-      dispatch(updateSchemaInfo()).then(() => {
-        dispatch(_push(getSchemaBaseRoute(schema, dataSourceName)));
-      })
-    );
-  }, [dataSourceName, dispatch, schema]);
+  const { invalidateSuggestedRelationships } =
+    useInvalidateSuggestedRelationships({ dataSourceName });
+
+  const onChange = React.useCallback(() => {
+    invalidateSuggestedRelationships();
+    dispatch(updateSchemaInfo());
+  }, [dispatch, invalidateSuggestedRelationships]);
 
   if (isMetadataError || isIntrospectionError)
     return (
@@ -64,68 +62,102 @@ export const TrackTablesContainer = ({
     );
 
   return (
-    <CollapsibleResource
-      title={<div>Untracked tables or views</div>}
-      tooltip="Tables or views that are not exposed over the GraphQL API"
-      defaultOpen
-      key={`${dataSourceName}-${schema}`}
-    >
-      <ExperimentalFeatureBanner
-        githubIssueLink={
-          'https://github.com/hasura/graphql-engine/discussions/9727'
-        }
-      />
-      <div className="my-2 text-muted">
-        Tracking tables adds them to your GraphQL API. All objects will be
-        admin-only until permissions have been set.
-      </div>
-      <TrackableResourceTabs
-        value={tab}
-        onValueChange={value => {
-          setTab(value);
-        }}
-        isLoading={isMetaLoading || isIntroLoading}
-        items={{
-          untracked: {
-            amount: untrackedTables.length,
-            content: (
-              <TableList
-                viewingTablesThatAre={'untracked'}
-                dataSourceName={dataSourceName}
-                tables={untrackedTables}
-                onMultipleTablesTrack={onMultiple}
-                onSingleTableTrack={table => {
-                  dispatch(
-                    _push(
-                      getTableModifyRoute(
-                        schema,
-                        dataSourceName,
-                        (table.table as PostgresTable).name,
-                        table.type !== 'VIEW'
+    <div>
+      <CollapsibleResource
+        title={<div>Untracked tables or views</div>}
+        tooltip="Tables or views that are not exposed over the GraphQL API"
+        defaultOpen
+        key={`tables-${dataSourceName}-${schema}`}
+      >
+        <ExperimentalFeatureBanner
+          githubIssueLink={
+            'https://github.com/hasura/graphql-engine/discussions/9727'
+          }
+        />
+        <TrackableResourceTabs
+          value={tab}
+          onValueChange={value => {
+            setTab(value);
+          }}
+          introText="Tracking tables adds them to your GraphQL API. All objects will be
+          admin-only until permissions have been set."
+          learnMoreLink={
+            'https://hasura.io/docs/latest/schema/postgres/tables/#tracking-tables'
+          }
+          isLoading={isMetaLoading || isIntroLoading}
+          items={{
+            untracked: {
+              amount: untrackedTables.length,
+              content: (
+                <TableList
+                  viewingTablesThatAre={'untracked'}
+                  dataSourceName={dataSourceName}
+                  tables={untrackedTables}
+                  onChange={onChange}
+                  trackMultipleEnabled
+                  onSingleTableTrack={table => {
+                    dispatch(
+                      _push(
+                        getTableModifyRoute(
+                          schema,
+                          dataSourceName,
+                          (table.table as PostgresTable).name,
+                          table.type !== 'VIEW'
+                        )
                       )
-                    )
-                  );
-                }}
-              />
-            ),
-          },
-          tracked: {
-            amount: trackedTables.length,
-            content: (
-              <TableList
-                viewingTablesThatAre={'tracked'}
-                dataSourceName={dataSourceName}
-                tables={trackedTables}
-                onMultipleTablesTrack={onMultiple}
-                onSingleTableTrack={table => {
-                  onMultiple();
-                }}
-              />
-            ),
-          },
-        }}
-      />
-    </CollapsibleResource>
+                    );
+                  }}
+                />
+              ),
+            },
+            tracked: {
+              amount: trackedTables.length,
+              content: (
+                <TableList
+                  viewingTablesThatAre={'tracked'}
+                  dataSourceName={dataSourceName}
+                  tables={trackedTables}
+                  onChange={onChange}
+                  trackMultipleEnabled
+                />
+              ),
+            },
+          }}
+        />
+      </CollapsibleResource>
+      <CollapsibleResource
+        title={<div>Untracked Foreign-key relationships</div>}
+        tooltip="Tables or views that are not exposed over the GraphQL API"
+        defaultOpen
+        key={`relationships-${dataSourceName}-${schema}`}
+      >
+        <ExperimentalFeatureBanner
+          githubIssueLink={
+            'https://github.com/hasura/graphql-engine/discussions/9727'
+          }
+        />
+        <ManageSuggestedRelationships
+          dataSourceName={dataSourceName}
+          schema={schema}
+        />
+      </CollapsibleResource>
+      <CollapsibleResource
+        title={<div>Untracked custom functions</div>}
+        tooltip="Custom functions that are not exposed over the GraphQL APICustom"
+        defaultOpen
+        key={`${dataSourceName}-${schema}`}
+      >
+        <ExperimentalFeatureBanner
+          githubIssueLink={
+            'https://github.com/hasura/graphql-engine/discussions/9727'
+          }
+        />
+        <ManageTrackedFunctions
+          dataSourceName={dataSourceName}
+          schema={schema}
+        />
+      </CollapsibleResource>
+    </div>
   );
 };
 

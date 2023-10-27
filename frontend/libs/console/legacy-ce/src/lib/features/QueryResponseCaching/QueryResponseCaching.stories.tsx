@@ -1,15 +1,13 @@
-import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 
-import { QueryResponseCaching } from './QueryResponseCaching';
+import { ConsoleTypeDecorator } from '../../storybook/decorators';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
+import { eeLicenseInfo } from '../EETrial/mocks/http';
 import {
   registerEETrialLicenseActiveMutation,
   registerEETrialLicenseAlreadyAppliedMutation,
 } from '../EETrial/mocks/registration.mock';
-import { eeLicenseInfo } from '../EETrial/mocks/http';
-import { useQueryClient } from 'react-query';
-import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
-import { EE_LICENSE_INFO_QUERY_NAME } from '../EETrial';
+import { QueryResponseCaching } from './QueryResponseCaching';
 
 export default {
   title: 'Features/Settings/Query Response Caching',
@@ -20,16 +18,8 @@ export default {
     },
   },
   decorators: [
-    // This is done so as we have set some cache time on the EE_LICENSE_INFO_QUERY_NAME query.
-    // So we need to refetch the cache data, so it doesn't persist across different stories. And
-    // it makes sure that our component actually does the network call, letting msw mocks return the
-    // desired response.
-    Story => {
-      const queryClient = useQueryClient();
-      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
-      return <Story />;
-    },
     ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro-lite' }),
   ],
 } as Meta<typeof QueryResponseCaching>;
 
@@ -42,7 +32,6 @@ export const UnregisteredUser: StoryObj<typeof QueryResponseCaching> = {
 
   parameters: {
     msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -55,6 +44,5 @@ export const LicenseActive: StoryObj<typeof QueryResponseCaching> = {
 
   parameters: {
     msw: [registerEETrialLicenseAlreadyAppliedMutation, eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };

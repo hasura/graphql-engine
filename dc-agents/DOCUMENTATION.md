@@ -110,10 +110,11 @@ This section is a guide to implementing Data Connector agents for `graphql-engin
 The entry point to the reference agent application is a Fastify HTTP server. Raw data is loaded from JSON files on disk, and the server provides the following endpoints:
 
 - `GET /capabilities`, which returns the capabilities of the agent and a schema that describes the type of the configuration expected to be sent on the `X-Hasura-DataConnector-Config` header
-- `GET /schema`, which returns information about the provided _data schema_, its tables and their columns
+- `POST /schema`, which returns information about the provided _data schema_, its tables and their columns
 - `POST /query`, which receives a query structure to be executed, encoded as the JSON request body, and returns JSON containing the requested fields. The query will be over the data schema described by the `/schema` endpoint.
 - `GET /health`, which can be used to either check if the agent is running, or if a particular data source is healthy
 - `POST /mutation`, which receives a request to mutate (ie change) data described by the `/schema` endpoint.
+- **DEPRECATED** - `GET /schema`, which returns information about the provided _data schema_, its tables and their columns 
 
 The `/schema`, `/query` and `/mutation` endpoints require the request to have the `X-Hasura-DataConnector-Config` header set. That header contains configuration information that agent can use to configure itself. For example, the header could contain a connection string to the database, if the agent requires a connection string to know how to connect to a specific database. The header must be a JSON object, but the specific properties that are required are up to the agent to define.
 
@@ -129,7 +130,8 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 {
   "capabilities": {
     "queries": {
-      "foreach": {}
+      "foreach": {},
+      "redaction": {}
     },
     "data_schema": {
       "supports_primary_keys": true,
@@ -137,8 +139,13 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
       "column_nullability": "nullable_and_non_nullable"
     },
     "relationships": {},
+    "interpolated_queries": {},
     "scalar_types": {
-      "DateTime": {"comparison_operators": {"DateTime": {"in_year": "Number"}}}
+      "DateTime": {
+        "comparison_operators": {
+          "in_year": "Number"
+        }
+      }
     },
     "user_defined_functions": {}
   },
@@ -170,6 +177,7 @@ The `capabilities` section describes the _capabilities_ of the service. This inc
 - `queries`: The query capabilities that the agent supports
 - `data_schema`: What sorts of features the agent supports when describing its data schema
 - `relationships`: whether or not the agent supports relationships
+- `interpolated_queries`: whether or not the agent supports interpolated queries
 - `scalar_types`: scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
 
 The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
@@ -177,12 +185,26 @@ The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/s
 `graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
 
 #### Query capabilities
+
 The agent can declare whether or not it supports ["foreach queries"](#foreach-queries) by including a `foreach` property with an empty object assigned to it. Foreach query support is optional, but is required if the agent is to be used as the target of remote relationships in HGE.
 
+The agent can also declare whether or not it supports ["data redaction"](#data-redaction) by including a `redaction` property with an empty object assigned to it. Data redaction support is optional, but is required if a user configures HGE with inherited roles with different column selection permissions for the same table in the inherited role's role set.
+
 #### Data schema capabilities
+
 The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
 
 If the agent only supports table columns that are always nullable, then it should set `column_nullability` to `"only_nullable"`. However, if it supports both nullable and non-nullable columns, then it should set `"nullable_and_non_nullable"`.
+
+### Interpolated Queries
+
+Interpolated queries are lists of strings and scalars that represent applied templates of analagous form to [`select * from users where id = `, 5]. 
+
+By declaring support for the `interpolated_queries` capability the Hasura admin understands that they will be able to define native queries that leverage this cabability through the agent.
+
+In the case of a well understood backend with a well defined query language - for example - Postgres. The admin will assume that they can define native queries using the most common query language for that backend - In the case of Postgres, PG flavoured SQL.
+
+In the case of a more niche or custom backend, they native query format should be well documented so that administrators know how to define them.
 
 #### Scalar type capabilities
 
@@ -394,6 +416,53 @@ Columns can have their value generated by the database, for example auto-increme
 
 If the agent declares a lack of mutability support in its capabilities, it should not declare tables/columns as mutable in its schema here.
 
+#### Schema Request
+The `/schema` endpoint may be sent a request body with optional filtering details designed to reduce the amount of schema data returned. Here's an example request body:
+
+```json
+{
+  "filters": {
+    "only_tables": [
+      ["Artist"],
+      ["Album"]
+    ],
+    "only_functions": [
+      ["SearchAlbums"]
+    ]
+  },
+  "detail_level": "basic_info"
+}
+```
+
+The `filters` property may contain an object with the following properties:
+* `only_tables`: This is a list of table names, and the schema response must only contain the tables specified in this list, if it is specified. An empty list means return no tables.
+* `only_functions`: This is a list of function names, and the schema response must only contain the functions specified in this list, if it is specified. An empty list means return no functions.
+
+The `detail_level` property controls what data needs to be returned about functions and tables. There are two values: `everything` and `basic_info` (the default, if omitted, is `everything`). `everything` requires the agent to return all properties described above. `basic_info` requires the agent to only return a reduced set of properties about tables and functions; specifically only table names and types, and function names and types should be returned. All other properties should be omitted.
+
+Here's an example response to the above request:
+
+```json
+{
+  "tables": [
+    {
+      "name": ["Artist"],
+      "type": "table"
+    },
+    {
+      "name": ["Album"],
+      "type": "table"
+    }
+  ],
+  "functions": [
+    {
+      "name": ["SearchAlbums"],
+      "type": "read"
+    }
+  ]
+}
+```
+
 #### Type definitions
 
 The `SchemaResponse` TypeScript type from [the reference implementation](./reference/src/types/index.ts) describes the valid response body for the `GET /schema` endpoint.
@@ -417,8 +486,11 @@ and here is the resulting query request payload:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [],
   "query": {
     "where": {
       "expressions": [],
@@ -448,7 +520,7 @@ The implementation of the service is responsible for intepreting this data struc
 Let's break down the request:
 
 - The `table` field tells us which table to fetch the data from, namely the `Artist` table. The table name (ie. the array of strings) must be one that was returned previously by the `/schema` endpoint.
-- The `table_relationships` field that lists any relationships used to join between tables in the query. This query does not use any relationships, so this is just an empty list here.
+- The `relationships` field that lists any relationships used to join between entities in the query. This query does not use any relationships, so this is just an empty list here.
 - The `query` field contains further information about how to query the specified table:
   - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
   - The `order_by` field tells us that there is no particular ordering to use, and that we can return data in its natural order.
@@ -509,8 +581,11 @@ This would produce the following agent query request JSON:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [],
   "query": {
     "aggregates_limit": null,
     "limit": 2,
@@ -563,8 +638,11 @@ This would produce the following agent query request JSON:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [],
   "query": {
     "aggregates_limit": 5,
     "limit": 2,
@@ -832,11 +910,11 @@ If the call to `GET /capabilities` returns a `capabilities` record with a `relat
 
 _Note_ : if the `relationships` capability is not present then `graphql-engine` will not send queries to this agent involving relationships.
 
-Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include the name of the relationship in a field called `relationship`. This name refers to a relationship that is specified on the top-level query request object in the `table_relationships` field.
+Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include the name of the relationship in a field called `relationship`. This name refers to a relationship that is specified on the top-level query request object in the `relationships` field.
 
-This `table_relationships` is a list of tables, and for each table, a map of relationship name to relationship information. The information is an object that has a field `target_table` that specifies the name of the related table. It has a field called `relationship_type` that specified either an `object` (many to one) or an `array` (one to many) relationship. There is also a `column_mapping` field that indicates the mapping from columns in the source table to columns in the related table.
+This `relationships` is a list of relationships from a target - table, function, or interpolated query. For each target, a map of relationship name to relationship information. The information is an object that has a `target` field that specifies the name of the related target. It has a field called `relationship_type` that specified either an `object` (many to one) or an `array` (one to many) relationship. There is also a `column_mapping` field that indicates the mapping from columns in the source table to columns in the related target.
 
-It is intended that the backend should execute the `query` contained in the relationship field and return the resulting query response as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current table.
+It is intended that the backend should execute the `query` contained in the relationship field and return the resulting query response as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current target.
 
 An example will illustrate this. Consider the following GraphQL query:
 
@@ -855,13 +933,20 @@ This will generate the following JSON query if the agent supports relationships:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Artist"],
       "relationships": {
         "ArtistAlbums": {
-          "target_table": ["Album"],
+          "target": {
+            "type": "table",
+            "name": ["Album"]
+          },
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -934,7 +1019,7 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
 }
 ```
 
-The top-level `table_relationships` can be looked up by starting from the source table (in this case `Artist`), locating the `ArtistAlbums` relationship under that table, then extracting the relationship information. This information includes the `target_table` field which indicates the table to be queried when following this relationship is the `Album` table. The `relationship_type` field indicates that this relationship is an `array` relationship (ie. that it will return zero to many Album rows per Artist row). The `column_mapping` field indicates the column mapping for this relationship, namely that the Artist's `ArtistId` must equal the Album's `ArtistId`.
+The top-level `relationships` can be looked up by starting from the source (in this case the `Artist` table), subsequently locating the `ArtistAlbums` relationship, then extracting the relationship information. This information includes the `target` field which indicates the (in this case) table to be queried when following this relationship is the `Album` table. The `relationship_type` field indicates that this relationship is an `array` relationship (ie. that it will return zero to many Album rows per Artist row). The `column_mapping` field indicates the column mapping for this relationship, namely that the Artist's `ArtistId` must equal the Album's `ArtistId`.
 
 Back on the relationship field inside the query, there is another `query` field. This indicates the query that should be executed against the `Album` table, but we must remember to enforce the additional constraint between Artist's `ArtistId` and Album's `ArtistId`. That is, in the context of any single outer `Artist` record, we should populate the `Albums` field with the query response containing the array of Album records for which the `ArtistId` field is equal to the outer record's `ArtistId` field.
 
@@ -975,7 +1060,8 @@ Here's an example (truncated) response:
 ```
 
 #### Cross-Table Filtering
-It is possible to form queries that filter their results by comparing columns across tables via relationships. One way this can happen in Hasura GraphQL Engine is when configuring permissions on a table. It is possible to configure a filter on a table such that it joins to another table in order to compare some data in the filter expression.
+
+It is possible to form queries that filter their results by comparing columns across tables (and other targets) via relationships. One way this can happen in Hasura GraphQL Engine is when configuring permissions on a table. It is possible to configure a filter on a table such that it joins to another table in order to compare some data in the filter expression.
 
 The following metadata when used with HGE configures a `Customer` and `Employee` table, and sets up a select permission rule on `Customer` such that only customers that live in the same country as their SupportRep Employee would be visible to users in the `user` role:
 
@@ -1066,13 +1152,20 @@ We would get the following query request JSON:
 
 ```json
 {
-  "table": ["Customer"],
-  "table_relationships": [
+  "target": {
+    "type": "table",
+    "name": ["Customer"]
+  },
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Customer"],
       "relationships": {
         "SupportRep": {
-          "target_table": ["Employee"],
+          "target": {
+            "type": "table",
+            "name": ["Employee"]
+          },
           "relationship_type": "object",
           "column_mapping": {
             "SupportRepId": "EmployeeId"
@@ -1144,6 +1237,7 @@ We would get the following query request JSON:
 The key point of interest here is in the `where` field where we are comparing between columns. Our first expression is an `exists` expression that specifies a row must exist in the table related to the `Customer` table by the `SupportRep` relationship (ie. the `Employee` table). These rows must match a subexpression that compares the related `Employee`'s `Country` column with `equal` to `Customer`'s `Country` column (as indicated by the `["$"]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship. Then if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Customer row's `Country` the `binary_op` would evaluate to True. This would mean a row exists, so the `exists` evaluates to true, and we don't filter out the Customer row.
 
 #### Filtering by Unrelated Tables
+
 It is possible to filter a table by a predicate evaluated against a completely unrelated table. This can happen in Hasura GraphQL Engine when configuring permissions on a table.
 
 In the following example, we are configuring HGE's metadata such that when the Customer table is queried by the employee role, the employee currently doing the query (as specified by the `X-Hasura-EmployeeId` session variable) must be an employee from the city of Calgary, otherwise no rows are returned.
@@ -1226,8 +1320,11 @@ We would get the following query request JSON:
 
 ```json
 {
-  "table": ["Customer"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Customer"]
+  },
+  "relationships": [],
   "query": {
     "fields": {
       "Country": {
@@ -1321,8 +1418,11 @@ This would cause the following query request to be performed:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "table": ["Artist"]
+  },
+  "relationships": [],
   "query": {
     "aggregates": {
       "aggregate_max_ArtistId": {
@@ -1359,8 +1459,11 @@ query {
 
 ```json
 {
-  "table": ["Album"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Album"]
+  },
+  "relationships": [],
   "query": {
     "aggregates": {
       "aggregate_distinct_count": {
@@ -1411,8 +1514,11 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "table": ["Artist"]
+  },
+  "relationships": [],
   "query": {
     "aggregates": {
       "aggregate_count": {
@@ -1483,13 +1589,20 @@ This would generate the following `QueryRequest`:
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Artist"],
       "relationships": {
         "Albums": {
-          "target_table": ["Album"],
+          "target": {
+            "type": "table",
+            "name": ["Album"]
+          },
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -1560,8 +1673,7 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "last_name",
-        "column_type": "string"
+        "column": "last_name"
       },
       "order_direction": "asc"
     },
@@ -1569,8 +1681,7 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "first_name",
-        "column_type": "string"
+        "column": "first_name"
       },
       "order_direction": "desc"
     }
@@ -1594,13 +1705,20 @@ Here's an example of applying an ordering by a related table; the Album table is
 
 ```json
 {
-  "table": ["Album"],
-  "table_relationships": [
+  "target": {
+    "type": "table",
+    "name": ["Album"]
+  },
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Album"],
       "relationships": {
         "Artist": {
-          "target_table": ["Artist"],
+          "target": {
+            "type": "table",
+            "name": ["Artist"]
+          },
           "relationship_type": "object",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -1635,7 +1753,7 @@ Here's an example of applying an ordering by a related table; the Album table is
 }
 ```
 
-Note that the `target_path` specifies the relationship path of `["Artist"]`, and that this relationship is defined in the top-level `table_relationships`. The ordering element target column `Name` would therefore be found on the `Artist` table after joining to it from each `Album`. (See the [Relationships](#Relationships) section for more information about relationships.)
+Note that the `target_path` specifies the relationship path of `["Artist"]`, and that this relationship is defined in the top-level `relationships`. The ordering element target column `Name` would therefore be found on the `Artist` table after joining to it from each `Album`. (See the [Relationships](#Relationships) section for more information about relationships.)
 
 The `relations` property of `order_by` will contain all the relations used in the order by, for the purpose of specifying filters that must be applied to the joined tables before using them for sorting. The `relations` property captures all `target_path`s used in the `order_by` in a recursive fashion, so for example, if the following `target_path`s were used in the `order_by`'s `elements`:
 
@@ -1669,13 +1787,20 @@ For example, here's a query that retrieves artists ordered descending by the cou
 
 ```json
 {
-  "table": ["Artist"],
-  "table_relationships": [
+  "target": {
+    "type": "table",
+    "name": ["Artist"]
+  },
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Artist"],
       "relationships": {
         "Albums": {
-          "target_table": ["Album"],
+          "target": {
+            "type": "table",
+            "name": ["Album"]
+          },
           "relationship_type": "array",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -1739,8 +1864,11 @@ Foreach queries are very similar to standard queries, except they include an add
 
 ```json
 {
-  "table": ["Album"],
-  "table_relationships": [],
+  "target": {
+    "type": "table",
+    "name": ["Album"]
+  },
+  "relationships": [],
   "query": {
     "fields": {
       "AlbumId": {
@@ -1820,6 +1948,381 @@ It is important to point out that a `LATERAL` join is necessary instead of regul
 
 The artificial `Index` column is inserted into the foreach rowset to ensure that the ordering of the results matches the original ordering of the foreach array in the query request.
 
+#### Data Redaction
+In HGE, it is possible to create inherited roles; these produce the union of the access rights of the roles in the inherited role's role set. Roles in HGE can grant or deny access to columns on tables and can filter the rows accessible on the table. Naturally, different roles composed together into an inherited role may combine different filters and column access rights for the same table.
+
+Consider the following `Test` table:
+
+| Id    | ColumnA | ColumnB | ColumnC |
+|-------|---------|---------|---------|
+| **1** | **A1**  | **B1**  | C1      |
+| **2** | **A2**  | **B2**  | **C2**  |
+| **3** | A3      | **B3**  | **C3**  |
+
+and the following roles defined for this `Test` table:
+* `RoleA`:
+    * Column Select Permissions: `Id`, `ColumnA`, `ColumnB`
+    * Row Filter: `{ Id: { _in: [1,2] } }`
+* `RoleB`:
+    * Column Select Permissions: `Id`, `ColumnB`, `ColumnC`
+    * Row Filter: `{ Id: { _in: [2,3] } }`
+* `ComboRole`: An inherited role, composed of `RoleA` and `RoleB`
+
+In this scenario, `ComboRole` grants access to all the data that has been **bolded** in the above table. Note that the `A3` is inaccessible because `RoleA` does not grant access to that row, `RoleB` does, but `RoleB` does not grant access to `ColumnA`. Similarly, `C1` is inaccessible because `RoleA` grants access to the row, but not to `ColumnC`, and `RoleB` does not grant access to the row.
+
+If a user using the `ComboRole` role was to query this `Test` table, we want the access rights as defined above to be enforced, so we'd expect the following data to be returned:
+
+| Id | ColumnA | ColumnB | ColumnC |
+|----|---------|---------|---------|
+| 1  | A1      | B1      | null    |
+| 2  | A2      | B2      | C2      |
+| 3  | null    | B3      | C3      |
+
+Data redaction is the process by which data is "nulled out" (ie. redacted) by the agent when it should be inaccessible to a user, as it has been above. It is only necessary when different roles in one inherited roles have differing column select permissions. When all the roles have the same column select permissions, the user is prevented from querying inaccessible columns in the first place. Redaction is only necessary when they have partial access to the column, such as in the above example scenario.
+
+To support data redaction, the agent must declare the `redaction` capability under the `queries` capability.
+
+```json
+{
+  "queries": {
+    "redaction": {}
+  }
+}
+```
+
+Once this is declared, all query requests that require redaction will contain a `redaction_expressions` property that will contain named redaction expressions per table/function. Then, in every place in the query that requires redaction, a `redaction_expression` property will be defined that refers to the particular named expression that needs to be used.
+
+A redaction expression is an `Expression`, same as what is used for the `where` query property used in [filters](#filters). If specified, the expression needs to be evaluated per row, and if it evaluates to false, the associated column value must be replaced with null.
+
+##### Redaction in Fields
+The first, most obvious, place redaction is applied is against columns requested in a query's `fields`.
+
+Here's an example query, querying all the columns of the above example `Test` table using the `ComboRole`:
+
+```jsonc
+{
+  "target": {
+    "type": "table",
+    "name": ["Test"]
+  },
+  "relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        "RedactionExp1": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      },
+      "ColumnA": {
+        "type": "column",
+        "column": "ColumnA",
+        "column_type": "string",
+        // This column must be redacted using the Test table's RedactionExp0 expression
+        // If this expression evaluates to false for a row, this field must return null for that row
+        "redaction_expression": "RedactionExp0"
+      },
+      "ColumnB": {
+        "type": "column",
+        "column": "ColumnB",
+        "column_type": "string"
+      },
+      "ColumnC": {
+        "type": "column",
+        "column": "ColumnC",
+        "column_type": "string",
+        // This column must be redacted using the Test table's RedactionExp1 expression
+        // If this expression evaluates to false for a row, this field must return null for that row
+        "redaction_expression": "RedactionExp1"
+      }
+    },
+    // The row filters from ComboRole are pushed down into the where filter predicate
+    "where": {
+      "type": "or",
+      "expressions": [
+        {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      ]
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT
+  "Id",
+  CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END AS "ColumnA",
+  "ColumnB",
+  CASE
+    WHEN "Id" IN (2,3) THEN "ColumnC"
+    ELSE NULL
+  END AS "ColumnC"
+FROM "Test"
+WHERE "Id" IN (1,2) OR "Id" IN (2,3)
+```
+
+##### Redaction in Aggregates
+Another place redaction can be applied is in aggregates. When aggregations are calculated across a set of rows, the columns being aggregated may need to be redacted _before_ being aggregated over.
+
+For example, here's an aggregation query:
+
+```jsonc
+{
+  "target": {
+    "type": "table",
+    "name": ["Test"]
+  },
+  "relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        "RedactionExp1": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "aggregates": {
+      // Both "single_column" and "column_count" aggregations can have redaction expressions
+      "aggregate_max_ColumnA": {
+        "type": "single_column",
+        "function": "max",
+        "column": "ColumnA",
+        "redaction_expression": "RedactionExp0",
+        "result_type": "string"
+      },
+      "aggregate_count_ColumnC": {
+        "type": "column_count",
+        "column": "ColumnC",
+        "redaction_expression": "RedactionExp1",
+        "distinct": false
+      }
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT
+  MAX(
+    CASE
+      WHEN "Id" IN (1,2) THEN "ColumnA"
+      ELSE NULL
+    END
+  ) AS "aggregate_max_ColumnA",
+  COUNT(
+    CASE
+      WHEN "Id" IN (2,3) THEN "ColumnC"
+      ELSE NULL
+    END
+  ) AS "aggregate_count_ColumnC"
+FROM "Test"
+```
+
+##### Redaction in Filtering
+When comparing a column to something during filtering, data redaction can require that the column be redacted before the comparison is performed.
+
+For example, here's a query that uses redaction inside the filter expression in `where`:
+
+```jsonc
+{
+  "target": {
+    "type": "table",
+    "name": ["Test"]
+  },
+  "relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      }
+    },
+    "where": {
+      "type": "binary_op",
+      "operator": "equals",
+      // ALl column comparisons in "binary_op", "binary_arr_op", and "unary_op"
+      // can potentially have a redaction expression
+      "column": {
+        "name": "ColumnA",
+        "column_type": "string",
+        "redaction_expression": "RedactionExp0"
+      },
+      "value": {
+        "type": "scalar",
+        "value": "A1",
+        "value_type": "string"
+      }
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT "Id"
+FROM "Test"
+WHERE
+  (CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END) = "A1"
+```
+
+##### Redaction in Ordering
+Data redaction also needs to be applied when ordering upon a column; namely the ordering should be performed across the redacted values.
+
+For example, here's a query that uses redaction inside the `order_by`:
+
+```jsonc
+{
+  "target": {
+    "type": "table",
+    "name": ["Test"]
+  },
+  "relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      }
+    },
+    "order_by": {
+      "relations": {},
+      "elements": [
+        {
+          "target_path": [],
+          // Both "column" and "single_column_aggregate"-typed ordering targets can have
+          // redaction expressions applied to them
+          "target": {
+            "type": "column",
+            "column": "ColumnA",
+            "redaction_expression": "RedactionExp0"
+          },
+          "order_direction": "asc"
+        }
+      ]
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT "Id"
+FROM "Test"
+ORDER BY
+  (CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END) ASC
+```
+
 #### Type Definitions
 
 The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
@@ -1852,7 +2355,7 @@ The `POST /mutation` endpoint is invoked when the user issues a mutation GraphQL
 
 ```jsonc
 {
-  "table_relationships": [], // Any relationships between tables are described in here in the same manner as in queries
+  "relationships": [], // Any relationships between tables are described in here in the same manner as in queries
   "operations": [ // A mutation request can contain multiple mutation operations
     {
       "type": "insert", // Also: "update" and "delete"
@@ -1927,7 +2430,7 @@ This would result in a mutation request like this:
 
 ```json
 {
-  "table_relationships": [],
+  "relationships": [],
   "insert_schema": [
     {
       "table": ["Artist"],
@@ -2063,19 +2566,26 @@ This would result in the following request:
 
 ```json
 {
-  "table_relationships": [
+  "relationships": [
     {
+      "type": "table",
       "source_table": ["Album"],
       "relationships": {
         "Artist": {
-          "target_table": ["Artist"],
+          "target": {
+            "type": "table",
+            "name": ["Artist"]
+          },
           "relationship_type": "object",
           "column_mapping": {
             "ArtistId": "ArtistId"
           }
         },
         "Tracks": {
-          "target_table": ["Track"],
+          "target": {
+            "type": "table",
+            "name": ["Track"]
+          },
           "relationship_type": "array",
           "column_mapping": {
             "AlbumId": "AlbumId"
@@ -2225,10 +2735,10 @@ This would result in the following request:
 
 Note that there are two new types of fields in the `insert_schema` in this query to capture the nested inserts:
 * `object_relation`: This captures a nested insert across an object relationship. In this case, we're inserting the related Artist row.
-  * `relationship`: The name of the relationship across which to insert the related row. The information about this relationship can be looked up in `table_relationships`.
+  * `relationship`: The name of the relationship across which to insert the related row. The information about this relationship can be looked up in `relationships`.
   * `insert_order`: This can be either `before_parent` or `after_parent` and indicates whether or not the related row needs to be inserted before the parent row or after it.
 * `array_relation`: This captures a nested insert across an array relationship. In this case, we're inserting the related Tracks rows.
-  * `relationship`: The name of the relationship across which to insert the related rows. The information about this relationship can be looked up in `table_relationships`.
+  * `relationship`: The name of the relationship across which to insert the related rows. The information about this relationship can be looked up in `relationships`.
 
 The agent is expected to set the necessary values of foreign key columns itself when inserting all the rows. In this example, the agent would:
 * First insert the Artist.
@@ -2302,7 +2812,7 @@ This would get translated into a mutation request like so:
 
 ```json
 {
-  "table_relationships": [],
+  "relationships": [],
   "operations": [
     {
       "type": "update",
@@ -2389,7 +2899,7 @@ This would cause a mutation request to be send that looks like this:
 
 ```json
 {
-  "table_relationships": [],
+  "relationships": [],
   "operations": [
     {
       "type": "delete",
@@ -2454,7 +2964,7 @@ Schema:
 
 ```json
 {
-  "tables": [ 
+  "tables": [
     {
       "name": [
         "Artist"
@@ -2543,9 +3053,10 @@ Query Sent to Agent:
       ],
       "relationships": {
         "myself": {
-          "target_table": [
-            "Artist"
-          ],
+          "target": {
+            "type": "table",
+            "name": ["Artist"]
+          },
           "relationship_type": "object",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -2560,9 +3071,10 @@ Query Sent to Agent:
       ],
       "relationships": {
         "myself": {
-          "target_table": [
-            "Artist"
-          ],
+          "target": {
+            "type": "table",
+            "name": ["Artist"]
+          },
           "relationship_type": "object",
           "column_mapping": {
             "ArtistId": "ArtistId"
@@ -2595,6 +3107,204 @@ Query Sent to Agent:
         "type": "column",
         "column": "ArtistId",
         "column_type": "number"
+      }
+    }
+  }
+}
+```
+
+### Interpolated Queries (Native Queries)
+
+Interpolated queries are "integrated raw queries" in the sense that the interpretation is up to the agent, and knowledge of their format is intended to be propagated out-of-band. They are integrated in that they can have relationships, and their responses are exposed via fields.
+
+If this is too abstract, then an example may help illuminate:
+
+* An HGE administrator has an application that has basic search functionality that leverages `like` parameters.
+* They wish to use advanced full-text-search capabilities that their DB backend provides.
+* They want to avoid having to define function in their database-schema due to lack of DB permissions, or expedience reasons.
+* Via the `raw` query interface, the administrator develops an SQL query that leverages the full-text-search functions to deliver the results they require
+* They add a new logical-model to represent the results format.
+* They add a new native query and use `{{variable}}` references to user parameters.
+* Application developers reference the new search functions.
+
+Agents may implement "interpolated query" support that powers HGE native queries by doing the following:
+
+* Including the `interpolated_queries: {}` capability
+* Handling the `"type": "interpolated"` query-request target
+* (Optionally) handling `"type": "interpolated_query"` relationship targets
+
+Requests that include interpolated queries define them (unsurprisingly) under the `interpolated_queries` field, keyed by id, but also including the id in the definition for convenience. References to them from `target`s will also be via this id.
+
+While it is not required, having good `/explain` integration for interpolated queries is very useful, as they are far more opaque to application developers than HGE's (and Hasura's published data connector) built-in query translations.
+
+#### Example
+
+Metadata Schema:
+
+```json
+{
+  "resource_version": 9,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "chinook",
+        "kind": "sqlite",
+        "tables": [
+          {
+            "table": [
+              "Artist"
+            ]
+          }
+        ],
+        "native_queries": [
+          {
+            "arguments": {},
+            "code": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as a",
+            "object_relationships": [
+              {
+                "name": "quux",
+                "using": {
+                  "column_mapping": {
+                    "a": "x"
+                  },
+                  "insertion_order": null,
+                  "remote_native_query": "native_quux"
+                }
+              }
+            ],
+            "returns": "logical_baz",
+            "root_field_name": "native_baz"
+          },
+          {
+            "arguments": {
+              "y": {
+                "nullable": false,
+                "type": "Boolean"
+              }
+            },
+            "code": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as x /* {{y}} */",
+            "returns": "logical_quux",
+            "root_field_name": "native_quux"
+          }
+        ],
+        "logical_models": [
+          {
+            "fields": [
+              {
+                "name": "a",
+                "type": {
+                  "nullable": false,
+                  "scalar": "String"
+                }
+              },
+              {
+                "name": "quux",
+                "type": {
+                  "logical_model": "logical_quux",
+                  "nullable": true
+                }
+              }
+            ],
+            "name": "logical_baz"
+          },
+          {
+            "fields": [
+              {
+                "name": "x",
+                "type": {
+                  "nullable": false,
+                  "scalar": "String"
+                }
+              }
+            ],
+            "name": "logical_quux"
+          }
+        ],
+        "configuration": {
+          "template": null,
+          "timeout": null,
+          "value": {
+            "db": "./dataset_clones/db.chinook.sqlite"
+          }
+        }
+      }
+    ],
+    "backend_configs": {
+      "dataconnector": {
+        "sqlite": {
+          "uri": "http://localhost:8100"
+        }
+      }
+    }
+  }
+}
+```
+
+GraphQL:
+
+```graphql
+{
+  native_baz {
+    a
+    quux(args: {y: true}) {
+      x
+    }
+  }
+}
+```
+
+Agent API Request:
+
+```json
+{
+  "target": {
+    "type": "interpolated",
+    "query_id": "native_baz_1", 
+    "arguments": null
+  },
+  "interpolated_queries": {
+    "native_baz_1": [{"type": "text", "value": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as a"}],
+    "native_baz_2": [{"type": "text", "value": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as x /* "}, {"type": "scalar", "value_type": "bool", "value": true}, {"type": "text", "value": " */"}]
+  },
+  "relationships": [
+    {
+      "type": "interpolated",
+      "source_interpolated_query": "native_baz_1",
+      "relationships": {
+        "quux": {
+          "target": {
+            "type": "interpolated",
+            "query_id": "native_baz_2",
+            "arguments": null
+          },
+          "relationship_type": "object",
+          "column_mapping": {
+            "a": "x"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "quux": {
+        "type": "relationship",
+        "relationship": "quux",
+        "query": {
+          "fields": {
+            "x": {
+              "type": "column",
+              "column": "x",
+              "column_type": "String"
+            }
+          }
+        }
+      },
+      "a": {
+        "type": "column",
+        "column": "a",
+        "column_type": "String"
       }
     }
   }

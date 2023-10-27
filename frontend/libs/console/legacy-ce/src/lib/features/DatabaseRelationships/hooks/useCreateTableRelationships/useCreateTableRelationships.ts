@@ -1,16 +1,16 @@
 import { useCallback } from 'react';
 import { isObject } from '../../../../components/Common/utils/jsUtils';
 import { transformErrorResponse } from '../../../Data/errorUtils';
-// import {
-//   useAllDriverCapabilities,
-//   useDriverCapabilities,
-// } from '../../../Data/hooks/useDriverCapabilities';
 import { useAllDriverCapabilities } from '../../../Data/hooks/useAllDriverCapabilities';
 import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
 import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
-import { Table } from '../../../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+  Table,
+} from '../../../hasura-metadata-types';
 import {
   DeleteRelationshipProps,
   LocalTableRelationshipDefinition,
@@ -24,6 +24,7 @@ import {
   deleteTableRelationshipRequestBody,
   renameRelationshipRequestBody,
 } from './utils';
+import { useInvalidateSuggestedRelationships } from '../../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
 
 type AllowedRelationshipDefinitions =
   | Omit<LocalTableRelationshipDefinition, 'capabilities'>
@@ -50,6 +51,18 @@ const defaultCapabilities = {
   isRemoteSchemaRelationshipSupported: true,
 };
 
+const isRemoteRelPresentInPayload = (
+  data: ReturnType<typeof createTableRelationshipRequestBody>[]
+) => {
+  const remoteRel = data.find(rel => {
+    if (rel === 'Not implemented') return false;
+
+    return rel.type.includes('_create_remote_relationship');
+  });
+
+  return !!remoteRel;
+};
+
 const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
   if ('toRemoteSchema' in target) return null;
 
@@ -60,9 +73,20 @@ const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
 
 export const useCreateTableRelationships = (
   dataSourceName: string,
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: Omit<MetadataMigrationOptions, 'onSuccess'> & {
+    onSuccess?: (
+      data: BulkAtomicResponse | BulkKeepGoingResponse,
+      variable?: any,
+      ctx?: any
+    ) => void;
+  }
 ) => {
   // get these capabilities
+
+  const { invalidateSuggestedRelationships } =
+    useInvalidateSuggestedRelationships({
+      dataSourceName,
+    });
 
   const { data: driverCapabilties = [] } = useAllDriverCapabilities({
     select: data => {
@@ -94,32 +118,6 @@ export const useCreateTableRelationships = (
     },
   });
 
-  // const {
-  //   data: capabilities = {
-  //     isLocalTableRelationshipSupported: false,
-  //     isRemoteTableRelationshipSupported: false,
-  //     isRemoteSchemaRelationshipSupported: true,
-  //   },
-  // } = useDriverCapabilities({
-  //   dataSourceName,
-  //   select: data => {
-  //     if (data === Feature.NotImplemented)
-  //       return {
-  //         isLocalTableRelationshipSupported: false,
-  //         isRemoteTableRelationshipSupported: false,
-  //         isRemoteSchemaRelationshipSupported: false,
-  //       };
-
-  //     return {
-  //       isLocalTableRelationshipSupported: isObject(data.relationships),
-  //       isRemoteTableRelationshipSupported: isObject(data.queries?.foreach),
-  //       isRemoteSchemaRelationshipSupported: true,
-  //     };
-  //   },
-  // });
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
   const { data: { metadataSources = [], resource_version } = {} } = useMetadata(
     m => ({
       metadataSources: m.metadata.sources,
@@ -142,11 +140,14 @@ export const useCreateTableRelationships = (
     [metadataSources]
   );
 
-  const { mutate, ...rest } = useMetadataMigration({
+  const { mutate, ...rest } = useMetadataMigration<
+    BulkAtomicResponse | BulkKeepGoingResponse
+  >({
     ...globalMutateOptions,
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
       globalMutateOptions?.onSuccess?.(data, variable, ctx);
+      invalidateSuggestedRelationships();
     },
   });
 
@@ -168,12 +169,12 @@ export const useCreateTableRelationships = (
           },
           sourceCapabilities:
             driverCapabilties.find(
-              c => c.driver === getDriver(item.source.fromSource)
+              c => c.driver.kind === getDriver(item.source.fromSource)
             )?.capabilities ?? defaultCapabilities,
           targetCapabilities:
             driverCapabilties.find(
               c =>
-                c.driver ===
+                c.driver.kind ===
                 getDriver(getTargetName(item.definition.target) ?? '')
             )?.capabilities ?? defaultCapabilities,
         });
@@ -182,7 +183,9 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
+            type: isRemoteRelPresentInPayload(payloads)
+              ? 'bulk_keep_going'
+              : 'bulk_atomic',
             args: payloads,
             resource_version,
           },
@@ -240,7 +243,7 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
+            type: 'bulk_atomic',
             args: payloads,
             resource_version,
           },

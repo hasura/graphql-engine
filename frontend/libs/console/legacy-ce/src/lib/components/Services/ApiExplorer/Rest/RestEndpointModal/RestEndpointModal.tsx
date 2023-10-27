@@ -38,6 +38,14 @@ export const RestEndpointModal = (props: RestEndpointModalProps) => {
     []
   );
 
+  const filteredEndpoints = React.useMemo(
+    () =>
+      ENDPOINTS.filter(
+        method => !!tableEndpointDefinitions[method.value as EndpointType]
+      ),
+    [tableEndpointDefinitions]
+  );
+
   return (
     <Dialog
       hasBackdrop
@@ -86,82 +94,103 @@ export const RestEndpointModal = (props: RestEndpointModalProps) => {
       }
     >
       <div className="p-4 flex flex-col gap-4">
-        <CardedTable
-          columns={[
-            <Checkbox
-              checked={selectedMethods.length === ENDPOINTS.length}
-              onCheckedChange={checked => {
-                if (checked) {
-                  setSelectedMethods(ENDPOINTS.map(endpoint => endpoint.value));
-                } else {
-                  setSelectedMethods([]);
-                }
-              }}
-            />,
-            'OPERATION',
-            'METHOD',
-            'PATH',
-          ]}
-          data={ENDPOINTS.map(method => {
-            const endpointDefinition =
-              tableEndpointDefinitions[method.value as EndpointType];
-
-            return [
+        {filteredEndpoints.length > 0 && (
+          <CardedTable
+            columns={[
               <Checkbox
-                checked={selectedMethods.includes(method.value as EndpointType)}
-                disabled={endpointDefinition?.exists}
+                checked={selectedMethods.length === ENDPOINTS.length}
                 onCheckedChange={checked => {
                   if (checked) {
-                    setSelectedMethods([
-                      ...selectedMethods,
-                      method.value as EndpointType,
-                    ]);
-                  } else {
                     setSelectedMethods(
-                      selectedMethods.filter(
-                        selectedMethod => selectedMethod !== method.value
-                      )
+                      ENDPOINTS.map(endpoint => endpoint.value)
                     );
+                  } else {
+                    setSelectedMethods([]);
                   }
                 }}
               />,
+              'OPERATION',
+              'METHOD',
+              'PATH',
+            ]}
+            data={filteredEndpoints.map(method => {
+              const endpointDefinition =
+                tableEndpointDefinitions[method.value as EndpointType];
+
+              return [
+                <Checkbox
+                  checked={selectedMethods.includes(
+                    method.value as EndpointType
+                  )}
+                  disabled={endpointDefinition?.exists}
+                  onCheckedChange={checked => {
+                    if (checked) {
+                      setSelectedMethods([
+                        ...selectedMethods,
+                        method.value as EndpointType,
+                      ]);
+                    } else {
+                      setSelectedMethods(
+                        selectedMethods.filter(
+                          selectedMethod => selectedMethod !== method.value
+                        )
+                      );
+                    }
+                  }}
+                />,
+                <div>
+                  {endpointDefinition?.exists ? (
+                    <Link
+                      to={{
+                        pathname: `/api/rest/details/${endpointDefinition.restEndpoint?.name}`,
+                        state: {
+                          ...endpointDefinition.restEndpoint,
+                          currentQuery: endpointDefinition.query.query,
+                        },
+                      }}
+                    >
+                      {method.label}{' '}
+                      <FaExternalLinkAlt className="relative ml-1 -top-0.5" />
+                    </Link>
+                  ) : (
+                    method.label
+                  )}
+                </div>,
+                <Badge color={method.color}>
+                  {endpointDefinition?.restEndpoint?.methods?.join(', ')}
+                </Badge>,
+                <div>/{endpointDefinition?.restEndpoint?.url ?? 'N/A'}</div>,
+              ];
+            })}
+          />
+        )}
+        {filteredEndpoints.length === 0 && (
+          <IndicatorCard
+            showIcon
+            children={
               <div>
-                {endpointDefinition?.exists ? (
-                  <Link
-                    to={{
-                      pathname: `/api/rest/details/${endpointDefinition.restEndpoint?.name}`,
-                      state: {
-                        ...endpointDefinition.restEndpoint,
-                        currentQuery: endpointDefinition.query.query,
-                      },
-                    }}
-                  >
-                    {method.label}{' '}
-                    <FaExternalLinkAlt className="relative ml-1 -top-0.5" />
-                  </Link>
-                ) : (
-                  method.label
-                )}
-              </div>,
-              <Badge color={method.color}>
-                {endpointDefinition?.restEndpoint?.methods?.join(', ')}
-              </Badge>,
-              <div>/{endpointDefinition?.restEndpoint?.url ?? 'N/A'}</div>,
-            ];
-          })}
-        />
-        <IndicatorCard
-          showIcon
-          children={
-            <div>
-              Creating REST Endpoints will add metadata entries to your Hasura
-              project
-              <LearnMoreLink href="https://hasura.io/docs/latest/restified/overview" />
-            </div>
-          }
-          status="info"
-          customIcon={FaExclamation}
-        />
+                No REST endpoints can be created for this table
+                <LearnMoreLink href="https://hasura.io/docs/latest/restified/overview" />
+              </div>
+            }
+            status="negative"
+            customIcon={FaExclamation}
+          />
+        )}
+        {filteredEndpoints.length > 0 && (
+          <IndicatorCard
+            showIcon
+            children={
+              <div>
+                Creating REST Endpoints will add metadata entries to your Hasura
+                project
+                <LearnMoreLink href="https://hasura.io/docs/latest/restified/overview" />
+              </div>
+            }
+            status="info"
+            customIcon={FaExclamation}
+          />
+        )}
       </div>
     </Dialog>
   );

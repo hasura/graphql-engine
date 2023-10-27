@@ -4,10 +4,11 @@ import type { TableColumn } from '../../../DataSource';
 
 import { useQuery } from 'react-query';
 import { useHttpClient } from '../../../Network';
-import { MetadataTable, Metadata } from '../../../hasura-metadata-types';
+import { Metadata, Table } from '../../../hasura-metadata-types';
 import { keyToPermission, metadataPermissionKeys } from '../../utils';
+import { MetadataSelectors } from '../../../hasura-metadata-api';
 
-interface RolePermission {
+export interface RolePermission {
   roleName: string;
   isNewRole: boolean;
   permissionTypes: {
@@ -246,78 +247,15 @@ type UseRolePermissionsArgs = {
   table: unknown;
 };
 
-type PermKeys = Pick<
-  MetadataTable,
-  | 'update_permissions'
-  | 'select_permissions'
-  | 'delete_permissions'
-  | 'insert_permissions'
->;
-const permKeys: Array<keyof PermKeys> = [
-  'insert_permissions',
-  'update_permissions',
-  'select_permissions',
-  'delete_permissions',
-];
-
-const getRoles = (m: Metadata) => {
-  if (!m) return null;
-
-  const { metadata } = m;
-
-  const actions = metadata.actions;
-  const tableEntries: MetadataTable[] = metadata.sources.reduce<
-    MetadataTable[]
-  >((acc, source) => {
-    return [...acc, ...source.tables];
-  }, []);
-  const inheritedRoles = metadata.inherited_roles;
-  const remoteSchemas = metadata.remote_schemas;
-  const allowlists = metadata.allowlist;
-  const securitySettings = {
-    api_limits: metadata.api_limits,
-    graphql_schema_introspection: metadata.graphql_schema_introspection,
-  };
-  const roleNames: string[] = [];
-
-  tableEntries?.forEach(table =>
-    permKeys.forEach(key =>
-      table[key]?.forEach(({ role }: { role: string }) => roleNames.push(role))
-    )
-  );
-
-  actions?.forEach(action =>
-    action.permissions?.forEach(p => roleNames.push(p.role))
-  );
-
-  remoteSchemas?.forEach(remoteSchema => {
-    remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
-  });
-
-  allowlists?.forEach(allowlist => {
-    if (allowlist?.scope?.global === false) {
-      allowlist?.scope?.roles?.forEach(role => roleNames.push(role));
-    }
-  });
-
-  inheritedRoles?.forEach(role => roleNames.push(role.role_name));
-
-  Object.entries(securitySettings?.api_limits ?? {}).forEach(
-    ([limit, value]) => {
-      if (limit !== 'disabled' && typeof value !== 'boolean') {
-        Object.keys(value?.per_role ?? {}).forEach(role =>
-          roleNames.push(role)
-        );
-      }
-    }
-  );
-
-  securitySettings?.graphql_schema_introspection?.disabled_for_roles.forEach(
-    role => roleNames.push(role)
-  );
-
-  return Array.from(new Set(roleNames));
-};
+export function permissionsTableKey({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: Table;
+}) {
+  return [dataSourceName, 'permissions', table];
+}
 
 export const useRolePermissions = ({
   dataSourceName,
@@ -329,7 +267,10 @@ export const useRolePermissions = ({
     { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
     Error
   >({
-    queryKey: [dataSourceName, 'permissionsTable', JSON.stringify(table)],
+    queryKey: permissionsTableKey({
+      dataSourceName,
+      table,
+    }),
     queryFn: async () => {
       const metadata = await exportMetadata({ httpClient });
       // get table columns for metadata table from db introspection
@@ -337,6 +278,7 @@ export const useRolePermissions = ({
         dataSourceName,
         table,
       });
+      const roles = MetadataSelectors.getRoles(metadata);
 
       // find the specific metadata table
       const metadataTable = getMetadataTable({
@@ -345,14 +287,11 @@ export const useRolePermissions = ({
         table,
       });
 
-      // get all roles
-      const roles = getRoles(metadata);
-
       // // extract the permissions data in the format required for the table
       const rolePermissions = createRoleTableData({
         metadataTable,
         tableColumns,
-        allRoles: roles ?? [],
+        allRoles: roles,
       });
 
       return { rolePermissions, supportedQueries };

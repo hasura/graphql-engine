@@ -1,30 +1,48 @@
+import { useFormContext } from 'react-hook-form';
+import { FaLock } from 'react-icons/fa';
+import { FiAlertTriangle } from 'react-icons/fi';
 import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
 import { CreateBooleanMap } from '../../../../../components/Common/utils/tsUtils';
 import {
-  Select,
   GraphQLSanitizedInputField,
+  Select,
 } from '../../../../../new-components/Form';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
+
 import { LogicalModel } from '../../../../hasura-metadata-types';
+import { ReactQueryUIWrapper } from '../../../components';
+import { useSupportedDataTypes } from '../../../hooks/useSupportedDataTypes';
 import { AddLogicalModelFormData } from '../validationSchema';
 import { FieldsInput } from './FieldsInput';
 
 export type LogicalModelFormProps = {
   sourceOptions: SelectItem[];
-  typeOptions: string[];
   disabled?: CreateBooleanMap<AddLogicalModelFormData>;
   logicalModels: LogicalModel[];
   isThereBigQueryOrMssqlSource?: boolean;
+  nameIsLocked?: boolean;
 };
 
 export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
+  const { watch } = useFormContext<AddLogicalModelFormData>();
+
+  const selectedDataSource = watch('dataSourceName');
+
+  const supportedDataTypesReturn = useSupportedDataTypes({
+    dataSourceName: selectedDataSource,
+    options: {
+      enabled: !!selectedDataSource,
+    },
+  });
+
   return (
     <>
       <Select
         name="dataSourceName"
         label="Select a source"
         options={props.sourceOptions}
-        dataTestId="dataSoureName"
+        dataTestId="dataSourceName"
         placeholder="Pick a database..."
         disabled={props.disabled?.dataSourceName}
       />
@@ -37,19 +55,40 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
           />
         )}
       </div>
+      {props?.nameIsLocked && (
+        <IndicatorCard
+          showIcon
+          headline="Name is locked"
+          customIcon={() => <FiAlertTriangle />}
+          status="info"
+        >
+          The Name field cannot be changed because this Logical Model is
+          referenced by a Table.
+        </IndicatorCard>
+      )}
       <GraphQLSanitizedInputField
         dataTestId="name"
         name="name"
         label="Logical Model Name"
-        placeholder="Enter a name for your logical Model"
+        placeholder="Enter a name for your Logical Model"
+        icon={props?.nameIsLocked ? <FaLock /> : undefined}
         disabled={props.disabled?.name}
         hideTips
       />
-      <FieldsInput
-        name="fields"
-        types={props.typeOptions}
-        disabled={props.disabled?.fields}
-        logicalModels={props.logicalModels}
+      <ReactQueryUIWrapper
+        useQueryResult={supportedDataTypesReturn}
+        fallbackData={[]}
+        loadingStyle="overlay"
+        loader="spinner"
+        miniSpinnerBackdrop
+        render={({ data: typeOptions }) => (
+          <FieldsInput
+            name="fields"
+            types={typeOptions}
+            disabled={props.disabled?.fields}
+            logicalModels={props.logicalModels}
+          />
+        )}
       />
     </>
   );

@@ -3,6 +3,7 @@
 module Hasura.RQL.DDL.RemoteRelationship
   ( CreateFromSourceRelationship (..),
     runCreateRemoteRelationship,
+    execDeleteRemoteRelationship,
     runDeleteRemoteRelationship,
     runUpdateRemoteRelationship,
     DeleteFromSourceRelationship (..),
@@ -178,23 +179,39 @@ instance (Backend b) => FromJSON (DeleteFromSourceRelationship b) where
       <*> o
       .: "name"
 
+execDeleteRemoteRelationship ::
+  forall b m.
+  (BackendMetadata b, MonadError QErr m, CacheRWM m) =>
+  DeleteFromSourceRelationship b ->
+  m (MetadataObjId, MetadataModifier)
+execDeleteRemoteRelationship (DeleteFromSourceRelationship source table relName) = do
+  fieldInfoMap <- askTableFieldInfoMap @b source table
+  void $ askRemoteRel fieldInfoMap relName
+
+  let metadataObjId :: MetadataObjId
+      metadataObjId =
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b table
+          $ MTORemoteRelationship relName
+
+      metadataModifier :: MetadataModifier
+      metadataModifier =
+        MetadataModifier
+          $ tableMetadataSetter @b source table
+          %~ dropRemoteRelationshipInMetadata relName
+
+  pure (metadataObjId, metadataModifier)
+
 runDeleteRemoteRelationship ::
   forall b m.
   (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) =>
   DeleteFromSourceRelationship b ->
   m EncJSON
-runDeleteRemoteRelationship (DeleteFromSourceRelationship source table relName) = do
-  fieldInfoMap <- askTableFieldInfoMap @b source table
-  void $ askRemoteRel fieldInfoMap relName
-  let metadataObj =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOTableObj @b table
-          $ MTORemoteRelationship relName
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ tableMetadataSetter @b source table
-    %~ dropRemoteRelationshipInMetadata relName
+runDeleteRemoteRelationship command = do
+  (metadataObj, metadataModifier) <- execDeleteRemoteRelationship command
+
+  buildSchemaCacheFor metadataObj metadataModifier
   pure successMsg
 
 --------------------------------------------------------------------------------

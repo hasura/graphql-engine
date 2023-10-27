@@ -54,7 +54,6 @@ ghcid-api-tests:
 ghcid-api-tests-run: start-api-tests-backends
 	HASURA_TEST_LOGTYPE=STDOUT \
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
-	POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
   	$(call run_ghcid_run_main,api-tests:lib:api-tests)
 
 .PHONY: ghcid-test-harness

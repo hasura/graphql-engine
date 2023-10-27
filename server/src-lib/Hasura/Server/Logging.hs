@@ -30,6 +30,8 @@ module Hasura.Server.Logging
     SchemaSyncLog (..),
     HttpLogGraphQLInfo,
     emptyHttpLogGraphQLInfo,
+    ModelInfo (..),
+    ModelInfoLog (..),
   )
 where
 
@@ -307,6 +309,8 @@ class (Monad m) => HttpLog m where
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
+    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
+    Bool ->
     m ()
 
   logHttpSuccess ::
@@ -334,6 +338,8 @@ class (Monad m) => HttpLog m where
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
+    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
+    Bool ->
     m ()
 
 instance (HttpLog m) => HttpLog (TraceT m) where
@@ -342,9 +348,9 @@ instance (HttpLog m) => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 instance (HttpLog m) => HttpLog (ReaderT r m) where
   type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
@@ -352,9 +358,9 @@ instance (HttpLog m) => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 instance (HttpLog m) => HttpLog (ExceptT e m) where
   type ExtraHttpLogMetadata (ExceptT e m) = ExtraHttpLogMetadata m
@@ -362,9 +368,9 @@ instance (HttpLog m) => HttpLog (ExceptT e m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 -- | Log information about the HTTP request
 data HttpInfoLog = HttpInfoLog
@@ -666,3 +672,26 @@ instance J.ToJSON SchemaSyncLog where
 instance ToEngineLog SchemaSyncLog Hasura where
   toEngineLog threadLog =
     (sslLogLevel threadLog, ELTInternal ILTSchemaSync, J.toJSON threadLog)
+
+data ModelInfo = ModelInfo
+  { miModelName :: !Text,
+    miModelType :: !Text,
+    miSourceName :: !(Maybe Text),
+    miSourceType :: !(Maybe Text),
+    miQueryType :: !Text,
+    miIsCached :: !Bool
+  }
+  deriving stock (Generic)
+
+instance J.ToJSON ModelInfo where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+
+data ModelInfoLog = ModelInfoLog
+  { milLogType :: !LogLevel,
+    milModelInfo :: !ModelInfo
+  }
+  deriving stock (Generic)
+
+instance ToEngineLog ModelInfoLog Hasura where
+  toEngineLog (ModelInfoLog level t) =
+    (level, ELTInternal ILTModelInfo, J.toJSON t)

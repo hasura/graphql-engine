@@ -39,6 +39,7 @@ import Hasura.Server.AppStateRef
 import Hasura.Server.Logging
 import Hasura.Server.Types
 import Hasura.Services
+import Hasura.Tracing qualified as Tracing
 import Refined (NonNegative, Refined, unrefine)
 
 data ThreadError
@@ -141,7 +142,8 @@ startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = d
 -- | An async thread which processes the schema sync events
 -- See Note [Schema Cache Sync]
 startSchemaSyncProcessorThread ::
-  ( C.ForkableMonadIO m,
+  ( Tracing.MonadTraceContext m,
+    C.ForkableMonadIO m,
     HasAppEnv m,
     HasCacheStaticConfig m,
     MonadMetadataStorage m,
@@ -247,7 +249,8 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
 -- | An IO action that processes events from Queue, in a loop forever.
 processor ::
   forall m void impl.
-  ( C.ForkableMonadIO m,
+  ( Tracing.MonadTraceContext m,
+    C.ForkableMonadIO m,
     HasAppEnv m,
     HasCacheStaticConfig m,
     MonadMetadataStorage m,
@@ -266,7 +269,8 @@ processor
     refreshSchemaCache metaVersion appStateRef TTProcessor logTVar
 
 refreshSchemaCache ::
-  ( MonadIO m,
+  ( Tracing.MonadTraceContext m,
+    MonadIO m,
     MonadBaseControl IO m,
     HasAppEnv m,
     HasCacheStaticConfig m,
@@ -299,7 +303,7 @@ refreshSchemaCache
             schemaCache <- askSchemaCache
             let engineResourceVersion = scMetadataResourceVersion schemaCache
             unless (engineResourceVersion == resourceVersion) $ do
-              logInfo logger threadType
+              logInfoTracing logger threadType
                 $ String
                 $ T.unwords
                   [ "Received metadata resource version:",
@@ -311,7 +315,7 @@ refreshSchemaCache
 
               MetadataWithResourceVersion metadata latestResourceVersion <- liftEitherM fetchMetadata
 
-              logInfo logger threadType
+              logInfoTracing logger threadType
                 $ String
                 $ T.unwords
                   [ "Fetched metadata with resource version:",
@@ -322,7 +326,7 @@ refreshSchemaCache
 
               case notifications of
                 [] -> do
-                  logInfo logger threadType
+                  logInfoTracing logger threadType
                     $ String
                     $ T.unwords
                       [ "Fetched metadata notifications and received no notifications. Not updating the schema cache.",
@@ -332,7 +336,7 @@ refreshSchemaCache
                       ]
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
                 _ -> do
-                  logInfo logger threadType
+                  logInfoTracing logger threadType
                     $ String "Fetched metadata notifications and received some notifications. Updating the schema cache."
                   let cacheInvalidations =
                         if any ((== (engineResourceVersion + 1)) . fst) notifications
@@ -351,22 +355,33 @@ refreshSchemaCache
                                     $ BackendMap.lookup @'DataConnector
                                     $ scBackendCache schemaCache
                               }
-                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
+                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata (Just latestResourceVersion)
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
-                  logInfo logger threadType
+                  logInfoTracing logger threadType
                     $ String
                     $ "Schema cache updated with resource version: "
                     <> showMetadataResourceVersion latestResourceVersion
         pure (msg, cache)
-    onLeft respErr (logError logger threadType . TEQueryError)
+    onLeft respErr (logErrorTracing logger threadType . TEQueryError)
 
 logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =
   unLogger logger
     $ SchemaSyncLog LevelInfo threadType val
 
+logInfoTracing :: (Tracing.MonadTraceContext m, MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
+logInfoTracing logger threadType val =
+  unLoggerTracing logger
+    $ SchemaSyncLog LevelInfo threadType val
+
 logError :: (MonadIO m, ToJSON a) => Logger Hasura -> SchemaSyncThreadType -> a -> m ()
 logError logger threadType err =
   unLogger logger
+    $ SchemaSyncLog LevelError threadType
+    $ object ["error" .= toJSON err]
+
+logErrorTracing :: (Tracing.MonadTraceContext m, MonadIO m, ToJSON a) => Logger Hasura -> SchemaSyncThreadType -> a -> m ()
+logErrorTracing logger threadType err =
+  unLoggerTracing logger
     $ SchemaSyncLog LevelError threadType
     $ object ["error" .= toJSON err]

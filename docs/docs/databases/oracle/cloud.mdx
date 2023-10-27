@@ -16,7 +16,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 # Getting Started with Oracle in Hasura Cloud
 
 <div className="badge-container">
-  <ProductBadge free standard pro ee />
+  <ProductBadge free pro ee />
 </div>
 
 ## Introduction
@@ -63,10 +63,16 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the Oracle data source driver. Enter a database display name and the JDBC Connection URL for your Oracle
-instance.
+Select the Oracle data source driver.
 
-The JDBC connection URL should look like this:
+:::info Already have a data source connected?
+
+You'll need to click `Manage` in the sidenav and then `Connect Database` to bring up the different available agents.
+
+:::
+
+Enter a database display name and the JDBC Connection URL for your Oracle instance. The JDBC connection URL should look
+like this:
 
 ```yaml {4-6}
 jdbc:oracle:thin:<username>/<password>@<hostname>:<port>:<service-name>
@@ -80,6 +86,14 @@ jdbc:oracle:thin:myuser/mypassword@myhost.mycompany.com:1234:oracletest  # assum
 ```
 
 Click `Connect Database`.
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
 
 ### Step 3: Track tables and run GraphQL API queries
 

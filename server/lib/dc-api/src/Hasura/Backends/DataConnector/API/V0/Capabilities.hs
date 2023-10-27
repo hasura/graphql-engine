@@ -10,12 +10,14 @@
 module Hasura.Backends.DataConnector.API.V0.Capabilities
   ( Capabilities (..),
     cDataSchema,
+    cPostSchema,
     cQueries,
     cLicensing,
     cMutations,
     cSubscriptions,
     cScalarTypes,
     cRelationships,
+    cInterpolatedQueries,
     cComparisons,
     cMetrics,
     cExplain,
@@ -29,10 +31,14 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     dscColumnNullability,
     dscSupportsSchemalessTables,
     defaultDataSchemaCapabilities,
+    defaultPostSchemaCapabilities,
     ColumnNullability (..),
+    PostSchemaCapabilities (..),
     QueryCapabilities (..),
     qcForeach,
+    qcRedaction,
     ForeachCapabilities (..),
+    RedactionCapabilities (..),
     MutationCapabilities (..),
     InsertCapabilities (..),
     UpdateCapabilities (..),
@@ -50,6 +56,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ScalarTypeCapabilities (..),
     ScalarTypesCapabilities (..),
     RelationshipCapabilities (..),
+    InterpolatedQueryCapabilities (..),
     ComparisonCapabilities (..),
     SubqueryComparisonCapabilities (..),
     MetricsCapabilities (..),
@@ -94,11 +101,13 @@ import Prelude
 -- which involve relationships.
 data Capabilities = Capabilities
   { _cDataSchema :: DataSchemaCapabilities,
+    _cPostSchema :: Maybe PostSchemaCapabilities,
     _cQueries :: Maybe QueryCapabilities,
     _cMutations :: Maybe MutationCapabilities,
     _cSubscriptions :: Maybe SubscriptionCapabilities,
     _cScalarTypes :: ScalarTypesCapabilities,
     _cRelationships :: Maybe RelationshipCapabilities,
+    _cInterpolatedQueries :: Maybe InterpolatedQueryCapabilities,
     _cComparisons :: Maybe ComparisonCapabilities,
     _cMetrics :: Maybe MetricsCapabilities,
     _cExplain :: Maybe ExplainCapabilities,
@@ -112,18 +121,20 @@ data Capabilities = Capabilities
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
       Capabilities
         <$> optionalFieldWithOmittedDefault "data_schema" defaultDataSchemaCapabilities "The agent's data schema capabilities" .= _cDataSchema
+        <*> optionalField "post_schema" "The agent's capabilities to accept schema as a `POST` request" .= _cPostSchema
         <*> optionalField "queries" "The agent's query capabilities" .= _cQueries
         <*> optionalField "mutations" "The agent's mutation capabilities" .= _cMutations
         <*> optionalField "subscriptions" "The agent's subscription capabilities" .= _cSubscriptions
         <*> optionalFieldWithOmittedDefault "scalar_types" mempty "The agent's scalar types and their capabilities" .= _cScalarTypes
         <*> optionalField "relationships" "The agent's relationship capabilities" .= _cRelationships
+        <*> optionalField "interpolated_queries" "The agent's interpolated (native) query capabilities" .= _cInterpolatedQueries
         <*> optionalField "comparisons" "The agent's comparison capabilities" .= _cComparisons
         <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
@@ -172,8 +183,21 @@ instance HasCodec ColumnNullability where
           (NullableAndNonNullableColumns, "nullable_and_non_nullable")
         ]
 
+data PostSchemaCapabilities = PostSchemaCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec PostSchemaCapabilities
+
+defaultPostSchemaCapabilities :: PostSchemaCapabilities
+defaultPostSchemaCapabilities = PostSchemaCapabilities
+
+instance HasCodec PostSchemaCapabilities where
+  codec =
+    object "PostSchemaCapabilities" $ pure PostSchemaCapabilities
+
 data QueryCapabilities = QueryCapabilities
-  { _qcForeach :: Maybe ForeachCapabilities
+  { _qcForeach :: Maybe ForeachCapabilities,
+    _qcRedaction :: Maybe RedactionCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -184,6 +208,7 @@ instance HasCodec QueryCapabilities where
     object "QueryCapabilities" $
       QueryCapabilities
         <$> optionalField "foreach" "Whether or not the agent supports foreach queries, which are used to enable remote joins to the agent" .= _qcForeach
+        <*> optionalField "redaction" "Whether or not the agent supports redaction expressions in the query" .= _qcRedaction
 
 data ForeachCapabilities = ForeachCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -193,6 +218,15 @@ data ForeachCapabilities = ForeachCapabilities {}
 instance HasCodec ForeachCapabilities where
   codec =
     object "ForeachCapabilities" $ pure ForeachCapabilities
+
+data RedactionCapabilities = RedactionCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RedactionCapabilities
+
+instance HasCodec RedactionCapabilities where
+  codec =
+    object "RedactionCapabilities" $ pure RedactionCapabilities
 
 data MutationCapabilities = MutationCapabilities
   { _mcInsertCapabilities :: Maybe InsertCapabilities,
@@ -295,6 +329,14 @@ data RelationshipCapabilities = RelationshipCapabilities {}
 
 instance HasCodec RelationshipCapabilities where
   codec = object "RelationshipCapabilities" $ pure RelationshipCapabilities
+
+data InterpolatedQueryCapabilities = InterpolatedQueryCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec InterpolatedQueryCapabilities
+
+instance HasCodec InterpolatedQueryCapabilities where
+  codec = object "InterpolatedQueryCapabilities" $ pure InterpolatedQueryCapabilities
 
 newtype ComparisonOperators = ComparisonOperators
   { unComparisonOperators :: HashMap GQL.Syntax.Name ScalarType

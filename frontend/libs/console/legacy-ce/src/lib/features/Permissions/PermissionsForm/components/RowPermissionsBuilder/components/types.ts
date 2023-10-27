@@ -10,7 +10,10 @@ export type Operators = Record<
 
 export type Permissions = Record<string, any>;
 
-export type Columns = Pick<TableColumn, 'dataType' | 'name'>[];
+export type Columns = Pick<
+  TableColumn,
+  'dataType' | 'name' | 'graphQLProperties'
+>[];
 
 export type Relationships = Array<Relationship>;
 
@@ -39,6 +42,7 @@ export type PermissionType =
   | 'column'
   | 'exist'
   | 'relationship'
+  | 'object'
   | 'value'
   | 'comparator';
 
@@ -49,6 +53,8 @@ export type RowPermissionsState = {
   setValue: (path: string[], value: any) => void;
   setKey: (props: { path: string[]; key: any; type: PermissionType }) => void;
   setPermissions: (permissions: Permissions) => void;
+  loadRelationships?: (relationships: Relationships) => void;
+  isLoading?: boolean;
 };
 
 export type TypesContext = {
@@ -74,3 +80,5 @@ export type TableContext = {
   relationships: Relationships;
   setRelationships: (relationships: Relationships) => void;
 };
+
+export type TableToLoad = { source: string; table: Table }[];

@@ -29,7 +29,7 @@ export const ChangeSummary: React.VFC<{
   }
 
   return (
-    <div className="flex flex-row justify-between w-1/5">
+    <div className="flex flex-row justify-between w-[28%]">
       <div className="flex-col">
         <div className="flex text-red-600 text-2xl font-bold">
           {numBreakingChanges}

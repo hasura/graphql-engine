@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
     experimentalFeatureKey,
@@ -16,17 +18,30 @@ module Hasura.Server.Types
     CheckFeatureFlag (..),
     getRequestId,
     ApolloFederationStatus (..),
+    TriggersErrorLogLevelStatus (..),
     isApolloFederationEnabled,
+    isTriggersErrorLogLevelEnabled,
+    ModelInfoLogState (..),
     GranularPrometheusMetricsState (..),
+    OpenTelemetryExporterState (..),
     CloseWebsocketsOnMetadataChangeStatus (..),
     isCloseWebsocketsOnMetadataChangeStatusEnabled,
+    PersistedQueriesState (..),
+    PersistedQueryRequest (..),
+    ExtPersistedQueryRequest (..),
+    ExtQueryReqs (..),
     MonadGetPolicies (..),
   )
 where
 
-import Data.Aeson
+import Control.Lens qualified as Lens
+import Data.Aeson hiding (json)
+import Data.Aeson.Casing qualified as J
+import Data.Aeson.Lens
+import Data.Aeson.TH qualified as J
 import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
+import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.ApiLimit
 import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
@@ -164,6 +179,35 @@ isApolloFederationEnabled = \case
 instance ToJSON ApolloFederationStatus where
   toJSON = toJSON . isApolloFederationEnabled
 
+data TriggersErrorLogLevelStatus = TriggersErrorLogLevelEnabled | TriggersErrorLogLevelDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance FromJSON TriggersErrorLogLevelStatus where
+  parseJSON = fmap (bool TriggersErrorLogLevelDisabled TriggersErrorLogLevelEnabled) . parseJSON
+
+isTriggersErrorLogLevelEnabled :: TriggersErrorLogLevelStatus -> Bool
+isTriggersErrorLogLevelEnabled = \case
+  TriggersErrorLogLevelEnabled -> True
+  TriggersErrorLogLevelDisabled -> False
+
+instance ToJSON TriggersErrorLogLevelStatus where
+  toJSON = toJSON . isTriggersErrorLogLevelEnabled
+
+data ModelInfoLogState
+  = ModelInfoLogOff
+  | ModelInfoLogOn
+  deriving (Eq, Show)
+
+instance FromJSON ModelInfoLogState where
+  parseJSON = withBool "ModelInfoLogState" $ \case
+    False -> pure ModelInfoLogOff
+    True -> pure ModelInfoLogOn
+
+instance ToJSON ModelInfoLogState where
+  toJSON = \case
+    ModelInfoLogOff -> Bool False
+    ModelInfoLogOn -> Bool True
+
 -- | Whether or not to enable granular metrics for Prometheus.
 --
 -- `GranularMetricsOn` will enable the dynamic labels for the metrics.
@@ -186,6 +230,25 @@ instance ToJSON GranularPrometheusMetricsState where
     GranularMetricsOff -> Bool False
     GranularMetricsOn -> Bool True
 
+-- | Whether or not to enable OpenTelemetry Exporter.
+--
+-- `OpenTelemetryExporterOn` will enable exporting of traces & metrics via the OTel Exporter.
+-- `OpenTelemetryExporterOff` will disable exporting of traces & metrics via the OTel Exporter.
+data OpenTelemetryExporterState
+  = OpenTelemetryExporterOff
+  | OpenTelemetryExporterOn
+  deriving (Eq, Show)
+
+instance FromJSON OpenTelemetryExporterState where
+  parseJSON = withBool "OpenTelemetryExporterState" $ \case
+    False -> pure OpenTelemetryExporterOff
+    True -> pure OpenTelemetryExporterOn
+
+instance ToJSON OpenTelemetryExporterState where
+  toJSON = \case
+    OpenTelemetryExporterOff -> Bool False
+    OpenTelemetryExporterOn -> Bool True
+
 -- | Whether or not to close websocket connections on metadata change.
 data CloseWebsocketsOnMetadataChangeStatus = CWMCEnabled | CWMCDisabled
   deriving stock (Show, Eq, Ord, Generic)
@@ -205,6 +268,70 @@ isCloseWebsocketsOnMetadataChangeStatusEnabled = \case
 instance ToJSON CloseWebsocketsOnMetadataChangeStatus where
   toJSON = toJSON . isCloseWebsocketsOnMetadataChangeStatusEnabled
 
+data PersistedQueriesState
+  = PersistedQueriesDisabled
+  | PersistedQueriesEnabled
+  deriving (Eq, Show)
+
+instance FromJSON PersistedQueriesState where
+  parseJSON = withBool "PersistedQueriesState" $ \case
+    False -> pure PersistedQueriesDisabled
+    True -> pure PersistedQueriesEnabled
+
+instance ToJSON PersistedQueriesState where
+  toJSON = \case
+    PersistedQueriesDisabled -> Bool False
+    PersistedQueriesEnabled -> Bool True
+
+-- | The persisted query request sent by Apollo clients. Ref:
+-- https://www.apollographql.com/docs/apollo-server/performance/apq/#verify
+data PersistedQueryRequest = PersistedQueryRequest
+  { _pqrVersion :: Int,
+    _pqrSha256Hash :: Text
+  }
+  deriving (Show, Eq, Generic)
+
+$(J.deriveToJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''PersistedQueryRequest)
+
+instance FromJSON PersistedQueryRequest where
+  parseJSON = withObject "PersistedQueryRequest" $ \o -> do
+    q <- o .: "persistedQuery"
+    version <- q .: "version"
+    hash <- q .: "sha256Hash"
+    pure $ PersistedQueryRequest version hash
+
+-- | The persisted query request sent in the POST body by Apollo Clients. Ref:
+-- <https://github.com/apollographql/apollo-link-persisted-queries#protocol>
+-- Read as Extended Persisted Query request.
+-- The Query field in the request body, will contain the query only when it is not present in the system,
+-- thus `HGE.GQLReq (Maybe a)`
+data ExtPersistedQueryRequest a = ExtPersistedQueryRequest
+  { _extOperationName :: (Maybe GH.OperationName),
+    _extQuery :: (Maybe GH.GQLQueryText),
+    _extVariables :: (Maybe GH.VariableValues),
+    _extExtensions :: PersistedQueryRequest
+  }
+  deriving (Show, Eq, Generic)
+
+$(J.deriveJSON (J.aesonDrop 4 J.camelCase) {J.omitNothingFields = True} ''ExtPersistedQueryRequest)
+
+-- | The POST request might either be a normal GQL request or a persisted query request
+data ExtQueryReqs
+  = EqrGQLReq GH.ReqsText
+  | EqrAPQReq (ExtPersistedQueryRequest (GH.GQLReq GH.GQLQueryText))
+  deriving (Show, Eq, Generic)
+
+instance ToJSON ExtQueryReqs where
+  toJSON (EqrGQLReq qs) = toJSON qs
+  toJSON (EqrAPQReq q) = toJSON q
+
+instance FromJSON ExtQueryReqs where
+  parseJSON arr@Array {} = EqrGQLReq <$> (GH.GQLBatchedReqs <$> parseJSON arr)
+  parseJSON json
+    -- The APQ requests, have a special key called as Extensions
+    | isJust (json Lens.^? key "extensions") = EqrAPQReq <$> parseJSON json
+    | otherwise = EqrGQLReq <$> (GH.GQLSingleRequest <$> parseJSON json)
+
 class (Monad m) => MonadGetPolicies m where
   runGetApiTimeLimit ::
     m (Maybe MaxTime)
@@ -216,14 +343,20 @@ class (Monad m) => MonadGetPolicies m where
   runGetPrometheusMetricsGranularity ::
     m (IO GranularPrometheusMetricsState)
 
+  runGetModelInfoLogStatus ::
+    m (IO ModelInfoLogState)
+
 instance (MonadGetPolicies m) => MonadGetPolicies (ReaderT r m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 instance (MonadGetPolicies m) => MonadGetPolicies (ExceptT e m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus

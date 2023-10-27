@@ -8,6 +8,7 @@ module Hasura.Server.Prometheus
     GraphQLRequestMetrics (..),
     EventTriggerMetrics (..),
     CacheRequestMetrics (..),
+    OpenTelemetryMetrics (..),
     makeDummyPrometheusMetrics,
     ConnectionsGauge,
     Connections (..),
@@ -70,13 +71,15 @@ data PrometheusMetrics = PrometheusMetrics
     pmGraphQLRequestMetrics :: GraphQLRequestMetrics,
     pmEventTriggerMetrics :: EventTriggerMetrics,
     pmWebSocketBytesReceived :: Counter,
-    pmWebSocketBytesSent :: Counter,
+    pmWebSocketBytesSent :: CounterVector DynamicSubscriptionLabel,
     pmActionBytesReceived :: Counter,
     pmActionBytesSent :: Counter,
     pmScheduledTriggerMetrics :: ScheduledTriggerMetrics,
     pmSubscriptionMetrics :: SubscriptionMetrics,
     pmWebsocketMsgQueueTimeSeconds :: Histogram,
-    pmCacheRequestMetrics :: CacheRequestMetrics
+    pmWebsocketMsgWriteTimeSeconds :: Histogram,
+    pmCacheRequestMetrics :: CacheRequestMetrics,
+    pmOpenTelemetryMetrics :: OpenTelemetryMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -132,6 +135,20 @@ data CacheRequestMetrics = CacheRequestMetrics
     crmCacheMisses :: Counter
   }
 
+-- | Metrics related to OTel telemetry export; for now the volume of logs and
+-- trace spans shipped, and counts of log lines and spans dropped due to high
+-- volume.
+data OpenTelemetryMetrics = OpenTelemetryMetrics
+  { otmSentSpans :: Counter,
+    -- | Dropped due to the send buffer being full
+    otmDroppedSpansInBuffer :: Counter,
+    -- | Dropped due to some error (after retrying) when sending to collector
+    otmDroppedSpansInSend :: Counter,
+    otmSentLogs :: Counter,
+    otmDroppedLogsInBuffer :: Counter,
+    otmDroppedLogsInSend :: Counter
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -140,13 +157,15 @@ makeDummyPrometheusMetrics = do
   pmGraphQLRequestMetrics <- makeDummyGraphQLRequestMetrics
   pmEventTriggerMetrics <- makeDummyEventTriggerMetrics
   pmWebSocketBytesReceived <- Counter.new
-  pmWebSocketBytesSent <- Counter.new
+  pmWebSocketBytesSent <- CounterVector.new
   pmActionBytesReceived <- Counter.new
   pmActionBytesSent <- Counter.new
   pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
   pmSubscriptionMetrics <- makeDummySubscriptionMetrics
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
+  pmWebsocketMsgWriteTimeSeconds <- Histogram.new []
   pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
+  pmOpenTelemetryMetrics <- makeDummyOpenTelemetryMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -206,6 +225,16 @@ makeDummyCacheRequestMetrics = do
   crmCacheHits <- Counter.new
   crmCacheMisses <- Counter.new
   pure CacheRequestMetrics {..}
+
+makeDummyOpenTelemetryMetrics :: IO OpenTelemetryMetrics
+makeDummyOpenTelemetryMetrics = do
+  otmSentSpans <- Counter.new
+  otmDroppedSpansInSend <- Counter.new
+  otmDroppedSpansInBuffer <- Counter.new
+  otmSentLogs <- Counter.new
+  otmDroppedLogsInSend <- Counter.new
+  otmDroppedLogsInBuffer <- Counter.new
+  pure OpenTelemetryMetrics {..}
 
 --------------------------------------------------------------------------------
 
@@ -307,7 +336,7 @@ liveQuerySubscriptionLabel :: SubscriptionKindLabel
 liveQuerySubscriptionLabel = SubscriptionKindLabel "live-query"
 
 data DynamicSubscriptionLabel = DynamicSubscriptionLabel
-  { _dslParamQueryHash :: ParameterizedQueryHash,
+  { _dslParamQueryHash :: Maybe ParameterizedQueryHash,
     _dslOperationName :: Maybe OperationName
   }
   deriving stock (Generic, Ord, Eq)
@@ -315,7 +344,7 @@ data DynamicSubscriptionLabel = DynamicSubscriptionLabel
 instance ToLabels DynamicSubscriptionLabel where
   toLabels (DynamicSubscriptionLabel hash opName) =
     Map.fromList
-      $ [("parameterized_query_hash", bsToTxt $ unParamQueryHash hash)]
+      $ maybe [] (\pqh -> [("parameterized_query_hash", bsToTxt $ unParamQueryHash pqh)]) hash
       <> maybe [] (\op -> [("operation_name", G.unName $ _unOperationName op)]) opName
 
 data SubscriptionLabel = SubscriptionLabel
@@ -387,7 +416,7 @@ recordSubcriptionMetric getMetricState alwaysObserve operationNamesMap parameter
   -- if no operation names are present, then emit metric with only param query hash as dynamic label
   if (null operationNamesMap)
     then do
-      let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash Nothing)
+      let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) Nothing)
           promMetricLabel = SubscriptionLabel subscriptionKind Nothing
       recordMetricWithLabel
         getMetricState
@@ -398,7 +427,7 @@ recordSubcriptionMetric getMetricState alwaysObserve operationNamesMap parameter
     do
       let operationNames = HashMap.keys operationNamesMap
       for_ operationNames $ \opName -> do
-        let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash opName)
+        let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) opName)
             promMetricLabel = SubscriptionLabel subscriptionKind Nothing
         recordMetricWithLabel
           getMetricState

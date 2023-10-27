@@ -1,8 +1,4 @@
-// see: https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
-// TS docs: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
-type DistributiveOmit<T, K extends PropertyKey> = T extends any
-  ? Omit<T, K>
-  : never;
+import { DistributiveOmit } from '../../components/Services/Data/Common/tsUtils';
 
 export type AlertMode = 'alert' | 'confirm' | 'prompt';
 
@@ -52,6 +48,8 @@ export type PromptParams = CommonAlertBase<'prompt'> &
     promptLabel?: React.ReactNode;
     promptPlaceholder?: string;
     sanitizeGraphQL?: boolean;
+    defaultValue?: string;
+    inputFieldName?: string;
   } & (
     | { onClose: (args: onClosePromptProps) => void; onCloseAsync?: never }
     | {

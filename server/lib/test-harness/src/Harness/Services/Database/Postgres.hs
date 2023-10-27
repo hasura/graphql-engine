@@ -233,10 +233,10 @@ mkReferenceSql :: SchemaName -> Schema.Reference -> Text
 mkReferenceSql (SchemaName localSchemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
   let schemaName = maybe localSchemaName unSchemaName (resolveReferenceSchema referenceTargetQualifiers)
    in [i|
-    FOREIGN KEY ("#{ referenceLocalColumn }")
-    REFERENCES "#{ schemaName }"."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
-    ON DELETE CASCADE ON UPDATE CASCADE
-  |]
+        FOREIGN KEY ("#{ referenceLocalColumn }")
+        REFERENCES "#{ schemaName }"."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
+        ON DELETE CASCADE ON UPDATE CASCADE
+      |]
 
 uniqueConstraintSql :: Schema.Constraint -> Text
 uniqueConstraintSql = \case
@@ -262,6 +262,7 @@ wrapIdentifier identifier = "\"" <> identifier <> "\""
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
+  Schema.TDouble -> "double precision"
   Schema.TStr -> "varchar"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
@@ -292,6 +293,7 @@ insertTable testEnv table@(Schema.Table {tableColumns, tableData}) = unless (nul
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt n -> tshow n
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> if b then "TRUE" else "FALSE"

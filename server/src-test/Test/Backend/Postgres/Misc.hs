@@ -12,6 +12,7 @@ module Test.Backend.Postgres.Misc
     integerOne,
     integerTwo,
     PG,
+    dummyUserInfo,
   )
 where
 
@@ -22,6 +23,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo, ColumnType (..), ColumnValue (..))
+import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Session (BackendOnlyFieldAccess (BOFADisallowed), SessionVariables, UserInfo (..))
 import Test.Parser.Expectation qualified as Expect
 
 type PG = 'Postgres 'Vanilla
@@ -115,3 +118,10 @@ integerTwo =
       { cvType = ColumnScalar PGInteger,
         cvValue = PGValInteger 2
       }
+
+dummyUserInfo :: UserInfo
+dummyUserInfo =
+  UserInfo
+    adminRoleName
+    (mempty @SessionVariables)
+    BOFADisallowed

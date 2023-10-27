@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { redirectToMetadataStatus } from '../../../Common/utils/routesUtils';
 import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { connect, ConnectedProps } from 'react-redux';
-import {
-  getInheritedRoles,
-  rolesSelector,
-} from '../../../../metadata/selector';
+import { getInheritedRoles } from '../../../../metadata/selector';
 import { Dispatch, ReduxState } from '../../../../types';
 import InheritedRolesTable, {
   InheritedRolesTableProps,
@@ -21,6 +18,11 @@ import {
   addInheritedRoleAction,
   updateInheritedRoleAction,
 } from '../../../../metadata/actions';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../features/hasura-metadata-api';
+import Skeleton from 'react-loading-skeleton';
 
 export const ActionContext = React.createContext<RoleActionsInterface | null>(
   null
@@ -29,8 +31,11 @@ export const ActionContext = React.createContext<RoleActionsInterface | null>(
 let lastinconsistency: any[];
 
 const InheritedRoles: React.FC<Props> = props => {
-  const { allRoles, inheritedRoles, inconsistentInheritedRoles, dispatch } =
-    props;
+  const { data: allRoles = [], isLoading } = useMetadata(
+    MetadataSelectors.getRoles
+  );
+
+  const { inheritedRoles, inconsistentInheritedRoles, dispatch } = props;
   const [inheritedRoleName, setInheritedRoleName] = useState('');
   const [inheritedRole, setInheritedRole] = useState<InheritedRole | null>(
     null
@@ -108,14 +113,19 @@ const InheritedRoles: React.FC<Props> = props => {
         >
           <InheritedRolesTable inheritedRoles={inheritedRoles} />
         </ActionContext.Provider>
-        <InheritedRolesEditor
-          allRoles={allRoles}
-          cancelCb={resetState}
-          isCollapsed={isCollapsed}
-          onSave={onSave}
-          inheritedRoleName={inheritedRoleName}
-          inheritedRole={inheritedRole}
-        />
+
+        {isLoading ? (
+          <Skeleton count={8} height={20} />
+        ) : (
+          <InheritedRolesEditor
+            allRoles={allRoles}
+            cancelCb={resetState}
+            isCollapsed={isCollapsed}
+            onSave={onSave}
+            inheritedRoleName={inheritedRoleName}
+            inheritedRole={inheritedRole}
+          />
+        )}
       </div>
     </Analytics>
   );
@@ -124,7 +134,6 @@ const InheritedRoles: React.FC<Props> = props => {
 const mapStateToProps = (state: ReduxState) => {
   return {
     inheritedRoles: getInheritedRoles(state),
-    allRoles: rolesSelector(state),
     experimentalFeatures: state.main.serverConfig.data.experimental_features,
     inconsistentInheritedRoles: state.metadata.inconsistentInheritedRoles,
   };

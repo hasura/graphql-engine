@@ -11,16 +11,16 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Common (RelName)
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualNativeQueryConfig)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 
--- | Codec for native-query-only relationships
+-- | Codec for native-query-or-table relationships
 nativeQueryRelationshipsCodec ::
   forall b.
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)))
-    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)))
+    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
 nativeQueryRelationshipsCodec =
   AC.dimapCodec
     ( InsOrdHashMap.fromList
@@ -32,8 +32,8 @@ nativeQueryRelationshipsCodec =
     ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
     )
     ( AC.listCodec
-        $ AC.object "RelDefRelManualNativeQueryConfig"
-        $ AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualNativeQueryConfig b)))
+        $ AC.object "RelDefRelManualConfig"
+        $ AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualConfig b)))
     )
 
 data MergedObject a b = MergedObject

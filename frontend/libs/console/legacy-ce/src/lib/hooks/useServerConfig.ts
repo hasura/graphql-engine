@@ -4,6 +4,7 @@ import React from 'react';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { APIError } from './error';
 import { Api } from './apiUtils';
+import { DEFAULT_STALE_TIME } from '../features/hasura-metadata-api/useMetadata';
 
 type ExperimentalFeature =
   | 'streaming_subscriptions'
@@ -32,6 +33,7 @@ export interface ServerConfig {
     claims_format: string;
   };
   is_prometheus_metrics_enabled: boolean;
+  is_apollo_federation_enabled: boolean;
 }
 
 export function useServerConfig<T = ServerConfig>(
@@ -55,6 +57,11 @@ export function useServerConfig<T = ServerConfig>(
     () => {
       return Api.get<ServerConfig>({ url: Endpoints.serverConfig, headers });
     },
-    { ...queryOptions, select }
+    {
+      ...queryOptions,
+      select,
+      refetchOnWindowFocus: false,
+      staleTime: DEFAULT_STALE_TIME,
+    }
   );
 }

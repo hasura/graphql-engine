@@ -1,8 +1,8 @@
-import { StoryObj, Meta } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import React, { useReducer } from 'react';
 
 import { expect, jest } from '@storybook/jest';
-import { screen, userEvent, within } from '@storybook/testing-library';
+import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
 import { useHasuraAlert } from '.';
 import useUpdateEffect from '../../hooks/useUpdateEffect';
 import { Button } from '../Button';
@@ -187,7 +187,7 @@ export const PromptTest: StoryObj<any> = {
           Open a prompt!
         </Button>
         <div className="my-4">
-          Your value: <span data-testid="prompt-value">{value}</span>
+          Your value: <span data-testid="prompt-value-display">{value}</span>
         </div>
       </div>
     );
@@ -199,8 +199,10 @@ export const PromptTest: StoryObj<any> = {
     await expect(await screen.findByText('Some Title')).toBeInTheDocument();
     await userEvent.type(await screen.findByLabelText('Input Label'), 'blah');
     await userEvent.click(await screen.findByText('Ok'));
-    await expect(await screen.findByTestId('prompt-value')).toHaveTextContent(
-      'blah'
+    await waitFor(() =>
+      expect(screen.getByTestId('prompt-value-display')).toHaveTextContent(
+        'blah'
+      )
     );
   },
 
@@ -404,7 +406,7 @@ export const AsyncPrompt: StoryObj<any> = {
           Open a prompt!
         </Button>
         <div className="my-4">
-          Your value: <span data-testid="prompt-value">{value}</span>
+          Your value: <span data-testid="prompt-value-display">{value}</span>
         </div>
       </div>
     );
@@ -731,9 +733,19 @@ export const ReferenceStability: StoryObj<any> = {
     //test prompt call
     await userEvent.click(canvas.getByTestId('prompt'));
 
+    await userEvent.type(await screen.findByTestId('prompt_value'), 'blah');
+
     await userEvent.click(await screen.findByText('Ok'));
 
     await expect(logSpy).not.toHaveBeenCalled();
+
+    //wait for alert to not be visible
+    await waitFor(
+      () => {
+        expect(screen.queryByTestId('alert-confirm-button')).toEqual(null);
+      },
+      { timeout: 500 }
+    );
 
     //test destructive confirm
     await userEvent.click(canvas.getByTestId('destructive-confirm'));
@@ -741,6 +753,13 @@ export const ReferenceStability: StoryObj<any> = {
     await userEvent.click(await screen.findByText('Cancel'));
 
     await expect(logSpy).not.toHaveBeenCalled();
+
+    await waitFor(
+      () => {
+        expect(screen.queryByTestId('alert-confirm-button')).toEqual(null);
+      },
+      { timeout: 500 }
+    );
 
     //test destructive prompt
     await userEvent.click(canvas.getByTestId('destructive-prompt'));

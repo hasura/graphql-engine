@@ -45,11 +45,21 @@ export type MetadataTableConfig = {
   };
   column_config?: Record<string, MetadataTableColumnConfig>;
   comment?: string;
+  logical_model?: string;
   /**
    * @deprecated do not use this anymore. Should be used only for backcompatiblity reasons
    */
   custom_column_names?: Record<string, string>;
 };
+
+export type LocalArrayRelationship =
+  | ManualArrayRelationship
+  | LocalTableArrayRelationship;
+
+export type LocalObjectRelationship =
+  | ManualObjectRelationship
+  | LocalTableObjectRelationship
+  | SameTableObjectRelationship;
 
 export type MetadataTable = {
   /**
@@ -70,18 +80,15 @@ export type MetadataTable = {
     | SourceToRemoteSchemaRelationship
     | Legacy_SourceToRemoteSchemaRelationship
   )[];
-  object_relationships?: (
-    | ManualObjectRelationship
-    | LocalTableObjectRelationship
-    | SameTableObjectRelationship
-  )[];
-  array_relationships?: (
-    | ManualArrayRelationship
-    | LocalTableArrayRelationship
-  )[];
+  object_relationships?: LocalObjectRelationship[];
+  array_relationships?: LocalArrayRelationship[];
 
   insert_permissions?: InsertPermission[];
   select_permissions?: SelectPermission[];
   update_permissions?: UpdatePermission[];
   delete_permissions?: DeletePermission[];
+
+  apollo_federation_config?: {
+    enable: 'v1';
+  } | null;
 };

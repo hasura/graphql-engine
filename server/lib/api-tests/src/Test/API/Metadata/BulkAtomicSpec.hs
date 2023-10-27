@@ -167,6 +167,141 @@ tests = do
 
     shouldReturnYaml testEnvironment actual expected
 
+  it "Supports table relationships being added and removed" \testEnvironment -> do
+    let schemaName = Schema.getSchemaName testEnvironment
+        backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
+
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [interpolateYaml|
+        type: pg_create_array_relationship
+        args:
+          name: articles_by_id_to_author_id
+          source: #{sourceName}
+          table:
+            name: authors
+            schema: #{schemaName}
+          using:
+            manual_configuration:
+              remote_table:
+                schema: #{schemaName}
+                name: articles
+              column_mapping:
+                id: author_id
+      |]
+
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [interpolateYaml|
+        type: bulk_atomic
+        args:
+        - type: pg_drop_relationship
+          args:
+            relationship: articles_by_id_to_author_id
+            source: #{sourceName}
+            table:
+              name: authors
+              schema: #{schemaName}
+      |]
+
+    let actual :: IO Value
+        actual =
+          GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query {
+                #{schemaName}_authors {
+                  id
+                  name
+                  articles_by_id_to_author_id {
+                    name
+                    authors_by_author_id_to_id { name }
+                  }
+                }
+              }
+            |]
+
+    let expected :: Value
+        expected =
+          [interpolateYaml|
+            errors:
+            - extensions:
+                code: validation-failed
+                path: $.selectionSet.hasura_authors.selectionSet.articles_by_id_to_author_id
+              message: 'field ''articles_by_id_to_author_id'' not found in type: ''hasura_authors'''
+          |]
+
+    shouldReturnYaml testEnvironment actual expected
+
+  it "Supports table relationships being added and removed" \testEnvironment -> do
+    let schemaName = Schema.getSchemaName testEnvironment
+        backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
+
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [interpolateYaml|
+        type: pg_create_remote_relationship
+        args:
+          name: articles_far_away
+          source: #{sourceName}
+          table:
+            schema: #{schemaName}
+            name: authors
+          definition:
+            to_source:
+              relationship_type: array
+              source: #{sourceName}
+              table:
+                schema: #{schemaName}
+                name: articles
+              field_mapping:
+                id: author_id
+      |]
+
+    GraphqlEngine.postMetadata_
+      testEnvironment
+      [interpolateYaml|
+        type: bulk_atomic
+        args:
+        - type: pg_delete_remote_relationship
+          args:
+            name: articles_far_away
+            source: #{sourceName}
+            table:
+              name: authors
+              schema: #{schemaName}
+      |]
+
+    let actual :: IO Value
+        actual =
+          GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query {
+                #{schemaName}_authors {
+                  id
+                  name
+                  articles_far_away {
+                    name
+                  }
+                }
+              }
+            |]
+
+    let expected :: Value
+        expected =
+          [interpolateYaml|
+            errors:
+            - extensions:
+                code: validation-failed
+                path: $.selectionSet.hasura_authors.selectionSet.articles_far_away
+              message: 'field ''articles_far_away'' not found in type: ''hasura_authors'''
+          |]
+
+    shouldReturnYaml testEnvironment actual expected
+
   it "Fails on invalid relationships" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
         backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment

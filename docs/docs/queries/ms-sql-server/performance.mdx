@@ -22,6 +22,14 @@ import TabItem from '@theme/TabItem';
 Sometimes queries can become slow due to large data volumes or levels of nesting. This page explains how to identify the
 query performance, and how queries can be optimized.
 
+:::info Note
+
+Only queries and subscriptions can be analyzed. Mutations are not supported.
+
+Stored procedures cannot be analyzed due to limitations in MS SQL Server.
+
+:::
+
 ## Analyzing query performance {#ms-sql-server-analyzing-query-performance}
 
 Let's say we want to analyze the following query:

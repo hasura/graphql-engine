@@ -254,6 +254,14 @@ class OneGraphExplorer extends React.Component {
       );
     }
 
+    if (!schema && this.props.loading) {
+      return (
+        <div className="h-full flex">
+          <Spinner />
+        </div>
+      );
+    }
+
     const graphiql = renderGraphiql({
       query: query,
       onEditQuery: this.editQuery,

@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { eeLicenseInfo } from '../../../features/EETrial/mocks/http';
 import Sidebar, { Metadata } from './Sidebar';
 import { HasuraMetadataV3 } from '../../../metadata/types';
+import { ConsoleTypeDecorator } from '../../../storybook/decorators';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -182,10 +183,9 @@ export const LogoutActive: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Logout Active',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro', adminSecret: true })],
   parameters: {
     msw: [...mockHandlers({}), eeLicenseInfo.active],
-    adminSecretSet: true,
   },
 };
 
@@ -196,10 +196,9 @@ export const ProLiteLoading: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite Prometheus Loading',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: mockHandlers({ delay: 'infinite' }),
-    consoleType: 'pro-lite',
   },
 };
 
@@ -210,10 +209,9 @@ export const ProLitePrometheusWithoutLicense: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite Prometheus Without License',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.none],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -225,9 +223,9 @@ export const ProLitePrometheusEnabled: StoryObj<typeof Sidebar> = {
   name: '💠 Demo Pro Lite Prometheus Enabled',
   args: generateArgs(),
 
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -238,10 +236,9 @@ export const ProLitePrometheusDisabled: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite Prometheus Disabled',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [...mockHandlers({ prometheusEnabled: false }), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -252,10 +249,9 @@ export const ProLiteError: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite Prometheus Error',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [...mockHandlers({ status: 500 }), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -266,10 +262,9 @@ export const ProLiteOpenTelemetryWithoutLicense: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite OpenTelemetry Without License',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [...mockHandlers({ openTelemetryEnabled: false }), eeLicenseInfo.none],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -280,13 +275,12 @@ export const ProLiteOpenTelemetryEnabled: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite OpenTelemetry Enabled',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [
       ...mockHandlers({ openTelemetryEnabled: true }),
       eeLicenseInfo.active,
     ],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -297,12 +291,11 @@ export const ProLiteOpenTelemetryDisabled: StoryObj<typeof Sidebar> = {
 
   name: '💠 Demo Pro Lite OpenTelemetry Disabled',
   args: generateArgs(),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [
       ...mockHandlers({ openTelemetryEnabled: false }),
       eeLicenseInfo.active,
     ],
-    consoleType: 'pro-lite',
   },
 };

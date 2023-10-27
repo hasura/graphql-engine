@@ -229,6 +229,16 @@ export HASURA_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 # Maybe launch the hasura instance we'll benchmark
 function maybe_launch_hasura_container() {
   if [ -n "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
+    # NOTE!: presence of HASURA_GRAPHQL_EE_LICENSE_KEY will determine if we run
+    # in EE mode or not, and this will happen silently! version doesn't indicate
+    # the mode we're in.
+    if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY}" ]; then
+        echo_pretty "Running in OSS mode"
+    else
+        echo_pretty "Running in EE mode"
+        # consistent across scripts/dev.sh and server/benchmarks:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+    fi
     HASURA_CONTAINER_NAME="graphql-engine-to-benchmark"
     # `TASKSET_HASURA`, `$DOCKER_NETWORK_HOST_MODE`, and `HASURA_RTS` depend on
     # word-splitting.
@@ -243,6 +253,8 @@ function maybe_launch_hasura_container() {
       --env HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       --env HASURA_GRAPHQL_ENABLE_CONSOLE=true \
       --env HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
+      --env HASURA_GRAPHQL_ADMIN_SECRET \
+      --env HASURA_GRAPHQL_EE_LICENSE_KEY \
       $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve \
@@ -359,6 +371,10 @@ function run_adhoc_operation_benchmarks() (
       if ! [[ "$iterations" =~ ^[0-9]+$ ]] ; then
           echo "Error: $script must define 'iterations'" >&2; exit 1
       fi
+      # shellcheck disable=SC2154
+      if ! [[ "$pause_after_seconds" =~ ^[0-9]+$ ]] ; then
+          echo "Error: $script must define 'pause_after_seconds'" >&2; exit 1
+      fi
 
       # TODO I was relying on being able to also get 'mutator_cpu_ns' to get a
       # stable metric of CPU usage (like counting instructions with 'perf').
@@ -396,6 +412,9 @@ function run_adhoc_operation_benchmarks() (
          latencies_ns+=" $((time_ns_after-time_ns_before))"
       done
       echo
+
+      # Allowing any asynchronous activity to settle:
+      sleep "$pause_after_seconds"
 
       allocated_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
       mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')

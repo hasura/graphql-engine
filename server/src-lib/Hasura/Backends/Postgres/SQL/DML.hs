@@ -425,17 +425,17 @@ jsonbTypeAnn = mkTypeAnn $ CollectableTypeScalar PGJSONB
 boolTypeAnn :: TypeAnn
 boolTypeAnn = mkTypeAnn $ CollectableTypeScalar PGBoolean
 
-data CountType
+data CountType columnType
   = CTStar
-  | CTSimple [PGCol]
-  | CTDistinct [PGCol]
-  deriving (Show, Eq, Generic, Data)
+  | CTSimple [columnType]
+  | CTDistinct [columnType]
+  deriving (Show, Eq, Generic, Data, Functor, Foldable, Traversable)
 
-instance NFData CountType
+instance (NFData columnType) => NFData (CountType columnType)
 
-instance Hashable CountType
+instance (Hashable columnType) => Hashable (CountType columnType)
 
-instance ToSQL CountType where
+instance ToSQL (CountType QIdentifier) where
   toSQL CTStar = "*"
   toSQL (CTSimple cols) =
     parenB $ ", " <+> cols
@@ -474,7 +474,7 @@ data SQLExp
   | SEArray [SQLExp]
   | SEArrayIndex SQLExp SQLExp
   | SETuple TupleExp
-  | SECount CountType
+  | SECount (CountType QIdentifier)
   | SENamedArg Identifier SQLExp
   | SEFunction FunctionExp
   deriving (Show, Eq, Generic, Data)

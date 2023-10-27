@@ -13,6 +13,7 @@ keywords:
   - traces
   - tracing
   - metrics config
+  - metrics
   - monitoring
   - enterprise
   - ee
@@ -22,7 +23,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # Metadata API Reference: Observability Options
 
-<ProductBadge ce free standard pro ee self />
+<ProductBadge ce free pro ee self />
 
 ## Introduction
 
@@ -30,7 +31,7 @@ The API to manage `Observability` related metadata configurations.
 
 ## Logs and metrics configuration
 
-<ProductBadge standard pro />
+<ProductBadge pro />
 
 These are the configurations that govern the metrics and logging output for debugging and analytics.
 
@@ -77,7 +78,8 @@ X-Hasura-Role: admin
 
 <ProductBadge self />
 
-The OpenTelemetry configuration enables export of [distributed traces](/observability/cloud-monitoring/tracing.mdx) to an
+The OpenTelemetry configuration enables export of [distributed traces](/observability/cloud-monitoring/tracing.mdx) and
+[metrics](/observability/enterprise-edition/prometheus/metrics.mdx) to an to an
 [OpenTelemetry](https://opentelemetry.io/) compliant APM receiver.
 
 ## set_opentelemetry_config {#metadata-set-opentelemetry-config}
@@ -99,11 +101,16 @@ X-Hasura-Role: admin
     "args": {
         "status": "enabled",
         "data_types": [
-            "traces"
+            "traces",
+            "metrics",
+            "logs"
         ],
         "exporter_otlp": {
             "otlp_traces_endpoint": "http://localhost:4318/v1/traces",
+            "otlp_metrics_endpoint": "http://localhost:4318/v1/metrics",
+            "otlp_logs_endpoint": "http://localhost:4318/v1/logs",
             "protocol": "http/protobuf",
+            "traces_propagators": ["tracecontext"],
             "headers": [
                 {
                     "name": "x-test-header",
@@ -137,7 +144,7 @@ X-Hasura-Role: admin
 | Key                  | Required | Schema                                                                                             | Description                                                                                                                                                                            |
 | -------------------- | -------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | status               | false    | `String`                                                                                           | Toggle to enable or disable the export. Allowed values are `enabled` and `disabled`. Default is `disabled` (If status is not explicitely passed, then the configuration gets disabled) |
-| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces` only                                                                                            |
+| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces` and `metrics` only                                                                              |
 | exporter_otlp        | false    | [OTLPExporter](/api-reference/syntax-defs.mdx#otlpexporter). This is required if status is enabled | OpenTelemetry compliant receiver configuration                                                                                                                                         |
 | batch_span_processor | false    | [OpenTelemetryBatchSpanProcessor](/api-reference/syntax-defs.mdx#opentelemetrybatchspanprocessor)  | OpenTelemetry batch export configuration                                                                                                                                               |
 

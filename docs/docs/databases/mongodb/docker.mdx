@@ -11,8 +11,11 @@ keywords:
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
-# Get Started with Docker (Hasura & MongoDB)
+# Get Started with Hasura and MongoDB in Docker
+
+<ProductBadge self />
 
 ## Introduction
 
@@ -20,7 +23,7 @@ This guide will help you get set up with the [Enterprise Edition](/enterprise/ov
 with our MongoDB integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
 MongoDB GraphQL Data Connector.
 
-:::info Supported versions:
+:::tip Supported versions:
 
 Hasura GraphQL Engine `v2.27.0` onwards
 
@@ -28,13 +31,9 @@ Hasura GraphQL Engine `v2.27.0` onwards
 
 :::tip Supported features
 
-Currently, Hasura supports read-only queries on MongoDB.<br/> Other limitations which are actively on the roadmap and
-will be supported soon include:
+Hasura currently supports queries, table relationships, remote relationships and permissions on MongoDB databases.
 
-- Embedded document queries and permissions.
-- Cross-Collection relationships (executed within the database).
-- Logical Models to support schema customization (removing the MongoDB validation schema as a dependency) and bespoke
-  query execution.
+A [logical model](/schema/mongodb/logical-models.mdx) or database [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) is required for generating your GraphQL schema.
 
 :::
 
@@ -65,14 +64,14 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 
 When you use these to launch the services, you'll see four containers running. The first two are Hasura GraphQL Engine
 and a Postgres Database for storing Hasura's metadata. The third container is the MongoDB GraphQL Connector agent. The
-forth container is a copy of [MongoDB Community Edition](https://hub.docker.com/_/mongo).
+fourth container is a copy of [MongoDB Community Edition](https://hub.docker.com/_/mongo).
 
 :::
 
 ### Step 2: Set the Hasura Enterprise Edition license key and the admin secret
 
-Edit the downloaded `docker-compose.yaml` and set the license key and admin secret. If you've been provided a license
-key by the Hasura team, you can enter it according to the directions below.
+If you've been provided a license key by the Hasura team, you can edit the downloaded `docker-compose.yaml` to set
+the license key and admin secret.
 
 ```yaml {5-6}
 ---
@@ -119,7 +118,7 @@ This guide assumes you don't have a MongoDB instance already set up. If you do, 
 
 :::
 
-Open MongoDB Compass and create a new connection using this connection string:
+Open [MongoDB Compass](https://www.mongodb.com/products/compass) and create a new connection using this connection string:
 
 ```
 mongodb://mongouser:mongopassword@localhost:27017/?authMechanism=DEFAULT
@@ -135,52 +134,8 @@ use demo;
 Via MongoShell, create a new `users` collection:
 
 ```javascript
-db.createCollection('users', {
-  validator: {
-    $jsonSchema: {
-      bsonType: 'object',
-      required: ['name', 'age'],
-      properties: {
-        name: {
-          bsonType: 'string',
-        },
-        age: {
-          bsonType: 'int',
-          minimum: 18,
-        },
-        email: {
-          bsonType: 'string',
-          pattern: '^.+@.+$',
-        },
-        user_meta: {
-          bsonType: 'object',
-          properties: {
-            user_role: {
-              bsonType: 'string',
-            },
-            email_verified: {
-              bsonType: 'bool',
-            },
-          },
-        },
-      },
-    },
-  },
-});
+db.createCollection('users');
 ```
-
-:::info Why do I need a validation schema in my Collection?
-
-Currently, Hasura uses the validation schema to build your GraphQL schema.
-
-Future versions of the Hasura MongoDB connector will allow on-the-fly editing of the GraphQL schema, will continue to
-work with the MongoDB validation schema, but will not have it as a dependency.
-
-Read more about the
-[MongoDB validation schema](https://www.mongodb.com/docs/manual/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
-and how to set it up for your database.
-
-:::
 
 If you don't see your changes, you can refresh your databases on the left-hand sidebar. Once applied, you can view the
 `users` Collection in MongoDB Compass:
@@ -264,29 +219,20 @@ top navigation. You can read more details [here](/enterprise/try-hasura-enterpri
 
 ### Step 7: Connect to MongoDB
 
-Visit `Data` > `Manage` to connect your MongoDB database. **If you've connected using the Docker guide above, your
-MongoDB data connector should be pre-connected to your Hasura instance.** Select the `Connect Database` button and
-follow head to [Step 8](#step-8-tracking-collections).
+Visit `Data` > `Manage` to connect your MongoDB database. 
+If you've connected using the Docker guide above, your MongoDB data connector should be pre-connected to your Hasura
+instance.
 
-You can check this by selecting the `Data Connector Agents` dropdown from the Data Manager:
+Then click, `Connect Database`.
 
-If it is not connected and you're using the `docker-compose.yml` file above, you can use the following details to
-connect to your agent as in the screenshot below:
-
-- Agent Name: `mongodb`
-- URL: `http://mongo-data-connector:3000`
-
-Then click, `Connect`:
-
-<Thumbnail src="/img/databases/mongodb/data-connector.png" alt="Connecting to MongoDB - Connector" width="1000px" />
-
-Connect your database using the following details:
+If you're using the Docker guide you can also connect your database using the following details:
 
 - Database Name: `mongodb`
 - Connection: `mongodb://mongouser:mongopassword@mongodb:27017`
 - db: `demo`
 
-<Thumbnail src="/img/databases/mongodb/connecting.gif" alt="Connecting to MongoDB - Connections" width="1000px" />
+<Thumbnail src="/img/databases/mongodb/connection-1-mongodb-select.png" alt="Connecting to MongoDB - Selecting MongoDB" width="1000px" />
+<Thumbnail src="/img/databases/mongodb/connection-2-mongodb-connect-database.png" alt="Connecting to MongoDB - Connecting your database" width="1000px" />
 
 If you're using a MongoDB instance hosted on MongoDB Atlas or elsewhere, simply add the connection details for your
 instance and click `Connect Database`.
@@ -297,7 +243,24 @@ Once your database has been connected, select the database name from the left-ha
 
 You should see your `users` Collection listed here. Select it, and select `Track Selected`.
 
-<Thumbnail src="/img/databases/mongodb/track-table.png" alt="Connecting to MongoDB - Track Tables." width="1000px" />
+:::info How do we generate your Collection's schema?
+
+Since MongoDB is a NoSQL database, Documents can be variable within each of the Collections.
+Hasura supports and recommends defining a [logical model](/schema/mongodb/logical-models.mdx) for each Collection which will define the Document schema.
+
+We also support optionally generating a schema automatically from your database's [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) if one is available.
+
+:::
+
+<Thumbnail src="/img/databases/mongodb/track-1-select.png" alt="Tracking a Collection - Select Collection" width="1000px" />
+
+You will now see a modal with a few options for setting up your Collection's schema.
+
+- **Infer Schema from Document** allows you to take a single Document from your Collection and infer the  
+- **Use Existing Logical Model** allows you to select a previously created [logical model](/schema/mongodb/logical-models.mdx).
+- **Use Database Schema** allows you to use your database's [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) if one is present in your database (a GraphQL schema will be automatically generated for you).
+
+<Thumbnail src="/img/databases/mongodb/track-2-sample.png" alt="Tracking a Collection - Sample Documents" width="1000px" />
 
 Your `users` Collection is now added to your GraphQL API! 🎉
 
@@ -358,7 +321,7 @@ query userFiltered {
 Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
 Metadata in JSON/YAML directly.
 
-If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our discord!
+If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our Discord!
 
-- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
-- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
+- [Hasura Newsletter](https://hasura.io/newsletter/)
+- [Hasura Discord](https://discord.com/invite/hasura)

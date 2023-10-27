@@ -15,12 +15,16 @@ module Harness.GraphqlEngine
     postMetadataWithStatus,
     postMetadataWithStatusAndHeaders,
     postExplain,
+    postExplainWithStatus,
     exportMetadata,
     reloadMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
+    postGraphqlWithReqHeaders,
+    postMetadataWithStatusAndReqHeaders,
     postGraphqlInternal,
+    postMetadataInternal,
     postGraphqlWithVariables,
     postGraphqlWithPair,
     postGraphqlWithHeaders,
@@ -218,14 +222,24 @@ postGraphqlYamlWithHeaders testEnvironment headers =
   withFrozenCallStack $ postGraphqlViaHttpOrWebSocketWithHeadersStatus 200 testEnvironment headers
 
 postGraphql :: (Has PostGraphql testEnvironment) => testEnvironment -> Value -> IO Value
-postGraphql = getPostGraphql . getter
+postGraphql testEnv = (getPostGraphql $ getter testEnv) []
+
+postGraphqlWithReqHeaders :: (Has PostGraphql testEnvironment) => testEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postGraphqlWithReqHeaders = getPostGraphql . getter
+
+postMetadataWithStatusAndReqHeaders :: (Has PostMetadata testEnvironment) => testEnvironment -> Int -> Http.RequestHeaders -> Value -> IO Value
+postMetadataWithStatusAndReqHeaders = getPostMetadata . getter
 
 -- | Same as 'postGraphqlYaml', but adds the @{query:..}@ wrapper.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-postGraphqlInternal :: (HasCallStack) => TestEnvironment -> Value -> IO Value
-postGraphqlInternal testEnvironment value =
-  withFrozenCallStack $ postGraphqlYaml testEnvironment (object ["query" .= value])
+postGraphqlInternal :: (HasCallStack) => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postGraphqlInternal testEnvironment reqHeaders value =
+  withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment reqHeaders (object ["query" .= value])
+
+postMetadataInternal :: (HasCallStack) => TestEnvironment -> Int -> Http.RequestHeaders -> Value -> IO Value
+postMetadataInternal testEnvironment status reqHeaders value =
+  withFrozenCallStack $ postMetadataWithStatusAndHeaders status testEnvironment reqHeaders value
 
 -- | Same as 'postGraphql', but accepts variables to the GraphQL query as well.
 postGraphqlWithVariables :: (HasCallStack) => TestEnvironment -> Value -> Value -> IO Value
@@ -255,9 +269,14 @@ postGraphqlWithHeaders testEnvironment headers value =
 
 -- | post to /v1/graphql/explain endpoint
 postExplain :: (HasCallStack) => TestEnvironment -> Value -> IO Value
-postExplain testEnvironment value =
+postExplain = postExplainWithStatus 200
+
+-- | post to /v1/graphql/explain endpoint and expect a specific status
+postExplainWithStatus :: (HasCallStack) => Int -> TestEnvironment -> Value -> IO Value
+postExplainWithStatus status testEnvironment value =
   withFrozenCallStack
-    $ postWithHeaders
+    $ postWithHeadersStatus
+      status
       testEnvironment
       "/v1/graphql/explain"
       mempty

@@ -31,6 +31,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
 import Hasura.Session
+import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
 
 data SchemaSyncEventProcessResult = SchemaSyncEventProcessResult
@@ -146,7 +147,7 @@ class (Monad m) => MonadMetadataStorage m where
     [HTTP.Header] ->
     Value ->
     m (Either QErr ActionId)
-  fetchUndeliveredActionEvents :: m (Either QErr [ActionLogItem])
+  fetchUndeliveredActionEvents :: Int -> m (Either QErr [ActionLogItem])
   setActionStatus :: ActionId -> AsyncActionStatus -> m (Either QErr ())
   fetchActionResponse :: ActionId -> m (Either QErr ActionLogResponse)
   clearActionData :: ActionName -> m (Either QErr ())
@@ -182,7 +183,7 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
   insertAction a b c d = lift $ insertAction a b c d
-  fetchUndeliveredActionEvents = lift fetchUndeliveredActionEvents
+  fetchUndeliveredActionEvents a = lift $ fetchUndeliveredActionEvents a
   setActionStatus a b = lift $ setActionStatus a b
   fetchActionResponse = lift . fetchActionResponse
   clearActionData = lift . clearActionData
@@ -197,6 +198,8 @@ deriving via (TransT (ExceptT e) m) instance (MonadMetadataStorage m) => MonadMe
 deriving via (TransT MetadataT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m)
 
 deriving via (TransT ManagedT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (ManagedT m)
+
+deriving via (TransT TraceT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (TraceT m)
 
 -- | Record a one-off event
 createOneOffScheduledEvent :: (MonadMetadataStorage m) => OneOffEvent -> m (Either QErr EventId)

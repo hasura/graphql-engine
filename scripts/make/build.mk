@@ -53,8 +53,3 @@ build-multitenant-integration-tests: $(GENERATED_CABAL_FILES)
 ## build-pro-api-tests: build pro api-tests
 build-pro-api-tests:
 	cabal build api-tests-pro
-
-.PHONY: build-postgres-agent
-## build-postgres-agent: build postgres data connector agent
-build-postgres-agent:
-	cabal build postgres-agent

@@ -124,7 +124,10 @@ export const InputField = <T extends z.infer<Schema>>({
 
   const maybeError = get(errors, name) as FieldError | undefined;
 
-  const { onChange, ...regReturn } = register(name);
+  const { onChange, ...regReturn } = register(
+    name,
+    type === 'number' ? { valueAsNumber: true } : {}
+  );
 
   const value = useWatch<Record<string, string>>({ name });
 

@@ -13,6 +13,7 @@ import Skeleton from 'react-loading-skeleton';
 import { useTrackStoredProcedure } from '../../hooks/useTrackStoredProcedure';
 import { StoredProcedureArgument } from '../../../hasura-metadata-types';
 import {
+  Routes,
   STORED_PROCEDURE_TRACK_ERROR,
   STORED_PROCEDURE_TRACK_SUCCESS,
 } from '../constants';
@@ -31,6 +32,7 @@ import {
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { useState } from 'react';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { BiRefresh } from 'react-icons/bi';
 
 export const StoredProcedureWidget = () => {
   const {
@@ -72,6 +74,7 @@ export const StoredProcedureWidget = () => {
     data: storedProcedureOptions = [],
     isLoading: isIntrospectionLoading,
     error: introspectionError,
+    refetch,
   } = useStoredProcedures({
     dataSourceName,
     select: data => {
@@ -97,10 +100,6 @@ export const StoredProcedureWidget = () => {
     error: typeIntrospectionError,
   } = useSupportedDataTypes({
     dataSourceName,
-    select: values => {
-      if (values === Feature.NotImplemented) return [];
-      return Object.values(values).flat();
-    },
     options: {
       enabled: !!dataSourceName,
     },
@@ -144,7 +143,7 @@ export const StoredProcedureWidget = () => {
           type: 'success',
           title: STORED_PROCEDURE_TRACK_SUCCESS,
         });
-        pushRoute('/data/native-queries/stored-procedures');
+        pushRoute(Routes.StoredProcedures);
       },
       onError: err => {
         hasuraToast({
@@ -168,12 +167,33 @@ export const StoredProcedureWidget = () => {
       {isIntrospectionLoading ? (
         <Skeleton count={4} height={25} className="mb-2" />
       ) : (
-        <Select
-          name="stored_procedure"
-          label="Select a stored procedure"
-          placeholder="Select a stored procedure"
-          options={storedProcedureOptions}
-        />
+        <>
+          <div className="flex items-center gap-2">
+            <Select
+              name="stored_procedure"
+              label="Select a stored procedure"
+              placeholder="Stored Procedure"
+              options={storedProcedureOptions}
+              disabled={!storedProcedureOptions.length && dataSourceName}
+            />
+            <div className="mt-3">
+              <Button
+                icon={<BiRefresh />}
+                onClick={() => refetch()}
+                disabled={!dataSourceName}
+              />
+            </div>
+          </div>
+
+          {!storedProcedureOptions.length && dataSourceName ? (
+            <IndicatorCard headline="No Stored Procedures Found" status="info">
+              There are no stored prodecures found for the selected data source
+              <code className="bg-slate-100 rounded text-red-600 ml-1.5">
+                {dataSourceName}
+              </code>
+            </IndicatorCard>
+          ) : null}
+        </>
       )}
 
       <Collapsible
@@ -206,16 +226,42 @@ export const StoredProcedureWidget = () => {
         label="Return Type"
         placeholder="Select a return type"
         options={logicalModelOptions}
+        disabled={!logicalModelOptions.length && dataSourceName}
       />
-      <div className="flex justify-end">
-        <Button
-          onClick={() => {
-            setIsLogicalModelWidgetOpen(true);
-          }}
-        >
-          Create Logical Model
-        </Button>
-      </div>
+
+      {!logicalModelOptions.length && dataSourceName ? (
+        <IndicatorCard headline="No Logical Models Found" status="info">
+          <div>
+            Looks like you do not have any Logical Models associated with
+            <code className="bg-slate-100 rounded text-red-600 ml-1.5">
+              {dataSourceName}
+            </code>
+            . Tracking Stored Procedure in Hasura requires a Logical Model to be
+            used as the return type. You can create one on the fly.
+          </div>
+
+          <div className="mt-sm">
+            <Button
+              onClick={() => {
+                setIsLogicalModelWidgetOpen(true);
+              }}
+            >
+              Create Logical Model
+            </Button>
+          </div>
+        </IndicatorCard>
+      ) : (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => {
+              setIsLogicalModelWidgetOpen(true);
+            }}
+          >
+            Create Logical Model
+          </Button>
+        </div>
+      )}
+
       <hr className="my-md" />
 
       {isLogicalModelWidgetOpen ? (

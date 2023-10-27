@@ -70,7 +70,7 @@ explainQueryField ::
   m EncJSON
 explainQueryField agentLicenseKey userInfo reqHeaders operationName fieldName rootField = do
   case rootField of
-    RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
+    RFRemote _ _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
     RFMulti _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
@@ -130,15 +130,15 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      (validSubscription, _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
+      ((validSubscription, _), _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
           actionLogResponseMap <- fst <$> E.fetchActionLogResponses actionIds
-          (_, E.SubscriptionQueryPlan exists) <- liftEitherM $ liftIO $ runExceptT $ liveQueryBuilder actionLogResponseMap
+          (_, E.SubscriptionQueryPlan exists) <- liftEitherM $ liftIO $ runExceptT $ fst <$> liveQueryBuilder actionLogResponseMap
           AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedSubscriptionQueryPlan execPlan) ->
             encJFromJValue <$> mkSubscriptionExplain execPlan
-        E.SEOnSourceDB (E.SSStreaming _ (_, E.SubscriptionQueryPlan exists)) -> do
+        E.SEOnSourceDB (E.SSStreaming _ ((_, E.SubscriptionQueryPlan exists), _modelInfo)) -> do
           AB.dispatchAnyBackend @BackendExecute exists \(E.MultiplexedSubscriptionQueryPlan execPlan) ->
             encJFromJValue <$> mkSubscriptionExplain execPlan
   where

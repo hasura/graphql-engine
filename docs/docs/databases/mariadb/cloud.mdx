@@ -15,7 +15,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # Getting Started with MariaDB in Hasura Cloud
 
-<ProductBadge free standard pro ee />
+<ProductBadge free pro ee />
 
 ## Introduction
 
@@ -84,6 +84,14 @@ For more information see
 [MariaDB Connection URL syntax](https://mariadb.com/kb/en/about-mariadb-connector-j/#using-the-driver).
 
 Click `Connect Database`.
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
 
 ### Step 3: Track tables and run GraphQL API queries
 

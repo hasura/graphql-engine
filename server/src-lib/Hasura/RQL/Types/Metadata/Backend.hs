@@ -31,6 +31,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Source.Table (SourceTableInfo)
 import Hasura.SQL.Types
+import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
 import Hasura.StoredProcedure.Metadata (StoredProcedureConfig, StoredProcedureMetadata)
@@ -106,7 +107,11 @@ class
 
   -- | Function that introspects a database for tables, columns, functions etc.
   resolveDatabaseMetadata ::
-    (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =>
+    ( MonadIO m,
+      MonadBaseControl IO m,
+      MonadResolveSource m,
+      FF.HasFeatureFlagChecker m
+    ) =>
     Logger Hasura ->
     SourceMetadata b ->
     SourceConfig b ->
@@ -236,11 +241,13 @@ class
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
+    SourceName ->
     SourceConnConfiguration b ->
+    SourceConfig b ->
     LogicalModelInfo b ->
     NativeQueryMetadata b ->
     m (InterpolatedQuery ArgumentName)
-  validateNativeQuery _ _ _ _ =
+  validateNativeQuery _ _ _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
   validateStoredProcedure ::

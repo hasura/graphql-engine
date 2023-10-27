@@ -6,7 +6,6 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((?~))
-import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as K
@@ -23,19 +22,26 @@ import Hasura.Backends.DataConnector.Plan.Common
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as QueryPlan
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 
 --------------------------------------------------------------------------------
 
 mkRemoteRelationshipPlan ::
   forall m r.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    MonadIO m,
+    Has SessionVariables r
+  ) =>
+  SourceName ->
   SourceConfig ->
   -- | List of join json objects, each of which contains IDs to be laterally-joined against
   -- as well as an argument ID that identifies the particular set of IDs (ie 'row' to join against).
@@ -51,12 +57,15 @@ mkRemoteRelationshipPlan ::
   -- | The field name the result of the join should be stored in the result object
   FieldName ->
   SourceRelationshipSelection 'DataConnector Void UnpreparedValue ->
-  m (Plan API.QueryRequest API.QueryResponse)
-mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir = do
+  m (Plan API.QueryRequest API.QueryResponse, [ModelInfoPart])
+mkRemoteRelationshipPlan sourceName _sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir = do
   foreachRowFilter <- traverse (translateForeachRowFilter argumentIdFieldName joinIdsSchema) joinIds
   argumentIds <- extractArgumentIds argumentIdFieldName joinIds
   queryRequest <- translateSourceRelationshipSelection foreachRowFilter ir
-  pure $ Plan queryRequest (reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIds resultFieldName ir)
+  modelNames <- getRSModelInfoGen sourceName ModelSourceTypeDataConnector ir
+  let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
+
+  pure $ (Plan queryRequest (reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIds resultFieldName ir), modelInfo)
   where
     translateSourceRelationshipSelection ::
       NonEmpty (HashMap API.ColumnName API.ScalarValue) ->
@@ -66,10 +75,10 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
       SourceRelationshipObject objectSelect ->
         translateAnnObjectSelectToQueryRequest foreachRowFilter objectSelect
       SourceRelationshipArray simpleSelect ->
-        QueryPlan.translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect
+        QueryPlan.translateAnnSimpleSelectToQueryRequest simpleSelect
           <&> (API.qrForeach ?~ foreachRowFilter)
       SourceRelationshipArrayAggregate aggregateSelect ->
-        QueryPlan.translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect
+        QueryPlan.translateAnnAggregateSelectToQueryRequest aggregateSelect
           <&> (API.qrForeach ?~ foreachRowFilter)
 
     translateAnnObjectSelectToQueryRequest ::
@@ -80,17 +89,19 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
       let tableName = case _aosTarget of
             FromTable table -> Witch.from table
             other -> error $ "translateAnnObjectSelectToQueryRequest: " <> show other
-      ((fields, whereClause), (TableRelationships tableRelationships)) <- CPS.runWriterT $ do
-        fields <- QueryPlan.translateAnnFields sessionVariables noPrefix (TableNameKey tableName) _aosFields
-        whereClause <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) _aosTargetFilter
-        pure (fields, whereClause)
+      ((fields, whereClause), (TableRelationships tableRelationships, redactionExpressionState, interpolatedQueries)) <-
+        flip runStateT (mempty, RedactionExpressionState mempty, mempty) do
+          fields <- QueryPlan.translateAnnFields noPrefix (API.TNTable tableName) _aosFields
+          whereClause <- translateBoolExpToExpression (API.TNTable tableName) _aosTargetFilter
+          pure (fields, whereClause)
       let apiTableRelationships = Set.fromList $ tableRelationshipsToList tableRelationships
       pure
-        $ API.QRTable
-        $ API.TableRequest
-          { _trTable = tableName,
-            _trRelationships = apiTableRelationships,
-            _trQuery =
+        $ API.QueryRequest
+          { _qrTarget = API.TTable (API.TargetTable tableName),
+            _qrRelationships = apiTableRelationships,
+            _qrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
+            _qrInterpolatedQueries = interpolatedQueries,
+            _qrQuery =
               API.Query
                 { _qFields = Just $ mapFieldNameHashMap fields,
                   _qAggregates = Nothing,
@@ -100,15 +111,15 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
                   _qWhere = whereClause,
                   _qOrderBy = Nothing
                 },
-            _trForeach = Just foreachRowFilter
+            _qrForeach = Just foreachRowFilter
           }
 
-tableRelationshipsToList :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship) -> [API.Relationships]
-tableRelationshipsToList m = map (either (API.RFunction . uncurry API.FunctionRelationships) (API.RTable . uncurry API.TableRelationships) . tableRelationshipsKeyToEither) (HashMap.toList m)
-
-tableRelationshipsKeyToEither :: (TableRelationshipsKey, c) -> Either (API.FunctionName, c) (API.TableName, c)
-tableRelationshipsKeyToEither (FunctionNameKey f, x) = Left (f, x)
-tableRelationshipsKeyToEither (TableNameKey t, x) = Right (t, x)
+tableRelationshipsToList :: HashMap API.TargetName (HashMap API.RelationshipName API.Relationship) -> [API.Relationships]
+tableRelationshipsToList m = map relationshipDispatch (HashMap.toList m)
+  where
+    relationshipDispatch (API.TNFunction f, x) = API.RFunction (API.FunctionRelationships f x)
+    relationshipDispatch (API.TNTable t, x) = API.RTable (API.TableRelationships t x)
+    relationshipDispatch (API.TNInterpolatedQuery q, x) = API.RInterpolated (API.InterpolatedRelationships q x)
 
 translateForeachRowFilter :: (MonadError QErr m) => FieldName -> HashMap FieldName (ColumnName, ScalarType) -> J.Object -> m (HashMap API.ColumnName API.ScalarValue)
 translateForeachRowFilter argumentIdFieldName joinIdsSchema joinIds =

@@ -10,6 +10,7 @@ import { useDriverCapabilities } from '../../Data/hooks/useDriverCapabilities';
 import { Capabilities } from '@hasura/dc-api-types';
 import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
 import { useIsTableView } from '../../Data/hooks/useIsTableView';
+import { isPermissionCheckboxDisabled } from './utils/isPermissionCheckboxDisabled';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
 type QueryType = (typeof queryType)[number];
@@ -142,6 +143,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     isSelectable={bulkSelect.isSelectable}
                     isSelected={state.context.bulkSelections.includes(roleName)}
                     machine={machine}
+                    disabled={isPermissionCheckboxDisabled(permissionTypes)}
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {

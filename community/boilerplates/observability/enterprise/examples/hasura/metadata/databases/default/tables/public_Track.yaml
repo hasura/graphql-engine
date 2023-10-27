@@ -1,0 +1,28 @@
+table:
+  name: Track
+  schema: public
+object_relationships:
+  - name: Album
+    using:
+      foreign_key_constraint_on: AlbumId
+  - name: Genre
+    using:
+      foreign_key_constraint_on: GenreId
+  - name: MediaType
+    using:
+      foreign_key_constraint_on: MediaTypeId
+array_relationships:
+  - name: InvoiceLines
+    using:
+      foreign_key_constraint_on:
+        column: TrackId
+        table:
+          name: InvoiceLine
+          schema: public
+  - name: PlaylistTracks
+    using:
+      foreign_key_constraint_on:
+        column: TrackId
+        table:
+          name: PlaylistTrack
+          schema: public

@@ -84,20 +84,41 @@ handleTypename :: (Name -> a) -> ParsedSelection a -> a
 handleTypename _ (SelectField value) = value
 handleTypename f (SelectTypename name) = f name
 
+data NullableInput a
+  = NullableInputValue a
+  | NullableInputNull G.GType
+  | NullableInputAbsent
+  deriving (Show, Functor)
+
+nullableToMaybe :: NullableInput a -> Maybe a
+nullableToMaybe = fromNullableInput Nothing . (Just <$>)
+
+fromNullableInput :: a -> NullableInput a -> a
+fromNullableInput _ (NullableInputValue x) = x
+fromNullableInput d _ = d
+
 nullable :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m (Maybe a)
-nullable parser =
+nullable = fmap nullableToMaybe . nullableExact
+
+-- | Distinguishes between inputs with an explicit null value, and inputs whose
+-- variable value is absent without default.  See GraphQL spec June 2018 section
+-- 2.9.5.
+nullableExact :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m (NullableInput a)
+nullableExact parser =
   gcastWith
     (inputParserInput @k)
     Parser
       { pType = schemaType,
         pParser =
-          peelVariable (toGraphQLType schemaType) >=> \case
-            JSONValue J.Null -> pure Nothing
-            GraphQLValue VNull -> pure Nothing
-            value -> Just <$> pParser parser value
+          peelVariableWith False gType >=> \case
+            Just (JSONValue J.Null) -> pure $ NullableInputNull gType
+            Just (GraphQLValue VNull) -> pure $ NullableInputNull gType
+            Just value -> NullableInputValue <$> pParser parser value
+            Nothing -> pure NullableInputAbsent
       }
   where
     schemaType = nullableType $ pType parser
+    gType = toGraphQLType schemaType
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m origin a. FieldParser origin m a -> FieldParser origin m a

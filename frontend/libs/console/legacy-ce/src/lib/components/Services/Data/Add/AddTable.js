@@ -23,6 +23,7 @@ import {
   removeColumn,
   setColName,
   setColType,
+  setColArray,
   setColNullable,
   setColDefault,
   setForeignKeys,
@@ -53,6 +54,7 @@ import {
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
+  columnsDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
@@ -79,6 +81,7 @@ class AddTable extends Component {
     this.onRemoveColumn = this.onRemoveColumn.bind(this);
     this.onColumnChange = this.onColumnNameChange.bind(this);
     this.onColTypeChange = this.onColTypeChange.bind(this);
+    this.onColArrayChange = this.onColArrayChange.bind(this);
     this.onColNullableChange = this.onColNullableChange.bind(this);
     this.onColUniqueChange = this.onColUniqueChange.bind(this);
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
@@ -162,6 +165,10 @@ class AddTable extends Component {
   onColNullableChange = (i, e) => {
     const { dispatch } = this.props;
     dispatch(setColNullable(e.target.checked, i));
+  };
+  onColArrayChange = (i, e) => {
+    const { dispatch } = this.props;
+    dispatch(setColArray(e.target.checked, i));
   };
 
   onColUniqueChange = (i, numUniqueKeys, isColumnUnique, _uindex) => {
@@ -535,6 +542,7 @@ class AddTable extends Component {
             <div className="w-full mb-lg">
               <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
                 Columns
+                <ToolTip message={columnsDescription} />
               </h4>
               <TableColumns
                 uniqueKeys={uniqueKeys}
@@ -545,6 +553,7 @@ class AddTable extends Component {
                 onRemoveColumn={this.onRemoveColumn}
                 onColumnChange={this.onColumnNameChange}
                 onColTypeChange={this.onColTypeChange}
+                onColArrayChange={this.onColArrayChange}
                 onColNullableChange={this.onColNullableChange}
                 onColUniqueChange={this.onColUniqueChange}
                 setColDefaultValue={this.setColDefaultValue}

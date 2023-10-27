@@ -23,7 +23,7 @@ export const queries = [
     payload: {
       type: 'run_sql',
       args: {
-        sql: "\n  SELECT \n   column_name, data_type, is_nullable\n  FROM \n    information_schema.columns \n  WHERE \n    table_schema = 'public' AND \n    table_name  = 'Stuff';",
+        sql: "\n  SELECT a.attname as column_name,\n       pg_catalog.format_type(a.atttypid, NULL) as data_type,\n       case\n        when a.attnotnull = 'f' then 'YES'\n        else 'NO'\n       end as is_nullable\nFROM pg_attribute a\n  JOIN pg_class t on a.attrelid = t.oid\n  JOIN pg_namespace s on t.relnamespace = s.oid\nWHERE a.attnum > 0 \n  AND NOT a.attisdropped\n  AND t.relname = 'Stuff'\n  AND s.nspname = 'public' \n",
         source: 'default',
       },
     },
@@ -54,7 +54,7 @@ export const queries = [
     payload: {
       type: 'run_sql',
       args: {
-        sql: "\n  SELECT \n   column_name, data_type, is_nullable\n  FROM \n    information_schema.columns \n  WHERE \n    table_schema = 'public' AND \n    table_name  = 'Stuff';",
+        sql: "\n  SELECT a.attname as column_name,\n       pg_catalog.format_type(a.atttypid, NULL) as data_type,\n       case\n        when a.attnotnull = 'f' then 'YES'\n        else 'NO'\n       end as is_nullable\nFROM pg_attribute a\n  JOIN pg_class t on a.attrelid = t.oid\n  JOIN pg_namespace s on t.relnamespace = s.oid\nWHERE a.attnum > 0 \n  AND NOT a.attisdropped\n  AND t.relname = 'Stuff'\n  AND s.nspname = 'public' \n",
         source: 'default',
       },
     },
@@ -85,7 +85,8 @@ export const queries = [
     payload: {
       type: 'run_sql',
       args: {
-        sql: "\n  SELECT \n   column_name, data_type, is_nullable\n  FROM \n    information_schema.columns \n  WHERE \n    table_schema = 'public' AND \n    table_name  = 'Stuff';",
+        // This one
+        sql: "\n  SELECT a.attname as column_name,\n       pg_catalog.format_type(a.atttypid, NULL) as data_type,\n       case\n        when a.attnotnull = 'f' then 'YES'\n        else 'NO'\n       end as is_nullable\nFROM pg_attribute a\n  JOIN pg_class t on a.attrelid = t.oid\n  JOIN pg_namespace s on t.relnamespace = s.oid\nWHERE a.attnum > 0 \n  AND NOT a.attisdropped\n  AND t.relname = 'Stuff'\n  AND s.nspname = 'public' \n",
         source: 'default',
       },
     },

@@ -13,7 +13,6 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
-    fromTableRowArgsDon'tAddBase,
     functionToIdentifier,
     withJsonBuildObj,
     withForceAggregation,
@@ -22,6 +21,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     customSQLToInnerCTEs,
     nativeQueryNameToAlias,
     toQuery,
+    selectToSelectWithM,
   )
 where
 
@@ -115,18 +115,6 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
         (S.mkQIdenExp baseTableIdentifier . Identifier)
     baseTableIdentifier = mkBaseTableIdentifier prefix
 
--- Like `fromTableRowArgs`, but we don't add `mkBaseTableIdentifier`
-fromTableRowArgsDon'tAddBase ::
-  TableIdentifier -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FunctionArgs
-fromTableRowArgsDon'tAddBase prefix = toFunctionArgs . fmap toSQLExp
-  where
-    toFunctionArgs (FunctionArgsExp positional named) =
-      S.FunctionArgs positional named
-    toSQLExp =
-      onArgumentExp
-        (S.SERowIdentifier (tableIdentifierToIdentifier prefix))
-        (S.mkQIdenExp prefix . Identifier)
-
 -- | Given a @NativeQueryName@, what should we call the CTE generated for it?
 nativeQueryNameToAlias :: NativeQueryName -> Int -> S.TableAlias
 nativeQueryNameToAlias nqName freshId = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName) <> "_" <> tshow freshId)
@@ -171,3 +159,8 @@ customSQLToInnerCTEs =
 
 toQuery :: S.SelectWithG S.TopLevelCTE -> Query
 toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE
+
+selectToSelectWithM :: (MonadIO m) => WriterT CustomSQLCTEs m S.Select -> m S.SelectWith
+selectToSelectWithM action = do
+  (selectSQL, customSQLCTEs) <- runWriterT action
+  pure $ S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) selectSQL

@@ -19,15 +19,21 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # Manage Development Environments
 
-<ProductBadge free standard pro ee />
+<ProductBadge free pro ee />
 
 ## Introduction
 
-This guide will show how to configure your Hasura Project for easy switching between development environments.
+This guide is designed to teach you how to set up and modify Hasura in a local Docker environment, and then transfer
+those changes to your Cloud project.
 
 ## Moving from Hasura Cloud to local development
 
 ### Step 1: Setup local development of Hasura with Docker
+
+In this step, you'll establish a self-hosted version of Hasura. **Please note: if you intend to utilize Hasura EE for
+local development, please secure a license by either registering for a
+[30-day free trial](/enterprise/try-hasura-enterprise-edition.mdx) or filing a ticket with
+[Hasura support](https://hasura.io/help/).**
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL Engine and
 Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as you'll be
@@ -105,9 +111,9 @@ Also add any other ENV vars that you might have set on your local project.
 ### Setting up a Git repo for your Hasura Project
 
 In order to easily apply your local changes to your new Cloud project, we'll use the Hasura
-[GitHub deployment](/cloud-ci-cd/github-integration.mdx) feature. But before we do that, we need to setup
-Metadata & Migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura Metadata &
-Migrations refer the guide [here](/migrations-metadata-seeds/overview.mdx)
+[GitHub deployment](/cloud-ci-cd/github-integration.mdx) feature. But before we do that, we need to setup Metadata &
+Migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura Metadata & Migrations
+refer the guide [here](/migrations-metadata-seeds/overview.mdx)
 
 ### Step 1: Install Hasura CLI
 

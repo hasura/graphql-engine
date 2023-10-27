@@ -1,4 +1,7 @@
-export const metadata = {
+import { Metadata } from '../../../../hasura-metadata-types';
+
+// make sure we are using the Metadata type and we won't create phantom errors in the code because our objects don't adhere to the underlying types!
+export const metadata: Metadata = {
   resource_version: 5,
   metadata: {
     version: 3,
@@ -19,8 +22,7 @@ export const metadata = {
             fields: [
               {
                 name: 'a',
-                nullable: false,
-                type: 'text',
+                type: { scalar: 'text', nullable: true },
               },
             ],
             name: 'a',
@@ -86,28 +88,24 @@ export const metadata = {
             fields: [
               {
                 name: 'TABLE_QUALIFIER',
-                nullable: false,
-                type: 'sysname',
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_OWNER',
-                nullable: false,
-                type: 'sysname',
+
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_NAME',
-                nullable: false,
-                type: 'sysname',
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_TYPE',
-                nullable: false,
-                type: 'varchar',
+                type: { scalar: 'varchar', nullable: false },
               },
               {
                 name: 'REMARKS',
-                nullable: false,
-                type: 'varchar',
+                type: { scalar: 'varchar', nullable: false },
               },
             ],
             name: 'logical_model_1',
@@ -116,28 +114,23 @@ export const metadata = {
             fields: [
               {
                 name: 'TABLE_QUALIFIER',
-                nullable: false,
-                type: 'sysname',
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_OWNER',
-                nullable: false,
-                type: 'sysname',
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_NAME',
-                nullable: false,
-                type: 'sysname',
+                type: { scalar: 'sysname', nullable: false },
               },
               {
                 name: 'TABLE_TYPE',
-                nullable: false,
-                type: 'varchar',
+                type: { scalar: 'varchar', nullable: false },
               },
               {
                 name: 'REMARKS',
-                nullable: false,
-                type: 'varchar',
+                type: { scalar: 'varchar', nullable: false },
               },
             ],
             name: 'logical_model_2',
@@ -149,9 +142,132 @@ export const metadata = {
               'DRIVER={ODBC Driver 17 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123',
             pool_settings: {
               idle_timeout: 5,
-              max_connections: null,
               total_max_connections: null,
             },
+          },
+        },
+      },
+      {
+        name: 'mssql',
+        kind: 'mssql',
+        tables: [
+          {
+            table: {
+              name: 'Album',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Artist',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Customer',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Employee',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Genre',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Invoice',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'InvoiceLine',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'MediaType',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'Playlist',
+              schema: 'dbo',
+            },
+          },
+          {
+            table: {
+              name: 'PlaylistTrack',
+              schema: 'dbo',
+            },
+          },
+        ],
+        logical_models: [
+          {
+            fields: [
+              {
+                name: 'TABLE_QUALIFIER',
+                type: {
+                  nullable: true,
+                  scalar: 'sysname',
+                },
+              },
+              {
+                name: 'TABLE_OWNER',
+                type: {
+                  nullable: true,
+                  scalar: 'sysname',
+                },
+              },
+              {
+                name: 'TABLE_NAME',
+                type: {
+                  nullable: true,
+                  scalar: 'sysname',
+                },
+              },
+              {
+                name: 'TABLE_TYPE',
+                type: {
+                  nullable: true,
+                  scalar: 'varchar',
+                },
+              },
+              {
+                name: 'REMARKS',
+                type: {
+                  nullable: true,
+                  scalar: 'varchar',
+                },
+              },
+            ],
+            name: 'tables',
+          },
+        ],
+        configuration: {
+          connection_info: {
+            connection_string:
+              'Driver={ODBC Driver 18 for SQL Server};Server=mssql,1433;Database=Chinook;UID=sa;PWD=Password!;Encrypt=yes;TrustServerCertificate=yes;ConnectionTimeout=30;',
+            pool_settings: {
+              idle_timeout: 5,
+              total_max_connections: null,
+            },
+          },
+        },
+        customization: {
+          naming_convention: 'hasura-default',
+          type_names: {
+            prefix: 'mssql_',
           },
         },
       },

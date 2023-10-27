@@ -24,7 +24,7 @@ export const ApolloFederationSupport = ({
   }
 
   const isSupportForApolloFederationEnabled =
-    configData?.experimental_features.includes('apollo_federation');
+    configData?.is_apollo_federation_enabled;
   return (
     <div className="mb-lg">
       <div className="flex items-center mb-formlabel">
@@ -37,10 +37,16 @@ export const ApolloFederationSupport = ({
       {!isSupportForApolloFederationEnabled ? (
         <div className="font-thin">
           Apollo federation is not enabled. To enable apollo federation support,
-          start the Hasura server with environment variable
-          <code>
-            HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: &quot;apollo_federation&quot;
-          </code>
+          set the{' '}
+          <a href="https://hasura.io/docs/latest/hasura-cloud/projects/env-vars/">
+            project env variable
+          </a>{' '}
+          or start the Hasura server with{' '}
+          <a href="https://hasura.io/docs/latest/deployment/graphql-engine-flags/index/#using-environment-variables">
+            {' '}
+            environment variable{' '}
+          </a>
+          <code>HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION: &quot;true&quot;</code>
         </div>
       ) : (
         <div data-toggle="tooltip">

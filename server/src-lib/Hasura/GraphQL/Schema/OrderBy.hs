@@ -25,11 +25,12 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
-import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiFields, _lmiName))
-import Hasura.LogicalModel.Common (columnsFromFields, toFieldInfo)
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel, logicalModelFieldsToFieldInfo)
 import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
@@ -76,18 +77,18 @@ logicalModelOrderByExp ::
   ) =>
   LogicalModelInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
-logicalModelOrderByExp logicalModel =
+logicalModelOrderByExp logicalModel = do
+  roleName <- retrieve scRole
   let name = getLogicalModelName (_lmiName logicalModel)
-   in case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
-        Nothing -> throw500 $ "Error creating fields for logical model " <> tshow name
-        Just tableFields -> do
-          let description =
-                G.Description
-                  $ "Ordering options when selecting data from "
-                  <> name
-                  <<> "."
-              memoizeKey = name
-          orderByExpInternal (C.fromCustomName name) description tableFields memoizeKey
+      selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
+      fieldInfos = HashMap.elems $ logicalModelFieldsToFieldInfo $ _lmiFields logicalModel
+      description =
+        G.Description
+          $ "Ordering options when selecting data from "
+          <> name
+          <<> "."
+      memoizeKey = name
+  orderByExpInternal (C.fromCustomName name) description selectPermissions fieldInfos memoizeKey
 
 -- | Corresponds to an object type for an order by.
 --
@@ -104,10 +105,11 @@ orderByExpInternal ::
   (Ord name, Typeable name, MonadBuildSchema b r m n) =>
   C.GQLNameIdentifier ->
   G.Description ->
+  Maybe (SelPermInfo b) ->
   [FieldInfo b] ->
   name ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
-orderByExpInternal gqlName description tableFields memoizeKey = do
+orderByExpInternal gqlName description selectPermissions tableFields memoizeKey = do
   sourceInfo <- asks getter
   P.memoizeOn 'orderByExpInternal (_siName sourceInfo, memoizeKey) do
     let customization = _siCustomization sourceInfo
@@ -123,22 +125,29 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
       FieldInfo b ->
       SchemaT r m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])))
     mkField sourceInfo tCase fieldInfo = runMaybeT $ do
+      selectPermissions' <- hoistMaybe selectPermissions
       roleName <- retrieve scRole
       case fieldInfo of
         FIColumn (SCIScalarColumn columnInfo) -> do
           let !fieldName = ciName columnInfo
-          pure
-            $ P.fieldOptional
-              fieldName
-              Nothing
-              (orderByOperator @b tCase sourceInfo)
-            <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo))
-            . join
-        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
-        FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
+          let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
+          orderByOperator @b tCase sourceInfo
+            & P.fieldOptional fieldName Nothing
+            <&> (fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo redactionExp)) . join)
+            & pure
+        FIColumn (SCIObjectColumn nestedObjectInfo@NestedObjectInfo {..}) -> do
+          let !fieldName = _noiName
+          logicalModelInfo <-
+            HashMap.lookup _noiType (_siLogicalModels sourceInfo)
+              `onNothing` throw500 ("Logical model " <> _noiType <<> " not found in source " <>> (_siName sourceInfo))
+          nestedParser <- lift $ logicalModelOrderByExp @b @r @m @n logicalModelInfo
+          pure $ do
+            nestedOrderBy <- P.fieldOptional fieldName Nothing nestedParser
+            pure $ fmap (map $ fmap $ IR.AOCNestedObject nestedObjectInfo) nestedOrderBy
+        FIColumn (SCIArrayColumn _) -> empty
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
-            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetNativeQuery _ -> hoistMaybe Nothing -- we do not support ordering by a nested Native Query yet
             RelTargetTable remoteTableName -> do
               remoteTableInfo <- askTableInfo remoteTableName
               perms <- hoistMaybe $ tableSelectPermissions roleName remoteTableInfo
@@ -167,7 +176,8 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
           guard $ _cffInputArgs == mempty -- No input arguments other than table row and session argument
           case computedFieldReturnType @b _cfiReturnType of
             ReturnsScalar scalarType -> do
-              let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType
+              let redactionExp = fromMaybe NoRedaction $ getRedactionExprForComputedField selectPermissions' _cfiName
+              let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType redactionExp
               pure
                 $ P.fieldOptional
                   fieldName
@@ -211,15 +221,17 @@ tableOrderByExp ::
   TableInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 tableOrderByExp tableInfo = do
+  roleName <- retrieve scRole
   tableGQLName <- getTableIdentifierName tableInfo
   tableFields <- tableSelectFields tableInfo
+  let selectPermissions = tableSelectPermissions roleName tableInfo
   let description =
         G.Description
           $ "Ordering options when selecting data from "
           <> tableInfoName tableInfo
           <<> "."
       memoizeKey = tableInfoName tableInfo
-  orderByExpInternal tableGQLName description tableFields memoizeKey
+  orderByExpInternal tableGQLName description selectPermissions tableFields memoizeKey
 
 -- FIXME!
 -- those parsers are directly using Postgres' SQL representation of
@@ -230,7 +242,7 @@ orderByAggregation ::
   (MonadBuildSchema b r m n) =>
   SourceInfo b ->
   TableInfo b ->
-  SchemaT r m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
+  SchemaT r m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b (IR.UnpreparedValue b))])
 orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siName sourceInfo, tableName) do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
@@ -241,14 +253,14 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       tCase = _rscNamingConvention customization
       mkTypename = _rscTypeNames customization
   tableIdentifierName <- getTableIdentifierName @b tableInfo
-  allColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
-  let numColumns = stdAggOpColumns tCase $ onlyNumCols allColumns
-      compColumns = stdAggOpColumns tCase $ onlyComparableCols allColumns
+  allScalarColumns <- mapMaybe (\(column, redactionExp) -> column ^? _SCIScalarColumn <&> (,redactionExp)) <$> tableSelectColumns tableInfo
+  let numColumns = stdAggOpColumns tCase $ filter (isNumCol . fst) allScalarColumns
+      compColumns = stdAggOpColumns tCase $ filter (isComparableCol . fst) allScalarColumns
       numOperatorsAndColumns = HashMap.fromList $ (,numColumns) <$> numericAggOperators
       compOperatorsAndColumns = HashMap.fromList $ (,compColumns) <$> comparisonAggOperators
       customOperatorsAndColumns =
         HashMap.mapKeys (C.fromCustomName)
-          $ getCustomAggOpsColumns tCase allColumns
+          $ getCustomAggOpsColumns tCase allScalarColumns
           <$> getCustomAggregateOperators @b (_siConfiguration sourceInfo)
       allOperatorsAndColumns =
         HashMap.catMaybes
@@ -281,50 +293,53 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
 
     stdAggOpColumns ::
       NamingCase ->
-      [ColumnInfo b] ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b))])
+      [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     stdAggOpColumns tCase columns =
       columns
         -- ALl std aggregate functions return the same type as the column used with it
-        & fmap (\colInfo -> (colInfo, ciType colInfo))
+        & fmap (\(colInfo, redactionExp) -> (colInfo, ciType colInfo, redactionExp))
         & mkAgOpsFields tCase
 
     -- Build an InputFieldsParser only if the column list is non-empty
     mkAgOpsFields ::
       NamingCase ->
       -- Assoc list of column types with the type returned by the aggregate function when it is applied to that column
-      [(ColumnInfo b, ColumnType b)] ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b))])
+      [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b)] ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     mkAgOpsFields tCase =
       fmap (fmap (catMaybes . toList) . traverse (mkField tCase)) . nonEmpty
 
     getCustomAggOpsColumns ::
       NamingCase ->
       -- All columns
-      [ColumnInfo b] ->
+      [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] ->
       -- Map of type the aggregate function accepts to the type it returns
       HashMap (ScalarType b) (ScalarType b) ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b))])
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     getCustomAggOpsColumns tCase allColumns typeMap =
       allColumns
         -- Filter by columns with a scalar type supported by this aggregate function
         -- and retrieve the result type of the aggregate function
         & mapMaybe
-          ( \columnInfo ->
+          ( \(columnInfo, redactionExp) ->
               case ciType columnInfo of
                 ColumnEnumReference _ -> Nothing
                 ColumnScalar scalarType ->
-                  (\resultType -> (columnInfo, ColumnScalar resultType)) <$> HashMap.lookup scalarType typeMap
+                  (\resultType -> (columnInfo, ColumnScalar resultType, redactionExp)) <$> HashMap.lookup scalarType typeMap
           )
         & mkAgOpsFields tCase
 
-    mkField :: NamingCase -> (ColumnInfo b, ColumnType b) -> InputFieldsParser n (Maybe (ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b)))
-    mkField tCase (columnInfo, resultType) =
+    mkField ::
+      NamingCase ->
+      (ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b) ->
+      InputFieldsParser n (Maybe (ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b)))
+    mkField tCase (columnInfo, resultType, redactionExp) =
       P.fieldOptional
         (ciName columnInfo)
         (ciDescription columnInfo)
         (orderByOperator @b tCase sourceInfo)
-        <&> fmap (columnInfo,resultType,)
+        <&> fmap (columnInfo,resultType,redactionExp,)
         . join
 
     parseOperator ::
@@ -332,8 +347,8 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       C.GQLNameIdentifier ->
       C.GQLNameIdentifier ->
       NamingCase ->
-      InputFieldsParser n [(ColumnInfo b, ColumnType b, (BasicOrderType b, NullsOrderType b))] ->
-      InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
+      InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))] ->
+      InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b (IR.UnpreparedValue b))])
     parseOperator makeTypename operator tableGQLName tCase columns =
       let opText = G.unName $ applyFieldNameCaseIdentifier tCase operator
           opTypeName = applyTypeNameCaseIdentifier tCase $ mkTableAggregateOrderByOpTypeName tableGQLName operator
@@ -341,7 +356,7 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
           objectName = runMkTypename makeTypename opTypeName
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
        in P.fieldOptional opFieldName Nothing (P.object objectName objectDesc columns)
-            `mapField` map (\(col, resultType, info) -> mkOrderByItemG (IR.AAOOp opText resultType col) info)
+            `mapField` map (\(col, resultType, redactionExp, info) -> mkOrderByItemG (IR.AAOOp $ IR.AggregateOrderByColumn opText resultType col redactionExp) info)
 
 orderByOperatorsHasuraCase ::
   forall b n.

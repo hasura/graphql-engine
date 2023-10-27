@@ -20,6 +20,8 @@ export const DataTypeToSQLTypeMap: Record<
   float: [],
 };
 
+export const DataTypeScalars = Object.values(DataTypeToSQLTypeMap).flat();
+
 export const bigQueryCapabilities: Capabilities = {
   queries: {
     foreach: {},
@@ -28,4 +30,5 @@ export const bigQueryCapabilities: Capabilities = {
   data_schema: {
     supports_foreign_keys: false,
   },
+  interpolated_queries: {},
 };

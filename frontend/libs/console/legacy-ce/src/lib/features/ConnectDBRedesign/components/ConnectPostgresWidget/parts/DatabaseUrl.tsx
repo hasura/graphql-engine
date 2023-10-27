@@ -1,6 +1,12 @@
+import React from 'react';
 import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
+import {
+  WarningCard,
+  WarningCardMetadataDBNotDynamic,
+} from '../../Common/WarningCard';
+import globals from '../../../../../Globals';
 
 export const DatabaseUrl = ({
   name,
@@ -13,7 +19,14 @@ export const DatabaseUrl = ({
     { value: 'databaseUrl', label: 'Database URL' },
     { value: 'envVar', label: 'Environment variable' },
     { value: 'connectionParams', label: 'Connection Parameters' },
-  ].filter(option => !hideOptions.includes(option.value));
+    { value: 'dynamicFromFile', label: 'Dynamic URL' },
+  ]
+    .filter(
+      option =>
+        // Remove this option on cloud, where it is unsupported:
+        !(option.value === 'dynamicFromFile' && globals.consoleType === 'cloud')
+    )
+    .filter(option => !hideOptions.includes(option.value));
 
   const { watch } = useFormContext<Record<string, ConnectionInfoSchema>>();
 
@@ -32,12 +45,25 @@ export const DatabaseUrl = ({
       </div>
 
       {connectionType === 'databaseUrl' ? (
-        <InputField
-          name={`${name}.url`}
-          key={`${name}.url`}
-          label="Database URL"
-          placeholder="postgresql://username:password@hostname:port/postgres"
-        />
+        <>
+          <WarningCard />
+          <InputField
+            name={`${name}.url`}
+            key={`${name}.url`}
+            label="Database URL"
+            placeholder="postgresql://username:password@hostname:port/postgres"
+          />
+        </>
+      ) : connectionType === 'dynamicFromFile' ? (
+        <>
+          <WarningCardMetadataDBNotDynamic />
+          <InputField
+            name={`${name}.dynamicFromFile`}
+            key={`${name}.dynamicFromFile`}
+            label="Path to file that contains the connection string"
+            placeholder="/path/to/file/on/server"
+          />
+        </>
       ) : connectionType === 'envVar' ? (
         <InputField
           name={`${name}.envVar`}
@@ -47,6 +73,7 @@ export const DatabaseUrl = ({
         />
       ) : (
         <>
+          <WarningCard />
           <InputField
             name={`${name}.username`}
             label="Username"

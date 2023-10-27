@@ -169,6 +169,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
       Options.Don'tStringifyNumbers -> withOptionDefault Nothing stringifyNumOption
       stringifyNums -> pure stringifyNums
   soDangerousBooleanCollapse <- withOptionDefault rsoDangerousBooleanCollapse dangerousBooleanCollapseOption
+  soRemoteNullForwardingPolicy <- withOptionDefault rsoRemoteNullForwardingPolicy remoteNullForwardingPolicyOption
   soEnabledAPIs <- withOptionDefault rsoEnabledAPIs enabledAPIsOption
   soLiveQueryOpts <- do
     _lqoRefetchInterval <- withOptionDefault rsoMxRefetchInt mxRefetchDelayOption
@@ -217,6 +218,10 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soCloseWebsocketsOnMetadataChangeStatus <- do
     withOptionDefault rsoCloseWebsocketsOnMetadataChangeStatus closeWebsocketsOnMetadataChangeOption
   soMaxTotalHeaderLength <- withOptionDefault rsoMaxTotalHeaderLength maxTotalHeaderLengthOption
+  soTriggersErrorLogLevelStatus <- withOptionDefault rsoTriggersErrorLogLevelStatus triggersErrorLogLevelStatusOption
+  soAsyncActionsFetchBatchSize <- withOptionDefault rsoAsyncActionsFetchBatchSize asyncActionsFetchBatchSizeOption
+  soPersistedQueries <- withOptionDefault rsoPersistedQueries persistedQueriesOption
+  soPersistedQueriesTtl <- withOptionDefault rsoPersistedQueriesTtl persistedQueriesTtlOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment

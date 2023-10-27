@@ -6,6 +6,7 @@ module Harness.Quoter.Graphql (graphql, ToGraphqlString (..)) where
 
 import Data.Bifunctor qualified as Bifunctor
 import Data.String (fromString)
+import Data.Text (unpack)
 import Hasura.Prelude
 import Language.Haskell.Meta (parseExp)
 import Language.Haskell.TH
@@ -23,6 +24,9 @@ instance ToGraphqlString Bool where
 
 instance ToGraphqlString String where
   showGql = id
+
+instance ToGraphqlString Text where
+  showGql = unpack
 
 -- | Transforms GraphQL to its JSON representation. Does string interpolation.
 -- For every expression enclosed as #{expression}, this Quasi Quoter will

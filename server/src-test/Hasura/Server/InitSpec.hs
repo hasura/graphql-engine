@@ -64,6 +64,7 @@ emptyServeOptionsRaw =
       rsoWsReadCookie = UUT.WsReadCookieDisabled,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
+      rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
       rsoMxBatchSize = Nothing,
@@ -93,7 +94,11 @@ emptyServeOptionsRaw =
       rsoMetadataDefaults = Nothing,
       rsoApolloFederationStatus = Nothing,
       rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
-      rsoMaxTotalHeaderLength = Nothing
+      rsoMaxTotalHeaderLength = Nothing,
+      rsoTriggersErrorLogLevelStatus = Nothing,
+      rsoAsyncActionsFetchBatchSize = Nothing,
+      rsoPersistedQueries = Nothing,
+      rsoPersistedQueriesTtl = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

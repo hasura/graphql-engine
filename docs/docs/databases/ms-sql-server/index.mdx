@@ -38,6 +38,14 @@ Here are 2 ways you can get started with Hasura and SQL Server:
 Hasura currently supports queries, subscriptions, mutations, relationships, permissions, and Event Triggers on MS SQL
 Server.
 
+## Required permissions
+
+Assuming a `CONNECT` permission already exists, the following permissions are required for Hasura to function completely. Note that missing permissions may cause the corresponding features to work incorrectly:
+
+* To use the Hasura Console to alter your schema, you will need appropriate schema permissions, such as `CREATE TABLE`, `CREATE VIEW`, `CREATE FUNCTION`, and `CREATE PROCEDURE`, depending on what you want to do.
+* To perform queries and mutations, Hasura will need permission to `DELETE`, `INSERT`, `SELECT`, and `UPDATE`.
+* To call MSSQL stored procedures via Hasura, the `EXECUTE` permission is also required.
+
 ## Keep up to date
 
 If you'd like to stay informed about the status of SQL Server support, subscribe to our newsletter and join our discord!
@@ -58,6 +66,7 @@ We also have a tutorial available on our Learn site -
 ## Know more
 
 - [Get Started](/databases/ms-sql-server/getting-started/index.mdx)
+- [Connect a Google Cloud SQL for MS SQL Server database](/databases/ms-sql-server/gcp.mdx)
 - [Schema](/schema/ms-sql-server/index.mdx)
 - [Queries](/queries/ms-sql-server/index.mdx)
 - [Mutations](/mutations/ms-sql-server/index.mdx)

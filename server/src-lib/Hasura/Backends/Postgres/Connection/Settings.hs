@@ -61,12 +61,12 @@ import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
 data PostgresPoolSettings = PostgresPoolSettings
-  { _ppsMaxConnections :: Maybe Int,
-    _ppsTotalMaxConnections :: Maybe Int,
-    _ppsIdleTimeout :: Maybe Int,
-    _ppsRetries :: Maybe Int,
-    _ppsPoolTimeout :: Maybe NominalDiffTime,
-    _ppsConnectionLifetime :: Maybe NominalDiffTime
+  { ppsMaxConnections :: Maybe Int,
+    ppsTotalMaxConnections :: Maybe Int,
+    ppsIdleTimeout :: Maybe Int,
+    ppsRetries :: Maybe Int,
+    ppsPoolTimeout :: Maybe NominalDiffTime,
+    ppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq, Generic)
 
@@ -80,17 +80,17 @@ instance HasCodec PostgresPoolSettings where
       $ AC.object "PostgresPoolSettings"
       $ PostgresPoolSettings
       <$> optionalFieldOrNull "max_connections" maxConnectionsDoc
-      .== _ppsMaxConnections
+      .== ppsMaxConnections
         <*> optionalFieldOrNull "total_max_connections" totalMaxConnectionsDoc
-      .== _ppsTotalMaxConnections
+      .== ppsTotalMaxConnections
         <*> optionalFieldOrNull "idle_timeout" idleTimeoutDoc
-      .== _ppsIdleTimeout
+      .== ppsIdleTimeout
         <*> optionalFieldOrNull "retries" retriesDoc
-      .== _ppsRetries
+      .== ppsRetries
         <*> optionalFieldOrNull "pool_timeout" poolTimeoutDoc
-      .== _ppsPoolTimeout
+      .== ppsPoolTimeout
         <*> (parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc)
-      .== _ppsConnectionLifetime
+      .== ppsConnectionLifetime
     where
       maxConnectionsDoc = "Maximum number of connections to be kept in the pool (default: 50)"
       totalMaxConnectionsDoc = "Total maximum number of connections across all instances (cloud only, default: null)"
@@ -127,10 +127,10 @@ instance FromJSON PostgresPoolSettings where
       <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
 data DefaultPostgresPoolSettings = DefaultPostgresPoolSettings
-  { _dppsMaxConnections :: Int,
-    _dppsIdleTimeout :: Int,
-    _dppsRetries :: Int,
-    _dppsConnectionLifetime :: Maybe NominalDiffTime
+  { dppsMaxConnections :: Int,
+    dppsIdleTimeout :: Int,
+    dppsRetries :: Int,
+    dppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq)
 
@@ -142,12 +142,12 @@ defaultPostgresPoolSettings = DefaultPostgresPoolSettings 50 180 1 (Just 600)
 setPostgresPoolSettings :: PostgresPoolSettings
 setPostgresPoolSettings =
   PostgresPoolSettings
-    { _ppsMaxConnections = (Just $ _dppsMaxConnections defaultPostgresPoolSettings),
-      _ppsTotalMaxConnections = Nothing,
-      _ppsIdleTimeout = (Just $ _dppsIdleTimeout defaultPostgresPoolSettings),
-      _ppsRetries = (Just $ _dppsRetries defaultPostgresPoolSettings),
-      _ppsPoolTimeout = Nothing, -- @Nothing@ is the default value of the pool timeout
-      _ppsConnectionLifetime = _dppsConnectionLifetime defaultPostgresPoolSettings
+    { ppsMaxConnections = (Just $ dppsMaxConnections defaultPostgresPoolSettings),
+      ppsTotalMaxConnections = Nothing,
+      ppsIdleTimeout = (Just $ dppsIdleTimeout defaultPostgresPoolSettings),
+      ppsRetries = (Just $ dppsRetries defaultPostgresPoolSettings),
+      ppsPoolTimeout = Nothing, -- @Nothing@ is the default value of the pool timeout
+      ppsConnectionLifetime = dppsConnectionLifetime defaultPostgresPoolSettings
     }
 
 -- PG Pool Settings are not given by the user, set defaults
@@ -160,13 +160,13 @@ getDefaultPGPoolSettingIfNotExists connSettings defaultPgPoolSettings =
     -- No PG Pool settings provided by user, set default values for all
     Nothing -> (defMaxConnections, defIdleTimeout, defRetries)
   where
-    defMaxConnections = _dppsMaxConnections defaultPgPoolSettings
-    defIdleTimeout = _dppsIdleTimeout defaultPgPoolSettings
-    defRetries = _dppsRetries defaultPgPoolSettings
+    defMaxConnections = dppsMaxConnections defaultPgPoolSettings
+    defIdleTimeout = dppsIdleTimeout defaultPgPoolSettings
+    defRetries = dppsRetries defaultPgPoolSettings
 
-    maxConnections = fromMaybe defMaxConnections . _ppsMaxConnections
-    idleTimeout = fromMaybe defIdleTimeout . _ppsIdleTimeout
-    retries = fromMaybe defRetries . _ppsRetries
+    maxConnections = fromMaybe defMaxConnections . ppsMaxConnections
+    idleTimeout = fromMaybe defIdleTimeout . ppsIdleTimeout
+    retries = fromMaybe defRetries . ppsRetries
 
 data SSLMode
   = Disable
@@ -334,11 +334,11 @@ instance ToJSON PG.TxIsolation where
   toJSON PG.Serializable = "serializable"
 
 data PostgresSourceConnInfo = PostgresSourceConnInfo
-  { _psciDatabaseUrl :: UrlConf,
-    _psciPoolSettings :: Maybe PostgresPoolSettings,
-    _psciUsePreparedStatements :: Bool,
-    _psciIsolationLevel :: PG.TxIsolation,
-    _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
+  { psciDatabaseUrl :: UrlConf,
+    psciPoolSettings :: Maybe PostgresPoolSettings,
+    psciUsePreparedStatements :: Bool,
+    psciIsolationLevel :: PG.TxIsolation,
+    psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
 
@@ -352,17 +352,17 @@ instance HasCodec PostgresSourceConnInfo where
       $ AC.object "PostgresSourceConnInfo"
       $ PostgresSourceConnInfo
       <$> requiredField "database_url" databaseUrlDoc
-      .== _psciDatabaseUrl
+      .== psciDatabaseUrl
         <*> optionalFieldOrNull "pool_settings" poolSettingsDoc
-      .== _psciPoolSettings
+      .== psciPoolSettings
         <*> optionalFieldWithDefault "use_prepared_statements" False usePreparedStatementsDoc
-      .== _psciUsePreparedStatements
+      .== psciUsePreparedStatements
         <*> optionalFieldWithDefault "isolation_level" PG.ReadCommitted isolationLevelDoc
-      .== _psciIsolationLevel
+      .== psciIsolationLevel
         <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc
-      .== _psciSslConfiguration
+      .== psciSslConfiguration
     where
-      databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
+      databaseUrlDoc = "The database connection URL as a string, from an environment variable, as connection parameters, or dynamically read from a file at connect time."
       poolSettingsDoc = "Connection pool settings"
       usePreparedStatementsDoc =
         T.unwords
@@ -408,9 +408,9 @@ data KritiTemplate = KritiTemplate
     -- (https://github.com/hasura/kriti-lang/issues/77)
 
     -- | Raw kriti template
-    _ktSource :: Text,
+    ktSource :: Text,
     -- | Parsed kriti template
-    _ktParsedAST :: Kriti.ValueExt
+    ktParsedAST :: Kriti.ValueExt
   }
   deriving (Show, Eq, Generic)
 
@@ -442,9 +442,9 @@ instance HasCodec KritiTemplate where
 -- | Connection template for the dynamic DB connection.
 data ConnectionTemplate = ConnectionTemplate
   { -- | Version for the connection template. Please read more about this in the dynamic DB connection RFC (Metadata API > Versioning).
-    _ctVersion :: Int,
+    ctVersion :: Int,
     -- | `kriti-lang` template for the dynamic DB connection.
-    _ctTemplate :: KritiTemplate
+    ctTemplate :: KritiTemplate
   }
   deriving (Show, Eq, Generic)
 
@@ -470,8 +470,8 @@ instance FromJSON ConnectionTemplate where
 instance ToJSON ConnectionTemplate where
   toJSON ConnectionTemplate {..} =
     object
-      [ "version" .= _ctVersion,
-        "template" .= _ctTemplate
+      [ "version" .= ctVersion,
+        "template" .= ctTemplate
       ]
 
 instance HasCodec ConnectionTemplate where
@@ -480,9 +480,9 @@ instance HasCodec ConnectionTemplate where
       $ AC.object "ConnectionTemplate"
       $ ConnectionTemplate
       <$> optionalFieldWithOmittedDefault "version" 1 ctVersionInfoDoc
-      AC..= _ctVersion
+      AC..= ctVersion
         <*> requiredField "template" ctTemplateInfoDoc
-      AC..= _ctTemplate
+      AC..= ctTemplate
     where
       ctVersionInfoDoc = "Optional connection template version (supported versions: [1], default: 1)"
       ctTemplateInfoDoc = "Connection kriti template (read more in the docs)"
@@ -502,8 +502,8 @@ instance FromJSON PostgresConnectionSetMemberName where
   parseJSON val = PostgresConnectionSetMemberName <$> parseJSON val
 
 data PostgresConnectionSetMember = PostgresConnectionSetMember
-  { _pscmName :: PostgresConnectionSetMemberName,
-    _pscmConnectionInfo :: PostgresSourceConnInfo
+  { pscmName :: PostgresConnectionSetMemberName,
+    pscmConnectionInfo :: PostgresSourceConnInfo
   }
   deriving (Show, Eq, Generic)
 
@@ -529,12 +529,12 @@ instance NFData PostgresConnectionSet
 instance FromJSON PostgresConnectionSet where
   parseJSON = withArray "PostgresConnectionSet" \arr -> do
     connectionSet <- mapWithJSONPath parseJSON (toList arr)
-    let connectionSetMemberNames = map _pscmName connectionSet
+    let connectionSetMemberNames = map pscmName connectionSet
         duplicateConnSetMemberNames = connectionSetMemberNames \\ (L.uniques connectionSetMemberNames)
     -- check if members with same name are present in connection set
     unless (null duplicateConnSetMemberNames) $ do
       fail $ "connection set members with duplicate names are not allowed: " ++ unpack (dquoteList (map toTxt duplicateConnSetMemberNames))
-    let connectionSetTuples = map (_pscmName &&& id) connectionSet
+    let connectionSetTuples = map (pscmName &&& id) connectionSet
     connectionSetHashMap <- NEMap.fromList connectionSetTuples `onNothing` fail "connection set cannot be empty"
     pure $ PostgresConnectionSet connectionSetHashMap
 
@@ -545,11 +545,11 @@ instance HasCodec PostgresConnectionSet where
   codec = codecViaAeson "PostgresConnectionSet"
 
 data PostgresConnConfiguration = PostgresConnConfiguration
-  { _pccConnectionInfo :: PostgresSourceConnInfo,
-    _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo),
-    _pccExtensionsSchema :: ExtensionsSchema,
-    _pccConnectionTemplate :: Maybe ConnectionTemplate,
-    _pccConnectionSet :: Maybe PostgresConnectionSet
+  { pccConnectionInfo :: PostgresSourceConnInfo,
+    pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo),
+    pccExtensionsSchema :: ExtensionsSchema,
+    pccConnectionTemplate :: Maybe ConnectionTemplate,
+    pccConnectionSet :: Maybe PostgresConnectionSet
   }
   deriving (Show, Eq, Generic)
 
@@ -575,11 +575,11 @@ instance FromJSON PostgresConnConfiguration where
 instance ToJSON PostgresConnConfiguration where
   toJSON PostgresConnConfiguration {..} =
     object
-      $ ["connection_info" .= _pccConnectionInfo]
-      <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) _pccReadReplicas
-      <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
-      <> maybe mempty (\connTemplate -> ["connection_template" .= connTemplate]) _pccConnectionTemplate
-      <> maybe mempty (\connSet -> ["connection_set" .= NEMap.elems (getPostgresConnectionSet connSet)]) _pccConnectionSet
+      $ ["connection_info" .= pccConnectionInfo]
+      <> maybe mempty (\readReplicas -> ["read_replicas" .= readReplicas]) pccReadReplicas
+      <> bool mempty (["extensions_schema" .= pccExtensionsSchema]) (pccExtensionsSchema /= defaultPostgresExtensionsSchema)
+      <> maybe mempty (\connTemplate -> ["connection_template" .= connTemplate]) pccConnectionTemplate
+      <> maybe mempty (\connSet -> ["connection_set" .= NEMap.elems (getPostgresConnectionSet connSet)]) pccConnectionSet
 
 instance HasCodec PostgresConnConfiguration where
   codec =
@@ -587,15 +587,15 @@ instance HasCodec PostgresConnConfiguration where
       $ AC.object "PostgresConnConfiguration"
       $ PostgresConnConfiguration
       <$> requiredField "connection_info" connectionInfoDoc
-      .== _pccConnectionInfo
+      .== pccConnectionInfo
         <*> optionalFieldOrNull "read_replicas" readReplicasDoc
-      .== _pccReadReplicas
+      .== pccReadReplicas
         <*> optionalFieldWithOmittedDefault "extensions_schema" defaultPostgresExtensionsSchema extensionsSchemaDoc
-      .== _pccExtensionsSchema
+      .== pccExtensionsSchema
         <*> optionalFieldOrNull "connection_template" connectionTemplateDoc
-      .== _pccConnectionTemplate
+      .== pccConnectionTemplate
         <*> optionalFieldOrNull "connection_set" connectionSetDoc
-      .== _pccConnectionSet
+      .== pccConnectionSet
     where
       connectionInfoDoc = "Connection parameters for the source"
       readReplicasDoc = "Optional list of read replica configuration (supported only in cloud/enterprise versions)"

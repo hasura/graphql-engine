@@ -46,6 +46,8 @@ paused if all the HTTP workers (defined below) are busy.
 Hasura also creates a pool of HTTP workers (by default 100) which are responsible for delivering the events from the
 events queue to the webhook.
 
+After receiving response from the webhook, the event's state is updated in the Hasura Event tables.
+
 ## Observability
 
 <ProductBadge self />

@@ -21,7 +21,7 @@ import Data.Text.Extended
 import Data.Type.Equality
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P (inputParserInput, nonNullableField, nullableField)
+import Hasura.GraphQL.Parser.Internal.Parser qualified as P (NullableInput (..), inputParserInput, nonNullableField, nullableExact, nullableField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
@@ -33,6 +33,7 @@ import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.SchemaCache.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -270,14 +271,21 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
     doNullability ::
       forall k.
       ('Input <: k) =>
+      Options.RemoteNullForwardingPolicy ->
       G.Nullability ->
+      G.Name ->
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable))
-    doNullability (G.Nullability True) parser =
-      nullable parser `bind` \case
-        Just x -> pure x
-        Nothing -> pure $ Just (Altered False, G.VNull)
-    doNullability (G.Nullability False) parser = parser
+    doNullability Options.RemoteOnlyForwardNonNull (G.Nullability True) _tyName parser =
+      nullable parser `bind` pure . join
+    doNullability Options.RemoteForwardAccurately (G.Nullability True) tyName parser =
+      P.nullableExact parser `bind` \case
+        P.NullableInputValue x -> pure x
+        P.NullableInputNull hasuraType ->
+          -- Disallow short-circuit optimisation if the type name has been changed by remote schema customization
+          pure $ Just (Altered (G.getBaseType hasuraType /= tyName), G.VNull)
+        P.NullableInputAbsent -> pure Nothing
+    doNullability _nullForwarding (G.Nullability False) _tyName parser = parser
 
     fieldConstructor ::
       forall k.
@@ -288,9 +296,9 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       case maybeDefaultVal of
         Nothing ->
           if G.isNullable fieldType
-            then join <$> fieldOptional name desc parser
+            then join <$> fieldOptional' name desc parser
             else field name desc parser
-        Just defaultVal -> fieldWithDefault name desc defaultVal parser
+        Just defaultVal -> fieldWithDefault' name desc defaultVal parser
 
     buildField ::
       ( forall k.
@@ -300,49 +308,51 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       ) ->
       G.GType ->
       SchemaT r m (InputFieldsParser n (Maybe (Altered, G.Value RemoteSchemaVariable)))
-    buildField mkInputFieldsParser = \case
-      G.TypeNamed nullability typeName ->
-        case lookupType schemaDoc typeName of
-          Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> typeName
-          Just typeDef -> do
-            customizeTypename <- asks getter
-            case typeDef of
-              G.TypeDefinitionScalar scalarTypeDefn ->
-                pure $ mkInputFieldsParser $ doNullability nullability $ Just <$> remoteFieldScalarParser customizeTypename scalarTypeDefn
-              G.TypeDefinitionEnum defn ->
-                pure $ mkInputFieldsParser $ doNullability nullability $ Just <$> remoteFieldEnumParser customizeTypename defn
-              G.TypeDefinitionObject _ ->
-                throw400 RemoteSchemaError "expected input type, but got output type"
-              G.TypeDefinitionInputObject defn -> do
-                potentialObject <- remoteInputObjectParser schemaDoc defn
-                pure $ case potentialObject of
-                  Left dummyInputFieldsParser -> do
-                    -- We couln't create a parser, meaning we can't create a field for this
-                    -- object. Instead we must return a "pure" InputFieldsParser that always yields
-                    -- the needed result without containing a field definition.
-                    --
-                    -- !!! WARNING #1 !!!
-                    -- Since we have no input field in the schema for this field, we can't make the
-                    -- distinction between it being actually present at parsing time or not. We
-                    -- therefore choose to behave as if it was always present, and we always
-                    -- include the preset values in the result.
-                    --
-                    -- !!! WARNING #2 !!!
-                    -- We are re-using an 'InputFieldsParser' that was created earlier! Won't that
-                    -- create new fields in the current context? No, it won't, but only because in
-                    -- this case we know that it was created from the preset fields in
-                    -- 'argumentsParser', and therefore contains no field definition.
-                    Just <$> dummyInputFieldsParser
-                  Right actualParser -> do
-                    -- We're in the normal case: we do have a parser for the input object, which is
-                    -- therefore valid (non-empty).
-                    mkInputFieldsParser $ doNullability nullability $ Just <$> actualParser
-              G.TypeDefinitionUnion _ ->
-                throw400 RemoteSchemaError "expected input type, but got output type"
-              G.TypeDefinitionInterface _ ->
-                throw400 RemoteSchemaError "expected input type, but got output type"
-      G.TypeList nullability subType -> do
-        buildField (mkInputFieldsParser . doNullability nullability . fmap (Just . fmap G.VList . aggregateListAndAlteration) . P.list) subType
+    buildField mkInputFieldsParser gType = do
+      nullForwarding <- asks getter
+      case gType of
+        G.TypeNamed nullability typeName ->
+          case lookupType schemaDoc typeName of
+            Nothing -> throw400 RemoteSchemaError $ "Could not find type with name " <>> typeName
+            Just typeDef -> do
+              customizeTypename <- asks getter
+              case typeDef of
+                G.TypeDefinitionScalar scalarTypeDefn ->
+                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability (G._stdName scalarTypeDefn) $ Just <$> remoteFieldScalarParser customizeTypename scalarTypeDefn
+                G.TypeDefinitionEnum defn ->
+                  pure $ mkInputFieldsParser $ doNullability nullForwarding nullability (G._etdName defn) $ Just <$> remoteFieldEnumParser customizeTypename defn
+                G.TypeDefinitionObject _ ->
+                  throw400 RemoteSchemaError "expected input type, but got output type"
+                G.TypeDefinitionInputObject defn -> do
+                  potentialObject <- remoteInputObjectParser schemaDoc defn
+                  pure $ case potentialObject of
+                    Left dummyInputFieldsParser -> do
+                      -- We couln't create a parser, meaning we can't create a field for this
+                      -- object. Instead we must return a "pure" InputFieldsParser that always yields
+                      -- the needed result without containing a field definition.
+                      --
+                      -- !!! WARNING #1 !!!
+                      -- Since we have no input field in the schema for this field, we can't make the
+                      -- distinction between it being actually present at parsing time or not. We
+                      -- therefore choose to behave as if it was always present, and we always
+                      -- include the preset values in the result.
+                      --
+                      -- !!! WARNING #2 !!!
+                      -- We are re-using an 'InputFieldsParser' that was created earlier! Won't that
+                      -- create new fields in the current context? No, it won't, but only because in
+                      -- this case we know that it was created from the preset fields in
+                      -- 'argumentsParser', and therefore contains no field definition.
+                      Just <$> dummyInputFieldsParser
+                    Right actualParser -> do
+                      -- We're in the normal case: we do have a parser for the input object, which is
+                      -- therefore valid (non-empty).
+                      mkInputFieldsParser $ doNullability nullForwarding nullability (G._iotdName defn) $ Just <$> actualParser
+                G.TypeDefinitionUnion _ ->
+                  throw400 RemoteSchemaError "expected input type, but got output type"
+                G.TypeDefinitionInterface _ ->
+                  throw400 RemoteSchemaError "expected input type, but got output type"
+        G.TypeList nullability subType -> do
+          buildField (mkInputFieldsParser . doNullability nullForwarding nullability (G.getBaseType subType) . fmap (Just . fmap G.VList . aggregateListAndAlteration) . P.list) subType
 
 -- | remoteFieldScalarParser attempts to parse a scalar value for a given remote field
 --

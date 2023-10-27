@@ -7,7 +7,6 @@ extra-source-files: README.md
 
 common common-all
   ghc-options:
-    -Werror
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
     -Wno-missing-exported-signatures
@@ -116,6 +115,10 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.BigquerySpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.NotSupportedSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.SqlserverSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
@@ -139,9 +142,11 @@ library
     Test.Databases.Postgres.ArraySpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
+    Test.Databases.Postgres.DataValidation.RemoteSourcePermissionPredicateSpec
     Test.Databases.Postgres.JsonbSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec
+    Test.Databases.SQLServer.ConnectionPoolSpec
     Test.Databases.SQLServer.DefaultValues.OnConflictSpec
     Test.Databases.SQLServer.InsertVarcharColumnSpec
     Test.Databases.SQLServer.VarcharLiteralsSpec
@@ -177,6 +182,7 @@ library
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Update.ValidationSpec
     Test.Mutations.Upsert.OnConflictSpec
+    Test.NamingConventionsSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec
@@ -188,7 +194,8 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
-    Test.Queries.NativeQueriesSpec
+    Test.Queries.NativeQueries.ProOnlySpec
+    Test.Queries.NativeQueries.NativeQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
@@ -222,6 +229,7 @@ library
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.RootExistElementAliasing9457Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
+    Test.Regression.SqlServerRemoteRelationshipRhs8712Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec

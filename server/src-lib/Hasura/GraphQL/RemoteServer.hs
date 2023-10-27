@@ -34,6 +34,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
@@ -57,12 +58,13 @@ fetchRemoteSchema ::
   forall m.
   (MonadIO m, MonadError QErr m, Tracing.MonadTrace m, ProvidesNetwork m) =>
   Env.Environment ->
+  SchemaSampledFeatureFlags ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env rsDef = do
+fetchRemoteSchema env schemaSampledFeatureFlags rsDef = do
   (_, _, rawIntrospectionResult) <-
-    execRemoteGQ env adminUserInfo [] rsDef introspectionQuery
-  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult rsDef
+    execRemoteGQ env Tracing.b3TraceContextPropagator adminUserInfo [] rsDef introspectionQuery
+  (ir, rsi) <- stitchRemoteSchema schemaSampledFeatureFlags rawIntrospectionResult rsDef
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
@@ -73,10 +75,11 @@ fetchRemoteSchema env rsDef = do
 -- like it's a valid GraphQL endpoint even under the configured customization.
 stitchRemoteSchema ::
   (MonadIO m, MonadError QErr m) =>
+  SchemaSampledFeatureFlags ->
   BL.ByteString ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, RemoteSchemaInfo)
-stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
+stitchRemoteSchema schemaSampledFeatureFlags rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
     J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
@@ -93,7 +96,7 @@ stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = 
   -- quickly reject an invalid schema.
   void
     $ runMemoizeT
-    $ runRemoteSchema minimumValidContext
+    $ runRemoteSchema minimumValidContext Options.RemoteForwardAccurately
     $ buildRemoteParser @_ @_ @Parse
       _rscIntroOriginal
       mempty -- remote relationships
@@ -122,6 +125,7 @@ stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = 
         HasuraSchema
         ignoreRemoteRelationship
         adminRoleName
+        schemaSampledFeatureFlags
 
 -- | Sends a GraphQL query to the given server.
 execRemoteGQ ::
@@ -131,6 +135,7 @@ execRemoteGQ ::
     ProvidesNetwork m
   ) =>
   Env.Environment ->
+  Tracing.HttpPropagator ->
   UserInfo ->
   [HTTP.Header] ->
   ValidatedRemoteSchemaDef ->
@@ -138,7 +143,7 @@ execRemoteGQ ::
   -- | Returns the response body and headers, along with the time taken for the
   -- HTTP request to complete
   m (DiffTime, [HTTP.Header], BL.ByteString)
-execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
+execRemoteGQ env tracesPropagator userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
   let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
 
   when (G._todType _grQuery == G.OperationTypeSubscription)
@@ -163,12 +168,12 @@ execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
 
   manager <- askHTTPManager
-  Tracing.traceHTTPRequest req \req' -> do
+  Tracing.traceHTTPRequest tracesPropagator req \req' -> do
     (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
-    ValidatedRemoteSchemaDef webhookEnvRecord hdrConf fwdClientHdrs timeout _mPrefix = rsdef
+    ValidatedRemoteSchemaDef _name webhookEnvRecord hdrConf fwdClientHdrs timeout _mPrefix = rsdef
     url = _envVarValue webhookEnvRecord
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
 

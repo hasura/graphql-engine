@@ -142,9 +142,9 @@ Hasura supports most databases with full Postgres compatibility such as:
   <VersionedLink to="/databases/postgres/gcp">
     <div className="card-wrapper">
       <div className="card">
-        <img src={GCP} title="GCP Postgres" alt="Connect GCP Postgres to Hasura" />
+        <img src={GCP} title="Google Cloud SQL Postgres" alt="Connect Google Cloud SQL Postgres to Hasura" />
       </div>
-      <h5>GCP Postgres</h5>
+      <h5>Google Cloud SQL Postgres</h5>
     </div>
   </VersionedLink>
   <VersionedLink to="/databases/postgres/neon">
@@ -203,6 +203,18 @@ Curious about any other Postgres flavors? Any other questions? Ask us on
 [GitHub discussions](https://github.com/hasura/graphql-engine/discussions)
 
 :::
+
+## Required user role permissions
+
+Below are the role permissions required for Hasura to perform all its functionality. Note that, with the exception of `CONNECT` and `GRANT USAGE`, the other features are opt-in, and not enabling them will simply mean that only the corresponding Hasura features will not work.
+
+* `CONNECT` is required in order for Hasura to connect to your Postgres data source.
+* You must `GRANT USAGE` to the Hasura user role for any schema you want to access via Hasura.
+* To allow queries and subscriptions via the GraphQL API, `SELECT` permissions are required.
+* Similarly, `INSERT`, `UPDATE`, and `DELETE` permissions are required for mutations.
+* The Hasura Console requires permissions such as `REFERENCES` and `CREATE` to make changes to your schema.
+* `TRIGGER` is required to use [Event Triggers](/event-triggers/overview.mdx)
+* If you want to use computed fields or user-defined Postgres functions, the `EXECUTE` permission is required.
 
 
 ## Know more

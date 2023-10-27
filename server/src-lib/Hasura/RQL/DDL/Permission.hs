@@ -44,7 +44,8 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -236,6 +237,7 @@ buildPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
@@ -259,17 +261,18 @@ buildLogicalModelPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
-  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelName fieldInfoMap p
+buildLogicalModelPermInfo sourceName logicalModelLocation fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelLocation fieldInfoMap p
   InsPerm' _ -> error "Not implemented yet"
   UpdPerm' _ -> error "Not implemented yet"
   DelPerm' _ -> error "Not implemented yet"
@@ -347,6 +350,7 @@ buildInsPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -367,7 +371,7 @@ buildInsPermInfo env source tn fieldInfoMap (InsPerm checkCond set mCols backend
       $ do
         indexedForM insCols $ \col -> do
           -- Check that all columns specified do in fact exist and are columns
-          _ <- askColumnType fieldInfoMap col relInInsErr
+          assertColumnExists fieldInfoMap relInInsErr col
           -- Check that the column is insertable
           ci <- askColInfo fieldInfoMap col ""
           unless (_cmIsInsertable $ ciMutability ci)
@@ -458,17 +462,18 @@ buildLogicalModelSelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = withPathK "permission" do
+buildLogicalModelSelPermInfo source logicalModelLocation logicalModelFieldMap sp = withPathK "permission" do
   let columns :: [Column b]
       columns = interpColSpec (lmfName <$> InsOrdHashMap.elems logicalModelFieldMap) (spColumns sp)
 
@@ -477,7 +482,7 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
   -- filter out the non-scalars.
   (spiFilter, boolExpDeps) <-
     withPathK "filter"
-      $ procLogicalModelBoolExp source logicalModelName (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
+      $ procLogicalModelBoolExp source logicalModelLocation (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
 
   let -- What parts of the metadata are interesting when computing the
       -- permissions? These dependencies bubble all the way up to
@@ -486,9 +491,9 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
       deps :: Seq SchemaDependency
       deps =
         mconcat
-          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelName),
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelLocation),
             boolExpDeps,
-            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelName)
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelLocation)
               $ Seq.fromList columns
           ]
 
@@ -507,11 +512,11 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
       --
       -- TODO: do we care about inherited roles? We don't seem to set this to
       -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
-      spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-      spiCols = HashMap.fromList (map (,Nothing) columns)
+      spiCols :: HashMap (Column b) (AnnRedactionExpPartialSQL b)
+      spiCols = HashMap.fromList (map (,NoRedaction) columns)
 
       -- Native queries don't have computed fields.
-      spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+      spiComputedFields :: HashMap ComputedFieldName (AnnRedactionExpPartialSQL b)
       spiComputedFields = mempty
 
   let -- We don't need something like validateAllowedRootFields because we
@@ -532,6 +537,7 @@ buildSelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -555,8 +561,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
   void
     $ withPathK "columns"
     $ indexedForM pgCols
-    $ \pgCol ->
-      askColumnType fieldInfoMap pgCol autoInferredErr
+    $ assertColumnExists fieldInfoMap autoInferredErr
 
   -- validate computed fields
   validComputedFields <-
@@ -587,8 +592,8 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     when (value < 0)
       $ throw400 NotSupported "unexpected negative value"
 
-  let spiCols = HashMap.fromList $ map (,Nothing) pgCols
-      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
+  let spiCols = HashMap.fromList $ map (,NoRedaction) pgCols
+      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> NoRedaction
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
     validateAllowedRootFields source tableName roleName sp
@@ -603,6 +608,7 @@ buildUpdPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -629,7 +635,7 @@ buildUpdPermInfo env source tn fieldInfoMap (UpdPerm colSpec set fltr check back
     $ indexedForM updCols
     $ \updCol -> do
       -- Check that all columns specified do in fact exist and are columns
-      _ <- askColumnType fieldInfoMap updCol relInUpdErr
+      assertColumnExists fieldInfoMap relInUpdErr updCol
       -- Check that the column is updatable
       ci <- askColInfo fieldInfoMap updCol ""
       unless (_cmIsUpdatable $ ciMutability ci)
@@ -655,6 +661,7 @@ buildDelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,

@@ -114,7 +114,7 @@ GraphQL Engine server.
 Hasura GraphQL Engine communicates with your data sources(s) via ODBC connection strings. This means Hasura has the same
 permissions as the provided credentials in the connection string.
 
-- Use environment variables rather than a hardcoded value when configuring the database connection string. This environment variable can then be reused in the other development environments (e.g., staging or production) while containing a reference to the environment-specific database connection string. This is necessary for a seamless CI/CD implementation.
+- Use environment variables rather than a hardcoded value when configuring the database connection string. This environment variable can then be reused in the other environments (e.g., staging or production) while containing a reference to the environment-specific database connection string.  Please see [Metadata Best Practices](/migrations-metadata-seeds/metadata-best-practices.mdx) for more information.
 
 - Review the database permissions allocated via the provided credentials to ensure the level of access granted to Hasura
   is appropriate.

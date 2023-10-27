@@ -52,13 +52,17 @@ above, databases can be connected using any custom environment variables of your
 ### Metadata Database URL
 
 This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata.
+`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the
+Metadata. This can also be a URI of the form `dynamic-from-file:///path/to/file`, where the referenced
+file contains a postgres connection string, which will be read dynamically every time a new
+connection is established. This allows the server to be used in an environment where secrets are
+rotated frequently.
 
 |                     |                                                                             |
 | ------------------- | --------------------------------------------------------------------------- |
 | **Flag**            | `--metadata-database-url <METADATA_DATABASE_URL>`                           |
 | **Env var**         | `HASURA_GRAPHQL_METADATA_DATABASE_URL`                                      |
-| **Accepted values** | String (PostgreSQL DB connection string)                                    |
+| **Accepted values** | String (PostgreSQL DB connection string, or `dynamic-from-file://` URI)     |
 | **Example**         | `postgres://<user>:<password>@<host>:<port>/<db-name>`                      |
 | **Default**         | **CE, Enterprise Edition**: `null` <br />**Cloud**: managed by Hasura Cloud |
 | **Supported in**    | CE, Enterprise Edition                                                      |
@@ -113,8 +117,8 @@ When you use [webhook or JWT mode for authentication](/auth/authentication/index
 
 ### Admin Secrets
 
-A list of valid admin [secret keys](/auth/authentication/multiple-admin-secrets.mdx) any one of which can be used to access the
-Hasura instance.
+A list of valid admin [secret keys](/auth/authentication/multiple-admin-secrets.mdx) any one of which can be used to
+access the Hasura instance.
 
 |                     |                                |
 | ------------------- | ------------------------------ |
@@ -130,6 +134,18 @@ Hasura instance.
 If both Admin Secret and Admin Secrets are set, then only Admin Secrets will be used.
 
 :::
+
+### Async Actions Fetch Batch Size
+
+The maximum number of async actions to be processed in a single batch.
+
+|                     |                                                 |
+| ------------------- | ----------------------------------------------- |
+| **Flag**            | `--async-actions-fetch-batch-size <BATCH_SIZE>` |
+| **Env var**         | `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_BATCH_SIZE` |
+| **Accepted values** | Integer                                         |
+| **Default**         | `10`                                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud                   |
 
 ### Async Actions Fetch Interval
 
@@ -312,6 +328,22 @@ headers on any request.
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
 
+### Dynamic Secrets Allowed Path Prefix
+
+Enables the ability to source Postgres connection strings from files on disk using
+[DynamicFromFile](/api-reference/syntax-defs.mdx#pgsourceconnectioninfo), and the ability for
+[Template Variables](/databases/database-config/data-connector-config.mdx#template-variables) to
+use the contents of files in Data Connector configuration transforms. File paths used with these
+features must start with the prefix set in this environment variable.
+
+|                     |                                                                          |
+| ------------------- | ------------------------------------------------------------------------ |
+| **Flag**            | N/A                                                                      |
+| **Env var**         | `HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX`                     |
+| **Accepted values** | String (representing a filesystem path prefix, such as `/var/secrets/`)  |
+| **Default**         | `null`                                                                   |
+| **Supported in**    | CE, Enterprise Edition                                                   |
+
 ### Enable Allow List
 
 Restrict requests allowed to be executed by the GraphQL Engine to those that are part of the configured
@@ -344,13 +376,25 @@ subgraph in an Apollo supergraph.
 
 Sets the maximum cumulative length of all headers in bytes.
 
-|                     |                                           |
-| ------------------- | ----------------------------------------- |
-| **Flag**            | `--max-total-header-length`               |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH`  |
-| **Accepted values** | Integer                                   |
-| **Default**         | `1024*1024` (1MB)                         |
-| **Supported in**    | CE, Enterprise Edition                    |
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
+
+### Enable Error Log Level for Trigger Errors
+
+Sets the log-level as `error` for Trigger type error logs (Event Triggers, Scheduled Triggers, Cron Triggers).
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-triggers-error-log-level`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL` |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition                           |
 
 ### Enable Console
 
@@ -367,8 +411,9 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 
 ### Enable High-cardinality Labels for Metrics
 
-Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx). Enabling this setting
-will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription metrics).
+Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx).
+Enabling this setting will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription
+metrics).
 
 |                     |                                                         |
 | ------------------- | ------------------------------------------------------- |
@@ -394,7 +439,7 @@ Enable sending compressed logs to [metrics server](/observability/enterprise-edi
 
 ### Enable Maintenance Mode
 
-Enabling [maintenance mode](/hasura-cloud/projects/maintenance-mode.mdx) disables updating of Metadata on the server.
+Enabling maintenance mode disables updating of Metadata on the server.
 
 |                     |                                             |
 | ------------------- | ------------------------------------------- |
@@ -460,16 +505,17 @@ List of [APIs](/api-reference/overview.mdx) to be enabled on a Hasura GraphQL En
 
 ### Enabled Log Types
 
-List of [log types](/deployment/logging.mdx#log-types) to enable.
+The options below represent log types on the Community Edition. Enterprise-specific log types - and descriptions of all
+log types — can be found [here](/deployment/logging.mdx#log-types).
 
-|                     |                                                       |
-| ------------------- | ----------------------------------------------------- |
-| **Flag**            | `--enabled-log-types <LOG_TYPES>`                     |
-| **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                    |
-| **Accepted values** | String (Comma-separated)                              |
-| **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`       |
-| **Supported in**    | CE, Enterprise Edition                                |
+|                     |                                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Flag**            | `--enabled-log-types <LOG_TYPES>`                                                                                                                                                                |
+| **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
+| **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
+| **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh`                                                                                                                                   |
+| **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
 
@@ -517,7 +563,7 @@ List of experimental features to be enabled.
 | **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
 | **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
 | **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
-| **Options**         | `inherited_roles`, `optimise_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
 | **Default**         | `null`                                                                                                                                                                                                                                                            |
 | **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
 
@@ -626,13 +672,13 @@ This variable sets the level for [Hasura's logs](/deployment/logging.mdx#logging
 
 The [maximum cache size](/caching/enterprise-caching.mdx), measured in MB, for queries.
 
-|                     |                                                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                                   |
-| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                                   |
-| **Accepted values** | Integer (Representing cache size measured in MB)                                                  |
-| **Default**         | `1`                                                                                               |
-| **Supported in**    | **Enterprise Edition**, **Cloud**: Standard / Professional tier is set to `100` MB as the default |
+|                     |                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                        |
+| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                        |
+| **Accepted values** | Integer (Representing cache size measured in MB)                                       |
+| **Default**         | `1`                                                                                    |
+| **Supported in**    | **Enterprise Edition**, **Cloud**: Professional tier is set to `100` MB as the default |
 
 ### Metadata Database Extension Schema
 
@@ -804,7 +850,8 @@ The maximum number of query plans that can be cached, where `0` disables the cac
 
 ### Rate-Limit Redis TLS Hostname
 
-The hostname to use for SNI when connecting to a rate-limiting [Redis instance over TLS](/caching/enterprise-caching.mdx).
+The hostname to use for SNI when connecting to a rate-limiting
+[Redis instance over TLS](/caching/enterprise-caching.mdx).
 
 |                     |                                                |
 | ------------------- | ---------------------------------------------- |
@@ -885,8 +932,8 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 
 ### Redis URL
 
-The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and [Webhook Auth
-Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
+The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
+[Webhook Auth Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
@@ -945,6 +992,39 @@ List of third-party identity providers to enable Single Sign-on authentication f
 | **Default**         | `null`                                                                                                                                                                                                                                                                                                               |
 | **Example**         | `[{\"client_id\": \"<client-id-from-idp>\", \"name\": \"<display-name>\", \"scope\": \"openid\", \"authorization_url\": \"<login-url>\", \"request_token_url\": \"<request-token-url>\", \"admin_roles\": [\"admin\"], \"jwt_secret\": {\"type\": \"RS256\", \"jwk_url\": \"https://...\", \"issuer\": \"myapp\"}}]` |
 | **Supported in**    | EE                                                                                                                                                                                                                                                                                                                   |
+
+### Skip Arguments with `null` Values for Remote Schema
+
+Skip arguments with `null` values while resolving fields from Remote Schemas. For instance:
+
+```graphql
+query RemoteQuery {
+  users(type:null) {
+    id
+    ...
+  }
+}
+```
+
+is forwarded as:
+
+```graphql
+query RemoteQuery {
+  users {
+    id
+    ...
+  }
+}
+```
+
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--remote-schema-skip-nulls`              |
+| **Env var**         | `HASURA_GRAPHQL_REMOTE_SCHEMA_SKIP_NULLS` |
+| **Accepted values** | Boolean                                   |
+| **Options**         | `true` or `false`                         |
+| **Default**         | `false`                                   |
+| **Supported in**    | CE, Enterprise Edition, Cloud             |
 
 ### Streaming Queries Multiplexed Batch Size
 

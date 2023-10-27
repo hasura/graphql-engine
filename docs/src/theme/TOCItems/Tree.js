@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 // Recursive component rendering the toc tree
 function TOCItemTree({ toc, className, linkClassName, isChild }) {
@@ -7,7 +7,7 @@ function TOCItemTree({ toc, className, linkClassName, isChild }) {
   }
   return (
     <ul className={isChild ? undefined : className}>
-      {toc.map((heading) => (
+      {toc.map(heading => (
         <li key={heading.id}>
           {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
           <a

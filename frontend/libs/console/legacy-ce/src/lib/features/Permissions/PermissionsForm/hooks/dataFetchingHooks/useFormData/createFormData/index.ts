@@ -5,6 +5,8 @@ import {
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
+import z from 'zod';
+import { inputValidationSchema } from '../../../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 
 type Operation = 'insert' | 'select' | 'update' | 'delete';
 
@@ -70,8 +72,9 @@ export interface CreateFormDataArgs {
   table: unknown;
   metadata: Metadata;
   tableColumns: TableColumn[];
-  metadataSource: MetadataDataSource | undefined;
-  trackedTables: TableEntry[] | undefined;
+  metadataSource: MetadataDataSource;
+  trackedTables: TableEntry[];
+  validateInput: z.infer<typeof inputValidationSchema>;
 }
 
 export const createFormData = (props: CreateFormDataArgs) => {

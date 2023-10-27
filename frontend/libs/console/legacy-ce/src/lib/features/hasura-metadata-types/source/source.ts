@@ -7,8 +7,18 @@ import {
 } from './configuration';
 import { LogicalModel } from './logicalModel';
 import { NativeQuery } from './nativeQuery';
-import { MetadataTable, Table } from './table';
 import { StoredProcedure } from './storedProcedure';
+import { MetadataTable, Table } from './table';
+
+export const NATIVE_DRIVERS: NativeDrivers[] = [
+  'postgres',
+  'alloy',
+  'mssql',
+  'mysql',
+  'bigquery',
+  'citus',
+  'cockroach',
+];
 
 export type NativeDrivers =
   | 'postgres'
@@ -97,18 +107,34 @@ export type QualifiedFunction = unknown;
 export type { LogicalModel, LogicalModelField } from './logicalModel';
 export type { NativeQuery, NativeQueryArgument } from './nativeQuery';
 export type {
+  QualifiedStoredProcedure,
   StoredProcedure,
   StoredProcedureArgument,
-  QualifiedStoredProcedure,
 } from './storedProcedure';
+export type { LocalArrayRelationship, LocalObjectRelationship } from './table';
 
-export type BulkKeepGoingResponse = [
+export type MetadataError = {
+  code: string;
+  error: string;
+  path: string;
+};
+export type BulkKeepGoingResponse = (
   | {
       message: 'success';
     }
+  | MetadataError
+)[];
+
+export type BulkAtomicResponse =
   | {
-      code: string;
-      error: string;
-      path: string;
+      message: 'success';
     }
-];
+  | MetadataError;
+
+export const isBulkAtomicResponseError = (
+  response: BulkAtomicResponse
+): response is MetadataError => {
+  return 'error' in response;
+};
+
+export { NativeQueryRelationship } from './nativeQuery';

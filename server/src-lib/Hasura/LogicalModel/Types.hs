@@ -4,11 +4,13 @@
 module Hasura.LogicalModel.Types
   ( LogicalModelName (..),
     LogicalModelField (..),
+    LogicalModelFields,
     LogicalModelType (..),
     LogicalModelTypeScalar (..),
     LogicalModelTypeArray (..),
     LogicalModelTypeReference (..),
     logicalModelFieldMapCodec,
+    LogicalModelLocation (..),
   )
 where
 
@@ -19,8 +21,9 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey, Value)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.Text.Extended (ToTxt)
+import Data.Text.Extended (ToTxt (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
+import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -298,6 +301,8 @@ instance (Backend b) => Hashable (LogicalModelField b)
 
 instance (Backend b) => NFData (LogicalModelField b)
 
+type LogicalModelFields b = InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b)
+
 -- we parse in as an array of NullableScalarTypeFromArray and then turn into
 -- InsOrdHashMap because JSON objects cannot be depended on for ordering
 logicalModelFieldMapCodec ::
@@ -305,8 +310,8 @@ logicalModelFieldMapCodec ::
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
-    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
+    (LogicalModelFields b)
+    (LogicalModelFields b)
 logicalModelFieldMapCodec =
   AC.dimapCodec
     ( InsOrdHashMap.fromList
@@ -317,3 +322,14 @@ logicalModelFieldMapCodec =
     ( fmap snd . InsOrdHashMap.toList
     )
     (AC.codec @[LogicalModelField b])
+
+-- when we are talking about permissions, they might be attached directly to a
+-- Native Query or similar
+data LogicalModelLocation
+  = LMLLogicalModel LogicalModelName
+  | LMLNativeQuery NativeQueryName
+  deriving (Eq, Ord, Show, Generic, Hashable)
+
+instance ToTxt LogicalModelLocation where
+  toTxt (LMLLogicalModel lmn) = toTxt lmn
+  toTxt (LMLNativeQuery nqn) = toTxt nqn

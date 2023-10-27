@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Column
     onlyNumCols,
     isNumCol,
     onlyComparableCols,
+    isComparableCol,
     parseScalarValueColumnTypeWithContext,
     parseScalarValueColumnType,
     parseScalarValuesColumnTypeWithContext,
@@ -51,7 +52,9 @@ import Data.Aeson hiding ((.=))
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
+import Data.Text (unpack)
 import Data.Text.Extended
+import Data.Tuple.Extra (uncurry3)
 import Hasura.Base.Error
 import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
@@ -217,6 +220,7 @@ data RawColumnType (b :: BackendType)
   | RawColumnTypeObject (XNestedObjects b) G.Name
   | RawColumnTypeArray (XNestedObjects b) (RawColumnType b) Bool
   deriving stock (Generic)
+  deriving (ToJSON, FromJSON) via Autodocodec (RawColumnType b)
 
 deriving instance (Backend b) => Eq (RawColumnType b)
 
@@ -228,21 +232,37 @@ deriving instance (Backend b) => Show (RawColumnType b)
 
 instance (Backend b) => NFData (RawColumnType b)
 
--- For backwards compatibility we want to serialize and deserialize
--- RawColumnTypeScalar as a ScalarType
-instance (Backend b) => ToJSON (RawColumnType b) where
-  toJSON = \case
-    RawColumnTypeScalar scalar -> toJSON scalar
-    other -> genericToJSON hasuraJSON other
-
-instance (Backend b) => FromJSON (RawColumnType b) where
-  parseJSON v = (RawColumnTypeScalar <$> parseJSON v) <|> genericParseJSON hasuraJSON v
-
--- Ideally we'd derive ToJSON and FromJSON instances from the HasCodec instance, rather than the other way around.
--- Unfortunately, I'm not sure if it's possible to write a proper HasCodec instance in the presence
--- of the (XNestedObjects b) type family, which may be Void.
 instance (Backend b) => HasCodec (RawColumnType b) where
-  codec = codecViaAeson "RawColumnType"
+  codec =
+    named "RawColumnType"
+      $
+      -- For backwards compatibility we want to serialize and deserialize
+      -- RawColumnTypeScalar as a ScalarType.
+      -- Note: we need to use `codecViaAeson` instead of `codec` because the `HasCodec` instance
+      -- for `PGScalarType` has diverged from the `ToJSON`/`FromJSON` instances.
+      matchChoiceCodec
+        (dimapCodec RawColumnTypeScalar id $ codecViaAeson "ScalarType")
+        (Autodocodec.object "ColumnTypeNonScalar" $ discriminatedUnionCodec "type" enc dec)
+        \case
+          RawColumnTypeScalar scalar -> Left scalar
+          ct -> Right ct
+    where
+      enc = \case
+        RawColumnTypeScalar _ -> error "unexpected RawColumnTypeScalar"
+        RawColumnTypeObject _ objectName -> ("object", mapToEncoder objectName columnTypeObjectCodec)
+        RawColumnTypeArray _ columnType isNullable -> ("array", mapToEncoder (columnType, isNullable) columnTypeArrayCodec)
+      dec =
+        HashMap.fromList
+          [ ("object", ("ColumnTypeObject", mapToDecoder (uncurry RawColumnTypeObject) columnTypeObjectCodec)),
+            ("array", ("ColumnTypeArray", mapToDecoder (uncurry3 RawColumnTypeArray) columnTypeArrayCodec))
+          ]
+      columnTypeObjectCodec = (,) <$> xNestedObjectsCodec <*> requiredField' "name"
+      columnTypeArrayCodec = (,,) <$> xNestedObjectsCodec <*> requiredField' "element_type" .= fst <*> requiredField' "nullable" .= snd
+      xNestedObjectsCodec :: ObjectCodec void (XNestedObjects b)
+      xNestedObjectsCodec =
+        bimapCodec supportsNestedObjects id (pureCodec ())
+      supportsNestedObjects :: void -> Either String (XNestedObjects b)
+      supportsNestedObjects _ = mapLeft (unpack . showQErr) $ backendSupportsNestedObjects @b
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
@@ -427,7 +447,10 @@ isNumCol :: forall b. (Backend b) => ColumnInfo b -> Bool
 isNumCol = isScalarColumnWhere (isNumType @b) . ciType
 
 onlyComparableCols :: forall b. (Backend b) => [ColumnInfo b] -> [ColumnInfo b]
-onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . ciType)
+onlyComparableCols = filter (isComparableCol @b)
+
+isComparableCol :: forall b. (Backend b) => ColumnInfo b -> Bool
+isComparableCol = isScalarColumnWhere (isComparableType @b) . ciType
 
 getColInfos :: (Backend b) => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =

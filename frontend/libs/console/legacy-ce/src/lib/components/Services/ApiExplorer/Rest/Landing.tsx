@@ -5,6 +5,7 @@ import LandingImage from './LandingImage';
 import { Button } from '../../../../new-components/Button';
 import _push from '../../Data/push';
 import { useAppDispatch } from '../../../../storeHooks';
+import { Analytics } from '../../../../features/Analytics';
 
 const landingDescription = `REST endpoints allow for the creation of a REST interface to your saved GraphQL queries and mutations.
 Endpoints are accessible from /api/rest/* and inherit the authorization and permission structure from your associated GraphQL nodes.
@@ -16,13 +17,15 @@ const Landing = () => {
     <div className="pl-md pt-md">
       <div className="flex">
         <h2 className="text-xl font-bold pr-2">REST Endpoints</h2>
-        <Button
-          mode="primary"
-          size="sm"
-          onClick={() => dispatch(_push('/api/rest/create'))}
-        >
-          Create REST
-        </Button>
+        <Analytics name="restified-create-btn-from-landing-page">
+          <Button
+            mode="primary"
+            size="sm"
+            onClick={() => dispatch(_push('/api/rest/create'))}
+          >
+            Create REST
+          </Button>
+        </Analytics>
       </div>
       <div className="pb-md pr-md">
         Create Rest endpoints on the top of existing GraphQL queries and

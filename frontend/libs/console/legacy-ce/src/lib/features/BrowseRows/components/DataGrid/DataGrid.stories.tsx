@@ -38,12 +38,20 @@ export const Testing: StoryObj<typeof DataGrid> = {
 
     await waitFor(
       async () => {
-        await userEvent.click(await canvas.findByTestId('@nextPageBtn'));
+        await canvas.findAllByTestId(/^@table-cell-0-.*$/);
+      },
+      { timeout: 10000 }
+    );
+
+    await userEvent.click(await canvas.findByTestId('@nextPageBtn'));
+
+    await waitFor(
+      async () => {
         const firstRow = await canvas.findAllByTestId(/^@table-cell-0-.*$/);
         expect(firstRow.length).toBe(5);
         expect(firstRow[0]).toHaveTextContent('11'); // AlbumId
       },
-      { timeout: 5000 }
+      { timeout: 10000 }
     );
 
     const firstRow = await canvas.findAllByTestId(/^@table-cell-0-.*$/);

@@ -4,10 +4,13 @@ module Harness.Permissions.Types
     insertPermission,
     SelectPermissionDetails (..),
     selectPermission,
+    LogicalModelSelectPermissionDetails (..),
+    logicalModelSelectPermission,
     UpdatePermissionDetails (..),
     updatePermission,
     DeletePermissionDetails (..),
     deletePermission,
+    InheritedRoleDetails (..),
   )
 where
 
@@ -19,9 +22,11 @@ import Hasura.Prelude
 -- tracking metadata API payload.
 data Permission
   = SelectPermission SelectPermissionDetails
+  | LogicalModelSelectPermission LogicalModelSelectPermissionDetails
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
   | DeletePermission DeletePermissionDetails
+  | InheritedRole InheritedRoleDetails
   deriving (Eq, Show)
 
 data SelectPermissionDetails = SelectPermissionDetails
@@ -29,9 +34,19 @@ data SelectPermissionDetails = SelectPermissionDetails
     selectPermissionTable :: Text,
     selectPermissionRole :: Text,
     selectPermissionColumns :: [Text],
+    selectPermissionComputedFields :: [Text],
     selectPermissionRows :: Value,
     selectPermissionAllowAggregations :: Bool,
     selectPermissionLimit :: Value
+  }
+  deriving (Eq, Show)
+
+data LogicalModelSelectPermissionDetails = LogicalModelSelectPermissionDetails
+  { lmSelectPermissionSource :: Maybe Text,
+    lmSelectPermissionName :: Text,
+    lmSelectPermissionRole :: Text,
+    lmSelectPermissionColumns :: [Text],
+    lmSelectPermissionFilter :: Value
   }
   deriving (Eq, Show)
 
@@ -64,6 +79,12 @@ data DeletePermissionDetails = DeletePermissionDetails
   }
   deriving (Eq, Show)
 
+data InheritedRoleDetails = InheritedRoleDetails
+  { inheritedRoleName :: Text,
+    inheritedRoleRoleSet :: [Text]
+  }
+  deriving (Eq, Show)
+
 selectPermission :: SelectPermissionDetails
 selectPermission =
   SelectPermissionDetails
@@ -71,9 +92,20 @@ selectPermission =
       selectPermissionTable = mempty,
       selectPermissionRole = "test-role",
       selectPermissionColumns = mempty,
+      selectPermissionComputedFields = mempty,
       selectPermissionRows = object [],
       selectPermissionAllowAggregations = False,
       selectPermissionLimit = Null
+    }
+
+logicalModelSelectPermission :: LogicalModelSelectPermissionDetails
+logicalModelSelectPermission =
+  LogicalModelSelectPermissionDetails
+    { lmSelectPermissionSource = Nothing,
+      lmSelectPermissionName = "",
+      lmSelectPermissionRole = "",
+      lmSelectPermissionColumns = [],
+      lmSelectPermissionFilter = object []
     }
 
 updatePermission :: UpdatePermissionDetails

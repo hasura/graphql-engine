@@ -178,6 +178,7 @@ interface BuildFieldElementArgs {
   depth: number;
   isSubfield: boolean;
   fieldOptions: HasuraRsFields;
+  showOnlySelectable: boolean;
 }
 
 const buildFieldElement = ({
@@ -188,6 +189,7 @@ const buildFieldElement = ({
   fieldOptions,
   depth,
   isSubfield,
+  showOnlySelectable = false,
 }: BuildFieldElementArgs): TreeNode => {
   const { type: fieldType }: { type: GraphQLType } = getUnderlyingType(
     field.type
@@ -236,6 +238,7 @@ const buildFieldElement = ({
             key: `${fieldKey}.__placeholder.sub_fields.${depth}`,
             checkable: false,
             type: 'field',
+            disabled: true,
             depth,
           },
           ...Object.values(subFields).map(subField =>
@@ -247,10 +250,28 @@ const buildFieldElement = ({
               fieldOptions,
               depth: depth + 1,
               isSubfield: true,
+              showOnlySelectable,
             })
           ),
         ];
       }
+    }
+  }
+
+  if (showOnlySelectable) {
+    children = children.filter(child => !child.disabled);
+    if (children.length === 0) {
+      children = [
+        {
+          title: (
+            <FieldLabel title="No selectable items available for this type" />
+          ),
+          key: `${fieldKey}.__placeholder.sub_fields.${depth}`,
+          checkable: false,
+          type: 'field',
+          depth,
+        },
+      ];
     }
   }
 
@@ -279,6 +300,7 @@ interface BuildTreeArgs {
   >;
   rootFields: AllowedRootFields;
   fields: HasuraRsFields;
+  showOnlySelectable: boolean;
 }
 
 export const buildTree = ({
@@ -287,6 +309,7 @@ export const buildTree = ({
   setRelationshipFields,
   fields: fieldOptions,
   rootFields,
+  showOnlySelectable = false,
 }: BuildTreeArgs): TreeNode[] => {
   const treeData: TreeNode[] = [];
   if (rootFields.includes('query')) {
@@ -309,6 +332,7 @@ export const buildTree = ({
             fieldOptions,
             depth: 0,
             isSubfield: false,
+            showOnlySelectable,
           })
         ),
       });
@@ -334,6 +358,7 @@ export const buildTree = ({
             fieldOptions,
             depth: 0,
             isSubfield: false,
+            showOnlySelectable,
           })
         ),
       });
@@ -359,6 +384,7 @@ export const buildTree = ({
             fieldOptions,
             depth: 0,
             isSubfield: false,
+            showOnlySelectable,
           })
         ),
       });

@@ -12,6 +12,7 @@ module Test.Backend.Postgres.Update
   )
 where
 
+import Data.Aeson (ToJSON (toJSON))
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Translate.Update qualified as Update
 import Hasura.Prelude
@@ -55,10 +56,11 @@ runTest TestBuilder {..} =
                   Expect.aubColumns = columns,
                   Expect.aubUpdateVariant = updateVariant
                 }
-    case Update.mkUpdateCTE @'Vanilla upd of
-      (Update.Update cte) ->
-        SI.fromText (toSQLTxt cte) `shouldBe` SI.fromText expectedSQL
-      _ -> assertFailure "expected single update, got multiple updates"
+    updateCTE <- runExceptT (Update.mkUpdateCTE @'Vanilla dummyUserInfo upd)
+    case updateCTE of
+      Right (Update.Update cte) -> SI.fromText (toSQLTxt cte) `shouldBe` SI.fromText expectedSQL
+      Right (Update.MultiUpdate _) -> assertFailure "expected single update, got multiple updates"
+      Left qErr -> assertFailure $ show $ toJSON qErr
 
 -- | Runs a test for /update_many/
 runMultipleUpdates :: TestBuilder [Text] -> Spec
@@ -73,11 +75,13 @@ runMultipleUpdates TestBuilder {..} =
                   Expect.aubColumns = columns,
                   Expect.aubUpdateVariant = updateVariant
                 }
-    case Update.mkUpdateCTE @'Vanilla upd of
-      (Update.MultiUpdate ctes) ->
+    updateCTE <- runExceptT (Update.mkUpdateCTE @'Vanilla dummyUserInfo upd)
+    case updateCTE of
+      Right (Update.Update _) -> assertFailure "expected update_many, got single update"
+      Right (Update.MultiUpdate ctes) ->
         SI.fromText
           . toSQLTxt
           <$> ctes
           `shouldBe` SI.fromText
-          <$> expectedSQL
-      _ -> assertFailure "expected update_many, got single update"
+            <$> expectedSQL
+      Left qErr -> assertFailure $ show $ toJSON qErr

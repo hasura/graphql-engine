@@ -17,6 +17,8 @@ import {
 } from '../../../../../../../metadata/types';
 
 import { createPermissionsObject } from './utils';
+import z from 'zod';
+import { inputValidationSchema } from '../../../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 
 interface GetMetadataTableArgs {
   table: unknown;
@@ -37,11 +39,12 @@ export interface CreateDefaultValuesArgs {
   roleName: string;
   table: unknown;
   dataSourceName: string;
-  metadata: Metadata;
+  metadata: Metadata | undefined;
   tableColumns: TableColumn[];
   defaultQueryRoot: string | never[];
   metadataSource: MetadataDataSource | undefined;
   supportedOperators: Operator[];
+  validateInput: z.infer<typeof inputValidationSchema>;
 }
 
 export const createDefaultValues = ({
@@ -52,6 +55,7 @@ export const createDefaultValues = ({
   defaultQueryRoot,
   metadataSource,
   supportedOperators,
+  validateInput,
 }: CreateDefaultValuesArgs) => {
   const selectedTable = getMetadataTable({
     table,
@@ -67,9 +71,11 @@ export const createDefaultValues = ({
 
   const baseDefaultValues: DefaultValues = {
     queryType: 'select',
+    comment: '',
     filterType: 'none',
     columns: {},
     supportedOperators,
+    validateInput,
   };
 
   if (selectedTable) {

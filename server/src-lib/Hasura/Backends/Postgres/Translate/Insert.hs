@@ -13,46 +13,55 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Session (UserInfo)
 
 mkInsertCTE ::
-  (Backend ('Postgres pgKind)) =>
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
+  UserInfo ->
   InsertQueryP1 ('Postgres pgKind) ->
-  S.TopLevelCTE
-mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
-  S.CTEInsert insert
-  where
-    tupVals = S.ValuesExp $ map S.TupleExp vals
-    insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict tn <$> conflict)
-        . Just
-        . S.RetExp
-        $ [ S.selectStar,
-            insertOrUpdateCheckExpr
-              tn
-              conflict
-              (toSQLBool insCheck)
-              (fmap toSQLBool updCheck)
-          ]
-    toSQLBool = toSQLBoolExp $ S.QualTable tn
+  m S.TopLevelCTE
+mkInsertCTE userInfo (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) = do
+  let toSQLBool = toSQLBoolExp userInfo $ S.QualTable tn
+  insCheckBoolExp <- toSQLBool insCheck
+  updateCheckBoolExps <- traverse toSQLBool updCheck
+  sqlConflictExp <- traverse (toSQLConflict userInfo tn) conflict
+  let tupVals = S.ValuesExp $ map S.TupleExp vals
+      insert =
+        S.SQLInsert tn cols tupVals sqlConflictExp
+          . Just
+          . S.RetExp
+          $ [ S.selectStar,
+              insertOrUpdateCheckExpr
+                tn
+                conflict
+                insCheckBoolExp
+                updateCheckBoolExps
+            ]
+
+  pure $ S.CTEInsert insert
 
 toSQLConflict ::
-  (Backend ('Postgres pgKind)) =>
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
+  UserInfo ->
   QualifiedTable ->
   OnConflictClause ('Postgres pgKind) S.SQLExp ->
-  S.SQLConflict
-toSQLConflict tableName = \case
-  OCCDoNothing ct -> S.DoNothing $ toSQLCT <$> ct
-  OCCUpdate OnConflictClauseData {..} ->
-    S.Update
-      (toSQLCT cp1udConflictTarget)
-      (S.buildUpsertSetExp cp1udAffectedColumns cp1udValues)
+  m S.SQLConflict
+toSQLConflict userInfo tableName = \case
+  OCCDoNothing ct -> pure $ S.DoNothing $ toSQLCT <$> ct
+  OCCUpdate OnConflictClauseData {..} -> do
+    boolExp <- toSQLBoolExp userInfo (S.QualTable tableName) cp1udFilter
+    pure
+      $ S.Update
+        (toSQLCT cp1udConflictTarget)
+        (S.buildUpsertSetExp cp1udAffectedColumns cp1udValues)
       $ Just
       $ S.WhereFrag
-      $ toSQLBoolExp (S.QualTable tableName) cp1udFilter
+      $ boolExp
   where
     toSQLCT ct = case ct of
       CTColumn pgCols -> S.SQLColumn pgCols

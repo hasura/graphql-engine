@@ -7,7 +7,9 @@ module Hasura.GraphQL.Parser.Internal.Input
     enum,
     field,
     fieldOptional,
+    fieldOptional',
     fieldWithDefault,
+    fieldWithDefault',
     inputParserInput,
     list,
     object,
@@ -18,7 +20,7 @@ where
 import Control.Applicative (Alternative ((<|>)), liftA2)
 import Control.Arrow ((>>>))
 import Control.Lens hiding (enum, index)
-import Control.Monad (unless, (<=<), (>=>))
+import Control.Monad (join, unless, (<=<), (>=>))
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
@@ -293,6 +295,29 @@ fieldOptional name description parser =
   where
     expectedType = toGraphQLType $ nullableType $ pType parser
 
+fieldOptional' ::
+  (MonadParse m, 'Input <: k) =>
+  Name ->
+  Maybe Description ->
+  Parser origin k m a ->
+  InputFieldsParser origin m (Maybe a)
+fieldOptional' name description parser =
+  InputFieldsParser
+    { ifDefinitions =
+        [ Definition name description Nothing [] $
+            InputFieldInfo (nullableType $ pType parser) Nothing
+        ],
+      ifParser =
+        HashMap.lookup name
+          >>> withKey (J.Key (K.fromText (unName name)))
+            . fmap join
+            . traverse \x -> do
+              val <- peelVariableWith False expectedType x
+              for val $ pInputParser parser
+    }
+  where
+    expectedType = toGraphQLType $ nullableType $ pType parser
+
 -- | Creates a parser for an input field with the given default value. The
 -- resulting field will always be optional, even if the underlying parser
 -- rejects `null` values. The underlying parser is always called.
@@ -311,7 +336,46 @@ fieldWithDefault name description defaultValue parser =
       ifParser =
         HashMap.lookup name
           >>> withKey (J.Key (K.fromText (unName name))) . \case
-            Just value -> peelVariableWith True expectedType value >>= pInputParser parser
+            Just value -> do
+              val <- peelVariableWith True expectedType value
+              case val of
+                Just x -> pInputParser parser x
+                -- TODO: If the variable has no value, then we SHOULD use
+                -- `defaultValue` rather than null.  This corresponds to step
+                -- 5.h.i. in algorithm `CoerceArgumentValues` in section 6.4.1
+                -- in the June 2018 GraphQL spec:
+                -- http://spec.graphql.org/June2018/#sec-Coercing-Field-Arguments
+                -- Currently using null instead to avoid breakages.
+                Nothing -> pInputParser parser $ GraphQLValue VNull
+            Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
+    }
+  where
+    expectedType = toGraphQLType $ pType parser
+
+fieldWithDefault' ::
+  (MonadParse m, 'Input <: k) =>
+  Name ->
+  Maybe Description ->
+  -- | default value
+  Value Void ->
+  Parser origin k m a ->
+  InputFieldsParser origin m a
+fieldWithDefault' name description defaultValue parser =
+  InputFieldsParser
+    { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
+      ifParser =
+        HashMap.lookup name
+          >>> withKey (J.Key (K.fromText (unName name))) . \case
+            Just value -> do
+              val <- peelVariableWith True expectedType value
+              case val of
+                Just x -> pInputParser parser x
+                -- If the variable has no value, then we SHOULD use
+                -- `defaultValue` rather than null.  This corresponds to step
+                -- 5.h.i. in algorithm `CoerceArgumentValues` in section 6.4.1
+                -- in the June 2018 GraphQL spec:
+                -- http://spec.graphql.org/June2018/#sec-Coercing-Field-Arguments
+                Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
             Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
     }
   where

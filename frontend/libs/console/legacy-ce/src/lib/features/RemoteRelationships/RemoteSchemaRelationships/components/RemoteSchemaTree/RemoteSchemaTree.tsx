@@ -25,32 +25,44 @@ export interface RemoteSchemaTreeProps
    */
   schema: GraphQLSchema;
   relationshipFields: RelationshipFields[];
+  selectedOperation?: string;
   rootFields: AllowedRootFields;
   setRelationshipFields: React.Dispatch<
     React.SetStateAction<RelationshipFields[]>
   >;
   fields: HasuraRsFields;
+  showOnlySelectable?: boolean;
 }
 
 export const RemoteSchemaTree = ({
   schema,
   relationshipFields,
   rootFields,
+  selectedOperation,
   setRelationshipFields,
   fields,
+  showOnlySelectable = false,
   ...rest
 }: RemoteSchemaTreeProps) => {
-  const tree: TreeNode[] = useMemo(
-    () =>
-      buildTree({
-        schema,
-        relationshipFields,
-        setRelationshipFields,
-        fields,
-        rootFields,
-      }),
-    [relationshipFields, schema, rootFields, fields]
-  );
+  const tree: TreeNode[] = useMemo(() => {
+    let tree = buildTree({
+      schema,
+      relationshipFields,
+      setRelationshipFields,
+      fields,
+      rootFields,
+      showOnlySelectable,
+    });
+    if (selectedOperation) {
+      const selectedOperationSubTree = tree[0].children?.find(
+        child => child.key === `__query.field.${selectedOperation}`
+      );
+      if (selectedOperationSubTree) {
+        tree = [selectedOperationSubTree];
+      }
+    }
+    return tree;
+  }, [relationshipFields, schema, rootFields, fields, selectedOperation]);
 
   const expandedKeys = useMemo(
     () => getExpandedKeys(relationshipFields),
@@ -126,6 +138,7 @@ export const RemoteSchemaTree = ({
 
       // remove all the fields and their children which are on same/higher depth, and add the current field
       // as one parent can have only one field at a certain depth
+
       setRelationshipFields([
         ...relationshipFields.filter(
           field =>
@@ -149,10 +162,19 @@ export const RemoteSchemaTree = ({
     <AntTree
       checkable
       checkStrictly
-      blockNode
+      blockNode={false}
       selectable={false}
       onCheck={onCheck}
       onExpand={onExpand}
+      onClick={(nativeEvent, node) => {
+        if ((node?.children?.length || 0) > 0) {
+          onExpand([node.key], {
+            node,
+            expanded: node.expanded,
+            nativeEvent: nativeEvent.nativeEvent,
+          });
+        }
+      }}
       treeData={tree}
       expandedKeys={expandedKeys}
       checkedKeys={checkedKeys}

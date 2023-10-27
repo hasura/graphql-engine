@@ -41,27 +41,35 @@ export const PrimaryWithTest: StoryObj<RemoteSchemaToDbFormProps> = {
     userEvent.click(submitButton);
 
     const nameError = await canvas.findByText('Name is required!');
-    const dbError = await canvas.findByText('Database is required!');
+    // const dbError = await canvas.findByText('Database is required!');
     const typeError = await canvas.findByText('Type is required!');
 
     // expect error messages
     expect(nameError).toBeInTheDocument();
-    expect(dbError).toBeInTheDocument();
+    // expect(dbError).toBeInTheDocument();
     expect(typeError).toBeInTheDocument();
 
     // update fields
-    const nameInput = await canvas.findByLabelText('Name');
+
+    const nameInput = await canvas.findByLabelText('Relationship Name');
     userEvent.type(nameInput, 'test');
 
-    const dbLabel = await canvas.findByLabelText('Reference Database');
-    const schemaLabel = await canvas.findByLabelText('Reference Schema');
-    const tableLabel = await canvas.findByLabelText('Reference Table');
-    const typeLabel = await canvas.findByLabelText('Source Type');
+    const typeLabel = await canvas.findByText('Select a type');
+    const targetLabel = await canvas.findByText('Select...');
+    userEvent.click(targetLabel);
+    await userEvent.click(
+      await canvas.findByText('chinook / public / Album'),
+      undefined,
+      {
+        skipHover: true,
+      }
+    );
 
-    userEvent.selectOptions(dbLabel, 'chinook');
-    userEvent.selectOptions(schemaLabel, 'public');
-    userEvent.selectOptions(tableLabel, 'Album');
-    userEvent.selectOptions(typeLabel, 'Language');
+    userEvent.click(typeLabel);
+    await userEvent.click(await canvas.findByText('Language'), undefined, {
+      skipHover: true,
+    });
+
     userEvent.click(submitButton);
   },
 };

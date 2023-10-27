@@ -1,4 +1,4 @@
-import { rest } from 'msw';
+import { DefaultBodyType, PathParams, RestRequest, rest } from 'msw';
 import { MockMetadataOptions, buildMetadata } from '../../mocks/metadata';
 
 type ResultBase = 'success' | 'native_queries_disabled';
@@ -22,6 +22,49 @@ type HandlersOptions = {
   enabledFeatureFlag?: boolean;
 };
 
+export type BulkArgsType<ArgType> = {
+  type: string;
+  args: ArgType;
+};
+
+type NativeQueryPayloadArg = {
+  root_field_name?: string;
+  name?: string;
+  source?: string;
+};
+
+type ExtractReturn<ArgType> = {
+  type: string;
+  isBulkAtomic: boolean;
+  args: ArgType;
+};
+
+// this function extracts a "type" argument
+// bc bulk_atomic has multiple "type"'s within it's payload, we get the last one as an approximation
+export const extractTypeAndArgs = async <ArgType = unknown>(
+  req: RestRequest<DefaultBodyType, PathParams<string>>
+): Promise<ExtractReturn<ArgType>> => {
+  const body = await req.json<{
+    type: string;
+    args: BulkArgsType<ArgType>[];
+  }>();
+
+  if (body.type !== 'bulk_atomic') {
+    return {
+      isBulkAtomic: false,
+      type: body.type,
+      args: body.args as ArgType,
+    };
+  }
+
+  const finalBulkStep = body.args[body.args.length - 1];
+
+  return {
+    isBulkAtomic: true,
+    ...finalBulkStep,
+  };
+};
+
 export const nativeQueryHandlers = ({
   metadataOptions,
   trackNativeQueryResult = 'success',
@@ -31,21 +74,18 @@ export const nativeQueryHandlers = ({
   enabledFeatureFlag = true,
 }: HandlersOptions) => [
   rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-    const reqBody = await req.json<{
-      type: string;
-      args: { root_field_name?: string; name?: string; source?: string };
-    }>();
+    const { type, args } = await extractTypeAndArgs<NativeQueryPayloadArg>(req);
 
     const response = (
       json: Record<string, any>,
       status: 200 | 400 | 500 = 200
     ) => res(ctx.status(status), ctx.delay(100), ctx.json(json));
 
-    if (reqBody.type === 'export_metadata') {
+    if (type === 'export_metadata') {
       return response(buildMetadata(metadataOptions));
     }
 
-    if (reqBody.type.endsWith('_track_native_query')) {
+    if (type.endsWith('_track_native_query')) {
       switch (trackNativeQueryResult) {
         case 'success':
           return response({ message: 'success' });
@@ -53,7 +93,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'already-tracked',
-              error: `Native query '${reqBody.args.root_field_name}' is already tracked.`,
+              error: `Native query '${args.root_field_name}' is already tracked.`,
               path: '$.args',
             },
             400
@@ -92,7 +132,7 @@ export const nativeQueryHandlers = ({
           );
       }
     }
-    if (reqBody.type.endsWith('_untrack_native_query')) {
+    if (type.endsWith('_untrack_native_query')) {
       switch (untrackNativeQueryResult) {
         case 'success':
           return response({ message: 'success' });
@@ -100,7 +140,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'not-found',
-              error: `Native query "${reqBody.args.root_field_name}" not found in source "${reqBody.args.source}".`,
+              error: `Native query "${args.root_field_name}" not found in source "${args.source}".`,
               path: '$.args',
             },
             400
@@ -117,7 +157,7 @@ export const nativeQueryHandlers = ({
       }
     }
 
-    if (reqBody.type.endsWith('_track_logical_model')) {
+    if (type.endsWith('_track_logical_model')) {
       switch (trackLogicalModelResult) {
         case 'success':
           return response({ message: 'success' });
@@ -125,7 +165,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'already-tracked',
-              error: `Logical model '${reqBody.args.name}' is already tracked.`,
+              error: `Logical model '${args.name}' is already tracked.`,
               path: '$.args',
             },
             400
@@ -141,7 +181,7 @@ export const nativeQueryHandlers = ({
           );
       }
     }
-    if (reqBody.type.endsWith('_untrack_logical_model')) {
+    if (type.endsWith('_untrack_logical_model')) {
       switch (untrackLogicalModelResult) {
         case 'success':
           return response({ message: 'success' });
@@ -149,7 +189,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'not-found',
-              error: `Logical model "${reqBody.args.name}" not found in source "${reqBody.args.source}".`,
+              error: `Logical model "${args.name}" not found in source "${args.source}".`,
               path: '$.args',
             },
             400
@@ -158,7 +198,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'constraint-violation',
-              error: `Custom type "${reqBody.args.name}" still being used by native query "hello_mssql_function".`,
+              error: `Custom type "${args.name}" still being used by native query "hello_mssql_function".`,
               path: '$.args',
             },
             400

@@ -49,6 +49,7 @@ backendTypeMetadata =
         data_schema:
           supports_primary_keys: true
           supports_foreign_keys: true
+        post_schema: {}
         scalar_types:
           DateTime: {}
         queries: {}
@@ -65,7 +66,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = scalarType
     }
 
 --------------------------------------------------------------------------------
@@ -229,7 +231,7 @@ mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   Text.unwords
     [ wrapIdentifier columnName,
-      scalarType columnType,
+      toColumnType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
     ]
@@ -263,7 +265,18 @@ mkReference _schemaName Schema.Reference {referenceLocalColumn, referenceTargetT
 
 scalarType :: Schema.ScalarType -> Text
 scalarType = \case
+  Schema.TInt -> "number"
+  Schema.TDouble -> "number"
+  Schema.TStr -> "string"
+  Schema.TUTCTime -> "DateTime"
+  Schema.TBool -> "bool"
+  Schema.TGeography -> "string"
+  Schema.TCustomType txt -> Schema.getBackendScalarType txt Schema.bstSqlite
+
+toColumnType :: Schema.ScalarType -> Text
+toColumnType = \case
   Schema.TInt -> "INTEGER"
+  Schema.TDouble -> "REAL"
   Schema.TStr -> "TEXT"
   Schema.TUTCTime -> "TIMESTAMP"
   Schema.TBool -> "BOOLEAN"
@@ -274,6 +287,7 @@ scalarType = \case
 serialize :: Schema.ScalarValue -> Text
 serialize = \case
   Schema.VInt i -> tshow i
+  Schema.VDouble d -> tshow d
   Schema.VStr s -> "'" <> Text.replace "'" "\'" s <> "'"
   Schema.VUTCTime t -> Text.pack $ Time.formatTime Time.defaultTimeLocale "'%F %T'" t
   Schema.VBool b -> if b then "1" else "0"

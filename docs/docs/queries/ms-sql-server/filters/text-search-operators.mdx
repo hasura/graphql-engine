@@ -1,0 +1,96 @@
+---
+sidebar_label: Filter using text values
+sidebar_position: 3
+description: Filter query results and search queries on MS SQL Server in Hasura
+keywords:
+  - hasura
+  - docs
+  - ms sql server
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# MS SQL Server: Filter Using Text Values
+
+## \_like
+
+The `_like` and `_nlike` operators are used for pattern matching on string/text fields.
+
+Fetch a list of articles whose titles contain the word “amet”:
+
+<GraphiQLIDE
+  query={`query {
+  articles(
+    where: {title: {_like: "%amet%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+"data": {
+  "articles": [
+    {
+      "id": 1,
+      "title": "sit amet"
+    },
+    {
+      "id": 3,
+      "title": "amet justo morbi"
+    },
+    {
+      "id": 9,
+      "title": "sit amet"
+    }
+  ]`}
+/>
+
+## \_nlike
+
+Fetch a list of articles whose titles do not contain the word “amet”:
+
+<GraphiQLIDE
+  query={`query {
+  articles(
+    where: {title: {_nlike: "%amet%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+"data": {
+    "articles": [
+        {
+        "id": 2,
+        "title": "nisi amet"
+        },
+        {
+        "id": 4,
+        "title": "nisi amet"
+        },
+        {
+        "id": 5,
+        "title": "nisi amet"
+        },
+        {
+        "id": 6,
+        "title": "nisi amet"
+        },
+        {
+        "id": 7,
+        "title": "nisi amet"
+        },
+        {
+        "id": 8,
+        "title": "nisi amet"
+        },
+        {
+        "id": 10,
+        "title": "nisi amet"
+        }
+    ]`}
+/>

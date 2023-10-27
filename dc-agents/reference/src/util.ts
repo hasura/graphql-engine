@@ -1,4 +1,4 @@
-﻿import { TableName } from "@hasura/dc-api-types";
+﻿import { FunctionName, TableName, TargetName } from "@hasura/dc-api-types";
 
 export const coerceUndefinedToNull = <T>(v: T | undefined): T | null => v === undefined ? null : v;
 
@@ -68,9 +68,22 @@ export const reduceOrIterable = (iterable: Iterable<boolean>): boolean => {
   return false;
 }
 
-export const nameEquals = (name1: TableName) => (name2: TableName): boolean => {
+export const nameEquals = (name1: TableName | FunctionName) => (name2: TableName | FunctionName): boolean => {
   if (name1.length !== name2.length)
     return false;
 
   return zip(name1, name2).every(([n1, n2]) => n1 === n2);
+}
+
+export const targetNameEquals = (name1: TargetName) => (name2: TargetName): boolean => {
+  switch (name1.type) {
+    case 'table':
+      return name2.type === "table" && nameEquals(name1.table)(name2.table);
+    case 'function':
+      return name2.type === "function" && nameEquals(name1.function)(name2.function);
+    case 'interpolated':
+      return name2.type === "interpolated" && name1.interpolated == name2.interpolated;
+    default:
+      return unreachable(name1["type"]);
+  }
 }

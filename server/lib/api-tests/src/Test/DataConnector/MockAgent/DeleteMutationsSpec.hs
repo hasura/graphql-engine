@@ -178,21 +178,22 @@ tests = do
 
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Album",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Artist",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Artist",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.DeleteOperation
@@ -204,17 +205,17 @@ tests = do
                            $ Set.fromList
                              [ API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
                                API.ApplyBinaryComparisonOperator
                                  API.GreaterThan
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 111) (API.ScalarType "number"))
                              ],
                        API._dmoReturningFields =
                          mkFieldsMap
-                           [ ("deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                             ("deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                           [ ("deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                             ("deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing),
                              ( "deletedRows_Artist",
                                API.RelField
                                  ( API.RelationshipField
@@ -222,8 +223,8 @@ tests = do
                                      ( emptyQuery
                                          & API.qFields
                                          ?~ mkFieldsMap
-                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                             ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
                                            ]
                                      )
                                  )
@@ -286,21 +287,22 @@ tests = do
 
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Album",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Artist",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Artist",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.DeleteOperation
@@ -312,17 +314,17 @@ tests = do
                            $ Set.fromList
                              [ API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
                                API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 112) (API.ScalarType "number"))
                              ],
                        API._dmoReturningFields =
                          mkFieldsMap
-                           [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                             ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                           [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                             ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing),
                              ( "Artist",
                                API.RelField
                                  ( API.RelationshipField
@@ -330,8 +332,8 @@ tests = do
                                      ( emptyQuery
                                          & API.qFields
                                          ?~ mkFieldsMap
-                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                             ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
                                            ]
                                      )
                                  )

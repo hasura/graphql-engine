@@ -94,11 +94,13 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       supports_foreign_keys: true,
       column_nullability: "nullable_and_non_nullable",
     },
+    post_schema: {},
     scalar_types,
     queries: {
       foreach: {}
     },
     relationships: {},
+    interpolated_queries: {},
     comparisons: {
       subquery: {
         supports_relations: true

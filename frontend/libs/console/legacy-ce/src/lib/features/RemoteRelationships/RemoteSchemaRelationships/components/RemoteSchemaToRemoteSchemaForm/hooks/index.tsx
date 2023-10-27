@@ -27,6 +27,7 @@ export const useDefaultValues = ({
   );
 
   const relationshipInfo = relationship?.definition?.to_remote_schema;
+
   const defaultValues: RsToRsSchema = React.useMemo(
     () => ({
       relationshipMethod: 'remoteSchema',
@@ -35,6 +36,8 @@ export const useDefaultValues = ({
       rsSourceType: rsToRsRelationship?.type_name || '',
       referenceRemoteSchema: relationshipInfo?.remote_schema || '',
       resultSet: relationshipInfo?.remote_field || '',
+      selectedOperation:
+        Object.keys(relationshipInfo?.remote_field ?? {})?.[0] ?? '',
       relationship,
     }),
     [relationship, relationshipInfo, rsToRsRelationship, sourceRemoteSchema]

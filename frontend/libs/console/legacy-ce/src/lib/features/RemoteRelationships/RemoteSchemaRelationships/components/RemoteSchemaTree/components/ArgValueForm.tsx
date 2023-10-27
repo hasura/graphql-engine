@@ -8,9 +8,11 @@ import {
   ArgValueKind,
   HasuraRsFields,
   RelationshipFields,
+  RsToRsSchema,
 } from '../../../types';
 import { defaultArgValue } from '../utils';
 import StaticArgValue from './StaticArgValue';
+import { useFormContext } from 'react-hook-form';
 
 const fieldStyle =
   'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
@@ -25,11 +27,6 @@ export interface ArgValueFormProps {
   argType: GraphQLType;
 }
 
-const argValueTypeOptions = [
-  { key: 'field', content: 'Source Field' },
-  { key: 'static', content: 'Static Value' },
-];
-
 export const ArgValueForm = ({
   argKey,
   relationshipFields,
@@ -39,6 +36,15 @@ export const ArgValueForm = ({
   argType,
 }: ArgValueFormProps) => {
   const [localArgValue, setLocalArgValue] = useState(argValue);
+
+  const { watch } = useFormContext<RsToRsSchema>();
+
+  const sourceType = watch('rsSourceType');
+
+  const argValueTypeOptions = [
+    { key: 'field', content: `Source Type Field (${sourceType})` },
+    { key: 'static', content: 'Static Value' },
+  ];
 
   useEffect(() => {
     setLocalArgValue(argValue);
@@ -132,7 +138,7 @@ export const ArgValueForm = ({
             <>
               <label htmlFor="fromField" className="text-muted font-semibold">
                 <FaCircle className="text-green-600 mr-2 mb-1" />
-                From Field
+                From Source Type Field
               </label>
               <select
                 className={fieldStyle}
@@ -142,7 +148,7 @@ export const ArgValueForm = ({
                 id="fromField"
               >
                 <option value="" disabled>
-                  Select Field...
+                  Select Field from {sourceType}
                 </option>
                 {(fields ?? []).map(option => (
                   <option key={option} value={option}>

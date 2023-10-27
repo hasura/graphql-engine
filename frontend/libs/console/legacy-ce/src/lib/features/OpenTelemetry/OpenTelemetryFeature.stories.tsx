@@ -8,6 +8,7 @@ import { OpenTelemetryFeature } from './OpenTelemetryFeature';
 import { eeLicenseInfo } from '../EETrial/mocks/http';
 import { registerEETrialLicenseActiveMutation } from '../EETrial/mocks/registration.mock';
 import { HasuraMetadataV3 } from '../../metadata/types';
+import { ConsoleTypeDecorator } from '../../storybook/decorators';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ const mockMetadataHandler = (
             protocol: 'http/protobuf',
             resource_attributes: [],
             otlp_traces_endpoint: '',
+            traces_propagators: [],
           },
           data_types: [],
           batch_span_processor: {
@@ -63,6 +65,7 @@ const mockMetadataHandler = (
             protocol: 'http/protobuf',
             resource_attributes: [],
             otlp_traces_endpoint: '',
+            traces_propagators: [],
           },
           data_types: [],
           batch_span_processor: {
@@ -92,6 +95,7 @@ export default {
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     ),
+    ConsoleTypeDecorator({ consoleType: 'pro-lite' }),
   ],
 } as Meta<typeof OpenTelemetryFeature>;
 
@@ -109,7 +113,6 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetryFeature> = {
       registerEETrialLicenseActiveMutation,
       eeLicenseInfo.active,
     ],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -122,7 +125,6 @@ export const Loading: StoryObj<typeof OpenTelemetryFeature> = {
 
   parameters: {
     msw: [mockMetadataHandler(true, 'infinite'), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -135,7 +137,6 @@ export const Enabled: StoryObj<typeof OpenTelemetryFeature> = {
 
   parameters: {
     msw: [mockMetadataHandler(true, 1), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -148,7 +149,6 @@ export const Disabled: StoryObj<typeof OpenTelemetryFeature> = {
 
   parameters: {
     msw: [mockMetadataHandler(false, 1), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -161,6 +161,5 @@ export const Error: StoryObj<typeof OpenTelemetryFeature> = {
 
   parameters: {
     msw: [mockMetadataHandler(false, 1, 500), eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };

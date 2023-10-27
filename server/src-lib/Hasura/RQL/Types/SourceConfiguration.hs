@@ -50,4 +50,8 @@ class
   -- template
   sourceConfigConnectonTemplateEnabled :: SourceConfig b -> Bool
 
+  -- | Whether or not the source supports performing column redaction.
+  -- See note [SQL generation for inherited roles] for more information
+  sourceSupportsColumnRedaction :: SourceConfig b -> Bool
+
   sourceConfigBackendSourceKind :: SourceConfig b -> BackendSourceKind b

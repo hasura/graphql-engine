@@ -10,6 +10,7 @@ where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Exception (bracket)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as ByteString
 import Data.Text qualified as Text
 import Database.PG.Query qualified as PG
@@ -46,7 +47,7 @@ dbContainer :: TC.Network -> TC.TestContainer Database
 dbContainer network = do
   container <-
     TC.run
-      $ TC.containerRequest (TC.fromTag ("postgis/postgis:15-3.3-alpine"))
+      $ TC.containerRequest (TC.fromTag ("postgis/postgis:16-3.4-alpine"))
       & TC.setSuffixedName "hge-test-upgrade-db"
       & TC.withNetwork network
       & TC.withNetworkAlias "db"
@@ -92,7 +93,7 @@ runTx url tx = do
             ciDetails = PG.CDDatabaseURI (ByteString.pack url)
           }
   bracket
-    (PG.initPGPool connInfo PG.defaultConnParams nullPGLogger)
+    (PG.initPGPool connInfo J.Null PG.defaultConnParams nullPGLogger)
     PG.destroyPGPool
     \pool -> do
       result <- runExceptT (PG.runTx' pool tx)

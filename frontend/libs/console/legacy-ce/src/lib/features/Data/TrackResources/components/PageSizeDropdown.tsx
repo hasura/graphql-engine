@@ -1,7 +1,12 @@
 import React from 'react';
 import { Button } from '../../../../new-components/Button';
 import { DEFAULT_PAGE_SIZES } from '../constants';
-import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
+import {
+  FaAngleDoubleLeft,
+  FaAngleDoubleRight,
+  FaAngleLeft,
+  FaAngleRight,
+} from 'react-icons/fa';
 import { PaginatedSearchableListProps } from '../hooks/usePaginatedSearchableList';
 
 export const PageSizeDropdown = ({
@@ -9,6 +14,8 @@ export const PageSizeDropdown = ({
   pageSize,
   decrementPage,
   incrementPage,
+  goToFirstPage,
+  goToLastPage,
   setPageSize,
   dataSize,
   totalPages,
@@ -17,6 +24,11 @@ export const PageSizeDropdown = ({
     <span className="whitespace-nowrap mr-2">
       Page {pageNumber} of {totalPages}
     </span>
+    <Button
+      icon={<FaAngleDoubleLeft />}
+      onClick={goToFirstPage}
+      disabled={pageNumber === 1}
+    />
     <Button
       icon={<FaAngleLeft />}
       onClick={decrementPage}
@@ -38,6 +50,11 @@ export const PageSizeDropdown = ({
     <Button
       icon={<FaAngleRight />}
       onClick={incrementPage}
+      disabled={pageNumber >= dataSize / pageSize}
+    />
+    <Button
+      icon={<FaAngleDoubleRight />}
+      onClick={goToLastPage}
       disabled={pageNumber >= dataSize / pageSize}
     />
   </div>

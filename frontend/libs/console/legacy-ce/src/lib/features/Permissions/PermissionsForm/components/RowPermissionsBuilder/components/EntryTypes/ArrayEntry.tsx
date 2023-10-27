@@ -1,11 +1,9 @@
 import { useContext } from 'react';
 import { Button } from '../../../../../../../new-components/Button';
 import { isComparator } from '../utils/helpers';
-import { tableContext } from '../TableProvider';
-import { typesContext } from '../TypesProvider';
 import { ValueInput } from '../ValueInput';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { createWrapper } from './utils';
+import { ConditionalTableProvider } from './ConditionalTableProvider';
 
 export function ArrayEntry({
   k,
@@ -16,18 +14,11 @@ export function ArrayEntry({
   v: any;
   path: string[];
 }) {
-  const { types } = useContext(typesContext);
-  const { relationships } = useContext(tableContext);
   const { setValue } = useContext(rowPermissionsContext);
 
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   const array = Array.isArray(v) ? v : [];
   return (
-    <Wrapper>
+    <ConditionalTableProvider path={path}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
@@ -52,6 +43,6 @@ export function ArrayEntry({
           </Button>
         </div>
       </div>
-    </Wrapper>
+    </ConditionalTableProvider>
   );
 }

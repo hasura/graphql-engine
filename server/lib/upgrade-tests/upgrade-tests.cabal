@@ -54,7 +54,8 @@ test-suite upgrade-tests
     Hasura.UpgradeTests.Server
 
   build-depends:
-      base
+    , aeson
+    , base
     , graphql-engine
     , pg-client
     , test-harness

@@ -30,6 +30,24 @@ export const mocksTrackedArrayRelationship = {
                   },
                 },
               ],
+              remote_relationships: [
+                {
+                  definition: {
+                    to_source: {
+                      field_mapping: {
+                        ArtistId: 'ArtistId',
+                      },
+                      relationship_type: 'object',
+                      source: 'aMySQL',
+                      table: {
+                        name: 'Artist',
+                        schema: 'dbo',
+                      },
+                    },
+                  },
+                  name: 'albumArtistRemote',
+                },
+              ],
             },
             { table: { name: 'AlbumCovers', schema: 'public' } },
             {
@@ -90,6 +108,24 @@ export const mocksTrackedArrayRelationship = {
             },
           },
           customization: { naming_convention: 'graphql-default' },
+        },
+        {
+          name: 'aMySQL',
+          kind: 'mysql8',
+          tables: [
+            {
+              table: ['Artist'],
+            },
+          ],
+          configuration: {
+            template: null,
+            timeout: null,
+            value: {
+              fully_qualify_all_names: false,
+              jdbc_url:
+                'jdbc:mysql://mysql:3306/Chinook?allowMultiQueries=true&user=root&password=pass',
+            },
+          },
         },
       ],
     },

@@ -27,6 +27,6 @@ spec TestData {..} = describe "Error Protocol" do
                   (CustomBinaryComparisonOperator "FOOBAR")
                   (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType)
                   (Data.scalarValueComparison (Number 1) $ artistIdScalarType)
-       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+       in QueryRequest (TTargetTable _tdArtistsTableName) mempty mempty mempty query Nothing
 
     artistIdScalarType = _tdFindColumnScalarType _tdArtistsTableName "ArtistId"

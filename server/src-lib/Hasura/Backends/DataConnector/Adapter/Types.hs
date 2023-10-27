@@ -1,8 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Backends.DataConnector.Adapter.Types
   ( ConnSourceConfig (..),
+    TemplateVariableName (..),
+    TemplateVariableSource (..),
     SourceTimeout (),
     sourceTimeoutMicroseconds,
     SourceConfig (..),
@@ -12,6 +15,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scEndpoint,
     scManager,
     scTemplate,
+    scTemplateVariables,
     scTimeoutMicroseconds,
     scEnvironment,
     DataConnectorOptions (..),
@@ -42,6 +46,7 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, g
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (parseEither, toJSONKeyText)
+import Data.Aeson.Types qualified as J
 import Data.Environment (Environment)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -53,6 +58,9 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp qualified as IR
+import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.DataConnector
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
@@ -65,14 +73,16 @@ data ConnSourceConfig = ConnSourceConfig
   { -- | An arbitrary JSON payload to be passed to the agent in a
     -- header. HGE validates this against the OpenAPI Spec provided by
     -- the agent.
-    value :: API.Config,
+    _cscValue :: API.Config,
     -- | Kriti Template for transforming the supplied 'API.Config' value.
-    template :: Maybe Text,
+    _cscTemplate :: Maybe Text,
+    -- | Definitions of variables that can be accessed in the Kriti template via $vars
+    _cscTemplateVariables :: Maybe (HashMap TemplateVariableName TemplateVariableSource),
     -- | Timeout setting for HTTP requests to the agent. -- TODO: verify with lyndon
-    timeout :: Maybe SourceTimeout
+    _cscTimeout :: Maybe SourceTimeout
   }
   deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (Hashable, NFData, ToJSON)
+  deriving anyclass (Hashable, NFData)
 
 -- Default to the old style of ConnSourceConfig if a "value" field isn't present.
 -- This will prevent existing configurations from breaking.
@@ -80,8 +90,27 @@ data ConnSourceConfig = ConnSourceConfig
 instance FromJSON ConnSourceConfig where
   parseJSON = J.withObject "ConnSourceConfig" \o ->
     case J.lookup "value" o of
-      Just _ -> ConnSourceConfig <$> o J..: "value" <*> o J..:? "template" <*> (o J..:? "timeout")
-      Nothing -> ConnSourceConfig (API.Config o) Nothing <$> (o J..:? "timeout")
+      Just _ ->
+        ConnSourceConfig
+          <$> o
+          J..: "value"
+          <*> o
+          J..:? "template"
+          <*> o
+          J..:? "template_variables"
+          <*> o
+          J..:? "timeout"
+      Nothing -> ConnSourceConfig (API.Config o) Nothing Nothing <$> (o J..:? "timeout")
+
+instance ToJSON ConnSourceConfig where
+  toJSON ConnSourceConfig {..} =
+    J.object
+      . catMaybes
+      $ [ Just $ "value" J..= _cscValue,
+          Just $ "template" J..= _cscTemplate,
+          ("template_variables" J..=) <$> _cscTemplateVariables,
+          Just $ "timeout" J..= _cscTimeout
+        ]
 
 instance HasCodec ConnSourceConfig where
   codec = AC.bimapCodec dec enc $ AC.possiblyJointEitherCodec withValueProp inlineConfig
@@ -90,18 +119,65 @@ instance HasCodec ConnSourceConfig where
         AC.object "DataConnectorConnSourceConfig"
           $ ConnSourceConfig
           <$> requiredField' "value"
-          AC..= value
+          AC..= _cscValue
             <*> optionalField' "template"
-          AC..= template
+          AC..= _cscTemplate
+            <*> optionalField' "template_variables"
+          AC..= _cscTemplateVariables
             <*> optionalField' "timeout"
-          AC..= timeout
+          AC..= _cscTimeout
       inlineConfig = codec @API.Config
 
       dec (Left config) = Right config
       dec (Right config@(API.Config jsonObj)) =
-        parseEither (\o -> ConnSourceConfig config Nothing <$> (o J..:? "timeout")) jsonObj
+        parseEither (\o -> ConnSourceConfig config Nothing Nothing <$> (o J..:? "timeout")) jsonObj
 
       enc = Left
+
+newtype TemplateVariableName = TemplateVariableName {unTemplateVariableName :: Text}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey)
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec TemplateVariableName where
+  codec =
+    AC.named "TemplateVariableName"
+      $ AC.dimapCodec TemplateVariableName unTemplateVariableName codec
+      AC.<?> "The name of the template variable"
+
+data TemplateVariableSource
+  = TemplateVariableDynamicFromFile FilePath
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (Hashable, NFData)
+
+instance FromJSON TemplateVariableSource where
+  parseJSON = J.withObject "TemplateVariableSource" \o -> do
+    (typeTxt :: Text) <- o J..: "type"
+    case typeTxt of
+      "dynamic_from_file" ->
+        TemplateVariableDynamicFromFile <$> o J..: "filepath"
+      unknownType -> fail ("Unknown type: " <> Text.unpack unknownType) J.<?> J.Key "type"
+
+instance ToJSON TemplateVariableSource where
+  toJSON = \case
+    TemplateVariableDynamicFromFile filepath ->
+      J.object
+        [ "type" J..= ("dynamic_from_file" :: Text),
+          "filepath" J..= filepath
+        ]
+
+instance HasCodec TemplateVariableSource where
+  codec =
+    AC.object "TemplateVariableSource"
+      $ AC.discriminatedUnionCodec "type" enc dec
+    where
+      dynamicFromFileCodec = requiredField' "filepath"
+      enc = \case
+        TemplateVariableDynamicFromFile filepath -> ("dynamic_from_file", AC.mapToEncoder filepath dynamicFromFileCodec)
+      dec =
+        HashMap.fromList
+          [ ("dynamic_from_file", ("TemplateVariableDynamicFromFile", AC.mapToDecoder TemplateVariableDynamicFromFile dynamicFromFileCodec))
+          ]
 
 --------------------------------------------------------------------------------
 
@@ -158,6 +234,7 @@ data SourceConfig = SourceConfig
   { _scEndpoint :: BaseUrl,
     _scConfig :: API.Config,
     _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template, specify template language
+    _scTemplateVariables :: HashMap TemplateVariableName TemplateVariableSource,
     _scCapabilities :: API.Capabilities,
     _scManager :: HTTP.Manager,
     _scTimeoutMicroseconds :: Maybe Int,
@@ -166,15 +243,17 @@ data SourceConfig = SourceConfig
   }
 
 instance Eq SourceConfig where
-  SourceConfig ep1 capabilities1 config1 template1 _ timeout1 dcName1 env1 == SourceConfig ep2 capabilities2 config2 template2 _ timeout2 dcName2 env2 =
+  SourceConfig ep1 config1 template1 templateVars1 capabilities1 _ timeout1 dcName1 env1 == SourceConfig ep2 config2 template2 templateVars2 capabilities2 _ timeout2 dcName2 env2 =
     ep1
       == ep2
-      && capabilities1
-      == capabilities2
       && config1
       == config2
       && template1
       == template2
+      && templateVars1
+      == templateVars2
+      && capabilities1
+      == capabilities2
       && timeout1
       == timeout2
       && dcName1
@@ -376,12 +455,29 @@ instance (Hashable a) => Hashable (ArgumentExp a)
 
 --------------------------------------------------------------------------------
 
-data CountAggregate
+data CountAggregate v
   = StarCount
-  | ColumnCount ColumnName
-  | ColumnDistinctCount ColumnName
-  deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+  | ColumnCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
+  | ColumnDistinctCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
+  deriving (Generic)
+
+deriving stock instance
+  (Backend 'DataConnector, Show (IR.AnnRedactionExp 'DataConnector v), Show v) =>
+  Show (CountAggregate v)
+
+deriving stock instance (Backend 'DataConnector) => Functor CountAggregate
+
+deriving stock instance (Backend 'DataConnector) => Foldable CountAggregate
+
+deriving stock instance (Backend 'DataConnector) => Traversable CountAggregate
+
+deriving stock instance
+  (Backend 'DataConnector, Eq (IR.AnnRedactionExp 'DataConnector v), Eq v) =>
+  Eq (CountAggregate v)
+
+deriving stock instance
+  (Backend 'DataConnector, Data (IR.AnnRedactionExp 'DataConnector v), Data v) =>
+  Data (CountAggregate v)
 
 --------------------------------------------------------------------------------
 

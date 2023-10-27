@@ -7,13 +7,13 @@ export default {
   component: ConnectGDCSourceWidget,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers({ agentTestType: 'super_connector_agents_not_added' }),
+    msw: handlers({ agentTestType: 'super_connector_agents_added' }),
   },
 } as Meta<typeof ConnectGDCSourceWidget>;
 
 export const CreateConnection: StoryFn<typeof ConnectGDCSourceWidget> = () => {
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-5xl">
       <ConnectGDCSourceWidget driver="sqlite" />
     </div>
   );
@@ -21,7 +21,7 @@ export const CreateConnection: StoryFn<typeof ConnectGDCSourceWidget> = () => {
 
 export const EditConnection: StoryFn<typeof ConnectGDCSourceWidget> = () => {
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-5xl">
       <ConnectGDCSourceWidget driver="sqlite" dataSourceName="sqlite_test" />
     </div>
   );

@@ -38,7 +38,7 @@ instance Backend 'MSSQL where
   type ConstraintName 'MSSQL = MSSQL.ConstraintName
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
-  type CountType 'MSSQL = MSSQL.Countable MSSQL.ColumnName
+  type CountType 'MSSQL = MSSQL.CountType
   type Column 'MSSQL = MSSQL.ColumnName
   type ScalarValue 'MSSQL = MSSQL.Value
   type ScalarType 'MSSQL = MSSQL.ScalarType
@@ -121,9 +121,12 @@ instance Backend 'MSSQL where
 
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
 
+  getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the MSSQL backend"
+
 instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   sourceConfigNumReadReplicas = MSSQL._mscReadReplicas
   sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = MSSQLKind

@@ -13,24 +13,38 @@ sidebar_position: 40
 
 # Unauthenticated / Public Access
 
+## Introduction
+
 It is a common requirement to have requests which are accessible to all users without the need for authentication or
 logging in.
 
-Once you have configured an [admin secret](/deployment/securing-graphql-endpoint.mdx), by default Hasura GraphQL Engine
-will reject any unauthenticated request it receives.
+## Enabling authenticated access with an admin secret
 
-You can configure the Hasura Engine to allow access to unauthenticated users by defining a specific role which will
-be used for all unauthenticated requests. Once an unauthenticated role is configured, unauthenticated requests will not
-be rejected and instead will be handled as the unauthenticated user with the relevant authorization permissions
-for that role taking effect.
+When Hasura GraphQL Engine has a configured [admin secret](/deployment/securing-graphql-endpoint.mdx), by default it
+will reject any [unauthenticated request it receives](#unauthenticated-request-definitions). We need to configure an
+unauthorized role in order to handle these requests via the Hasura permissions system.
 
-A guide on setting up permissions for the unauthenticated role can be found
-[here](/auth/authorization/permissions/common-roles-auth-examples.mdx#unauthorized-users-example).
+## Enabling unauthenticated access with a unauthorized role
 
-:::warning Risk of session variables with the unauthenticated role
+You can configure the Hasura Engine to allow access to unauthenticated users by defining a specific role which will be
+used for all unauthenticated requests. Once an unauthorized role is configured, unauthenticated requests will not be
+rejected and instead will be handled as the unauthenticated user with the relevant authorization permissions for that
+role taking effect.
 
-You should not use [session variables](/auth/authorization/roles-variables.mdx#session-variables) in
-the permissions for an unauthenticated role because the source of the session variables cannot be trusted.
+To set the unauthorized role, you can use the env variable
+[`HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or the `--unauthorized-role` flag](/deployment/graphql-engine-flags/reference.mdx#unauthorized-role)
+to define a role name for unauthenticated (non-logged in) users. See
+[GraphQL Engine server config reference](/deployment/graphql-engine-flags/index.mdx) for more details on setting this
+flag or environment variable.
+
+Once that role is set, you can [configure permissions for it in the usual way](/auth/authorization/permissions/common-roles-auth-examples.mdx).
+
+[Click here](/auth/authorization/permissions/common-roles-auth-examples.mdx#unauthorized-users-example) for a guide on setting up permissions for the unauthorized role.
+
+:::warning Risk of session variables with the unauthorized role
+
+You should not use [session variables](/auth/authorization/roles-variables.mdx#session-variables) in the permissions for
+an unauthorized role because the source of the session variables cannot be trusted.
 
 Since session variables can be passed using request headers and they are not verified through the JWT or webhook
 authentication methods or utilize an admin secret, a user can choose to set any values for them and bypass the
@@ -38,28 +52,25 @@ permissions.
 
 :::
 
-## Configuring unauthenticated / public access
+### Unauthenticated request definitions
 
-You can use the env variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or the `--unauthorized-role` flag to define a role for
-unauthenticated (non-logged in) users. See
-[GraphQL Engine server config reference](/deployment/graphql-engine-flags/index.mdx) for more details on setting
-this flag or environment variable.
+The following situations are considered unauthenticated requests and will default to the unauthorized role:
 
-### No-auth setup
+- When [JWT](/auth/authentication/jwt.mdx) or [webhook](/auth/authentication/webhook.mdx) modes are not configured, and
+  the request does not contain the admin secret header, then every request is considered an unauthenticated request
+  no matter the headers supplied.
+- When [JWT](/auth/authentication/jwt.mdx) mode is configured, and the request does not contain the admin secret
+  header, then a request will be considered unauthenticated if it does not have a JWT.
+- When [webhook](/auth/authentication/webhook.mdx) mode is configured, and the request does not contain the admin
+  secret header, then a request will be considered unauthenticated if the webhook returns the following response:
+  ```http
+  HTTP/1.1 200 OK
+  Content-Type: application/json
 
-When JWT or webhook modes are not configured, and the request does not contain the admin secret
-header, then every request is considered an unauthenticated request.
-
-### JWT
-
-For [JWT authentication mode](/auth/authentication/jwt.mdx), any request which does not contain a JWT token is
-considered an unauthenticated request.
-
-### Webhooks
-
-When using [webhook mode](/auth/authentication/webhook.mdx), any request for which the webhook returns a
-`401 Unauthorized` response is denied.
-
-To allow unauthenticated access, say for public data, the server must be configured with an unauthorized role and the
-auth webhook should return a `200` status response with your unauthenticated role specified in the headers. For details
-on the webhook response, refer to [this section](/auth/authentication/webhook.mdx#webhook-response).
+  {
+      "X-Hasura-Role": "your-unauthorized-role-name",
+  }
+  ```
+  To deny the request in webhook mode, a `401` response [should be returned](/auth/authentication/webhook.mdx#auth-denial).
+  Any response from the webhook which is not a `200` [response with a valid role](/auth/authentication/webhook.mdx#success)
+  or the above `401` response will raise a `500 Internal Server Error` exception in Hasura Engine.

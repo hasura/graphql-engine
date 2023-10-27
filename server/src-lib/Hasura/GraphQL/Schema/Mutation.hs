@@ -251,7 +251,9 @@ mkDefaultRelationshipParser ::
   SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
 mkDefaultRelationshipParser backendInsertAction xNestedInserts relationshipInfo = runMaybeT do
   otherTableName <- case riTarget relationshipInfo of
-    RelTargetNativeQuery _ -> error "mkDefaultRelationshipParser RelTargetNativeQuery"
+    RelTargetNativeQuery _ ->
+      -- Native Queries do not support mutations atm
+      hoistMaybe Nothing
     RelTargetTable tn -> pure tn
   let relName = riName relationshipInfo
   otherTableInfo <- askTableInfo otherTableName
@@ -541,10 +543,11 @@ primaryKeysArguments tableInfo = runMaybeT $ do
     $ fmap (BoolAnd . toList)
     . sequenceA
     <$> for columns \columnInfo -> do
+      let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPerms (ciColumn columnInfo)
       field <- columnParser (ciType columnInfo) (G.Nullability False)
       pure
         $ BoolField
-        . AVColumn columnInfo
+        . AVColumn columnInfo redactionExp
         . pure
         . AEQ NonNullableComparison
         . IR.mkParameter

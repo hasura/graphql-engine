@@ -11,6 +11,7 @@ module Hasura.RQL.Types.Relationships.Local
     RelDef (..),
     RelTarget (..),
     RelInfo (..),
+    RelManualConfig (..),
     RelManualTableConfig (..),
     RelManualNativeQueryConfig (..),
     RelManualCommon (..),
@@ -74,7 +75,22 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
       "comment" .= rc
     ]
 
-data RelManualTableConfig (b :: BackendType) = RelManualTableConfig
+data RelManualConfig (b :: BackendType)
+  = RelManualTableConfig (RelManualTableConfig b)
+  | RelManualNativeQueryConfig (RelManualNativeQueryConfig b)
+  deriving (Eq, Show, Generic)
+  deriving (FromJSON, ToJSON) via AC.Autodocodec (RelManualConfig b)
+
+instance (Backend b) => HasCodec (RelManualConfig b) where
+  codec = AC.matchChoiceCodec tableCase nativeQueryCase chooser
+    where
+      tableCase = RelManualTableConfig <$> codec
+      nativeQueryCase = RelManualNativeQueryConfig <$> codec
+
+      chooser (RelManualTableConfig c) = Left c
+      chooser (RelManualNativeQueryConfig c) = Right c
+
+data RelManualTableConfig (b :: BackendType) = RelManualTableConfigC
   { rmtTable :: TableName b,
     rmtCommon :: RelManualCommon b
   }
@@ -85,7 +101,7 @@ deriving instance (Backend b) => Eq (RelManualTableConfig b)
 
 deriving instance (Backend b) => Show (RelManualTableConfig b)
 
-data RelManualNativeQueryConfig (b :: BackendType) = RelManualNativeQueryConfig
+data RelManualNativeQueryConfig (b :: BackendType) = RelManualNativeQueryConfigC
   { rmnNativeQueryName :: NativeQueryName,
     rmnCommon :: RelManualCommon b
   }
@@ -108,7 +124,7 @@ deriving instance (Backend b) => Show (RelManualCommon b)
 instance (Backend b) => HasCodec (RelManualTableConfig b) where
   codec =
     AC.object (backendPrefix @b <> "RelManualTableConfig")
-      $ RelManualTableConfig
+      $ RelManualTableConfigC
       <$> requiredField' "remote_table"
       AC..= rmtTable
         <*> AC.objectCodec
@@ -117,7 +133,7 @@ instance (Backend b) => HasCodec (RelManualTableConfig b) where
 instance (Backend b) => HasCodec (RelManualNativeQueryConfig b) where
   codec =
     AC.object (backendPrefix @b <> "RelManualNativeQueryConfig")
-      $ RelManualNativeQueryConfig
+      $ RelManualNativeQueryConfigC
       <$> requiredField' "remote_native_query"
       AC..= rmnNativeQueryName
         <*> AC.objectCodec
@@ -133,7 +149,7 @@ instance (Backend b) => AC.HasObjectCodec (RelManualCommon b) where
 
 data RelUsing (b :: BackendType) a
   = RUFKeyOn a
-  | RUManual (RelManualTableConfig b)
+  | RUManual (RelManualConfig b)
   deriving (Show, Eq, Generic)
 
 instance (Backend b, HasCodec a, Typeable a) => HasCodec (RelUsing b a) where

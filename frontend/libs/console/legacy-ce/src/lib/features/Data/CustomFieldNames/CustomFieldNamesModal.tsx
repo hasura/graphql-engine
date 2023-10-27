@@ -18,6 +18,7 @@ export type CustomFieldNamesModalProps = {
   callToActionLoadingText?: string;
   callToDeny?: string;
   currentConfiguration?: MetadataTableConfig;
+  source: string;
 };
 
 export const CustomFieldNamesModal: React.FC<CustomFieldNamesModalProps> = ({

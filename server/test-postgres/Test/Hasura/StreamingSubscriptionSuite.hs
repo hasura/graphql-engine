@@ -42,7 +42,7 @@ import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), RequestId (..))
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (ModelInfoLogOff), RequestId (..))
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
@@ -67,7 +67,7 @@ buildStreamingSubscriptionSuite = do
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
-  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
+  pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
@@ -157,6 +157,10 @@ streamingSubscriptionPollingSpec srcConfig = do
               ORDER BY "root.pg.id" ASC   ) AS "_2_root"      ) AS "numbers_stream"      )
               AS "_fld_resp" ON ('true')
         |]
+  let logger' :: Logger Hasura = Logger $ \l -> do
+        let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+        t <- liftIO $ getFormattedTime Nothing
+        liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail Nothing Nothing
   let pollingAction cohortMap testSyncAction =
         pollStreamingQuery
           @('Postgres 'Vanilla)
@@ -176,6 +180,9 @@ streamingSubscriptionPollingSpec srcConfig = do
           emptyOperationNamesMap
           Nothing
           Nothing
+          logger'
+          []
+          (pure ModelInfoLogOff)
 
       mkSubscriber sId =
         let wsId = maybe (error "Invalid UUID") WS.mkUnsafeWSId $ UUID.fromString "ec981f92-8d5a-47ab-a306-80af7cfb1113"
@@ -385,7 +392,7 @@ streamingSubscriptionPollingSpec srcConfig = do
       let logger :: Logger Hasura = Logger $ \l -> do
             let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
             t <- liftIO $ getFormattedTime Nothing
-            liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail
+            liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail Nothing Nothing
 
           subOptions = mkSubscriptionsOptions Nothing Nothing
           addStreamSubQuery subscriberMetadata reqId =
@@ -406,6 +413,8 @@ streamingSubscriptionPollingSpec srcConfig = do
               (pure GranularMetricsOff)
               (const (pure ()))
               Nothing
+              []
+              (pure ModelInfoLogOff)
 
       it "concurrently adding two subscribers should retain both of them in the poller map" $ do
         -- Adding two subscribers that query identical queries should be adding them into the same

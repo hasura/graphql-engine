@@ -11,7 +11,7 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName, genColumnType, genColumnValueGenerationStrategy)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genTargetRedactionExpressions)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
@@ -28,9 +28,9 @@ spec :: Spec
 spec = do
   describe "MutationRequest" $ do
     testToFromJSONToSchema
-      (MutationRequest [] [] [])
+      (MutationRequest [] [] [] [])
       [aesonQQ|
-        { "table_relationships": [],
+        { "relationships": [],
           "insert_schema": [],
           "operations": [] }
       |]
@@ -93,7 +93,7 @@ spec = do
     jsonOpenApiProperties genInsertFieldSchema
 
   describe "MutationOperation" $ do
-    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string"))]
+    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string") (Just $ RedactionExpressionName "RedactionExp1"))]
     describe "InsertOperation" $ do
       testToFromJSONToSchema
         (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] (Just $ And []) returningFields))
@@ -106,7 +106,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -124,7 +125,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -140,7 +142,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -249,7 +252,8 @@ spec = do
 genMutationRequest :: Gen MutationRequest
 genMutationRequest =
   MutationRequest
-    <$> Gen.set defaultRange genTableRelationships
+    <$> Gen.set defaultRange (RTable <$> genTableRelationships)
+    <*> Gen.set defaultRange genTargetRedactionExpressions
     <*> Gen.set defaultRange genTableInsertSchema
     <*> Gen.list defaultRange genMutationOperation
 

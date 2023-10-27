@@ -35,6 +35,10 @@ services:
       - '8100:8100'
     volumes:
       - ./DataSources/sqlite.db:/sqlite.db
+  # The SQL Server image will only work on macOS if you enable the relevant
+  # settings. Open the Docker Desktop settings, enable "Use Virtualization
+  # framework" in the "General" tab, and "Use Rosetta for x86/amd64 emulation on
+  # Apple Silicon" in the "Features in development" tab.
   mssql:
     container_name: 'mssql'
     user: root
@@ -43,14 +47,23 @@ services:
     volumes:
       - mssql-database-data:/var/opt/mssql
     stdin_open: true
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    # if not running Apple Silicon (M1/M2 etc), you can use this:
-    #image: mcr.microsoft.com/mssql/server:2022-latest
-    init: true # azure-sql-edge doesn't shut down properly without this
+    image: &mssql-image mcr.microsoft.com/mssql/server:2019-latest
+    platform: linux/amd64
     environment:
       ACCEPT_EULA: 'Y'
       SA_PASSWORD: 'Password!'
       MSSQL_SA_PASSWORD: 'Password!'
+  mssql-init:
+    depends_on:
+      - mssql
+    container_name: 'mssql-init'
+    image: *mssql-image
+    platform: linux/amd64
+    command:
+      - /opt/mssql_scripts/run-initialization.sh
+    stdin_open: true
+    volumes:
+      - ./DataSources/mssql:/opt/mssql_scripts
   mongo:
     image: mongo
     restart: always
@@ -61,17 +74,6 @@ services:
     ports:
       - '27017:27017'
     command: mongod --setParameter enableLocalhostAuthBypass=0 --dbpath=/data/db --bind_ip_all --port 27017
-
-  # sqlcmd (tools) are not included in the arm64 image
-  mssql-tools:
-    depends_on:
-      - mssql
-    container_name: 'mssql-tools'
-    image: mcr.microsoft.com/mssql-tools:latest
-    command: bash /opt/mssql_scripts/run-initialization.sh
-    stdin_open: true
-    volumes:
-      - ./DataSources/mssql:/opt/mssql_scripts
 
   graphql-engine:
     image: hasura/graphql-engine:latest

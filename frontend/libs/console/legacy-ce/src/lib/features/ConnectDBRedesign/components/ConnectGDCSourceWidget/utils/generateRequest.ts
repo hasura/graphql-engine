@@ -1,6 +1,7 @@
 import { DatabaseConnection } from '../../../types';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization';
+import { templateVariableArrayToMap } from '../useFormValidationSchema';
 
 export const generateGDCRequestPayload = ({
   driver,
@@ -9,15 +10,21 @@ export const generateGDCRequestPayload = ({
   driver: string;
   values: any;
 }): DatabaseConnection => {
-  const payload = {
+  return cleanEmpty({
     driver,
     details: {
       name: values.name,
-      configuration: values.configuration,
+      configuration: {
+        value: values.configuration,
+        timeout: { seconds: values.timeout },
+        template: values.template,
+        template_variables: templateVariableArrayToMap(
+          values?.template_variables || []
+        ),
+      },
       customization: generateGraphQLCustomizationInfo(
         values.customization ?? {}
       ),
     },
-  };
-  return cleanEmpty(payload);
+  });
 };

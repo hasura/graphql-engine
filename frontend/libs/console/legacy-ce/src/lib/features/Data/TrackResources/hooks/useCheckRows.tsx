@@ -106,7 +106,7 @@ export const useCheckRows = <T,>(
           ],
         ]}
       >
-        <AiFillCaretDown />
+        <AiFillCaretDown className="cursor-pointer" />
       </DropdownMenu>
     </div>
   );
