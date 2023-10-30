@@ -60,10 +60,10 @@
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
 </span><span id="line-56"></span><span id="runResponseTemplateTransform"><span class="annot"><span class="annottext">runResponseTemplateTransform :: Template
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle Value
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runResponseTemplateTransform"><span class="hs-identifier hs-var hs-var">runResponseTemplateTransform</span></a></span></span><span> </span><span id="local-6989586621687742111"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687742111"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">responseTransformEngine :: ResponseTransformCtx -&gt; TemplatingEngine
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runResponseTemplateTransform"><span class="hs-identifier hs-var hs-var">runResponseTemplateTransform</span></a></span></span><span> </span><span id="local-6989586621687742297"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687742297"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">responseTransformEngine :: ResponseTransformCtx -&gt; TemplatingEngine
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseTransformEngine"><span class="hs-identifier hs-var">responseTransformEngine</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Kriti"><span class="hs-identifier hs-var">Kriti</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687742112"><span id="local-6989586621687742113"><span id="local-6989586621687742114"><span id="local-6989586621687742115"><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Kriti"><span class="hs-identifier hs-var">Kriti</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687742298"><span id="local-6989586621687742299"><span id="local-6989586621687742300"><span id="local-6989586621687742301"><span class="annot"><span class="annottext">Int
 Maybe SessionVariables
 Value
 responseTransformBody :: ResponseTransformCtx -&gt; Value
@@ -75,31 +75,31 @@ responseTransformReqCtx :: Value
 responseSessionVariables :: Maybe SessionVariables
 responseStatusCode :: Int
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseTransformBody"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687742116"><span class="annot"><span class="annottext">context :: [(Text, Value)]
-</span><a href="#local-6989586621687742116"><span class="hs-identifier hs-var hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687742302"><span class="annot"><span class="annottext">context :: [(Text, Value)]
+</span><a href="#local-6989586621687742302"><span class="hs-identifier hs-var hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$body&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687742112"><span class="hs-identifier hs-var">responseTransformBody</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687742298"><span class="hs-identifier hs-var">responseTransformBody</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$request&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687742113"><span class="hs-identifier hs-var">responseTransformReqCtx</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687742299"><span class="hs-identifier hs-var">responseTransformReqCtx</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$response&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;status&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687742115"><span class="hs-identifier hs-var">responseStatusCode</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687742301"><span class="hs-identifier hs-var">responseStatusCode</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$session_variables&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621687742114"><span class="hs-identifier hs-var">responseSessionVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621687742120"><span class="annot"><span class="annottext">customFunctions :: HashMap Text KritiFunc
-</span><a href="#local-6989586621687742120"><span class="hs-identifier hs-var hs-var">customFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables -&gt; HashMap Text KritiFunc
+</span><a href="#local-6989586621687742300"><span class="hs-identifier hs-var">responseSessionVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621687742306"><span class="annot"><span class="annottext">customFunctions :: HashMap Text KritiFunc
+</span><a href="#local-6989586621687742306"><span class="hs-identifier hs-var hs-var">customFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables -&gt; HashMap Text KritiFunc
 </span><a href="Data.Aeson.Kriti.Functions.html#sessionFunctions"><span class="hs-identifier hs-var">KFunc.sessionFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621687742114"><span class="hs-identifier hs-var">responseSessionVariables</span></a></span><span>
-</span><span id="line-59"></span><span>      </span><span id="local-6989586621687742122"><span class="annot"><span class="annottext">eResult :: Either SerializedError Value
-</span><a href="#local-6989586621687742122"><span class="hs-identifier hs-var hs-var">eResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687742300"><span class="hs-identifier hs-var">responseSessionVariables</span></a></span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621687742308"><span class="annot"><span class="annottext">eResult :: Either SerializedError Value
+</span><a href="#local-6989586621687742308"><span class="hs-identifier hs-var hs-var">eResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; [(Text, Value)]
 -&gt; HashMap Text KritiFunc
 -&gt; Either SerializedError Value
@@ -107,11 +107,11 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#unTemplate"><span class="hs-identifier hs-var">unTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(Template -&gt; Text) -&gt; Template -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687742111"><span class="hs-identifier hs-var">template</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621687742116"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text KritiFunc
-</span><a href="#local-6989586621687742120"><span class="hs-identifier hs-var">customFunctions</span></a></span><span>
+</span><a href="#local-6989586621687742297"><span class="hs-identifier hs-var">template</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621687742302"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text KritiFunc
+</span><a href="#local-6989586621687742306"><span class="hs-identifier hs-var">customFunctions</span></a></span><span>
 </span><span id="line-60"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Either SerializedError Value
-</span><a href="#local-6989586621687742122"><span class="hs-identifier hs-var">eResult</span></a></span><span> </span><span class="annot"><span class="annottext">Either SerializedError Value
+</span><a href="#local-6989586621687742308"><span class="hs-identifier hs-var">eResult</span></a></span><span> </span><span class="annot"><span class="annottext">Either SerializedError Value
 -&gt; (Either SerializedError Value
     -&gt; Either TransformErrorBundle Value)
 -&gt; Either TransformErrorBundle Value
@@ -123,16 +123,16 @@ forall b c d. (b -&gt; c) -&gt; Either b d -&gt; Either c d
 forall (a :: * -&gt; * -&gt; *) b c d.
 ArrowChoice a =&gt;
 a b c -&gt; a (Either b d) (Either c d)
-</span><span class="hs-identifier hs-var">left</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687742126"><span class="annot"><span class="annottext">SerializedError
-</span><a href="#local-6989586621687742126"><span class="hs-identifier hs-var">kritiErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-61"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687742127"><span class="annot"><span class="annottext">renderedErr :: Value
-</span><a href="#local-6989586621687742127"><span class="hs-identifier hs-var hs-var">renderedErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SerializedError -&gt; Value
+</span><span class="hs-identifier hs-var">left</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687742312"><span class="annot"><span class="annottext">SerializedError
+</span><a href="#local-6989586621687742312"><span class="hs-identifier hs-var">kritiErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687742313"><span class="annot"><span class="annottext">renderedErr :: Value
+</span><a href="#local-6989586621687742313"><span class="hs-identifier hs-var hs-var">renderedErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SerializedError -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">SerializedError
-</span><a href="#local-6989586621687742126"><span class="hs-identifier hs-var">kritiErr</span></a></span><span>
+</span><a href="#local-6989586621687742312"><span class="hs-identifier hs-var">kritiErr</span></a></span><span>
 </span><span id="line-62"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; TransformErrorBundle
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-var">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687742127"><span class="hs-identifier hs-var">renderedErr</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621687742313"><span class="hs-identifier hs-var">renderedErr</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="annot"><span class="hs-comment">-- | Run an 'UnescapedTemplate' with a 'ResponseTransformCtx'.</span></span><span>
 </span><span id="line-65"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform"><span class="hs-identifier hs-type">runUnescapedResponseTemplateTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -141,22 +141,22 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-69"></span><span id="runUnescapedResponseTemplateTransform"><span class="annot"><span class="annottext">runUnescapedResponseTemplateTransform :: ResponseTransformCtx
 -&gt; UnescapedTemplate -&gt; Either TransformErrorBundle ByteString
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform"><span class="hs-identifier hs-var hs-var">runUnescapedResponseTemplateTransform</span></a></span></span><span> </span><span id="local-6989586621687742129"><span class="annot"><span class="annottext">ResponseTransformCtx
-</span><a href="#local-6989586621687742129"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687742130"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621687742130"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621687742131"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687742131"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Template
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform"><span class="hs-identifier hs-var hs-var">runUnescapedResponseTemplateTransform</span></a></span></span><span> </span><span id="local-6989586621687742315"><span class="annot"><span class="annottext">ResponseTransformCtx
+</span><a href="#local-6989586621687742315"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687742316"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687742316"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621687742317"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687742317"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Template
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runResponseTemplateTransform"><span class="hs-identifier hs-var">runResponseTemplateTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; Template
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#wrapUnescapedTemplate"><span class="hs-identifier hs-var">wrapUnescapedTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621687742130"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
-</span><a href="#local-6989586621687742129"><span class="hs-identifier hs-var">context</span></a></span><span>
+</span><a href="#local-6989586621687742316"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
+</span><a href="#local-6989586621687742315"><span class="hs-identifier hs-var">context</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">Value -&gt; Either TransformErrorBundle ByteString
 forall (m :: * -&gt; *).
 MonadError TransformErrorBundle m =&gt;
 Value -&gt; m ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#encodeScalar"><span class="hs-identifier hs-var">encodeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687742131"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621687742317"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-72"></span><span>
 </span><span id="line-73"></span><span class="annot"><span class="hs-comment">-- | Run an 'UnescapedTemplate' with a 'ResponseTransformCtx' in 'Validation'.</span></span><span>
 </span><span id="line-74"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform%27"><span class="hs-identifier hs-type">runUnescapedResponseTemplateTransform'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -165,9 +165,9 @@ Value -&gt; m ByteString
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/validation-1.1.2-f77b914ad3f6e48474a3e52a8ec8ada822fa6cef988fcfb086e9be1e9f54e69b/share/doc/html/src/Data.Validation.html#Validation"><span class="hs-identifier hs-type">Validation</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-78"></span><span id="runUnescapedResponseTemplateTransform%27"><span class="annot"><span class="annottext">runUnescapedResponseTemplateTransform' :: ResponseTransformCtx
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform%27"><span class="hs-identifier hs-var hs-var">runUnescapedResponseTemplateTransform'</span></a></span></span><span> </span><span id="local-6989586621687742132"><span class="annot"><span class="annottext">ResponseTransformCtx
-</span><a href="#local-6989586621687742132"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687742133"><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621687742133"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform%27"><span class="hs-identifier hs-var hs-var">runUnescapedResponseTemplateTransform'</span></a></span></span><span> </span><span id="local-6989586621687742318"><span class="annot"><span class="annottext">ResponseTransformCtx
+</span><a href="#local-6989586621687742318"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687742319"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687742319"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">Either TransformErrorBundle ByteString
 -&gt; Validation TransformErrorBundle ByteString
 forall e a. Either e a -&gt; Validation e a
@@ -180,6 +180,6 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
 -&gt; UnescapedTemplate -&gt; Either TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform"><span class="hs-identifier hs-var">runUnescapedResponseTemplateTransform</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
-</span><a href="#local-6989586621687742132"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
-</span><a href="#local-6989586621687742133"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span>
+</span><a href="#local-6989586621687742318"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687742319"><span class="hs-identifier hs-var">unescapedTemplate</span></a></span><span>
 </span><span id="line-81"></span></pre></body></html>
