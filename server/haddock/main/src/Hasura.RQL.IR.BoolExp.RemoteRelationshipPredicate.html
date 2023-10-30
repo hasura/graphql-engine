@@ -16,51 +16,51 @@
 </span><span id="line-16"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteRelSessionVariable"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSessionVariable"><span class="hs-identifier hs-var">RemoteRelSessionVariable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span>
 </span><span id="line-17"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLiteralValue"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLiteralValue"><span class="hs-identifier hs-var">RemoteRelLiteralValue</span></a></span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687457820"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSessionVariableORLiteralValue"><span class="hs-identifier hs-type">RemoteRelSessionVariableORLiteralValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621687457834"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteRelSessionVariableORLiteralValue
-</span><a href="#local-6989586621687457834"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621687457836"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457836"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687581290"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSessionVariableORLiteralValue"><span class="hs-identifier hs-type">RemoteRelSessionVariableORLiteralValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621687581304"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteRelSessionVariableORLiteralValue
+</span><a href="#local-6989586621687581304"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621687581306"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581306"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-21"></span><span>    </span><span class="annot"><span class="annottext">Parser RemoteRelSessionVariableORLiteralValue
-</span><a href="#local-6989586621687457837"><span class="hs-identifier hs-var">parseSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">Parser RemoteRelSessionVariableORLiteralValue
+</span><a href="#local-6989586621687581307"><span class="hs-identifier hs-var">parseSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">Parser RemoteRelSessionVariableORLiteralValue
 -&gt; Parser RemoteRelSessionVariableORLiteralValue
 -&gt; Parser RemoteRelSessionVariableORLiteralValue
 forall a. Parser a -&gt; Parser a -&gt; Parser a
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-22"></span><span>      </span><span id="local-6989586621687457839"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687457839"><span class="hs-identifier hs-var">v'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
+</span><span id="line-22"></span><span>      </span><span id="local-6989586621687581309"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687581309"><span class="hs-identifier hs-var">v'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457836"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621687581306"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-23"></span><span>      </span><span class="annot"><span class="annottext">RemoteRelSessionVariableORLiteralValue
 -&gt; Parser RemoteRelSessionVariableORLiteralValue
 forall a. a -&gt; Parser a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; RemoteRelSessionVariableORLiteralValue
 </span><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLiteralValue"><span class="hs-identifier hs-var">RemoteRelLiteralValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687457839"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687581309"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-25"></span><span>      </span><span id="local-6989586621687457837"><span class="annot"><span class="annottext">parseSessionVar :: Parser RemoteRelSessionVariableORLiteralValue
-</span><a href="#local-6989586621687457837"><span class="hs-identifier hs-var hs-var">parseSessionVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-25"></span><span>      </span><span id="local-6989586621687581307"><span class="annot"><span class="annottext">parseSessionVar :: Parser RemoteRelSessionVariableORLiteralValue
+</span><a href="#local-6989586621687581307"><span class="hs-identifier hs-var hs-var">parseSessionVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser RemoteRelSessionVariableORLiteralValue)
 -&gt; Value
 -&gt; Parser RemoteRelSessionVariableORLiteralValue
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withText"><span class="hs-identifier hs-var">J.withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteRelSessionVariableORLiteralValue&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687457841"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687457841"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; RemoteRelSessionVariableORLiteralValue
+</span><span class="hs-string">&quot;RemoteRelSessionVariableORLiteralValue&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687581311"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687581311"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; RemoteRelSessionVariableORLiteralValue
 </span><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSessionVariable"><span class="hs-identifier hs-var">RemoteRelSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariable -&gt; RemoteRelSessionVariableORLiteralValue)
 -&gt; Parser SessionVariable
 -&gt; Parser RemoteRelSessionVariableORLiteralValue
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser SessionVariable
 </span><a href="Hasura.RQL.Types.Session.html#parseSessionVariable"><span class="hs-identifier hs-var">parseSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687457841"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457836"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621687581311"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581306"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteRelRHSFetchWhereExp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-var">RemoteRelRHSFetchWhereExp</span></a></span></span><span> </span><span id="local-6989586621687457788"><span class="annot"><a href="#local-6989586621687457788"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteRelRHSFetchWhereExp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-var">RemoteRelRHSFetchWhereExp</span></a></span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteRelRHSFetchWhereExp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-var">RemoteRelRHSFetchWhereExp</span></a></span></span><span> </span><span id="local-6989586621687581258"><span class="annot"><a href="#local-6989586621687581258"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteRelRHSFetchWhereExp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-var">RemoteRelRHSFetchWhereExp</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rrrfweColumnFieldName"><span class="annot"><span class="annottext">forall f. RemoteRelRHSFetchWhereExp f -&gt; f
-</span><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#rrrfweColumnFieldName"><span class="hs-identifier hs-var hs-var">rrrfweColumnFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687457788"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#rrrfweColumnFieldName"><span class="hs-identifier hs-var hs-var">rrrfweColumnFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687581258"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="rrrfweBoolExp"><span class="annot"><span class="annottext">forall f.
 RemoteRelRHSFetchWhereExp f
 -&gt; [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
@@ -76,25 +76,25 @@ RemoteRelRHSFetchWhereExp f
 }
  -}</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687457794"><span id="local-6989586621687457849"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687457794"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-type">RemoteRelRHSFetchWhereExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687457794"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621687457864"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RemoteRelRHSFetchWhereExp f)
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687581264"><span id="local-6989586621687581319"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687581264"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-type">RemoteRelRHSFetchWhereExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687581264"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621687581334"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RemoteRelRHSFetchWhereExp f)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (RemoteRelRHSFetchWhereExp f))
 -&gt; Value
 -&gt; Parser (RemoteRelRHSFetchWhereExp f)
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteRelationshipPredicateExpression&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687457866"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687457866"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;RemoteRelationshipPredicateExpression&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687581336"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687581336"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.KeyMap.html#toList"><span class="hs-identifier hs-var">KM.toList</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687457866"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-44"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span id="local-6989586621687457868"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457868"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687457869"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457869"><span class="hs-identifier hs-var">innerObj</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>        </span><span id="local-6989586621687457870"><span class="annot"><span class="annottext">[RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
-</span><a href="#local-6989586621687457870"><span class="hs-identifier hs-var">remoteRelBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687581336"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-44"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span id="local-6989586621687581338"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687581338"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687581339"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581339"><span class="hs-identifier hs-var">innerObj</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>        </span><span id="local-6989586621687581340"><span class="annot"><span class="annottext">[RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
+</span><a href="#local-6989586621687581340"><span class="hs-identifier hs-var">remoteRelBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-46"></span><span>          </span><span class="annot"><span class="annottext">String
 -&gt; (Object
     -&gt; Parser
@@ -106,8 +106,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span>
 </span><span id="line-47"></span><span>            </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;column field&quot;</span></span><span>
-</span><span id="line-48"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687457871"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687457871"><span class="hs-identifier hs-var">o'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687581341"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687581341"><span class="hs-identifier hs-var">o'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-49"></span><span>                </span><span class="annot"><span class="annottext">[(Key, Value)]
 -&gt; ((Key, Value)
     -&gt; Parser
@@ -120,28 +120,28 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.KeyMap.html#toList"><span class="hs-identifier hs-var">KM.toList</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687457871"><span class="hs-identifier hs-var">o'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687457873"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457873"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687457874"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457874"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687581341"><span class="hs-identifier hs-var">o'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687581343"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687581343"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687581344"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581344"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-50"></span><span>                  </span><span class="annot"><span class="annottext">(Key, Value)
 -&gt; Parser
      (RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue)
 forall a. FromJSONKeyValue a =&gt; (Key, Value) -&gt; Parser a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#parseJSONKeyValue"><span class="hs-identifier hs-var">parseJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457873"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457874"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687581343"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581344"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>            </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457869"><span class="hs-identifier hs-var">innerObj</span></a></span><span>
-</span><span id="line-53"></span><span>        </span><span id="local-6989586621687457876"><span class="annot"><span class="annottext">f
-</span><a href="#local-6989586621687457876"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
+</span><a href="#local-6989586621687581339"><span class="hs-identifier hs-var">innerObj</span></a></span><span>
+</span><span id="line-53"></span><span>        </span><span id="local-6989586621687581346"><span class="annot"><span class="annottext">f
+</span><a href="#local-6989586621687581346"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser f) -&gt; Value -&gt; Parser f
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Key.html#toText"><span class="hs-identifier hs-var">K.toText</span></a></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457868"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687581338"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">RemoteRelRHSFetchWhereExp f -&gt; Parser (RemoteRelRHSFetchWhereExp f)
 forall a. a -&gt; Parser a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -158,8 +158,8 @@ f
 -&gt; [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
 -&gt; RemoteRelRHSFetchWhereExp f
 </span><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelRHSFetchWhereExp"><span class="hs-identifier hs-var">RemoteRelRHSFetchWhereExp</span></a></span><span> </span><span class="annot"><span class="annottext">f
-</span><a href="#local-6989586621687457876"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="annot"><span class="annottext">[RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
-</span><a href="#local-6989586621687457870"><span class="hs-identifier hs-var">remoteRelBoolExp</span></a></span><span>
+</span><a href="#local-6989586621687581346"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="annot"><span class="annottext">[RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]
+</span><a href="#local-6989586621687581340"><span class="hs-identifier hs-var">remoteRelBoolExp</span></a></span><span>
 </span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">[(Key, Value)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (RemoteRelRHSFetchWhereExp f)
 forall a. String -&gt; Parser a
@@ -167,25 +167,25 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Expected the remote relationship expression predicate to be {\&quot;&lt;remote column name&gt;\&quot;:{\&quot;_eq\&quot;:\&quot;&lt;some session variable name&gt;\&quot;}}&quot;</span></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteRelSupportedOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSupportedOp"><span class="hs-identifier hs-var">RemoteRelSupportedOp</span></a></span></span><span> </span><span id="local-6989586621687457814"><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span></span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteRelEqOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelEqOp"><span class="hs-identifier hs-var">RemoteRelEqOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNeqOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNeqOp"><span class="hs-identifier hs-var">RemoteRelNeqOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelGtOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelGtOp"><span class="hs-identifier hs-var">RemoteRelGtOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLtOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLtOp"><span class="hs-identifier hs-var">RemoteRelLtOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelGteOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelGteOp"><span class="hs-identifier hs-var">RemoteRelGteOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLteOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLteOp"><span class="hs-identifier hs-var">RemoteRelLteOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelInOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelInOp"><span class="hs-identifier hs-var">RemoteRelInOp</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNinOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNinOp"><span class="hs-identifier hs-var">RemoteRelNinOp</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLikeOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLikeOp"><span class="hs-identifier hs-var">RemoteRelLikeOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNlikeOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNlikeOp"><span class="hs-identifier hs-var">RemoteRelNlikeOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687457814"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteRelSupportedOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSupportedOp"><span class="hs-identifier hs-var">RemoteRelSupportedOp</span></a></span></span><span> </span><span id="local-6989586621687581284"><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteRelEqOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelEqOp"><span class="hs-identifier hs-var">RemoteRelEqOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNeqOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNeqOp"><span class="hs-identifier hs-var">RemoteRelNeqOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelGtOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelGtOp"><span class="hs-identifier hs-var">RemoteRelGtOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLtOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLtOp"><span class="hs-identifier hs-var">RemoteRelLtOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelGteOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelGteOp"><span class="hs-identifier hs-var">RemoteRelGteOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLteOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLteOp"><span class="hs-identifier hs-var">RemoteRelLteOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelInOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelInOp"><span class="hs-identifier hs-var">RemoteRelInOp</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNinOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNinOp"><span class="hs-identifier hs-var">RemoteRelNinOp</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelLikeOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelLikeOp"><span class="hs-identifier hs-var">RemoteRelLikeOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelNlikeOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelNlikeOp"><span class="hs-identifier hs-var">RemoteRelNlikeOp</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687581284"><span class="hs-identifier hs-type">field</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RemoteRelIsNullOp"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelIsNullOp"><span class="hs-identifier hs-var">RemoteRelIsNullOp</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-69"></span><span>
-</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687457796"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687457796"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#FromJSONKeyValue"><span class="hs-identifier hs-type">FromJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSupportedOp"><span class="hs-identifier hs-type">RemoteRelSupportedOp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687457796"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-71"></span><span>  </span><span id="local-6989586621687457942"><span class="annot"><span class="annottext">parseJSONKeyValue :: (Key, Value) -&gt; Parser (RemoteRelSupportedOp f)
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#parseJSONKeyValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSONKeyValue</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687457943"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457943"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687457944"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687457943"><span class="hs-identifier hs-var">op</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687581266"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687581266"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#FromJSONKeyValue"><span class="hs-identifier hs-type">FromJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate.html#RemoteRelSupportedOp"><span class="hs-identifier hs-type">RemoteRelSupportedOp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687581266"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687581412"><span class="annot"><span class="annottext">parseJSONKeyValue :: (Key, Value) -&gt; Parser (RemoteRelSupportedOp f)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#parseJSONKeyValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSONKeyValue</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687581413"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687581413"><span class="hs-identifier hs-var">op</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687581414"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687581413"><span class="hs-identifier hs-var">op</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_eq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -195,7 +195,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_neq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -205,7 +205,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_gt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -215,7 +215,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_lt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -225,7 +225,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_gte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -235,7 +235,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_lte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -245,7 +245,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_in&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[f] -&gt; RemoteRelSupportedOp f
 forall field. [field] -&gt; RemoteRelSupportedOp field
@@ -255,7 +255,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [f]
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_nin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[f] -&gt; RemoteRelSupportedOp f
 forall field. [field] -&gt; RemoteRelSupportedOp field
@@ -265,7 +265,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [f]
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_like&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -275,7 +275,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_nlike&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f -&gt; RemoteRelSupportedOp f
 forall field. field -&gt; RemoteRelSupportedOp field
@@ -285,7 +285,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser f
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;_is_null&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; RemoteRelSupportedOp f
 forall field. Bool -&gt; RemoteRelSupportedOp field
@@ -295,7 +295,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Bool
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687457944"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621687581414"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (RemoteRelSupportedOp f)
 forall a. String -&gt; Parser a
