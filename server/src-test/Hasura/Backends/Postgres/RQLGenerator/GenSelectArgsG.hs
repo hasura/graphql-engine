@@ -48,6 +48,7 @@ genSelectArgsG genA = do
         $ genAnnBoolExp
           ( genAnnBoolExpFld
               genColumn
+              genColumn
               genTableName
               genScalarType
               genFunctionName
@@ -66,6 +67,7 @@ genSelectArgsG genA = do
           genBasicOrderType
           genNullsOrderType
           ( genAnnotatedOrderByElement @_ @('Postgres 'Vanilla)
+              genColumn
               genColumn
               genTableName
               genScalarType
@@ -89,6 +91,7 @@ genSelectArgsG genA = do
         $ AnnDistinctColumn
         <$> genColumn
         <*> genAnnRedactionExp
+          genColumn
           genColumn
           genTableName
           genScalarType

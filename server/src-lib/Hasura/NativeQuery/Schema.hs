@@ -48,7 +48,7 @@ import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (UVParameter)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Common (RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Metadata.Object qualified as MO
-import Hasura.RQL.Types.Relationships.Local (Nullable (..), RelInfo (..), RelTarget (..))
+import Hasura.RQL.Types.Relationships.Local (Nullable (..), RelInfo (..), RelMapping (..), RelTarget (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
   ( SourceInfo (_siCustomization, _siName),
@@ -328,7 +328,7 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
       pure
         $ nativeQueryParser
         <&> \selectExp ->
-          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability selectExp)
     RelTargetTable otherTableName -> do
       let desc = Just $ G.Description "An object relationship"
       roleName <- retrieve scRole
@@ -339,7 +339,7 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
         $ P.subselection_ relFieldName desc selectionSetParser
         <&> \fields ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ IR._tpFilter
             $ tablePermissionsInfo remotePerms
@@ -361,7 +361,7 @@ nativeQueryRelationshipField ri = do
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability selectExp
     RelTargetTable otherTableName -> runMaybeT $ do
       let arrayRelDesc = Just $ G.Description "An array relationship"
 
@@ -371,6 +371,6 @@ nativeQueryRelationshipField ri = do
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
                 $ selectExp
       pure arrayRelField

@@ -12,7 +12,7 @@ where
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnSelector)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName, genTableTarget)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
@@ -38,7 +38,7 @@ spec = do
           Relationship
             { _rTarget = TTable (TargetTable (TableName ["target_table_name"])),
               _rRelationshipType = ObjectRelationship,
-              _rColumnMapping = [(ColumnName "outer_column", ColumnName "inner_column")]
+              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column", mkColumnSelector $ ColumnName "inner_column")]
             }
     testToFromJSONToSchema
       relationship
@@ -51,18 +51,20 @@ spec = do
         }
       |]
     jsonOpenApiProperties genRelationship
+  describe "ColumnPathMapping"
+    $ jsonOpenApiProperties genColumnPathMapping
   describe "TableRelationships" $ do
     let relationshipA =
           Relationship
             { _rTarget = TTable (TargetTable (TableName ["target_table_name_a"])),
               _rRelationshipType = ObjectRelationship,
-              _rColumnMapping = [(ColumnName "outer_column_a", ColumnName "inner_column_a")]
+              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column_a", mkColumnSelector $ ColumnName "inner_column_a")]
             }
     let relationshipB =
           Relationship
             { _rTarget = TTable (TargetTable (TableName ["target_table_name_b"])),
               _rRelationshipType = ArrayRelationship,
-              _rColumnMapping = [(ColumnName "outer_column_b", ColumnName "inner_column_b")]
+              _rColumnMapping = ColumnPathMapping [(mkColumnSelector $ ColumnName "outer_column_b", mkColumnSelector $ ColumnName "inner_column_b")]
             }
     let tableRelationships =
           TableRelationships
@@ -109,7 +111,7 @@ genRelationship =
   Relationship
     <$> genTableTarget
     <*> genRelationshipType
-    <*> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnName <*> genColumnName))
+    <*> genColumnPathMapping
 
 genRelationships :: Gen Relationships
 genRelationships = (RTable <$> genTableRelationships) <|> (RFunction <$> genFunctionRelationships)
@@ -128,3 +130,6 @@ genFunctionRelationships =
 
 genFunctionName :: (MonadGen m) => m FunctionName
 genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
+
+genColumnPathMapping :: (MonadGen m) => m ColumnPathMapping
+genColumnPathMapping = ColumnPathMapping . HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnSelector <*> genColumnSelector)

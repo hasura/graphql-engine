@@ -187,7 +187,7 @@ convertRemoteSourceRelationship ::
   forall b.
   (Backend b) =>
   -- | Join columns for the relationship
-  HashMap (Column b) (Column b) ->
+  HashMap (ColumnPath b) (ColumnPath b) ->
   -- | The LHS of the join, this is the expression which selects from json
   -- objects
   SelectFromG b (UnpreparedValue b) ->

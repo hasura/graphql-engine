@@ -23,6 +23,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
     TableName (..),
     ConstraintName (..),
     ColumnName (..),
+    ColumnPath (..),
     FunctionName (..),
     FunctionReturnType (..),
     CountAggregate (..),
@@ -413,6 +414,41 @@ instance ToTxt ColumnName where
 
 instance ToErrorValue ColumnName where
   toErrorValue = ErrorValue.squote . unColumnName
+
+instance Witch.From ColumnName ColumnPath where
+  from = CPColumn
+
+--------------------------------------------------------------------------------
+
+data ColumnPath
+  = CPPath (NonEmpty ColumnName)
+  | CPColumn (ColumnName)
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving (FromJSON, ToJSON, ToSchema) via AC.Autodocodec ColumnPath
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec ColumnPath where
+  codec = AC.disjointMatchChoiceCodec pathCodec columnCodec chooser
+    where
+      pathCodec = AC.dimapCodec CPPath id (codec @(NonEmpty ColumnName))
+      columnCodec = AC.dimapCodec CPColumn id (codec @ColumnName)
+      chooser = \case
+        CPPath p -> Left p
+        CPColumn c -> Right c
+
+instance ToJSONKey ColumnPath
+
+instance FromJSONKey ColumnPath
+
+instance Witch.From API.ColumnSelector ColumnPath where
+  from = \case
+    API.ColumnSelectorPath p -> CPPath $ Witch.from <$> p
+    API.ColumnSelectorColumn c -> CPColumn $ Witch.from c
+
+instance Witch.From ColumnPath API.ColumnSelector where
+  from = \case
+    CPPath p -> API.ColumnSelectorPath $ Witch.from <$> p
+    CPColumn c -> API.ColumnSelectorColumn $ Witch.from c
 
 --------------------------------------------------------------------------------
 

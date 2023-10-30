@@ -56,6 +56,7 @@ instance Backend 'DataConnector where
   type NullsOrderType 'DataConnector = Unimplemented
   type CountType 'DataConnector = DC.CountAggregate
   type Column 'DataConnector = DC.ColumnName
+  type ColumnPath 'DataConnector = DC.ColumnPath
   type ScalarValue 'DataConnector = J.Value
   type ScalarType 'DataConnector = DC.ScalarType
 
@@ -166,6 +167,15 @@ instance Backend 'DataConnector where
   defaultTriggerOnReplication = Nothing
 
   getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the Data Connector backend"
+
+  getColumnPathColumn = \case
+    DC.CPPath p -> NonEmpty.head p
+    DC.CPColumn c -> c
+
+  tryColumnPathToColumn = \case
+    DC.CPPath (column :| []) -> Just column
+    DC.CPColumn column -> Just column
+    _ -> Nothing
 
   backendSupportsNestedObjects = pure ()
 

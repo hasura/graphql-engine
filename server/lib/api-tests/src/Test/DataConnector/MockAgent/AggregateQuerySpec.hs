@@ -177,7 +177,7 @@ tests = describe "Aggregate Query Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ArrayRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
                                 }
                             )
                           ]
@@ -300,7 +300,7 @@ tests = describe "Aggregate Query Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "InvoiceLine",
                                   _rRelationshipType = API.ArrayRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+                                  _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "InvoiceId", API.mkColumnSelector $ API.ColumnName "InvoiceId")]
                                 }
                             )
                           ]

@@ -162,7 +162,8 @@ renameColumnInMetadata ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   Column b ->
   Column b ->
@@ -532,7 +533,7 @@ updateColExp qt rf (ColExp fld val) =
 -- rename columns in relationship definitions
 updateColInRel ::
   forall b m.
-  (CacheRM m, MonadWriter MetadataModifier m, BackendMetadata b) =>
+  (CacheRM m, MonadWriter MetadataModifier m, BackendMetadata b, Column b ~ ColumnPath b) =>
   SourceName ->
   TableName b ->
   RelName ->
@@ -681,7 +682,7 @@ updateTableInRemoteRelationshipRHS source tableName remoteRelationshipName (_, n
     .~ toJSON newTableName
 
 updateColInObjRel ::
-  (Backend b) =>
+  (Backend b, Column b ~ ColumnPath b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
@@ -694,7 +695,7 @@ updateColInObjRel fromQT toQT rnCol = \case
     RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateRelChoice ::
-  (Backend b) =>
+  (Backend b, Column b ~ ColumnPath b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
@@ -706,7 +707,7 @@ updateRelChoice fromQT toQT rnCol =
     RemoteTable t c -> RemoteTable t (getNewCol rnCol toQT c)
 
 updateColInArrRel ::
-  (Backend b) =>
+  (Backend b, Column b ~ ColumnPath b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
@@ -717,8 +718,6 @@ updateColInArrRel fromQT toQT rnCol = \case
     let updCol = getNewCol rnCol toQT c
      in RUFKeyOn $ ArrRelUsingFKeyOn t updCol
   RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
-
-type ColMap b = HashMap (Column b) (Column b)
 
 getNewCol ::
   forall b f.
@@ -741,7 +740,7 @@ getNewCol rnCol qt cols =
 
 updateRelManualConfig ::
   forall b.
-  (Backend b) =>
+  (Backend b, Column b ~ ColumnPath b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
@@ -754,14 +753,14 @@ updateRelManualConfig fromQT toQT rnCol (RelManualNativeQueryConfig (RelManualNa
 
 updateColMap ::
   forall b.
-  (Backend b) =>
+  (Backend b, Column b ~ ColumnPath b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
-  ColMap b ->
-  ColMap b
+  RelMapping b ->
+  RelMapping b
 updateColMap fromQT toQT rnCol =
-  HashMap.fromList . map (modCol fromQT *** modCol toQT) . HashMap.toList
+  RelMapping . HashMap.fromList . map (modCol fromQT *** modCol toQT) . HashMap.toList . unRelMapping
   where
     RenameItem qt oCol nCol = rnCol
     modCol colQt col = if colQt == qt && col == oCol then nCol else col

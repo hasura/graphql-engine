@@ -40,6 +40,7 @@ instance Backend 'MSSQL where
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
   type CountType 'MSSQL = MSSQL.CountType
   type Column 'MSSQL = MSSQL.ColumnName
+  type ColumnPath 'MSSQL = MSSQL.ColumnName
   type ScalarValue 'MSSQL = MSSQL.Value
   type ScalarType 'MSSQL = MSSQL.ScalarType
   type BooleanOperators 'MSSQL = MSSQL.BooleanOperators
@@ -122,6 +123,10 @@ instance Backend 'MSSQL where
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
 
   getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the MSSQL backend"
+
+  getColumnPathColumn = id
+
+  tryColumnPathToColumn = Just
 
 instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig

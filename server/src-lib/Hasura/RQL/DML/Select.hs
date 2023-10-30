@@ -286,7 +286,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   relInfo <-
     withPathK "name"
       $ askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo {riType = relTy, riMapping = colMapping, riTarget = relTarget}) = relInfo
+  let (RelInfo {riType = relTy, riMapping = RelMapping colMapping, riTarget = relTarget}) = relInfo
   relTableName <- case relTarget of
     RelTargetNativeQuery _ -> error "convExtRel RelTargetNativeQuery"
     RelTargetTable tn -> pure tn

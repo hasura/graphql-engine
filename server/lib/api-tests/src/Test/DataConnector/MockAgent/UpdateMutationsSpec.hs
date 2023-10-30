@@ -203,7 +203,7 @@ tests = do
                               API.Relationship
                                 { API._rTarget = mkTableTarget "Genre",
                                   API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                  API._rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "GenreId", API.mkColumnSelector $ API.ColumnName "GenreId")]
                                 }
                             )
                           ]
@@ -394,7 +394,7 @@ tests = do
                               API.Relationship
                                 { API._rTarget = mkTableTarget "Genre",
                                   API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                  API._rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "GenreId", API.mkColumnSelector $ API.ColumnName "GenreId")]
                                 }
                             )
                           ]

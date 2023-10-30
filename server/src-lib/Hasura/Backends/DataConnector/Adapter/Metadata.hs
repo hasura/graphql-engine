@@ -8,7 +8,6 @@ import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Bifunctor (bimap)
 import Data.Environment (Environment)
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
@@ -71,7 +70,7 @@ import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase (NamingCase)
-import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo ())
+import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo (), RelMapping (..))
 import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig, askSourceInfo)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes (DependencyReason (DRTable), SchemaDependency (SchemaDependency), SchemaObjId (SOSourceObj), SourceObjId (SOITable))
@@ -474,7 +473,7 @@ buildForeignKeySet (API.ForeignKeys constraints) =
     $ constraints
     & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
       \constraintName API.Constraint {..} -> maybeToList do
-        let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
+        let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (Witch.from k, Witch.from v) : acc) [] $ API.unColumnPathMapping _cColumnMapping
         columnMapping <- NEHashMap.fromList columnMapAssocList
         let foreignKey =
               RQL.T.T.ForeignKey
@@ -786,7 +785,7 @@ convertTableMetadataToTableInfo tableName logicalModelCache RQL.T.T.DBTableMetad
                   constraint =
                     SourceConstraint
                       { _scForeignTable = Witch.from _fkForeignTable,
-                        _scColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
+                        _scColumnMapping = RelMapping $ NEHashMap.toHashMap _fkColumnMapping
                       }
                in (constraintName, constraint)
           )

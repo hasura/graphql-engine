@@ -30,6 +30,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Prelude

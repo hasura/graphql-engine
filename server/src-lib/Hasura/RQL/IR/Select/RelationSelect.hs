@@ -18,7 +18,7 @@ import Hasura.RQL.Types.Relationships.Local (Nullable)
 
 data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
   { _aarRelationshipName :: RelName, -- Relationship name
-    _aarColumnMapping :: HashMap (Column b) (Column b), -- Column of left table to join with
+    _aarColumnMapping :: HashMap (ColumnPath b) (ColumnPath b), -- Column of left table to join with
     _aarNullable :: Nullable, -- is the target object allowed to be missing?
     _aarAnnSelect :: a -- Current table. Almost ~ to SQL Select
   }

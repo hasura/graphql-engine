@@ -103,6 +103,7 @@ instance
   type NullsOrderType ('Postgres pgKind) = Postgres.NullsOrder
   type CountType ('Postgres pgKind) = Postgres.CountAggregate pgKind
   type Column ('Postgres pgKind) = Postgres.PGCol
+  type ColumnPath ('Postgres pgKind) = Postgres.PGCol
   type ScalarValue ('Postgres pgKind) = Postgres.PGScalarValue
   type ScalarType ('Postgres pgKind) = Postgres.PGScalarType
   type BooleanOperators ('Postgres pgKind) = Postgres.BooleanOperators
@@ -176,6 +177,10 @@ instance
       RelTargetNativeQuery q -> modify $ (++) [ModelNameInfo (G.unName $ getNativeQueryName q, ModelTypeNativeQuery, sourceName, modelSourceType)]
 
   getColVals = Postgres.getPGColValues
+
+  getColumnPathColumn = id
+
+  tryColumnPathToColumn = Just
 
 instance
   ( HasTag ('Postgres pgKind)
