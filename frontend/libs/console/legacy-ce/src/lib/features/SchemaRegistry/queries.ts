@@ -134,6 +134,16 @@ query fetchSchemaRegistryDumpsV2($projectId: uuid!, $limit: Int!, $offset: Int!)
   }
 }
 `);
+export const FETCH_SCHEMA_REGISTRY_NOTIFICATION_QUERY = gql(`
+query fetchSchemaRegistryDumpsV2($projectId: uuid!) {
+  schema_registry_dumps_v2(where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}]}, order_by: {change_recorded_at: desc}, limit: 1) {
+    change_recorded_at
+      diff_with_previous_schema {
+        schema_diff_data
+      }
+  }
+}
+`);
 
 export const FETCH_SCHEMA_REGISTRY_DUMPS_V1_QUERY = gql(`
 query fetchSchemaRegistryDumpsV1($projectId: uuid!, $limit: Int!, $offset: Int!, $changeTimestamp: timestamptz!) {
