@@ -968,6 +968,7 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
           . Warp.setBeforeMainLoop (for_ startupStatusHook id)
+          . Warp.setServerName ""
           . setForkIOWithMetrics
           . Warp.setMaxTotalHeaderLength appEnvMaxTotalHeaderLength
           $ Warp.defaultSettings
