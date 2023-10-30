@@ -18,7 +18,7 @@ import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
-import Hasura.Backends.DataConnector.API (ColumnName (..), ScalarType (..), ScalarValue (..))
+import Hasura.Backends.DataConnector.API (ColumnName (..), ScalarType (..), ScalarValue (..), mkColumnSelector)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.Expression
 import Hasura.Prelude

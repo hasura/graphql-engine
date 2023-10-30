@@ -57,6 +57,9 @@ connInfoToLog connInfo =
   where
     Query.ConnInfo retries details = connInfo
     infoVal = case details of
+      -- create a valid URI referencing the 'dynamic_from_file' metadata
+      -- configuration the user must have used to get here:
+      Query.CDDynamicDatabaseURI path -> mkDBUriLog $ "dynamic-from-file://" <> path
       Query.CDDatabaseURI uri -> mkDBUriLog $ Text.unpack $ bsToTxt uri
       Query.CDOptions co ->
         J.object

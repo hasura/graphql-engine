@@ -484,7 +484,7 @@ const makeApplyRedaction = (
 const createFilterExpressionForRelationshipJoin = (row: Record<string, RawScalarValue>, relationship: Relationship): Expression | null => {
   const columnMappings = Object.entries(relationship.column_mapping);
   const filterConditions: Expression[] = columnMappings
-    .map(([outerColumnName, innerColumnName]): [RawScalarValue, string] => [row[outerColumnName], innerColumnName])
+    .map(([outerColumnName, innerColumnName]): [RawScalarValue, string] => [row[outerColumnName], innerColumnName as string])
     .filter((x): x is [RawScalarValue, string] => {
       const [outerValue, _] = x;
       return outerValue !== null;

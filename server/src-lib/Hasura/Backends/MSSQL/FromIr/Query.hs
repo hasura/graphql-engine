@@ -991,20 +991,20 @@ unfurlAnnotatedOrderByElement =
             -- text/ntext/image. See ToQuery for more explanation.
             _ -> Nothing
         )
-    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetNativeQuery nativeQueryName} annBoolExp annOrderByElementG -> do
+    IR.AOCObjectRelation IR.RelInfo {riMapping = IR.RelMapping mapping, riTarget = IR.RelTargetNativeQuery nativeQueryName} annBoolExp annOrderByElementG -> do
       let name = T.toTxt (getNativeQueryName nativeQueryName)
           selectFrom = TSQL.FromIdentifier name
       joinAliasEntity <-
         lift (lift (generateAlias (ForOrderAlias name)))
       genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom (Left nativeQueryName)
-    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable table} annBoolExp annOrderByElementG -> do
+    IR.AOCObjectRelation IR.RelInfo {riMapping = IR.RelMapping mapping, riTarget = IR.RelTargetTable table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
         lift (lift (generateAlias (ForOrderAlias (tableNameText table))))
       genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom (Right table)
     IR.AOCArrayAggregation IR.RelInfo {riTarget = IR.RelTargetNativeQuery _} _annBoolExp _annAggregateOrderBy ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
-    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
+    IR.AOCArrayAggregation IR.RelInfo {riMapping = IR.RelMapping mapping, riTarget = IR.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-

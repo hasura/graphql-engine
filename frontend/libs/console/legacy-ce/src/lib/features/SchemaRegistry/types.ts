@@ -90,6 +90,11 @@ export type GetSchemaRegstiryDumpsV2AggregateResponseWithError = {
   errors?: GraphQLError[];
 };
 
+export type GetSchemaRegistryNotificationResponseWithError = {
+  data?: GetSchemaRegistryNotificationResponse;
+  errors?: GraphQLError[];
+};
+
 export type GetSchemaRegstiryDumpsV2AggregateResponse = {
   schema_registry_dumps_v2_aggregate: SchemaRegistryDumpsAggregate;
   schema_registry_dumps_v2: SchemaRegistryChangeRecordedAt[];
@@ -100,6 +105,12 @@ export type GetSchemaRegstiryDumpsV1AggregateResponseWithError = {
 };
 export type GetSchemaRegstiryDumpsV1AggregateResponse = {
   schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
+};
+export type GetSchemaRegistryNotificationResponse = {
+  schema_registry_dumps_v2: SchemaRegsitryNotificationData[];
+};
+export type SchemaRegsitryNotificationData = SchemaRegistryChangeRecordedAt & {
+  diff_with_previous_schema: SchemaDiffData[];
 };
 export type SchemaRegistryChangeRecordedAt = {
   change_recorded_at: string;

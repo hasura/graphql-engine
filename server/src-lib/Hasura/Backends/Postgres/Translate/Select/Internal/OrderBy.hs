@@ -132,7 +132,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
             $ S.mkQIdenExp baseTableIdentifier
             $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
+          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget} = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
           case relTarget of
@@ -153,7 +153,7 @@ processOrderByItems userInfo sourcePrefix' selectSourceQual fieldAlias' similarA
                   S.mkQIdenExp relSourcePrefix relOrderByAlias
                 )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
+          let RelInfo {riName = relName, riMapping = RelMapping colMapping, riTarget = relTarget} = relInfo
           case relTarget of
             RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCArrayAggregation)"
             RelTargetTable relTable -> do

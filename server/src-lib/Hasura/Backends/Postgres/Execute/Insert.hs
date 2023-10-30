@@ -195,7 +195,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
     afterInsertDepCols =
       flip (getColInfos @('Postgres pgKind)) allColumns
-        $ concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
+        $ concatMap (HashMap.keys . unRelMapping . riMapping . IR._riRelationInfo) allAfterInsertRels
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->
@@ -258,7 +258,7 @@ insertObjRel planVars userInfo stringifyNum tCase objRelIns =
     table = case riTarget relInfo of
       RelTargetNativeQuery _ -> error "insertObjRel RelTargetNativeQuery"
       RelTargetTable tn -> tn
-    mapCols = riMapping relInfo
+    mapCols = unRelMapping $ riMapping relInfo
     allCols = IR._aiTableColumns singleObjIns
     rCols = HashMap.elems mapCols
     rColInfos = getColInfos rCols allCols
@@ -298,7 +298,7 @@ insertArrRel resCols userInfo planVars stringifyNum tCase arrRelIns =
       $ throw500 "affected_rows not returned in array rel insert"
   where
     IR.RelationInsert multiObjIns relInfo = arrRelIns
-    mapping = riMapping relInfo
+    mapping = unRelMapping $ riMapping relInfo
     mutOutput = IR.MOutMultirowFields [("affected_rows", IR.MCount)]
 
 -- | Validate an insert object based on insert columns,
@@ -325,7 +325,7 @@ validateInsert insCols objRels addCols = do
     <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
-    let lCols = HashMap.keys $ riMapping relInfo
+    let lCols = HashMap.keys $ unRelMapping $ riMapping relInfo
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)

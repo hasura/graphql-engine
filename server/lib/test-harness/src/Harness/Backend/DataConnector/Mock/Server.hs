@@ -220,7 +220,12 @@ schema =
               API._tiDescription = Just "Collection of music albums created by artists",
               API._tiForeignKeys =
                 API.ForeignKeys
-                  $ HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId"))),
+                  $ HashMap.singleton
+                    (API.ConstraintName "Artist")
+                    ( API.Constraint
+                        (mkTableName "Artist")
+                        (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.mkColumnSelector $ API.ColumnName "ArtistId"))
+                    ),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -351,7 +356,12 @@ schema =
               API._tiDescription = Just "Collection of customers who can buy tracks",
               API._tiForeignKeys =
                 API.ForeignKeys
-                  $ HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId"))),
+                  $ HashMap.singleton
+                    (API.ConstraintName "CustomerSupportRep")
+                    ( API.Constraint
+                        (mkTableName "Employee")
+                        (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "SupportRepId") (API.mkColumnSelector $ API.ColumnName "EmployeeId"))
+                    ),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -500,7 +510,12 @@ schema =
               API._tiDescription = Just "Collection of employees who work for the business",
               API._tiForeignKeys =
                 API.ForeignKeys
-                  $ HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId"))),
+                  $ HashMap.singleton
+                    (API.ConstraintName "EmployeeReportsTo")
+                    ( API.Constraint
+                        (mkTableName "Employee")
+                        (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "ReportsTo") (API.mkColumnSelector $ API.ColumnName "EmployeeId"))
+                    ),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -626,7 +641,9 @@ schema =
               API._tiForeignKeys =
                 API.ForeignKeys
                   $ HashMap.singleton (API.ConstraintName "InvoiceCustomer")
-                  $ API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId")),
+                  $ API.Constraint
+                    (mkTableName "Customer")
+                    (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "CustomerId") (API.mkColumnSelector $ API.ColumnName "CustomerId")),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -686,8 +703,16 @@ schema =
               API._tiForeignKeys =
                 API.ForeignKeys
                   $ HashMap.fromList
-                    [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
-                      (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
+                    [ ( API.ConstraintName "Invoice",
+                        API.Constraint
+                          (mkTableName "Invoice")
+                          (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "InvoiceId") (API.mkColumnSelector $ API.ColumnName "InvoiceId"))
+                      ),
+                      ( API.ConstraintName "Track",
+                        API.Constraint
+                          (mkTableName "Track")
+                          (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "TrackId") (API.mkColumnSelector $ API.ColumnName "TrackId"))
+                      )
                     ],
               API._tiInsertable = True,
               API._tiUpdatable = True,
@@ -814,9 +839,21 @@ schema =
               API._tiForeignKeys =
                 API.ForeignKeys
                   $ HashMap.fromList
-                    [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
-                      (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
-                      (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
+                    [ ( API.ConstraintName "Album",
+                        API.Constraint
+                          (mkTableName "Album")
+                          (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.mkColumnSelector $ API.ColumnName "AlbumId"))
+                      ),
+                      ( API.ConstraintName "Genre",
+                        API.Constraint
+                          (mkTableName "Genre")
+                          (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "GenreId") (API.mkColumnSelector $ API.ColumnName "GenreId"))
+                      ),
+                      ( API.ConstraintName "MediaType",
+                        API.Constraint
+                          (mkTableName "MediaType")
+                          (API.ColumnPathMapping $ HashMap.singleton (API.mkColumnSelector $ API.ColumnName "MediaTypeId") (API.mkColumnSelector $ API.ColumnName "MediaTypeId"))
+                      )
                     ],
               API._tiInsertable = True,
               API._tiUpdatable = True,

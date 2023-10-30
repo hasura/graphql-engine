@@ -11,6 +11,8 @@ export const generateConnectionInfo = (
       ? values.databaseUrl.url
       : values.databaseUrl.connectionType === 'envVar'
       ? { from_env: values.databaseUrl.envVar }
+      : values.databaseUrl.connectionType === 'dynamicFromFile'
+      ? { dynamic_from_file: values.databaseUrl.dynamicFromFile }
       : {
           connection_parameters: {
             username: values.databaseUrl.username,

@@ -228,7 +228,7 @@ tests = describe "Object Relationships Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Genre",
                                   _rRelationshipType = API.ObjectRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                  _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "GenreId", API.mkColumnSelector $ API.ColumnName "GenreId")]
                                 }
                             ),
                             ( API.RelationshipName "MediaType",
@@ -236,8 +236,9 @@ tests = describe "Object Relationships Tests" $ do
                                 { _rTarget = mkTableTarget "MediaType",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping =
-                                    HashMap.fromList
-                                      [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+                                    API.ColumnPathMapping
+                                      $ HashMap.fromList
+                                        [(API.mkColumnSelector $ API.ColumnName "MediaTypeId", API.mkColumnSelector $ API.ColumnName "MediaTypeId")]
                                 }
                             )
                           ]
@@ -354,7 +355,9 @@ tests = describe "Object Relationships Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ObjectRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+                                  _rColumnMapping =
+                                    API.ColumnPathMapping
+                                      $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "AlbumId", API.mkColumnSelector $ API.ColumnName "AlbumId")]
                                 }
                             )
                           ]
@@ -368,7 +371,9 @@ tests = describe "Object Relationships Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Artist",
                                   _rRelationshipType = API.ObjectRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  _rColumnMapping =
+                                    API.ColumnPathMapping
+                                      $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
                                 }
                             )
                           ]
@@ -449,7 +454,7 @@ tests = describe "Object Relationships Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Employee",
                                   _rRelationshipType = API.ObjectRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+                                  _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "SupportRepId", API.mkColumnSelector $ API.ColumnName "EmployeeId")]
                                 }
                             )
                           ]
@@ -463,7 +468,7 @@ tests = describe "Object Relationships Tests" $ do
                               API.Relationship
                                 { _rTarget = mkTableTarget "Customer",
                                   _rRelationshipType = API.ArrayRelationship,
-                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+                                  _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "EmployeeId", API.mkColumnSelector $ API.ColumnName "SupportRepId")]
                                 }
                             )
                           ]
