@@ -44,7 +44,7 @@ const CustomDocItem = props => {
         page = page.replace('/docs/', 'docs_v2_').replace('latest/', '').replace(/\//g, '_');
 
         const href = linkElement.getAttribute('href');
-        const newHref = href.replace(/pg=[a-z_-]+/, `pg=${page}`);
+        const newHref = href.replace(/pg=([^&]+)/, `pg=${page}`);
         linkElement.setAttribute('href', newHref);
       }
     }
