@@ -300,6 +300,7 @@ instance (UserInfoM m) => UserInfoM (MetadataT m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (MetadataT m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 -- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
 -- provided so that it can be considered from the --metadataDefaults arguments.

@@ -29,6 +29,7 @@ import Hasura.QueryTags
   ( emptyQueryTagsComment,
   )
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
@@ -76,7 +77,7 @@ bqDBQueryPlan ::
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  m (DBStepInfo 'BigQuery)
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
 bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
@@ -88,7 +89,10 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
         case result of
           Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ J.toJSON err
           Right (job, recordSet) -> pure ActionResult {arStatistics = Just BigQuery.ExecutionStatistics {_esJob = job}, arResult = recordSetToEncJSON (BigQuery.selectCardinality select) recordSet}
-  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
+  modelNames <- irToModelInfoGen sourceName ModelSourceTypeBigQuery qrf
+  let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
+
+  pure $ (DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action (), modelInfo)
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: BigQuery.Cardinality -> DataLoader.RecordSet -> EncJSON
@@ -141,7 +145,7 @@ bqDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
-  m (DBStepInfo 'BigQuery)
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
 bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
@@ -224,9 +228,10 @@ bqDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
-  m (DBStepInfo 'BigQuery)
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
 bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
-  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+  pure (dbStepInfo, modelInfo)
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema

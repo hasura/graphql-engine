@@ -35,15 +35,17 @@ withHge ::
     Has HgePool testEnvironment
   ) =>
   HgeConfig ->
-  SpecWith (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment))) ->
+  SpecWith (PostMetadata, (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment)))) ->
   SpecWith testEnvironment
 withHge hgeConfig specs = do
   flip aroundWith specs \action testEnvironment -> runManaged do
     server <- drawFromPool testEnvironment hgeConfig
     liftIO
       $ action
-        ( PostGraphql (hgePostGraphql (server, testEnvironment)),
-          (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+        ( PostMetadata (hgePostMetadataWithStatusAndHeaders (server, testEnvironment)),
+          ( PostGraphql (hgePostGraphqlWithHeaders (server, testEnvironment)),
+            (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+          )
         )
 
 -- | Spawn a fresh graphql-engine instance with specific environment variables set.
@@ -57,13 +59,15 @@ withHgeSpawn ::
     Has PassthroughEnvVars testEnvironment
   ) =>
   HgeConfig ->
-  SpecWith (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment))) ->
+  SpecWith (PostMetadata, (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment)))) ->
   SpecWith testEnvironment
 withHgeSpawn hgeConfig specs = do
   flip aroundWith specs \action testEnvironment -> do
     (server, cleanup) <- spawnServer testEnvironment hgeConfig
     action
-      ( PostGraphql (hgePostGraphql (server, testEnvironment)),
-        (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+      ( PostMetadata (hgePostMetadataWithStatusAndHeaders (server, testEnvironment)),
+        ( PostGraphql (hgePostGraphqlWithHeaders (server, testEnvironment)),
+          (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+        )
       )
     cleanup

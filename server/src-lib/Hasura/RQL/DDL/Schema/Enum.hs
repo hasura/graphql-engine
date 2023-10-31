@@ -40,7 +40,9 @@ resolveEnumReferences enumTables =
   where
     resolveEnumReference :: ForeignKey b -> Maybe (Column b, EnumReference b)
     resolveEnumReference foreignKey = do
-      [(localColumn, foreignColumn)] <- pure $ NEHashMap.toList (_fkColumnMapping @b foreignKey)
+      [(localColumnPath, foreignColumnPath)] <- pure $ NEHashMap.toList (_fkColumnMapping @b foreignKey)
+      localColumn <- tryColumnPathToColumn @b localColumnPath
+      foreignColumn <- tryColumnPathToColumn @b foreignColumnPath
       let foreignKeyTableName = _fkForeignTable foreignKey
       (primaryKey, tConfig, enumValues) <- HashMap.lookup foreignKeyTableName enumTables
       let tableCustomName = _tcCustomName tConfig

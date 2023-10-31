@@ -8,6 +8,8 @@ export const getDatabaseConnectionDisplayName = (
     ? databaseUrl.url
     : databaseUrl.connectionType === 'envVar'
     ? databaseUrl.envVar
+    : databaseUrl.connectionType === 'dynamicFromFile'
+    ? databaseUrl.dynamicFromFile
     : getDatabaseUrlFromConnectionParams({
         username: databaseUrl.username,
         password: databaseUrl.password,

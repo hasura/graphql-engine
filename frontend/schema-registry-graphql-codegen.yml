@@ -1,0 +1,9 @@
+overwrite: true
+schema:
+  - 'http://schema-registry.lux-dev.hasura.me/v1/graphql':
+      headers:
+        'x-hasura-admin-secret': 'randomsecret'
+documents: 'libs/console/legacy-ce/src/lib/features/SchemaRegistry/queries.ts'
+generates:
+  libs/console/legacy-ce/src/lib/features/SchemaRegistry/generatedGraphQLTypes.ts:
+    plugins: ['typescript', 'typescript-operations']

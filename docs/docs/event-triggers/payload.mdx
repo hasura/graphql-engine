@@ -16,55 +16,86 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-The following is the payload and delivery mechanism of an event to the webhook when an Event Trigger is invoked.
+Whenever data-driven events invoke an Event Trigger, the payload of the event is delivered to the webhook endpoint you
+provide. The payload contains information about the event that was triggered, including the new or updated data, and —
+when used with PostgreSQL — the session variables of the user who triggered the event.
 
 ## HTTP request method
 
-Delivered over `HTTP POST` with the following headers:
+Event Triggers are invoked using an HTTP `POST` request with the following headers:
 
-```none
+```text
 Content-Type: application/json
 ```
 
 ## JSON payload
 
-```none
+In the request object, the payload makes up the majority of the content. The payload is a JSON object with the following
+structure:
+
+```json
 {
-  "event": {
-      "session_variables": <session-variables>,
-      "op": "<op-name>",
+  // Headers above are not shown
+  "payload": {
+    "created_at": "<TIMESTAMP>",
+    "delivery_info": {
+      "current_retry": "<RETRY_NUMBER>",
+      "max_retries": "<MAX_RETRIES>"
+    },
+    "event": {
       "data": {
-          "old": <column-values>,
-          "new": <column-values>
+        "new": "<OBJECT_OF_COLUMNS_AND_VALUES>",
+        "old": "<OBJECT_OF_COLUMNS_AND_VALUES|NULL>"
+      },
+      "op": "<INSERT|UPDATE|DELETE|MANUAL>",
+      "session_variables": {
+        "x-hasura-role": "<ROLE_NAME>"
+      },
+      "trace_context": {
+        "span_id": "<SPAN_ID>",
+        "trace_id": "<TRACE_ID>"
       }
-  },
-  "created_at": "<timestamp>",
-  "id": "<uuid>",
-  "trigger": {
-      "name": "<name-of-trigger>"
-  },
-  "table":  {
-      "schema": "<schema-name>",
-      "name": "<table-name>"
+    },
+    "id": "<UUID_FOR_INVOCATION>",
+    "table": {
+      "name": "<TABLE_NAME>",
+      "schema": "<SCHEMA_NAME>"
+    },
+    "trigger": {
+      "name": "<TRIGGER_NAME>"
+    }
   }
+  // Version below is not shown
 }
 ```
 
-| Key               | Type                      | Description                                                                                                                                                 |
-| ----------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| session-variables | [Object](#object) or NULL | Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found) (**Only available for Postgres**) |
-| op-name           | [OpName](#opname)         | Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"                                                                                   |
-| column-values     | [Object](#object)         | Key-value pairs of column name and their values of the table                                                                                                |
-| timestamp         | String                    | Timestamp at which event was created                                                                                                                        |
-| uuid              | String                    | UUID identifier for the event                                                                                                                               |
-| name-of-trigger   | String                    | Name of the trigger                                                                                                                                         |
-| schema-name       | String                    | Name of the schema for the table                                                                                                                            |
-| table-name        | String                    | Name of the table                                                                                                                                           |
+| Key                                     | Type             | Description                                                                                                                                                 |
+| --------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `created_at`                            | String           | Represents a timestamp value for the invocation of the trigger.                                                                                             |
+| `delivery_info`                         | Object           | Contains information about message delivery retries.                                                                                                        |
+| `delivery_info.current_retry`           | Integer          | Represents the current retry number.                                                                                                                        |
+| `delivery_info.max_retries`             | Integer          | Represents the maximum number of retries.                                                                                                                   |
+| `event`                                 | Object           | Represents an event and related data.                                                                                                                       |
+| `event.data`                            | Object           | Contains data related to the event.                                                                                                                         |
+| `event.data.new`                        | Object           | Object representing the new data associated with the event, with each key-value pair representing a column name and its value.                              |
+| `event.data.old`                        | Object or `null` | Represents old data associated with the event or `null` if not applicable.                                                                                  |
+| `event.op`                              | String           | Represents the name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"                                                                    |
+| `event.session_variables`               | Object           | Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found) (**Only available for Postgres**) |
+| `event.session_variables.x-hasura-role` | String           | Represents the role name of the user who triggered the event.                                                                                               |
+| `event.trace_context`                   | Object           | Contains trace context information.                                                                                                                         |
+| `event.trace_context.span_id`           | String           | Represents the span ID for tracing.                                                                                                                         |
+| `event.trace_context.trace_id`          | String           | Represents the trace ID for tracing.                                                                                                                        |
+| `id`                                    | String           | Represents a UUID for invocation.                                                                                                                           |
+| `table`                                 | Object           | Represents information about the table.                                                                                                                     |
+| `table.name`                            | String           | Represents the name of the table.                                                                                                                           |
+| `table.schema`                          | String           | Represents the schema name of the table.                                                                                                                    |
+| `trigger`                               | Object           | Represents information about the trigger.                                                                                                                   |
+| `trigger.name`                          | String           | Represents the name of the trigger.                                                                                                                         |
 
 <Tabs groupId="user-preference" className="json-payloads">
 <TabItem value="postgres" label="Postgres">
 
-**In case of**:
+Below, you'll find examples of the `new` and `old` objects for each operation type.
 
 - INSERT
   - `event.data.old` will be `null`
@@ -89,41 +120,10 @@ Content-Type: application/json
 
 :::
 
-**For example**:
-
-```json
-{
-  "id": "85558393-c75d-4d2f-9c15-e80591b83894",
-  "created_at": "2018-09-05T07:14:21.601701Z",
-  "trigger": {
-    "name": "insert_user_trigger"
-  },
-  "table": {
-    "schema": "public",
-    "name": "users"
-  },
-  "event": {
-    "session_variables": {
-      "x-hasura-role": "admin",
-      "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
-      "x-hasura-user-id": "1"
-    },
-    "op": "INSERT",
-    "data": {
-      "old": null,
-      "new": {
-        "id": "42",
-        "name": "john doe"
-      }
-    }
-  }
-}
-```
-
 </TabItem>
 <TabItem value="mssql" label="MSSQL">
 
-**In case of**:
+Below, you'll find examples of the `new` and `old` objects for each operation type.
 
 - INSERT
   - `event.data.old` will be `null`
@@ -152,62 +152,64 @@ Content-Type: application/json
 
 :::
 
-**For example**:
+</TabItem>
+</Tabs>
+
+### Example
+
+Below, we have an example of the payload for an `INSERT` operation.
 
 ```json
 {
-  "id": "85558393-c75d-4d2f-9c15-e80591b83894",
-  "created_at": "2018-09-05T07:14:21.601701Z",
-  "trigger": {
-    "name": "insert_user_trigger"
-  },
-  "table": {
-    "schema": "public",
-    "name": "users"
-  },
-  "event": {
-    "session_variables": {
-      "x-hasura-role": "admin",
-      "x-hasura-allowed-roles": "['user', 'boo', 'admin']",
-      "x-hasura-user-id": "1"
+  "payload": {
+    "created_at": "2020-07-29T10:00:00.000Z",
+    "delivery_info": {
+      "current_retry": 0,
+      "max_retries": 0
     },
-    "op": "INSERT",
-    "data": {
-      "old": null,
-      "new": {
-        "id": "42",
-        "name": "john doe"
+    "event": {
+      "data": {
+        "new": {
+          "id": 1,
+          "name": "John"
+        },
+        "old": null
+      },
+      "op": "INSERT",
+      "session_variables": {
+        "x-hasura-role": "admin"
+      },
+      "trace_context": {
+        "span_id": "123",
+        "trace_id": "456"
       }
+    },
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "table": {
+      "name": "users",
+      "schema": "public"
+    },
+    "trigger": {
+      "name": "insert_user"
     }
   }
 }
 ```
 
-</TabItem>
-</Tabs>
+:::info Parsing the payload
 
-## Syntax definitions
+You can access data from the request by parsing the JSON payload. For example, to access the new user's id, you can use
+`req.body.event.data.new.id` to get the value `1`.
 
-### Object
-
-```none
-{
-  "column1": "value1",
-  "column2": "value2",
-  ..
-}
-```
-
-### OpName
-
-`"INSERT" | "UPDATE" | "DELETE" | "MANUAL"`
+:::
 
 ## Webhook response structure
 
 A `2xx` response status code is deemed to be a successful invocation of the webhook. Any other response status will be
 deemed as an unsuccessful invocation which will cause retries as per the retry configuration.
 
-It is also recommended that you return a JSON object in your webhook response.
+After executing your business logic in the webhook, it's recommended that you return a JSON object in your webhook's
+response.
 
 ### Retry-After header
 

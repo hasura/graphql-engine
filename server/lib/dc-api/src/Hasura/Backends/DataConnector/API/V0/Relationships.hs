@@ -30,6 +30,7 @@ import Control.DeepSeq (NFData)
 import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
+import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
@@ -43,13 +44,13 @@ import Hasura.Backends.DataConnector.API.V0.Target qualified as API.V0
 import Prelude
 
 data Relationships = RTable TableRelationships | RFunction FunctionRelationships | RInterpolated InterpolatedRelationships
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Relationships
 
-pattern RTableRelationships :: API.V0.TableName -> HashMap.HashMap RelationshipName Relationship -> Relationships
+pattern RTableRelationships :: API.V0.TableName -> HashMap RelationshipName Relationship -> Relationships
 pattern RTableRelationships source rels = RTable (TableRelationships source rels)
 
-pattern RFunctionRelationships :: API.V0.FunctionName -> HashMap.HashMap RelationshipName Relationship -> Relationships
+pattern RFunctionRelationships :: API.V0.FunctionName -> HashMap RelationshipName Relationship -> Relationships
 pattern RFunctionRelationships source rels = RFunction (FunctionRelationships source rels)
 
 instance HasCodec Relationships where
@@ -71,9 +72,9 @@ instance HasCodec Relationships where
 
 data InterpolatedRelationships = InterpolatedRelationships
   { _irSource :: API.V0.InterpolatedQueryId,
-    _irRelationships :: HashMap.HashMap RelationshipName Relationship
+    _irRelationships :: HashMap RelationshipName Relationship
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
 
 instance HasObjectCodec InterpolatedRelationships where
   objectCodec =
@@ -84,9 +85,9 @@ instance HasObjectCodec InterpolatedRelationships where
 -- NOTE: Prefix is `trel` due to TableRequest conflicting with `tr` prefix.
 data TableRelationships = TableRelationships
   { _trelSourceTable :: API.V0.TableName,
-    _trelRelationships :: HashMap.HashMap RelationshipName Relationship
+    _trelRelationships :: HashMap RelationshipName Relationship
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
 
 instance HasObjectCodec TableRelationships where
   objectCodec =
@@ -96,9 +97,9 @@ instance HasObjectCodec TableRelationships where
 
 data FunctionRelationships = FunctionRelationships
   { _frelSourceFunction :: API.V0.FunctionName,
-    _frelRelationships :: HashMap.HashMap RelationshipName Relationship
+    _frelRelationships :: HashMap RelationshipName Relationship
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
 
 instance HasObjectCodec FunctionRelationships where
   objectCodec =
@@ -110,9 +111,9 @@ instance HasObjectCodec FunctionRelationships where
 data Relationship = Relationship
   { _rTarget :: API.V0.Target,
     _rRelationshipType :: RelationshipType,
-    _rColumnMapping :: HashMap.HashMap SourceColumnName TargetColumnName
+    _rColumnMapping :: API.V0.ColumnPathMapping
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Relationship
 
 instance HasCodec Relationship where
@@ -140,9 +141,9 @@ instance HasCodec RelationshipType where
     named "RelationshipType" $
       stringConstCodec [(ObjectRelationship, "object"), (ArrayRelationship, "array")]
 
-type SourceColumnName = API.V0.ColumnName
+type SourceColumnName = API.V0.ColumnSelector
 
-type TargetColumnName = API.V0.ColumnName
+type TargetColumnName = API.V0.ColumnSelector
 
 $(makeLenses 'TableRelationships)
 $(makeLenses 'Relationship)

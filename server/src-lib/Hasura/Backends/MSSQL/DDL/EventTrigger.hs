@@ -757,9 +757,9 @@ generateColumnTriggerAlias op colPrefixMaybe colInfo =
         case colPrefixMaybe of
           -- prefix with the joining table's name
           -- `id` -> `inserted.id` (prefix = 'inserted')
-          Just colPrefix -> colPrefix <> "." <> dbColNameText
+          Just colPrefix -> "[" <> colPrefix <> "].[" <> dbColNameText <> "]"
           -- do not prefix anthing to the column name
-          Nothing -> dbColNameText
+          Nothing -> "[" <> dbColNameText <> "]"
       -- create the alias for the column
       -- `payload.data.old.id` (opText = old) (dbColNameText = id)
       dbColAlias = "payload.data" <> "." <> opText <> "." <> dbColNameText
@@ -802,7 +802,7 @@ mkPrimaryKeyJoinExp lhsPrefix rhsPrefix columns =
   where
     singleColExp colInfo =
       let dbColNameText = columnNameText $ ciColumn colInfo
-       in LT.toStrict $ [ST.stext| #{lhsPrefix}.#{dbColNameText} = #{rhsPrefix}.#{dbColNameText} |]
+       in LT.toStrict $ [ST.stext| [#{lhsPrefix}].[#{dbColNameText}] = [#{rhsPrefix}].[#{dbColNameText}] |]
 
 -- Creates the WHERE clause for UPDATE SQL Trigger
 -- eg: If no listenColumns are defined then the where clause is an empty text
@@ -814,7 +814,7 @@ mkListenColumnsExp lhsPrefix rhsPrefix columns =
   where
     singleColExp colInfo =
       let dbColNameText = columnNameText $ ciColumn colInfo
-       in LT.toStrict $ [ST.stext| #{lhsPrefix}.#{dbColNameText} != #{rhsPrefix}.#{dbColNameText} |]
+       in LT.toStrict $ [ST.stext| [#{lhsPrefix}].[#{dbColNameText}] != [#{rhsPrefix}].[#{dbColNameText}] |]
 
 -- | Check if primary key is present in listen columns
 -- We use this in update event trigger, to check if the primary key has been updated

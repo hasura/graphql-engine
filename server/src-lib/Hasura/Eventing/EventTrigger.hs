@@ -76,6 +76,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
@@ -359,7 +360,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
                         return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event _siConfiguration sourceName eventsFetchedTime) events
                   Left err -> do
-                    liftIO $ L.unLogger logger $ EventInternalErr err
+                    L.unLogger logger $ EventInternalErr err
                     pure []
               else pure []
 
@@ -421,7 +422,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
             let clearlyBehind = fullFetchCount >= 3
             unless alreadyWarned
               $ when clearlyBehind
-              $ L.unLogger logger
+              $ L.unLoggerTracing logger
               $ L.UnstructuredLog L.LevelWarn
               $ fromString
               $ "Events processor may not be keeping up with events generated in postgres, "
@@ -432,7 +433,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
             when (lenEvents /= fetchBatchSize && alreadyWarned)
               $
               -- emit as warning in case users are only logging warning severity and saw above
-              L.unLogger logger
+              L.unLoggerTracing logger
               $ L.UnstructuredLog L.LevelWarn
               $ fromString
               $ "It looks like the events processor is keeping up again."
@@ -462,7 +463,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
               Tracing.samplingStateFromHeader
                 $ e
                 ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
-        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState Tracing.emptyTraceState
 
     processEvent ::
       forall io r b.
@@ -542,6 +543,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         $ mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook)
                         >>= \reqDetails -> do
                           let request = extractRequest reqDetails
+                              tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig cache
                               logger' res details = do
                                 logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus
                                 liftIO $ do
@@ -571,7 +573,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                                   liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
                                   liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
                               )
-                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
+                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger' tracesPropagator)
                           pure (request, resp)
                     case eitherReqRes of
                       Right (req, resp) -> do
@@ -624,7 +626,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                           (HTTPError reqBody err) ->
                             processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
                           (TransformationError _ err) -> do
-                            L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                            L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                             -- Record an Event Error
                             recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
@@ -636,7 +638,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                 `onNothingM` do
                   let eventTriggerTimeoutMessage = "Event Trigger " <> etiName eti <<> " timed out while processing."
                       eventTriggerTimeoutError = err500 TimeoutErrorCode eventTriggerTimeoutMessage
-                  L.unLogger logger $ EventInternalErr eventTriggerTimeoutError
+                  L.unLoggerTracing logger $ EventInternalErr eventTriggerTimeoutError
                   processError @b sourceConfig e retryConf logHeaders J.Null maintenanceModeVersion eventTriggerMetrics (HOther $ T.unpack eventTriggerTimeoutMessage)
                     >>= flip onLeft logQErr
 
@@ -767,10 +769,10 @@ mkInvocation eid ep statusMaybe reqHeaders respBody respHeaders =
         (mkWebhookReq ep reqHeaders invocationVersionET)
         resp
 
-logQErr :: (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
+logQErr :: (Tracing.MonadTraceContext m, MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ EventInternalErr err
+  L.unLoggerTracing logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent ::
   forall b. (Backend b) => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)

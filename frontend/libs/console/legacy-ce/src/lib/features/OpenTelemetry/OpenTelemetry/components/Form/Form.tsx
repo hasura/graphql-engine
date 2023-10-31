@@ -2,11 +2,15 @@ import * as React from 'react';
 import clsx from 'clsx';
 
 import { Button } from '../../../../../new-components/Button';
-import { useConsoleForm, InputField } from '../../../../../new-components/Form';
+import {
+  useConsoleForm,
+  InputField,
+  CheckboxesField,
+} from '../../../../../new-components/Form';
 import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
-import { formSchema } from './schema';
+import { formSchema, tracesPropagatorSchema } from './schema';
 import { Toggle } from './components/Toggle';
 import { useResetDefaultFormValues } from './hooks/useResetDefaultFormValues';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
@@ -42,6 +46,7 @@ export function Form(props: FormProps) {
 
   const traceType = dataType.includes('traces');
   const metricsType = dataType.includes('metrics');
+  const logsType = dataType.includes('logs');
 
   const buttonTexts = firstTimeSetup
     ? { text: 'Connect', loadingText: 'Connecting...' }
@@ -60,7 +65,7 @@ export function Form(props: FormProps) {
         loading={skeletonMode}
       />
       {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
-      <div className="flex">
+      <div>
         <InputField
           name="tracesEndpoint"
           label="Traces Endpoint"
@@ -69,7 +74,6 @@ export function Form(props: FormProps) {
           learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
-          className="pr-4"
           disabled={!traceType}
           prependLabel={
             <Switch
@@ -108,6 +112,29 @@ export function Form(props: FormProps) {
             />
           }
         />
+        <InputField
+          name="logsEndpoint"
+          label="Logs Endpoint"
+          placeholder="Your OpenTelemetry logs endpoint"
+          tooltip="OpenTelemetry-compliant logs receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/logs. Environment variable templating is available using the {{VARIABLE}} tag"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
+          clearButton
+          loading={skeletonMode}
+          disabled={!logsType}
+          prependLabel={
+            <Switch
+              checked={logsType}
+              onCheckedChange={checked => {
+                setValue(
+                  'dataType',
+                  checked
+                    ? dataType.concat('logs')
+                    : dataType.filter(type => type !== 'logs')
+                );
+              }}
+            />
+          }
+        />
       </div>
       <InputField
         name="batchSize"
@@ -119,6 +146,21 @@ export function Form(props: FormProps) {
         clearButton
         loading={skeletonMode}
       />
+      <div>
+        <CheckboxesField
+          name="tracesPropagators"
+          label="Trace Propagations"
+          orientation="horizontal"
+          tooltip="The specification that exchanges trace context propagation data between services and processes. The b3 propagation is enabled by default."
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#trace-propagations"
+          loading={skeletonMode}
+          options={tracesPropagatorSchema.options.map(option => ({
+            label: option,
+            value: option,
+            disabled: option === 'b3',
+          }))}
+        />
+      </div>
       <CollapsibleFieldWrapper
         inputFieldName="headers"
         label="Headers"

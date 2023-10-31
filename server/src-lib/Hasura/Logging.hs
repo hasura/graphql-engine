@@ -24,9 +24,19 @@ module Hasura.Logging
     UnhandledInternalErrorLog (..),
     mkLogger,
     nullLogger,
-    LoggerCtx (..),
+
+    -- ** LoggerCtx
+    LoggerCtx,
+    getLoggerSet,
+    getTimeGetter,
+    getLogLevel,
+    getEnabledLogTypes,
+    getLogsExporter,
     mkLoggerCtx,
+    mkLoggerCtxOTLP,
     cleanLoggerCtx,
+
+    -- ** etc
     eventTriggerLogType,
     eventTriggerProcessLogType,
     scheduledTriggerLogType,
@@ -180,6 +190,7 @@ data InternalLogTypes
   | ILTSourceCatalogMigration
   | ILTStoredIntrospection
   | ILTStoredIntrospectionStorage
+  | ILTModelInfo
   deriving (Show, Eq, Generic)
 
 instance Hashable InternalLogTypes
@@ -201,6 +212,7 @@ instance Witch.From InternalLogTypes Text where
     ILTSourceCatalogMigration -> "source-catalog-migration"
     ILTStoredIntrospection -> "stored-introspection"
     ILTStoredIntrospectionStorage -> "stored-introspection-storage"
+    ILTModelInfo -> "model-info"
 
 instance J.ToJSON InternalLogTypes where
   toJSON = J.String . Witch.into @Text
@@ -303,12 +315,31 @@ instance ToEngineLog UnstructuredLog Hasura where
   toEngineLog (UnstructuredLog level t) =
     (level, ELTInternal ILTUnstructured, J.toJSON t)
 
+-- | Abstract. Constructed with 'mkLoggerCtx'.
 data LoggerCtx impl = LoggerCtx
   { _lcLoggerSet :: !FL.LoggerSet,
     _lcLogLevel :: !LogLevel,
     _lcTimeGetter :: !(IO FormattedTime),
-    _lcEnabledLogTypes :: !(Set.HashSet (EngineLogType impl))
+    _lcEnabledLogTypes :: !(Set.HashSet (EngineLogType impl)),
+    -- | @LogsExporter@ or a noop. Wrapped in readIORef to work around cycle at
+    -- callsite of @runOtlpLogsExporter@
+    _lcLogsExporter :: !(IO (EngineLog impl -> IO ()))
   }
+
+getLoggerSet :: LoggerCtx impl -> FL.LoggerSet
+getLoggerSet = _lcLoggerSet
+
+getLogLevel :: LoggerCtx impl -> LogLevel
+getLogLevel = _lcLogLevel
+
+getTimeGetter :: LoggerCtx impl -> IO FormattedTime
+getTimeGetter = _lcTimeGetter
+
+getEnabledLogTypes :: LoggerCtx impl -> Set.HashSet (EngineLogType impl)
+getEnabledLogTypes = _lcEnabledLogTypes
+
+getLogsExporter :: LoggerCtx impl -> IO (EngineLog impl -> IO ())
+getLogsExporter = _lcLogsExporter
 
 -- * Unhandled Internal Errors
 
@@ -345,22 +376,26 @@ getFormattedTime tzM = do
   t <- Time.getCurrentTime
   return $ FormattedTime t tz
 
--- | Creates a new 'LoggerCtx'.
+-- | Creates a new 'LoggerCtx', optionally fanning out to an OTLP endpoint
+-- (while enabled) as well.
 --
 -- The underlying 'LoggerSet' is bound to the 'ManagedT' context: when it exits,
 -- the log will be flushed and cleared regardless of whether it was exited
 -- properly or not ('ManagedT' uses 'bracket' underneath). This guarantees that
 -- the logs will always be flushed, even in case of error, avoiding a repeat of
 -- https://github.com/hasura/graphql-engine/issues/4772.
-mkLoggerCtx ::
+mkLoggerCtxOTLP ::
   (MonadIO io, MonadBaseControl IO io) =>
+  -- | @LogsExporter@ or a noop. Wrapped in readIORef to work around cycle at
+  -- callsite of @runOtlpLogsExporter@
+  IO (EngineLog impl -> IO ()) ->
   LoggerSettings ->
   Set.HashSet (EngineLogType impl) ->
   ManagedT io (LoggerCtx impl)
-mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
+mkLoggerCtxOTLP logsExporter (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
   loggerSet <- allocate acquire release
   timeGetter <- liftIO $ bool (pure $ getFormattedTime tzM) cachedTimeGetter cacheTime
-  pure $ LoggerCtx loggerSet logLevel timeGetter enabledLogs
+  pure $ LoggerCtx loggerSet logLevel timeGetter enabledLogs logsExporter
   where
     acquire = liftIO do
       FL.newStdoutLoggerSet FL.defaultBufSize
@@ -372,6 +407,14 @@ mkLoggerCtx (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
         Auto.defaultUpdateSettings
           { Auto.updateAction = getFormattedTime tzM
           }
+
+-- | 'mkLoggerCtxOTLP' but with no otlp log shipping, for compatibility
+mkLoggerCtx ::
+  (MonadIO io, MonadBaseControl IO io) =>
+  LoggerSettings ->
+  Set.HashSet (EngineLogType impl) ->
+  ManagedT io (LoggerCtx impl)
+mkLoggerCtx = mkLoggerCtxOTLP (pure (\_ -> pure ()))
 
 cleanLoggerCtx :: LoggerCtx a -> IO ()
 cleanLoggerCtx =
@@ -396,7 +439,7 @@ newToOrig :: Logger impl -> (forall a m. (ToEngineLog a impl, MonadIO m) => a ->
 newToOrig (LoggerTracing f) = fmap Tracing.runNoMonadTraceContext f
 
 mkLogger :: (J.ToJSON (EngineLogType impl)) => LoggerCtx impl -> Logger impl
-mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = LoggerTracing $ \l -> do
+mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes logsExporter) = LoggerTracing $ \l -> do
   -- NOTE: This has us logging a trace and span id even  in the OSS server,
   -- where tracing isn't actually supported.  We decided this was fine, and
   -- actually might end up being useful as a way for OSS users to correlate
@@ -406,10 +449,10 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
       mbCurrentTrace = tcCurrentTrace <$> cxt
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy)
-    $ liftIO
-    $ FL.pushLogStrLn loggerSet
-    $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet mbCurrentTrace mbCurrentSpan)
+  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $ liftIO do
+    let logLine = EngineLog localTime logLevel logTy logDet mbCurrentTrace mbCurrentSpan
+    FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode logLine)
+    logsExporter >>= \f -> f logLine
 
 nullLogger :: Logger Hasura
 nullLogger = Logger \_ -> pure ()

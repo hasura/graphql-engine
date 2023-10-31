@@ -10,7 +10,7 @@ keywords:
   - daily
   - summary
   - automated
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 import Tabs from '@theme/Tabs';
@@ -138,9 +138,18 @@ Whenever a cron job is triggered, Hasura will send a request to the webhook URL 
 simply going to send a `POST` request. Our webhook will parse the request, ensure the header is correct, and then query
 the database to determine which customers should receive a summary of their new notifications.
 
-Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
-attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
-code as a guide to write your own webhook.
+Below, we've written an example of webhook. As we established earlier, this runs on port `4000`. If you're attempting to
+run this locally, follow the instructions below. If you're running this in a hosted environment, use this code as a
+guide to write your own webhook.
+
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
 
 Init a new project with `npm init` and install the following dependencies:
 
@@ -276,8 +285,118 @@ nodemailer.createTestAccount((err, account) => {
 
 </details>
 
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Webhook server is running on port 4000`, you're good to go!
+You can run the server by running `node index.js` in your terminal.
+
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask secure-smtplib requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from smtplib import SMTPException
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
+import requests
+
+app = Flask(__name__)
+
+# Create an SMTP server connection
+def create_smtp_server():
+    try:
+        server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
+        server.starttls()
+        server.login('example@superstore.com', 'samplePassword123')
+        return server
+    except SMTPException as e:
+        print(f"An error occurred while creating the SMTP server: {e}\n\n🔔We'll print the message to the terminal:\n\n")
+        return None
+
+@app.route('/daily-summary', methods=['POST'])
+def send_daily_summary():
+    # Confirm the authentication header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Get the date for the query
+    today = datetime.now()
+    twenty_four_hours_prior = today - timedelta(days=1)
+
+    # Fetch data from your Hasura instance (replace with actual endpoint and admin secret)
+    endpoint = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
+    admin_secret = '<YOUR_ADMIN_SECRET>'
+    query = {
+        "query": """
+        query DailyNotificationsQuery($start_time: timestamptz!) {
+          notifications(where: {created_at: {_gte: $start_time}}) {
+            id
+            message
+            user {
+              id
+              email
+              name
+            }
+          }
+        }
+        """,
+        "variables": {"start_time": twenty_four_hours_prior.isoformat()}
+    }
+    headers = {
+        'Content-Type': 'application/json',
+        'x-hasura-admin-secret': admin_secret
+    }
+    response = requests.post(endpoint, json=query, headers=headers)
+    data = response.json()
+    notifications = data.get('data', {}).get('notifications', [])
+
+    # Create an email and send it for each notification
+    recipients = []
+    for notification in notifications:
+        # Create a message
+        msg = MIMEMultipart()
+        msg['From'] = 'sender@SuperStore.com'
+        msg['To'] = f"{notification['user']['name']} <{notification['user']['email']}>"
+        msg['Subject'] = f"You've got new notifications, {notification['user']['name'].split(' ')[0]}!"
+        message_body = f"Hi {notification['user']['name'].split(' ')[0]},\n\nCheck out your recent notifications:\n\n{notification['message']}\n\nThanks,\nSuperStore.com"
+        msg.attach(MIMEText(message_body, 'plain'))
+
+        server = create_smtp_server()
+        if server is not None:
+            # Send the email if server is running
+            server.sendmail('sender@SuperStore.com', notification['user']['email'], msg.as_string())
+            server.quit()
+        else:
+            # or just print the message to the terminal
+            print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{message_body}")
+
+        recipients.append(notification['user']['email'])
+
+    return jsonify({'message': 'Notifications sent!', 'recipients': recipients})
+
+if __name__ == '__main__':
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
+  </TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
 
 ## Step 4: Test the setup
 
@@ -292,6 +411,8 @@ link to a handy email 🎉
   alt="Hasura Scheduled Trigger architecture"
   width="1000"
 />
+
+The screenshot above illustrates the output of the Node.js version of the webhook.
 
 Feel free to customize the webhook implementation based on your specific requirements and chosen email sending service.
 Remember to handle error scenarios, implement necessary validations, and add appropriate security measures to your

@@ -1,7 +1,7 @@
 import { Table } from '../../../../hasura-metadata-types';
 
 import { useFormContext } from 'react-hook-form';
-import { RowPermissionsInput } from './components';
+import { RowPermissionsInput, TableToLoad } from './components';
 import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
 import Skeleton from 'react-loading-skeleton';
@@ -25,7 +25,9 @@ export const RowPermissionBuilder = ({
   // this value will always be 'filter' or 'check' depending on the query type
 
   const value = watch(permissionsKey);
-  const [tablesToLoad, setTablesToLoad] = useState<Table[]>([table]);
+  const [tablesToLoad, setTablesToLoad] = useState<TableToLoad>([
+    { table, source: dataSourceName },
+  ]);
 
   const { tables, isLoading } = usePermissionTables({
     dataSourceName,

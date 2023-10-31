@@ -33,7 +33,7 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
   return capabilitiesResponse;
 });
 
-server.get<{ Body: SchemaRequest | undefined, Reply: SchemaResponse }>("/schema", async (request, _response) => {
+server.post<{ Body: SchemaRequest | undefined, Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
   return getSchema(staticData, config, request.body);

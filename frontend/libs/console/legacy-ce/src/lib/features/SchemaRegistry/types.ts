@@ -60,25 +60,95 @@ export type GetSchemaListResponseWithError = {
   data?: GetSchemaListQueryResponse;
   errors?: GraphQLError[];
 };
+export type GetSchemaListQueryResponse = {
+  schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
+  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
+};
 export type GetSchemaChangeListResponseWithError = {
   data?: GetSchemaChangeListQueryResponse;
   errors?: GraphQLError[];
 };
 export type GetSchemaChangeListQueryResponse = {
-  schema_change_list: SchemaRegistryDumpWithSiblingSchema[];
-  current_schema_card: SchemaRegistryDumpWithSiblingSchema[];
+  schema_registry_dumps: SchemaChangeListDumpWithSiblingSchema[];
   schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
 };
-export type GetSchemaListQueryResponse = {
-  schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
-  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
-};
+
+/**
+ * Query types for dumps_v2 aggregate
+ * START
+ */
 export type SchemaRegistryDumpsAggregate = {
   aggregate: SchemaRegistryCountAggregate;
 };
+
 export type SchemaRegistryCountAggregate = {
   count: number;
 };
+
+export type GetSchemaRegstiryDumpsV2AggregateResponseWithError = {
+  data?: GetSchemaRegstiryDumpsV2AggregateResponse;
+  errors?: GraphQLError[];
+};
+
+export type GetSchemaRegistryNotificationResponseWithError = {
+  data?: GetSchemaRegistryNotificationResponse;
+  errors?: GraphQLError[];
+};
+
+export type GetSchemaRegstiryDumpsV2AggregateResponse = {
+  schema_registry_dumps_v2_aggregate: SchemaRegistryDumpsAggregate;
+  schema_registry_dumps_v2: SchemaRegistryChangeRecordedAt[];
+};
+export type GetSchemaRegstiryDumpsV1AggregateResponseWithError = {
+  data?: GetSchemaRegstiryDumpsV1AggregateResponse;
+  errors?: GraphQLError[];
+};
+export type GetSchemaRegstiryDumpsV1AggregateResponse = {
+  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
+};
+export type GetSchemaRegistryNotificationResponse = {
+  schema_registry_dumps_v2: SchemaRegsitryNotificationData[];
+};
+export type SchemaRegsitryNotificationData = SchemaRegistryChangeRecordedAt & {
+  diff_with_previous_schema: SchemaDiffData[];
+};
+export type SchemaRegistryChangeRecordedAt = {
+  change_recorded_at: string;
+};
+/**
+ * END
+ */
+
+/**
+ * Query types for dumps_v2
+ * START
+ */
+export type GetSchemaRegstiryDumpsV2ResponseWithError = {
+  data?: GetSchemaRegstiryDumpsV2Response;
+  errors?: GraphQLError[];
+};
+export type GetSchemaRegstiryDumpsV2Response = {
+  schema_registry_dumps_v2: SchemaRegistryDumpWithSiblingSchema[];
+};
+/**
+ * END
+ */
+
+/**
+ * Query types for dumps_v1
+ * START
+ */
+export type GetSchemaRegstiryDumpsV1ResponseWithError = {
+  data?: GetSchemaRegstiryDumpsV1Response;
+  errors?: GraphQLError[];
+};
+export type GetSchemaRegstiryDumpsV1Response = {
+  schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
+};
+/**
+ * END
+ */
+
 export type SchemaRegistryDump = {
   id: string;
   entry_hash: string;
@@ -88,6 +158,19 @@ export type SchemaRegistryDump = {
   hasura_schema_role: string;
   schema_sdl: string;
   schema_tags: SchemaRegistryTag[];
+};
+export type SchemaChangeListDumpWithSiblingSchema = {
+  id: string;
+  entry_hash: string;
+  schema_hash: string;
+  change_recorded_at: string;
+  schema_tags: SchemaRegistryTag[];
+  sibling_schemas: SchemaChangeListSiblingSchema[];
+};
+
+export type SchemaChangeListSiblingSchema = {
+  id: string;
+  hasura_schema_role: string;
 };
 
 export type SchemaRegistryDumpWithSiblingSchema = SchemaRegistryDump & {
@@ -112,9 +195,19 @@ export type GetRegistrySchemaResponseWithError = {
   data?: GetRegistrySchemaQueryResponse;
   errors?: GraphQLError[];
 };
+export type GetURLRegistrySchemaResponseWithError = {
+  data?: GetURLSchemaChangeQueryResponse;
+  errors?: GraphQLError[];
+};
+
+export type GetURLSchemaChangeQueryResponse = {
+  schema_registry_dumps: SchemaChangeListDumpWithSiblingSchema[];
+  schema_registry_dumps_v2: SchemaChangeListDumpWithSiblingSchema[];
+};
 
 export type GetRegistrySchemaQueryResponse = {
   schema_registry_dumps: SiblingSchema[];
+  schema_registry_dumps_v2: SiblingSchema[];
 };
 
 export type GetAlertConfigResponseWithError = {

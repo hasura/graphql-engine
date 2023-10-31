@@ -918,7 +918,10 @@ X-Hasura-Role: admin
 </Tabs>
 
 :::info Note
-You can also apply multiple transforms based on the HTTP response received from the Action webhook in the response transform template. For example:
+
+You can also apply multiple transforms based on the following:
+
+1. HTTP response received from the Action webhook in the response transform template. For example:
 
 ```
 {{ if $response.status == 200 }}
@@ -929,11 +932,35 @@ You can also apply multiple transforms based on the HTTP response received from 
     }
   }
 {{ elif $response.status == 400 }}
-  { 
+  {
     "message": {{$body.error}}
   }
 {{ else }}
-  { 
+  {
+    "message" : "internal error"
+  }
+{{ end }}
+```
+
+2. Session Variables. For example:
+
+```
+{{ if $session_variables["x-hasura-role"] == "admin" }}
+  {
+    "users": {
+      "name": {{$body}},
+      "password": {{$body}}
+    }
+  }
+{{ elif $session_variables["x-hasura-role"] == "user" }}
+  {
+    "users": {
+      "name": {{$body.username}},
+      "password": "<redacted password>"
+    }
+  }
+{{ else }}
+  {
     "message" : "internal error"
   }
 {{ end }}

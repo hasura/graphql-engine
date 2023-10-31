@@ -122,7 +122,7 @@ instance HasCodec TableType where
 --------------------------------------------------------------------------------
 
 newtype ForeignKeys = ForeignKeys {_unForeignKeys :: HashMap ConstraintName Constraint}
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
@@ -138,9 +138,9 @@ newtype ConstraintName = ConstraintName {unConstraintName :: Text}
 
 data Constraint = Constraint
   { _cForeignTable :: TableName,
-    _cColumnMapping :: HashMap API.V0.ColumnName API.V0.ColumnName
+    _cColumnMapping :: API.V0.ColumnPathMapping
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec Constraint
 

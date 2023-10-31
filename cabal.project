@@ -127,3 +127,8 @@ source-repository-package
   tag: c1aa7b3991e669e4c6a977712b495d40a54cf819
   subdir: yaml
 
+source-repository-package
+  type: git
+  location: https://github.com/hasura/libdeflate-hs.git
+  tag: e6f020a1a24d07516d753fbb6f30758774f76372
+

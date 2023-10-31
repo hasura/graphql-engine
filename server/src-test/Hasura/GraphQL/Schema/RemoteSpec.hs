@@ -13,6 +13,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
+import Data.Text.NonEmpty qualified as NEText
 import Data.Text.RawString
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (ErrorMessage, fromErrorMessage)
@@ -34,6 +35,7 @@ import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
@@ -130,7 +132,7 @@ buildQueryParsers ::
   IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
 buildQueryParsers introspection customizer = do
   let introResult = IntrospectionResult introspection GName._Query Nothing Nothing
-      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef (EnvRecord "" N.nullURI) [] False 60 Nothing) customizer
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef remoteSchemaDummyName (EnvRecord "" N.nullURI) [] False 60 Nothing) customizer
       remoteSchemaRels = mempty
       schemaContext =
         SchemaContext
@@ -625,3 +627,6 @@ _x = [G.name|x|]
 
 _Int :: G.Name
 _Int = [G.name|Int|]
+
+remoteSchemaDummyName :: RemoteSchemaName
+remoteSchemaDummyName = RemoteSchemaName (NEText.mkNonEmptyTextUnsafe "dummy")

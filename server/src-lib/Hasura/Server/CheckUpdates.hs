@@ -13,7 +13,7 @@ import Data.Either (fromRight)
 import Data.Text qualified as T
 import Data.Text.Conversions (toText)
 import Hasura.HTTP
-import Hasura.Logging (LoggerCtx (..))
+import Hasura.Logging (LoggerCtx, getLoggerSet)
 import Hasura.Prelude
 import Hasura.Server.Version (Version, currentVersion)
 import Network.HTTP.Client qualified as HTTP
@@ -36,7 +36,7 @@ instance J.ToJSON UpdateInfo where
   toEncoding = J.genericToEncoding (J.aesonDrop 2 J.snakeCase)
 
 checkForUpdates :: LoggerCtx a -> HTTP.Manager -> IO void
-checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
+checkForUpdates ctx manager = do
   let options = wreqOptions manager []
   url <- getUrl
   forever $ do
@@ -46,7 +46,7 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
       Right bs -> do
         UpdateInfo latestVersion <- decodeResp $ bs ^. Wreq.responseBody
         when (latestVersion /= currentVersion)
-          $ FL.pushLogStrLn loggerSet
+          $ FL.pushLogStrLn (getLoggerSet ctx)
           $ FL.toLogStr
           $ updateMsg latestVersion
 

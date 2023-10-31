@@ -22,11 +22,13 @@ import Hasura.Backends.DataConnector.Plan.Common
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as QueryPlan
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -39,6 +41,7 @@ mkRemoteRelationshipPlan ::
     MonadIO m,
     Has SessionVariables r
   ) =>
+  SourceName ->
   SourceConfig ->
   -- | List of join json objects, each of which contains IDs to be laterally-joined against
   -- as well as an argument ID that identifies the particular set of IDs (ie 'row' to join against).
@@ -54,12 +57,15 @@ mkRemoteRelationshipPlan ::
   -- | The field name the result of the join should be stored in the result object
   FieldName ->
   SourceRelationshipSelection 'DataConnector Void UnpreparedValue ->
-  m (Plan API.QueryRequest API.QueryResponse)
-mkRemoteRelationshipPlan _sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir = do
+  m (Plan API.QueryRequest API.QueryResponse, [ModelInfoPart])
+mkRemoteRelationshipPlan sourceName _sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir = do
   foreachRowFilter <- traverse (translateForeachRowFilter argumentIdFieldName joinIdsSchema) joinIds
   argumentIds <- extractArgumentIds argumentIdFieldName joinIds
   queryRequest <- translateSourceRelationshipSelection foreachRowFilter ir
-  pure $ Plan queryRequest (reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIds resultFieldName ir)
+  modelNames <- getRSModelInfoGen sourceName ModelSourceTypeDataConnector ir
+  let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
+
+  pure $ (Plan queryRequest (reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIds resultFieldName ir), modelInfo)
   where
     translateSourceRelationshipSelection ::
       NonEmpty (HashMap API.ColumnName API.ScalarValue) ->

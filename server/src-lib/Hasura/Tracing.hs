@@ -3,9 +3,13 @@ module Hasura.Tracing (module Tracing) where
 import Hasura.Tracing.Class as Tracing
 import Hasura.Tracing.Context as Tracing
 import Hasura.Tracing.Monad as Tracing
+import Hasura.Tracing.Propagator as Tracing
+import Hasura.Tracing.Propagator.B3 as Tracing
+import Hasura.Tracing.Propagator.W3CTraceContext as Tracing
 import Hasura.Tracing.Reporter as Tracing
 import Hasura.Tracing.Sampling as Tracing
 import Hasura.Tracing.TraceId as Tracing
+import Hasura.Tracing.TraceState as Tracing
 import Hasura.Tracing.Utils as Tracing
 
 {- Note [Tracing]

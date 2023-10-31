@@ -110,10 +110,11 @@ This section is a guide to implementing Data Connector agents for `graphql-engin
 The entry point to the reference agent application is a Fastify HTTP server. Raw data is loaded from JSON files on disk, and the server provides the following endpoints:
 
 - `GET /capabilities`, which returns the capabilities of the agent and a schema that describes the type of the configuration expected to be sent on the `X-Hasura-DataConnector-Config` header
-- `GET /schema`, which returns information about the provided _data schema_, its tables and their columns
+- `POST /schema`, which returns information about the provided _data schema_, its tables and their columns
 - `POST /query`, which receives a query structure to be executed, encoded as the JSON request body, and returns JSON containing the requested fields. The query will be over the data schema described by the `/schema` endpoint.
 - `GET /health`, which can be used to either check if the agent is running, or if a particular data source is healthy
 - `POST /mutation`, which receives a request to mutate (ie change) data described by the `/schema` endpoint.
+- **DEPRECATED** - `GET /schema`, which returns information about the provided _data schema_, its tables and their columns 
 
 The `/schema`, `/query` and `/mutation` endpoints require the request to have the `X-Hasura-DataConnector-Config` header set. That header contains configuration information that agent can use to configure itself. For example, the header could contain a connection string to the database, if the agent requires a connection string to know how to connect to a specific database. The header must be a JSON object, but the specific properties that are required are up to the agent to define.
 

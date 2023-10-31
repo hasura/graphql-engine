@@ -632,7 +632,7 @@ unfurlAnnotatedOrderByElement =
       pure (fieldName, expression)
     Ir.AOCObjectRelation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
-    Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
+    Ir.AOCObjectRelation Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       joinAliasEntity <-
         lift (lift (generateEntityAlias (ForOrderAlias (tableNameText tableName))))
@@ -674,7 +674,7 @@ unfurlAnnotatedOrderByElement =
       local (const joinAliasEntity) (unfurlAnnotatedOrderByElement annOrderByElementG)
     Ir.AOCArrayAggregation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annAggregateOrderBy ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
-    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
+    Ir.AOCArrayAggregation Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAlias <-
@@ -835,7 +835,7 @@ fromAnnBoolExpFld =
       error "fromAnnBoolExpFld RelTargetNativeQuery"
     Ir.AVRemoteRelationship _ ->
       error "fromAnnBoolExpFld RemoteRelationship"
-    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
+    Ir.AVRelationship Rql.RelInfo {riMapping = Rql.RelMapping mapping, riTarget = Rql.RelTargetTable table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-

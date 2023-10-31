@@ -1,5 +1,5 @@
-export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
+export type Maybe<T> = T | null;
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K];
 };
@@ -1037,7 +1037,9 @@ export type Alert_Service_Type_Updates = {
 /** Alert type enum for alert configuration */
 export type Alert_Type = {
   __typename?: 'alert_type';
+  always_enabled: Scalars['Boolean'];
   description: Scalars['String'];
+  hidden: Scalars['Boolean'];
   id: Scalars['String'];
   name: Scalars['String'];
   template?: Maybe<Scalars['String']>;
@@ -1069,7 +1071,9 @@ export type Alert_Type_Bool_Exp = {
   _and?: Maybe<Array<Alert_Type_Bool_Exp>>;
   _not?: Maybe<Alert_Type_Bool_Exp>;
   _or?: Maybe<Array<Alert_Type_Bool_Exp>>;
+  always_enabled?: Maybe<Boolean_Comparison_Exp>;
   description?: Maybe<String_Comparison_Exp>;
+  hidden?: Maybe<Boolean_Comparison_Exp>;
   id?: Maybe<String_Comparison_Exp>;
   name?: Maybe<String_Comparison_Exp>;
   template?: Maybe<String_Comparison_Exp>;
@@ -1083,7 +1087,9 @@ export enum Alert_Type_Constraint {
 
 /** input type for inserting data into table "alert_type" */
 export type Alert_Type_Insert_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
   description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   template?: Maybe<Scalars['String']>;
@@ -1132,7 +1138,9 @@ export type Alert_Type_On_Conflict = {
 
 /** Ordering options when selecting data from "alert_type". */
 export type Alert_Type_Order_By = {
+  always_enabled?: Maybe<Order_By>;
   description?: Maybe<Order_By>;
+  hidden?: Maybe<Order_By>;
   id?: Maybe<Order_By>;
   name?: Maybe<Order_By>;
   template?: Maybe<Order_By>;
@@ -1146,7 +1154,11 @@ export type Alert_Type_Pk_Columns_Input = {
 /** select columns of table "alert_type" */
 export enum Alert_Type_Select_Column {
   /** column name */
+  AlwaysEnabled = 'always_enabled',
+  /** column name */
   Description = 'description',
+  /** column name */
+  Hidden = 'hidden',
   /** column name */
   Id = 'id',
   /** column name */
@@ -1157,7 +1169,9 @@ export enum Alert_Type_Select_Column {
 
 /** input type for updating data in table "alert_type" */
 export type Alert_Type_Set_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
   description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   template?: Maybe<Scalars['String']>;
@@ -1173,7 +1187,9 @@ export type Alert_Type_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Alert_Type_Stream_Cursor_Value_Input = {
+  always_enabled?: Maybe<Scalars['Boolean']>;
   description?: Maybe<Scalars['String']>;
+  hidden?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
   template?: Maybe<Scalars['String']>;
@@ -1182,7 +1198,11 @@ export type Alert_Type_Stream_Cursor_Value_Input = {
 /** update columns of table "alert_type" */
 export enum Alert_Type_Update_Column {
   /** column name */
+  AlwaysEnabled = 'always_enabled',
+  /** column name */
   Description = 'description',
+  /** column name */
+  Hidden = 'hidden',
   /** column name */
   Id = 'id',
   /** column name */
@@ -6608,11 +6628,6 @@ export type CreateTenantResponse = {
   tenant?: Maybe<Tenant>;
 };
 
-export type CreateTunnelOutput = {
-  __typename?: 'CreateTunnelOutput';
-  tunnel?: Maybe<DdnTunnel>;
-};
-
 /** ordering argument of a cursor */
 export enum Cursor_Ordering {
   /** ascending ordering of the cursor */
@@ -11527,44 +11542,6 @@ export type Ddn_Tunnel_Variance_Fields = {
 /** order by variance() on columns of table "ddn.tunnel" */
 export type Ddn_Tunnel_Variance_Order_By = {
   reserved_port?: Maybe<Order_By>;
-};
-
-export type DdnApplyMetadataOutput = {
-  __typename?: 'DDNApplyMetadataOutput';
-  build?: Maybe<Ddn_Build>;
-  build_id?: Maybe<Scalars['String']>;
-  graphql_api_endpoint: Scalars['String'];
-};
-
-export type DdnCreateBuildOutput = {
-  __typename?: 'ddnCreateBuildOutput';
-  build?: Maybe<Ddn_Build>;
-  build_id: Scalars['String'];
-  build_version: Scalars['String'];
-  graphql_api_endpoint: Scalars['String'];
-};
-
-export type DdnCreateProjectResponse = {
-  __typename?: 'DDNCreateProjectResponse';
-  id: Scalars['uuid'];
-  name: Scalars['String'];
-  project?: Maybe<Ddn_Projects>;
-};
-
-export type DdnTunnel = {
-  __typename?: 'DDNTunnel';
-  id: Scalars['uuid'];
-  owner_id: Scalars['uuid'];
-  reserved_cluster: Scalars['uuid'];
-  reserved_port: Scalars['Int'];
-  tunnel_cluster: DdnTunnelCluster;
-};
-
-export type DdnTunnelCluster = {
-  __typename?: 'DDNTunnelCluster';
-  internal_fqdn: Scalars['String'];
-  name: Scalars['String'];
-  public_fqdn: Scalars['String'];
 };
 
 /** Table to keep track of dedicated cloud bills. These are not part of automated Stripe invoicing.  */
@@ -19751,17 +19728,6 @@ export type Hasura_Worker_Updates = {
   where: Hasura_Worker_Bool_Exp;
 };
 
-export type HasuraSecretList = {
-  __typename?: 'HasuraSecretList';
-  key: Scalars['String'];
-  value: Scalars['String'];
-};
-
-export type HasuraSecretMessage = {
-  __typename?: 'HasuraSecretMessage';
-  message: Scalars['String'];
-};
-
 /** heroku integration metadata (1.4+) */
 export type Heroku_Integrations = {
   __typename?: 'heroku_integrations';
@@ -24811,13 +24777,6 @@ export type Mutation_Root = {
   createPersonalAccessToken: PersonalAccessToken;
   createTenant?: Maybe<CreateTenantResponse>;
   createZendeskSupportTicket: SuccessOrError;
-  ddnApplyMetadata?: Maybe<DdnApplyMetadataOutput>;
-  /** ddnCreateBuild */
-  ddnCreateBuild?: Maybe<DdnCreateBuildOutput>;
-  ddnCreateProject?: Maybe<DdnCreateProjectResponse>;
-  ddnCreateTunnel?: Maybe<CreateTunnelOutput>;
-  ddnHasuraSecretDelete: HasuraSecretMessage;
-  ddnHasuraSecretSet: HasuraSecretMessage;
   declineBillingManagerInvite?: Maybe<BillingManagerInvitation>;
   declineInvite: ProjectCollaboratorInvitation;
   declineTransferOwnershipInvite: ProjectOwnershipTransferInvitation;
@@ -28039,41 +27998,6 @@ export type Mutation_RootCreateZendeskSupportTicketArgs = {
   priority?: Maybe<SupportTicketPriority>;
   project_id?: Maybe<Scalars['uuid']>;
   subject: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnApplyMetadataArgs = {
-  build_id?: Maybe<Scalars['String']>;
-  environment?: Maybe<Scalars['String']>;
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnCreateBuildArgs = {
-  description?: Maybe<Scalars['String']>;
-  metadata_json: Scalars['String'];
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnCreateProjectArgs = {
-  cloud?: Maybe<Scalars['String']>;
-  name?: Maybe<Scalars['String']>;
-  plan?: Maybe<Scalars['String']>;
-  region?: Maybe<Scalars['String']>;
-};
-
-/** mutation root */
-export type Mutation_RootDdnHasuraSecretDeleteArgs = {
-  key: Scalars['String'];
-  project_id: Scalars['String'];
-};
-
-/** mutation root */
-export type Mutation_RootDdnHasuraSecretSetArgs = {
-  key: Scalars['String'];
-  project_id: Scalars['String'];
-  value: Scalars['String'];
 };
 
 /** mutation root */
@@ -53930,7 +53854,6 @@ export type Query_Root = {
   ddn_tunnel_cluster_aggregate: Ddn_Tunnel_Cluster_Aggregate;
   /** fetch data from the table: "ddn.tunnel_cluster" using primary key columns */
   ddn_tunnel_cluster_by_pk?: Maybe<Ddn_Tunnel_Cluster>;
-  ddnHasuraSecretList: Array<HasuraSecretList>;
   /** fetch data from the table: "dedicated_cloud_bills" */
   dedicated_cloud_bills: Array<Dedicated_Cloud_Bills>;
   /** fetch aggregated fields from the table: "dedicated_cloud_bills" */
@@ -55819,10 +55742,6 @@ export type Query_RootDdn_Tunnel_Cluster_AggregateArgs = {
 
 export type Query_RootDdn_Tunnel_Cluster_By_PkArgs = {
   id: Scalars['uuid'];
-};
-
-export type Query_RootDdnHasuraSecretListArgs = {
-  project_id: Scalars['String'];
 };
 
 export type Query_RootDedicated_Cloud_BillsArgs = {

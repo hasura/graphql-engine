@@ -137,7 +137,7 @@ let
     freetdsWithODBC
     pkgs.libmysqlclient
     pkgs.mariadb
-    pkgs.postgresql_15
+    pkgs.postgresql_16
     unixODBC
     msodbcsql
   ]

@@ -126,6 +126,7 @@ export const LS_KEYS = {
   notificationsLastSeen: 'notifications:lastSeen',
   authState: 'AUTH_STATE',
   skipOnboarding: 'SKIP_CLOUD_ONBOARDING',
+  lastViewedSchemaChange: 'LAST_VIEWED_SCHEMA_CHANGE',
 };
 
 export const clearGraphiqlLS = () => {

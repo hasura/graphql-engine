@@ -214,7 +214,7 @@ fromNativeQueryArray arrRel translateFieldsAndAggregates sourceTargetName native
     API.Relationship
       { _rTarget = TInterpolated (API.TargetInterpolatedQuery nqid),
         _rRelationshipType = API.ArrayRelationship,
-        _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping arrRel)
+        _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping arrRel)
       }
 
   pure
@@ -252,7 +252,7 @@ fromNativeQueryObject objRel sourceTargetName nativeQuery = do
     API.Relationship
       { _rTarget = TInterpolated (API.TargetInterpolatedQuery nqid),
         _rRelationshipType = API.ObjectRelationship,
-        _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
+        _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
       }
 
   pure
@@ -526,7 +526,7 @@ translateAnnField targetName = \case
           API.Relationship
             { _rTarget = API.TTable (API.TargetTable targetTable),
               _rRelationshipType = API.ObjectRelationship,
-              _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
+              _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
             }
 
         pure
@@ -586,7 +586,7 @@ translateArrayRelationSelect targetName translateFieldsAndAggregates arrRel = do
         API.Relationship
           { _rTarget = API.TTable (API.TargetTable (Witch.into targetTable)),
             _rRelationshipType = API.ArrayRelationship,
-            _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping arrRel)
+            _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping arrRel)
           }
 
       pure

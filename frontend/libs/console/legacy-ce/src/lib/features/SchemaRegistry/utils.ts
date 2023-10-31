@@ -4,12 +4,11 @@ import {
   Schema,
   RoleBasedSchema,
   SchemaChange,
-  GetSchemaListResponseWithError,
-  SchemaRegistryDumpWithSiblingSchema,
-  SiblingSchema,
   GetRegistrySchemaResponseWithError,
   Role,
   SchemaChangeCard,
+  SchemaChangeListDumpWithSiblingSchema,
+  SchemaChangeListSiblingSchema,
 } from './types';
 import {
   getLSItem,
@@ -21,6 +20,9 @@ import { useCallback, useLayoutEffect, useRef } from 'react';
 import moment from 'moment';
 
 export const CapitalizeFirstLetter = (str: string) => {
+  if (str === '') {
+    return '';
+  }
   return str[0].toUpperCase() + str.slice(1);
 };
 
@@ -53,67 +55,21 @@ export const setSearchParam = (pageNumber: number) => {
   window.history.pushState({}, '', newUrl);
 };
 
-export const schemaListTransformFn = (
-  dumps: NonNullable<
-    GetSchemaListResponseWithError['data']
-  >['schema_registry_dumps']
-) => {
-  const schemaList: Schema[] = [];
-
-  dumps.forEach((dump: SchemaRegistryDumpWithSiblingSchema) => {
-    const roleBasedSchemas: RoleBasedSchema[] = [];
-
-    dump.sibling_schemas.forEach((childSchema: SiblingSchema) => {
-      const prevSchemaDiff = childSchema.diff_with_previous_schema;
-      let changes: SchemaChange[] | undefined = [];
-
-      if (prevSchemaDiff?.length > 0) {
-        changes = [...(prevSchemaDiff[0]?.schema_diff_data || [])];
-      } else {
-        changes = undefined;
-      }
-
-      const roleBasedSchema: RoleBasedSchema = {
-        raw: childSchema.schema_sdl,
-        role: childSchema.hasura_schema_role,
-        hash: childSchema.schema_hash,
-        entry_hash: dump.entry_hash,
-        id: childSchema.id,
-        changes: changes,
-      };
-
-      roleBasedSchemas.push(roleBasedSchema);
-    });
-
-    const schema: Schema = {
-      hash: dump.schema_hash,
-      created_at: dump.change_recorded_at,
-      id: dump.id,
-      entry_hash: dump.entry_hash,
-      roleBasedSchemas: roleBasedSchemas,
-      tags: dump.schema_tags,
-    };
-
-    schemaList.push(schema);
-  });
-  return schemaList;
-};
-
 export const schemaChangeListTransformFn = (
-  dumps: NonNullable<
-    GetSchemaListResponseWithError['data']
-  >['schema_registry_dumps']
+  dumps: SchemaChangeListDumpWithSiblingSchema[]
 ) => {
   const schemaList: SchemaChangeCard[] = [];
-  dumps.forEach((dump: SchemaRegistryDumpWithSiblingSchema) => {
+  dumps.forEach((dump: SchemaChangeListDumpWithSiblingSchema) => {
     const schemaRoles: Role[] = [];
-    dump.sibling_schemas.forEach((childSchema: SiblingSchema) => {
-      const schemaRole: Role = {
-        id: childSchema.id,
-        role: childSchema.hasura_schema_role,
-      };
-      schemaRoles.push(schemaRole);
-    });
+    dump.sibling_schemas.forEach(
+      (childSchema: SchemaChangeListSiblingSchema) => {
+        const schemaRole: Role = {
+          id: childSchema.id,
+          role: childSchema.hasura_schema_role,
+        };
+        schemaRoles.push(schemaRole);
+      }
+    );
     const schema: SchemaChangeCard = {
       hash: dump.schema_hash,
       created_at: dump.change_recorded_at,
@@ -131,7 +87,10 @@ export const schemaChangeListTransformFn = (
 export const schemaTransformFn = (
   fetchedData: NonNullable<GetRegistrySchemaResponseWithError['data']>
 ) => {
-  const data = fetchedData.schema_registry_dumps[0] || [];
+  const data =
+    fetchedData.schema_registry_dumps[0] ||
+    fetchedData.schema_registry_dumps_v2[0] ||
+    [];
 
   const roleBasedSchemas: RoleBasedSchema[] = [];
 

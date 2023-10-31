@@ -135,12 +135,19 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
             name={column.name}
             onChange={onChange}
             placeholder={column.placeholder}
-            isDisabled={!column.insertable}
+            isDisabled={
+              !column.insertable ||
+              column?.value_generated?.type === 'auto_increment'
+            }
             // TODO-NEXT: disable if the column has no default value
             isDefaultDisabled={false}
             isNullDisabled={!column.nullable}
             resetToken={resetToken}
-            dataType={column.dataType}
+            dataType={
+              column?.value_generated?.type === 'auto_increment'
+                ? `${column.dataType} Auto Increment`
+                : column.dataType
+            }
             driver={driver}
           />
         ))}

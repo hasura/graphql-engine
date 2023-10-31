@@ -25,8 +25,25 @@ datasources:
     url: http://jaeger:16686/
     # basicAuth: true
     # basicAuthUser: my_user
-    # editable: true
+    editable: true
     isDefault: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'Loki'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: "{exporter=\"OTLP\"} | json | traceid=`$${__span.traceId}`"
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+      spanBar:
+        type: 'None'
 
   - name: Loki
     type: loki
@@ -34,4 +51,4 @@ datasources:
     url: http://loki:3100
     version: 1
     editable: false
-    isDefault: true
+    isDefault: false

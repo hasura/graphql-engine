@@ -30,6 +30,7 @@ import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelSessionVariableORLiteralValue, RemoteRelSupportedOp)
+import Hasura.RQL.IR.ModelInformation.Types
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
@@ -39,6 +40,7 @@ import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
+import Witch (From)
 
 type SessionVarType b = CollectableType (ScalarType b)
 
@@ -80,6 +82,7 @@ class
   ( HasSourceConfiguration b,
     Representable (BasicOrderType b),
     Representable (Column b),
+    Representable (ColumnPath b),
     Representable (ComputedFieldDefinition b),
     Representable (ComputedFieldImplicitArguments b),
     Representable (ComputedFieldReturn b),
@@ -103,14 +106,18 @@ class
     Ord (FunctionName b),
     Ord (ScalarType b),
     Ord (Column b),
+    Ord (ColumnPath b),
     Ord (ComputedFieldReturn b),
     Ord (ComputedFieldImplicitArguments b),
     Ord (ConstraintName b),
     Ord (FunctionArgument b),
     Ord (XComputedField b),
     Data (TableName b),
+    From (Column b) (ColumnPath b),
     FromJSON (BackendConfig b),
     FromJSON (Column b),
+    FromJSON (ColumnPath b),
+    FromJSON (ColumnPath b),
     FromJSON (ComputedFieldDefinition b),
     FromJSON (ConnectionTemplateRequestContext b),
     FromJSON (ConstraintName b),
@@ -122,17 +129,22 @@ class
     FromJSON (ScalarType b),
     FromJSON (TableName b),
     FromJSONKey (Column b),
+    FromJSONKey (ColumnPath b),
     FromJSONKey (ConstraintName b),
     HasCodec (BackendConfig b),
     HasCodec (BackendSourceKind b),
     HasCodec (Column b),
+    HasCodec (ColumnPath b),
     HasCodec (ComputedFieldDefinition b),
     HasCodec (FunctionName b),
     HasCodec (FunctionReturnType b),
     HasCodec (ScalarType b),
     HasCodec (TableName b),
+    Hashable (Column b),
+    Hashable (ColumnPath b),
     ToJSON (BackendConfig b),
     ToJSON (Column b),
+    ToJSON (ColumnPath b),
     ToJSON (ConstraintName b),
     ToJSON (ExecutionStatistics b),
     ToJSON (FunctionArgument b),
@@ -149,6 +161,7 @@ class
     ToJSON (HealthCheckTest b),
     ToJSON (ResolvedConnectionTemplate b),
     ToJSONKey (Column b),
+    ToJSONKey (ColumnPath b),
     ToJSONKey (ConstraintName b),
     ToJSONKey (ScalarType b),
     ToTxt (Column b),
@@ -159,6 +172,7 @@ class
     ToErrorValue (Column b),
     ToErrorValue (TableName b),
     Typeable (Column b),
+    Typeable (ColumnPath b),
     Typeable b,
     HasTag b,
     Traversable (CountType b),
@@ -230,6 +244,9 @@ class
 
   -- Name of a 'column'
   type Column b :: Type
+
+  -- Path to a column
+  type ColumnPath b :: Type
 
   type ScalarValue b :: Type
   type ScalarType b :: Type
@@ -442,12 +459,23 @@ class
     (Column b, [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]) ->
     m [Text]
 
+  -- | Get the top-level column from a ColumnPath
+  -- For backends that don't support nested objects (i.e. where ColumnPath b = Column b) this will be `id`.
+  getColumnPathColumn :: ColumnPath b -> Column b
+
+  -- | Convert a singleton ColumnPath to a Column
+  -- Should return Nothing for paths to nested fields
+  tryColumnPathToColumn :: ColumnPath b -> Maybe (Column b)
+
   backendSupportsNestedObjects :: Either QErr (XNestedObjects b)
   default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)
   backendSupportsNestedObjects = throw400 InvalidConfiguration "Nested objects not supported"
 
   sourceSupportsSchemalessTables :: SourceConfig b -> Bool
   sourceSupportsSchemalessTables = const False
+
+  getAggregationPredicatesModels :: (MonadState [ModelNameInfo] m) => SourceName -> ModelSourceType -> AggregationPredicates b a -> m ()
+  getAggregationPredicatesModels _ _ _ = pure ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

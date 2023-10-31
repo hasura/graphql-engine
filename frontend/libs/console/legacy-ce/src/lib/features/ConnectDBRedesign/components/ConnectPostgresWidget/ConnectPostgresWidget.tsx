@@ -112,6 +112,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
           ? `Edit ${overrideDisplayName ?? 'Postgres'} Connection`
           : `Connect ${overrideDisplayName ?? 'Postgres'} Database`}
       </div>
+      <div className="my-3" />
       <Tabs
         value={tab}
         onValueChange={value => setTab(value)}

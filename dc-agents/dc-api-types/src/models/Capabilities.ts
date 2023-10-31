@@ -10,6 +10,7 @@ import type { InterpolatedQueryCapabilities } from './InterpolatedQueryCapabilit
 import type { Licensing } from './Licensing';
 import type { MetricsCapabilities } from './MetricsCapabilities';
 import type { MutationCapabilities } from './MutationCapabilities';
+import type { PostSchemaCapabilities } from './PostSchemaCapabilities';
 import type { QueryCapabilities } from './QueryCapabilities';
 import type { RawCapabilities } from './RawCapabilities';
 import type { RelationshipCapabilities } from './RelationshipCapabilities';
@@ -26,6 +27,7 @@ export type Capabilities = {
   licensing?: Licensing;
   metrics?: MetricsCapabilities;
   mutations?: MutationCapabilities;
+  post_schema?: PostSchemaCapabilities;
   queries?: QueryCapabilities;
   raw?: RawCapabilities;
   relationships?: RelationshipCapabilities;

@@ -49,6 +49,7 @@ backendTypeMetadata =
         data_schema:
           supports_primary_keys: true
           supports_foreign_keys: true
+        post_schema: {}
         scalar_types:
           DateTime: {}
         queries: {}

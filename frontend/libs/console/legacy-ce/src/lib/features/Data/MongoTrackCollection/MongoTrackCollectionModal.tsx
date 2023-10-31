@@ -198,7 +198,7 @@ export const MongoTrackCollectionModal = ({
       if (data.logicalModelForm === 'sample-documents' && data.sampleDocument) {
         // infer the logical models from sampleDocument
         const logicalModels = inferLogicalModels(
-          collectionName,
+          data.custom_name || collectionName,
           data.sampleDocument
         );
         setInferredLogicalModels(

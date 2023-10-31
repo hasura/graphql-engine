@@ -36,9 +36,70 @@ query fetchRegistrySchemas($projectId: uuid!, $cursor: timestamptz!, $limit: Int
   }
 }
 `);
+
 export const FETCH_SCHEMA_CHANGE_LIST_QUERY = gql(`
-query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!,$schemaId:uuid!) {
-  schema_change_list :schema_registry_dumps(
+query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!) {
+  schema_registry_dumps(
+    where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}]},
+    order_by: {change_recorded_at: desc}
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    entry_hash
+    schema_hash
+    change_recorded_at
+    sibling_schemas {
+      id
+      hasura_schema_role
+    }
+    schema_tags {
+      id
+      name
+      entry_hash
+      color
+    }
+  }
+  
+  schema_registry_dumps_aggregate(
+    where: {
+      hasura_schema_role: {_eq: "admin"},
+      project_id: {_eq: $projectId}
+    }
+  ) {
+    aggregate {
+      count
+    }
+  }
+}
+`);
+
+export const FETCH_SCHEMA_REGSITRY_DUMPS_V2_INFO_QUERY = gql(`
+query fetchSchemaRegistryDumpsV2Info($projectId: uuid!) {
+  schema_registry_dumps_v2_aggregate(where: {hasura_schema_role: {_eq: "admin"}, project_id: {_eq: $projectId}}) {
+    aggregate {
+      count
+    }
+  }
+  schema_registry_dumps_v2(where: {project_id: {_eq: $projectId}}, order_by: {change_recorded_at: asc}, limit: 1) {
+    change_recorded_at
+  }
+}
+`);
+
+export const FETCH_SCHEMA_REGISTRY_DUMPS_V1_AGGREGATE_QUERY = gql(`
+query fetchSchemaRegistryDumpsV1Aggregate($projectId: uuid!, $lastV2EntryCursor: timestamptz!) {
+  schema_registry_dumps_aggregate(where: {hasura_schema_role: {_eq: "admin"}, project_id: {_eq: $projectId}, change_recorded_at: {_lt: $lastV2EntryCursor}}) {
+    aggregate {
+      count
+    }
+  }
+}
+`);
+
+export const FETCH_SCHEMA_REGISTRY_DUMPS_V2_QUERY = gql(`
+query fetchSchemaRegistryDumpsV2($projectId: uuid!, $limit: Int!, $offset: Int!) {
+  schema_registry_dumps_v2(
     where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}]},
     order_by: {change_recorded_at: desc}
     limit: $limit
@@ -71,12 +132,22 @@ query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!,$schem
       color
     }
   }
-  current_schema_card :schema_registry_dumps(
-    where: {id:{_eq :$schemaId }},
-    order_by: {change_recorded_at: desc}
-    limit: $limit
-    offset: $offset
-  ) {
+}
+`);
+export const FETCH_SCHEMA_REGISTRY_NOTIFICATION_QUERY = gql(`
+query fetchSchemaRegistryDumpsV2($projectId: uuid!) {
+  schema_registry_dumps_v2(where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}]}, order_by: {change_recorded_at: desc}, limit: 1) {
+    change_recorded_at
+      diff_with_previous_schema {
+        schema_diff_data
+      }
+  }
+}
+`);
+
+export const FETCH_SCHEMA_REGISTRY_DUMPS_V1_QUERY = gql(`
+query fetchSchemaRegistryDumpsV1($projectId: uuid!, $limit: Int!, $offset: Int!, $changeTimestamp: timestamptz!) {
+  schema_registry_dumps(where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}], change_recorded_at: {_lt: $changeTimestamp}}, order_by: {change_recorded_at: desc}, limit: $limit, offset: $offset) {
     change_recorded_at
     schema_hash
     entry_hash
@@ -104,16 +175,6 @@ query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!,$schem
       color
     }
   }
-  schema_registry_dumps_aggregate(
-    where: {
-      hasura_schema_role: {_eq: "admin"},
-      project_id: {_eq: $projectId}
-    }
-  ) {
-    aggregate {
-      count
-    }
-  }
 }
 `);
 
@@ -139,6 +200,71 @@ query fetchRegistrySchema ($schemaId: uuid!) {
       former_schema_id
       current_schema_id
       schema_diff_data
+    }
+  }
+	
+	schema_registry_dumps_v2 (
+    where: {
+      id: {
+        _eq: $schemaId
+      }
+    }
+  ) {
+    id
+    entry_hash
+    schema_hash
+    change_recorded_at
+    created_at
+    hasura_schema_role
+    schema_sdl
+    diff_with_previous_schema {
+      current_schema_hash
+      former_schema_hash
+      former_schema_id
+      current_schema_id
+      schema_diff_data
+    }
+  }
+}
+`);
+
+export const FETCH_URL_REGISTRY_SCHEMA_QUERY = gql(`
+query fetchURLRegistrySchema ($schemaId: uuid!) {
+  schema_registry_dumps(
+    where: {id:{_eq :$schemaId }}
+  ) {
+    id
+    entry_hash
+    schema_hash
+    change_recorded_at
+    sibling_schemas {
+      id
+      hasura_schema_role
+    }
+    schema_tags {
+      id
+      name
+      entry_hash
+      color
+    }
+  }
+
+  schema_registry_dumps_v2(
+    where: {id:{_eq :$schemaId }}
+  ) {
+    id
+    entry_hash
+    schema_hash
+    change_recorded_at
+    sibling_schemas {
+      id
+      hasura_schema_role
+    }
+    schema_tags {
+      id
+      name
+      entry_hash
+      color
     }
   }
 }

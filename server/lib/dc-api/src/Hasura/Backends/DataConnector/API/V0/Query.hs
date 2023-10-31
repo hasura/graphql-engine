@@ -33,6 +33,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qrAggregates,
     qrInterpolatedQueries,
     FieldValue,
+    unFieldValue,
     mkColumnFieldValue,
     mkRelationshipFieldValue,
     mkNestedObjFieldValue,
@@ -299,7 +300,7 @@ instance HasStatus QueryResponse where
 -- field values (mainly for testing purposes), we must compare them using 'QueryResponse',
 -- since raw JSON comparisons will show up immaterial differences between null properties
 -- and missing properties (which we consider to be the same thing here).
-newtype FieldValue = FieldValue J.Value
+newtype FieldValue = FieldValue {unFieldValue :: J.Value}
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec FieldValue
 
 instance Eq FieldValue where

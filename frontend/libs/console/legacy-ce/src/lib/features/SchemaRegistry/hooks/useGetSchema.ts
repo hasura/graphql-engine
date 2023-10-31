@@ -53,7 +53,6 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
       message: 'error',
     };
   }
-
   return {
     kind: 'success',
     response: data.data,

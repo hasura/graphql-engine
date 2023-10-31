@@ -218,6 +218,7 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (CacheRWT m) where
   runGetApiTimeLimit = lift $ runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift $ runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 runCacheRWT ::
   (Monad m) =>
@@ -244,18 +245,18 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 -- fetching/storing stored introspection) in the critical code path of building
 -- the 'SchemaCache'.
 loadStoredIntrospection ::
-  (MonadMetadataStorage m, MonadIO m) =>
+  (Tracing.MonadTraceContext m, MonadMetadataStorage m, MonadIO m) =>
   Logger Hasura ->
   MetadataResourceVersion ->
   m (Maybe StoredIntrospection)
 loadStoredIntrospection logger metadataVersion = do
   fetchSourceIntrospection metadataVersion `onLeftM` \err -> do
-    unLogger logger
+    unLoggerTracing logger
       $ StoredIntrospectionStorageLog "Could not load stored-introspection. Continuing without it" err
     pure Nothing
 
 saveSourcesIntrospection ::
-  (MonadIO m, MonadMetadataStorage m) =>
+  (Tracing.MonadTraceContext m, MonadIO m, MonadMetadataStorage m) =>
   Logger Hasura ->
   SourcesIntrospectionStatus ->
   MetadataResourceVersion ->
@@ -268,10 +269,11 @@ saveSourcesIntrospection logger sourcesIntrospection metadataVersion = do
     SourcesIntrospectionChangedPartial _ -> pure ()
     SourcesIntrospectionChangedFull introspection ->
       storeSourceIntrospection introspection metadataVersion `onLeftM` \err ->
-        unLogger logger $ StoredIntrospectionStorageLog "Could not save source introspection" err
+        unLoggerTracing logger $ StoredIntrospectionStorageLog "Could not save source introspection" err
 
 instance
-  ( MonadIO m,
+  ( Tracing.MonadTraceContext m,
+    MonadIO m,
     MonadError QErr m,
     ProvidesNetwork m,
     MonadResolveSource m,
@@ -1555,11 +1557,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               ( do
                   (info, dependencies) <- bindErrorA -< modifyErr (addTableContext @b table . addTriggerContext) $ buildEventTriggerInfo @b env source table eventTriggerConf
                   staticConfig <- bindA -< askCacheStaticConfig
-                  let isCatalogUpdate =
-                        case buildReason of
-                          CatalogUpdate _ -> True
-                          CatalogSync -> False
-                      tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
+                  let tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
                   if ( _cscMaintenanceMode staticConfig
                          == MaintenanceModeDisabled
                          && _cscReadOnlyMode staticConfig
@@ -1585,19 +1583,20 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                               triggerOnReplication
                               (etcDefinition eventTriggerConf)
                               (_tciPrimaryKey tableInfo)
-                      if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
+                      recreateTriggerIfNeeded
+                        -<
+                          ( dynamicConfig,
+                            source,
+                            table,
+                            tableColumns,
+                            triggerName,
+                            triggerOnReplication,
+                            etcDefinition eventTriggerConf,
+                            sourceConfig,
+                            (_tciPrimaryKey tableInfo)
+                          )
+                      if migrationRecreateEventTriggers == RETRecreate
                         then do
-                          recreateTriggerIfNeeded
-                            -<
-                              ( dynamicConfig,
-                                table,
-                                tableColumns,
-                                triggerName,
-                                triggerOnReplication,
-                                etcDefinition eventTriggerConf,
-                                sourceConfig,
-                                (_tciPrimaryKey tableInfo)
-                              )
                           -- We check if the SQL triggers for the event triggers
                           -- are present. If any SQL triggers are missing, those are
                           -- created.
@@ -1623,9 +1622,22 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- using `Inc.cache` here means that the response will be cached for the given output and the
           -- next time this arrow recieves the same input, the cached response will be returned and the
           -- computation will not be done again.
+          -- The `buildReason` is passed through the MonadReader because we don't want it to participate
+          -- in the caching.
+
+          -- By default, the SQL triggers are not recreated. They can be recreated, under the following conditions:
+          -- 1. There is no existing cache present for the given set of arguments and the build reason is not `CatalogSync`.
+          --      The build reason `CatalogSync` can be due to either Hasura being start up or the metadata is getting
+          --      synced with another Hasura instance that is connected to the same metadata database.
+          --
+          --      This case includes renaming of event trigger, adding/dropping of table columns etc.
+          --
+          -- 2. The SQL triggers of a source can be explicitly recreated by specifying the source name
+          --    in `reload_metadata`'s `recreate_event_triggers`.
           Inc.cache
             proc
               ( dynamicConfig,
+                sourceName,
                 tableName,
                 tableColumns,
                 triggerName,
@@ -1635,9 +1647,23 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 primaryKey
                 )
             -> do
+              buildReason <- bindA -< ask
+
+              let shouldRecreateEventTrigger =
+                    case buildReason of
+                      -- Build reason is CatalogSync when Hasura is started or when the metadata is being synced.
+                      -- We don't want to recreate SQL triggers in such case because in both cases, we expect
+                      -- the SQL trigger to already be present.
+                      CatalogSync -> False
+                      -- Handles the case of a metadata update and `run_sql`
+                      CatalogUpdate Nothing -> True
+                      -- Handles the case of `reload_metadata` with `recreate_event_triggers` containing
+                      -- the current source
+                      CatalogUpdate (Just sources) -> sourceName `elem` sources
               bindErrorA
                 -< do
-                  liftEitherM
+                  when shouldRecreateEventTrigger
+                    $ liftEitherM
                     $ createTableEventTrigger @b
                       (_cdcSQLGenCtx dynamicConfig)
                       sourceConfig

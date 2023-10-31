@@ -1,0 +1,204 @@
+---
+sidebar_label: Filter using JSONB objects
+sidebar_position: 4
+description: Filter query results and search queries on Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter Using JSONB Objects
+
+## Introduction
+
+The `_contains`, `_contained_in`, `_has_key`, `_has_keys_any` and `_has_keys_all` operators are used to filter based on
+`JSONB` columns.
+
+For more details on JSONB operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#jsonb-operators).
+
+## \_contains
+
+Fetch all authors living within a particular pincode (present in `address` JSONB column):
+
+<GraphiQLIDE
+  query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+  authors(
+    where: {
+      address: {_contains: $jsonFilter }
+    }
+  ) {
+    id
+    name
+    address
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Ash",
+        "address": {
+          "street_address": "161, 19th Main Road, Koramangala 6th Block",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "pincode": 560095,
+          "phone": "9090909090"
+        }
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "jsonFilter": {
+    "pincode": 560095
+  }
+}`}
+/>
+
+## \_contained_in
+
+This example fetches all items where the "Tags" property contains the value "tag1" and is also contained in the list
+`["tag1", "tag2"]`.
+
+<GraphiQLIDE
+  query={`query get_items_with_tags{
+  items(
+    where: {
+      tags: {
+        _contained_in: {
+          value: ["tag1", "tag2"]
+        }
+      }
+    }
+  ) {
+    id
+    name
+    tags
+  }
+}
+`}
+  response={`{
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "name": "Item 1",
+        "tags": ["tag1", "tag2"]
+      }
+    ]
+  }
+}
+  `}
+/>
+
+## \_has_key
+
+Fetch authors if the `phone` key is present in their JSONB `address` column:
+
+<GraphiQLIDE
+  query={`query get_authors_if_phone {
+  authors(
+    where: {
+      address: {_has_key: "phone" }
+    }
+  ) {
+    id
+    name
+    address
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Ash",
+        "address": {
+          "street_address": "161, 19th Main Road, Koramangala 6th Block",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "pincode": 560095,
+          "phone": "9090909090"
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+## \_has_keys_any
+
+Fetch users who have either "admin" or "editor" permissions:
+
+<GraphiQLIDE
+  query={`query {
+  user {
+    id
+    name
+    permissions(where: {_has_keys_any: ["admin", "editor"]}) {
+      id
+      name
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "Ash",
+      "permissions": [
+        {
+          "id": 1,
+          "name": "admin"
+        },
+        {
+          "id": 2,
+          "name": "editor"
+        }
+      ]
+    }
+  }`}
+/>
+
+## \_has_keys_all
+
+Fetch user, where their id is "123", and check if the address has all the fields "street", "city", "state", "zip":
+
+<GraphiQLIDE
+  query={`query {
+  user(id: "123") {
+    name
+    address {
+      street
+      city
+      state
+      zip
+      phone
+    }
+    hasAllAddressFields: address _has_keys_all(keys: ["street", "city", "state", "zip"])
+  }
+}`}
+  response={`{
+    "data": {
+      "user": {
+        "name": "John Doe",
+        "address": {
+          "street": "123 Main St.",
+          "city": "Anytown",
+          "state": "CA",
+          "zip": "12345",
+          "phone": "555-555-5555"
+        },
+        "hasAllAddressFields": true
+      }
+    } 
+  }`}
+/>

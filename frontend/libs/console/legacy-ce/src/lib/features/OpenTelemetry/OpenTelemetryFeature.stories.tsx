@@ -47,6 +47,7 @@ const mockMetadataHandler = (
             protocol: 'http/protobuf',
             resource_attributes: [],
             otlp_traces_endpoint: '',
+            traces_propagators: [],
           },
           data_types: [],
           batch_span_processor: {
@@ -64,6 +65,7 @@ const mockMetadataHandler = (
             protocol: 'http/protobuf',
             resource_attributes: [],
             otlp_traces_endpoint: '',
+            traces_propagators: [],
           },
           data_types: [],
           batch_span_processor: {

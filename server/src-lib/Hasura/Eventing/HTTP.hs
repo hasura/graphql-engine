@@ -258,6 +258,7 @@ logHTTPForTriggers ::
   ( MonadReader r m,
     Has (Logger Hasura) r,
     MonadIO m,
+    MonadTraceContext m,
     ToEngineLog (HTTPRespExtraLog a) Hasura
   ) =>
   Either (HTTPErr a) (HTTPResp a) ->
@@ -270,11 +271,12 @@ logHTTPForTriggers ::
 logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus = do
   logger :: Logger Hasura <- asks getter
   case (eitherResp, isTriggersErrorLogLevelEnabled triggersErrorLogLevelStatus) of
-    (Left _, True) -> unLogger logger $ HTTPRespExtraLog LevelError $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
-    (_, _) -> unLogger logger $ HTTPRespExtraLog LevelInfo $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+    (Left _, True) -> unLoggerTracing logger $ HTTPRespExtraLog LevelError $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+    (_, _) -> unLoggerTracing logger $ HTTPRespExtraLog LevelInfo $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
 
 logHTTPForET ::
   ( MonadReader r m,
+    MonadTraceContext m,
     Has (Logger Hasura) r,
     MonadIO m
   ) =>
@@ -289,6 +291,7 @@ logHTTPForET = logHTTPForTriggers
 
 logHTTPForST ::
   ( MonadReader r m,
+    MonadTraceContext m,
     Has (Logger Hasura) r,
     MonadIO m
   ) =>
@@ -363,13 +366,14 @@ invokeRequest ::
   Maybe Transform.ResponseTransform ->
   Maybe SessionVariables ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
+  HttpPropagator ->
   m (HTTPResp a)
-invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger = do
+invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger tracesPropagator = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
       reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
-  eitherResp <- traceHTTPRequest finalReq $ runHTTP manager
+  eitherResp <- traceHTTPRequest tracesPropagator finalReq $ runHTTP manager
   -- Log the result along with the pre/post transformation Request data
   logger eitherResp reqDetails
   resp <- eitherResp `onLeft` (throwError . HTTPError reqBody)
@@ -383,7 +387,7 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
             Left err -> do
               -- Log The Response Transformation Error
               logger' :: Logger Hasura <- asks getter
-              unLogger logger' $ UnstructuredLog LevelError (SB.fromLBS $ J.encode err)
+              unLoggerTracing logger' $ UnstructuredLog LevelError (SB.fromLBS $ J.encode err)
               -- Throw an exception with the Transformation Error
               throwError $ HTTPError reqBody $ HOther $ T.unpack $ TE.decodeUtf8 $ LBS.toStrict $ J.encode $ J.toJSON err
             Right transformedBody -> pure $ resp {hrsBody = SB.fromLBS transformedBody}

@@ -22,7 +22,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # Data Connector Config
 
-<ProductBadge ce free standard pro ee self />
+<ProductBadge ce free pro ee self />
 
 ## Introduction
 
@@ -33,7 +33,7 @@ connectors. Those two options are:
 1. [Timeout](#timeout)
 2. [Template](#template)
 
-:::info This configuration only applies to Hasura Data Connector Agents 
+:::info This configuration only applies to Hasura Data Connector Agents
 
 Please note that this only applies to [data connectors](/databases/data-connectors/index.mdx). If you are using a
 native database connection then this configuration does not apply. You can learn more about connecting to a
@@ -46,7 +46,7 @@ native database [here](/databases/overview.mdx#supported-databases).
 The timeout setting is related to how long the graphql engine will wait for a response from the
 data connector agent before throwing an error. This value defaults to 30 seconds.
 
-As an example, if it takes more than 30 seconds to introspect the schema of a data connector, then it 
+As an example, if it takes more than 30 seconds to introspect the schema of a data connector, then it
 is likely you may be connecting to a slow or latent data source. In this case, you may want to increase
 the timeout value to allow for the introspection to complete.
 
@@ -128,6 +128,78 @@ has access to:
 - [Environment variables](#environment-variables)
 - [Session variables](#session-variables)
 - [Configuration variables](#configuration-variables)
+- [Template variables](#template-variables)
+
+Templates are written using the [Kriti templating language](/api-reference/kriti-templating.mdx).
+
+<Tabs groupId="timeout-setting" className="timeout-settings-tabs">
+<TabItem value="console" label="Console">
+
+In the Console, navigate to the `Data` tab and select your data connector. Then, under the `Advanced` tab you
+will can set the template value.
+
+<Thumbnail
+  src="/img/databases/data-connector-config.png"
+  alt="Data connector advanced config"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can add a _template_ for a data connector database by adding their config to the
+`/metadata/databases/database.yaml` file:
+
+```yaml {5}
+- name: snowflake
+  kind: snowflake
+  configuration:
+    template: |
+      {"jdbc_url": "jdbc:snowflake://url.snowflakecomputing.com/?password={{$vars['snowflake_password']}}&user={{$env['SNOWFLAKE_USER']}}&warehouse=warehouse&db=db&role=role&schema=schema"}
+    template_variables:
+      snowflake_password:
+        type: dynamic_from_file
+        filepath: /var/secrets/snowflake_password.txt
+    timeout: null
+    value: {}
+```
+
+Apply the Metadata by running:
+
+```yaml
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+The _template_ via the [{{:connector_name}}_add_source](/api-reference/metadata-api/source.mdx) Metadata API.
+
+```http {10}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_add_source",
+  "args": {
+    "name": "db",
+    "configuration": {
+      "template": "{\"jdbc_url\": \"jdbc:snowflake://url.snowflakecomputing.com/?password={{$vars['snowflake_password']}}&user={{$env['SNOWFLAKE_USER']}}&warehouse=warehouse&db=db&role=role&schema=schema}",
+      "template_variables": {
+        "snowflake_password": {
+          "type": "dynamic_from_file",
+          "filepath: "/var/secrets/snowflake_password.txt"
+        }
+      }
+      "timeout": null,
+      "value": {}
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
 
 #### Environment variables
 
@@ -161,68 +233,38 @@ connection string dynamically.
 #### Configuration variables
 
 Config variables can be accessed using the variable `$config`. This allows you to access any field from the
-data connector's configuration fields. As a simple example you could setup your template to check the value
+data connector's configuration fields. As a simple example, you could set up your template to check the value
 of the JDBC url configuration field as environment variable or fallback to using the value as the JDBC url.
 
 ```
 {"jdbc_url":{{$env?[$config.jdbc_url] ?? $config.jdbc_url}}}
 ```
 
-<Tabs groupId="timeout-setting" className="timeout-settings-tabs">
-<TabItem value="console" label="Console">
+#### Template variables
 
-In the Console, navigate to the `Data` tab and select your data connector. Then, under the `Advanced` tab you
-will can set the template value.
+:::tip Supported versions
 
-<Thumbnail
-  src="/img/databases/data-connector-config.png"
-  alt="Data connector advanced config"
-/>
+Template variables are supported on Hasura GraphQL Engine from v2.35.0 onwards.<br/>
+However, they are not supported on Hasura Cloud.
 
-</TabItem>
-<TabItem value="cli" label="CLI">
+:::
 
-You can add a _template_ for a data connector database by adding their config to the
-`/metadata/databases/database.yaml` file:
+Template variables allow you to define variables that can be referred to in your template using the variable `$vars`.
+The values of these variables can be dynamically loaded on a per-query basis from a file on disk.
 
-```yaml {5}
-- name: snowflake
-  kind: snowflake
-  configuration:
-    template: |
-      {"jdbc_url": "getEnvironmentVariable("SNOWFLAKE_JDBC_URL")"}
-    timeout: null
-    value: {}
+```
+{"jdbc_url": "jdbc:snowflake://url.snowflakecomputing.com/?password={{$vars['snowflakePassword']}}&user={{$env['SNOWFLAKE_USER']}}&warehouse=warehouse&db=db&role=role&schema=schema"}
 ```
 
-Apply the Metadata by running:
+This can be useful in scenarios where you need to rotate credentials regularly and you want to avoid restarting Hasura
+in order to update environment variables. Instead, you can write the credentials to a file and load the file contents
+as a template variable to incorporate it in your configuration Kriti template. The file could be updated with new
+credentials when they change, and the new credentials will be used by all requests following the file update.
 
-```yaml
-hasura metadata apply
-```
+:::info Configuration
 
-</TabItem>
-<TabItem value="api" label="API">
+This feature requires the environment variable `HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX` to be set to the path
+that you will locate your files in. For example, you could use `/var/secrets/`. Only file paths that have this prefix
+will be allowed to be accessed as a template variable.
 
-The _template_ via the [{{:connector_name}}_add_source](/api-reference/metadata-api/source.mdx) Metadata API.
-
-```http {10}
-POST /v1/metadata HTTP/1.1
-Content-Type: application/json
-X-Hasura-Role: admin
-
-{
-  "type": "snowflake_add_source",
-  "args": {
-    "name": "db",
-    "configuration": {
-      "template": "{\"jdbc_url\": \"getEnvironmentVariable(\"SNOWFLAKE_JDBC_URL\")\"}",
-      "timeout": null,
-      "value": {}
-    }
-  }
-}
-```
-
-</TabItem>
-</Tabs>
+:::

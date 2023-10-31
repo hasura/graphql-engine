@@ -22,6 +22,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..))
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert hiding (Single)
+import Hasura.RQL.IR.ModelInformation
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Select
@@ -79,11 +81,13 @@ mkMutationPlan ::
     Has SessionVariables r,
     MonadIO m
   ) =>
+  SourceName ->
+  ModelSourceType ->
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  m (Plan API.MutationRequest API.MutationResponse)
-mkMutationPlan mutationDB = do
-  request <- translateMutationDB mutationDB
-  pure $ Plan request (reshapeResponseToMutationGqlShape mutationDB)
+  m (Plan API.MutationRequest API.MutationResponse, [ModelNameInfo])
+mkMutationPlan sourceName modelSourceType mutationDB = do
+  (request, modelInfo) <- translateMutationDB sourceName modelSourceType mutationDB
+  pure $ (Plan request (reshapeResponseToMutationGqlShape mutationDB), modelInfo)
 
 translateMutationDB ::
   ( MonadError QErr m,
@@ -92,9 +96,11 @@ translateMutationDB ::
     Has SessionVariables r,
     MonadIO m
   ) =>
+  SourceName ->
+  ModelSourceType ->
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  m API.MutationRequest
-translateMutationDB = \case
+  m (API.MutationRequest, [ModelNameInfo])
+translateMutationDB sourceName modelSourceType = \case
   MDBInsert insert -> do
     (insertOperation, (tableRelationships, redactionExpressionState, API.InterpolatedQueries interpolatedQueries, tableInsertSchemas)) <-
       flip runStateT (mempty, RedactionExpressionState mempty, mempty, mempty) $ translateInsert insert
@@ -106,13 +112,21 @@ translateMutationDB = \case
             & HashMap.toList
             & fmap (\(tableName, TableInsertSchema {..}) -> API.TableInsertSchema tableName _tisPrimaryKey _tisFields)
     let apiTableRelationships = Set.fromList $ API.RTable . uncurry API.TableRelationships <$> mapMaybe tableKey (HashMap.toList (unTableRelationships tableRelationships))
+    let (modelName, modelType) = (toTxt $ _aiTableName $ _aiData insert, ModelTypeTable)
+    let outputInsertMut = _aiOutput insert
+    argModels <- do
+      (_, res') <- flip runStateT [] $ getMutationInsertArgumentModelNamesDC sourceName modelSourceType $ _aiData insert
+      return res'
+    let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> argModels <> getMutationOutputModelNamesGen sourceName modelSourceType outputInsertMut
     pure
-      $ API.MutationRequest
-        { _mrRelationships = apiTableRelationships,
-          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
-          _mrInsertSchema = Set.fromList apiTableInsertSchema,
-          _mrOperations = [API.InsertOperation insertOperation]
-        }
+      $ ( API.MutationRequest
+            { _mrRelationships = apiTableRelationships,
+              _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
+              _mrInsertSchema = Set.fromList apiTableInsertSchema,
+              _mrOperations = [API.InsertOperation insertOperation]
+            },
+          modelNames
+        )
   MDBUpdate update -> do
     (updateOperations, (tableRelationships, redactionExpressionState, API.InterpolatedQueries interpolatedQueries)) <-
       flip runStateT (mempty, RedactionExpressionState mempty, mempty) $ translateUpdate update
@@ -126,13 +140,28 @@ translateMutationDB = \case
             $ API.RTable
             . uncurry API.TableRelationships
             <$> mapMaybe tableKey (HashMap.toList (unTableRelationships tableRelationships))
+    let getWhereClauseModels updateBatch' = do
+          (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ _ubWhere updateBatch'
+          return res
+    let (modelName, modelType) = (toTxt $ _auTable update, ModelTypeTable)
+    let returnModels = getMutationOutputModelNamesGen sourceName modelSourceType (_auOutput update)
+    let mutationUpdateVariant = _auUpdateVariant update
+    argModelNames <- case mutationUpdateVariant of
+      SingleBatch updateBatch -> getWhereClauseModels updateBatch
+      MultipleBatches updateBatchList -> do
+        whereModelsList <-
+          forM updateBatchList $ \updateBatch -> getWhereClauseModels updateBatch
+        pure $ concat whereModelsList
+    let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> (argModelNames) <> (returnModels)
     pure
-      $ API.MutationRequest
-        { _mrRelationships = apiTableRelationships,
-          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
-          _mrInsertSchema = mempty,
-          _mrOperations = API.UpdateOperation <$> updateOperations
-        }
+      $ ( API.MutationRequest
+            { _mrRelationships = apiTableRelationships,
+              _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
+              _mrInsertSchema = mempty,
+              _mrOperations = API.UpdateOperation <$> updateOperations
+            },
+          modelNames
+        )
   MDBDelete delete -> do
     (deleteOperation, (tableRelationships, redactionExpressionState, API.InterpolatedQueries interpolatedQueries)) <-
       flip runStateT (mempty, RedactionExpressionState mempty, mempty) $ translateDelete delete
@@ -146,13 +175,22 @@ translateMutationDB = \case
             $ API.RTable
             . uncurry API.TableRelationships
             <$> mapMaybe tableKey (HashMap.toList (unTableRelationships tableRelationships))
+    let getWhereClauseModels boolExp = do
+          (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType boolExp
+          res
+    let (modelName, modelType) = (toTxt $ _adTable delete, ModelTypeTable)
+        returnModels = getMutationOutputModelNamesGen sourceName modelSourceType (_adOutput delete)
+        argModelNames = getWhereClauseModels $ snd $ _adWhere delete
+        modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> (argModelNames) <> (returnModels)
     pure
-      $ API.MutationRequest
-        { _mrRelationships = apiTableRelationships,
-          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
-          _mrInsertSchema = mempty,
-          _mrOperations = [API.DeleteOperation deleteOperation]
-        }
+      $ ( API.MutationRequest
+            { _mrRelationships = apiTableRelationships,
+              _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
+              _mrInsertSchema = mempty,
+              _mrOperations = [API.DeleteOperation deleteOperation]
+            },
+          modelNames
+        )
   MDBFunction _returnsSet _select ->
     throw400 NotSupported "translateMutationDB: function mutations not implemented for the Data Connector backend."
 

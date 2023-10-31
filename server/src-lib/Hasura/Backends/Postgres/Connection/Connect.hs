@@ -29,8 +29,8 @@ withPostgresDB env sourceName PG.PostgresConnConfiguration {..} tx = do
 
     generateMinimalPool :: PG.PostgresSourceConnInfo -> IO (Either QErr PG.PGPool)
     generateMinimalPool PG.PostgresSourceConnInfo {..} = runExceptT do
-      urlText <- resolveUrlConf env psciDatabaseUrl
-      let connInfo = PG.ConnInfo 0 $ PG.CDDatabaseURI $ txtToBs urlText
+      connDetails <- resolveUrlConf env psciDatabaseUrl
+      let connInfo = PG.ConnInfo 0 connDetails
           -- Create pool with only one connection
           connParams = PG.defaultConnParams {PG.cpConns = 1}
       liftIO $ PG.initPGPool connInfo context connParams (\_ -> pure ())

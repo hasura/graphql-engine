@@ -60,6 +60,7 @@ export const ValidateModal = (props: ValidateModalProps) => {
         connection_template: {
           template: values?.connection_template || '',
         },
+        source_name: sourceName,
         request_context: {
           headers: values?.headers
             ?.filter(({ checked }) => checked)

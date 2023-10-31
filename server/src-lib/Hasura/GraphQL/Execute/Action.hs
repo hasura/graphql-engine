@@ -74,6 +74,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
@@ -147,12 +148,13 @@ resolveActionExecution ::
   HTTP.Manager ->
   Env.Environment ->
   L.Logger L.Hasura ->
+  Tracing.HttpPropagator ->
   PrometheusMetrics ->
   IR.AnnActionExecution Void ->
   ActionExecContext ->
   Maybe GQLQueryText ->
   ActionExecution
-resolveActionExecution httpManager env logger prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
+resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
   ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
@@ -166,6 +168,7 @@ resolveActionExecution httpManager env logger prometheusMetrics IR.AnnActionExec
         $ callWebhook
           env
           httpManager
+          tracesPropagator
           prometheusMetrics
           _aaeOutputType
           _aaeOutputFields
@@ -457,8 +460,9 @@ asyncActionsProcessor ::
   IO OptionalInterval ->
   STM.TVar (Set LockedActionEventId) ->
   Maybe GH.GQLQueryText ->
+  Int ->
   m (Forever m)
-asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText =
+asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize =
   return
     $ Forever ()
     $ const
@@ -471,13 +475,15 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
         -- we check for async actions to process.
         Skip -> liftIO $ sleep $ seconds 1
         Interval sleepTime -> do
-          actionCache <- scActions <$> liftIO getSCFromRef'
-          let asyncActions =
+          schemaCache <- liftIO getSCFromRef'
+          let actionCache = scActions schemaCache
+              tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig schemaCache
+              asyncActions =
                 HashMap.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
           unless (HashMap.null asyncActions) $ do
             -- fetch undelivered action events only when there's at least
             -- one async action present in the schema cache
-            asyncInvocationsE <- fetchUndeliveredActionEvents
+            asyncInvocationsE <- fetchUndeliveredActionEvents fetchBatchSize
             asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
             -- save the actions that are currently fetched from the DB to
             -- be processed in a TVar (Set LockedActionEventId) and when
@@ -488,11 +494,11 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
             -- locked action events set TVar is empty, it will mean that there are
             -- no events that are in the 'processing' state
             saveLockedEvents (map (EventId . actionIdToText . _aliId) asyncInvocations) lockedActionEvents
-            LA.mapConcurrently_ (callHandler actionCache) asyncInvocations
+            LA.mapConcurrently_ (callHandler actionCache tracesPropagator) asyncInvocations
           liftIO $ sleep $ milliseconds (unrefine sleepTime)
   where
-    callHandler :: ActionCache -> ActionLogItem -> m ()
-    callHandler actionCache actionLogItem =
+    callHandler :: ActionCache -> Tracing.HttpPropagator -> ActionLogItem -> m ()
+    callHandler actionCache tracesPropagator actionLogItem =
       Tracing.newTrace Tracing.sampleAlways "async actions processor" do
         let ActionLogItem
               actionId
@@ -521,6 +527,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
                 $ callWebhook
                   env
                   appEnvManager
+                  tracesPropagator
                   appEnvPrometheusMetrics
                   outputType
                   outputFields
@@ -549,6 +556,7 @@ callWebhook ::
   ) =>
   Env.Environment ->
   HTTP.Manager ->
+  Tracing.HttpPropagator ->
   PrometheusMetrics ->
   GraphQLType ->
   IR.ActionOutputFields ->
@@ -564,6 +572,7 @@ callWebhook ::
 callWebhook
   env
   manager
+  tracesPropagator
   prometheusMetrics
   outputType
   outputFields
@@ -605,7 +614,7 @@ callWebhook
               Left err -> do
                 -- Log The Transformation Error
                 logger :: L.Logger L.Hasura <- asks getter
-                L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                 -- Throw an exception with the Transformation Error
                 throw500WithDetail "Request Transformation Failed" $ J.toJSON err
@@ -617,7 +626,7 @@ callWebhook
         actualSize = fromMaybe requestBodySize transformedReqSize
 
     httpResponse <-
-      Tracing.traceHTTPRequest actualReq $ \request ->
+      Tracing.traceHTTPRequest tracesPropagator actualReq $ \request ->
         liftIO . try $ HTTP.httpLbs request manager
 
     let requestInfo = ActionRequestInfo webhookEnvName postPayload (confHeaders <> toHeadersConf clientHeaders) transformedReq
@@ -648,7 +657,7 @@ callWebhook
              in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
                   -- Log The Response Transformation Error
                   logger :: L.Logger L.Hasura <- asks getter
-                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                  L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                   -- Throw an exception with the Transformation Error
                   throw500WithDetail "Response Transformation Failed" $ J.toJSON err
@@ -662,7 +671,7 @@ callWebhook
             (pmActionBytesReceived prometheusMetrics)
             responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
+        L.unLoggerTracing logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
         case J.eitherDecode transformedResponseBody of
           Left e -> do
@@ -761,8 +770,8 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
   where
     toHeadersMap = HashMap.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
-fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
-fetchUndeliveredActionEventsTx =
+fetchUndeliveredActionEventsTx :: Int -> PG.TxE QErr [ActionLogItem]
+fetchUndeliveredActionEventsTx fetchBatchSize =
   map mapEvent
     <$> PG.withQE
       defaultTxErrorHandler
@@ -772,12 +781,12 @@ fetchUndeliveredActionEventsTx =
       id in (
         select id from hdb_catalog.hdb_action_log
         where status = 'created'
-        for update skip locked limit 10
+        for update skip locked limit $1
       )
     returning
       id, action_name, request_headers::json, session_variables::json, input_payload::json
   |]
-      ()
+      (Identity batchSize)
       False
   where
     mapEvent
@@ -790,6 +799,8 @@ fetchUndeliveredActionEventsTx =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
     fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . HashMap.toList
+
+    batchSize = fromIntegral fetchBatchSize :: Word64
 
 setActionStatusTx :: ActionId -> AsyncActionStatus -> PG.TxE QErr ()
 setActionStatusTx actionId = \case

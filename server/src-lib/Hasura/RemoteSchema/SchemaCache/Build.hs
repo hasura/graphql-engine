@@ -65,7 +65,7 @@ buildRemoteSchemas logger env =
     buildRemoteSchema = Inc.cache proc ((invalidationKeys, orderedRoles, storedIntrospection, schemaSampledFeatureFlags), remoteSchema@(RemoteSchemaMetadata name defn _comment permissions relationships)) -> do
       Inc.dependOn -< Inc.selectKeyD name invalidationKeys
       let metadataObj = mkRemoteSchemaMetadataObject remoteSchema
-      upstreamResponse <- bindA -< runExceptT (noopTrace $ addRemoteSchemaP2Setup env schemaSampledFeatureFlags defn)
+      upstreamResponse <- bindA -< runExceptT (noopTrace $ addRemoteSchemaP2Setup name env schemaSampledFeatureFlags defn)
       remoteSchemaContextParts <-
         case upstreamResponse of
           Right upstream@(_, byteString, _) -> do
@@ -82,7 +82,7 @@ buildRemoteSchemas logger env =
                 processedIntrospection <-
                   bindA
                     -< runExceptT do
-                      rsDef <- validateRemoteSchemaDef env defn
+                      rsDef <- validateRemoteSchemaDef name env defn
                       (ir, rsi) <- stitchRemoteSchema schemaSampledFeatureFlags storedRawIntrospection rsDef
                       pure (ir, storedRawIntrospection, rsi)
                 case processedIntrospection of
@@ -202,10 +202,11 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
 
 addRemoteSchemaP2Setup ::
   (QErrM m, MonadIO m, ProvidesNetwork m, Tracing.MonadTrace m) =>
+  RemoteSchemaName ->
   Env.Environment ->
   SchemaSampledFeatureFlags ->
   RemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-addRemoteSchemaP2Setup env schemaSampledFeatureFlags def = do
-  rsi <- validateRemoteSchemaDef env def
+addRemoteSchemaP2Setup name env schemaSampledFeatureFlags def = do
+  rsi <- validateRemoteSchemaDef name env def
   fetchRemoteSchema env schemaSampledFeatureFlags rsi

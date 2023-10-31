@@ -47,7 +47,7 @@ dbContainer :: TC.Network -> TC.TestContainer Database
 dbContainer network = do
   container <-
     TC.run
-      $ TC.containerRequest (TC.fromTag ("postgis/postgis:15-3.3-alpine"))
+      $ TC.containerRequest (TC.fromTag ("postgis/postgis:16-3.4-alpine"))
       & TC.setSuffixedName "hge-test-upgrade-db"
       & TC.withNetwork network
       & TC.withNetworkAlias "db"

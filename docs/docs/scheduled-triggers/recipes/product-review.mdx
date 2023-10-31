@@ -144,6 +144,15 @@ Below, we've written an example of webhook in JavaScript. As we established earl
 attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
 code as a guide to write your own webhook.
 
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
+
 Init a new project with `npm init` and install the following dependencies:
 
 ```bash
@@ -301,6 +310,114 @@ nodemailer.createTestAccount((err, account) => {
 
 You can run the server by running `node index.js` in your terminal. If you see the message
 `Webhook server is running on port 4000`, you're good to go!
+
+</TabItem>
+<TabItem value="python">
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+import requests
+from datetime import datetime, timedelta
+
+app = Flask(__name__)
+
+@app.route('/review-request', methods=['POST'])
+def send_review_requests():
+    # confirm the auth header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify(message='Unauthorized'), 401
+
+    # get timestamp strings for the query
+    current_utc_date = datetime.utcnow()
+    seven_days_ago_midnight = (current_utc_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    seven_days_ago_eod = (current_utc_date - timedelta(days=7)).replace(hour=23, minute=59, second=0, microsecond=0)
+
+    # Fetch data from Hasura instance
+    hasura_endpoint = '<YOUR_PROJECT_ENDPOINT>'
+    admin_secret = '<YOUR_ADMIN_SECRET>'
+    query = '''
+    query ReviewRequestQuery($after: timestamptz!, $before: timestamptz!) {
+        orders(where: {delivery_date: {_gte: $after, _lte: $before}, is_reviewed: {_eq: false}}) {
+            user {
+                id
+                name
+                email
+            }
+            product {
+                id
+                name
+            }
+        }
+    }
+    '''
+    variables = {
+        'after': seven_days_ago_midnight.isoformat(),
+        'before': seven_days_ago_eod.isoformat()
+    }
+    response = requests.post(hasura_endpoint, json={'query': query, 'variables': variables}, headers={'x-hasura-admin-secret': admin_secret})
+    orders = response.json()['data']['orders']
+
+    # Send review requests
+    outcomes = []
+    smtp_host = os.getenv('SMTP_HOST', 'smtp.ethereal.email')
+    smtp_port = int(os.getenv('SMTP_PORT', 587))
+    smtp_user = os.getenv('SMTP_USER', '<YOUR_EMAIL>')
+    smtp_password = os.getenv('SMTP_PASSWORD', '<YOUR_PASSWORD>')
+    for order in orders:
+        try:
+            # Create message
+            message = MIMEMultipart()
+            message['From'] = 'SuperStore.com <sender@SuperStore.com>'
+            message['To'] = f"{order['user']['name']} <{order['user']['email']}>"
+            message['Subject'] = f"We need your review, {order['user']['name'].split()[0]}!"
+            body = f"Hi {order['user']['name'].split()[0]}, we hope you're enjoying your {order['product']['name']}. Please leave us a review!"
+            message.attach(MIMEText(body, 'plain'))
+
+            # Send email using SMTP server
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(smtp_user, message['To'], message.as_string())
+
+            # Log the message info
+            outcomes.append({
+                'messageId': 'Successfully sent',
+                'previewUrl': 'Not available'
+            })
+
+        except Exception as e:
+            outcomes.append({'error': str(e)})
+            print('An error occurred while sending the email. We\'ll print the message to the terminal.\n\n')
+            print(f"From: {message['From']}\nTo: {message['To']}\nSubject: {message['Subject']}\n{body}\n\n")
+
+    return jsonify(message='Review requests sent!', outcomes=outcomes)
+
+if __name__ == '__main__':
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.If you see the message
+`* Running on http://127.0.0.1:4000/ (Press CTRL+C to quit)`, you're good to go!
+
+</TabItem>
+</Tabs>
 
 ## Step 4: Test the setup
 

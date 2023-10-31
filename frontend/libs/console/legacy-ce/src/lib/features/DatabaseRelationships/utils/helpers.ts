@@ -38,8 +38,8 @@ export const getTableDisplayName = (table: Table): string => {
   return JSON.stringify(table);
 };
 
-export function isNotRemoteRelationship(
+export function isNotRemoteSchemaRelationship(
   relationship: Relationship
 ): relationship is LocalRelationship | RemoteDatabaseRelationship {
-  return relationship.relationshipType !== 'Remote';
+  return relationship.type !== 'remoteSchemaRelationship';
 }

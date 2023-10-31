@@ -1,5 +1,5 @@
 # HGE
-HGE_IMAGE=hasura/graphql-engine:v2.33.0-beta.1.cli-migrations-v3
+HGE_IMAGE=hasura/graphql-engine:v2.35.0.cli-migrations-v3
 HGE_PORT=8080
 HGE_EE_LICENSE_KEY=
 HGE_ADMIN_SECRET=myadminsecretkey
@@ -53,3 +53,13 @@ LOKI_PORT=3100
 
 # Promtail
 PROMTAIL_IMAGE=grafana/promtail:2.8.2
+
+# OpenTelemetry Collector
+OTEL_COLLECTOR_IMAGE=otel/opentelemetry-collector-contrib:0.84.0
+
+# DataDog
+DD_API_KEY=
+
+# HoneyComb
+HONEYCOMB_API_KEY=
+HONEYCOMB_DATASET=

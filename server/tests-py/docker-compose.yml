@@ -27,11 +27,3 @@ services:
     extends:
       file: ../../docker-compose/databases.yaml
       service: sqlserver
-
-  sqlserver-healthcheck:
-    extends:
-      file: ../../docker-compose/databases.yaml
-      service: sqlserver-healthcheck
-    depends_on:
-      sqlserver:
-        condition: service_started

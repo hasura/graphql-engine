@@ -307,6 +307,7 @@ common lib-depends
                      , incremental
                      , kan-extensions
                      , kriti-lang
+                     , libdeflate-hs
                      , lifted-base
                      , monad-control
                      , monad-loops
@@ -770,7 +771,11 @@ library
                      , Hasura.Tracing.Reporter
                      , Hasura.Tracing.Sampling
                      , Hasura.Tracing.TraceId
+                     , Hasura.Tracing.TraceState
                      , Hasura.Tracing.Utils
+                     , Hasura.Tracing.Propagator
+                     , Hasura.Tracing.Propagator.B3
+                     , Hasura.Tracing.Propagator.W3CTraceContext
 
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
@@ -930,6 +935,8 @@ library
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
+                     , Hasura.RQL.IR.ModelInformation
+                     , Hasura.RQL.IR.ModelInformation.Types
                      , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Returning
@@ -1248,6 +1255,7 @@ test-suite graphql-engine-tests
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec
     Hasura.Tracing.TraceIdSpec
+    Hasura.Tracing.PropagatorSpec
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Expectation
     Test.Aeson.Utils

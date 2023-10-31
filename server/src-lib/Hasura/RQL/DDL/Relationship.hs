@@ -135,14 +135,15 @@ defaultBuildObjectRelationshipInfo ::
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC {rmnNativeQueryName = refqt, rmnCommon = common})) -> do
-    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+    let (lCols, rCols) = unzip $ HashMap.toList $ unRelMapping $ rmColumns common
         io = fromMaybe BeforeParent $ rmInsertOrder common
         mkNativeQueryDependency nativeQueryName reason col =
           SchemaDependency
             ( SOSourceObj source
                 $ AB.mkAnyBackend
                 $ SOINativeQueryObj @b nativeQueryName
-                $ NQOCol @b col
+                $ NQOCol @b
+                $ getColumnPathColumn @b col
             )
             reason
         mkDependency tableName reason col =
@@ -150,7 +151,8 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
             ( SOSourceObj source
                 $ AB.mkAnyBackend
                 $ SOITableObj @b tableName
-                $ TOCol @b col
+                $ TOCol @b
+                $ getColumnPathColumn @b col
             )
             reason
         dependencies =
@@ -158,14 +160,15 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
             <> (mkNativeQueryDependency refqt DRRightColumn <$> Seq.fromList rCols)
     pure (RelInfo rn ObjRel (rmColumns common) (RelTargetNativeQuery refqt) True io, dependencies)
   RUManual (RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common})) -> do
-    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+    let (lCols, rCols) = unzip $ HashMap.toList $ unRelMapping $ rmColumns common
         io = fromMaybe BeforeParent $ rmInsertOrder common
         mkDependency tableName reason col =
           SchemaDependency
             ( SOSourceObj source
                 $ AB.mkAnyBackend
                 $ SOITableObj @b tableName
-                $ TOCol @b col
+                $ TOCol @b
+                $ getColumnPathColumn @b col
             )
             reason
         dependencies =
@@ -195,8 +198,8 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
                 )
                 DRRemoteTable
             ]
-            <> (drUsingColumnDep @b source qt <$> Seq.fromList (toList columns))
-    pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) (RelTargetTable foreignTable) False BeforeParent, dependencies)
+            <> (drUsingColumnDep @b source qt <$> Seq.fromList (toList $ getColumnPathColumn @b <$> columns))
+    pure (RelInfo rn ObjRel (RelMapping $ NEHashMap.toHashMap colMap) (RelTargetTable foreignTable) False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
 
@@ -219,7 +222,8 @@ nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName 
                 ( SOSourceObj sourceName
                     $ AB.mkAnyBackend
                     $ SOINativeQueryObj @b refqt
-                    $ NQOCol @b c
+                    $ NQOCol @b
+                    $ getColumnPathColumn @b c
                 )
                 DRRightColumn
           )
@@ -231,12 +235,13 @@ nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName 
                 ( SOSourceObj sourceName
                     $ AB.mkAnyBackend
                     $ SOITableObj @b refqt
-                    $ TOCol @b c
+                    $ TOCol @b
+                    $ getColumnPathColumn @b c
                 )
                 DRRightColumn
           )
 
-  let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+  let (lCols, rCols) = unzip $ HashMap.toList $ unRelMapping $ rmColumns common
       io = case relType of
         ObjRel -> fromMaybe BeforeParent $ rmInsertOrder common
         ArrRel -> AfterParent
@@ -247,7 +252,8 @@ nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName 
                   ( SOSourceObj sourceName
                       $ AB.mkAnyBackend
                       $ SOINativeQueryObj @b nativeQueryName
-                      $ NQOCol @b c
+                      $ NQOCol @b
+                      $ getColumnPathColumn @b c
                   )
                   DRLeftColumn
             )
@@ -266,7 +272,7 @@ defaultBuildArrayRelationshipInfo ::
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC {rmnNativeQueryName = refqt, rmnCommon = common})) -> do
-    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+    let (lCols, rCols) = unzip $ HashMap.toList $ unRelMapping $ rmColumns common
         deps =
           ( fmap
               ( \c ->
@@ -274,7 +280,8 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
                     ( SOSourceObj source
                         $ AB.mkAnyBackend
                         $ SOITableObj @b qt
-                        $ TOCol @b c
+                        $ TOCol @b
+                        $ getColumnPathColumn @b c
                     )
                     DRLeftColumn
               )
@@ -286,14 +293,15 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
                     ( SOSourceObj source
                         $ AB.mkAnyBackend
                         $ SOINativeQueryObj @b refqt
-                        $ NQOCol @b c
+                        $ NQOCol @b
+                        $ getColumnPathColumn @b c
                     )
                     DRRightColumn
               )
               (Seq.fromList rCols)
     pure (RelInfo rn ArrRel (rmColumns common) (RelTargetNativeQuery refqt) True AfterParent, deps)
   RUManual (RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common})) -> do
-    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+    let (lCols, rCols) = unzip $ HashMap.toList $ unRelMapping $ rmColumns common
         deps =
           ( fmap
               ( \c ->
@@ -301,7 +309,8 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
                     ( SOSourceObj source
                         $ AB.mkAnyBackend
                         $ SOITableObj @b qt
-                        $ TOCol @b c
+                        $ TOCol @b
+                        $ getColumnPathColumn @b c
                     )
                     DRLeftColumn
               )
@@ -313,7 +322,8 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
                     ( SOSourceObj source
                         $ AB.mkAnyBackend
                         $ SOITableObj @b refqt
-                        $ TOCol @b c
+                        $ TOCol @b
+                        $ getColumnPathColumn @b c
                     )
                     DRRightColumn
               )
@@ -332,7 +342,7 @@ mkFkeyRel ::
   RelName ->
   TableName b ->
   TableName b ->
-  NonEmpty (Column b) ->
+  NonEmpty (ColumnPath b) ->
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
   m (RelInfo b, Seq SchemaDependency)
 mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys = do
@@ -358,17 +368,18 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
               DRRemoteTable
           ]
           <> ( drUsingColumnDep @b source remoteTable
-                 <$> Seq.fromList (toList remoteColumns)
+                 <$> Seq.fromList (toList $ getColumnPathColumn @b <$> remoteColumns)
              )
-  pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) (RelTargetTable remoteTable) False io, dependencies)
+  pure (RelInfo rn relType (RelMapping $ reverseMap $ NEHashMap.toHashMap colMap) (RelTargetTable remoteTable) False io, dependencies)
   where
     reverseMap :: (Hashable y) => HashMap x y -> HashMap y x
     reverseMap = HashMap.fromList . fmap swap . HashMap.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
 getRequiredFkey ::
+  forall m b.
   (QErrM m, Backend b) =>
-  NonEmpty (Column b) ->
+  NonEmpty (ColumnPath b) ->
   [ForeignKey b] ->
   m (ForeignKey b)
 getRequiredFkey cols fkeys =

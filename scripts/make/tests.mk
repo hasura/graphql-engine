@@ -147,7 +147,7 @@ test-unit: remove-tix-file
 .PHONY: test-integration-mssql
 ## test-integration-mssql: run MS SQL Server integration tests
 test-integration-mssql: remove-tix-file
-	docker compose up --build --detach --wait sqlserver-healthcheck
+	docker compose up --build --detach --wait sqlserver
 	HASURA_MSSQL_CONN_STR='$(TEST_MSSQL_CONNECTION_STRING)' \
 			cabal run graphql-engine:test:graphql-engine-test-mssql
 
@@ -162,7 +162,7 @@ test-integration-postgres: remove-tix-file
 ## test-native-queries: run all tests for the Native Query feature
 test-native-queries:
 	cabal build exe:graphql-engine-pro
-	docker compose up --build --detach --wait postgres citus cockroach sqlserver-healthcheck
+	docker compose up --build --detach --wait postgres citus cockroach sqlserver
 	HSPEC_MATCH=NativeQueries make test-unit
 	HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
@@ -183,7 +183,7 @@ test-native-queries-postgres:
 ## test-native-queries-sqlserver: run all sqlserver tests for the Native Query feature
 test-native-queries-sqlserver: remove-tix-file
 	cabal build exe:graphql-engine-pro
-	docker compose up --build --detach --wait postgres sqlserver-healthcheck
+	docker compose up --build --detach --wait postgres sqlserver
 	HSPEC_MATCH=${HSPEC_MATCH:-"NativeQueries"}
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
@@ -203,7 +203,7 @@ test-native-queries-bigquery: remove-tix-file
 ## test-stored-procedures-sqlserver: run all sqlserver tests for the Stored Procedure feature
 test-stored-procedures-sqlserver: remove-tix-file
 	cabal build exe:graphql-engine-pro
-	docker compose up --build --detach --wait postgres sqlserver-healthcheck
+	docker compose up --build --detach --wait postgres sqlserver
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=StoredProcedures \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \

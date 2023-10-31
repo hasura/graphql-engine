@@ -42,11 +42,13 @@ export const AggregationSection: React.FC<AggregationProps> = ({
     setValue('aggregationEnabled', !enabled);
     setValue(
       'query_root_fields',
-      queryRootFields.filter((field: string) => field !== 'select_aggregate')
+      (queryRootFields ?? []).filter(
+        (field: string) => field !== 'select_aggregate'
+      )
     );
     setValue(
       'subscription_root_fields',
-      subscriptionRootFields.filter(
+      (subscriptionRootFields ?? []).filter(
         (field: string) => field !== 'select_aggregate'
       )
     );

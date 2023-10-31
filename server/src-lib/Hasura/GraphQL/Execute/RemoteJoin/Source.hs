@@ -41,9 +41,11 @@ import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.IR.ModelInformation (ModelInfoPart)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
@@ -55,7 +57,7 @@ import Network.HTTP.Types qualified as HTTP
 
 -- | Construct and execute a call to a source for a remote join.
 makeSourceJoinCall ::
-  (MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m) =>
+  (MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m, MonadGetPolicies m) =>
   -- | Function to dispatch a request to a source.
   (AB.AnyBackend SourceJoinCall -> m BL.ByteString) ->
   -- | User information.
@@ -69,7 +71,7 @@ makeSourceJoinCall ::
   [HTTP.Header] ->
   Maybe G.Name ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
-  m (Maybe (IntMap.IntMap AO.Value))
+  m (Maybe (IntMap.IntMap AO.Value, [ModelInfoPart]))
 makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName =
   Tracing.newSpan ("Remote join to data source " <> sourceName <<> " for field " <>> jaFieldName) do
     -- step 1: create the SourceJoinCall
@@ -80,12 +82,13 @@ makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArg
       AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin
         $ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
     -- if there actually is a remote call:
-    for maybeSourceCall \sourceCall -> do
+    for maybeSourceCall \(sourceCall, modelInfoList) -> do
       -- step 2: send this call over the network
       sourceResponse <- networkFunction sourceCall
       -- step 3: build the join index
       Tracing.newSpan "Build remote join index"
-        $ buildJoinIndex sourceResponse
+        $ (,(modelInfoList))
+        <$> buildJoinIndex sourceResponse
   where
     sourceName :: SourceName
     sourceName = AB.dispatchAnyBackend @Backend remoteSourceJoin _rsjSource
@@ -106,14 +109,14 @@ data SourceJoinCall b = SourceJoinCall
 
 buildSourceJoinCall ::
   forall b m.
-  (EB.BackendExecute b, MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m) =>
+  (EB.BackendExecute b, MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m, MonadGetPolicies m) =>
   UserInfo ->
   FieldName ->
   IntMap.IntMap JoinArgument ->
   [HTTP.Header] ->
   Maybe G.Name ->
   RemoteSourceJoin b ->
-  m (Maybe (AB.AnyBackend SourceJoinCall))
+  m (Maybe (AB.AnyBackend SourceJoinCall, [ModelInfoPart]))
 buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
   Tracing.newSpan "Resolve execution step for remote join field" do
     let rows =
@@ -127,7 +130,7 @@ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName 
     for (NE.nonEmpty rows) $ \nonEmptyRows -> do
       let sourceConfig = _rsjSourceConfig remoteSourceJoin
       Tracing.attachSourceConfigAttributes @b sourceConfig
-      stepInfo <-
+      (stepInfo, modelInfoList) <-
         EB.mkDBRemoteRelationshipPlan
           userInfo
           (_rsjSource remoteSourceJoin)
@@ -148,8 +151,10 @@ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName 
       -- from 'collectJoinArguments' is reasonable to use for logging.
       let rootFieldAlias = mkUnNamespacedRootFieldAlias fieldName
       pure
-        $ AB.mkAnyBackend
-        $ SourceJoinCall rootFieldAlias sourceConfig stepInfo
+        $ ( AB.mkAnyBackend
+              $ SourceJoinCall rootFieldAlias sourceConfig stepInfo,
+            modelInfoList
+          )
 
 -------------------------------------------------------------------------------
 -- Step 3: extracting the join index

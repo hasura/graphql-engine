@@ -9,6 +9,7 @@ import Data.Aeson qualified as J
 import Hasura.Prelude
 import Hasura.Tracing.Sampling
 import Hasura.Tracing.TraceId
+import Hasura.Tracing.TraceState (TraceState)
 
 -- | Any additional human-readable key-value pairs relevant to the execution of
 -- a span.
@@ -30,7 +31,10 @@ data TraceContext = TraceContext
   { tcCurrentTrace :: TraceId,
     tcCurrentSpan :: SpanId,
     tcCurrentParent :: Maybe SpanId,
-    tcSamplingState :: SamplingState
+    tcSamplingState :: SamplingState,
+    -- Optional vendor-specific trace identification information across different distributed tracing systems.
+    -- It's used for the W3C Trace Context only https://www.w3.org/TR/trace-context/#tracestate-header
+    tcStateState :: TraceState
   }
 
 -- Should this be here? This implicitly ties Tracing to the name of fields in HTTP headers.

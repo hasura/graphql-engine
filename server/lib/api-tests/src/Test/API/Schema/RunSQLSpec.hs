@@ -59,9 +59,9 @@ tests = do
                   - domain: global
                     location: q
                     locationType: parameter
-                    message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+                    message: 'Syntax error: Unexpected keyword SOME at [1:1]'
                     reason: invalidQuery
-                  message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+                  message: 'Syntax error: Unexpected keyword SOME at [1:1]'
                   status: INVALID_ARGUMENT
             path: $
           |]

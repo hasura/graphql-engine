@@ -154,7 +154,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        L.unLogger logger
+        L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Attempting to insert new metadata in storage"
@@ -162,7 +162,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           Tracing.newSpan "setMetadata"
             $ liftEitherM
             $ setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
-        L.unLogger logger
+        L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Successfully inserted new metadata in storage with resource version: "
@@ -182,7 +182,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM
           $ notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
-        L.unLogger logger
+        L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Inserted schema cache sync notification at resource version:"

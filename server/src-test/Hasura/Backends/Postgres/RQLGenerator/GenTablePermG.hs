@@ -24,7 +24,7 @@ import Hedgehog.Gen qualified as Gen
 
 genTablePermG :: (MonadGen m) => m a -> m (TablePermG ('Postgres 'Vanilla) a)
 genTablePermG genA = do
-  let genV = genAnnBoolExpFld @_ @('Postgres 'Vanilla) genColumn genTableName genScalarType genFunctionName genXComputedField (genBooleanOperators genA) (genFunctionArgumentExp genA) genA
+  let genV = genAnnBoolExpFld @_ @('Postgres 'Vanilla) genColumn genColumn genTableName genScalarType genFunctionName genXComputedField (genBooleanOperators genA) (genFunctionArgumentExp genA) genA
   gBoolExp <- genAnnBoolExp @_ @_ @('Postgres 'Vanilla) genV genTableName
   limit <- Gen.maybe (Gen.integral defaultRange)
   pure $ TablePerm gBoolExp limit

@@ -199,6 +199,8 @@ buildGQLContext
 
     writeToSchemaRegistryAction <-
       forM mSchemaRegistryContext $ \schemaRegistryCtx -> do
+        -- NOTE!: Where this code path is reached it's absolutely crucial that
+        -- we have a thread reading, otherwise we have an unbounded space leak
         res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
         case res of
           Left err ->
@@ -218,6 +220,9 @@ buildGQLContext
               $ \metadataResourceVersion inconsistentMetadata metadata ->
                 STM.atomically
                   $ STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx)
+                  -- NOTE!: this is a rare case where we'd like this to be a thunk
+                  -- because it is significant work we can avoid entirely in
+                  -- EE, where this queue is just drained and items discarded
                   $ projectSchemaInfo metadataResourceVersion inconsistentMetadata metadata
 
     pure
@@ -324,9 +329,9 @@ buildRoleContext sampledFeatureFlags options sources remotes actions customTypes
     (remoteSchemaFields, !remoteSchemaErrors) <-
       runRemoteSchema schemaContext (soRemoteNullForwardingPolicy schemaOptions)
         $ buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationBackendFields role remoteSchemaPermsCtx
-    let remotesQueryFields = concatMap piQuery remoteSchemaFields
-        remotesMutationFields = concat $ mapMaybe piMutation remoteSchemaFields
-        remotesSubscriptionFields = concat $ mapMaybe piSubscription remoteSchemaFields
+    let remotesQueryFields = concatMap (\(n, rf) -> (n,) <$> piQuery rf) remoteSchemaFields
+        remotesMutationFields = concat $ mapMaybe (\(n, rf) -> fmap (n,) <$> piMutation rf) remoteSchemaFields
+        remotesSubscriptionFields = concat $ mapMaybe (\(n, rf) -> fmap (n,) <$> piSubscription rf) remoteSchemaFields
         apolloQueryFields = apolloRootFields apolloFederationStatus apolloFedTableParsers
 
     -- build all actions
@@ -624,9 +629,9 @@ unauthenticatedContext options sources allRemotes expFeatures schemaSampledFeatu
           runRemoteSchema fakeSchemaContext (soRemoteNullForwardingPolicy schemaOptions)
             $ buildAndValidateRemoteSchemas allRemotes [] [] fakeRole remoteSchemaPermsCtx
         pure
-          ( fmap (fmap RFRemote) <$> concatMap piQuery remoteFields,
-            fmap (fmap RFRemote) <$> concat (mapMaybe piMutation remoteFields),
-            fmap (fmap RFRemote) <$> concat (mapMaybe piSubscription remoteFields),
+          ( (\(n, rf) -> fmap (fmap (RFRemote n)) rf) <$> concatMap (\(n, q) -> (n,) <$> piQuery q) remoteFields,
+            (\(n, rf) -> fmap (fmap (RFRemote n)) rf) <$> concat (mapMaybe (\(n, q) -> fmap (n,) <$> piMutation q) remoteFields),
+            (\(n, rf) -> fmap (fmap (RFRemote n)) rf) <$> concat (mapMaybe (\(n, q) -> fmap (n,) <$> piSubscription q) remoteFields),
             remoteSchemaErrors
           )
     mutationParser <-
@@ -666,7 +671,7 @@ buildAndValidateRemoteSchemas ::
       CustomizeRemoteFieldName
     )
     (MemoizeT m)
-    ([RemoteSchemaParser P.Parse], HashSet InconsistentMetadata)
+    ([(RemoteSchemaName, RemoteSchemaParser P.Parse)], HashSet InconsistentMetadata)
 buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields role remoteSchemaPermsCtx =
   runWriterT $ foldlM step [] (HashMap.elems remotes)
   where
@@ -676,8 +681,8 @@ buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields r
     sourcesMutationFieldNames = getFieldName <$> sourcesMutationFields
 
     step validatedSchemas (remoteSchemaContext, metadataId) = do
-      let previousSchemasQueryFieldNames = map getFieldName $ concatMap piQuery validatedSchemas
-          previousSchemasMutationFieldNames = map getFieldName $ concat $ mapMaybe piMutation validatedSchemas
+      let previousSchemasQueryFieldNames = map getFieldName $ concatMap (piQuery . snd) validatedSchemas
+          previousSchemasMutationFieldNames = map getFieldName $ concat $ mapMaybe (piMutation . snd) validatedSchemas
           reportInconsistency reason = tell $ Set.singleton $ InconsistentObject reason Nothing metadataId
       maybeParser <- lift $ buildRemoteSchemaParser remoteSchemaPermsCtx role remoteSchemaContext
       case maybeParser of
@@ -708,7 +713,7 @@ buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields r
           -- Only add this new remote to the list if there was no error
           pure
             $ if Set.null inconsistencies
-              then remoteSchemaParser : validatedSchemas
+              then (_rscName remoteSchemaContext, remoteSchemaParser) : validatedSchemas
               else validatedSchemas
 
 buildRemoteSchemaParser ::
@@ -962,7 +967,7 @@ buildQueryParser ::
   (MonadMemoize m, MonadError QErr m, MonadParse n) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [P.FieldParser n (G.SchemaIntrospection -> QueryRootField UnpreparedValue)] ->
-  [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
+  [(RemoteSchemaName, P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)))] ->
   [P.FieldParser n (QueryRootField UnpreparedValue)] ->
   Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))) ->
   Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))) ->
@@ -977,7 +982,7 @@ buildQueryParser sourceQueryFields apolloFederationFields remoteQueryFields acti
   -- data, notably the Apollo federation fields `_service` and `_entities`
   -- themselves. So in this method we build a version of the introspection for
   -- Apollo federation purposes.
-  let partialApolloQueryFP = sourceQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (fmap $ fmap RFRemote) remoteQueryFields
+  let partialApolloQueryFP = sourceQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (\(n, rf) -> fmap (fmap (RFRemote n)) rf) remoteQueryFields
   basicQueryPForApollo <- queryRootFromFields partialApolloQueryFP
   let buildApolloIntrospection buildQRF = do
         partialSchema <-
@@ -1044,13 +1049,13 @@ buildMutationParser ::
   forall n m.
   (MonadMemoize m, MonadError QErr m, MonadParse n) =>
   [P.FieldParser n (NamespacedField (MutationRootField UnpreparedValue))] ->
-  [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
+  [(RemoteSchemaName, P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)))] ->
   [P.FieldParser n (MutationRootField UnpreparedValue)] ->
   m (Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))))
 buildMutationParser mutationFields remoteFields actionFields = do
   let mutationFieldsParser =
         mutationFields
-          <> (fmap (fmap RFRemote) <$> remoteFields)
+          <> ((\(n, rf) -> fmap (fmap (RFRemote n)) rf) <$> remoteFields)
           <> (fmap NotNamespaced <$> actionFields)
   whenMaybe (not $ null mutationFieldsParser)
     $ safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
@@ -1063,13 +1068,13 @@ buildSubscriptionParser ::
   forall n m.
   (MonadMemoize m, MonadError QErr m, MonadParse n) =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
-  [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
+  [(RemoteSchemaName, P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)))] ->
   [P.FieldParser n (QueryRootField UnpreparedValue)] ->
   m (Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))))
 buildSubscriptionParser sourceSubscriptionFields remoteSubscriptionFields actionFields = do
   let subscriptionFields =
         sourceSubscriptionFields
-          <> fmap (fmap $ fmap RFRemote) remoteSubscriptionFields
+          <> fmap (\(n, rf) -> fmap (fmap (RFRemote n)) rf) remoteSubscriptionFields
           <> (fmap NotNamespaced <$> actionFields)
   whenMaybe (not $ null subscriptionFields)
     $ safeSelectionSet subscriptionRoot Nothing subscriptionFields

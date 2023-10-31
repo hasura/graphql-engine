@@ -4,42 +4,18 @@ import { useGetSchema } from '../hooks/useGetSchema';
 import { Tabs } from '../../../new-components/Tabs';
 import { IconTooltip } from '../../../new-components/Tooltip';
 import { SchemaRow } from './SchemaRow';
-import { ChangeSummary } from './ChangeSummary';
 import {
   findIfSubStringExists,
   schemaTransformFn,
   getPublishTime,
 } from '../utils';
-import { Link } from 'react-router';
 import { RoleBasedSchema, Schema } from '../types';
-import {
-  FaHome,
-  FaAngleRight,
-  FaFileImport,
-  FaSearch,
-  FaShareAlt,
-} from 'react-icons/fa';
+import { FaSearch, FaShareAlt } from 'react-icons/fa';
 import { Input } from '../../../new-components/Form';
 import AceEditor from 'react-ace';
 import { SearchableSelect } from '../../../components/Common';
 import { Analytics } from '../../Analytics';
 
-export const Breadcrumbs = () => (
-  <div className="flex items-center space-x-xs mb-4">
-    <Link
-      to="/settings/schema-registry"
-      className="cursor-pointer flex items-center text-muted hover:text-gray-900"
-    >
-      <FaHome className="mr-1.5" />
-      <span className="text-sm">Schema</span>
-    </Link>
-    <FaAngleRight className="text-muted" />
-    <div className="cursor-pointer flex items-center text-yellow-500">
-      <FaFileImport className="mr-1.5" />
-      <span className="text-sm">Roles</span>
-    </div>
-  </div>
-);
 interface SchemaChangeDetailsProps {
   schemaId: string;
 }
@@ -49,7 +25,6 @@ export const SchemaChangeDetails: React.FC<
 > = props => {
   const { schemaId } = props;
   const fetchSchemaResponse = useGetSchema(schemaId);
-  console.log('fetchSchemaResponse', fetchSchemaResponse);
   const { kind } = fetchSchemaResponse;
 
   switch (kind) {
@@ -114,16 +89,17 @@ const SchemasDetails: React.VFC<{
       />
       <div className="px-4 mb-2">
         <div className="flex mt-4">
-          <div className="flex-col ">
-            <div className="flex items-center">
-              <p className="font-bold text-gray-500 py-2">Published</p>
+          <div className="flex items-center ">
+            <p className="font-bold text-gray-500 py-2">Published: </p>
+
+            <div className="flex items-center ml-2 font-semibold text-gray-600">
+              <span>{getPublishTime(schema.created_at)}</span>
               <IconTooltip message="The time at which this GraphQL schema was generated" />
             </div>
-            <span>{getPublishTime(schema.created_at)}</span>
           </div>
           <div className="flex items-center justify-around ml-auto w-1/2">
             <div className="flex-col">
-              <div className="flex items-center">
+              <div className="flex items-center mt-4">
                 <p className="font-bold text-gray-500 py-2">Hash</p>
                 <IconTooltip message="Hash of the GraphQL Schema SDL. Hash for two identical schema is identical." />
               </div>
@@ -264,65 +240,64 @@ export const ChangesView: React.VFC<{
     changesList.filter(c => c.criticality.level === 'NON_BREAKING');
 
   const showBreakingChanges =
-    !selectedChangeLevel || selectedChangeLevel === 'breaking';
+    (!selectedChangeLevel || selectedChangeLevel === 'breaking') &&
+    !!breakingChanges?.length;
   const showDangerousChanges =
-    !selectedChangeLevel || selectedChangeLevel === 'dangerous';
+    (!selectedChangeLevel || selectedChangeLevel === 'dangerous') &&
+    !!dangerousChanges?.length;
   const showSafeChanges =
-    !selectedChangeLevel || selectedChangeLevel === 'safe';
+    (!selectedChangeLevel || selectedChangeLevel === 'safe') &&
+    !!safeChanges?.length;
 
   const onFilterChange = (op: Option) => {
     setSelectedChangeLevel(op.value);
   };
   return (
     <div className="flex-col">
-      <div className="flex-col">
-        <div className="font-semibold text-lg mb-8 mt-8 text-gray-500">
-          Change Summary
-        </div>
-        <div className="mr-8">
-          <ChangeSummary changes={changes} />
-        </div>
-      </div>
-      <div className="flex w-full border-b border-gray-300 my-8" />
-      <div className="flex w-full mb-4 justify-between items-center">
+      <div className="flex w-full mt-4 mb-4 justify-between items-center">
         <div className="flex font-semibold text-lg text-gray-500">Changes</div>
-        <div className="flex block w-[50%]">
+        <div className="flex w-[50%]">
           <div className="flex  w-full">
             <div className="px-2 w-1/2">
-              <SearchableSelect
-                options={[
-                  {
-                    value: 'breaking',
-                    label: 'Breaking',
-                  },
-                  {
-                    value: 'dangerous',
-                    label: 'Dangerous',
-                  },
-                  {
-                    value: 'safe',
-                    label: 'Safe',
-                  },
-                ]}
-                onChange={op => {
-                  onFilterChange(op as Option);
-                }}
-                filterOption="prefix"
-                placeholder="Filter"
-                isClearable={true}
-              />
-            </div>
-            <div className="pr-2 w-1/2">
-              <label>
-                <Input
-                  type="text"
-                  placeholder="Search"
-                  name="search"
-                  icon={<FaSearch />}
-                  iconPosition="start"
-                  onChange={handleSearch}
+              <Analytics name="schema-registry-schema-change-details-filter">
+                <SearchableSelect
+                  options={[
+                    {
+                      value: 'breaking',
+                      label: 'Breaking',
+                    },
+                    {
+                      value: 'dangerous',
+                      label: 'Dangerous',
+                    },
+                    {
+                      value: 'safe',
+                      label: 'Safe',
+                    },
+                  ]}
+                  onChange={op => {
+                    onFilterChange(op as Option);
+                  }}
+                  filterOption="prefix"
+                  placeholder="Filter"
+                  isClearable={true}
                 />
-              </label>
+              </Analytics>
+            </div>
+
+            <div className="pr-2 w-1/2">
+              <Analytics name="schema-registry-schema-change-details-search">
+                <label>
+                  <Input
+                    type="text"
+                    placeholder="Search"
+                    name="search"
+                    icon={<FaSearch />}
+                    iconPosition="start"
+                    onChange={handleSearch}
+                  />
+                </label>
+              </Analytics>
             </div>
           </div>
         </div>
@@ -330,31 +305,27 @@ export const ChangesView: React.VFC<{
 
       {showBreakingChanges && (
         <div>
-          <div className="font-semibold text-md text-gray-500 mt-4">
+          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
             Breaking
-          </div>
-          <div className="text-sm text-gray-600 pb-2">
-            Content for What is breaking on schema registry
+            <IconTooltip message="Breaking changes due the schema change" />
           </div>
           <ChangesTable changes={breakingChanges} level="breaking" />
         </div>
       )}
-      {showDangerousChanges && (
+      {showDangerousChanges && dangerousChanges && (
         <div>
-          <div className="font-semibold text-md text-gray-500 mt-4">
+          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
             Dangerous
-          </div>
-          <div className="text-sm text-gray-600 pb-2">
-            Content for What is dangerous on schema registry
+            <IconTooltip message="Dangerous changes due the schema change" />
           </div>
           <ChangesTable changes={dangerousChanges} level="dangerous" />
         </div>
       )}
-      {showSafeChanges && (
+      {showSafeChanges && safeChanges && (
         <div>
-          <div className="font-semibold text-md text-gray-500 mt-4">Safe</div>
-          <div className="text-sm text-gray-600 pb-2">
-            Content for What is safe on schema registry
+          <div className="flex items-center font-semibold text-md text-gray-500 mt-4">
+            Safe
+            <IconTooltip message="Safe changes due the schema change" />
           </div>
           <ChangesTable changes={safeChanges} level="safe" />
         </div>
@@ -386,7 +357,7 @@ const ChangesTable: React.FC<ChangesTableProps> = ({ changes, level }) => {
           </tr>
         </thead>
         <tbody>
-          {changes && changes.length ? (
+          {changes &&
             changes.map((change, index) => (
               <tr
                 className={`${textColor[level]} border border-neutral-200 p-2`}
@@ -394,12 +365,7 @@ const ChangesTable: React.FC<ChangesTableProps> = ({ changes, level }) => {
               >
                 <td className="pl-2">{change.message}</td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td className="pl-2">{`No ${level} changes`}</td>
-            </tr>
-          )}
+            ))}
         </tbody>
       </table>
     </div>

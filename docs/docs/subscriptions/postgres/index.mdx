@@ -24,10 +24,11 @@ Hasura works with most [Postgres compatible flavours](/databases/postgres/index.
 
 :::
 
-:::info Caveat
+:::info Single subscription in each query caveat
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
-for only one root field in a subscription.
+for only one root field in a subscription. You also cannot execute multiple separate subscriptions in one query. To
+have multiple subscriptions running at the same time they must be in separate queries.
 
 :::
 

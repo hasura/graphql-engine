@@ -10,14 +10,13 @@ module Hasura.Backends.DataConnector.API.V0.ExpressionSpec
     genExpression,
     genRedactionExpressionName,
     genTargetRedactionExpressions,
-    genColumnSelector,
   )
 where
 
 import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnSelector)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
@@ -83,13 +82,6 @@ spec = do
     describe "CurrentTable"
       $ testToFromJSONToSchema CurrentTable [aesonQQ|[]|]
     jsonOpenApiProperties genColumnPath
-
-  describe "ColumnSelector" $ do
-    describe "single column selector"
-      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo"]) [aesonQQ|"foo"|]
-    describe "nested path selector"
-      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo", ColumnName "bar"]) [aesonQQ|["foo","bar"]|]
-    jsonOpenApiProperties genColumnSelector
 
   describe "ComparisonValue" $ do
     describe "AnotherColumnComparison"
@@ -289,10 +281,6 @@ genComparisonColumn =
 genColumnPath :: (MonadGen m) => m ColumnPath
 genColumnPath =
   Gen.element [CurrentTable, QueryTable]
-
-genColumnSelector :: (MonadGen m) => m ColumnSelector
-genColumnSelector =
-  ColumnSelector <$> Gen.nonEmpty defaultRange genColumnName
 
 genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =

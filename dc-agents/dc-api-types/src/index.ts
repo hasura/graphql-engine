@@ -109,6 +109,7 @@ export type { OrderByStarCountAggregate } from './models/OrderByStarCountAggrega
 export type { OrderByTarget } from './models/OrderByTarget';
 export type { OrderDirection } from './models/OrderDirection';
 export type { OrExpression } from './models/OrExpression';
+export type { PostSchemaCapabilities } from './models/PostSchemaCapabilities';
 export type { Query } from './models/Query';
 export type { QueryCapabilities } from './models/QueryCapabilities';
 export type { QueryRequest } from './models/QueryRequest';

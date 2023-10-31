@@ -25,29 +25,41 @@ Full support for Logical Models on MongoDB are supported from `v2.31.0` onwards.
 
 Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
 
-Logical Models are currently used by MongoDB as the primary method for defining a Collection or View's schema which will be used to generate the GraphQL API.
-Since NoSQL databases don't inherently have a schema present for the Documents present, we need to define one for our Collections as they are added in Hasura.
+Logical Models are currently used by MongoDB as the primary method for defining a Collection or View's schema which will
+be used to generate the GraphQL API. Since NoSQL databases don't inherently have a schema present for the Documents
+present, we need to define one for our Collections as they are added in Hasura.
 
-You can find examples of how to use Logical Models in the
-[Cloud](/databases/mongodb/cloud.mdx) or [Docker](/databases/mongodb/docker.mdx) Getting Started guides for MongoDB. For a more detailed explanation
-of Logical Models themselves, read on.
+You can find examples of how to use Logical Models in the [Cloud](/databases/mongodb/cloud.mdx) or
+[Docker](/databases/mongodb/docker.mdx) Getting Started guides for MongoDB. For a more detailed explanation of Logical
+Models themselves, read on.
 
 ## Tracking a Collection with a Logical Model
 
-Each Collection needs to have a Logical Model in order to specify its GraphQL schema.<br />
-A Logical model if optional if a Collection has a database [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) present, it will be used as the default.
+Each Collection needs to have a Logical Model in order to specify its GraphQL schema.<br /> A Logical model if optional
+if a Collection has a database
+[validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+present, it will be used as the default.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src="/img/databases/mongodb/track-1-select.png" alt="Tracking a Collection - Select Collection" width="1000px" />
-<Thumbnail src="/img/databases/mongodb/track-2-sample.png" alt="Tracking a Collection - Sample Documents" width="1000px" />
+<Thumbnail
+  src="/img/databases/mongodb/track-1-select.png"
+  alt="Tracking a Collection - Select Collection"
+  width="1000px"
+/>
+<Thumbnail
+  src="/img/databases/mongodb/track-2-sample.png"
+  alt="Tracking a Collection - Sample Documents"
+  width="1000px"
+/>
 
 </TabItem>
 
 <TabItem value="cli" label="CLI">
 
-You can create a logical model by adding it to the appropriate database definition in the `metadata > databases > databases.yaml` file:
+You can create a logical model by adding it to the appropriate database definition in the
+`metadata > databases > databases.yaml` file:
 
 ```yaml
   logical_models:
@@ -60,7 +72,8 @@ You can create a logical model by adding it to the appropriate database definiti
         ...
 ```
 
-And the track the Collection with its associated logical model by adding the definition to `metadata > databases > tables > <collection_name>.yaml`.
+And the track the Collection with its associated logical model by adding the definition to
+`metadata > databases > tables > <collection_name>.yaml`.
 
 ```yaml
 table:
@@ -71,7 +84,7 @@ logical_model: <logical_model_name>
 There will also be an associated `includes` statement in the `metadata > databases > tables > tables.yaml` file.
 
 ```yaml
-- "!include <table_name>.yaml"
+- '!include <table_name>.yaml'
 ```
 
 </TabItem>
@@ -106,7 +119,6 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-
 ## Tracking a Logical Model
 
 <Tabs groupId="user-preference" className="api-tabs">
@@ -122,7 +134,8 @@ X-Hasura-Role: admin
 
 <TabItem value="cli" label="CLI">
 
-You can create a logical model by adding it to the appropriate model definition, under the database in the `metadata > databases > databases.yaml` file:
+You can create a logical model by adding it to the appropriate model definition, under the database in the
+`metadata > databases > databases.yaml` file:
 
 ```yaml
   logical_models:
@@ -500,7 +513,7 @@ can receive.
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/filters/index.mdx). To allow
 all rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
@@ -528,7 +541,7 @@ Add the required permissions to the relevant logical model in `metadata > databa
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/filters/index.mdx). To allow
 all rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 ```http

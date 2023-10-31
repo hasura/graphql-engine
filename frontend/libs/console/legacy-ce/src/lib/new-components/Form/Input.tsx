@@ -173,7 +173,8 @@ export const Input = ({
             },
             type === 'file' && 'h-auto',
             inputClassName,
-            rightButton && 'rounded-r-none border-r-0'
+            rightButton && 'rounded-r-none border-r-0',
+            showInputEndContainer && 'pr-8'
           )}
           placeholder={placeholder}
           {...inputProps}

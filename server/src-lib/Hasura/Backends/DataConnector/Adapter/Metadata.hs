@@ -1,14 +1,13 @@
 {-# LANGUAGE Arrows #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata (requestDatabaseSchema) where
+module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Bifunctor (bimap)
 import Data.Environment (Environment)
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
@@ -71,7 +70,7 @@ import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase (NamingCase)
-import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo ())
+import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo (), RelMapping (..))
 import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig, askSourceInfo)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes (DependencyReason (DRTable), SchemaDependency (SchemaDependency), SchemaObjId (SOSourceObj), SourceObjId (SOITable))
@@ -290,7 +289,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
     toHashMap = HashMap.fromList . Map.toList
 
 resolveSourceConfig' ::
-  (Monad m) =>
+  (MonadIO m) =>
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
@@ -300,7 +299,7 @@ resolveSourceConfig' ::
   m (Either QErr DC.SourceConfig)
 resolveSourceConfig'
   sourceName
-  csc@DC.ConnSourceConfig {template, timeout, value = originalConfig}
+  csc@DC.ConnSourceConfig {_cscTemplate, _cscTemplateVariables, _cscTimeout, _cscValue = originalConfig}
   (DataConnectorKind dataConnectorName)
   backendInfo
   env
@@ -313,10 +312,11 @@ resolveSourceConfig'
       DC.SourceConfig
         { _scEndpoint = _dcoUri,
           _scConfig = originalConfig,
-          _scTemplate = template,
+          _scTemplate = _cscTemplate,
+          _scTemplateVariables = fromMaybe mempty _cscTemplateVariables,
           _scCapabilities = _dciCapabilities,
           _scManager = manager,
-          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
+          _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> _cscTimeout),
           _scDataConnectorName = dataConnectorName,
           _scEnvironment = env
         }
@@ -341,8 +341,12 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' logger sourceMetadata@SourceMetadata {_smName} sourceConfig = runExceptT do
-  let schemaRequest = makeTrackedItemsOnlySchemaRequest sourceMetadata
-  API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig schemaRequest
+  API.SchemaResponse {..} <-
+    if supportsSchemaPost' sourceConfig
+      then do
+        let schemaRequest = makeTrackedItemsOnlySchemaRequest sourceMetadata
+        requestDatabaseSchemaPost logger _smName sourceConfig schemaRequest
+      else requestDatabaseSchemaGet logger _smName sourceConfig
   let logicalModels =
         maybe mempty (InsOrdHashMap.fromList . map toLogicalModelMetadata . toList) _srObjectTypes
       tables = HashMap.fromList $ do
@@ -406,18 +410,30 @@ makeTrackedItemsOnlySchemaRequest SourceMetadata {..} =
       _srDetailLevel = API.Everything
     }
 
-requestDatabaseSchema ::
+requestDatabaseSchemaGet ::
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  Logger Hasura ->
+  SourceName ->
+  DC.SourceConfig ->
+  m API.SchemaResponse
+requestDatabaseSchemaGet logger sourceName sourceConfig = do
+  transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
+  ignoreTraceT
+    . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
+    $ Client.schemaGet sourceName (DC._scConfig transformedSourceConfig)
+
+requestDatabaseSchemaPost ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   Logger Hasura ->
   SourceName ->
   DC.SourceConfig ->
   API.SchemaRequest ->
   m API.SchemaResponse
-requestDatabaseSchema logger sourceName sourceConfig schemaRequest = do
+requestDatabaseSchemaPost logger sourceName sourceConfig schemaRequest = do
   transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
   ignoreTraceT
     . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
-    $ Client.schema sourceName (DC._scConfig transformedSourceConfig) schemaRequest
+    $ Client.schemaPost sourceName (DC._scConfig transformedSourceConfig) schemaRequest
 
 getFieldType :: Bool -> API.ColumnType -> LogicalModelType 'DataConnector
 getFieldType isNullable = \case
@@ -457,7 +473,7 @@ buildForeignKeySet (API.ForeignKeys constraints) =
     $ constraints
     & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
       \constraintName API.Constraint {..} -> maybeToList do
-        let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
+        let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (Witch.from k, Witch.from v) : acc) [] $ API.unColumnPathMapping _cColumnMapping
         columnMapping <- NEHashMap.fromList columnMapAssocList
         let foreignKey =
               RQL.T.T.ForeignKey
@@ -652,14 +668,20 @@ listAllTables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl
 listAllTables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+  schemaResponse <-
+    if supportsSchemaPost' sourceConfig
+      then requestDatabaseSchemaPost logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+      else requestDatabaseSchemaGet logger sourceName sourceConfig
   pure $ fmap (Witch.from . API._tiName) $ API._srTables schemaResponse
 
 listAllTrackables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, MetadataM m) => SourceName -> m (TrackableInfo 'DataConnector)
 listAllTrackables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+  schemaResponse <-
+    if supportsSchemaPost' sourceConfig
+      then requestDatabaseSchemaPost logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+      else requestDatabaseSchemaGet logger sourceName sourceConfig
   let functions = fmap (\fi -> TrackableFunctionInfo (Witch.into (API._fiName fi)) (getVolatility (API._fiFunctionType fi))) $ API._srFunctions schemaResponse
   let tables = fmap (TrackableTableInfo . Witch.into . API._tiName) $ API._srTables schemaResponse
   pure
@@ -667,6 +689,10 @@ listAllTrackables' sourceName = do
       { trackableTables = tables,
         trackableFunctions = functions
       }
+
+supportsSchemaPost' :: DC.SourceConfig -> Bool
+supportsSchemaPost' DC.SourceConfig {..} =
+  isJust $ API._cPostSchema _scCapabilities
 
 getVolatility :: API.FunctionType -> FunctionVolatility
 getVolatility API.FRead = FTSTABLE
@@ -759,7 +785,7 @@ convertTableMetadataToTableInfo tableName logicalModelCache RQL.T.T.DBTableMetad
                   constraint =
                     SourceConstraint
                       { _scForeignTable = Witch.from _fkForeignTable,
-                        _scColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
+                        _scColumnMapping = RelMapping $ NEHashMap.toHashMap _fkColumnMapping
                       }
                in (constraintName, constraint)
           )

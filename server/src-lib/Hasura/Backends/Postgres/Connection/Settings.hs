@@ -362,7 +362,7 @@ instance HasCodec PostgresSourceConnInfo where
         <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc
       .== psciSslConfiguration
     where
-      databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
+      databaseUrlDoc = "The database connection URL as a string, from an environment variable, as connection parameters, or dynamically read from a file at connect time."
       poolSettingsDoc = "Connection pool settings"
       usePreparedStatementsDoc =
         T.unwords

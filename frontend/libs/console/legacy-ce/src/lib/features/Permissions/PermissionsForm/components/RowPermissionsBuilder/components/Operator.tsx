@@ -95,7 +95,7 @@ export const Operator = ({
           ))}
         </optgroup>
       ) : null}
-      {relationships?.length ? (
+      {relationships.length ? (
         <optgroup label="Relationships">
           {relationships.map((item, index) => (
             <option

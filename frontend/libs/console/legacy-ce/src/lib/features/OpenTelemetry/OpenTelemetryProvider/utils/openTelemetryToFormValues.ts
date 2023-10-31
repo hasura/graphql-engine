@@ -27,9 +27,10 @@ export function openTelemetryToFormValues(
     enabled: openTelemetry.status === 'enabled',
     tracesEndpoint: openTelemetry.exporter_otlp.otlp_traces_endpoint ?? '',
     metricsEndpoint: openTelemetry.exporter_otlp.otlp_metrics_endpoint ?? '',
+    logsEndpoint: openTelemetry.exporter_otlp.otlp_logs_endpoint ?? '',
     headers: metadataHeadersToFormHeaders(openTelemetry.exporter_otlp.headers),
     batchSize: openTelemetry.batch_span_processor.max_export_batch_size,
-
+    tracesPropagators: openTelemetry.exporter_otlp.traces_propagators,
     attributes: metadataAttributesToFormAttributes(
       openTelemetry.exporter_otlp.resource_attributes
     ),
@@ -48,8 +49,9 @@ export function formValuesToOpenTelemetry(
 ): OpenTelemetry {
   const otlp_traces_endpoint = formValues.tracesEndpoint;
   const otlp_metrics_endpoint = formValues.metricsEndpoint;
+  const otlp_logs_endpoint = formValues.logsEndpoint;
   const max_export_batch_size = formValues.batchSize;
-
+  const traces_propagators = formValues.tracesPropagators;
   // At the beginning, only one Connection Type is available
   const protocol = 'http/protobuf';
 
@@ -68,6 +70,7 @@ export function formValuesToOpenTelemetry(
       headers,
       protocol,
       resource_attributes,
+      traces_propagators,
     },
 
     batch_span_processor: {
@@ -80,6 +83,9 @@ export function formValuesToOpenTelemetry(
   }
   if (otlp_metrics_endpoint) {
     ot.exporter_otlp.otlp_metrics_endpoint = otlp_metrics_endpoint;
+  }
+  if (otlp_logs_endpoint) {
+    ot.exporter_otlp.otlp_logs_endpoint = otlp_logs_endpoint;
   }
   return ot;
 }

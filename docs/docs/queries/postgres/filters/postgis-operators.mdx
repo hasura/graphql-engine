@@ -1,0 +1,642 @@
+---
+sidebar_label: Filter using geospatial data
+sidebar_position: 5
+description: Filter query results and search queries on Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+toc_max_heading_level: 3
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter Using Geospatial Data
+
+## PostGIS spatial relationship operators
+
+The `_st_contains`, `_st_crosses`, `_st_equals`, `_st_intersects`, `_st_3d_intersects`, `_st_overlaps`, `_st_touches`,
+`_st_within`, `_st_d_within`, and `_st_3d_d_within` operators are used to filter based on `geometry` like columns.
+
+`_st_d_within` and `_st_intersects` can be used on `geography` columns also (but their 3D variations are for `geometry`
+only).
+
+For more details on spatial relationship operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#geometry-operators).
+
+Use JSON representation (see [GeoJSON](https://tools.ietf.org/html/rfc7946)) of `geometry` and `geography` values in
+`variables` as shown in the following examples:
+
+### \_st_contains
+
+`_st_contains` is a spatial operator that checks whether one geometry contains another. It returns values if the first
+geometry completely contains the second geometry.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_contains: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+    "data": {
+    "locations": [
+      {
+        "id": 1,
+        "name": "Times Square",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [
+            -73.9857,
+            40.7484
+          ]
+        }
+      }
+    ]
+  }`}
+/>
+
+### \_st_crosses
+
+`_st_crosses` is a spatial operator that checks whether two geometries cross each other. It returns values if the two
+geometries cross one another.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {river: {_st_crosses: {interstate: {name: "I-95"}}}}) {
+    id
+    name
+    river {
+      name
+      geometry
+    }
+    interstate {
+      name
+      geometry
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "river": {
+          "name": "River 1",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "river": {
+          "name": "River 2",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-74.0064, 40.7142], [-73.9874, 40.7397]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+### \_st_equals
+
+`_st_equals` is a spatial operator that checks whether two geometries are equal. It returns values if the two geometries
+have the same shape and size.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_equals: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+### \_st_intersects
+
+In this example, the `getPointsWithinPolygon` query takes in a polygon argument that defines a rectangular area on a
+map. The location field returns the latitude and longitude of points that intersect with the given polygon using the
+`_st_intersects` operator.
+
+<GraphiQLIDE
+  query={`query {
+  getPointsWithinPolygon(polygon: "POLYGON((-122.431297 37.773972,-122.431297 37.771547,-122.434282 37.771547,-122.434282 37.773972,-122.431297 37.773972))") {
+    id
+    name
+    location {
+      latitude
+      longitude
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "getPointsWithinPolygon": [
+      {
+        "id": 1,
+        "name": "Point 1",
+        "location": {
+          "latitude": 37.773972,
+          "longitude": -122.431297
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+### \_st_within
+
+`_st_within` is a spatial operator that checks whether one geometry is completely contained within another geometry. It
+returns values if the first geometry is completely contained within the second geometry.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_within: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.981, 40.748],
+              [-73.981, 40.749],
+              [-73.98, 40.749],
+              [-73.98, 40.748],
+              [-73.981, 40.748]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+### \_st_d_within
+
+Fetch a list of `geometry` values which are within a 3-unit buffer from a given `point` value:
+
+<GraphiQLIDE
+  query={`query geom_table($point: geometry){
+  geom_table(
+    where: {geom_col: {_st_d_within: {distance: 3, from: $point}}}
+  ){
+    id
+    geom_col
+  }
+}`}
+  response={`{
+  "data": {
+    "geom_table": [
+      {
+        "id": 1,
+        "geom_col": {
+          "type": "Point",
+          "coordinates": [
+            1,
+            2
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "geom_col": {
+          "type": "Point",
+          "coordinates": [
+            3,
+            0
+          ]
+        }
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "point": {
+    "type": "Point",
+    "coordinates": [ 0, 0 ]
+  }
+}`}
+/>
+
+### \_st_3d_d_within
+
+This is completely analogous to the `_st_d_within` example above, the only difference being that our coordinates now
+contain a z-value.
+
+<GraphiQLIDE
+  query={`query geom_table($point: geometry){
+  geom_table(
+    where: {geom_col: {_st_3d_d_within: {distance: 3, from: $point}}}
+  ){
+    id
+    geom_col
+  }
+}`}
+  response={`{
+  "data": {
+    "geom_table": [
+      {
+        "id": 1,
+        "geom_col": {
+          "type": "Point",
+          "coordinates": [
+            1,
+            2,
+            1
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "geom_col": {
+          "type": "Point",
+          "coordinates": [
+            3,
+            0,
+            0
+          ]
+        }
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "point": {
+    "type": "Point",
+    "coordinates": [ 0, 0, 0 ]
+  }
+}`}
+/>
+
+### \_st_3d_intersects
+
+Fetch a list of (3D) `geometry` values which intersect a given `polygon` value:
+
+<GraphiQLIDE
+  query={`query geom_table($point: geometry){
+  geom_table(
+    where: {geom_col: {_st_3d_intersects: $polygon}}
+  ){
+    id
+    geom_col
+  }
+}`}
+  response={`{
+  "data": {
+    "geom_table": [
+      {
+        "id": 1,
+        "geom_col": {
+          "type": "LineString",
+          "coordinates":
+            [
+              [ -1, -2, -2 ],
+              [ 3, 3, 2 ]
+            ]
+        }
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "polygon": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [0, 0, 0],
+        [2, 0, 0],
+        [1, 2, 0],
+        [1, 1, 2],
+        [0, 0, 0]
+      ]
+    ]
+  }
+}`}
+/>
+
+### \_st_overlaps
+
+`_st_overlaps` is a spatial operator that checks whether two geometries overlap each other and that their two compared
+geometries are of the same dimension. It returns values if the two geometries share some, but not all, points.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_overlaps: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "river": {
+          "name": "River 1",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "river": {
+          "name": "River 2",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-74.0064, 40.7142], [-73.9874, 40.7397]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+### \_st_touches
+
+`_st_touches` is a spatial operator that checks whether two geometries share a boundary, but do not overlap. It returns
+values if the two geometries share one or more points on their boundaries.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_touches: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.981, 40.748],
+              [-73.981, 40.749],
+              [-73.98, 40.749],
+              [-73.98, 40.748],
+              [-73.981, 40.748]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+## Intersect operators on RASTER columns
+
+Intersect operators on columns with `raster` type are supported. Please submit a feature request via
+[GitHub](https://github.com/hasura/graphql-engine) if you want support for more functions.
+
+For more details on intersect operators on raster columns and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#intersect-operators).
+
+### \_st_intersects_rast
+
+Filter the raster values which intersect the input raster value.
+
+Executes the following SQL function:
+
+```sql
+boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
+```
+
+<GraphiQLIDE
+  query={`query getIntersectingValues ($rast: raster){
+  dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+    rid
+    rast
+  }
+}`}
+  response={`{
+  "data": {
+    "dummy_rast": [
+      {
+        "rid": 1,
+        "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+      },
+      {
+        "rid": 2,
+        "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+}`}
+/>
+
+### \_st_intersects_geom_nband
+
+Filter the raster values which intersect the input geometry value and optional band number.
+
+Executes the following SQL function:
+
+```sql
+boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
+```
+
+<GraphiQLIDE
+  query={`query getIntersectingValues ($point: geometry!){
+  dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+    rid
+    rast
+  }
+}`}
+  response={`{
+ "data": {
+   "dummy_rast": [
+     {
+       "rid": 1,
+       "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+     },
+     {
+       "rid": 2,
+       "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+     }
+   ]
+ }
+}`}
+  variables={`{
+ "point": {
+   "type": "Point",
+   "coordinates": [
+     1,
+     2
+   ],
+   "crs": {
+     "type": "name",
+     "properties": {
+       "name": "urn:ogc:def:crs:EPSG::4326"
+     }
+   }
+ }
+}`}
+/>
+
+### \_st_intersects_nband_geom
+
+Filter the raster values (with specified band number) which intersect the input geometry value.
+
+Executes the following SQL function:
+
+```sql
+boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
+```
+
+<GraphiQLIDE
+  query={`query getIntersectingValues ($point: geometry!){
+  dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
+    rid
+    rast
+  }
+}`}
+  response={`{
+ "data": {
+   "dummy_rast": [
+     {
+       "rid": 1,
+       "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+     },
+     {
+       "rid": 2,
+       "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+     }
+   ]
+ }
+}`}
+  variables={`{
+ "point": {
+   "type": "Point",
+   "coordinates": [
+     1,
+     2
+   ],
+   "crs": {
+     "type": "name",
+     "properties": {
+       "name": "urn:ogc:def:crs:EPSG::4326"
+     }
+   }
+ }
+}`}
+/>

@@ -1,0 +1,158 @@
+---
+sidebar_label: Filter using text values
+sidebar_position: 3
+description: Filter query results and search queries on BigQuery in Hasura
+keywords:
+  - hasura
+  - docs
+  - bigquery
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# BigQuery: Filter Using Text Values
+
+## Introdution
+
+The `_like`, `_nlike`, `_ilike`, `_nilike` operators are used for pattern matching on string/text fields.
+
+## \_like
+
+Fetch a list of articles whose titles contain the word “amet”:
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_articles(
+    where: {title: {_like: "%amet%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "bigquery_articles": [
+      {
+        "id": "1",
+        "title": "sit amet"
+      },
+      {
+        "id": "3",
+        "title": "amet justo morbi"
+      },
+      {
+        "id": "9",
+        "title": "sit amet"
+      }
+    ]
+  }
+}`}
+/>
+
+:::info Note
+
+`_like` is case-sensitive. Use `_ilike` for case-insensitive search.
+
+:::
+
+## \_nlike
+
+Retrieve a list of articles whose titles do not contain the word "Lorem":
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_articles(
+    where: {title: {_nlike: "%Lorem%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "bigquery_articles": [
+      {
+        "id": "2",
+        "title": "Dolor sit amet"
+      },
+      {
+        "id": "5",
+        "title": "Consectetur adipiscing elit"
+      },
+      {
+        "id": "7",
+        "title": "Aenean nisl libero"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_ilike
+
+Retrieve a list of articles whose titles contain the case-insensitive word "lorem":
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_articles(
+    where: {title: {_ilike: "%lorem%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "bigquery_articles": [
+      {
+        "id": "1",
+        "title": "Lorem ipsum dolor"
+      },
+      {
+        "id": "2",
+        "title": "lorem sit amet"
+      },
+      {
+        "id": "4",
+        "title": "LOREM IPSUM"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_nilike
+
+Retrieve a list of articles whose titles do not contain the case-insensitive word "ipsum":
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_articles(
+    where: {title: {_nilike: "%ipsum%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "bigquery_articles": [
+      {
+        "id": "3",
+        "title": "Dolor sit amet"
+      },
+      {
+        "id": "5",
+        "title": "Consectetur adipiscing elit"
+      },
+      {
+        "id": "6",
+        "title": "Aenean nisl libero"
+      }
+    ]
+  }
+}`}
+/>

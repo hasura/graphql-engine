@@ -73,15 +73,21 @@ export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType.toLowerCase());
 
 const columnDataTypes = {
-  INTEGER: 'integer',
   BIGINT: 'bigint',
-  GUID: 'guid',
-  JSONDTYPE: 'nvarchar',
-  DATETIMEOFFSET: 'timestamp with time zone',
+  BIT: 'bit',
+  DECIMAL: 'decimal',
+  INT: 'int',
+  MONEY: 'money',
+  FLOAT: 'float',
+  NCHAR: 'nchar',
+  NTEXT: 'ntext',
+  NVARCHAR: 'nvarchar',
+  BINARY: 'binary',
+  IMAGE: 'image',
   NUMERIC: 'numeric',
   DATE: 'date',
-  TIME: 'time',
-  TEXT: 'text',
+  DATETIME: 'datetime',
+  DATETIME2: 'datetime2',
 };
 
 // eslint-disable-next-line no-useless-escape

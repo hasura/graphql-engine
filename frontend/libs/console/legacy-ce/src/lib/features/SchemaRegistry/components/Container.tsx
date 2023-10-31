@@ -6,22 +6,19 @@ import { SCHEMA_REGISTRY_FEATURE_NAME } from '../constants';
 import { FaBell } from 'react-icons/fa';
 import { IconTooltip } from '../../../new-components/Tooltip';
 import { AlertsDialog } from './AlertsDialog';
-import { Badge } from '../../../new-components/Badge';
-import { SCHEMA_REGISTRY_REF_URL } from '../constants';
-import { Analytics } from '../../Analytics';
+import { Analytics, InitializeTelemetry } from '../../Analytics';
+import { useGetV2Info } from '../hooks/useGetV2Info';
+import { telemetryUserEventsTracker } from '../../../telemetry';
 
-const Header: React.VFC = () => {
+const SchemaRegistryHeader: React.VFC = () => {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="flex mb-sm mt-md w-full">
+    <div className="flex flex-col w-full pl-12 mb-2">
+      <div className="flex mb-xs mt-md w-full">
         <h1 className="inline-block text-xl font-semibold mr-2 text-slate-900">
           GraphQL Schema Registry
         </h1>
-        <Badge className="mx-2" color="blue">
-          BETA
-        </Badge>
         <Analytics name="data-schema-registry-alerts-btn">
           <div
             className="flex text-lg mt-2 mx-2 cursor-pointer"
@@ -35,14 +32,9 @@ const Header: React.VFC = () => {
           </div>
         </Analytics>
       </div>
-      <a
-        className="text-muted w-auto mb-md"
-        href={SCHEMA_REGISTRY_REF_URL}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        What is Schema Registry?
-      </a>
+      <span className="text-muted text-md mb-2 italic">
+        GraphQL Schema Registry changes will only be retained for 14 days.
+      </span>
       {isAlertModalOpen && (
         <AlertsDialog onClose={() => setIsAlertModalOpen(false)} />
       )}
@@ -50,17 +42,33 @@ const Header: React.VFC = () => {
   );
 };
 
-const Body: React.VFC<{
+const SchemaRegistryBody: React.VFC<{
   hasFeatureAccess: boolean;
   schemaId: string | undefined;
 }> = props => {
   const { hasFeatureAccess, schemaId } = props;
+  const projectID = globals.hasuraCloudProjectId || '';
+  const v2Info = useGetV2Info(projectID);
   if (!hasFeatureAccess) {
     return <FeatureRequest />;
   }
 
-  return <SchemaRegistryHome schemaId={schemaId} />;
+  switch (v2Info.kind) {
+    case 'loading':
+      return <p>Loading...</p>;
+    case 'error':
+      return <p>Error: {v2Info.message}</p>;
+  }
+
+  return (
+    <SchemaRegistryHome
+      schemaId={schemaId}
+      v2Cursor={v2Info.v2Cursor}
+      v2Count={v2Info.v2Count}
+    />
+  );
 };
+
 type SchemaDetailsViewProps = {
   params: {
     id?: string;
@@ -76,9 +84,13 @@ export const SchemaRegistryContainer: React.VFC<
   );
 
   return (
-    <div className="p-4 flex flex-col w-full">
-      <Header />
-      <Body hasFeatureAccess={hasFeatureAccess} schemaId={schemaId} />
+    <div className="flex flex-col w-[80%] pl-10 ml-10 justify-center">
+      <SchemaRegistryHeader />
+      <InitializeTelemetry tracker={telemetryUserEventsTracker} skip={false} />
+      <SchemaRegistryBody
+        hasFeatureAccess={hasFeatureAccess}
+        schemaId={schemaId}
+      />
     </div>
   );
 };

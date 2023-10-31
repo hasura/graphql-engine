@@ -272,7 +272,6 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                 prefix: 'type_names_prefix',
                 suffix: 'type_names_suffix',
               },
-              namingConvention: 'hasura-default',
             },
           })
         );

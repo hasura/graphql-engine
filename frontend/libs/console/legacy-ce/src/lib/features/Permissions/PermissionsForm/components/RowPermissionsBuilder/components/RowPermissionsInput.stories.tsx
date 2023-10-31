@@ -723,8 +723,11 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
       dataSourceName: 'default',
       tablesToLoad: [
         {
-          name: 'Stuff',
-          schema: 'public',
+          source: 'default',
+          table: {
+            name: 'Stuff',
+            schema: 'public',
+          },
         },
       ],
     });
@@ -775,8 +778,11 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
       dataSourceName: 'default',
       tablesToLoad: [
         {
-          name: 'Stuff',
-          schema: 'public',
+          source: 'default',
+          table: {
+            name: 'Stuff',
+            schema: 'public',
+          },
         },
       ],
     });
@@ -811,8 +817,11 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
       dataSourceName: 'default',
       tablesToLoad: [
         {
-          name: 'Stuff',
-          schema: 'public',
+          source: 'default',
+          table: {
+            name: 'Stuff',
+            schema: 'public',
+          },
         },
       ],
     });
@@ -867,8 +876,11 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
       dataSourceName: 'default',
       tablesToLoad: [
         {
-          name: 'Stuff',
-          schema: 'public',
+          source: 'default',
+          table: {
+            name: 'Stuff',
+            schema: 'public',
+          },
         },
       ],
     });
@@ -1049,7 +1061,12 @@ export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({});
     const { tables } = usePermissionTables({
       dataSourceName: 'OhMy',
-      tablesToLoad: [['Chinook', 'Artist']],
+      tablesToLoad: [
+        {
+          source: 'Chinook',
+          table: ['Chinook', 'Artist'],
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -1093,7 +1110,12 @@ export const NestedObjects: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
-      tablesToLoad: [['students']],
+      tablesToLoad: [
+        {
+          source: 'M',
+          table: ['students'],
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -1131,7 +1153,12 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
     render: args => {
       const { tables } = usePermissionTables({
         dataSourceName: 'M',
-        tablesToLoad: [['students']],
+        tablesToLoad: [
+          {
+            source: 'M',
+            table: ['students'],
+          },
+        ],
       });
 
       const comparators = usePermissionComparators();
@@ -1190,7 +1217,12 @@ export const NestedObjectsAnd: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
-      tablesToLoad: [['students']],
+      tablesToLoad: [
+        {
+          source: 'M',
+          table: ['students'],
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -1227,7 +1259,12 @@ export const NestedObjectsOr: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
-      tablesToLoad: [['students']],
+      tablesToLoad: [
+        {
+          source: 'M',
+          table: ['students'],
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();

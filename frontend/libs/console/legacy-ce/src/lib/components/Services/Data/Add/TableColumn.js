@@ -56,6 +56,8 @@ const TableColumn = props => {
   const [isArray, setArray] = useState(false);
 
   const handleColTypeChange = selectedOption => {
+    if (!selectedOption) return onColTypeChange(i, '');
+
     const newType = getNewType({ oldType: selectedOption.value, isArray });
 
     onColTypeChange(selectedOption.colIdentifier, newType);
