@@ -542,7 +542,7 @@ query, for the 1st selection set (`TowPks`), we will have the argument
 3. Next we would have to use the parsers for the fields (`TwoPksByPk` and
 `UsersDataByPk`) to evaluate the `Field` (constructed using the selection set
 and arguments in above steps).
-4. Finally we would concatenate the results in a list.
+4. Finally, we would concatenate the results in a list.
 
 Note: The above method of evaluating the query may do multiple fetches from the
 database, which might be something that can be optimised in further iterations.

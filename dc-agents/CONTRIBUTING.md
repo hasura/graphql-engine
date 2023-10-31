@@ -18,7 +18,7 @@ Once node is installed, run `npm ci` to restore all npm packages.
 To restore the npm modules used by all the projects, ensure you run `npm ci` in the `/dc-agents` directory (ie. this directory).
 
 ### Deriving lockfiles
-Because `sqlite` and `reference` are linked into the root workspace, they don't normally get their own lockfiles (ie. `package-lock.json`), as the lockfile is managed at the root workspace level. However, we want to be able to take these projects and build them outside of the workspace setup we have here, where the root `package-lock.json` does not exist.
+Because `sqlite` and `reference` are linked into the root workspace, they don't normally get their own lockfiles (ie. `package-lock.json`), as the lockfile is managed at the root workspace level. However, we want to be able to take these projects and build them outside the workspace setup we have here, where the root `package-lock.json` does not exist.
 
 In order to achieve this, we have a tool that will derive individual `package-lock.json` files for the `reference` and `sqlite` packages from the root `package-lock.json` file. These derived `package-lock.json` files are committed to the repository so that they can be used by the package-specific Dockerfiles (eg `reference/Dockerfile`).
 

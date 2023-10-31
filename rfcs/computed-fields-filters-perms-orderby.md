@@ -68,7 +68,7 @@ AS $function$
 $function$
 ```
 
-I should able to fetch an author whose `full_name` is 'Bob Morley'
+I should be able to fetch an author whose `full_name` is 'Bob Morley'
 
 ```graphql
 query {

@@ -40,7 +40,7 @@ The reference agent is a good starting point if you want to build your own conne
 
 ## API's
 
-- Github (Coming soon...)
+- GitHub (Coming soon...)
 - Prometheus (Coming soon...)
 - Salesforce (Coming soon...)
 - Zendesk (Coming soon...)

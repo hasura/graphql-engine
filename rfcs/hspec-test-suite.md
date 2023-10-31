@@ -144,7 +144,7 @@ The x-axis represents the various backends. Each backend should implement the fo
 
 -   The ability to list out supported all test groups
 
--   The ability to set up the test database schema, which should cover all of the supported test groups
+-   The ability to set up the test database schema, which should cover all the supported test groups
 
 -   A blank metadata structure which provides the test database as a data source with a standard name
 
@@ -182,7 +182,7 @@ Given these backends and test groups, the basic test plan looks like this:
 
         -   Replace the metadata on the server with this generated metadata
 
-        -   Run all of the tests cases in group G
+        -   Run all the tests cases in group G
 
 Related work
 ------------
@@ -196,8 +196,8 @@ Related work
 Within that PR, [Vamshi described](https://github.com/hasura/graphql-engine-mono/pull/2403#issuecomment-933630333) the expected DB-to-DB relationship behaviour and a proposal for designing new DB-to-DB joins tests.
 
 *Feedback from DB-to-DB joins testing effort*
-1. the test monad - we're currently using a mix of `Test.Hspec.Wai`'s `WaiSession` and a reader called `TestM` to carry around some postgres config. this limits us to request/response testing, and doesn't give us much access to the guts of the running server. if it were me, i might go full `YesodExample` style and add a new type with an `Example` instance and expose helpers to encapsulate both request/response testing and examining the server state. this also gives you better type inferences and error messages
-2. integrating with `scripts/dev.sh` - these tests are currently in a separate module tree from the other haskell tests (i believe intentionally?), so dev.sh doesn't appear to know about them. probably want to rectify that
+1. the test monad - we're currently using a mix of `Test.Hspec.Wai`'s `WaiSession` and a reader called `TestM` to carry around some postgres config. this limits us to request/response testing, and doesn't give us much access to the guts of the running server. if it were me, I might go full `YesodExample` style and add a new type with an `Example` instance and expose helpers to encapsulate both request/response testing and examining the server state. this also gives you better type inferences and error messages
+2. integrating with `scripts/dev.sh` - these tests are currently in a separate module tree from the other haskell tests (I believe intentionally?), so dev.sh doesn't appear to know about them. probably want to rectify that
 3. conventions for backend-specific setup - Phil's composable `testCaseFamily :: SourceMetadata backend -> m (SourceMetadata backend)` looks reasonable, but we're currently doing:
     ```haskell
     withMetadata

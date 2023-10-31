@@ -55,7 +55,7 @@ The output of the above query looks like the following:
 ]
 ```
 
-Doing this will let the user know that some of the queries that are running on the database are in a locked state.
+Doing this will let the user know that some queries that are running on the database are in a locked state.
 
 ##  Implementation details
 
@@ -63,7 +63,7 @@ Doing this will let the user know that some of the queries that are running on t
 
 `logPGSourceCatalogStats :: forall pgKind m . (MonadIO m, MonadTx m) => Logger Hasura -> SourceConfig '(Postgres pgKind) -> m Void`
 
-2. The `logPGSourceCatalogStats` function will be run in a separate thread so as to not block the migrations. This can be done by  calling `logPGSourceCatalogStats` using the `forkManagedT` function.
+2. The `logPGSourceCatalogStats` function will be run in a separate thread to not block the migrations. This can be done by  calling `logPGSourceCatalogStats` using the `forkManagedT` function.
 
 3. To avoid implementing this feature for metadata DB catalog migrations, we need to make the 40_to_41 migration a no-op and move the logic to
    be a source catalog migration. Which means to make the `40_to_41.sql` a noop migration and move the migration to `0_to_1.sql` in `pg_source_migrations`. The `41_to_40.sql` migration should change accordingly, it has to check first whether the `locked` column is a `timestamp with time zone` and iff alter it to the boolean type otherwise do nothing.
