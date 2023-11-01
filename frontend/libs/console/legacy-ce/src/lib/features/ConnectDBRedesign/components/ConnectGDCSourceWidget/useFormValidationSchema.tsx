@@ -26,6 +26,10 @@ const createValidationSchema = (configSchemas: GDCConfigSchemas) =>
       .gte(0, { message: 'Timeout must be a postive number' })
       .optional(),
     template: z.string().optional(),
+
+    // template variables is not marked as optional b/c it makes some pretty annoying TS issues with react-hook-form
+    // the field is initialized with a default value of `[]`
+    // with clean up empty fields, including arrays before submission, so it won't be sent to the server if the array is empty
     template_variables: z
       .object({
         name: reqString('variable name'),
