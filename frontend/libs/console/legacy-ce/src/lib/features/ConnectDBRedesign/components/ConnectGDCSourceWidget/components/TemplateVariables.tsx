@@ -108,7 +108,7 @@ export const TemplateVariables = () => {
         ),
       }),
     ],
-    []
+    [remove]
   );
 
   const table = useReactTable({

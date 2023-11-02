@@ -13,8 +13,10 @@ import { hasuraToast } from '../../../../new-components/Toasts';
 import { useAvailableDrivers } from '../../../ConnectDB/hooks';
 import { OpenApi3Form } from '../../../OpenApi3Form';
 import { useMetadata } from '../../../hasura-metadata-api';
+import { Source } from '../../../hasura-metadata-types';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { cleanEmpty } from '../ConnectPostgresWidget/utils/helpers';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
 import { Template } from './components/Template';
@@ -25,8 +27,6 @@ import {
   useFormValidationSchema,
 } from './useFormValidationSchema';
 import { generateGDCRequestPayload } from './utils/generateRequest';
-import { Source } from '../../../hasura-metadata-types';
-import { cleanEmpty } from '../ConnectPostgresWidget/utils/helpers';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -129,6 +129,11 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     methods: { formState, reset },
   } = useConsoleForm({
     schema,
+    options: {
+      defaultValues: {
+        template_variables: [],
+      },
+    },
   });
 
   useEffect(() => {
