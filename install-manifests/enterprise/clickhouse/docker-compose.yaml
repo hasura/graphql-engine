@@ -51,9 +51,9 @@ services:
     image: hasura/clickhouse-data-connector:v2.32.0
     restart: always
     ports:
-      - 8080:8081
+      - 8081:8081
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 5s
       timeout: 10s
       retries: 5
