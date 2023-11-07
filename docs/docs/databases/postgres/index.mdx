@@ -204,18 +204,36 @@ Curious about any other Postgres flavors? Any other questions? Ask us on
 
 :::
 
+## Managing data with the Hasura Console
+
+The Hasura Console is a web UI that allows you to manage your data and metadata. It is available at
+`http://localhost:8080/console` when you run Hasura locally, or from your project's Console endpoint when you use
+[Hasura Cloud](https://cloud.hasura.io).
+
+The data-management features (such as creating tables) are available in the `Data` tab. You can access your GraphQL API
+in the `API` tab and interact with it using the GraphiQL interface.
+
+:::info Console support
+
+You can use these tools to manage your PostgreSQL database, but we recommend using your preferred
+[PostgreSQL client instead](https://wiki.postgresql.org/wiki/PostgreSQL_Clients). The Hasura Console is designed to be a
+tool for managing your GraphQL API, and not a full-fledged database management tool.
+
+:::
+
 ## Required user role permissions
 
-Below are the role permissions required for Hasura to perform all its functionality. Note that, with the exception of `CONNECT` and `GRANT USAGE`, the other features are opt-in, and not enabling them will simply mean that only the corresponding Hasura features will not work.
+Below are the role permissions required for Hasura to perform all its functionality. Note that, with the exception of
+`CONNECT` and `GRANT USAGE`, the other features are opt-in, and not enabling them will simply mean that only the
+corresponding Hasura features will not work.
 
-* `CONNECT` is required in order for Hasura to connect to your Postgres data source.
-* You must `GRANT USAGE` to the Hasura user role for any schema you want to access via Hasura.
-* To allow queries and subscriptions via the GraphQL API, `SELECT` permissions are required.
-* Similarly, `INSERT`, `UPDATE`, and `DELETE` permissions are required for mutations.
-* The Hasura Console requires permissions such as `REFERENCES` and `CREATE` to make changes to your schema.
-* `TRIGGER` is required to use [Event Triggers](/event-triggers/overview.mdx)
-* If you want to use computed fields or user-defined Postgres functions, the `EXECUTE` permission is required.
-
+- `CONNECT` is required in order for Hasura to connect to your Postgres data source.
+- You must `GRANT USAGE` to the Hasura user role for any schema you want to access via Hasura.
+- To allow queries and subscriptions via the GraphQL API, `SELECT` permissions are required.
+- Similarly, `INSERT`, `UPDATE`, and `DELETE` permissions are required for mutations.
+- The Hasura Console requires permissions such as `REFERENCES` and `CREATE` to make changes to your schema.
+- `TRIGGER` is required to use [Event Triggers](/event-triggers/overview.mdx)
+- If you want to use computed fields or user-defined Postgres functions, the `EXECUTE` permission is required.
 
 ## Know more
 
