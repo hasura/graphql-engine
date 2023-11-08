@@ -1,0 +1,1029 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Postgres Instances Transport</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- Defines the MSSQL instance of 'BackendTransport' and how to interact with the</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- database for running queries, mutations, subscriptions, and so on.</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Instances.Transport</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutationTransaction"><span class="hs-identifier">runPGMutationTransaction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-b5ad8e22c80bc291a2f581fb78a4448e46180aa38110e81c957f693abd1dc222/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Agent.Client</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection.MonadTx</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Subscription.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Subscription</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PGL</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Types</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Execute.html"><span class="hs-identifier">Hasura.Backends.Postgres.Instances.Execute</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EQ</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresTranslateSelect"><span class="hs-identifier">PostgresTranslateSelect</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CredentialCache.html"><span class="hs-identifier">Hasura.CredentialCache</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Backend</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.Plan</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html"><span class="hs-identifier">Hasura.GraphQL.Logging</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html"><span class="hs-identifier">Hasura.GraphQL.Namespace</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier">RootFieldAlias</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier">RootFieldMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier">mkUnNamespacedRootFieldAlias</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Transport.Backend</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.ConnectionTemplate.html"><span class="hs-identifier">Hasura.RQL.DDL.ConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.ConnectionTemplate.html#BackendResolvedConnectionTemplate"><span class="hs-identifier">BackendResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.ConnectionTemplate.html#ResolvedConnectionTemplateWrapper"><span class="hs-identifier">ResolvedConnectionTemplateWrapper</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html"><span class="hs-identifier">Hasura.RQL.Types.BackendTag</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html#HasTag"><span class="hs-identifier">HasTag</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier">RequestId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621687998765"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998765"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html#PostgresTranslateSelect"><span class="hs-identifier hs-type">PostgresTranslateSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998765"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.Backend.html#BackendTransport"><span class="hs-identifier hs-type">BackendTransport</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998765"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621687998951"><span class="annot"><span class="annottext">runDBQuery :: forall (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadQueryLog m, MonadExecutionLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad
+     (ExecutionMonad ('Postgres pgKind))
+     (Maybe (AnyBackend ExecutionStats), EncJSON)
+-&gt; Maybe (PreparedQuery ('Postgres pgKind))
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="#local-6989586621687998951"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(HasTag ('Postgres pgKind), MonadIO m, MonadBaseControl IO m,
+ MonadError QErr m, MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad
+     (TxET QErr) (Maybe (AnyBackend ExecutionStats), EncJSON)
+-&gt; Maybe PreparedSql
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQuery"><span class="hs-identifier hs-var">runPGQuery</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687998765"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621687998965"><span class="annot"><span class="annottext">runDBMutation :: forall (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad (ExecutionMonad ('Postgres pgKind)) EncJSON
+-&gt; Maybe (PreparedQuery ('Postgres pgKind))
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="#local-6989586621687998965"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBMutation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(HasTag ('Postgres pgKind), MonadIO m, MonadBaseControl IO m,
+ MonadError QErr m, MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad (TxET QErr) EncJSON
+-&gt; Maybe PreparedSql
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutation"><span class="hs-identifier hs-var">runPGMutation</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687998765"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621687998972"><span class="annot"><span class="annottext">runDBSubscription :: forall (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><a href="#local-6989586621687998972"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBSubscription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+SourceConfig ('Postgres Any)
+-&gt; MultiplexedQuery ('Postgres Any)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres Any)
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGSubscription"><span class="hs-identifier hs-var">runPGSubscription</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687998979"><span class="annot"><span class="annottext">runDBStreamingSubscription :: forall (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+</span><a href="#local-6989586621687998979"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBStreamingSubscription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+SourceConfig ('Postgres Any)
+-&gt; MultiplexedQuery ('Postgres Any)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres Any)
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGStreamingSubscription"><span class="hs-identifier hs-var">runPGStreamingSubscription</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621687998990"><span class="annot"><span class="annottext">runDBQueryExplain :: forall (m :: * -&gt; *).
+(MonadIO m, MonadError QErr m, MonadBaseControl IO m,
+ MonadTrace m) =&gt;
+Maybe (CredentialCache AgentLicenseKey)
+-&gt; DBStepInfo ('Postgres pgKind) -&gt; m EncJSON
+</span><a href="#local-6989586621687998990"><span class="hs-identifier hs-var hs-var hs-var hs-var">runDBQueryExplain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (CredentialCache AgentLicenseKey)
+-&gt; DBStepInfo ('Postgres pgKind) -&gt; m EncJSON
+forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadTrace m) =&gt;
+Maybe (CredentialCache AgentLicenseKey)
+-&gt; DBStepInfo ('Postgres pgKind) -&gt; m EncJSON
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQueryExplain"><span class="hs-identifier hs-var">runPGQueryExplain</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQuery"><span class="hs-identifier hs-type">runPGQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687998769"><span class="annot"><a href="#local-6989586621687998769"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621687998770"><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998769"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.QueryLog.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CredentialCache.html#CredentialCache"><span class="hs-identifier hs-type">CredentialCache</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998769"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#OnBaseMonad"><span class="hs-identifier hs-type">OnBaseMonad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#TxET"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.ExecutionLog.html#ExecutionStats"><span class="hs-identifier hs-type">ExecutionStats</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Execute.html#PreparedSql"><span class="hs-identifier hs-type">EQ.PreparedSql</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998769"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Also return the time spent in the PG query; for telemetry.</span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621687998770"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span id="runPGQuery"><span class="annot"><span class="annottext">runPGQuery :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(HasTag ('Postgres pgKind), MonadIO m, MonadBaseControl IO m,
+ MonadError QErr m, MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad
+     (TxET QErr) (Maybe (AnyBackend ExecutionStats), EncJSON)
+-&gt; Maybe PreparedSql
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQuery"><span class="hs-identifier hs-var hs-var">runPGQuery</span></a></span></span><span> </span><span id="local-6989586621687999030"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999030"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span id="local-6989586621687999031"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999031"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999032"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999032"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621687999033"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687999033"><span class="hs-identifier hs-var">_userInfo</span></a></span></span><span> </span><span id="local-6989586621687999034"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999034"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (CredentialCache AgentLicenseKey)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687999035"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999035"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687999036"><span class="annot"><span class="annottext">OnBaseMonad
+  (TxET QErr) (Maybe (AnyBackend ExecutionStats), EncJSON)
+</span><a href="#local-6989586621687999036"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621687999037"><span class="annot"><span class="annottext">Maybe PreparedSql
+</span><a href="#local-6989586621687999037"><span class="hs-identifier hs-var">genSql</span></a></span></span><span> </span><span id="local-6989586621687999038"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999038"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-comment">-- log the generated SQL and the graphql query</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999034"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryLog -&gt; m ()) -&gt; QueryLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres Any))
+-&gt; QueryLog
+forall (pgKind :: PostgresKind).
+GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+-&gt; QueryLog
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#mkQueryLog"><span class="hs-identifier hs-var">mkQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999031"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999032"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PreparedSql
+</span><a href="#local-6989586621687999037"><span class="hs-identifier hs-var">genSql</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999030"><span class="hs-identifier hs-var">reqId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999038"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe (Maybe PostgresResolvedConnectionTemplate)
+forall a b. a -&gt; Maybe b -&gt; Maybe a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999038"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="annottext">m EncJSON -&gt; m (DiffTime, EncJSON)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m (DiffTime, EncJSON))
+-&gt; m EncJSON -&gt; m (DiffTime, EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m EncJSON -&gt; m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var">newSpan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Postgres Query for root field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RootFieldAlias -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999032"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m EncJSON -&gt; m () -&gt; m EncJSON
+forall a b. m a -&gt; m b -&gt; m a
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+(HasSourceConfiguration b, MonadTrace m) =&gt;
+SourceConfig b -&gt; m ()
+</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var">attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998769"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999035"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m EncJSON -&gt; m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runQueryTx"><span class="hs-identifier hs-var">runQueryTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999035"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999038"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; m EncJSON)
+-&gt; TxET QErr m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Maybe (AnyBackend ExecutionStats), EncJSON) -&gt; EncJSON)
+-&gt; TxET QErr m (Maybe (AnyBackend ExecutionStats), EncJSON)
+-&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; TxET QErr m a -&gt; TxET QErr m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (AnyBackend ExecutionStats), EncJSON) -&gt; EncJSON
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OnBaseMonad
+  (TxET QErr) (Maybe (AnyBackend ExecutionStats), EncJSON)
+-&gt; forall (m :: * -&gt; *).
+   (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+    MonadTrace m, MonadError QErr m) =&gt;
+   TxET QErr m (Maybe (AnyBackend ExecutionStats), EncJSON)
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) a.
+OnBaseMonad t a
+-&gt; forall (m :: * -&gt; *).
+   (Functor (t m), MonadIO m, MonadBaseControl IO m, MonadTrace m,
+    MonadError QErr m) =&gt;
+   t m a
+</span><a href="Hasura.GraphQL.Execute.Backend.html#runOnBaseMonad"><span class="hs-identifier hs-var">runOnBaseMonad</span></a></span><span> </span><span class="annot"><span class="annottext">OnBaseMonad
+  (TxET QErr) (Maybe (AnyBackend ExecutionStats), EncJSON)
+</span><a href="#local-6989586621687999036"><span class="hs-identifier hs-var">tx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutation"><span class="hs-identifier hs-type">runPGMutation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687998772"><span class="annot"><a href="#local-6989586621687998772"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621687998773"><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998772"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.QueryLog.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CredentialCache.html#CredentialCache"><span class="hs-identifier hs-type">CredentialCache</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998772"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#OnBaseMonad"><span class="hs-identifier hs-type">OnBaseMonad</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#TxET"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-110"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Execute.html#PreparedSql"><span class="hs-identifier hs-type">EQ.PreparedSql</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998772"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="#local-6989586621687998773"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span id="runPGMutation"><span class="annot"><span class="annottext">runPGMutation :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(HasTag ('Postgres pgKind), MonadIO m, MonadBaseControl IO m,
+ MonadError QErr m, MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; Maybe (CredentialCache AgentLicenseKey)
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; OnBaseMonad (TxET QErr) EncJSON
+-&gt; Maybe PreparedSql
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, EncJSON)
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutation"><span class="hs-identifier hs-var hs-var">runPGMutation</span></a></span></span><span> </span><span id="local-6989586621687999081"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999081"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span id="local-6989586621687999082"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999082"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999083"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999083"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621687999084"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687999084"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687999085"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999085"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (CredentialCache AgentLicenseKey)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687999086"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999086"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687999087"><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) EncJSON
+</span><a href="#local-6989586621687999087"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621687999088"><span class="annot"><span class="annottext">Maybe PreparedSql
+</span><a href="#local-6989586621687999088"><span class="hs-identifier hs-var">_genSql</span></a></span></span><span> </span><span id="local-6989586621687999089"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999089"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-comment">-- log the graphql query</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999085"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryLog -&gt; m ()) -&gt; QueryLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres Any))
+-&gt; QueryLog
+forall (pgKind :: PostgresKind).
+GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+-&gt; QueryLog
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#mkQueryLog"><span class="hs-identifier hs-var">mkQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999082"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999083"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PreparedSql
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999081"><span class="hs-identifier hs-var">reqId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999089"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe (Maybe PostgresResolvedConnectionTemplate)
+forall a b. a -&gt; Maybe b -&gt; Maybe a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999089"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="annottext">m EncJSON -&gt; m (DiffTime, EncJSON)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m (DiffTime, EncJSON))
+-&gt; m EncJSON -&gt; m (DiffTime, EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m EncJSON -&gt; m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var">newSpan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Postgres Mutation for root field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RootFieldAlias -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999083"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m EncJSON -&gt; m () -&gt; m EncJSON
+forall a b. m a -&gt; m b -&gt; m a
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+(HasSourceConfiguration b, MonadTrace m) =&gt;
+SourceConfig b -&gt; m ()
+</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var">attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998772"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999086"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">(m EncJSON -&gt; m EncJSON) -&gt; m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserInfo
+-&gt; PGExecCtx
+-&gt; PGExecTxType
+-&gt; PGExecFrom
+-&gt; TxET QErr m EncJSON
+-&gt; m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadTrace m) =&gt;
+UserInfo
+-&gt; PGExecCtx -&gt; PGExecTxType -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runTxWithCtxAndUserInfo"><span class="hs-identifier hs-var">runTxWithCtxAndUserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687999084"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999086"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAccess -&gt; Maybe TxIsolation -&gt; PGExecTxType
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#Tx"><span class="hs-identifier hs-var">Tx</span></a></span><span> </span><span class="annot"><span class="annottext">TxAccess
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#ReadWrite"><span class="hs-identifier hs-var">PG.ReadWrite</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TxIsolation
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999089"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; m EncJSON)
+-&gt; TxET QErr m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) EncJSON
+-&gt; forall (m :: * -&gt; *).
+   (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+    MonadTrace m, MonadError QErr m) =&gt;
+   TxET QErr m EncJSON
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) a.
+OnBaseMonad t a
+-&gt; forall (m :: * -&gt; *).
+   (Functor (t m), MonadIO m, MonadBaseControl IO m, MonadTrace m,
+    MonadError QErr m) =&gt;
+   t m a
+</span><a href="Hasura.GraphQL.Execute.Backend.html#runOnBaseMonad"><span class="hs-identifier hs-var">runOnBaseMonad</span></a></span><span> </span><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) EncJSON
+</span><a href="#local-6989586621687999087"><span class="hs-identifier hs-var">tx</span></a></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span id="local-6989586621687998775"><span id="local-6989586621687998776"><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGSubscription"><span class="hs-identifier hs-type">runPGSubscription</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998775"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998775"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998776"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MultiplexedQuery"><span class="hs-identifier hs-type">MultiplexedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998776"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998776"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="#local-6989586621687998775"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-129"></span><span id="runPGSubscription"><span class="annot"><span class="annottext">runPGSubscription :: forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGSubscription"><span class="hs-identifier hs-var hs-var">runPGSubscription</span></a></span></span><span> </span><span id="local-6989586621687999105"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999105"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687999106"><span class="annot"><span class="annottext">MultiplexedQuery ('Postgres pgKind)
+</span><a href="#local-6989586621687999106"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999107"><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><a href="#local-6989586621687999107"><span class="hs-identifier hs-var">variables</span></a></span></span><span> </span><span id="local-6989586621687999108"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999108"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><span class="annottext">m (Either QErr [(CohortId, ByteString)])
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><span class="annottext">(m (Either QErr [(CohortId, ByteString)])
+ -&gt; m (DiffTime, Either QErr [(CohortId, ByteString)]))
+-&gt; m (Either QErr [(CohortId, ByteString)])
+-&gt; m (DiffTime, Either QErr [(CohortId, ByteString)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m [(CohortId, ByteString)]
+-&gt; m (Either QErr [(CohortId, ByteString)])
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><span class="annottext">(ExceptT QErr m [(CohortId, ByteString)]
+ -&gt; m (Either QErr [(CohortId, ByteString)]))
+-&gt; ExceptT QErr m [(CohortId, ByteString)]
+-&gt; m (Either QErr [(CohortId, ByteString)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGExecCtx
+-&gt; PGExecFrom
+-&gt; TxET QErr (ExceptT QErr m) [(CohortId, ByteString)]
+-&gt; ExceptT QErr m [(CohortId, ByteString)]
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runQueryTx"><span class="hs-identifier hs-var">runQueryTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999105"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999108"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><span class="annottext">(TxET QErr (ExceptT QErr m) [(CohortId, ByteString)]
+ -&gt; ExceptT QErr m [(CohortId, ByteString)])
+-&gt; TxET QErr (ExceptT QErr m) [(CohortId, ByteString)]
+-&gt; ExceptT QErr m [(CohortId, ByteString)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
+-&gt; [(CohortId, CohortVariables)]
+-&gt; TxET QErr (ExceptT QErr m) [(CohortId, ByteString)]
+forall (m :: * -&gt; *).
+MonadTx m =&gt;
+MultiplexedQuery
+-&gt; [(CohortId, CohortVariables)] -&gt; m [(CohortId, ByteString)]
+</span><a href="Hasura.Backends.Postgres.Execute.Subscription.html#executeMultiplexedQuery"><span class="hs-identifier hs-var">PGL.executeMultiplexedQuery</span></a></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
+MultiplexedQuery ('Postgres pgKind)
+</span><a href="#local-6989586621687999106"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><a href="#local-6989586621687999107"><span class="hs-identifier hs-var">variables</span></a></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span id="local-6989586621687998778"><span id="local-6989586621687998779"><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGStreamingSubscription"><span class="hs-identifier hs-type">runPGStreamingSubscription</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-136"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998778"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998778"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998779"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MultiplexedQuery"><span class="hs-identifier hs-type">MultiplexedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998779"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortVariables"><span class="hs-identifier hs-type">CohortVariables</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998779"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="#local-6989586621687998778"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CursorVariableValues"><span class="hs-identifier hs-type">CursorVariableValues</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-142"></span><span id="runPGStreamingSubscription"><span class="annot"><span class="annottext">runPGStreamingSubscription :: forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+(MonadIO m, MonadBaseControl IO m) =&gt;
+SourceConfig ('Postgres pgKind)
+-&gt; MultiplexedQuery ('Postgres pgKind)
+-&gt; [(CohortId, CohortVariables)]
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGStreamingSubscription"><span class="hs-identifier hs-var hs-var">runPGStreamingSubscription</span></a></span></span><span> </span><span id="local-6989586621687999127"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999127"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687999128"><span class="annot"><span class="annottext">MultiplexedQuery ('Postgres pgKind)
+</span><a href="#local-6989586621687999128"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999129"><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><a href="#local-6989586621687999129"><span class="hs-identifier hs-var">variables</span></a></span></span><span> </span><span id="local-6989586621687999130"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999130"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-143"></span><span>  </span><span class="annot"><span class="annottext">m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">(m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
+ -&gt; m (DiffTime,
+       Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
+-&gt; m (DiffTime,
+      Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
+-&gt; m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">(ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
+ -&gt; m (Either QErr [(CohortId, ByteString, CursorVariableValues)]))
+-&gt; ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
+-&gt; m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-146"></span><span>      </span><span id="local-6989586621687999131"><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
+</span><a href="#local-6989586621687999131"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
+-&gt; PGExecFrom
+-&gt; TxET
+     QErr
+     (ExceptT QErr m)
+     [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+-&gt; ExceptT
+     QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runQueryTx"><span class="hs-identifier hs-var">runQueryTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999127"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999130"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TxET
+   QErr
+   (ExceptT QErr m)
+   [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+ -&gt; ExceptT
+      QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)])
+-&gt; TxET
+     QErr
+     (ExceptT QErr m)
+     [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+-&gt; ExceptT
+     QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
+-&gt; [(CohortId, CohortVariables)]
+-&gt; TxET
+     QErr
+     (ExceptT QErr m)
+     [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+forall (m :: * -&gt; *).
+MonadTx m =&gt;
+MultiplexedQuery
+-&gt; [(CohortId, CohortVariables)]
+-&gt; m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
+</span><a href="Hasura.Backends.Postgres.Execute.Subscription.html#executeStreamingMultiplexedQuery"><span class="hs-identifier hs-var">PGL.executeStreamingMultiplexedQuery</span></a></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
+MultiplexedQuery ('Postgres pgKind)
+</span><a href="#local-6989586621687999128"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
+</span><a href="#local-6989586621687999129"><span class="hs-identifier hs-var">variables</span></a></span><span>
+</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">[(CohortId, ByteString, CursorVariableValues)]
+-&gt; ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
+forall a. a -&gt; ExceptT QErr m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([(CohortId, ByteString, CursorVariableValues)]
+ -&gt; ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)])
+-&gt; [(CohortId, ByteString, CursorVariableValues)]
+-&gt; ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
+</span><a href="#local-6989586621687999131"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
+-&gt; ((CohortId, ByteString, ViaJSON CursorVariableValues)
+    -&gt; (CohortId, ByteString, CursorVariableValues))
+-&gt; [(CohortId, ByteString, CursorVariableValues)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687999134"><span class="annot"><span class="annottext">CohortId
+</span><a href="#local-6989586621687999134"><span class="hs-identifier hs-var">cohortId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687999135"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687999135"><span class="hs-identifier hs-var">cohortRes</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687999136"><span class="annot"><span class="annottext">ViaJSON CursorVariableValues
+</span><a href="#local-6989586621687999136"><span class="hs-identifier hs-var">cursorVariableVals</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CohortId
+</span><a href="#local-6989586621687999134"><span class="hs-identifier hs-var">cohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687999135"><span class="hs-identifier hs-var">cohortRes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ViaJSON CursorVariableValues -&gt; CursorVariableValues
+forall a. ViaJSON a -&gt; a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html#getViaJSON"><span class="hs-identifier hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">ViaJSON CursorVariableValues
+</span><a href="#local-6989586621687999136"><span class="hs-identifier hs-var">cursorVariableVals</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQueryExplain"><span class="hs-identifier hs-type">runPGQueryExplain</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687998782"><span class="annot"><a href="#local-6989586621687998782"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621687998781"><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-151"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CredentialCache.html#CredentialCache"><span class="hs-identifier hs-type">CredentialCache</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621687998781"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-159"></span><span id="runPGQueryExplain"><span class="annot"><span class="annottext">runPGQueryExplain :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadTrace m) =&gt;
+Maybe (CredentialCache AgentLicenseKey)
+-&gt; DBStepInfo ('Postgres pgKind) -&gt; m EncJSON
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQueryExplain"><span class="hs-identifier hs-var hs-var">runPGQueryExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (CredentialCache AgentLicenseKey)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687999155"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999155"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (PreparedQuery ('Postgres pgKind))
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687999156"><span class="annot"><span class="annottext">OnBaseMonad
+  (ExecutionMonad ('Postgres pgKind))
+  (ActionResult ('Postgres pgKind))
+</span><a href="#local-6989586621687999156"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span id="local-6989586621687999157"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999157"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-160"></span><span>  </span><span class="annot"><span class="annottext">PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m EncJSON -&gt; m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
+PGExecCtx -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runQueryTx"><span class="hs-identifier hs-var">runQueryTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999155"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999157"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; m EncJSON)
+-&gt; TxET QErr m EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ActionResult ('Postgres pgKind) -&gt; EncJSON)
+-&gt; TxET QErr m (ActionResult ('Postgres pgKind))
+-&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; TxET QErr m a -&gt; TxET QErr m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ActionResult ('Postgres pgKind) -&gt; EncJSON
+forall (b :: BackendType). ActionResult b -&gt; EncJSON
+</span><a href="Hasura.GraphQL.Execute.Backend.html#arResult"><span class="hs-identifier hs-var">arResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) (ActionResult ('Postgres pgKind))
+-&gt; forall (m :: * -&gt; *).
+   (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+    MonadTrace m, MonadError QErr m) =&gt;
+   TxET QErr m (ActionResult ('Postgres pgKind))
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) a.
+OnBaseMonad t a
+-&gt; forall (m :: * -&gt; *).
+   (Functor (t m), MonadIO m, MonadBaseControl IO m, MonadTrace m,
+    MonadError QErr m) =&gt;
+   t m a
+</span><a href="Hasura.GraphQL.Execute.Backend.html#runOnBaseMonad"><span class="hs-identifier hs-var">runOnBaseMonad</span></a></span><span> </span><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) (ActionResult ('Postgres pgKind))
+OnBaseMonad
+  (ExecutionMonad ('Postgres pgKind))
+  (ActionResult ('Postgres pgKind))
+</span><a href="#local-6989586621687999156"><span class="hs-identifier hs-var">action</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span id="local-6989586621687998798"><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#mkQueryLog"><span class="hs-identifier hs-type">mkQueryLog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-164"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-166"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Execute.html#PreparedSql"><span class="hs-identifier hs-type">EQ.PreparedSql</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-167"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-168"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998798"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-169"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Logging.QueryLog.html#QueryLog"><span class="hs-identifier hs-type">QueryLog</span></a></span></span><span>
+</span><span id="line-170"></span><span id="mkQueryLog"><span class="annot"><span class="annottext">mkQueryLog :: forall (pgKind :: PostgresKind).
+GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+-&gt; QueryLog
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#mkQueryLog"><span class="hs-identifier hs-var hs-var">mkQueryLog</span></a></span></span><span> </span><span id="local-6989586621687999168"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999168"><span class="hs-identifier hs-var">gqlQuery</span></a></span></span><span> </span><span id="local-6989586621687999169"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999169"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621687999170"><span class="annot"><span class="annottext">Maybe PreparedSql
+</span><a href="#local-6989586621687999170"><span class="hs-identifier hs-var">preparedSql</span></a></span></span><span> </span><span id="local-6989586621687999171"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999171"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687999172"><span class="annot"><span class="annottext">Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+</span><a href="#local-6989586621687999172"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-171"></span><span>  </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; Maybe (RootFieldAlias, GeneratedQuery)
+-&gt; RequestId
+-&gt; QueryLogKind
+-&gt; QueryLog
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#QueryLog"><span class="hs-identifier hs-var">QueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999168"><span class="hs-identifier hs-var">gqlQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999169"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(GeneratedQuery -&gt; (RootFieldAlias, GeneratedQuery))
+-&gt; Maybe GeneratedQuery -&gt; Maybe (RootFieldAlias, GeneratedQuery)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe GeneratedQuery
+</span><a href="#local-6989586621687999175"><span class="hs-identifier hs-var">generatedQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999171"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe BackendResolvedConnectionTemplate -&gt; QueryLogKind
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#QueryLogKindDatabase"><span class="hs-identifier hs-var">QueryLogKindDatabase</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+-&gt; BackendResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres Any)
+-&gt; BackendResolvedConnectionTemplate
+forall (pgKind :: PostgresKind).
+ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; BackendResolvedConnectionTemplate
+</span><a href="#local-6989586621687999177"><span class="hs-identifier hs-var">mkBackendResolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PostgresResolvedConnectionTemplate
+ -&gt; BackendResolvedConnectionTemplate)
+-&gt; Maybe (Maybe PostgresResolvedConnectionTemplate)
+-&gt; Maybe BackendResolvedConnectionTemplate
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe PostgresResolvedConnectionTemplate)
+Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+</span><a href="#local-6989586621687999172"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-173"></span><span>    </span><span id="local-6989586621687998885"><span class="annot"><a href="#local-6989586621687999177"><span class="hs-identifier hs-type">mkBackendResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-174"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998885"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-175"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.ConnectionTemplate.html#BackendResolvedConnectionTemplate"><span class="hs-identifier hs-type">BackendResolvedConnectionTemplate</span></a></span></span><span>
+</span><span id="line-176"></span><span>    </span><span id="local-6989586621687999177"><span class="annot"><span class="annottext">mkBackendResolvedConnectionTemplate :: forall (pgKind :: PostgresKind).
+ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; BackendResolvedConnectionTemplate
+</span><a href="#local-6989586621687999177"><span class="hs-identifier hs-var hs-var">mkBackendResolvedConnectionTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-177"></span><span>      </span><span class="annot"><span class="annottext">AnyBackend ResolvedConnectionTemplateWrapper
+-&gt; BackendResolvedConnectionTemplate
+</span><a href="Hasura.RQL.DDL.ConnectionTemplate.html#BackendResolvedConnectionTemplate"><span class="hs-identifier hs-var">BackendResolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyBackend ResolvedConnectionTemplateWrapper
+ -&gt; BackendResolvedConnectionTemplate)
+-&gt; (Maybe PostgresResolvedConnectionTemplate
+    -&gt; AnyBackend ResolvedConnectionTemplateWrapper)
+-&gt; Maybe PostgresResolvedConnectionTemplate
+-&gt; BackendResolvedConnectionTemplate
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+i b -&gt; AnyBackend i
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ResolvedConnectionTemplateWrapper ('Postgres 'Vanilla)
+ -&gt; AnyBackend ResolvedConnectionTemplateWrapper)
+-&gt; (Maybe PostgresResolvedConnectionTemplate
+    -&gt; ResolvedConnectionTemplateWrapper ('Postgres 'Vanilla))
+-&gt; Maybe PostgresResolvedConnectionTemplate
+-&gt; AnyBackend ResolvedConnectionTemplateWrapper
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+-&gt; ResolvedConnectionTemplateWrapper ('Postgres 'Vanilla)
+ResolvedConnectionTemplate ('Postgres 'Vanilla)
+-&gt; ResolvedConnectionTemplateWrapper ('Postgres 'Vanilla)
+forall (b :: BackendType).
+ResolvedConnectionTemplate b -&gt; ResolvedConnectionTemplateWrapper b
+</span><a href="Hasura.RQL.DDL.ConnectionTemplate.html#ResolvedConnectionTemplateWrapper"><span class="hs-identifier hs-var">ResolvedConnectionTemplateWrapper</span></a></span><span>
+</span><span id="line-178"></span><span>    </span><span id="local-6989586621687999175"><span class="annot"><span class="annottext">generatedQuery :: Maybe GeneratedQuery
+</span><a href="#local-6989586621687999175"><span class="hs-identifier hs-var hs-var">generatedQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span>      </span><span class="annot"><span class="annottext">Maybe PreparedSql
+</span><a href="#local-6989586621687999170"><span class="hs-identifier hs-var">preparedSql</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PreparedSql
+-&gt; (PreparedSql -&gt; GeneratedQuery) -&gt; Maybe GeneratedQuery
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Execute.html#PreparedSql"><span class="hs-identifier hs-type">EQ.PreparedSql</span></a></span><span> </span><span id="local-6989586621687999185"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621687999185"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999186"><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621687999186"><span class="hs-identifier hs-var">args</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-180"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; GeneratedQuery
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#GeneratedQuery"><span class="hs-identifier hs-var">GeneratedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Query -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#getQueryText"><span class="hs-identifier hs-var">PG.getQueryText</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621687999185"><span class="hs-identifier hs-var">query</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntMap Value -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(IntMap Value -&gt; Value) -&gt; IntMap Value -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGScalarValue -&gt; Value
+</span><a href="Hasura.Backends.Postgres.SQL.Value.html#pgScalarValueToJson"><span class="hs-identifier hs-var">pgScalarValueToJson</span></a></span><span> </span><span class="annot"><span class="annottext">(PGScalarValue -&gt; Value)
+-&gt; ((PrepArg, PGScalarValue) -&gt; PGScalarValue)
+-&gt; (PrepArg, PGScalarValue)
+-&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(PrepArg, PGScalarValue) -&gt; PGScalarValue
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">((PrepArg, PGScalarValue) -&gt; Value) -&gt; PrepArgMap -&gt; IntMap Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621687999186"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span class="hs-comment">-- ad-hoc transaction optimisation</span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- see Note [Backwards-compatible transaction optimisation]</span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutationTransaction"><span class="hs-identifier hs-type">runPGMutationTransaction</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687998900"><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621687998901"><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-187"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-189"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-db4229aec3d9c1011503cf06798714c732b74d731fab23998dd34d578ed6d457/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-190"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-191"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.QueryLog.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-192"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-194"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-195"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-196"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-197"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-199"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-200"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-201"></span><span>  </span><span class="annot"><a href="#local-6989586621687998901"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DiffTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span id="runPGMutationTransaction"><span class="annot"><span class="annottext">runPGMutationTransaction :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(HasTag ('Postgres pgKind), MonadIO m, MonadBaseControl IO m,
+ MonadError QErr m, MonadQueryLog m, MonadTrace m) =&gt;
+RequestId
+-&gt; GQLReqUnparsed
+-&gt; UserInfo
+-&gt; Logger Hasura
+-&gt; SourceConfig ('Postgres pgKind)
+-&gt; ResolvedConnectionTemplate ('Postgres pgKind)
+-&gt; RootFieldMap (DBStepInfo ('Postgres pgKind))
+-&gt; m (DiffTime, RootFieldMap EncJSON)
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGMutationTransaction"><span class="hs-identifier hs-var hs-var">runPGMutationTransaction</span></a></span></span><span> </span><span id="local-6989586621687999225"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999225"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span id="local-6989586621687999226"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999226"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687999227"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687999227"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687999228"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999228"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687999229"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999229"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687999230"><span class="annot"><span class="annottext">ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999230"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span></span><span> </span><span id="local-6989586621687999231"><span class="annot"><span class="annottext">RootFieldMap (DBStepInfo ('Postgres pgKind))
+</span><a href="#local-6989586621687999231"><span class="hs-identifier hs-var">mutations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-203"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura -&gt; QueryLog -&gt; m ()
+forall (m :: * -&gt; *).
+MonadQueryLog m =&gt;
+Logger Hasura -&gt; QueryLog -&gt; m ()
+</span><a href="Hasura.GraphQL.Logging.QueryLog.html#logQueryLog"><span class="hs-identifier hs-var">logQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687999228"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryLog -&gt; m ()) -&gt; QueryLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres Any))
+-&gt; QueryLog
+forall (pgKind :: PostgresKind).
+GQLReqUnparsed
+-&gt; RootFieldAlias
+-&gt; Maybe PreparedSql
+-&gt; RequestId
+-&gt; Maybe (ResolvedConnectionTemplate ('Postgres pgKind))
+-&gt; QueryLog
+</span><a href="Hasura.Backends.Postgres.Instances.Transport.html#mkQueryLog"><span class="hs-identifier hs-var">mkQueryLog</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687999226"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; RootFieldAlias
+</span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_transaction"><span class="hs-identifier hs-var">Name._transaction</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe PreparedSql
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687999225"><span class="hs-identifier hs-var">reqId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999230"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe PostgresResolvedConnectionTemplate
+-&gt; Maybe (Maybe PostgresResolvedConnectionTemplate)
+forall a b. a -&gt; Maybe b -&gt; Maybe a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999230"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><span class="annottext">m (RootFieldMap EncJSON) -&gt; m (DiffTime, RootFieldMap EncJSON)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; m a -&gt; m (DiffTime, a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#withElapsedTime"><span class="hs-identifier hs-var">withElapsedTime</span></a></span><span>
+</span><span id="line-205"></span><span>    </span><span class="annot"><span class="annottext">(m (RootFieldMap EncJSON) -&gt; m (DiffTime, RootFieldMap EncJSON))
+-&gt; m (RootFieldMap EncJSON) -&gt; m (DiffTime, RootFieldMap EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserInfo
+-&gt; PGExecCtx
+-&gt; PGExecTxType
+-&gt; PGExecFrom
+-&gt; TxET QErr m (RootFieldMap EncJSON)
+-&gt; m (RootFieldMap EncJSON)
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, MonadError QErr m,
+ MonadTrace m) =&gt;
+UserInfo
+-&gt; PGExecCtx -&gt; PGExecTxType -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runTxWithCtxAndUserInfo"><span class="hs-identifier hs-var">runTxWithCtxAndUserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687999227"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+PGSourceConfig
+</span><a href="#local-6989586621687999229"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxAccess -&gt; Maybe TxIsolation -&gt; PGExecTxType
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#Tx"><span class="hs-identifier hs-var">Tx</span></a></span><span> </span><span class="annot"><span class="annottext">TxAccess
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#ReadWrite"><span class="hs-identifier hs-var">PG.ReadWrite</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TxIsolation
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate -&gt; PGExecFrom
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#GraphQLQuery"><span class="hs-identifier hs-var">GraphQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresResolvedConnectionTemplate
+ResolvedConnectionTemplate ('Postgres pgKind)
+</span><a href="#local-6989586621687999230"><span class="hs-identifier hs-var">resolvedConnectionTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-206"></span><span>    </span><span class="annot"><span class="annottext">(TxET QErr m (RootFieldMap EncJSON) -&gt; m (RootFieldMap EncJSON))
+-&gt; TxET QErr m (RootFieldMap EncJSON) -&gt; m (RootFieldMap EncJSON)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias
+  -&gt; DBStepInfo ('Postgres pgKind) -&gt; TxET QErr m EncJSON)
+ -&gt; RootFieldMap (DBStepInfo ('Postgres pgKind))
+ -&gt; TxET QErr m (RootFieldMap EncJSON))
+-&gt; RootFieldMap (DBStepInfo ('Postgres pgKind))
+-&gt; (RootFieldAlias
+    -&gt; DBStepInfo ('Postgres pgKind) -&gt; TxET QErr m EncJSON)
+-&gt; TxET QErr m (RootFieldMap EncJSON)
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(RootFieldAlias
+ -&gt; DBStepInfo ('Postgres pgKind) -&gt; TxET QErr m EncJSON)
+-&gt; RootFieldMap (DBStepInfo ('Postgres pgKind))
+-&gt; TxET QErr m (RootFieldMap EncJSON)
+forall (f :: * -&gt; *) k a b.
+Applicative f =&gt;
+(k -&gt; a -&gt; f b) -&gt; InsOrdHashMap k a -&gt; f (InsOrdHashMap k b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-b5ad8e22c80bc291a2f581fb78a4448e46180aa38110e81c957f693abd1dc222/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#traverseWithKey"><span class="hs-identifier hs-var">InsOrdHashMap.traverseWithKey</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldMap (DBStepInfo ('Postgres pgKind))
+</span><a href="#local-6989586621687999231"><span class="hs-identifier hs-var">mutations</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687999235"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999235"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621687999236"><span class="annot"><span class="annottext">DBStepInfo ('Postgres pgKind)
+</span><a href="#local-6989586621687999236"><span class="hs-identifier hs-var">dbsi</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-207"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; TxET QErr m EncJSON -&gt; TxET QErr m EncJSON
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var">newSpan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Postgres Mutation for root field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RootFieldAlias -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687999235"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span>        </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; TxET QErr m EncJSON)
+-&gt; TxET QErr m EncJSON -&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxET QErr m EncJSON -&gt; TxET QErr m () -&gt; TxET QErr m EncJSON
+forall a b. TxET QErr m a -&gt; TxET QErr m b -&gt; TxET QErr m a
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+(HasSourceConfiguration b, MonadTrace m) =&gt;
+SourceConfig b -&gt; m ()
+</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var">attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687998900"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621687999229"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-209"></span><span>        </span><span class="annot"><span class="annottext">(TxET QErr m EncJSON -&gt; TxET QErr m EncJSON)
+-&gt; TxET QErr m EncJSON -&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ActionResult ('Postgres pgKind) -&gt; EncJSON)
+-&gt; TxET QErr m (ActionResult ('Postgres pgKind))
+-&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; TxET QErr m a -&gt; TxET QErr m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ActionResult ('Postgres pgKind) -&gt; EncJSON
+forall (b :: BackendType). ActionResult b -&gt; EncJSON
+</span><a href="Hasura.GraphQL.Execute.Backend.html#arResult"><span class="hs-identifier hs-var">arResult</span></a></span><span>
+</span><span id="line-210"></span><span>        </span><span class="annot"><span class="annottext">(TxET QErr m (ActionResult ('Postgres pgKind))
+ -&gt; TxET QErr m EncJSON)
+-&gt; TxET QErr m (ActionResult ('Postgres pgKind))
+-&gt; TxET QErr m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OnBaseMonad (TxET QErr) (ActionResult ('Postgres pgKind))
+-&gt; forall (m :: * -&gt; *).
+   (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+    MonadTrace m, MonadError QErr m) =&gt;
+   TxET QErr m (ActionResult ('Postgres pgKind))
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) a.
+OnBaseMonad t a
+-&gt; forall (m :: * -&gt; *).
+   (Functor (t m), MonadIO m, MonadBaseControl IO m, MonadTrace m,
+    MonadError QErr m) =&gt;
+   t m a
+</span><a href="Hasura.GraphQL.Execute.Backend.html#runOnBaseMonad"><span class="hs-identifier hs-var">runOnBaseMonad</span></a></span><span>
+</span><span id="line-211"></span><span>        </span><span class="annot"><span class="annottext">(OnBaseMonad (TxET QErr) (ActionResult ('Postgres pgKind))
+ -&gt; forall (m :: * -&gt; *).
+    (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+     MonadTrace m, MonadError QErr m) =&gt;
+    TxET QErr m (ActionResult ('Postgres pgKind)))
+-&gt; OnBaseMonad (TxET QErr) (ActionResult ('Postgres pgKind))
+-&gt; forall (m :: * -&gt; *).
+   (Functor (TxET QErr m), MonadIO m, MonadBaseControl IO m,
+    MonadTrace m, MonadError QErr m) =&gt;
+   TxET QErr m (ActionResult ('Postgres pgKind))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DBStepInfo ('Postgres pgKind)
+-&gt; OnBaseMonad
+     (ExecutionMonad ('Postgres pgKind))
+     (ActionResult ('Postgres pgKind))
+forall (b :: BackendType).
+DBStepInfo b -&gt; OnBaseMonad (ExecutionMonad b) (ActionResult b)
+</span><a href="Hasura.GraphQL.Execute.Backend.html#dbsiAction"><span class="hs-identifier hs-var">dbsiAction</span></a></span><span> </span><span class="annot"><span class="annottext">DBStepInfo ('Postgres pgKind)
+</span><a href="#local-6989586621687999236"><span class="hs-identifier hs-var">dbsi</span></a></span><span>
+</span><span id="line-212"></span></pre></body></html>

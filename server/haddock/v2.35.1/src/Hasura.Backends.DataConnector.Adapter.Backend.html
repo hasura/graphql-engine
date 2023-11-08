@@ -1,0 +1,1030 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Backend</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier">CustomBooleanOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#columnTypeToScalarType"><span class="hs-identifier">columnTypeToScalarType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#parseValue"><span class="hs-identifier">parseValue</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#lookupGraphQLType"><span class="hs-identifier">lookupGraphQLType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Getter.html#view"><span class="hs-identifier">view</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html"><span class="hs-identifier">Data.Aeson.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#ToJSONKeyValue"><span class="hs-identifier">ToJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Key.html"><span class="hs-identifier">Data.Aeson.Key</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier">fromText</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hspec-core-2.10.10-de263ac8ebbf55c7971310f8a215d00129d22068c07959a0c97ad20b624c7172/share/doc/html/src/NonEmpty.html"><span class="hs-identifier">NonEmpty</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/scientific-0.3.7.0-040944185e68a27d1dd0a46f276a723df1dd9fd8cb5d89a8bac5d7abeb4db5d3/share/doc/html/src/Data.Scientific.html"><span class="hs-identifier">Data.Scientific</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/scientific-0.3.7.0-040944185e68a27d1dd0a46f276a723df1dd9fd8cb5d89a8bac5d7abeb4db5d3/share/doc/html/src/Data.Scientific.html#fromFloatDigits"><span class="hs-identifier">fromFloatDigits</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html"><span class="hs-identifier">Data.Text.Casing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator">(&lt;&lt;&gt;)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.html"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DC</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types.Mutations</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DC</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#Code"><span class="hs-identifier">Code</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier">ValidationFailed</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier">QErr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier">runAesonParser</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier">throw400</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier">throw500</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldReturnType"><span class="hs-identifier">ComputedFieldReturnType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#HasSourceConfiguration"><span class="hs-identifier">HasSourceConfiguration</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SupportedNamingCase"><span class="hs-identifier">SupportedNamingCase</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier">XDisable</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XEnable"><span class="hs-identifier">XEnable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier">BackendSourceKind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnectorKind"><span class="hs-identifier">DataConnectorKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier">DataConnector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html"><span class="hs-identifier">Hasura.RQL.Types.ResizePool</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witch-1.1.2.0-7d3317eff3121e1ca77884519eb6a26865e0c5099853582f33fa9f35b13becde/share/doc/html/src/Witch.html"><span class="hs-identifier">Witch</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | An alias for '()' indicating that a particular associated type has not yet</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- been implemented for the 'DataConnector' backend.</span><span>
+</span><span id="line-37"></span><span class="hs-comment">--</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- '()' is used (rather than a type with an empty data constructor) because it</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- comes with many of the instances that these associated types require.</span><span>
+</span><span id="line-40"></span><span class="hs-comment">--</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- This alias should /not/ be exported from this module, and it's only defined</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- for clarity.</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">type</span><span> </span><span id="Unimplemented"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#Unimplemented"><span class="hs-identifier hs-var">Unimplemented</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687714085"><span id="local-6989586621687714089"><span id="local-6989586621687714092"><span id="local-6989586621687714095"><span id="local-6989586621687714108"><span id="local-6989586621687714124"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BackendConfig"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendConfig"><span class="hs-identifier hs-var">BackendConfig</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DC.DataConnectorName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DC.DataConnectorOptions</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BackendInfo"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInfo"><span class="hs-identifier hs-var">BackendInfo</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DC.DataConnectorName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DC.DataConnectorInfo</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="TableName"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#TableName"><span class="hs-identifier hs-type">DC.TableName</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="FunctionName"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-var">FunctionName</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#FunctionName"><span class="hs-identifier hs-type">DC.FunctionName</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="FunctionReturnType"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionReturnType"><span class="hs-identifier hs-var">FunctionReturnType</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#FunctionReturnType"><span class="hs-identifier hs-type">DC.FunctionReturnType</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="RawFunctionInfo"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-var">RawFunctionInfo</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Function.html#FunctionInfo"><span class="hs-identifier hs-type">API.FunctionInfo</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="FunctionArgument"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-var">FunctionArgument</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Function.html#FunctionArg"><span class="hs-identifier hs-type">API.FunctionArg</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ConstraintName"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier hs-var">ConstraintName</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConstraintName"><span class="hs-identifier hs-type">DC.ConstraintName</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BasicOrderType"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BasicOrderType"><span class="hs-identifier hs-var">BasicOrderType</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#OrderDirection"><span class="hs-identifier hs-type">DC.OrderDirection</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="NullsOrderType"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#NullsOrderType"><span class="hs-identifier hs-var">NullsOrderType</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#Unimplemented"><span class="hs-identifier hs-type">Unimplemented</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="CountType"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#CountType"><span class="hs-identifier hs-var">CountType</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CountAggregate"><span class="hs-identifier hs-type">DC.CountAggregate</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ColumnName"><span class="hs-identifier hs-type">DC.ColumnName</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ColumnPath"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ColumnPath"><span class="hs-identifier hs-var">ColumnPath</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ColumnPath"><span class="hs-identifier hs-type">DC.ColumnPath</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ScalarValue"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-var">ScalarValue</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ScalarType"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-var">ScalarType</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-comment">-- This does not actually have to be the full IR Expression, in fact it is only</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-comment">-- required to represent literals, so we use a special type for that.</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-comment">-- The 'SQLExpression' type family should be removed in a future refactor</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SQLExpression"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-var">SQLExpression</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#Literal"><span class="hs-identifier hs-type">DC.Literal</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ScalarSelectionArguments"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarSelectionArguments"><span class="hs-identifier hs-var">ScalarSelectionArguments</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BooleanOperators"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-var">BooleanOperators</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-type">CustomBooleanOperator</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ExtraTableMetadata"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ExtraTableMetadata"><span class="hs-identifier hs-var">ExtraTableMetadata</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ExtraTableMetadata"><span class="hs-identifier hs-type">DC.ExtraTableMetadata</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ComputedFieldDefinition"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#Unimplemented"><span class="hs-identifier hs-type">Unimplemented</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="FunctionArgumentExp"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgumentExp"><span class="hs-identifier hs-var">FunctionArgumentExp</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ArgumentExp"><span class="hs-identifier hs-type">DC.ArgumentExp</span></a></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ComputedFieldImplicitArguments"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-var">ComputedFieldImplicitArguments</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#Unimplemented"><span class="hs-identifier hs-type">Unimplemented</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ComputedFieldReturn"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldReturn"><span class="hs-identifier hs-var">ComputedFieldReturn</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#Unimplemented"><span class="hs-identifier hs-type">Unimplemented</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="UpdateVariant"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-var">UpdateVariant</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DC.DataConnectorUpdateVariant</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="BackendInsert"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#BackendInsert"><span class="hs-identifier hs-type">DC.BackendInsert</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XComputedField"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XComputedField"><span class="hs-identifier hs-var">XComputedField</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier hs-type">XDisable</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XRelay"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XRelay"><span class="hs-identifier hs-var">XRelay</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier hs-type">XDisable</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XNodesAgg"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNodesAgg"><span class="hs-identifier hs-var">XNodesAgg</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XEnable"><span class="hs-identifier hs-type">XEnable</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XEventTriggers"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XEventTriggers"><span class="hs-identifier hs-var">XEventTriggers</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier hs-type">XDisable</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XNestedInserts"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedInserts"><span class="hs-identifier hs-var">XNestedInserts</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier hs-type">XDisable</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XStreamingSubscription"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XStreamingSubscription"><span class="hs-identifier hs-var">XStreamingSubscription</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XDisable"><span class="hs-identifier hs-type">XDisable</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="XNestedObjects"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XNestedObjects"><span class="hs-identifier hs-var">XNestedObjects</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XEnable"><span class="hs-identifier hs-type">XEnable</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="HealthCheckTest"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#HealthCheckTest"><span class="hs-identifier hs-var">HealthCheckTest</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#isComparableType"><span class="hs-identifier hs-type">isComparableType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621687714372"><span class="annot"><span class="annottext">isComparableType :: ScalarType 'DataConnector -&gt; Bool
+</span><a href="Hasura.RQL.Types.Backend.html#isComparableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">isComparableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; ScalarType -&gt; Bool
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#isNumType"><span class="hs-identifier hs-type">isNumType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621687714375"><span class="annot"><span class="annottext">isNumType :: ScalarType 'DataConnector -&gt; Bool
+</span><a href="Hasura.RQL.Types.Backend.html#isNumType"><span class="hs-identifier hs-var hs-var hs-var hs-var">isNumType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; ScalarType -&gt; Bool
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#getCustomAggregateOperators"><span class="hs-identifier hs-type">getCustomAggregateOperators</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">DC.SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621687714386"><span class="annot"><span class="annottext">getCustomAggregateOperators :: SourceConfig -&gt; HashMap Name (HashMap ScalarType ScalarType)
+</span><a href="Hasura.RQL.Types.Backend.html#getCustomAggregateOperators"><span class="hs-identifier hs-var hs-var hs-var hs-var">getCustomAggregateOperators</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">DC.SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687714388"><span id="local-6989586621687714389"><span id="local-6989586621687714390"><span id="local-6989586621687714391"><span id="local-6989586621687714392"><span id="local-6989586621687714393"><span id="local-6989586621687714394"><span id="local-6989586621687714395"><span id="local-6989586621687714396"><span class="annot"><span class="annottext">Maybe Int
+Maybe Text
+HashMap TemplateVariableName TemplateVariableSource
+Config
+Capabilities
+Environment
+Manager
+BaseUrl
+DataConnectorName
+_scEndpoint :: BaseUrl
+_scConfig :: Config
+_scTemplate :: Maybe Text
+_scTemplateVariables :: HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: Capabilities
+_scManager :: Manager
+_scTimeoutMicroseconds :: Maybe Int
+_scDataConnectorName :: DataConnectorName
+_scEnvironment :: Environment
+_scEndpoint :: SourceConfig -&gt; BaseUrl
+_scConfig :: SourceConfig -&gt; Config
+_scTemplate :: SourceConfig -&gt; Maybe Text
+_scTemplateVariables :: SourceConfig -&gt; HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: SourceConfig -&gt; Capabilities
+_scManager :: SourceConfig -&gt; Manager
+_scTimeoutMicroseconds :: SourceConfig -&gt; Maybe Int
+_scDataConnectorName :: SourceConfig -&gt; DataConnectorName
+_scEnvironment :: SourceConfig -&gt; Environment
+</span><a href="#local-6989586621687714388"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">(ScalarType
+ -&gt; ScalarTypeCapabilities
+ -&gt; HashMap Name (HashMap ScalarType ScalarType)
+ -&gt; HashMap Name (HashMap ScalarType ScalarType))
+-&gt; HashMap Name (HashMap ScalarType ScalarType)
+-&gt; HashMap ScalarType ScalarTypeCapabilities
+-&gt; HashMap Name (HashMap ScalarType ScalarType)
+forall k v a. (k -&gt; v -&gt; a -&gt; a) -&gt; a -&gt; HashMap k v -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#foldrWithKey"><span class="hs-identifier hs-var">HashMap.foldrWithKey</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
+-&gt; ScalarTypeCapabilities
+-&gt; HashMap Name (HashMap ScalarType ScalarType)
+-&gt; HashMap Name (HashMap ScalarType ScalarType)
+forall {k} {source} {v}.
+(Hashable k, From source k, From ScalarType v) =&gt;
+source
+-&gt; ScalarTypeCapabilities
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714407"><span class="hs-identifier hs-var">insertOps</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (HashMap ScalarType ScalarType)
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">HashMap ScalarType ScalarTypeCapabilities
+</span><a href="#local-6989586621687714408"><span class="hs-identifier hs-var">scalarTypesCapabilities</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-98"></span><span>      </span><span id="local-6989586621687714408"><span class="annot"><span class="annottext">scalarTypesCapabilities :: HashMap ScalarType ScalarTypeCapabilities
+</span><a href="#local-6989586621687714408"><span class="hs-identifier hs-var hs-var">scalarTypesCapabilities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ScalarTypesCapabilities
+-&gt; HashMap ScalarType ScalarTypeCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#unScalarTypesCapabilities"><span class="hs-identifier hs-var">API.unScalarTypesCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">(ScalarTypesCapabilities
+ -&gt; HashMap ScalarType ScalarTypeCapabilities)
+-&gt; ScalarTypesCapabilities
+-&gt; HashMap ScalarType ScalarTypeCapabilities
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; ScalarTypesCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#_cScalarTypes"><span class="hs-identifier hs-var">API._cScalarTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities
+</span><a href="#local-6989586621687714392"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span>
+</span><span id="line-99"></span><span>      </span><span id="local-6989586621687714407"><span class="annot"><span class="annottext">insertOps :: source
+-&gt; ScalarTypeCapabilities
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714407"><span class="hs-identifier hs-var hs-var">insertOps</span></a></span></span><span> </span><span id="local-6989586621687714424"><span class="annot"><span class="annottext">source
+</span><a href="#local-6989586621687714424"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#ScalarTypeCapabilities"><span class="hs-identifier hs-type">API.ScalarTypeCapabilities</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687714426"><span id="local-6989586621687714427"><span id="local-6989586621687714428"><span id="local-6989586621687714429"><span class="annot"><span class="annottext">Maybe GraphQLType
+UpdateColumnOperators
+AggregateFunctions
+ComparisonOperators
+_stcComparisonOperators :: ComparisonOperators
+_stcAggregateFunctions :: AggregateFunctions
+_stcUpdateColumnOperators :: UpdateColumnOperators
+_stcGraphQLType :: Maybe GraphQLType
+_stcComparisonOperators :: ScalarTypeCapabilities -&gt; ComparisonOperators
+_stcAggregateFunctions :: ScalarTypeCapabilities -&gt; AggregateFunctions
+_stcUpdateColumnOperators :: ScalarTypeCapabilities -&gt; UpdateColumnOperators
+_stcGraphQLType :: ScalarTypeCapabilities -&gt; Maybe GraphQLType
+</span><a href="#local-6989586621687714426"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621687714434"><span class="annot"><span class="annottext">HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714434"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">(Name
+ -&gt; ScalarType
+ -&gt; HashMap Name (HashMap k v)
+ -&gt; HashMap Name (HashMap k v))
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name ScalarType
+-&gt; HashMap Name (HashMap k v)
+forall k v a. (k -&gt; v -&gt; a -&gt; a) -&gt; a -&gt; HashMap k v -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#foldrWithKey"><span class="hs-identifier hs-var">HashMap.foldrWithKey</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+-&gt; ScalarType
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714435"><span class="hs-identifier hs-var">insertOp</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714434"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">(HashMap Name ScalarType -&gt; HashMap Name (HashMap k v))
+-&gt; HashMap Name ScalarType -&gt; HashMap Name (HashMap k v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AggregateFunctions -&gt; HashMap Name ScalarType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#unAggregateFunctions"><span class="hs-identifier hs-var">API.unAggregateFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">AggregateFunctions
+</span><a href="#local-6989586621687714427"><span class="hs-identifier hs-var">_stcAggregateFunctions</span></a></span><span>
+</span><span id="line-102"></span><span>        </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>          </span><span id="local-6989586621687714435"><span class="annot"><span class="annottext">insertOp :: Name
+-&gt; ScalarType
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+</span><a href="#local-6989586621687714435"><span class="hs-identifier hs-var hs-var">insertOp</span></a></span></span><span> </span><span id="local-6989586621687714437"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687714437"><span class="hs-identifier hs-var">funtionName</span></a></span></span><span> </span><span id="local-6989586621687714438"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714438"><span class="hs-identifier hs-var">resultTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>            </span><span class="annot"><span class="annottext">(HashMap k v -&gt; HashMap k v -&gt; HashMap k v)
+-&gt; Name
+-&gt; HashMap k v
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.Strict.html#insertWith"><span class="hs-identifier hs-var">HashMap.insertWith</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+forall k v.
+(Eq k, Hashable k) =&gt;
+HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#union"><span class="hs-identifier hs-var">HashMap.union</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687714437"><span class="hs-identifier hs-var">funtionName</span></a></span><span>
+</span><span id="line-105"></span><span>              </span><span class="annot"><span class="annottext">(HashMap k v
+ -&gt; HashMap Name (HashMap k v) -&gt; HashMap Name (HashMap k v))
+-&gt; HashMap k v
+-&gt; HashMap Name (HashMap k v)
+-&gt; HashMap Name (HashMap k v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; v -&gt; HashMap k v
+forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span>
+</span><span id="line-106"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">source -&gt; k
+forall source target. From source target =&gt; source -&gt; target
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witch-1.1.2.0-7d3317eff3121e1ca77884519eb6a26865e0c5099853582f33fa9f35b13becde/share/doc/html/src/Witch.From.html#from"><span class="hs-identifier hs-var">Witch.from</span></a></span><span> </span><span class="annot"><span class="annottext">source
+</span><a href="#local-6989586621687714424"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; v
+forall source target. From source target =&gt; source -&gt; target
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witch-1.1.2.0-7d3317eff3121e1ca77884519eb6a26865e0c5099853582f33fa9f35b13becde/share/doc/html/src/Witch.From.html#from"><span class="hs-identifier hs-var">Witch.from</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714438"><span class="hs-identifier hs-var">resultTypeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#textToScalarValue"><span class="hs-identifier hs-type">textToScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621687714446"><span class="annot"><span class="annottext">textToScalarValue :: Maybe Text -&gt; ScalarValue 'DataConnector
+</span><a href="Hasura.RQL.Types.Backend.html#textToScalarValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">textToScalarValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe Text -&gt; Value
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;textToScalarValue: not implemented for the Data Connector backend.&quot;</span></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#parseScalarValue"><span class="hs-identifier hs-type">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#ScalarTypesCapabilities"><span class="hs-identifier hs-type">API.ScalarTypesCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621687714451"><span class="annot"><span class="annottext">parseScalarValue :: ScalarTypesCapabilities
+-&gt; ScalarType 'DataConnector
+-&gt; Value
+-&gt; Either QErr (ScalarValue 'DataConnector)
+</span><a href="Hasura.RQL.Types.Backend.html#parseScalarValue"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseScalarValue</span></a></span></span><span> </span><span id="local-6989586621687714452"><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714452"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span id="local-6989586621687714453"><span class="annot"><span class="annottext">ScalarType 'DataConnector
+</span><a href="#local-6989586621687714453"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621687714454"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714454"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser Value) -&gt; Value -&gt; Either QErr Value
+forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarTypesCapabilities -&gt; ScalarType -&gt; Value -&gt; Parser Value
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#parseValue"><span class="hs-identifier hs-var">parseValue</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714452"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'DataConnector
+ScalarType
+</span><a href="#local-6989586621687714453"><span class="hs-identifier hs-var">type'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714454"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#scalarValueToJSON"><span class="hs-identifier hs-type">scalarValueToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621687714456"><span class="annot"><span class="annottext">scalarValueToJSON :: ScalarValue 'DataConnector -&gt; Value
+</span><a href="Hasura.RQL.Types.Backend.html#scalarValueToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">scalarValueToJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
+ScalarValue 'DataConnector -&gt; Value
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-comment">-- TODO: Fill in this definition for computed fields</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#computedFieldFunction"><span class="hs-identifier hs-type">computedFieldFunction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621687714461"><span class="annot"><span class="annottext">computedFieldFunction :: ComputedFieldDefinition 'DataConnector
+-&gt; FunctionName 'DataConnector
+</span><a href="Hasura.RQL.Types.Backend.html#computedFieldFunction"><span class="hs-identifier hs-var hs-var hs-var hs-var">computedFieldFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; () -&gt; FunctionName
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;computedFieldFunction: not implemented for the Data Connector backend&quot;</span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#computedFieldReturnType"><span class="hs-identifier hs-type">computedFieldReturnType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldReturnType"><span class="hs-identifier hs-type">ComputedFieldReturnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span id="local-6989586621687714465"><span class="annot"><span class="annottext">computedFieldReturnType :: ComputedFieldReturn 'DataConnector
+-&gt; ComputedFieldReturnType 'DataConnector
+</span><a href="Hasura.RQL.Types.Backend.html#computedFieldReturnType"><span class="hs-identifier hs-var hs-var hs-var hs-var">computedFieldReturnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; () -&gt; ComputedFieldReturnType 'DataConnector
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;computedFieldReturnType: not implemented for the Data Connector backend&quot;</span></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-type">fromComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621687714467"><span class="annot"><a href="#local-6989586621687714467"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgumentExp"><span class="hs-identifier hs-type">FunctionArgumentExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687714467"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621687714470"><span class="annot"><span class="annottext">fromComputedFieldImplicitArguments :: forall v.
+v
+-&gt; ComputedFieldImplicitArguments 'DataConnector
+-&gt; [FunctionArgumentExp 'DataConnector v]
+</span><a href="Hasura.RQL.Types.Backend.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromComputedFieldImplicitArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; v -&gt; () -&gt; [ArgumentExp v]
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;fromComputedFieldImplicitArguments: not implemented for the Data Connector backend&quot;</span></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-comment">-- phil said this was cursed</span><span>
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#tableToFunction"><span class="hs-identifier hs-type">tableToFunction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621687714473"><span class="annot"><span class="annottext">tableToFunction :: TableName 'DataConnector -&gt; FunctionName 'DataConnector
+</span><a href="Hasura.RQL.Types.Backend.html#tableToFunction"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableToFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector -&gt; FunctionName 'DataConnector
+TableName -&gt; FunctionName
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#functionToTable"><span class="hs-identifier hs-type">functionToTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621687714476"><span class="annot"><span class="annottext">functionToTable :: FunctionName 'DataConnector -&gt; TableName 'DataConnector
+</span><a href="Hasura.RQL.Types.Backend.html#functionToTable"><span class="hs-identifier hs-var hs-var hs-var hs-var">functionToTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionName 'DataConnector -&gt; TableName 'DataConnector
+FunctionName -&gt; TableName
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#tableGraphQLName"><span class="hs-identifier hs-type">tableGraphQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621687714488"><span class="annot"><span class="annottext">tableGraphQLName :: TableName 'DataConnector -&gt; Either QErr Name
+</span><a href="Hasura.RQL.Types.Backend.html#tableGraphQLName"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableGraphQLName</span></a></span></span><span> </span><span id="local-6989586621687714489"><span class="annot"><span class="annottext">TableName 'DataConnector
+</span><a href="#local-6989586621687714489"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687714490"><span class="annot"><span class="annottext">snakedName :: Text
+</span><a href="#local-6989586621687714490"><span class="hs-identifier hs-var hs-var">snakedName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; TableName b -&gt; Text
+</span><a href="Hasura.RQL.Types.Backend.html#snakeCaseTableName"><span class="hs-identifier hs-var">snakeCaseTableName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
+</span><a href="#local-6989586621687714489"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#mkName"><span class="hs-identifier hs-var">G.mkName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714490"><span class="hs-identifier hs-var">snakedName</span></a></span><span>
+</span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either QErr Name -&gt; Either QErr Name
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; Either QErr Name
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TableName &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714490"><span class="hs-identifier hs-var">snakedName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not a valid GraphQL identifier&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#functionGraphQLName"><span class="hs-identifier hs-type">functionGraphQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621687714503"><span class="annot"><span class="annottext">functionGraphQLName :: FunctionName 'DataConnector -&gt; Either QErr Name
+</span><a href="Hasura.RQL.Types.Backend.html#functionGraphQLName"><span class="hs-identifier hs-var hs-var hs-var hs-var">functionGraphQLName</span></a></span></span><span> </span><span id="local-6989586621687714504"><span class="annot"><span class="annottext">FunctionName 'DataConnector
+</span><a href="#local-6989586621687714504"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687714505"><span class="annot"><span class="annottext">snakedName :: Text
+</span><a href="#local-6989586621687714505"><span class="hs-identifier hs-var hs-var">snakedName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; TableName b -&gt; Text
+</span><a href="Hasura.RQL.Types.Backend.html#snakeCaseTableName"><span class="hs-identifier hs-var">snakeCaseTableName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionName -&gt; TableName
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">FunctionName 'DataConnector
+FunctionName
+</span><a href="#local-6989586621687714504"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#mkName"><span class="hs-identifier hs-var">G.mkName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714505"><span class="hs-identifier hs-var">snakedName</span></a></span><span>
+</span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either QErr Name -&gt; Either QErr Name
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; Either QErr Name
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;FunctionName &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714505"><span class="hs-identifier hs-var">snakedName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not a valid GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#snakeCaseTableName"><span class="hs-identifier hs-type">snakeCaseTableName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621687714507"><span class="annot"><span class="annottext">snakeCaseTableName :: TableName 'DataConnector -&gt; Text
+</span><a href="Hasura.RQL.Types.Backend.html#snakeCaseTableName"><span class="hs-identifier hs-var hs-var hs-var hs-var">snakeCaseTableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#intercalate"><span class="hs-identifier hs-var">Text.intercalate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; (TableName -&gt; [Text]) -&gt; TableName -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Text -&gt; [Text]
+forall a. NonEmpty a -&gt; [a]
+</span><span class="hs-identifier hs-var">NonEmpty.toList</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty Text -&gt; [Text])
+-&gt; (TableName -&gt; NonEmpty Text) -&gt; TableName -&gt; [Text]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; NonEmpty Text
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#unTableName"><span class="hs-identifier hs-var">DC.unTableName</span></a></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#getTableIdentifier"><span class="hs-identifier hs-type">getTableIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">C.GQLNameIdentifier</span></a></span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621687714526"><span class="annot"><span class="annottext">getTableIdentifier :: TableName 'DataConnector -&gt; Either QErr GQLNameIdentifier
+</span><a href="Hasura.RQL.Types.Backend.html#getTableIdentifier"><span class="hs-identifier hs-var hs-var hs-var hs-var">getTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687714527"><span class="annot"><span class="annottext">name :: TableName 'DataConnector
+</span><a href="#local-6989586621687714527"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#TableName"><span class="hs-identifier hs-type">DC.TableName</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687714529"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714529"><span class="hs-identifier hs-var">prefix</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span id="local-6989586621687714530"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621687714530"><span class="hs-identifier hs-var">suffixes</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687714531"><span class="annot"><span class="annottext">identifier :: Maybe GQLNameIdentifier
+</span><a href="#local-6989586621687714531"><span class="hs-identifier hs-var hs-var">identifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-153"></span><span>          </span><span id="local-6989586621687714532"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687714532"><span class="hs-identifier hs-var">namePrefix</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#mkName"><span class="hs-identifier hs-var">G.mkName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714529"><span class="hs-identifier hs-var">prefix</span></a></span><span>
+</span><span id="line-154"></span><span>          </span><span id="local-6989586621687714533"><span class="annot"><span class="annottext">[NameSuffix]
+</span><a href="#local-6989586621687714533"><span class="hs-identifier hs-var">nameSuffixes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe NameSuffix) -&gt; [Text] -&gt; Maybe [NameSuffix]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; [a] -&gt; f [b]
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NameSuffix
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#mkNameSuffix"><span class="hs-identifier hs-var">G.mkNameSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621687714530"><span class="hs-identifier hs-var">suffixes</span></a></span><span>
+</span><span id="line-155"></span><span>          </span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; Maybe GQLNameIdentifier
+forall a. a -&gt; Maybe a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; Maybe GQLNameIdentifier)
+-&gt; GQLNameIdentifier -&gt; Maybe GQLNameIdentifier
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html#fromAutogeneratedTuple"><span class="hs-identifier hs-var">C.fromAutogeneratedTuple</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687714532"><span class="hs-identifier hs-var">namePrefix</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[NameSuffix]
+</span><a href="#local-6989586621687714533"><span class="hs-identifier hs-var">nameSuffixes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-156"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Maybe GQLNameIdentifier
+</span><a href="#local-6989586621687714531"><span class="hs-identifier hs-var">identifier</span></a></span><span>
+</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">Maybe GQLNameIdentifier
+-&gt; Either QErr GQLNameIdentifier -&gt; Either QErr GQLNameIdentifier
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; Either QErr GQLNameIdentifier
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TableName &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
+TableName
+</span><a href="#local-6989586621687714527"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not a valid GraphQL identifier&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#namingConventionSupport"><span class="hs-identifier hs-type">namingConventionSupport</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SupportedNamingCase"><span class="hs-identifier hs-type">SupportedNamingCase</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621687714538"><span class="annot"><span class="annottext">namingConventionSupport :: SupportedNamingCase
+</span><a href="Hasura.RQL.Types.Backend.html#namingConventionSupport"><span class="hs-identifier hs-var hs-var hs-var hs-var">namingConventionSupport</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SupportedNamingCase
+</span><a href="Hasura.RQL.Types.Backend.html#OnlyHasuraCase"><span class="hs-identifier hs-var">OnlyHasuraCase</span></a></span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#resizeSourcePools"><span class="hs-identifier hs-type">resizeSourcePools</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-type">SourceResizePoolSummary</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621687714543"><span class="annot"><span class="annottext">resizeSourcePools :: SourceConfig 'DataConnector
+-&gt; ServerReplicas -&gt; IO SourceResizePoolSummary
+</span><a href="Hasura.RQL.Types.Backend.html#resizeSourcePools"><span class="hs-identifier hs-var hs-var hs-var hs-var">resizeSourcePools</span></a></span></span><span> </span><span id="local-6989586621687714544"><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><a href="#local-6989586621687714544"><span class="hs-identifier hs-var">_sourceConfig</span></a></span></span><span> </span><span id="local-6989586621687714545"><span class="annot"><span class="annottext">ServerReplicas
+</span><a href="#local-6989586621687714545"><span class="hs-identifier hs-var">_serverReplicas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-164"></span><span>    </span><span class="hs-comment">-- Data connectors do not have concept of connection pools</span><span>
+</span><span id="line-165"></span><span>    </span><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; IO SourceResizePoolSummary
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SourceResizePoolSummary
+</span><a href="Hasura.RQL.Types.ResizePool.html#noPoolsResizedSummary"><span class="hs-identifier hs-var">noPoolsResizedSummary</span></a></span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span>  </span><span id="local-6989586621687714547"><span class="annot"><span class="annottext">defaultTriggerOnReplication :: Maybe (XEventTriggers 'DataConnector, TriggerOnReplication)
+</span><a href="#local-6989586621687714547"><span class="hs-identifier hs-var hs-var hs-var hs-var">defaultTriggerOnReplication</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Void, TriggerOnReplication)
+Maybe (XEventTriggers 'DataConnector, TriggerOnReplication)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621687714553"><span class="annot"><span class="annottext">getColVals :: forall (m :: * -&gt; *).
+(MonadIO m, MonadError QErr m) =&gt;
+SessionVariables
+-&gt; SourceName
+-&gt; SourceConfig 'DataConnector
+-&gt; TableName 'DataConnector
+-&gt; (ScalarType 'DataConnector, Column 'DataConnector)
+-&gt; (Column 'DataConnector,
+    [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue])
+-&gt; m [Text]
+</span><a href="#local-6989586621687714553"><span class="hs-identifier hs-var hs-var hs-var hs-var">getColVals</span></a></span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">(ScalarType 'DataConnector, Column 'DataConnector)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">(Column 'DataConnector,
+ [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue])
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m [Text]
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;getColVals: not implemented for the Data Connector backend&quot;</span></span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621687714555"><span class="annot"><span class="annottext">getColumnPathColumn :: ColumnPath 'DataConnector -&gt; Column 'DataConnector
+</span><a href="#local-6989586621687714555"><span class="hs-identifier hs-var hs-var hs-var hs-var">getColumnPathColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CPPath"><span class="hs-identifier hs-type">DC.CPPath</span></a></span><span> </span><span id="local-6989586621687714558"><span class="annot"><span class="annottext">NonEmpty ColumnName
+</span><a href="#local-6989586621687714558"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NonEmpty ColumnName -&gt; ColumnName
+forall a. NonEmpty a -&gt; a
+</span><span class="hs-identifier hs-var">NonEmpty.head</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty ColumnName
+</span><a href="#local-6989586621687714558"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CPColumn"><span class="hs-identifier hs-type">DC.CPColumn</span></a></span><span> </span><span id="local-6989586621687714561"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621687714561"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Column 'DataConnector
+ColumnName
+</span><a href="#local-6989586621687714561"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span>  </span><span id="local-6989586621687714562"><span class="annot"><span class="annottext">tryColumnPathToColumn :: ColumnPath 'DataConnector -&gt; Maybe (Column 'DataConnector)
+</span><a href="#local-6989586621687714562"><span class="hs-identifier hs-var hs-var hs-var hs-var">tryColumnPathToColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-176"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CPPath"><span class="hs-identifier hs-type">DC.CPPath</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687714564"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621687714564"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; Maybe ColumnName
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621687714564"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><span id="line-177"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#CPColumn"><span class="hs-identifier hs-type">DC.CPColumn</span></a></span><span> </span><span id="local-6989586621687714565"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621687714565"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; Maybe ColumnName
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621687714565"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><span id="line-178"></span><span>    </span><span class="annot"><span class="annottext">ColumnPath 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Column 'DataConnector)
+Maybe ColumnName
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-179"></span><span>
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621687714567"><span class="annot"><span class="annottext">backendSupportsNestedObjects :: Either QErr (XNestedObjects 'DataConnector)
+</span><a href="#local-6989586621687714567"><span class="hs-identifier hs-var hs-var hs-var hs-var">backendSupportsNestedObjects</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Either QErr ()
+forall a. a -&gt; Either QErr a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621687714576"><span class="annot"><span class="annottext">sourceSupportsSchemalessTables :: SourceConfig 'DataConnector -&gt; Bool
+</span><a href="#local-6989586621687714576"><span class="hs-identifier hs-var hs-var hs-var hs-var">sourceSupportsSchemalessTables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-183"></span><span>    </span><span class="annot"><span class="annottext">Getting Bool SourceConfig Bool
+-&gt; SourceConfig 'DataConnector -&gt; Bool
+forall s (m :: * -&gt; *) a. MonadReader s m =&gt; Getting a s a -&gt; m a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">(Getting Bool SourceConfig Bool
+ -&gt; SourceConfig 'DataConnector -&gt; Bool)
+-&gt; Getting Bool SourceConfig Bool
+-&gt; SourceConfig 'DataConnector
+-&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Capabilities -&gt; Const Bool Capabilities)
+-&gt; SourceConfig -&gt; Const Bool SourceConfig
+Lens' SourceConfig Capabilities
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#scCapabilities"><span class="hs-identifier hs-var">DC.scCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">((Capabilities -&gt; Const Bool Capabilities)
+ -&gt; SourceConfig -&gt; Const Bool SourceConfig)
+-&gt; ((Bool -&gt; Const Bool Bool)
+    -&gt; Capabilities -&gt; Const Bool Capabilities)
+-&gt; Getting Bool SourceConfig Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(DataSchemaCapabilities -&gt; Const Bool DataSchemaCapabilities)
+-&gt; Capabilities -&gt; Const Bool Capabilities
+Lens' Capabilities DataSchemaCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#cDataSchema"><span class="hs-identifier hs-var">API.cDataSchema</span></a></span><span> </span><span class="annot"><span class="annottext">((DataSchemaCapabilities -&gt; Const Bool DataSchemaCapabilities)
+ -&gt; Capabilities -&gt; Const Bool Capabilities)
+-&gt; ((Bool -&gt; Const Bool Bool)
+    -&gt; DataSchemaCapabilities -&gt; Const Bool DataSchemaCapabilities)
+-&gt; (Bool -&gt; Const Bool Bool)
+-&gt; Capabilities
+-&gt; Const Bool Capabilities
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Const Bool Bool)
+-&gt; DataSchemaCapabilities -&gt; Const Bool DataSchemaCapabilities
+Lens' DataSchemaCapabilities Bool
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#dscSupportsSchemalessTables"><span class="hs-identifier hs-var">API.dscSupportsSchemalessTables</span></a></span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#HasSourceConfiguration"><span class="hs-identifier hs-type">HasSourceConfiguration</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SourceConfig"><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-var">SourceConfig</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">DC.SourceConfig</span></a></span><span>
+</span><span id="line-187"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="SourceConnConfiguration"><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConnConfiguration"><span class="hs-identifier hs-var">SourceConnConfiguration</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ConnSourceConfig"><span class="hs-identifier hs-type">DC.ConnSourceConfig</span></a></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ScalarTypeParsingContext"><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#ScalarTypeParsingContext"><span class="hs-identifier hs-var">ScalarTypeParsingContext</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#ScalarTypesCapabilities"><span class="hs-identifier hs-type">API.ScalarTypesCapabilities</span></a></span><span>
+</span><span id="line-189"></span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621687714633"><span class="annot"><span class="annottext">sourceConfigNumReadReplicas :: SourceConfig 'DataConnector -&gt; Int
+</span><a href="#local-6989586621687714633"><span class="hs-identifier hs-var hs-var hs-var hs-var">sourceConfigNumReadReplicas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceConfig -&gt; Int
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-comment">-- not supported</span><span>
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621687714635"><span class="annot"><span class="annottext">sourceConfigConnectonTemplateEnabled :: SourceConfig 'DataConnector -&gt; Bool
+</span><a href="#local-6989586621687714635"><span class="hs-identifier hs-var hs-var hs-var hs-var">sourceConfigConnectonTemplateEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; SourceConfig -&gt; Bool
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-comment">-- not supported</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621687714638"><span class="annot"><span class="annottext">sourceSupportsColumnRedaction :: SourceConfig 'DataConnector -&gt; Bool
+</span><a href="#local-6989586621687714638"><span class="hs-identifier hs-var hs-var hs-var hs-var">sourceSupportsColumnRedaction</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">DC.SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687714640"><span id="local-6989586621687714641"><span id="local-6989586621687714642"><span id="local-6989586621687714643"><span id="local-6989586621687714644"><span id="local-6989586621687714645"><span id="local-6989586621687714646"><span id="local-6989586621687714647"><span id="local-6989586621687714648"><span class="annot"><span class="annottext">Maybe Int
+Maybe Text
+HashMap TemplateVariableName TemplateVariableSource
+Config
+Capabilities
+Environment
+Manager
+BaseUrl
+DataConnectorName
+_scEndpoint :: SourceConfig -&gt; BaseUrl
+_scConfig :: SourceConfig -&gt; Config
+_scTemplate :: SourceConfig -&gt; Maybe Text
+_scTemplateVariables :: SourceConfig -&gt; HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: SourceConfig -&gt; Capabilities
+_scManager :: SourceConfig -&gt; Manager
+_scTimeoutMicroseconds :: SourceConfig -&gt; Maybe Int
+_scDataConnectorName :: SourceConfig -&gt; DataConnectorName
+_scEnvironment :: SourceConfig -&gt; Environment
+_scEndpoint :: BaseUrl
+_scConfig :: Config
+_scTemplate :: Maybe Text
+_scTemplateVariables :: HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: Capabilities
+_scManager :: Manager
+_scTimeoutMicroseconds :: Maybe Int
+_scDataConnectorName :: DataConnectorName
+_scEnvironment :: Environment
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_scEndpoint"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">Capabilities
+</span><a href="#local-6989586621687714644"><span class="hs-identifier hs-var">_scCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">Capabilities
+-&gt; (Capabilities -&gt; Maybe QueryCapabilities)
+-&gt; Maybe QueryCapabilities
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Capabilities -&gt; Maybe QueryCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#_cQueries"><span class="hs-identifier hs-var">API._cQueries</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryCapabilities
+-&gt; (QueryCapabilities -&gt; Maybe RedactionCapabilities)
+-&gt; Maybe RedactionCapabilities
+forall a b. Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">QueryCapabilities -&gt; Maybe RedactionCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#_qcRedaction"><span class="hs-identifier hs-var">API._qcRedaction</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RedactionCapabilities
+-&gt; (Maybe RedactionCapabilities -&gt; Bool) -&gt; Bool
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RedactionCapabilities -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span>
+</span><span id="line-194"></span><span>  </span><span id="local-6989586621687714653"><span class="annot"><span class="annottext">sourceConfigBackendSourceKind :: SourceConfig 'DataConnector -&gt; BackendSourceKind 'DataConnector
+</span><a href="#local-6989586621687714653"><span class="hs-identifier hs-var hs-var hs-var hs-var">sourceConfigBackendSourceKind</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">DC.SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687714655"><span id="local-6989586621687714656"><span id="local-6989586621687714657"><span id="local-6989586621687714658"><span id="local-6989586621687714659"><span id="local-6989586621687714660"><span id="local-6989586621687714661"><span id="local-6989586621687714662"><span id="local-6989586621687714663"><span class="annot"><span class="annottext">Maybe Int
+Maybe Text
+HashMap TemplateVariableName TemplateVariableSource
+Config
+Capabilities
+Environment
+Manager
+BaseUrl
+DataConnectorName
+_scEndpoint :: SourceConfig -&gt; BaseUrl
+_scConfig :: SourceConfig -&gt; Config
+_scTemplate :: SourceConfig -&gt; Maybe Text
+_scTemplateVariables :: SourceConfig -&gt; HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: SourceConfig -&gt; Capabilities
+_scManager :: SourceConfig -&gt; Manager
+_scTimeoutMicroseconds :: SourceConfig -&gt; Maybe Int
+_scDataConnectorName :: SourceConfig -&gt; DataConnectorName
+_scEnvironment :: SourceConfig -&gt; Environment
+_scEndpoint :: BaseUrl
+_scConfig :: Config
+_scTemplate :: Maybe Text
+_scTemplateVariables :: HashMap TemplateVariableName TemplateVariableSource
+_scCapabilities :: Capabilities
+_scManager :: Manager
+_scTimeoutMicroseconds :: Maybe Int
+_scDataConnectorName :: DataConnectorName
+_scEnvironment :: Environment
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_scEndpoint"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; BackendSourceKind 'DataConnector
+</span><a href="Hasura.RQL.Types.BackendType.html#DataConnectorKind"><span class="hs-identifier hs-var">DataConnectorKind</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687714662"><span class="hs-identifier hs-var">_scDataConnectorName</span></a></span><span>
+</span><span id="line-195"></span><span>
+</span><span id="line-196"></span><span class="hs-keyword">data</span><span> </span><span id="CustomBooleanOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-var">CustomBooleanOperator</span></a></span></span><span> </span><span id="local-6989586621687713555"><span class="annot"><a href="#local-6989586621687713555"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomBooleanOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-var">CustomBooleanOperator</span></a></span></span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cboName"><span class="annot"><span class="annottext">forall a. CustomBooleanOperator a -&gt; Text
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#_cboName"><span class="hs-identifier hs-var hs-var">_cboName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-198"></span><span>    </span><span id="_cboRHS"><span class="annot"><span class="annottext">forall a. CustomBooleanOperator a -&gt; Maybe a
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#_cboRHS"><span class="hs-identifier hs-var hs-var">_cboRHS</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687713555"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-199"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-200"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687714669"><span id="local-6989586621687714675"><span class="annot"><span class="annottext">CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+(CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool)
+-&gt; (CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool)
+-&gt; Eq (CustomBooleanOperator a)
+forall a.
+Eq a =&gt;
+CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: forall a.
+Eq a =&gt;
+CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+== :: CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+$c/= :: forall a.
+Eq a =&gt;
+CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+/= :: CustomBooleanOperator a -&gt; CustomBooleanOperator a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687714680"><span id="local-6989586621687714682"><span class="annot"><span class="annottext">(forall x.
+ CustomBooleanOperator a -&gt; Rep (CustomBooleanOperator a) x)
+-&gt; (forall x.
+    Rep (CustomBooleanOperator a) x -&gt; CustomBooleanOperator a)
+-&gt; Generic (CustomBooleanOperator a)
+forall x.
+Rep (CustomBooleanOperator a) x -&gt; CustomBooleanOperator a
+forall x.
+CustomBooleanOperator a -&gt; Rep (CustomBooleanOperator a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x.
+Rep (CustomBooleanOperator a) x -&gt; CustomBooleanOperator a
+forall a x.
+CustomBooleanOperator a -&gt; Rep (CustomBooleanOperator a) x
+$cfrom :: forall a x.
+CustomBooleanOperator a -&gt; Rep (CustomBooleanOperator a) x
+from :: forall x.
+CustomBooleanOperator a -&gt; Rep (CustomBooleanOperator a) x
+$cto :: forall a x.
+Rep (CustomBooleanOperator a) x -&gt; CustomBooleanOperator a
+to :: forall x.
+Rep (CustomBooleanOperator a) x -&gt; CustomBooleanOperator a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687714686"><span id="local-6989586621687714692"><span id="local-6989586621687714698"><span id="local-6989586621687714703"><span id="local-6989586621687714706"><span id="local-6989586621687714709"><span id="local-6989586621687714712"><span id="local-6989586621687714715"><span id="local-6989586621687714718"><span id="local-6989586621687714721"><span id="local-6989586621687714724"><span id="local-6989586621687714727"><span id="local-6989586621687714730"><span id="local-6989586621687714735"><span id="local-6989586621687714740"><span id="local-6989586621687714745"><span id="local-6989586621687714750"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; CustomBooleanOperator m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a)
+-&gt; (forall a. CustomBooleanOperator a -&gt; [a])
+-&gt; (forall a. CustomBooleanOperator a -&gt; Bool)
+-&gt; (forall a. CustomBooleanOperator a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; CustomBooleanOperator a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a)
+-&gt; (forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; CustomBooleanOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; CustomBooleanOperator a -&gt; a)
+-&gt; Foldable CustomBooleanOperator
+forall a. Eq a =&gt; a -&gt; CustomBooleanOperator a -&gt; Bool
+forall a. Num a =&gt; CustomBooleanOperator a -&gt; a
+forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a
+forall m. Monoid m =&gt; CustomBooleanOperator m -&gt; m
+forall a. CustomBooleanOperator a -&gt; Bool
+forall a. CustomBooleanOperator a -&gt; Int
+forall a. CustomBooleanOperator a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall m. Monoid m =&gt; CustomBooleanOperator m -&gt; m
+fold :: forall m. Monoid m =&gt; CustomBooleanOperator m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; CustomBooleanOperator a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; CustomBooleanOperator a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; CustomBooleanOperator a -&gt; a
+$ctoList :: forall a. CustomBooleanOperator a -&gt; [a]
+toList :: forall a. CustomBooleanOperator a -&gt; [a]
+$cnull :: forall a. CustomBooleanOperator a -&gt; Bool
+null :: forall a. CustomBooleanOperator a -&gt; Bool
+$clength :: forall a. CustomBooleanOperator a -&gt; Int
+length :: forall a. CustomBooleanOperator a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; CustomBooleanOperator a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; CustomBooleanOperator a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a
+maximum :: forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a
+$cminimum :: forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a
+minimum :: forall a. Ord a =&gt; CustomBooleanOperator a -&gt; a
+$csum :: forall a. Num a =&gt; CustomBooleanOperator a -&gt; a
+sum :: forall a. Num a =&gt; CustomBooleanOperator a -&gt; a
+$cproduct :: forall a. Num a =&gt; CustomBooleanOperator a -&gt; a
+product :: forall a. Num a =&gt; CustomBooleanOperator a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687714756"><span id="local-6989586621687714760"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; CustomBooleanOperator a -&gt; CustomBooleanOperator b)
+-&gt; (forall a b.
+    a -&gt; CustomBooleanOperator b -&gt; CustomBooleanOperator a)
+-&gt; Functor CustomBooleanOperator
+forall a b. a -&gt; CustomBooleanOperator b -&gt; CustomBooleanOperator a
+forall a b.
+(a -&gt; b) -&gt; CustomBooleanOperator a -&gt; CustomBooleanOperator b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall a b.
+(a -&gt; b) -&gt; CustomBooleanOperator a -&gt; CustomBooleanOperator b
+fmap :: forall a b.
+(a -&gt; b) -&gt; CustomBooleanOperator a -&gt; CustomBooleanOperator b
+$c&lt;$ :: forall a b. a -&gt; CustomBooleanOperator b -&gt; CustomBooleanOperator a
+&lt;$ :: forall a b. a -&gt; CustomBooleanOperator b -&gt; CustomBooleanOperator a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687714769"><span id="local-6989586621687714777"><span id="local-6989586621687714782"><span id="local-6989586621687714787"><span class="annot"><span class="annottext">Functor CustomBooleanOperator
+Foldable CustomBooleanOperator
+Functor CustomBooleanOperator
+-&gt; Foldable CustomBooleanOperator
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; CustomBooleanOperator a -&gt; f (CustomBooleanOperator b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    CustomBooleanOperator (f a) -&gt; f (CustomBooleanOperator a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; CustomBooleanOperator a -&gt; m (CustomBooleanOperator b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    CustomBooleanOperator (m a) -&gt; m (CustomBooleanOperator a))
+-&gt; Traversable CustomBooleanOperator
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+CustomBooleanOperator (m a) -&gt; m (CustomBooleanOperator a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+CustomBooleanOperator (f a) -&gt; f (CustomBooleanOperator a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; CustomBooleanOperator a -&gt; m (CustomBooleanOperator b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; CustomBooleanOperator a -&gt; f (CustomBooleanOperator b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; CustomBooleanOperator a -&gt; f (CustomBooleanOperator b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; CustomBooleanOperator a -&gt; f (CustomBooleanOperator b)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+CustomBooleanOperator (f a) -&gt; f (CustomBooleanOperator a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+CustomBooleanOperator (f a) -&gt; f (CustomBooleanOperator a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; CustomBooleanOperator a -&gt; m (CustomBooleanOperator b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; CustomBooleanOperator a -&gt; m (CustomBooleanOperator b)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+CustomBooleanOperator (m a) -&gt; m (CustomBooleanOperator a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+CustomBooleanOperator (m a) -&gt; m (CustomBooleanOperator a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687714795"><span id="local-6989586621687714803"><span id="local-6989586621687714807"><span class="annot"><span class="annottext">Int -&gt; CustomBooleanOperator a -&gt; ShowS
+[CustomBooleanOperator a] -&gt; ShowS
+CustomBooleanOperator a -&gt; String
+(Int -&gt; CustomBooleanOperator a -&gt; ShowS)
+-&gt; (CustomBooleanOperator a -&gt; String)
+-&gt; ([CustomBooleanOperator a] -&gt; ShowS)
+-&gt; Show (CustomBooleanOperator a)
+forall a. Show a =&gt; Int -&gt; CustomBooleanOperator a -&gt; ShowS
+forall a. Show a =&gt; [CustomBooleanOperator a] -&gt; ShowS
+forall a. Show a =&gt; CustomBooleanOperator a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; CustomBooleanOperator a -&gt; ShowS
+showsPrec :: Int -&gt; CustomBooleanOperator a -&gt; ShowS
+$cshow :: forall a. Show a =&gt; CustomBooleanOperator a -&gt; String
+show :: CustomBooleanOperator a -&gt; String
+$cshowList :: forall a. Show a =&gt; [CustomBooleanOperator a] -&gt; ShowS
+showList :: [CustomBooleanOperator a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-201"></span><span>
+</span><span id="line-202"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687713627"><span id="local-6989586621687714812"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621687713627"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-type">CustomBooleanOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687713627"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687713642"><span id="local-6989586621687714837"><span id="local-6989586621687714844"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687713642"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-type">CustomBooleanOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687713642"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-205"></span><span>
+</span><span id="line-206"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687713647"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687713647"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html#ToJSONKeyValue"><span class="hs-identifier hs-type">ToJSONKeyValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-type">CustomBooleanOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687713647"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-207"></span><span>  </span><span id="local-6989586621687714866"><span class="annot"><span class="annottext">toJSONKeyValue :: CustomBooleanOperator a -&gt; (Key, Value)
+</span><a href="#local-6989586621687714866"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#CustomBooleanOperator"><span class="hs-identifier hs-type">CustomBooleanOperator</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687714868"><span id="local-6989586621687714869"><span class="annot"><span class="annottext">Maybe a
+Text
+_cboName :: forall a. CustomBooleanOperator a -&gt; Text
+_cboRHS :: forall a. CustomBooleanOperator a -&gt; Maybe a
+_cboName :: Text
+_cboRHS :: Maybe a
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#_cboName"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier hs-var">fromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687714868"><span class="hs-identifier hs-var">_cboName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621687714869"><span class="hs-identifier hs-var">_cboRHS</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span>
+</span><span id="line-209"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#parseValue"><span class="hs-identifier hs-type">parseValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#ScalarTypesCapabilities"><span class="hs-identifier hs-type">API.ScalarTypesCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">J.Parser</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
+</span><span id="line-210"></span><span id="parseValue"><span class="annot"><span class="annottext">parseValue :: ScalarTypesCapabilities -&gt; ScalarType -&gt; Value -&gt; Parser Value
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#parseValue"><span class="hs-identifier hs-var hs-var">parseValue</span></a></span></span><span> </span><span id="local-6989586621687714871"><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714871"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span id="local-6989586621687714872"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714872"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span id="local-6989586621687714873"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714873"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-211"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714873"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-212"></span><span>    </span><span class="annot"><span class="annottext">Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Null"><span class="hs-identifier hs-var">J.Null</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Value
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Null"><span class="hs-identifier hs-var">J.Null</span></a></span><span>
+</span><span id="line-213"></span><span>    </span><span id="local-6989586621687714875"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScalarTypesCapabilities -&gt; ScalarType -&gt; Maybe GraphQLType
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#lookupGraphQLType"><span class="hs-identifier hs-var">lookupGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714871"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714872"><span class="hs-identifier hs-var">type'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-214"></span><span>      </span><span class="annot"><span class="annottext">Maybe GraphQLType
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Value
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-215"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLInt"><span class="hs-identifier hs-var">DC.GraphQLInt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Number"><span class="hs-identifier hs-var">J.Number</span></a></span><span> </span><span class="annot"><span class="annottext">(Scientific -&gt; Value) -&gt; (Int -&gt; Scientific) -&gt; Int -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Scientific
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; Parser Int -&gt; Parser Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-216"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLFloat"><span class="hs-identifier hs-var">DC.GraphQLFloat</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Number"><span class="hs-identifier hs-var">J.Number</span></a></span><span> </span><span class="annot"><span class="annottext">(Scientific -&gt; Value) -&gt; (Double -&gt; Scientific) -&gt; Double -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Scientific
+forall a. RealFloat a =&gt; a -&gt; Scientific
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/scientific-0.3.7.0-040944185e68a27d1dd0a46f276a723df1dd9fd8cb5d89a8bac5d7abeb4db5d3/share/doc/html/src/Data.Scientific.html#fromFloatDigits"><span class="hs-identifier hs-var">fromFloatDigits</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value) -&gt; Parser Double -&gt; Parser Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-217"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLString"><span class="hs-identifier hs-var">DC.GraphQLString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Parser Text -&gt; Parser Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-218"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLBoolean"><span class="hs-identifier hs-var">DC.GraphQLBoolean</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Bool"><span class="hs-identifier hs-var">J.Bool</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Value) -&gt; Parser Bool -&gt; Parser Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Bool
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-219"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLID"><span class="hs-identifier hs-var">DC.GraphQLID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Parser Text -&gt; Parser Value
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Text
+</span><a href="#local-6989586621687714886"><span class="hs-identifier hs-var">parseID</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714875"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-220"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>    </span><span id="local-6989586621687714886"><span class="annot"><span class="annottext">parseID :: Value -&gt; Parser Text
+</span><a href="#local-6989586621687714886"><span class="hs-identifier hs-var hs-var">parseID</span></a></span></span><span> </span><span id="local-6989586621687714894"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714894"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714894"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser Text -&gt; Parser Text
+forall a. Parser a -&gt; Parser a -&gt; Parser a
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Text) -&gt; Parser Int -&gt; Parser Text
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687714894"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-222"></span><span>
+</span><span id="line-223"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#lookupGraphQLType"><span class="hs-identifier hs-type">lookupGraphQLType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#ScalarTypesCapabilities"><span class="hs-identifier hs-type">API.ScalarTypesCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#GraphQLType"><span class="hs-identifier hs-type">DC.GraphQLType</span></a></span><span>
+</span><span id="line-224"></span><span id="lookupGraphQLType"><span class="annot"><span class="annottext">lookupGraphQLType :: ScalarTypesCapabilities -&gt; ScalarType -&gt; Maybe GraphQLType
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#lookupGraphQLType"><span class="hs-identifier hs-var hs-var">lookupGraphQLType</span></a></span></span><span> </span><span id="local-6989586621687714897"><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714897"><span class="hs-identifier hs-var">capabilities</span></a></span></span><span> </span><span id="local-6989586621687714898"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714898"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><span class="annottext">ScalarTypeCapabilities -&gt; Maybe GraphQLType
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#_stcGraphQLType"><span class="hs-identifier hs-var">API._stcGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">(ScalarTypeCapabilities -&gt; Maybe GraphQLType)
+-&gt; Maybe ScalarTypeCapabilities -&gt; Maybe GraphQLType
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">ScalarType
+-&gt; HashMap ScalarType ScalarTypeCapabilities
+-&gt; Maybe ScalarTypeCapabilities
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; ScalarType
+forall source target. From source target =&gt; source -&gt; target
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witch-1.1.2.0-7d3317eff3121e1ca77884519eb6a26865e0c5099853582f33fa9f35b13becde/share/doc/html/src/Witch.From.html#from"><span class="hs-identifier hs-var">Witch.from</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621687714898"><span class="hs-identifier hs-var">type'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarTypesCapabilities
+-&gt; HashMap ScalarType ScalarTypeCapabilities
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#unScalarTypesCapabilities"><span class="hs-identifier hs-var">API.unScalarTypesCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarTypesCapabilities
+</span><a href="#local-6989586621687714897"><span class="hs-identifier hs-var">capabilities</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-226"></span><span>
+</span><span id="line-227"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#columnTypeToScalarType"><span class="hs-identifier hs-type">columnTypeToScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#ScalarType"><span class="hs-identifier hs-type">DC.ScalarType</span></a></span><span>
+</span><span id="line-228"></span><span id="columnTypeToScalarType"><span class="annot"><span class="annottext">columnTypeToScalarType :: ColumnType 'DataConnector -&gt; ScalarType
+</span><a href="Hasura.Backends.DataConnector.Adapter.Backend.html#columnTypeToScalarType"><span class="hs-identifier hs-var hs-var">columnTypeToScalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621687714902"><span class="annot"><span class="annottext">ScalarType 'DataConnector
+</span><a href="#local-6989586621687714902"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType 'DataConnector
+ScalarType
+</span><a href="#local-6989586621687714902"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
+</span><span id="line-230"></span><span>  </span><span class="hs-comment">-- Data connectors does not yet support enum tables.</span><span>
+</span><span id="line-231"></span><span>  </span><span class="hs-comment">-- If/when we add this support, we probably want to</span><span>
+</span><span id="line-232"></span><span>  </span><span class="hs-comment">-- embed the enum scalar type name within the `EnumReference` record type</span><span>
+</span><span id="line-233"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="annot"><span class="annottext">EnumReference 'DataConnector
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ScalarType
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;columnTypeToScalarType got enum&quot;</span></span><span>
+</span><span id="line-234"></span></pre></body></html>

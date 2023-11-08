@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.Monad.Trans.Extended</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Monad.Trans.Extended.html#TransT"><span class="hs-identifier">TransT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-b97db20fdd237afaed65fccc5829c422d35937fead9df9f9f77000a8c06eab8e/share/doc/html/src/Control.Monad.Morph.html"><span class="hs-identifier">Control.Monad.Morph</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- | Utility newtype that can be used to derive type class instances just using</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- `MonadTrans`.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">--</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- We often derive some `MonadBlaBla` instance for `ReaderT` by using `lift`</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- from `MonadTrans`.  Which is fine, but it gets laborious if you do the same</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- for `ExceptT`, `StateT` and `WriterT`, even though the method implementations</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- are exactly the same.  `TransT` allows you to write one `MonadTrans`-based</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- instance, which can then be used with `DerivingVia` to use that one</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- implementation for all monad transformers that use that same lifting</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- implementation.</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">newtype</span><span> </span><span id="TransT"><span class="annot"><a href="Control.Monad.Trans.Extended.html#TransT"><span class="hs-identifier hs-var">TransT</span></a></span></span><span> </span><span id="local-6989586621687549784"><span class="annot"><a href="#local-6989586621687549784"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687549785"><span class="annot"><a href="#local-6989586621687549785"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687549786"><span class="annot"><a href="#local-6989586621687549786"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TransT"><span class="annot"><a href="Control.Monad.Trans.Extended.html#TransT"><span class="hs-identifier hs-var">TransT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687549784"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687549785"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687549786"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687549789"><span id="local-6989586621687549793"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b)
+-&gt; (forall a b. a -&gt; TransT t m b -&gt; TransT t m a)
+-&gt; Functor (TransT t m)
+forall a b. a -&gt; TransT t m b -&gt; TransT t m a
+forall a b. (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Functor (t m) =&gt;
+a -&gt; TransT t m b -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Functor (t m) =&gt;
+(a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+$cfmap :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Functor (t m) =&gt;
+(a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+fmap :: forall a b. (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+$c&lt;$ :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Functor (t m) =&gt;
+a -&gt; TransT t m b -&gt; TransT t m a
+&lt;$ :: forall a b. a -&gt; TransT t m b -&gt; TransT t m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687549803"><span id="local-6989586621687549807"><span id="local-6989586621687549811"><span id="local-6989586621687549815"><span id="local-6989586621687549819"><span class="annot"><span class="annottext">Functor (TransT t m)
+Functor (TransT t m)
+-&gt; (forall a. a -&gt; TransT t m a)
+-&gt; (forall a b.
+    TransT t m (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; TransT t m a -&gt; TransT t m b -&gt; TransT t m c)
+-&gt; (forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b)
+-&gt; (forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m a)
+-&gt; Applicative (TransT t m)
+forall a. a -&gt; TransT t m a
+forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m a
+forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+forall a b. TransT t m (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; TransT t m a -&gt; TransT t m b -&gt; TransT t m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+forall {t :: (* -&gt; *) -&gt; * -&gt; *} {m :: * -&gt; *}.
+Applicative (t m) =&gt;
+Functor (TransT t m)
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+Applicative (t m) =&gt;
+a -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b c.
+Applicative (t m) =&gt;
+(a -&gt; b -&gt; c) -&gt; TransT t m a -&gt; TransT t m b -&gt; TransT t m c
+$cpure :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+Applicative (t m) =&gt;
+a -&gt; TransT t m a
+pure :: forall a. a -&gt; TransT t m a
+$c&lt;*&gt; :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+&lt;*&gt; :: forall a b. TransT t m (a -&gt; b) -&gt; TransT t m a -&gt; TransT t m b
+$cliftA2 :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b c.
+Applicative (t m) =&gt;
+(a -&gt; b -&gt; c) -&gt; TransT t m a -&gt; TransT t m b -&gt; TransT t m c
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; TransT t m a -&gt; TransT t m b -&gt; TransT t m c
+$c*&gt; :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+*&gt; :: forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+$c&lt;* :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Applicative (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m a
+&lt;* :: forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687549830"><span id="local-6989586621687549834"><span id="local-6989586621687549838"><span class="annot"><span class="annottext">Applicative (TransT t m)
+Applicative (TransT t m)
+-&gt; (forall a b.
+    TransT t m a -&gt; (a -&gt; TransT t m b) -&gt; TransT t m b)
+-&gt; (forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b)
+-&gt; (forall a. a -&gt; TransT t m a)
+-&gt; Monad (TransT t m)
+forall a. a -&gt; TransT t m a
+forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+forall a b. TransT t m a -&gt; (a -&gt; TransT t m b) -&gt; TransT t m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+forall {t :: (* -&gt; *) -&gt; * -&gt; *} {m :: * -&gt; *}.
+Monad (t m) =&gt;
+Applicative (TransT t m)
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+Monad (t m) =&gt;
+a -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Monad (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Monad (t m) =&gt;
+TransT t m a -&gt; (a -&gt; TransT t m b) -&gt; TransT t m b
+$c&gt;&gt;= :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Monad (t m) =&gt;
+TransT t m a -&gt; (a -&gt; TransT t m b) -&gt; TransT t m b
+&gt;&gt;= :: forall a b. TransT t m a -&gt; (a -&gt; TransT t m b) -&gt; TransT t m b
+$c&gt;&gt; :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a b.
+Monad (t m) =&gt;
+TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+&gt;&gt; :: forall a b. TransT t m a -&gt; TransT t m b -&gt; TransT t m b
+$creturn :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+Monad (t m) =&gt;
+a -&gt; TransT t m a
+return :: forall a. a -&gt; TransT t m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687549848"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TransT t m a)
+-&gt; MonadTrans (TransT t)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; TransT t m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *).
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; t m a) -&gt; MonadTrans t
+$clift :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; TransT t m a
+lift :: forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TransT t m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">MonadTrans</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687549859"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *) (n :: * -&gt; *) b.
+ Monad m =&gt;
+ (forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b)
+-&gt; MFunctor (TransT t)
+forall {k} (t :: (* -&gt; *) -&gt; k -&gt; *).
+(forall (m :: * -&gt; *) (n :: * -&gt; *) (b :: k).
+ Monad m =&gt;
+ (forall a. m a -&gt; n a) -&gt; t m b -&gt; t n b)
+-&gt; MFunctor t
+forall (m :: * -&gt; *) (n :: * -&gt; *) b.
+Monad m =&gt;
+(forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *) b.
+(MFunctor t, Monad m) =&gt;
+(forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b
+$choist :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *) b.
+(MFunctor t, Monad m) =&gt;
+(forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b
+hoist :: forall (m :: * -&gt; *) (n :: * -&gt; *) b.
+Monad m =&gt;
+(forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-b97db20fdd237afaed65fccc5829c422d35937fead9df9f9f77000a8c06eab8e/share/doc/html/src/Control.Monad.Morph.html#MFunctor"><span class="hs-identifier hs-var hs-var hs-var hs-var">MFunctor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687549876"><span class="annot"><span class="annottext">MonadTrans (TransT t)
+MFunctor (TransT t)
+MFunctor (TransT t)
+-&gt; MonadTrans (TransT t)
+-&gt; (forall (n :: * -&gt; *) (m :: * -&gt; *) b.
+    Monad n =&gt;
+    (forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b)
+-&gt; MMonad (TransT t)
+forall (n :: * -&gt; *) (m :: * -&gt; *) b.
+Monad n =&gt;
+(forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b
+forall {t :: (* -&gt; *) -&gt; * -&gt; *}. MMonad t =&gt; MonadTrans (TransT t)
+forall {t :: (* -&gt; *) -&gt; * -&gt; *}. MMonad t =&gt; MFunctor (TransT t)
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (n :: * -&gt; *) (m :: * -&gt; *) b.
+(MMonad t, Monad n) =&gt;
+(forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b
+forall (t :: (* -&gt; *) -&gt; * -&gt; *).
+MFunctor t
+-&gt; MonadTrans t
+-&gt; (forall (n :: * -&gt; *) (m :: * -&gt; *) b.
+    Monad n =&gt;
+    (forall a. m a -&gt; t n a) -&gt; t m b -&gt; t n b)
+-&gt; MMonad t
+$cembed :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (n :: * -&gt; *) (m :: * -&gt; *) b.
+(MMonad t, Monad n) =&gt;
+(forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b
+embed :: forall (n :: * -&gt; *) (m :: * -&gt; *) b.
+Monad n =&gt;
+(forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-b97db20fdd237afaed65fccc5829c422d35937fead9df9f9f77000a8c06eab8e/share/doc/html/src/Control.Monad.Morph.html#MMonad"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">MMonad</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span></pre></body></html>
