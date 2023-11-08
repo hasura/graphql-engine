@@ -28,10 +28,10 @@
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#w3cTraceContextPropagator"><span class="hs-identifier hs-var hs-var">w3cTraceContextPropagator</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.Tracing.Propagator.html#Propagator"><span class="hs-identifier hs-type">Propagator</span></a></span><span>
 </span><span id="line-29"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">extractor :: RequestHeaders -&gt; SpanId -&gt; Maybe TraceContext
-</span><a href="Hasura.Tracing.Propagator.html#extractor"><span class="hs-identifier hs-var">extractor</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687747651"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687747651"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621687747652"><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687747652"><span class="hs-identifier hs-var">freshSpanId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-30"></span><span>        </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceParent"><span class="hs-identifier hs-type">TraceParent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687747654"><span id="local-6989586621687747655"><span id="local-6989586621687747656"><span id="local-6989586621687747657"><span class="annot"><span class="annottext">Word8
+</span><a href="Hasura.Tracing.Propagator.html#extractor"><span class="hs-identifier hs-var">extractor</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687747687"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687747687"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621687747688"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621687747688"><span class="hs-identifier hs-var">freshSpanId</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-30"></span><span>        </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceParent"><span class="hs-identifier hs-type">TraceParent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687747690"><span id="local-6989586621687747691"><span id="local-6989586621687747692"><span id="local-6989586621687747693"><span class="annot"><span class="annottext">Word8
 SpanId
 TraceId
 TraceFlags
@@ -43,22 +43,22 @@ tpVersion :: TraceParent -&gt; Word8
 tpTraceId :: TraceParent -&gt; TraceId
 tpParentId :: TraceParent -&gt; SpanId
 tpTraceFlags :: TraceParent -&gt; TraceFlags
-</span><a href="#local-6989586621687747654"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; RequestHeaders -&gt; Maybe ByteString
+</span><a href="#local-6989586621687747690"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; RequestHeaders -&gt; Maybe ByteString
 forall a b. Eq a =&gt; a -&gt; [(a, b)] -&gt; Maybe b
 </span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;traceparent&quot;</span></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687747651"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621687747687"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
 -&gt; (ByteString -&gt; Maybe TraceParent) -&gt; Maybe TraceParent
 forall a b. Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceParent
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#decodeTraceparentHeader"><span class="hs-identifier hs-var">decodeTraceparentHeader</span></a></span><span>
-</span><span id="line-31"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687747664"><span class="annot"><span class="annottext">traceState :: Maybe TraceState
-</span><a href="#local-6989586621687747664"><span class="hs-identifier hs-var hs-var">traceState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; RequestHeaders -&gt; Maybe ByteString
+</span><span id="line-31"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687747700"><span class="annot"><span class="annottext">traceState :: Maybe TraceState
+</span><a href="#local-6989586621687747700"><span class="hs-identifier hs-var hs-var">traceState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; RequestHeaders -&gt; Maybe ByteString
 forall a b. Eq a =&gt; a -&gt; [(a, b)] -&gt; Maybe b
 </span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;tracestate&quot;</span></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687747651"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621687747687"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
 -&gt; (ByteString -&gt; Maybe TraceState) -&gt; Maybe TraceState
 forall a b. Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -78,40 +78,40 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; TraceContext
 </span><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-var">TraceContext</span></a></span><span>
 </span><span id="line-34"></span><span>            </span><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621687747655"><span class="hs-identifier hs-var">tpTraceId</span></a></span><span>
+</span><a href="#local-6989586621687747691"><span class="hs-identifier hs-var">tpTraceId</span></a></span><span>
 </span><span id="line-35"></span><span>            </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687747652"><span class="hs-identifier hs-var">freshSpanId</span></a></span><span>
+</span><a href="#local-6989586621687747688"><span class="hs-identifier hs-var">freshSpanId</span></a></span><span>
 </span><span id="line-36"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SpanId -&gt; Maybe SpanId
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687747656"><span class="hs-identifier hs-var">tpParentId</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747692"><span class="hs-identifier hs-var">tpParentId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceFlags -&gt; SamplingState
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceFlagsToSampling"><span class="hs-identifier hs-var">traceFlagsToSampling</span></a></span><span> </span><span class="annot"><span class="annottext">TraceFlags
-</span><a href="#local-6989586621687747657"><span class="hs-identifier hs-var">tpTraceFlags</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747693"><span class="hs-identifier hs-var">tpTraceFlags</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceState -&gt; Maybe TraceState -&gt; TraceState
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">TraceState
 </span><a href="Hasura.Tracing.TraceState.html#emptyTraceState"><span class="hs-identifier hs-var">TS.emptyTraceState</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TraceState
-</span><a href="#local-6989586621687747664"><span class="hs-identifier hs-var">traceState</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687747700"><span class="hs-identifier hs-var">traceState</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">injector :: TraceContext -&gt; RequestHeaders -&gt; RequestHeaders
-</span><a href="Hasura.Tracing.Propagator.html#injector"><span class="hs-identifier hs-var">injector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687747670"><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621687747670"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687747671"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687747671"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-40"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747672"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747672"><span class="hs-identifier hs-var">traceParent</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747673"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747673"><span class="hs-identifier hs-var">traceState</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; (ByteString, ByteString)
+</span><a href="Hasura.Tracing.Propagator.html#injector"><span class="hs-identifier hs-var">injector</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687747706"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621687747706"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span id="local-6989586621687747707"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687747707"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747708"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747708"><span class="hs-identifier hs-var">traceParent</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747709"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747709"><span class="hs-identifier hs-var">traceState</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; (ByteString, ByteString)
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#encodeSpanContext"><span class="hs-identifier hs-var">encodeSpanContext</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
-</span><a href="#local-6989586621687747670"><span class="hs-identifier hs-var">context</span></a></span><span>
+</span><a href="#local-6989586621687747706"><span class="hs-identifier hs-var">context</span></a></span><span>
 </span><span id="line-41"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687747671"><span class="hs-identifier hs-var">headers</span></a></span><span>
+</span><a href="#local-6989586621687747707"><span class="hs-identifier hs-var">headers</span></a></span><span>
 </span><span id="line-42"></span><span>              </span><span class="annot"><span class="annottext">RequestHeaders -&gt; RequestHeaders -&gt; RequestHeaders
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;traceparent&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747672"><span class="hs-identifier hs-var">traceParent</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687747708"><span class="hs-identifier hs-var">traceParent</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-43"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;tracestate&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747673"><span class="hs-identifier hs-var">traceState</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747709"><span class="hs-identifier hs-var">traceState</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>                 </span><span class="hs-special">]</span><span>
 </span><span id="line-45"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-46"></span><span>
@@ -130,7 +130,7 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span id="line-56"></span><span>    </span><span id="tpTraceFlags"><span class="annot"><span class="annottext">TraceParent -&gt; TraceFlags
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#tpTraceFlags"><span class="hs-identifier hs-var hs-var">tpTraceFlags</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747676"><span id="local-6989586621687747688"><span id="local-6989586621687747692"><span class="annot"><span class="annottext">Int -&gt; TraceParent -&gt; ShowS
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747712"><span id="local-6989586621687747724"><span id="local-6989586621687747728"><span class="annot"><span class="annottext">Int -&gt; TraceParent -&gt; ShowS
 [TraceParent] -&gt; ShowS
 TraceParent -&gt; String
 (Int -&gt; TraceParent -&gt; ShowS)
@@ -150,7 +150,7 @@ showList :: [TraceParent] -&gt; ShowS
 </span><span id="line-60"></span><span class="hs-comment">-- | Contain details about the trace. Unlike TraceState values, TraceFlags are present in all traces.</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- The current version of the specification only supports a single flag called sampled.</span><span>
 </span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span id="TraceFlags"><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-var">TraceFlags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TraceFlags"><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-var">TraceFlags</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747697"><span id="local-6989586621687747701"><span id="local-6989586621687747704"><span class="annot"><span class="annottext">Int -&gt; TraceFlags -&gt; ShowS
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747733"><span id="local-6989586621687747737"><span id="local-6989586621687747740"><span class="annot"><span class="annottext">Int -&gt; TraceFlags -&gt; ShowS
 [TraceFlags] -&gt; ShowS
 TraceFlags -&gt; String
 (Int -&gt; TraceFlags -&gt; ShowS)
@@ -165,7 +165,7 @@ $cshow :: TraceFlags -&gt; String
 show :: TraceFlags -&gt; String
 $cshowList :: [TraceFlags] -&gt; ShowS
 showList :: [TraceFlags] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747707"><span id="local-6989586621687747712"><span class="annot"><span class="annottext">TraceFlags -&gt; TraceFlags -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747743"><span id="local-6989586621687747748"><span class="annot"><span class="annottext">TraceFlags -&gt; TraceFlags -&gt; Bool
 (TraceFlags -&gt; TraceFlags -&gt; Bool)
 -&gt; (TraceFlags -&gt; TraceFlags -&gt; Bool) -&gt; Eq TraceFlags
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -173,7 +173,7 @@ $c== :: TraceFlags -&gt; TraceFlags -&gt; Bool
 == :: TraceFlags -&gt; TraceFlags -&gt; Bool
 $c/= :: TraceFlags -&gt; TraceFlags -&gt; Bool
 /= :: TraceFlags -&gt; TraceFlags -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747720"><span id="local-6989586621687747725"><span id="local-6989586621687747729"><span id="local-6989586621687747733"><span id="local-6989586621687747737"><span id="local-6989586621687747741"><span id="local-6989586621687747745"><span class="annot"><span class="annottext">Eq TraceFlags
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747756"><span id="local-6989586621687747761"><span id="local-6989586621687747765"><span id="local-6989586621687747769"><span id="local-6989586621687747773"><span id="local-6989586621687747777"><span id="local-6989586621687747781"><span class="annot"><span class="annottext">Eq TraceFlags
 Eq TraceFlags
 -&gt; (TraceFlags -&gt; TraceFlags -&gt; Ordering)
 -&gt; (TraceFlags -&gt; TraceFlags -&gt; Bool)
@@ -223,16 +223,16 @@ min :: TraceFlags -&gt; TraceFlags -&gt; TraceFlags
 </span><span id="line-70"></span><span class="annot"><span class="hs-comment">-- | Get the current bitmask for the @TraceFlags@, useful for serialization purposes.</span></span><span>
 </span><span id="line-71"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceFlagsValue"><span class="hs-identifier hs-type">traceFlagsValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
 </span><span id="line-72"></span><span id="traceFlagsValue"><span class="annot"><span class="annottext">traceFlagsValue :: TraceFlags -&gt; Word8
-</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceFlagsValue"><span class="hs-identifier hs-var hs-var">traceFlagsValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747752"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747752"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747752"><span class="hs-identifier hs-var">flags</span></a></span><span>
+</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceFlagsValue"><span class="hs-identifier hs-var hs-var">traceFlagsValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747788"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747788"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747788"><span class="hs-identifier hs-var">flags</span></a></span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="annot"><span class="hs-comment">-- | Will the trace associated with this @TraceFlags@ value be sampled?</span></span><span>
 </span><span id="line-75"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#isSampled"><span class="hs-identifier hs-type">isSampled</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-76"></span><span id="isSampled"><span class="annot"><span class="annottext">isSampled :: TraceFlags -&gt; Bool
-</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#isSampled"><span class="hs-identifier hs-var hs-var">isSampled</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747754"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747754"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747754"><span class="hs-identifier hs-var">flags</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int -&gt; Bool
+</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#isSampled"><span class="hs-identifier hs-var hs-var">isSampled</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747790"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747790"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747790"><span class="hs-identifier hs-var">flags</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int -&gt; Bool
 forall a. Bits a =&gt; a -&gt; Int -&gt; Bool
 </span><span class="hs-operator hs-var">`testBit`</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
@@ -240,10 +240,10 @@ forall a. Bits a =&gt; a -&gt; Int -&gt; Bool
 </span><span id="line-78"></span><span class="annot"><span class="hs-comment">-- | Set the @sampled@ flag on the @TraceFlags@</span></span><span>
 </span><span id="line-79"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#setSampled"><span class="hs-identifier hs-type">setSampled</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span>
 </span><span id="line-80"></span><span id="setSampled"><span class="annot"><span class="annottext">setSampled :: TraceFlags -&gt; TraceFlags
-</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#setSampled"><span class="hs-identifier hs-var hs-var">setSampled</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747756"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747756"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; TraceFlags
+</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#setSampled"><span class="hs-identifier hs-var hs-var">setSampled</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-type">TraceFlags</span></a></span><span> </span><span id="local-6989586621687747792"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747792"><span class="hs-identifier hs-var">flags</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; TraceFlags
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-var">TraceFlags</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747756"><span class="hs-identifier hs-var">flags</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int -&gt; Word8
+</span><a href="#local-6989586621687747792"><span class="hs-identifier hs-var">flags</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int -&gt; Word8
 forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><span class="hs-operator hs-var">`setBit`</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
@@ -274,7 +274,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-90"></span><span class="annot"><span class="hs-comment">-- | Encoded the given 'TraceContext' into a @traceparent@, @tracestate@ tuple.</span></span><span>
 </span><span id="line-91"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#encodeSpanContext"><span class="hs-identifier hs-type">encodeSpanContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span id="encodeSpanContext"><span class="annot"><span class="annottext">encodeSpanContext :: TraceContext -&gt; (ByteString, ByteString)
-</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#encodeSpanContext"><span class="hs-identifier hs-var hs-var">encodeSpanContext</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687747760"><span id="local-6989586621687747761"><span id="local-6989586621687747762"><span id="local-6989586621687747763"><span id="local-6989586621687747764"><span class="annot"><span class="annottext">Maybe SpanId
+</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#encodeSpanContext"><span class="hs-identifier hs-var hs-var">encodeSpanContext</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687747796"><span id="local-6989586621687747797"><span id="local-6989586621687747798"><span id="local-6989586621687747799"><span id="local-6989586621687747800"><span class="annot"><span class="annottext">Maybe SpanId
 SamplingState
 SpanId
 TraceId
@@ -289,12 +289,12 @@ tcCurrentSpan :: TraceContext -&gt; SpanId
 tcCurrentParent :: TraceContext -&gt; Maybe SpanId
 tcSamplingState :: TraceContext -&gt; SamplingState
 tcStateState :: TraceContext -&gt; TraceState
-</span><a href="#local-6989586621687747760"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747770"><span class="hs-identifier hs-var">traceparent</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747771"><span class="hs-identifier hs-var">tracestate</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747796"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747806"><span class="hs-identifier hs-var">traceparent</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747807"><span class="hs-identifier hs-var">tracestate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621687747770"><span class="annot"><span class="annottext">traceparent :: ByteString
-</span><a href="#local-6989586621687747770"><span class="hs-identifier hs-var hs-var">traceparent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621687747806"><span class="annot"><span class="annottext">traceparent :: ByteString
+</span><a href="#local-6989586621687747806"><span class="hs-identifier hs-var hs-var">traceparent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">L.toStrict</span></span><span>
 </span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; ByteString -&gt; ByteString
@@ -317,7 +317,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Builder
 </span><span class="hs-identifier hs-var">B.byteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#traceIdToHex"><span class="hs-identifier hs-var">traceIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621687747760"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747796"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Builder
@@ -328,7 +328,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Builder
 </span><span class="hs-identifier hs-var">B.byteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687747761"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747797"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Builder
@@ -342,10 +342,10 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SamplingState -&gt; TraceFlags
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceFlagsFromSampling"><span class="hs-identifier hs-var">traceFlagsFromSampling</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingState
-</span><a href="#local-6989586621687747763"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747799"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span>    </span><span id="local-6989586621687747771"><span class="annot"><span class="annottext">tracestate :: ByteString
-</span><a href="#local-6989586621687747771"><span class="hs-identifier hs-var hs-var">tracestate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621687747807"><span class="annot"><span class="annottext">tracestate :: ByteString
+</span><a href="#local-6989586621687747807"><span class="hs-identifier hs-var hs-var">tracestate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#txtToBs"><span class="hs-identifier hs-var">txtToBs</span></a></span><span>
 </span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; Text -&gt; ByteString
@@ -355,44 +355,44 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;,&quot;</span></span><span>
 </span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; [Text] -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">TS.Key</span></a></span><span> </span><span id="local-6989586621687747782"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687747782"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">TS.Value</span></a></span><span> </span><span id="local-6989586621687747784"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687747784"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687747782"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">TS.Key</span></a></span><span> </span><span id="local-6989586621687747818"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687747818"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">TS.Value</span></a></span><span> </span><span id="local-6989586621687747820"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687747820"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687747818"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;=&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687747784"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747820"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">((Key, Value) -&gt; Text) -&gt; [(Key, Value)] -&gt; [Text]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceState -&gt; [(Key, Value)]
 </span><a href="Hasura.Tracing.TraceState.html#toTraceStateList"><span class="hs-identifier hs-var">TS.toTraceStateList</span></a></span><span> </span><span class="annot"><span class="annottext">TraceState
-</span><a href="#local-6989586621687747764"><span class="hs-identifier hs-var">tcStateState</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687747800"><span class="hs-identifier hs-var">tcStateState</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-111"></span><span>
 </span><span id="line-112"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceparentParser"><span class="hs-identifier hs-type">traceparentParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceParent"><span class="hs-identifier hs-type">TraceParent</span></a></span><span>
 </span><span id="line-113"></span><span id="traceparentParser"><span class="annot"><span class="annottext">traceparentParser :: Parser TraceParent
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceparentParser"><span class="hs-identifier hs-var hs-var">traceparentParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-114"></span><span>  </span><span id="local-6989586621687747788"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621687747788"><span class="hs-identifier hs-var">tpVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621687747824"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621687747824"><span class="hs-identifier hs-var">tpVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
 forall a. (Integral a, Bits a) =&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Char8.html#hexadecimal"><span class="hs-identifier hs-var">hexadecimal</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#string"><span class="hs-identifier hs-var">string</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;-&quot;</span></span><span>
-</span><span id="line-116"></span><span>  </span><span id="local-6989586621687747789"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747789"><span class="hs-identifier hs-var">traceIdBs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621687747825"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747825"><span class="hs-identifier hs-var">traceIdBs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Char8.html#takeWhile"><span class="hs-identifier hs-var">takeWhile</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">isHexDigit</span></span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621687747790"><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621687747790"><span class="hs-identifier hs-var">tpTraceId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe TraceId
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621687747826"><span class="annot"><span class="annottext">TraceId
+</span><a href="#local-6989586621687747826"><span class="hs-identifier hs-var">tpTraceId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe TraceId
 -&gt; Parser ByteString TraceId -&gt; Parser ByteString TraceId
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceId
 </span><a href="Hasura.Tracing.TraceId.html#traceIdFromHex"><span class="hs-identifier hs-var">traceIdFromHex</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747789"><span class="hs-identifier hs-var">traceIdBs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser ByteString TraceId
+</span><a href="#local-6989586621687747825"><span class="hs-identifier hs-var">traceIdBs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser ByteString TraceId
 forall a. String -&gt; Parser ByteString a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -401,17 +401,17 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#string"><span class="hs-identifier hs-var">string</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;-&quot;</span></span><span>
-</span><span id="line-119"></span><span>  </span><span id="local-6989586621687747793"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747793"><span class="hs-identifier hs-var">parentIdBs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621687747829"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747829"><span class="hs-identifier hs-var">parentIdBs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Char8.html#takeWhile"><span class="hs-identifier hs-var">takeWhile</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">isHexDigit</span></span><span>
-</span><span id="line-120"></span><span>  </span><span id="local-6989586621687747794"><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687747794"><span class="hs-identifier hs-var">tpParentId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe SpanId
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621687747830"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621687747830"><span class="hs-identifier hs-var">tpParentId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe SpanId
 -&gt; Parser ByteString SpanId -&gt; Parser ByteString SpanId
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe SpanId
 </span><a href="Hasura.Tracing.TraceId.html#spanIdFromHex"><span class="hs-identifier hs-var">spanIdFromHex</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747793"><span class="hs-identifier hs-var">parentIdBs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser ByteString SpanId
+</span><a href="#local-6989586621687747829"><span class="hs-identifier hs-var">parentIdBs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser ByteString SpanId
 forall a. String -&gt; Parser ByteString a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -420,8 +420,8 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#string"><span class="hs-identifier hs-var">string</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;-&quot;</span></span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621687747796"><span class="annot"><span class="annottext">TraceFlags
-</span><a href="#local-6989586621687747796"><span class="hs-identifier hs-var">tpTraceFlags</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; TraceFlags
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621687747832"><span class="annot"><span class="annottext">TraceFlags
+</span><a href="#local-6989586621687747832"><span class="hs-identifier hs-var">tpTraceFlags</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; TraceFlags
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceFlags"><span class="hs-identifier hs-var">TraceFlags</span></a></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; TraceFlags)
 -&gt; Parser Word8 -&gt; Parser ByteString TraceFlags
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -451,19 +451,19 @@ tpTraceFlags :: TraceFlags
 </span><span id="line-125"></span><span>
 </span><span id="line-126"></span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#decodeTraceparentHeader"><span class="hs-identifier hs-type">decodeTraceparentHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#TraceParent"><span class="hs-identifier hs-type">TraceParent</span></a></span><span>
 </span><span id="line-127"></span><span id="decodeTraceparentHeader"><span class="annot"><span class="annottext">decodeTraceparentHeader :: ByteString -&gt; Maybe TraceParent
-</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#decodeTraceparentHeader"><span class="hs-identifier hs-var hs-var">decodeTraceparentHeader</span></a></span></span><span> </span><span id="local-6989586621687747797"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747797"><span class="hs-identifier hs-var">tp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Parser TraceParent -&gt; ByteString -&gt; Either String TraceParent
+</span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#decodeTraceparentHeader"><span class="hs-identifier hs-var hs-var">decodeTraceparentHeader</span></a></span></span><span> </span><span id="local-6989586621687747833"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687747833"><span class="hs-identifier hs-var">tp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Parser TraceParent -&gt; ByteString -&gt; Either String TraceParent
 forall a. Parser a -&gt; ByteString -&gt; Either String a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#parseOnly"><span class="hs-identifier hs-var">parseOnly</span></a></span><span> </span><span class="annot"><span class="annottext">Parser TraceParent
 </span><a href="Hasura.Tracing.Propagator.W3CTraceContext.html#traceparentParser"><span class="hs-identifier hs-var">traceparentParser</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747797"><span class="hs-identifier hs-var">tp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687747833"><span class="hs-identifier hs-var">tp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-128"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe TraceParent
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-129"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687747798"><span class="annot"><span class="annottext">TraceParent
-</span><a href="#local-6989586621687747798"><span class="hs-identifier hs-var">ok</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TraceParent -&gt; Maybe TraceParent
+</span><span id="line-129"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687747834"><span class="annot"><span class="annottext">TraceParent
+</span><a href="#local-6989586621687747834"><span class="hs-identifier hs-var">ok</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TraceParent -&gt; Maybe TraceParent
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TraceParent
-</span><a href="#local-6989586621687747798"><span class="hs-identifier hs-var">ok</span></a></span><span>
+</span><a href="#local-6989586621687747834"><span class="hs-identifier hs-var">ok</span></a></span><span>
 </span><span id="line-130"></span></pre></body></html>
