@@ -984,7 +984,7 @@ instance (Backend b) => FromJSON (UniqueConstraint b) where
 data ForeignKey (b :: BackendType) = ForeignKey
   { _fkConstraint :: Constraint b,
     _fkForeignTable :: TableName b,
-    _fkColumnMapping :: NEHashMap (Column b) (Column b)
+    _fkColumnMapping :: NEHashMap (ColumnPath b) (ColumnPath b)
   }
   deriving (Generic)
 

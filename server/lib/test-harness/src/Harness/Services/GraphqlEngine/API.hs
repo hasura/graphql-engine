@@ -7,11 +7,14 @@ module Harness.Services.GraphqlEngine.API
     HgeServerInstance (..),
     getHgeServerInstanceUrl,
     PostGraphql (..),
+    PostMetadata (..),
 
     -- * Api actions
     hgePost,
     hgePostGraphql,
+    hgePostGraphqlWithHeaders,
     hgePostMetadata,
+    hgePostMetadataWithStatusAndHeaders,
     hgePostExplain,
     hgePostExplainRole,
     hgePostV2Query,
@@ -43,7 +46,9 @@ getHgeServerInstanceUrl (HgeServerInstance {hgeServerHost, hgeServerPort}) =
 
 -- | Newtype-wrapper which enables late binding of 'postGraphql' on the test environment.
 -- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
-newtype PostGraphql = PostGraphql {getPostGraphql :: J.Value -> IO J.Value}
+newtype PostGraphql = PostGraphql {getPostGraphql :: Http.RequestHeaders -> J.Value -> IO J.Value}
+
+newtype PostMetadata = PostMetadata {getPostMetadata :: Int -> Http.RequestHeaders -> J.Value -> IO J.Value}
 
 export_metadata :: (Has Logger env, Has HgeServerInstance env) => env -> IO Value
 export_metadata env = do
@@ -102,6 +107,17 @@ hgePostGraphql ::
 hgePostGraphql env query = do
   hgePost env 200 "/v1/graphql" [] (J.object ["query" J..= query])
 
+hgePostGraphqlWithHeaders ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  Http.RequestHeaders ->
+  J.Value ->
+  IO J.Value
+hgePostGraphqlWithHeaders env headers query = do
+  hgePost env 200 "/v1/graphql" headers (J.object ["query" J..= query])
+
 hgePostV2Query ::
   ( Has HgeServerInstance env,
     Has Logger env
@@ -125,6 +141,22 @@ hgePostMetadata env = do
     200
     "/v1/metadata"
     []
+
+hgePostMetadataWithStatusAndHeaders ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  Int ->
+  Http.RequestHeaders ->
+  J.Value ->
+  IO J.Value
+hgePostMetadataWithStatusAndHeaders env status headers = do
+  hgePost
+    env
+    status
+    "/v1/metadata"
+    headers
 
 -- | post to /v1/graphql/explain endpoint
 hgePostExplain ::

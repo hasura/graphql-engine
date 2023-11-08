@@ -64,7 +64,8 @@ main = hspec $ do
               "postgresql://user:pass@127.0.0.1:5432/instance?sslmode=disable"
 
     it "parses a host name correctly" do
-      extractHost uriConnDetails `shouldBe` Just "127.0.0.1"
+      h <- extractHost uriConnDetails
+      h `shouldBe` Just "127.0.0.1"
 
     it "parses connection options correctly" do
       extractConnOptions uriConnDetails

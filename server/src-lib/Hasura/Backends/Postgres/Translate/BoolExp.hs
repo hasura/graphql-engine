@@ -375,12 +375,12 @@ translateAggPredArguments predArgs relTableNameIdentifier userInfo =
         )
         cols
 
-translateTableRelationship :: (Monad m) => HashMap PGCol PGCol -> TableIdentifier -> BoolExpM m S.BoolExp
+translateTableRelationship :: (Monad m) => RelMapping ('Postgres pgKind) -> TableIdentifier -> BoolExpM m S.BoolExp
 translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
   pure
     $ sqlAnd
-    $ flip map (HashMap.toList colMapping)
+    $ flip map (HashMap.toList $ unRelMapping colMapping)
     $ \(lCol, rCol) ->
       S.BECompare
         S.SEQ

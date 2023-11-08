@@ -4,10 +4,14 @@ import { ReactQueryDecorator } from '../../../../storybook/decorators/react-quer
 import { handlers } from '../../mocks/handlers.mock';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 
 export default {
   component: ConnectPostgresWidget,
-  decorators: [ReactQueryDecorator()],
+  decorators: [
+    ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro' }),
+  ],
   parameters: {
     msw: handlers(),
   },
@@ -56,7 +60,7 @@ export const Test: StoryObj<typeof ConnectPostgresWidget> = {
     const radioOptions = await canvas.findAllByLabelText(
       'Connect Database via'
     );
-    await expect(radioOptions.length).toBe(3);
+    await expect(radioOptions.length).toBe(4);
 
     const databaseUrlOption = await canvas.findByTestId(
       'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
@@ -157,7 +161,7 @@ export const PostgresEditConnection: StoryObj<typeof ConnectPostgresWidget> = {
     const radioOptions = await canvas.findAllByLabelText(
       'Connect Database via'
     );
-    await expect(radioOptions.length).toBe(3);
+    await expect(radioOptions.length).toBe(4);
     const databaseUrlOption = await canvas.findByTestId(
       'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
     );

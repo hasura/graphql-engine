@@ -68,7 +68,7 @@ import Hasura.RQL.Types.Backend (Backend, SessionVarType, getColVals)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelMapping (..), RelTarget (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
@@ -151,7 +151,7 @@ recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
             API.Relationship
               { _rTarget = API.TTable (API.TargetTable (Witch.from targetTableName)),
                 _rRelationshipType = relationshipType,
-                _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
+                _rColumnMapping = API.ColumnPathMapping $ HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (unRelMapping riMapping)
               }
       recordRelationship
         sourceTableName
@@ -346,8 +346,10 @@ pushColumn :: ColumnStack -> ColumnName -> ColumnStack
 pushColumn (ColumnStack stack) columnName = ColumnStack $ columnName : stack
 
 toColumnSelector :: ColumnStack -> ColumnName -> API.ColumnSelector
+toColumnSelector (ColumnStack []) columnName =
+  API.ColumnSelectorColumn $ Witch.from columnName
 toColumnSelector (ColumnStack stack) columnName =
-  API.ColumnSelector $ NonEmpty.reverse $ Witch.from columnName :| fmap Witch.from stack
+  API.ColumnSelectorPath $ NonEmpty.reverse $ Witch.from columnName :| fmap Witch.from stack
 
 --------------------------------------------------------------------------------
 

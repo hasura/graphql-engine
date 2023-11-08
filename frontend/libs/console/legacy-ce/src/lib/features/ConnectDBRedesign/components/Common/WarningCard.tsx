@@ -52,3 +52,27 @@ export const WarningCard: React.FC<unknown> = () => {
     </Card>
   );
 };
+export const WarningCardMetadataDBNotDynamic: React.FC<unknown> = () => {
+  return (
+    <Card mode="warning" className="mb-3">
+      <div className="flex gap-4 items-center">
+        <div className="text-amber-500 mr-2 rounded-full bg-amber-100 p-4">
+          <FaExclamationTriangle size="28" />
+        </div>
+        <div>
+          <div className="text-lg text-amber-500 font-semibold">Warning</div>
+          <div>
+            This will have no effect on your metadata database URI, which may
+            have been initialized from{' '}
+            <code className="!px-0">HASURA_GRAPHQL_DATABASE_URL</code>. If you
+            need a dynamic URL for metadata as well, your administrator will
+            need to set{' '}
+            <code className="!px-0">
+              HASURA_GRAPHQL_METADATA_DATABASE_URL=dynamic-from-file:///path/to/file
+            </code>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};

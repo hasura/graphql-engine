@@ -36,10 +36,11 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Relationships.Local (RelInfo (riMapping, riTarget), RelTarget (..))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (riMapping, riTarget), RelMapping (..), RelTarget (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Table.Cache (ForeignKey, UniqueConstraint, _cName, _fkColumnMapping, _fkConstraint, _fkForeignTable, _ucColumns)
+import Witch qualified
 
 -- | Datatype used by Metadata API to represent Request for Suggested Relationships
 data SuggestRels b = SuggestRels
@@ -102,7 +103,7 @@ instance (Backend b) => HasCodec (Relationship b) where
 
 data Mapping b = Mapping
   { mTable :: TableName b,
-    mColumns :: [Column b],
+    mColumns :: [ColumnPath b],
     mConstraintName :: Maybe J.Value
   }
   deriving (Generic)
@@ -133,7 +134,7 @@ suggestRelsFK ::
   HashMap (TableName b) (TableCoreInfo b) ->
   TableName b ->
   HashSet (UniqueConstraint b) ->
-  H.HashSet (TableName b, HashMap (Column b) (Column b)) ->
+  H.HashSet (TableName b, HashMap (ColumnPath b) (ColumnPath b)) ->
   (TableName b -> Bool) ->
   ForeignKey b ->
   [Relationship b]
@@ -145,6 +146,7 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
   where
     toTracked = H.member (relatedTableName, columnRelationships) tracked
     fromTracked = H.member (name, invert columnRelationships) trackedBack
+    toRelationship, fromRelationship :: Relationship b
     toRelationship =
       Relationship
         { rType = ObjRel,
@@ -157,10 +159,10 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
           rTo = Mapping {mTable = name, mColumns = localColumns, mConstraintName = Just constraintName},
           rFrom = Mapping {mTable = relatedTableName, mColumns = relatedColumns, mConstraintName = Nothing}
         }
-    columnRelationships = MapNE.toHashMap (_fkColumnMapping foreignKey)
+    columnRelationships = MapNE.toHashMap $ _fkColumnMapping foreignKey
     localColumns = HashMap.keys columnRelationships
     relatedColumns = HashMap.elems columnRelationships
-    uniqueConstraintColumns = H.map _ucColumns uniqueConstraints
+    uniqueConstraintColumns = H.map (H.map Witch.from . _ucColumns) uniqueConstraints
     relatedTableName = _fkForeignTable foreignKey
     relatedTable = HashMap.lookup relatedTableName tables
     constraintName = J.toJSON (_cName (_fkConstraint foreignKey))
@@ -174,10 +176,10 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
 -- we're only interested in suggesting table-based relationships for now
 getRelationshipsInputs ::
   RelInfo b ->
-  Maybe (TableName b, HashMap (Column b) (Column b))
+  Maybe (TableName b, HashMap (ColumnPath b) (ColumnPath b))
 getRelationshipsInputs ri =
   case riTarget ri of
-    RelTargetTable tn -> Just (tn, riMapping ri)
+    RelTargetTable tn -> Just (tn, unRelMapping $ riMapping ri)
     _ -> Nothing
 
 suggestRelsTable ::

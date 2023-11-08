@@ -40,7 +40,9 @@ export const NumberInputField = ({
           aria-label={name}
           onChange={e => {
             setLocalValue(e.target.value);
-            setValue(name, parseInt(e.target.value, 10));
+
+            // will fallback to undefined if input is empty or NaN
+            setValue(name, parseInt(e.target.value, 10) || undefined);
           }}
           data-test={name}
           className={clsx(

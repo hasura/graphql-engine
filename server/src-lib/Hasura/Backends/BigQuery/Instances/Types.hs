@@ -28,6 +28,7 @@ instance Backend 'BigQuery where
   type NullsOrderType 'BigQuery = BigQuery.NullsOrder
   type CountType 'BigQuery = BigQuery.CountType
   type Column 'BigQuery = BigQuery.ColumnName
+  type ColumnPath 'BigQuery = BigQuery.ColumnName
   type ScalarValue 'BigQuery = BigQuery.Value
   type ScalarType 'BigQuery = BigQuery.ScalarType
   type SQLExpression 'BigQuery = BigQuery.Expression
@@ -116,6 +117,10 @@ instance Backend 'BigQuery where
   defaultTriggerOnReplication = Nothing
 
   getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the BigQuery backend"
+
+  getColumnPathColumn = id
+
+  tryColumnPathToColumn = Just
 
 instance HasSourceConfiguration 'BigQuery where
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig

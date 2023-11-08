@@ -1334,11 +1334,42 @@
       "Constraint": {
         "properties": {
           "column_mapping": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "The columns on which you want want to define the foreign key.",
-            "type": "object"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            ],
+            "description": "The columns on which you want want to define the foreign key."
           },
           "foreign_table": {
             "$ref": "#/components/schemas/TableName"
@@ -1845,11 +1876,42 @@
       "Relationship": {
         "properties": {
           "column_mapping": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "A mapping between columns on the source table to columns on the target table",
-            "type": "object"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            ],
+            "description": "A mapping between columns on the source table to columns on the target table"
           },
           "relationship_type": {
             "$ref": "#/components/schemas/RelationshipType"
@@ -2068,19 +2130,18 @@
             "$ref": "#/components/schemas/ScalarType"
           },
           "name": {
-            "additionalProperties": true,
-            "anyOf": [
-              {
-                "type": "string"
-              },
+            "description": "The name of the column",
+            "oneOf": [
               {
                 "items": {
                   "type": "string"
                 },
                 "type": "array"
+              },
+              {
+                "type": "string"
               }
-            ],
-            "description": "The name of the column"
+            ]
           },
           "path": {
             "default": [],
@@ -2620,16 +2681,15 @@
       "OrderByColumn": {
         "properties": {
           "column": {
-            "additionalProperties": true,
-            "anyOf": [
-              {
-                "type": "string"
-              },
+            "oneOf": [
               {
                 "items": {
                   "type": "string"
                 },
                 "type": "array"
+              },
+              {
+                "type": "string"
               }
             ]
           },

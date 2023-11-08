@@ -41,6 +41,7 @@ import Data.Text.Lazy qualified as TL
 import Debug.Trace
 import Harness.Constants qualified as Constants
 import Harness.GlobalTestEnvironment
+import Harness.Http qualified as Http
 import Harness.Logging.Messages
 import Harness.Permissions.Types (Permission)
 import Harness.Schema.Name
@@ -69,7 +70,8 @@ data TestEnvironment = TestEnvironment
     -- | Custom fixture-specific options.
     _options :: Custom.Options,
     -- Compatibility with the new, componentised fixtures:
-    _postgraphqlInternal :: TestEnvironment -> Value -> IO Value,
+    _postgraphqlInternal :: TestEnvironment -> Http.RequestHeaders -> Value -> IO Value,
+    _postMetadataInternal :: TestEnvironment -> Int -> Http.RequestHeaders -> Value -> IO Value,
     _shouldReturnYamlFInternal :: TestEnvironment -> (Value -> IO Value) -> IO Value -> Value -> IO (),
     _getSchemaNameInternal :: TestEnvironment -> SchemaName
   }
@@ -216,6 +218,21 @@ instance Has Services.PostGraphql TestEnvironment where
     testEnv
       { _postgraphqlInternal =
           const (Services.getPostGraphql $ f (getter testEnv))
+      }
+
+-- | This enables late binding of 'postMetadata' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+--
+-- This instance is somewhat subtle, in that the 'PostMetadata' function we return
+-- has to constructed using the *current* test environment. Otherwise we'll break
+-- the late binding and 'postMetadataInternal' won't pick up updates to
+-- permissions or protocols.
+instance Has Services.PostMetadata TestEnvironment where
+  getter testEnv = Services.PostMetadata $ _postMetadataInternal testEnv testEnv
+  modifier f testEnv =
+    testEnv
+      { _postMetadataInternal =
+          const (Services.getPostMetadata $ f (getter testEnv))
       }
 
 -- | This enables late binding of 'shouldReturnYaml' on the test environment.

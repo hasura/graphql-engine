@@ -3,6 +3,7 @@ import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import { LocationDescriptor } from 'history';
+import { sendTelemetryEvent } from '../../telemetry';
 
 export type NavigationSidebarItem = {
   key: string;
@@ -50,6 +51,17 @@ export const NavigationSidebar = ({
                     ? 'text-amber-500'
                     : 'text-muted'
                 )}
+                onClick={() => {
+                  // Check if section.key is "schema-registry" and trigger telemetry event
+                  if (item.key === 'schema-registry') {
+                    sendTelemetryEvent({
+                      type: 'CLICK_EVENT',
+                      data: {
+                        id: 'schema-registry-settings-btn',
+                      },
+                    });
+                  }
+                }}
               >
                 {item.label}
               </div>

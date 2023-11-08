@@ -10,6 +10,7 @@ module Hasura.RQL.Types.Relationships.Local
     ObjRelUsingChoice (..),
     RelDef (..),
     RelTarget (..),
+    RelMapping (..),
     RelInfo (..),
     RelManualConfig (..),
     RelManualTableConfig (..),
@@ -31,6 +32,8 @@ import Autodocodec.Extended (optionalFieldOrIncludedNull', typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
+import Data.Bitraversable
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.NativeQuery.Types (NativeQueryName)
@@ -39,6 +42,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Witch qualified
 
 data RelDef a = RelDef
   { _rdName :: RelName,
@@ -112,7 +116,7 @@ deriving instance (Backend b) => Eq (RelManualNativeQueryConfig b)
 deriving instance (Backend b) => Show (RelManualNativeQueryConfig b)
 
 data RelManualCommon (b :: BackendType) = RelManualCommon
-  { rmColumns :: HashMap (Column b) (Column b),
+  { rmColumns :: RelMapping b,
     rmInsertOrder :: Maybe InsertOrder
   }
   deriving (Generic)
@@ -188,7 +192,7 @@ instance (FromJSON a, Backend b) => FromJSON (RelUsing b a) where
 
 data ArrRelUsingFKeyOn (b :: BackendType) = ArrRelUsingFKeyOn
   { arufTable :: TableName b,
-    arufColumns :: NonEmpty (Column b)
+    arufColumns :: NonEmpty (ColumnPath b)
   }
   deriving (Generic)
 
@@ -224,8 +228,8 @@ instance (ToAesonPairs a, Backend b) => ToJSON (WithTable b a) where
     object $ ("source" .= sourceName) : ("table" .= tn) : toAesonPairs rel
 
 data ObjRelUsingChoice b
-  = SameTable (NonEmpty (Column b))
-  | RemoteTable (TableName b) (NonEmpty (Column b))
+  = SameTable (NonEmpty (ColumnPath b))
+  | RemoteTable (TableName b) (NonEmpty (ColumnPath b))
   deriving (Generic)
 
 deriving instance (Backend b) => Eq (ObjRelUsingChoice b)
@@ -235,10 +239,10 @@ deriving instance (Backend b) => Show (ObjRelUsingChoice b)
 instance (Backend b) => HasCodec (ObjRelUsingChoice b) where
   codec = dimapCodec dec enc $ disjointEitherCodec sameTableCodec remoteTableCodec
     where
-      sameTableCodec :: AC.JSONCodec (Either (Column b) (NonEmpty (Column b)))
+      sameTableCodec :: AC.JSONCodec (Either (ColumnPath b) (NonEmpty (ColumnPath b)))
       sameTableCodec = disjointEitherCodec codec codec
 
-      remoteTableCodec :: AC.JSONCodec (Either (TableName b, Column b) (TableName b, NonEmpty (Column b)))
+      remoteTableCodec :: AC.JSONCodec (Either (TableName b, ColumnPath b) (TableName b, NonEmpty (ColumnPath b)))
       remoteTableCodec =
         singleOrMultipleRelColumnsCodec @b
           $ backendPrefix @b
@@ -262,8 +266,8 @@ singleOrMultipleRelColumnsCodec ::
   Text ->
   AC.JSONCodec
     ( Either
-        (TableName b, Column b)
-        (TableName b, NonEmpty (Column b))
+        (TableName b, ColumnPath b)
+        (TableName b, NonEmpty (ColumnPath b))
     )
 singleOrMultipleRelColumnsCodec codecName =
   disjointEitherCodec
@@ -310,7 +314,7 @@ instance (Backend b) => FromJSON (ObjRelUsingChoice b) where
       pure $ RemoteTable table cols
     val -> SameTable <$> parseColumns val
     where
-      parseColumns :: Value -> Parser (NonEmpty (Column b))
+      parseColumns :: Value -> Parser (NonEmpty (ColumnPath b))
       parseColumns = \case
         v@(String _) -> pure <$> parseJSON v
         v@(Array _) -> parseJSON v
@@ -321,12 +325,12 @@ instance (Backend b) => HasCodec (ArrRelUsingFKeyOn b) where
     dimapCodec dec enc
       $ singleOrMultipleRelColumnsCodec @b (backendPrefix @b <> "ArrRelUsingFKeyOn")
     where
-      dec :: (Either (TableName b, Column b) (TableName b, NonEmpty (Column b))) -> ArrRelUsingFKeyOn b
+      dec :: (Either (TableName b, ColumnPath b) (TableName b, NonEmpty (ColumnPath b))) -> ArrRelUsingFKeyOn b
       dec = \case
         Left (qt, col) -> ArrRelUsingFKeyOn qt (pure col)
         Right (qt, cols) -> ArrRelUsingFKeyOn qt cols
 
-      enc :: ArrRelUsingFKeyOn b -> (Either (TableName b, Column b) (TableName b, NonEmpty (Column b)))
+      enc :: ArrRelUsingFKeyOn b -> (Either (TableName b, ColumnPath b) (TableName b, NonEmpty (ColumnPath b)))
       enc = \case
         ArrRelUsingFKeyOn qt (col :| []) -> Left (qt, col)
         ArrRelUsingFKeyOn qt cols -> Right (qt, cols)
@@ -352,7 +356,7 @@ instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
       pure $ ArrRelUsingFKeyOn table cols
     _ -> fail "Expecting object { table, columns }."
     where
-      parseColumns :: Value -> Parser (NonEmpty (Column b))
+      parseColumns :: Value -> Parser (NonEmpty (ColumnPath b))
       parseColumns = \case
         v@(String _) -> pure <$> parseJSON v
         v@(Array _) -> parseJSON v
@@ -391,10 +395,48 @@ instance (Backend b) => ToJSON (RelTarget b) where
 
 ---
 
+newtype RelMapping (b :: BackendType) = RelMapping {unRelMapping :: HashMap (ColumnPath b) (ColumnPath b)}
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (RelMapping b)
+
+deriving instance (Backend b) => Eq (RelMapping b)
+
+deriving instance (Backend b) => Ord (RelMapping b)
+
+deriving via AC.Autodocodec (RelMapping b) instance (Backend b) => FromJSON (RelMapping b)
+
+deriving via AC.Autodocodec (RelMapping b) instance (Backend b) => ToJSON (RelMapping b)
+
+instance (Backend b) => NFData (RelMapping b)
+
+instance (Backend b) => Hashable (RelMapping b)
+
+-- If all keys in the RelMapping have a singleton ColumnPath then we want to
+-- want to represent the mapping as a JSON object with the source columns as properties
+-- (using `codec @(HashMap (Column b) (ColumnPath b))`).
+-- This is required for metadata and API backwards compatibilty.
+-- If some of the keys are not singletons then we can't use a JSON object so we use
+-- an array of pairs instead, as provided by `codec @(HashMap (ColumnPath b) (ColumnPath b))`
+instance (Backend b) => HasCodec (RelMapping b) where
+  codec =
+    AC.matchChoiceCodec
+      (AC.dimapCodec RelMapping unRelMapping $ codec @(HashMap (ColumnPath b) (ColumnPath b)))
+      (AC.dimapCodec toRelMapping id $ codec @(HashMap (Column b) (ColumnPath b)))
+      \m -> maybeToEither m (tryFromRelMapping m)
+    where
+      toRelMapping :: HashMap (Column b) (ColumnPath b) -> RelMapping b
+      toRelMapping = RelMapping . HashMap.mapKeys Witch.from
+
+      tryFromRelMapping :: RelMapping b -> Maybe (HashMap (Column b) (ColumnPath b))
+      tryFromRelMapping = fmap HashMap.fromList . traverse (bitraverse (tryColumnPathToColumn @b) pure) . HashMap.toList . unRelMapping
+
+---
+
 data RelInfo (b :: BackendType) = RelInfo
   { riName :: RelName,
     riType :: RelType,
-    riMapping :: HashMap (Column b) (Column b),
+    riMapping :: RelMapping b,
     riTarget :: RelTarget b,
     riIsManual :: Bool,
     riInsertOrder :: InsertOrder

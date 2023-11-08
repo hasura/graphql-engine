@@ -155,7 +155,7 @@ albumsRelationshipName = API.RelationshipName "Albums"
 
 artistsTableRelationships :: API.TableRelationships
 artistsTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+  let joinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
    in API.TableRelationships
         artistsTableName
         ( HashMap.fromList
@@ -175,8 +175,8 @@ albumsRowsById =
 
 albumsTableRelationships :: API.TableRelationships
 albumsTableRelationships =
-  let artistsJoinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-      tracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+  let artistsJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
+      tracksJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "AlbumId", API.mkColumnSelector $ API.ColumnName "AlbumId")]
    in API.TableRelationships
         albumsTableName
         ( HashMap.fromList
@@ -203,8 +203,8 @@ customersRowsById =
 
 customersTableRelationships :: API.TableRelationships
 customersTableRelationships =
-  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
-      invoicesJoinFieldMapping = HashMap.fromList [(API.ColumnName "CustomerId", API.ColumnName "CustomerId")]
+  let supportRepJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "SupportRepId", API.mkColumnSelector $ API.ColumnName "EmployeeId")]
+      invoicesJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "CustomerId", API.mkColumnSelector $ API.ColumnName "CustomerId")]
    in API.TableRelationships
         customersTableName
         ( HashMap.fromList
@@ -231,8 +231,8 @@ employeesRowsById =
 
 employeesTableRelationships :: API.TableRelationships
 employeesTableRelationships =
-  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
-      reportsToEmployeeJoinFieldMapping = HashMap.fromList [(API.ColumnName "ReportsTo", API.ColumnName "EmployeeId")]
+  let supportRepJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "EmployeeId", API.mkColumnSelector $ API.ColumnName "SupportRepId")]
+      reportsToEmployeeJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ReportsTo", API.mkColumnSelector $ API.ColumnName "EmployeeId")]
    in API.TableRelationships
         employeesTableName
         ( HashMap.fromList
@@ -259,8 +259,8 @@ invoicesRowsById =
 
 invoicesTableRelationships :: API.TableRelationships
 invoicesTableRelationships =
-  let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
-      customersJoinFieldMapping = HashMap.fromList [(API.ColumnName "CustomerId", API.ColumnName "CustomerId")]
+  let invoiceLinesJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "InvoiceId", API.mkColumnSelector $ API.ColumnName "InvoiceId")]
+      customersJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "CustomerId", API.mkColumnSelector $ API.ColumnName "CustomerId")]
    in API.TableRelationships
         invoicesTableName
         ( HashMap.fromList
@@ -280,8 +280,8 @@ invoiceLinesRows = sortBy (API.FieldName "InvoiceLineId") $ readTableFromXmlInto
 
 invoiceLinesTableRelationships :: API.TableRelationships
 invoiceLinesTableRelationships =
-  let invoiceJoinFieldMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
-      tracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
+  let invoiceJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "InvoiceId", API.mkColumnSelector $ API.ColumnName "InvoiceId")]
+      tracksJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "TrackId", API.mkColumnSelector $ API.ColumnName "TrackId")]
    in API.TableRelationships
         invoiceLinesTableName
         ( HashMap.fromList
@@ -314,11 +314,11 @@ tracksRowsById =
 
 tracksTableRelationships :: API.TableRelationships
 tracksTableRelationships =
-  let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
-      mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
-      albumJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
-      genreJoinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-      playlistTracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
+  let invoiceLinesJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "TrackId", API.mkColumnSelector $ API.ColumnName "TrackId")]
+      mediaTypeJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "MediaTypeId", API.mkColumnSelector $ API.ColumnName "MediaTypeId")]
+      albumJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "AlbumId", API.mkColumnSelector $ API.ColumnName "AlbumId")]
+      genreJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "GenreId", API.mkColumnSelector $ API.ColumnName "GenreId")]
+      playlistTracksJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "TrackId", API.mkColumnSelector $ API.ColumnName "TrackId")]
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
@@ -359,7 +359,7 @@ mkFibonacciRows n = take n $ fibonacciRow <$> fibs
 
 genresTableRelationships :: API.TableRelationships
 genresTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+  let joinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "GenreId", API.mkColumnSelector $ API.ColumnName "GenreId")]
    in API.TableRelationships
         genresTableName
         ( HashMap.fromList
@@ -538,7 +538,13 @@ mkTestData schemaResponse testConfig =
     formatTableRelationships :: API.TableRelationships -> API.TableRelationships
     formatTableRelationships =
       prefixTableRelationships
-        >>> API.trelRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
+        >>> API.trelRelationships . traverse . API.rColumnMapping
+          %~ ( API.unColumnPathMapping
+                 >>> HashMap.toList
+                 >>> fmap (bimap (formatColumnSelector testConfig) (formatColumnSelector testConfig))
+                 >>> HashMap.fromList
+                 >>> API.ColumnPathMapping
+             )
 
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
@@ -623,7 +629,7 @@ formatTableInfo testConfig =
     >>> API.tiPrimaryKey . _Just . traverse %~ formatColumnName testConfig
     >>> API.tiForeignKeys . API.unForeignKeys . traverse
       %~ ( API.cForeignTable %~ formatTableName testConfig
-             >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
+             >>> API.cColumnMapping %~ (API.unColumnPathMapping >>> HashMap.toList >>> fmap (bimap (formatColumnSelector testConfig) (formatColumnSelector testConfig)) >>> HashMap.fromList >>> API.ColumnPathMapping)
          )
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
@@ -646,6 +652,11 @@ applyNameCasing casing text = case casing of
 
 formatColumnName :: TestConfig -> API.ColumnName -> API.ColumnName
 formatColumnName TestConfig {..} = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
+formatColumnSelector :: TestConfig -> API.ColumnSelector -> API.ColumnSelector
+formatColumnSelector testConfig = \case
+  API.ColumnSelectorPath p -> API.ColumnSelectorPath $ formatColumnName testConfig <$> p
+  API.ColumnSelectorColumn c -> API.ColumnSelectorColumn $ formatColumnName testConfig c
 
 columnField :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.Field
 columnField schemaResponse testConfig tableName columnName =

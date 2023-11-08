@@ -12,7 +12,8 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genSingleColumnAggregate)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genColumnSelector, genExpression, genRedactionExpressionName)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnSelector)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genRedactionExpressionName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude

@@ -134,6 +134,15 @@ Below, we've written an example of webhook in JavaScript that uses `body-parser`
 earlier, this runs on port `4000`. If you're attempting to run this locally, follow the instructions below. If you're
 running this in a hosted environment, use this code as a guide to write your own webhook.
 
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
+
 Init a new project with `npm init` and install the following dependencies:
 
 ```bash
@@ -279,8 +288,175 @@ app.listen(4000, () => {
 
 </details>
 
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Webhook server is running on port 4000`, you're good to go!
+You can run the server by running `node index.js` in your terminal.
+
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask[async] openai requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import openai
+import requests
+import json
+
+app = Flask(__name__)
+
+# Hasura and OpenAI config
+config = {
+    'url': '<YOUR_PROJECT_ENDPOINT>',
+    'secret': '<YOUR_ADMIN_SECRET>',
+    'openAIKey': '<YOUR_OPENAI_KEY>',
+}
+
+# OpenAI API config and client
+openai.api_key = config["openAIKey"]
+
+prompt = (
+    "You are a content moderator for SuperStore.com. A customer has left a review for a product they purchased. "
+    'Your response should only be a JSON object with two properties: "feedback" and "is_appropriate". '
+    'The "feedback" property should be a string containing your response to the customer only if the review "is_appropriate" value is false. '
+    "The feedback should be on why their review was flagged as inappropriate, not a response to their review. "
+    'The "is_appropriate" property should be a boolean indicating whether or not the review contains inappropriate content and it should be set by you.'
+    '"is_appropriate" is set to TRUE for appropriate content and to FALSE for inappropriate content.'
+    "The review is as follows:"
+)
+
+
+# Send a request to ChatGPT to see if the review contains inappropriate content
+def check_review_with_chat_gpt(review_text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": review_text},
+            ],
+        )
+        response_content = response["choices"][0]["message"]["content"]
+        return json.loads(response_content)
+    except Exception as e:
+        print(f"Error evaluating content: {review_text}")
+        print(str(e))
+        return None
+
+
+# Mark their review as visible if there's no feedback
+async def mark_review_as_visible(user_review, review_id):
+    response = requests.post(
+        config["url"],
+        json={
+            "query": """
+        mutation UpdateReviewToVisible($review_id: uuid!) {
+            update_reviews_by_pk(pk_columns: {id: $review_id}, _set: {is_visible: true}) {
+                id
+            }
+        }      
+        """,
+            "variables": {
+                "review_id": review_id,
+            },
+        },
+        headers={
+            "Content-Type": "application/json",
+            "x-hasura-admin-secret": config["secret"],
+        },
+    )
+    print(f"🎉 Review approved: {user_review}")
+    data = response.json()
+    return data.get("update_reviews_by_pk", None)
+
+
+# Send a notification to the user if their review is flagged
+def send_notification(user_review, user_id, review_feedback):
+    query = """
+    mutation InsertNotification($user_id: uuid!, $review_feedback: String!) {
+      insert_notifications_one(object: {user_id: $user_id, message: $review_feedback}) {
+        id
+      }
+    }
+    """
+    variables = {"user_id": user_id, "review_feedback": review_feedback}
+    headers = {
+        "Content-Type": "application/json",
+        "x-hasura-admin-secret": config["secret"],
+    }
+    url = config["url"]
+
+    request_body = {"query": query, "variables": variables}
+
+    try:
+        response = requests.post(url, json=request_body, headers=headers)
+        # Raise an error for bad responses
+        response.raise_for_status()
+
+        response_json = response.json()
+        if "errors" in response_json:
+            # Handle the case where there are errors in the response
+            print(f"Failed to send a notification for: {user_review}")
+            print(response_json)
+            return None
+
+        # Extract the updated data from the response
+        data = response_json.get("data", {})
+        notification = data.get("insert_notifications_one", {})
+        print(
+            f"🚩 Review flagged. This is not visible to users: {user_review}\n🔔 The user has received the following notification: {review_feedback}"
+        )
+        return notification
+    except Exception as e:
+        # Handle exceptions or network errors
+        print(f"Error sending a notification for: {user_review}")
+        print(str(e))
+        return None
+
+
+@app.route("/check-review", methods=["POST"])
+async def check_review():
+    auth_header = request.headers.get("secret-authorization-string")
+    if auth_header != "super_secret_string_123":
+        return jsonify({"message": "Unauthorized"}), 401
+
+    # Parse the review from the event payload
+    data = request.get_json()
+    user_review = data["event"]["data"]["new"]["text"]
+    user_id = data["event"]["data"]["new"]["user_id"]
+    review_id = data["event"]["data"]["new"]["id"]
+
+    # Check the review with ChatGPT
+    moderation_report = check_review_with_chat_gpt(user_review)
+
+    # If the review is appropriate, mark it as visible; if not, send a notification to the user
+    if moderation_report["is_appropriate"]:
+        await mark_review_as_visible(user_review, review_id)
+    else:
+        send_notification(user_review, user_id, moderation_report["feedback"])
+
+    return jsonify({"GPTResponse": moderation_report})
+
+
+if __name__ == "__main__":
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python3 index.py` in your terminal.
+
+  </TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
 
 ## Step 4: Test the setup
 

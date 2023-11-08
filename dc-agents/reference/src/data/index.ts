@@ -175,7 +175,7 @@ export const getSchema = (store: Record<string, StaticData>, config: Config, req
       ? mapObjectValues(table.foreign_keys, constraint => ({
         ...constraint,
         foreign_table: prefixSchemaToTableName(constraint.foreign_table.map(applyTableNameCasing)),
-        column_mapping: mapObject(constraint.column_mapping, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
+        column_mapping: mapObject(constraint.column_mapping as Record<string, string>, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
       }))
       : table.foreign_keys,
     columns: table.columns?.map(column => ({

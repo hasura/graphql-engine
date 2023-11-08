@@ -24,7 +24,7 @@ type ConnectionTemplateTestArgs = {
       };
     }
   | {
-      source: string;
+      source_name: string;
     }
 );
 export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {

@@ -96,7 +96,9 @@ emptyServeOptionsRaw =
       rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
       rsoMaxTotalHeaderLength = Nothing,
       rsoTriggersErrorLogLevelStatus = Nothing,
-      rsoAsyncActionsFetchBatchSize = Nothing
+      rsoAsyncActionsFetchBatchSize = Nothing,
+      rsoPersistedQueries = Nothing,
+      rsoPersistedQueriesTtl = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

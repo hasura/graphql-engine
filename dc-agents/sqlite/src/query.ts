@@ -234,7 +234,7 @@ function generateRelationshipJoinComparisonFragments(relationship: Relationship,
   return Object
     .entries(relationship.column_mapping)
     .map(([sourceColumnName, targetColumnName]) =>
-      `${sourceTablePrefix}${escapeIdentifier(sourceColumnName)} = ${targetTableAlias}.${escapeIdentifier(targetColumnName)}`);
+      `${sourceTablePrefix}${escapeIdentifier(sourceColumnName)} = ${targetTableAlias}.${escapeIdentifier(targetColumnName as string)}`);
 }
 
 function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, queryTableAlias: string, currentTableAlias: string): string {
@@ -419,7 +419,7 @@ function target_query( // TODO: Rename as `target_query`
 function relationship(ts: Relationships[], r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
   const relationshipJoinInfo = {
     sourceTableAlias,
-    columnMapping: r.column_mapping,
+    columnMapping: r.column_mapping as Record<string, string>,
   };
 
   // We force a limit of 1 for object relationships in case the user has configured a manual
@@ -638,7 +638,7 @@ function generateOrderByAggregateTargetJoinInfo(
       default: unreachable(element.target["type"]);
     }
   });
-  const joinColumns = Object.values(relationship.column_mapping).map(escapeIdentifier);
+  const joinColumns = Object.values(relationship.column_mapping as Record<string, string>).map(escapeIdentifier);
   const selectColumns = [...joinColumns, aggregateColumnsFragments];
   const whereClause = whereExpression ? `WHERE ${where_clause(allTableRelationships, whereExpression, relationship.target, subqueryTableAlias)}` : "";
   const aggregateSubquery = `SELECT ${selectColumns.join(", ")} FROM ${escapeTargetName(relationship.target)} AS ${subqueryTableAlias} ${whereClause} GROUP BY ${joinColumns.join(", ")}`

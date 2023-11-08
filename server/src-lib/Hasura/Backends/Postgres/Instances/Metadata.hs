@@ -323,7 +323,7 @@ instance
             let mappings :: HashMap Postgres.PGCol Postgres.PGCol
                 mappings = NEHashMap.toHashMap _fkColumnMapping
 
-            pure (_cName _fkConstraint, SourceConstraint _fkForeignTable mappings)
+            pure (_cName _fkConstraint, SourceConstraint _fkForeignTable $ RelMapping mappings)
 
       pure
         SourceTableInfo

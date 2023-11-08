@@ -9,7 +9,7 @@ export type Relationship = {
   /**
    * A mapping between columns on the source table to columns on the target table
    */
-  column_mapping: Record<string, string>;
+  column_mapping: Record<string, (Array<string> | string)>;
   relationship_type: RelationshipType;
   target: Target;
 };

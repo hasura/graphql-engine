@@ -23,11 +23,17 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 ## Introduction
 
-This guide will show how to configure your Hasura Project for easy switching between development environments.
+This guide is designed to teach you how to set up and modify Hasura in a local Docker environment, and then transfer
+those changes to your Cloud project.
 
 ## Moving from Hasura Cloud to local development
 
 ### Step 1: Setup local development of Hasura with Docker
+
+In this step, you'll establish a self-hosted version of Hasura. **Please note: if you intend to utilize Hasura EE for
+local development, please secure a license by either registering for a
+[30-day free trial](/enterprise/try-hasura-enterprise-edition.mdx) or filing a ticket with
+[Hasura support](https://hasura.io/help/).**
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL Engine and
 Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as you'll be
@@ -59,6 +65,15 @@ hasura migrate create init --from-server --endpoint <hasura-cloud-project-url> -
 
 hasura migrate apply --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --version <version-number> --skip-execution
 ```
+
+:::info When using a non-Postgres database
+
+Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
+Should you wish to use a different database, you will need to manually create the migration files. For more information,
+please see this section of the [Migrations](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations)
+documentation.
+
+:::
 
 It is important to mark the migration as applied on the Cloud project to ensure that the schema that is already created
 on Hasura Cloud project is not attempted to be recreated again, which would end in an error state.
@@ -135,6 +150,15 @@ hasura migrate create init --from-server --admin-secret <admin-secret> --databas
 
 hasura migrate apply --admin-secret <admin-secret> --version <version-number> --skip-execution
 ```
+
+:::info When using a non-Postgres database
+
+Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
+Should you wish to use a different database, you will need to manually create the migration files. For more information,
+please see this section of the [Migrations](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations)
+documentation.
+
+:::
 
 ### Step 4: Initialize Hasura Metadata
 

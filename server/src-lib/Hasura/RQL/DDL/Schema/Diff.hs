@@ -289,7 +289,8 @@ processTablesDiff ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   TableCache b ->
@@ -313,7 +314,8 @@ alterTableInMetadata ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   TableCoreInfo b ->
@@ -387,7 +389,8 @@ alterColumnsInMetadata ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   [(RawColumnInfo b, RawColumnInfo b)] ->

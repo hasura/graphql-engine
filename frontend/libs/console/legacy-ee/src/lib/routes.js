@@ -346,6 +346,11 @@ const routes = store => {
             <Route path="details/:name" component={RestEndpointDetailsPage} />
             <Route path="edit/:name" component={CreateRestView} />
           </Route>
+          <Route path="schema-registry" component={SchemaRegistryContainer} />
+          <Route
+            path="schema-registry/:id"
+            component={SchemaRegistryContainer}
+          />
           <Route path="allow-list">
             <IndexRedirect to="detail" />
             <Route

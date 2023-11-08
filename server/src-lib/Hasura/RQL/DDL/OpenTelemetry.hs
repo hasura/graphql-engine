@@ -78,6 +78,11 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
           $ uriRequest
             { requestHeaders = headers ++ requestHeaders uriRequest
             }
+      mkAttribute (NameValue nvName nvValue) = mapLeft (err400 InvalidParams) $ do
+        rawValueTemplate <- mapLeft Text.pack $ parseTemplate nvValue
+        renderedValue <- renderTemplate env rawValueTemplate
+        pure (nvName, renderedValue)
+
   -- Allow telemetry endpoints to be unset when not enabled
   _oteleiTracesBaseRequest <- case _oecTracesEndpoint of
     Nothing
@@ -103,16 +108,14 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
       | OtelLogs `Set.member` enabledDataTypes ->
           mkExportReq rawLogsEndpoint
     _ -> pure Nothing -- disabled
+  _oteleiResourceAttributes <- Map.fromList <$> mapM mkAttribute _oecResourceAttributes
+
   pure
     $ OtelExporterInfo
       { _oteleiMetricsBaseRequest,
         _oteleiTracesBaseRequest,
         _oteleiLogsBaseRequest,
-        _oteleiResourceAttributes =
-          Map.fromList
-            $ map
-              (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-              _oecResourceAttributes,
+        _oteleiResourceAttributes,
         _oteleiTracesPropagator =
           mkOtelTracesPropagator
             $ uniques (_oecTracesPropagators <> defaultOtelExporterTracesPropagators)

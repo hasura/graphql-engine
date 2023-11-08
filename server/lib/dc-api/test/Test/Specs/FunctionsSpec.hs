@@ -116,7 +116,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
                   ]
               query' = Data.emptyQuery & qFields ?~ fields
               authorRelationship =
-                let authorsJoinFieldMapping = HashMap.fromList [(API.ColumnName "author_id", API.ColumnName "id")]
+                let authorsJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "author_id", API.mkColumnSelector $ API.ColumnName "id")]
                  in API.FunctionRelationships
                       _ftdSearchArticlesFunctionName
                       ( HashMap.fromList
@@ -164,7 +164,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
                   (API.ScalarValueComparison (API.ScalarValue (Number 10) (API.ScalarType "number")))
               query' = Data.emptyQuery & qFields ?~ fields & qWhere ?~ whereClause & qLimit ?~ 2
               authorRelationship =
-                let authorsJoinFieldMapping = HashMap.fromList [(API.ColumnName "author_id", API.ColumnName "id")]
+                let authorsJoinFieldMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "author_id", API.mkColumnSelector $ API.ColumnName "id")]
                  in API.FunctionRelationships
                       _ftdSearchArticlesFunctionName
                       ( HashMap.fromList

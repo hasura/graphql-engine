@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, genColumnType, genColumnInfo, genColumnValueGenerationStrategy) where
+module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, genColumnSelector, genColumnType, genColumnInfo, genColumnValueGenerationStrategy) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
@@ -19,6 +19,12 @@ spec = do
   describe "ColumnName" $ do
     testToFromJSONToSchema (ColumnName "my_column_name") [aesonQQ|"my_column_name"|]
     jsonOpenApiProperties genColumnName
+  describe "ColumnSelector" $ do
+    describe "single column selector"
+      $ testToFromJSONToSchema (ColumnSelectorColumn $ ColumnName "foo") [aesonQQ|"foo"|]
+    describe "nested path selector"
+      $ testToFromJSONToSchema (ColumnSelectorPath [ColumnName "foo", ColumnName "bar"]) [aesonQQ|["foo","bar"]|]
+    jsonOpenApiProperties genColumnSelector
   describe "ColumnInfo" $ do
     describe "minimal"
       $ testFromJSON
@@ -55,6 +61,13 @@ spec = do
 
 genColumnName :: (MonadGen m) => m ColumnName
 genColumnName = ColumnName <$> genArbitraryAlphaNumText defaultRange
+
+genColumnSelector :: (MonadGen m) => m ColumnSelector
+genColumnSelector =
+  Gen.choice
+    [ ColumnSelectorPath <$> Gen.nonEmpty defaultRange genColumnName,
+      ColumnSelectorColumn <$> genColumnName
+    ]
 
 genColumnType :: Gen ColumnType
 genColumnType =

@@ -38,6 +38,7 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.LogicalModel.Metadata
 import Hasura.RQL.Types.Backend (Backend (..), ConstraintName)
+import Hasura.RQL.Types.Relationships.Local (RelMapping (..))
 import Hasura.RQL.Types.Source.Column (SourceColumnInfo)
 import Hasura.RQL.Types.Source.TableType
 import Prelude
@@ -102,7 +103,7 @@ instance (Backend b) => HasCodec (SourceForeignKeys b) where
 
 data SourceConstraint b = SourceConstraint
   { _scForeignTable :: TableName b,
-    _scColumnMapping :: HashMap (Column b) (Column b)
+    _scColumnMapping :: RelMapping b
   }
   deriving stock (Generic)
   deriving anyclass (Hashable)

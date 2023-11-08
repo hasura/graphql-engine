@@ -54,7 +54,7 @@ runResponseTemplateTransform ::
   ResponseTransformCtx ->
   Either TransformErrorBundle J.Value
 runResponseTemplateTransform template ResponseTransformCtx {responseTransformEngine = Kriti, ..} =
-  let context = [("$body", responseTransformBody), ("$request", J.toJSON responseTransformReqCtx), ("$response", J.object (["status" J..= responseStatusCode]))]
+  let context = [("$body", responseTransformBody), ("$request", J.toJSON responseTransformReqCtx), ("$response", J.object (["status" J..= responseStatusCode])), ("$session_variables", J.toJSON responseSessionVariables)]
       customFunctions = KFunc.sessionFunctions responseSessionVariables
       eResult = KFunc.runKritiWith (unTemplate $ template) context customFunctions
    in eResult & left \kritiErr ->

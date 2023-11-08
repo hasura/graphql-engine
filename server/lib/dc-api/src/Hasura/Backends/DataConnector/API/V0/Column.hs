@@ -3,6 +3,8 @@
 
 module Hasura.Backends.DataConnector.API.V0.Column
   ( ColumnName (..),
+    ColumnSelector (..),
+    mkColumnSelector,
     ColumnType (..),
     ColumnInfo (..),
     ciName,
@@ -13,19 +15,24 @@ module Hasura.Backends.DataConnector.API.V0.Column
     ciUpdatable,
     ciValueGenerated,
     ColumnValueGenerationStrategy (..),
+    ColumnPathMapping (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec
+import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Data.Bitraversable (bitraverse)
 import Data.Data (Data)
+import Data.Either.Extra (maybeToEither)
+import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -43,6 +50,31 @@ newtype ColumnName = ColumnName {unColumnName :: Text}
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName unColumnName textCodec
+
+--------------------------------------------------------------------------------
+
+data ColumnSelector
+  = ColumnSelectorPath (NonEmpty ColumnName)
+  | ColumnSelectorColumn (ColumnName)
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnSelector
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec ColumnSelector where
+  codec = disjointMatchChoiceCodec pathCodec columnCodec chooser
+    where
+      pathCodec = dimapCodec ColumnSelectorPath id (codec @(NonEmpty ColumnName))
+      columnCodec = dimapCodec ColumnSelectorColumn id (codec @ColumnName)
+      chooser = \case
+        ColumnSelectorPath p -> Left p
+        ColumnSelectorColumn c -> Right c
+
+instance FromJSONKey ColumnSelector
+
+instance ToJSONKey ColumnSelector
+
+mkColumnSelector :: ColumnName -> ColumnSelector
+mkColumnSelector = ColumnSelectorColumn
 
 --------------------------------------------------------------------------------
 
@@ -135,3 +167,33 @@ instance HasCodec ColumnValueGenerationStrategy where
           ]
 
 $(makeLenses ''ColumnInfo)
+
+newtype ColumnPathMapping = ColumnPathMapping {unColumnPathMapping :: HashMap ColumnSelector ColumnSelector}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnPathMapping
+
+-- If all keys in the ColumnPathMapping are ColumnSelectors with a single column then we
+-- want to represent the mapping as a JSON object with the source columns as properties
+-- (using `codec @(HashMap ColumnName ColumnSelector)).
+-- This is required for backwards compatibility of the DC API.
+-- If some of the keys are not singletons then we can't use a JSON object so we use
+-- an array of pairs instead, as provided by `codec @(HashMap ColumnSelector ColumnSelector)`.
+instance HasCodec ColumnPathMapping where
+  codec =
+    matchChoiceCodec
+      (dimapCodec ColumnPathMapping unColumnPathMapping $ codec @(HashMap ColumnSelector ColumnSelector))
+      (dimapCodec columnMappingToColumnPathMapping id $ codec @(HashMap ColumnName ColumnSelector))
+      \m -> maybeToEither m (tryColumnPathMappingToColumnMapping m)
+    where
+      columnMappingToColumnPathMapping :: HashMap ColumnName ColumnSelector -> ColumnPathMapping
+      columnMappingToColumnPathMapping = ColumnPathMapping . HashMap.mapKeys mkColumnSelector
+
+      tryColumnPathMappingToColumnMapping :: ColumnPathMapping -> Maybe (HashMap ColumnName ColumnSelector)
+      tryColumnPathMappingToColumnMapping =
+        fmap HashMap.fromList . traverse (bitraverse tryColumnSelectorToColumnName pure) . HashMap.toList . unColumnPathMapping
+
+      tryColumnSelectorToColumnName :: ColumnSelector -> Maybe ColumnName
+      tryColumnSelectorToColumnName = \case
+        ColumnSelectorColumn columnName -> Just columnName
+        _ -> Nothing

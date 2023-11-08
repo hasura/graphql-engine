@@ -181,7 +181,7 @@ tests = do
                               API.Relationship
                                 { API._rTarget = mkTableTarget "Artist",
                                   API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  API._rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
                                 }
                             )
                           ]

@@ -33,6 +33,23 @@ const CustomDocItem = props => {
         cell.innerHTML = cell.innerHTML.replace(/_/g, '_<wbr>');
       });
     }
+
+    // dynamically updating the pg prop for the getting started cta
+    function updateGettingStartedParam() {
+      const linkElement = document.querySelector('.navbar__link.nav-link_getting-started');
+
+      if (linkElement) {
+        let page = props.location.pathname;
+        page = page.slice(0, -1);
+        page = page.replace('/docs/', 'docs_v2_').replace('latest/', '').replace(/\//g, '_');
+
+        const href = linkElement.getAttribute('href');
+        const newHref = href.replace(/pg=([^&]+)/, `pg=${page}`);
+        linkElement.setAttribute('href', newHref);
+      }
+    }
+
+    updateGettingStartedParam();
   }, []);
 
   // redirect them to the index if they attempt to directly navigate to a path with

@@ -4,21 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
+	"io"
+	"io/ioutil"
 )
 
 type modeHandler interface {
 	Apply(*ProjectMetadata) (io.Reader, error)
 	Diff(*ProjectMetadata) (io.Reader, error)
 	Parse(*ProjectMetadata) (io.Reader, error)
+	Export(*ProjectMetadata) (io.Reader, error)
 }
 
 func getModeHandler(mode cli.MetadataMode) modeHandler {
@@ -77,6 +77,16 @@ func (m *metadataModeDirectoryHandler) Diff(p *ProjectMetadata) (io.Reader, erro
 	return r, nil
 }
 
+func (m *metadataModeDirectoryHandler) Export(p *ProjectMetadata) (io.Reader, error) {
+	var op errors.Op = "metadata.metadataModeDirectoryHandler.Export"
+	r, err := export(p, p.ec.MetadataMode)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	return r, nil
+}
+
 func diff(p *ProjectMetadata) (io.Reader, error) {
 	var op errors.Op = "metadata.diff"
 	w := new(bytes.Buffer)
@@ -121,6 +131,15 @@ func (m *metadataModeJSONHandler) Diff(p *ProjectMetadata) (io.Reader, error) {
 	return r, nil
 }
 
+func (m *metadataModeJSONHandler) Export(p *ProjectMetadata) (io.Reader, error) {
+	var op errors.Op = "metadata.metadataModeDirectoryHandler.Export"
+	r, err := export(p, p.ec.MetadataMode)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return r, nil
+}
+
 type metadataModeYAMLHandler struct{}
 
 func (m *metadataModeYAMLHandler) Apply(p *ProjectMetadata) (io.Reader, error) {
@@ -148,6 +167,15 @@ func (m *metadataModeYAMLHandler) Parse(p *ProjectMetadata) (io.Reader, error) {
 func (m *metadataModeYAMLHandler) Diff(p *ProjectMetadata) (io.Reader, error) {
 	var op errors.Op = "metadata.metadataModeYAMLHandler.Diff"
 	r, err := diff(p)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return r, nil
+}
+
+func (m *metadataModeYAMLHandler) Export(p *ProjectMetadata) (io.Reader, error) {
+	var op errors.Op = "metadata.metadataModeYAMLHandler.Export"
+	r, err := export(p, p.ec.MetadataMode)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -193,4 +221,27 @@ func apply(p *ProjectMetadata, mode cli.MetadataMode) (io.Reader, error) {
 		return nil, errors.E(op, fmt.Errorf("encoding json response from server: %w", err))
 	}
 	return b, nil
+}
+
+func export(p *ProjectMetadata, mode cli.MetadataMode) (io.Reader, error) {
+	var op errors.Op = "metadata.export"
+	metadata, err := p.ec.APIClient.V1Metadata.ExportMetadata()
+	if err != nil {
+		return nil, errors.E(op, fmt.Errorf("exporting metadata from server: %w", err))
+	}
+
+	var metadataBytes []byte
+	metadataBytes, err = ioutil.ReadAll(metadata)
+	if err != nil {
+		return nil, errors.E(op, fmt.Errorf("reading metadata from response: %w", err))
+	}
+
+	if mode == cli.MetadataModeYAML {
+		metadataBytes, err = metadatautil.JSONToYAML(metadataBytes)
+		if err != nil {
+			return nil, errors.E(op, fmt.Errorf("parsing metadata to yaml: %w", err))
+		}
+	}
+
+	return bytes.NewReader(metadataBytes), nil
 }

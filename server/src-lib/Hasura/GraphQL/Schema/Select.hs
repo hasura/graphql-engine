@@ -1560,7 +1560,7 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
                     RelTargetTable tn -> Just tn
                     _ -> Nothing
                in if (remoteTableName == Just table)
-                    && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
+                    && (unRelMapping (riMapping remoteRI) `HashMap.isInverseOf` unRelMapping (riMapping ri))
                     && (thisTablePerm == rfFilter)
                     then BoolAnd []
                     else x
@@ -1610,7 +1610,7 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
       nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
-          let columns = HashMap.keys $ riMapping ri
+          let columns = fmap (getColumnPathColumn @b) $ HashMap.keys $ unRelMapping $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
               findColumn col = HashMap.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn . _SCIScalarColumn
           -- Fetch information about the referencing columns of the foreign key
@@ -1627,7 +1627,7 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
         $ P.subselection_ relFieldName desc selectionSetParser
         <&> \fields ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ deduplicatePermissions
             $ IR._tpFilter
@@ -1639,7 +1639,7 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+                $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable
                 $ deduplicatePermissions' selectExp
           relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> Name.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
@@ -1658,8 +1658,8 @@ relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = 
       pure
         $ catMaybes
           [ Just arrayRelField,
-            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteAggField,
-            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteConnectionField
+            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable) <$> remoteAggField,
+            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) Nullable) <$> remoteConnectionField
           ]
 relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQueryName} = runMaybeT do
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
@@ -1680,7 +1680,7 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
         $ pure
         $ nativeQueryParser
         <&> \selectExp ->
-          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) nullability selectExp)
     ArrRel -> do
       nativeQueryInfo <- askNativeQueryInfo nativeQueryName
 
@@ -1697,4 +1697,4 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
+            $ IR.AnnRelationSelectG (riName ri) (unRelMapping $ riMapping ri) innerNullability selectExp
