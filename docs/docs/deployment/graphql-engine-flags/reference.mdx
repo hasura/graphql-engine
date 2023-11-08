@@ -52,11 +52,10 @@ above, databases can be connected using any custom environment variables of your
 ### Metadata Database URL
 
 This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the
-Metadata. This can also be a URI of the form `dynamic-from-file:///path/to/file`, where the referenced
-file contains a postgres connection string, which will be read dynamically every time a new
-connection is established. This allows the server to be used in an environment where secrets are
-rotated frequently.
+`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata. This can also be a URI of the form
+`dynamic-from-file:///path/to/file`, where the referenced file contains a postgres connection string, which will be read
+dynamically every time a new connection is established. This allows the server to be used in an environment where
+secrets are rotated frequently.
 
 |                     |                                                                             |
 | ------------------- | --------------------------------------------------------------------------- |
@@ -210,8 +209,8 @@ Whether or not to send the request body (graphql request/variables) to the auth 
 
 Stringify certain
 [BigQuery numeric types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#numeric_types),
-specifically `bignumeric`, `float64`, `int64`, `numeric` and aliases thereof, as they don't fit into the
-`IEnterprise EditionE 754` spec for JSON encoding-decoding.
+specifically `bignumeric`, `float64`, `int64`, `numeric` and aliases thereof, as they don't fit into the `IEEE 754` spec
+for JSON encoding-decoding.
 
 |                     |                                                |
 | ------------------- | ---------------------------------------------- |
@@ -332,17 +331,17 @@ headers on any request.
 
 Enables the ability to source Postgres connection strings from files on disk using
 [DynamicFromFile](/api-reference/syntax-defs.mdx#pgsourceconnectioninfo), and the ability for
-[Template Variables](/databases/database-config/data-connector-config.mdx#template-variables) to
-use the contents of files in Data Connector configuration transforms. File paths used with these
-features must start with the prefix set in this environment variable.
+[Template Variables](/databases/database-config/data-connector-config.mdx#template-variables) to use the contents of
+files in Data Connector configuration transforms. File paths used with these features must start with the prefix set in
+this environment variable.
 
-|                     |                                                                          |
-| ------------------- | ------------------------------------------------------------------------ |
-| **Flag**            | N/A                                                                      |
-| **Env var**         | `HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX`                     |
-| **Accepted values** | String (representing a filesystem path prefix, such as `/var/secrets/`)  |
-| **Default**         | `null`                                                                   |
-| **Supported in**    | CE, Enterprise Edition                                                   |
+|                     |                                                                         |
+| ------------------- | ----------------------------------------------------------------------- |
+| **Flag**            | N/A                                                                     |
+| **Env var**         | `HASURA_GRAPHQL_DYNAMIC_SECRETS_ALLOWED_PATH_PREFIX`                    |
+| **Accepted values** | String (representing a filesystem path prefix, such as `/var/secrets/`) |
+| **Default**         | `null`                                                                  |
+| **Supported in**    | CE, Enterprise Edition                                                  |
 
 ### Enable Allow List
 
@@ -1055,7 +1054,7 @@ any - will be sent, at most, once during this interval.
 ### Stringify Numeric Types
 
 Stringify certain [Postgres numeric types](/schema/postgres/postgresql-types.mdx), specifically `bigint` ,`numeric`
-,`decimal` and `double precision` as they don't fit into the `IEnterprise EditionE-754` spec for JSON encoding-decoding.
+,`decimal` and `double precision` as they don't fit into the `IEEE-754` spec for JSON encoding-decoding.
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
