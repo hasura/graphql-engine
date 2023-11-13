@@ -253,7 +253,7 @@ buildSchemaOptions ::
   HashSet ExperimentalFeature ->
   SchemaOptions
 buildSchemaOptions
-  ( SQLGenCtx stringifyNum dangerousBooleanCollapse remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
+  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
     functionPermsCtx
     )
   expFeatures =

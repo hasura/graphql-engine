@@ -31,6 +31,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     wsReadCookieOption,
     stringifyNumOption,
     dangerousBooleanCollapseOption,
+    backwardsCompatibleNullInNonNullableVariablesOption,
     remoteNullForwardingPolicyOption,
     enabledAPIsOption,
     mxRefetchDelayOption,
@@ -124,6 +125,7 @@ serveCommandParser =
     <*> parseWsReadCookie
     <*> parseStringifyNum
     <*> parseDangerousBooleanCollapse
+    <*> parseBackwardsCompatibleNullInNonNullableVariables
     <*> parseRemoteNullForwardingPolicy
     <*> parseEnabledAPIs
     <*> parseMxRefetchDelay
@@ -635,6 +637,26 @@ dangerousBooleanCollapseOption =
       Config._helpMessage =
         "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
           <> " value will be interpreted to mean that the field should be ignored"
+          <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+    }
+
+parseBackwardsCompatibleNullInNonNullableVariables :: Opt.Parser (Maybe Options.BackwardsCompatibleNullInNonNullableVariables)
+parseBackwardsCompatibleNullInNonNullableVariables =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "null-in-nonnullable-variables"
+          <> Opt.help (Config._helpMessage backwardsCompatibleNullInNonNullableVariablesOption)
+      )
+
+backwardsCompatibleNullInNonNullableVariablesOption :: Config.Option Options.BackwardsCompatibleNullInNonNullableVariables
+backwardsCompatibleNullInNonNullableVariablesOption =
+  Config.Option
+    { Config._default = Options.Don'tAllowNullInNonNullableVariables,
+      Config._envVar = "HASURA_GRAPHQL_BACKWARDS_COMPAT_NULL_IN_NONNULLABLE_VARIABLES",
+      Config._helpMessage =
+        "Emulate unexpected behavior of allowing 'null' values for non-nullable variables"
+          <> " exists before v2.34.0."
           <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
     }
 

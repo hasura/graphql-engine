@@ -390,6 +390,7 @@ getResolvedExecPlan
               tracesPropagator
               prometheusMetrics
               gCtx
+              sqlGenCtx
               userInfo
               reqHeaders
               directives
@@ -426,6 +427,7 @@ getResolvedExecPlan
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" $ do
           (normalizedDirectives, normalizedSelectionSet) <-
             ER.resolveVariables
+              (nullInNonNullableVariables sqlGenCtx)
               varDefs
               (fromMaybe mempty (_grVariables reqUnparsed))
               directives
