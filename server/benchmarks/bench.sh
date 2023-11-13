@@ -255,12 +255,16 @@ function maybe_launch_hasura_container() {
       --env HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
       --env HASURA_GRAPHQL_ADMIN_SECRET \
       --env HASURA_GRAPHQL_EE_LICENSE_KEY \
+      --env HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL=0 \
+      --env HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL=0 \
       $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve \
         +RTS -T $HASURA_RTS -RTS
-      # ^^^ We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
+      # ^^^ - We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
       #     inspecting memory usage stats
+      #     - We disable some unneeded (currently) polling to try to eliminate
+      #     some sources of non-determinism
   else
     echo_pretty "We'll benchmark the hasura instance at port $HASURA_GRAPHQL_SERVER_PORT"
   fi
