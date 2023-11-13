@@ -82,7 +82,7 @@
 </span><span id="line-82"></span><span>
 </span><span id="line-83"></span><span class="hs-keyword">newtype</span><span> </span><span id="SubscriberId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberId"><span class="hs-identifier hs-var">SubscriberId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubscriberId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberId"><span class="hs-identifier hs-var">SubscriberId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSubscriberId"><span class="annot"><span class="annottext">SubscriberId -&gt; UUID
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unSubscriberId"><span class="hs-identifier hs-var hs-var">unSubscriberId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-types-1.0.5-07c347266924b5864e7fa85e20a45e422e8afaa081f8ec1365ac0ba2259fb28b/share/doc/html/src/Data.UUID.Types.Internal.html#UUID"><span class="hs-identifier hs-type">UUID.UUID</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853143"><span id="local-6989586621687853149"><span id="local-6989586621687853153"><span class="annot"><span class="annottext">Int -&gt; SubscriberId -&gt; ShowS
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856134"><span id="local-6989586621687856140"><span id="local-6989586621687856144"><span class="annot"><span class="annottext">Int -&gt; SubscriberId -&gt; ShowS
 [SubscriberId] -&gt; ShowS
 SubscriberId -&gt; String
 (Int -&gt; SubscriberId -&gt; ShowS)
@@ -97,7 +97,7 @@ $cshow :: SubscriberId -&gt; String
 show :: SubscriberId -&gt; String
 $cshowList :: [SubscriberId] -&gt; ShowS
 showList :: [SubscriberId] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853157"><span id="local-6989586621687853162"><span class="annot"><span class="annottext">SubscriberId -&gt; SubscriberId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856148"><span id="local-6989586621687856153"><span class="annot"><span class="annottext">SubscriberId -&gt; SubscriberId -&gt; Bool
 (SubscriberId -&gt; SubscriberId -&gt; Bool)
 -&gt; (SubscriberId -&gt; SubscriberId -&gt; Bool) -&gt; Eq SubscriberId
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -105,7 +105,7 @@ $c== :: SubscriberId -&gt; SubscriberId -&gt; Bool
 == :: SubscriberId -&gt; SubscriberId -&gt; Bool
 $c/= :: SubscriberId -&gt; SubscriberId -&gt; Bool
 /= :: SubscriberId -&gt; SubscriberId -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853168"><span id="local-6989586621687853170"><span class="annot"><span class="annottext">(forall x. SubscriberId -&gt; Rep SubscriberId x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856159"><span id="local-6989586621687856161"><span class="annot"><span class="annottext">(forall x. SubscriberId -&gt; Rep SubscriberId x)
 -&gt; (forall x. Rep SubscriberId x -&gt; SubscriberId)
 -&gt; Generic SubscriberId
 forall x. Rep SubscriberId x -&gt; SubscriberId
@@ -116,7 +116,7 @@ $cfrom :: forall x. SubscriberId -&gt; Rep SubscriberId x
 from :: forall x. SubscriberId -&gt; Rep SubscriberId x
 $cto :: forall x. Rep SubscriberId x -&gt; SubscriberId
 to :: forall x. Rep SubscriberId x -&gt; SubscriberId
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853176"><span id="local-6989586621687853181"><span class="annot"><span class="annottext">Eq SubscriberId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856167"><span id="local-6989586621687856172"><span class="annot"><span class="annottext">Eq SubscriberId
 Eq SubscriberId
 -&gt; (Int -&gt; SubscriberId -&gt; Int)
 -&gt; (SubscriberId -&gt; Int)
@@ -128,7 +128,7 @@ $chashWithSalt :: Int -&gt; SubscriberId -&gt; Int
 hashWithSalt :: Int -&gt; SubscriberId -&gt; Int
 $chash :: SubscriberId -&gt; Int
 hash :: SubscriberId -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853187"><span id="local-6989586621687853192"><span id="local-6989586621687853196"><span id="local-6989586621687853200"><span class="annot"><span class="annottext">[SubscriberId] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856178"><span id="local-6989586621687856183"><span id="local-6989586621687856187"><span id="local-6989586621687856191"><span class="annot"><span class="annottext">[SubscriberId] -&gt; Value
 [SubscriberId] -&gt; Encoding
 SubscriberId -&gt; Value
 SubscriberId -&gt; Encoding
@@ -168,7 +168,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-93"></span><span class="hs-comment">-- in pollerlog</span><span>
 </span><span id="line-94"></span><span class="hs-keyword">newtype</span><span> </span><span id="SubscriberMetadata"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberMetadata"><span class="hs-identifier hs-var">SubscriberMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SubscriberMetadata"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberMetadata"><span class="hs-identifier hs-var">SubscriberMetadata</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSubscriberMetadata"><span class="annot"><span class="annottext">SubscriberMetadata -&gt; Value
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unSubscriberMetadata"><span class="hs-identifier hs-var hs-var">unSubscriberMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853209"><span id="local-6989586621687853214"><span id="local-6989586621687853218"><span class="annot"><span class="annottext">Int -&gt; SubscriberMetadata -&gt; ShowS
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856200"><span id="local-6989586621687856205"><span id="local-6989586621687856209"><span class="annot"><span class="annottext">Int -&gt; SubscriberMetadata -&gt; ShowS
 [SubscriberMetadata] -&gt; ShowS
 SubscriberMetadata -&gt; String
 (Int -&gt; SubscriberMetadata -&gt; ShowS)
@@ -183,7 +183,7 @@ $cshow :: SubscriberMetadata -&gt; String
 show :: SubscriberMetadata -&gt; String
 $cshowList :: [SubscriberMetadata] -&gt; ShowS
 showList :: [SubscriberMetadata] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853221"><span id="local-6989586621687853226"><span class="annot"><span class="annottext">SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856212"><span id="local-6989586621687856217"><span class="annot"><span class="annottext">SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
 (SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool)
 -&gt; (SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool)
 -&gt; Eq SubscriberMetadata
@@ -192,7 +192,7 @@ $c== :: SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
 == :: SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
 $c/= :: SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
 /= :: SubscriberMetadata -&gt; SubscriberMetadata -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853231"><span id="local-6989586621687853235"><span id="local-6989586621687853239"><span id="local-6989586621687853243"><span class="annot"><span class="annottext">[SubscriberMetadata] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856222"><span id="local-6989586621687856226"><span id="local-6989586621687856230"><span id="local-6989586621687856234"><span class="annot"><span class="annottext">[SubscriberMetadata] -&gt; Value
 [SubscriberMetadata] -&gt; Encoding
 SubscriberMetadata -&gt; Value
 SubscriberMetadata -&gt; Encoding
@@ -223,11 +223,11 @@ toEncodingList :: [SubscriberMetadata] -&gt; Encoding
 -&gt; Maybe OperationName
 -&gt; RequestId
 -&gt; SubscriberMetadata
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#mkSubscriberMetadata"><span class="hs-identifier hs-var hs-var">mkSubscriberMetadata</span></a></span></span><span> </span><span id="local-6989586621687853247"><span class="annot"><span class="annottext">WSId
-</span><a href="#local-6989586621687853247"><span class="hs-identifier hs-var">websocketId</span></a></span></span><span> </span><span id="local-6989586621687853248"><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621687853248"><span class="hs-identifier hs-var">operationId</span></a></span></span><span> </span><span id="local-6989586621687853249"><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621687853249"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span id="local-6989586621687853250"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687853250"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#mkSubscriberMetadata"><span class="hs-identifier hs-var hs-var">mkSubscriberMetadata</span></a></span></span><span> </span><span id="local-6989586621687856238"><span class="annot"><span class="annottext">WSId
+</span><a href="#local-6989586621687856238"><span class="hs-identifier hs-var">websocketId</span></a></span></span><span> </span><span id="local-6989586621687856239"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621687856239"><span class="hs-identifier hs-var">operationId</span></a></span></span><span> </span><span id="local-6989586621687856240"><span class="annot"><span class="annottext">Maybe OperationName
+</span><a href="#local-6989586621687856240"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span id="local-6989586621687856241"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687856241"><span class="hs-identifier hs-var">reqId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">Value -&gt; SubscriberMetadata
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberMetadata"><span class="hs-identifier hs-var">SubscriberMetadata</span></a></span><span>
 </span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">(Value -&gt; SubscriberMetadata) -&gt; Value -&gt; SubscriberMetadata
@@ -239,25 +239,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">WSId
-</span><a href="#local-6989586621687853247"><span class="hs-identifier hs-var">websocketId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856238"><span class="hs-identifier hs-var">websocketId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-102"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;operation_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; OperationId -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
-</span><a href="#local-6989586621687853248"><span class="hs-identifier hs-var">operationId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856239"><span class="hs-identifier hs-var">operationId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;operation_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe OperationName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621687853249"><span class="hs-identifier hs-var">operationName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856240"><span class="hs-identifier hs-var">operationName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RequestId -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687853250"><span class="hs-identifier hs-var">reqId</span></a></span><span>
+</span><a href="#local-6989586621687856241"><span class="hs-identifier hs-var">reqId</span></a></span><span>
 </span><span id="line-105"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-keyword">data</span><span> </span><span id="Subscriber"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Subscriber"><span class="hs-identifier hs-var">Subscriber</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Subscriber"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Subscriber"><span class="hs-identifier hs-var">Subscriber</span></a></span></span><span>
@@ -295,7 +295,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><span id="line-131"></span><span class="hs-keyword">data</span><span> </span><span id="PollerResponseState"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerResponseState"><span class="hs-identifier hs-var">PollerResponseState</span></a></span></span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PRSSuccess"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PRSSuccess"><span class="hs-identifier hs-var">PRSSuccess</span></a></span></span><span>
 </span><span id="line-133"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PRSError"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PRSError"><span class="hs-identifier hs-var">PRSError</span></a></span></span><span>
-</span><span id="line-134"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853268"><span id="local-6989586621687853270"><span class="annot"><span class="annottext">PollerResponseState -&gt; PollerResponseState -&gt; Bool
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856259"><span id="local-6989586621687856261"><span class="annot"><span class="annottext">PollerResponseState -&gt; PollerResponseState -&gt; Bool
 (PollerResponseState -&gt; PollerResponseState -&gt; Bool)
 -&gt; (PollerResponseState -&gt; PollerResponseState -&gt; Bool)
 -&gt; Eq PollerResponseState
@@ -317,7 +317,7 @@ $c/= :: PollerResponseState -&gt; PollerResponseState -&gt; Bool
 </span><span id="line-144"></span><span class="hs-comment">-- therefore a single row in the query result).</span><span>
 </span><span id="line-145"></span><span class="hs-comment">--</span><span>
 </span><span id="line-146"></span><span class="hs-comment">-- See also 'CohortMap'.</span><span>
-</span><span id="line-147"></span><span class="hs-keyword">data</span><span> </span><span id="Cohort"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-var">Cohort</span></a></span></span><span> </span><span id="local-6989586621687852860"><span class="annot"><a href="#local-6989586621687852860"><span class="hs-identifier hs-type">streamCursorVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Cohort"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-var">Cohort</span></a></span></span><span>
+</span><span id="line-147"></span><span class="hs-keyword">data</span><span> </span><span id="Cohort"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-var">Cohort</span></a></span></span><span> </span><span id="local-6989586621687855851"><span class="annot"><a href="#local-6989586621687855851"><span class="hs-identifier hs-type">streamCursorVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Cohort"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-var">Cohort</span></a></span></span><span>
 </span><span id="line-148"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | a unique identifier used to identify the cohort in the generated query</span></span><span>
 </span><span id="line-149"></span><span>    </span><span id="_cCohortId"><span class="annot"><span class="annottext">forall streamCursorVars. Cohort streamCursorVars -&gt; CohortId
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_cCohortId"><span class="hs-identifier hs-var hs-var">_cCohortId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CohortId"><span class="hs-identifier hs-type">CohortId</span></a></span><span class="hs-special">,</span><span>
@@ -338,14 +338,14 @@ Cohort streamCursorVars -&gt; TVar (Maybe ResponseHash)
 </span><span id="line-160"></span><span>    </span><span class="hs-comment">--   of live query subscription, this field is ignored by setting `streamCursorVars` to `()`</span><span>
 </span><span id="line-161"></span><span>    </span><span id="_cStreamCursorVariables"><span class="annot"><span class="annottext">forall streamCursorVars.
 Cohort streamCursorVars -&gt; streamCursorVars
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_cStreamCursorVariables"><span class="hs-identifier hs-var hs-var">_cStreamCursorVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687852860"><span class="hs-identifier hs-type">streamCursorVars</span></a></span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_cStreamCursorVariables"><span class="hs-identifier hs-var hs-var">_cStreamCursorVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687855851"><span class="hs-identifier hs-type">streamCursorVars</span></a></span><span>
 </span><span id="line-162"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-163"></span><span>
 </span><span id="line-164"></span><span class="hs-comment">-- | The @BatchId@ is a number based ID to uniquely identify a batch in a single poll and</span><span>
 </span><span id="line-165"></span><span class="hs-comment">--   it's used to identify the batch to which a cohort belongs to.</span><span>
 </span><span id="line-166"></span><span class="hs-keyword">newtype</span><span> </span><span id="BatchId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchId"><span class="hs-identifier hs-var">BatchId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BatchId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchId"><span class="hs-identifier hs-var">BatchId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unBatchId"><span class="annot"><span class="annottext">BatchId -&gt; Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_unBatchId"><span class="hs-identifier hs-var hs-var">_unBatchId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-167"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853282"><span id="local-6989586621687853287"><span id="local-6989586621687853291"><span class="annot"><span class="annottext">Int -&gt; BatchId -&gt; ShowS
+</span><span id="line-167"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856273"><span id="local-6989586621687856278"><span id="local-6989586621687856282"><span class="annot"><span class="annottext">Int -&gt; BatchId -&gt; ShowS
 [BatchId] -&gt; ShowS
 BatchId -&gt; String
 (Int -&gt; BatchId -&gt; ShowS)
@@ -358,7 +358,7 @@ $cshow :: BatchId -&gt; String
 show :: BatchId -&gt; String
 $cshowList :: [BatchId] -&gt; ShowS
 showList :: [BatchId] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853294"><span id="local-6989586621687853299"><span class="annot"><span class="annottext">BatchId -&gt; BatchId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856285"><span id="local-6989586621687856290"><span class="annot"><span class="annottext">BatchId -&gt; BatchId -&gt; Bool
 (BatchId -&gt; BatchId -&gt; Bool)
 -&gt; (BatchId -&gt; BatchId -&gt; Bool) -&gt; Eq BatchId
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -366,7 +366,7 @@ $c== :: BatchId -&gt; BatchId -&gt; Bool
 == :: BatchId -&gt; BatchId -&gt; Bool
 $c/= :: BatchId -&gt; BatchId -&gt; Bool
 /= :: BatchId -&gt; BatchId -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853304"><span id="local-6989586621687853308"><span id="local-6989586621687853312"><span id="local-6989586621687853316"><span class="annot"><span class="annottext">[BatchId] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856295"><span id="local-6989586621687856299"><span id="local-6989586621687856303"><span id="local-6989586621687856307"><span class="annot"><span class="annottext">[BatchId] -&gt; Value
 [BatchId] -&gt; Encoding
 BatchId -&gt; Value
 BatchId -&gt; Encoding
@@ -404,7 +404,7 @@ yet is at least as secure as the latest standard SHA-3&quot;.
 </span><span id="line-179"></span><span class="hs-comment">-- hash collision is ~4.294417&#215;10-63. See Note [Blake2b faster than SHA-256].</span><span>
 </span><span id="line-180"></span><span class="hs-keyword">newtype</span><span> </span><span id="ResponseHash"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#ResponseHash"><span class="hs-identifier hs-var">ResponseHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResponseHash"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#ResponseHash"><span class="hs-identifier hs-var">ResponseHash</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unResponseHash"><span class="annot"><span class="annottext">ResponseHash -&gt; Digest Blake2b_256
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unResponseHash"><span class="hs-identifier hs-var hs-var">unResponseHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/cryptonite-0.30-82f3091402b56d66b8a2f66a64904995ef7bae51b2ac35b5fcac45686819d431/share/doc/html/src/Crypto.Hash.Types.html#Digest"><span class="hs-identifier hs-type">CH.Digest</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/cryptonite-0.30-82f3091402b56d66b8a2f66a64904995ef7bae51b2ac35b5fcac45686819d431/share/doc/html/src/Crypto.Hash.Blake2b.html#Blake2b_256"><span class="hs-identifier hs-type">CH.Blake2b_256</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853322"><span id="local-6989586621687853327"><span id="local-6989586621687853331"><span class="annot"><span class="annottext">Int -&gt; ResponseHash -&gt; ShowS
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856313"><span id="local-6989586621687856318"><span id="local-6989586621687856322"><span class="annot"><span class="annottext">Int -&gt; ResponseHash -&gt; ShowS
 [ResponseHash] -&gt; ShowS
 ResponseHash -&gt; String
 (Int -&gt; ResponseHash -&gt; ShowS)
@@ -419,7 +419,7 @@ $cshow :: ResponseHash -&gt; String
 show :: ResponseHash -&gt; String
 $cshowList :: [ResponseHash] -&gt; ShowS
 showList :: [ResponseHash] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853334"><span id="local-6989586621687853339"><span class="annot"><span class="annottext">ResponseHash -&gt; ResponseHash -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856325"><span id="local-6989586621687856330"><span class="annot"><span class="annottext">ResponseHash -&gt; ResponseHash -&gt; Bool
 (ResponseHash -&gt; ResponseHash -&gt; Bool)
 -&gt; (ResponseHash -&gt; ResponseHash -&gt; Bool) -&gt; Eq ResponseHash
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -429,9 +429,9 @@ $c/= :: ResponseHash -&gt; ResponseHash -&gt; Bool
 /= :: ResponseHash -&gt; ResponseHash -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>
-</span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687853345"><span id="local-6989586621687853349"><span id="local-6989586621687853352"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#ResponseHash"><span class="hs-identifier hs-type">ResponseHash</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-184"></span><span>  </span><span id="local-6989586621687853358"><span class="annot"><span class="annottext">toJSON :: ResponseHash -&gt; Value
-</span><a href="#local-6989586621687853358"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
+</span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687856336"><span id="local-6989586621687856340"><span id="local-6989586621687856343"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#ResponseHash"><span class="hs-identifier hs-type">ResponseHash</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621687856349"><span class="annot"><span class="annottext">toJSON :: ResponseHash -&gt; Value
+</span><a href="#local-6989586621687856349"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Value)
 -&gt; (ResponseHash -&gt; String) -&gt; ResponseHash -&gt; Value
@@ -464,14 +464,14 @@ ba -&gt; Digest a
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="hs-comment">-- | This has the invariant, maintained in 'removeLiveQuery', that it contains</span><span>
 </span><span id="line-196"></span><span class="hs-comment">-- no 'Cohort' with zero total (existing + new) subscribers.</span><span>
-</span><span id="line-197"></span><span class="hs-keyword">type</span><span> </span><span id="CohortMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-var">CohortMap</span></a></span></span><span> </span><span id="local-6989586621687853364"><span class="annot"><a href="#local-6989586621687853364"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap.TMap</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortKey"><span class="hs-identifier hs-type">CohortKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-type">Cohort</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687853364"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span class="hs-keyword">type</span><span> </span><span id="CohortMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-var">CohortMap</span></a></span></span><span> </span><span id="local-6989586621687856355"><span class="annot"><a href="#local-6989586621687856355"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#TMap"><span class="hs-identifier hs-type">TMap.TMap</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortKey"><span class="hs-identifier hs-type">CohortKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-type">Cohort</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687856355"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span>
-</span><span id="line-199"></span><span id="local-6989586621687852879"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpCohortMap"><span class="hs-identifier hs-type">dumpCohortMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-type">CohortMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852879"><span class="hs-identifier hs-type">streamCursor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
+</span><span id="line-199"></span><span id="local-6989586621687855870"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpCohortMap"><span class="hs-identifier hs-type">dumpCohortMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-type">CohortMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855870"><span class="hs-identifier hs-type">streamCursor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
 </span><span id="line-200"></span><span id="dumpCohortMap"><span class="annot"><span class="annottext">dumpCohortMap :: forall streamCursor. CohortMap streamCursor -&gt; IO Value
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpCohortMap"><span class="hs-identifier hs-var hs-var">dumpCohortMap</span></a></span></span><span> </span><span id="local-6989586621687853382"><span class="annot"><span class="annottext">CohortMap streamCursor
-</span><a href="#local-6989586621687853382"><span class="hs-identifier hs-var">cohortMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621687853383"><span class="annot"><span class="annottext">[(CohortKey, Cohort streamCursor)]
-</span><a href="#local-6989586621687853383"><span class="hs-identifier hs-var">cohorts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM [(CohortKey, Cohort streamCursor)]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpCohortMap"><span class="hs-identifier hs-var hs-var">dumpCohortMap</span></a></span></span><span> </span><span id="local-6989586621687856373"><span class="annot"><span class="annottext">CohortMap streamCursor
+</span><a href="#local-6989586621687856373"><span class="hs-identifier hs-var">cohortMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621687856374"><span class="annot"><span class="annottext">[(CohortKey, Cohort streamCursor)]
+</span><a href="#local-6989586621687856374"><span class="hs-identifier hs-var">cohorts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM [(CohortKey, Cohort streamCursor)]
 -&gt; IO [(CohortKey, Cohort streamCursor)]
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM [(CohortKey, Cohort streamCursor)]
@@ -482,7 +482,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CohortMap streamCursor -&gt; STM [(CohortKey, Cohort streamCursor)]
 forall k v. TMap k v -&gt; STM [(k, v)]
 </span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-var">TMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">CohortMap streamCursor
-</span><a href="#local-6989586621687853382"><span class="hs-identifier hs-var">cohortMap</span></a></span><span>
+</span><a href="#local-6989586621687856373"><span class="hs-identifier hs-var">cohortMap</span></a></span><span>
 </span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">([Value] -&gt; Value) -&gt; IO [Value] -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -499,17 +499,17 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[(CohortKey, Cohort streamCursor)]
-</span><a href="#local-6989586621687853383"><span class="hs-identifier hs-var">cohorts</span></a></span><span> </span><span class="annot"><span class="annottext">(((CohortKey, Cohort streamCursor) -&gt; IO Value) -&gt; IO Value)
+</span><a href="#local-6989586621687856374"><span class="hs-identifier hs-var">cohorts</span></a></span><span> </span><span class="annot"><span class="annottext">(((CohortKey, Cohort streamCursor) -&gt; IO Value) -&gt; IO Value)
 -&gt; ((CohortKey, Cohort streamCursor) -&gt; IO Value) -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687853387"><span class="annot"><span class="annottext">CohortKey
-</span><a href="#local-6989586621687853387"><span class="hs-identifier hs-var">variableValues</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853388"><span class="annot"><span class="annottext">Cohort streamCursor
-</span><a href="#local-6989586621687853388"><span class="hs-identifier hs-var">cohort</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-203"></span><span>    </span><span id="local-6989586621687853389"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687853389"><span class="hs-identifier hs-var">cohortJ</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Cohort streamCursor -&gt; IO Value
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687856378"><span class="annot"><span class="annottext">CohortKey
+</span><a href="#local-6989586621687856378"><span class="hs-identifier hs-var">variableValues</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856379"><span class="annot"><span class="annottext">Cohort streamCursor
+</span><a href="#local-6989586621687856379"><span class="hs-identifier hs-var">cohort</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-203"></span><span>    </span><span id="local-6989586621687856380"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687856380"><span class="hs-identifier hs-var">cohortJ</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Cohort streamCursor -&gt; IO Value
 forall {streamCursorVars}. Cohort streamCursorVars -&gt; IO Value
-</span><a href="#local-6989586621687853390"><span class="hs-identifier hs-var">dumpCohort</span></a></span><span> </span><span class="annot"><span class="annottext">Cohort streamCursor
-</span><a href="#local-6989586621687853388"><span class="hs-identifier hs-var">cohort</span></a></span><span>
+</span><a href="#local-6989586621687856381"><span class="hs-identifier hs-var">dumpCohort</span></a></span><span> </span><span class="annot"><span class="annottext">Cohort streamCursor
+</span><a href="#local-6989586621687856379"><span class="hs-identifier hs-var">cohort</span></a></span><span>
 </span><span id="line-204"></span><span>    </span><span class="annot"><span class="annottext">Value -&gt; IO Value
 forall a. a -&gt; IO a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -523,42 +523,42 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">CohortKey
-</span><a href="#local-6989586621687853387"><span class="hs-identifier hs-var">variableValues</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856378"><span class="hs-identifier hs-var">variableValues</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-207"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;cohort&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687853389"><span class="hs-identifier hs-var">cohortJ</span></a></span><span>
+</span><a href="#local-6989586621687856380"><span class="hs-identifier hs-var">cohortJ</span></a></span><span>
 </span><span id="line-208"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-209"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-210"></span><span>    </span><span id="local-6989586621687853390"><span class="annot"><span class="annottext">dumpCohort :: Cohort streamCursorVars -&gt; IO Value
-</span><a href="#local-6989586621687853390"><span class="hs-identifier hs-var hs-var">dumpCohort</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-type">Cohort</span></a></span><span> </span><span id="local-6989586621687853413"><span class="annot"><span class="annottext">CohortId
-</span><a href="#local-6989586621687853413"><span class="hs-identifier hs-var">respId</span></a></span></span><span> </span><span id="local-6989586621687853414"><span class="annot"><span class="annottext">TVar (Maybe ResponseHash)
-</span><a href="#local-6989586621687853414"><span class="hs-identifier hs-var">respTV</span></a></span></span><span> </span><span id="local-6989586621687853415"><span class="annot"><span class="annottext">SubscriberMap
-</span><a href="#local-6989586621687853415"><span class="hs-identifier hs-var">curOps</span></a></span></span><span> </span><span id="local-6989586621687853416"><span class="annot"><span class="annottext">SubscriberMap
-</span><a href="#local-6989586621687853416"><span class="hs-identifier hs-var">newOps</span></a></span></span><span> </span><span class="annot"><span class="annottext">streamCursorVars
+</span><span id="line-210"></span><span>    </span><span id="local-6989586621687856381"><span class="annot"><span class="annottext">dumpCohort :: Cohort streamCursorVars -&gt; IO Value
+</span><a href="#local-6989586621687856381"><span class="hs-identifier hs-var hs-var">dumpCohort</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Cohort"><span class="hs-identifier hs-type">Cohort</span></a></span><span> </span><span id="local-6989586621687856404"><span class="annot"><span class="annottext">CohortId
+</span><a href="#local-6989586621687856404"><span class="hs-identifier hs-var">respId</span></a></span></span><span> </span><span id="local-6989586621687856405"><span class="annot"><span class="annottext">TVar (Maybe ResponseHash)
+</span><a href="#local-6989586621687856405"><span class="hs-identifier hs-var">respTV</span></a></span></span><span> </span><span id="local-6989586621687856406"><span class="annot"><span class="annottext">SubscriberMap
+</span><a href="#local-6989586621687856406"><span class="hs-identifier hs-var">curOps</span></a></span></span><span> </span><span id="local-6989586621687856407"><span class="annot"><span class="annottext">SubscriberMap
+</span><a href="#local-6989586621687856407"><span class="hs-identifier hs-var">newOps</span></a></span></span><span> </span><span class="annot"><span class="annottext">streamCursorVars
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-211"></span><span>      </span><span class="annot"><span class="annottext">STM Value -&gt; IO Value
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM Value -&gt; IO Value) -&gt; STM Value -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-212"></span><span>        </span><span id="local-6989586621687853417"><span class="annot"><span class="annottext">Maybe ResponseHash
-</span><a href="#local-6989586621687853417"><span class="hs-identifier hs-var">prevResHash</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Maybe ResponseHash) -&gt; STM (Maybe ResponseHash)
+</span><span id="line-212"></span><span>        </span><span id="local-6989586621687856408"><span class="annot"><span class="annottext">Maybe ResponseHash
+</span><a href="#local-6989586621687856408"><span class="hs-identifier hs-var">prevResHash</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Maybe ResponseHash) -&gt; STM (Maybe ResponseHash)
 forall a. TVar a -&gt; STM a
 </span><span class="hs-identifier hs-var">STM.readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Maybe ResponseHash)
-</span><a href="#local-6989586621687853414"><span class="hs-identifier hs-var">respTV</span></a></span><span>
-</span><span id="line-213"></span><span>        </span><span id="local-6989586621687853419"><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
-</span><a href="#local-6989586621687853419"><span class="hs-identifier hs-var">curOpIds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SubscriberMap -&gt; STM [(SubscriberId, Subscriber)]
+</span><a href="#local-6989586621687856405"><span class="hs-identifier hs-var">respTV</span></a></span><span>
+</span><span id="line-213"></span><span>        </span><span id="local-6989586621687856410"><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
+</span><a href="#local-6989586621687856410"><span class="hs-identifier hs-var">curOpIds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SubscriberMap -&gt; STM [(SubscriberId, Subscriber)]
 forall k v. TMap k v -&gt; STM [(k, v)]
 </span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-var">TMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">SubscriberMap
-</span><a href="#local-6989586621687853415"><span class="hs-identifier hs-var">curOps</span></a></span><span>
-</span><span id="line-214"></span><span>        </span><span id="local-6989586621687853420"><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
-</span><a href="#local-6989586621687853420"><span class="hs-identifier hs-var">newOpIds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SubscriberMap -&gt; STM [(SubscriberId, Subscriber)]
+</span><a href="#local-6989586621687856406"><span class="hs-identifier hs-var">curOps</span></a></span><span>
+</span><span id="line-214"></span><span>        </span><span id="local-6989586621687856411"><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
+</span><a href="#local-6989586621687856411"><span class="hs-identifier hs-var">newOpIds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SubscriberMap -&gt; STM [(SubscriberId, Subscriber)]
 forall k v. TMap k v -&gt; STM [(k, v)]
 </span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#toList"><span class="hs-identifier hs-var">TMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">SubscriberMap
-</span><a href="#local-6989586621687853416"><span class="hs-identifier hs-var">newOps</span></a></span><span>
+</span><a href="#local-6989586621687856407"><span class="hs-identifier hs-var">newOps</span></a></span><span>
 </span><span id="line-215"></span><span>        </span><span class="annot"><span class="annottext">Value -&gt; STM Value
 forall a. a -&gt; STM a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -572,7 +572,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">CohortId
-</span><a href="#local-6989586621687853413"><span class="hs-identifier hs-var">respId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856404"><span class="hs-identifier hs-var">respId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-218"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;current_ops&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [SubscriberId] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -583,7 +583,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(SubscriberId, Subscriber) -&gt; SubscriberId
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
-</span><a href="#local-6989586621687853419"><span class="hs-identifier hs-var">curOpIds</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856410"><span class="hs-identifier hs-var">curOpIds</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-219"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;new_ops&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [SubscriberId] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -594,13 +594,13 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(SubscriberId, Subscriber) -&gt; SubscriberId
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(SubscriberId, Subscriber)]
-</span><a href="#local-6989586621687853420"><span class="hs-identifier hs-var">newOpIds</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856411"><span class="hs-identifier hs-var">newOpIds</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-220"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;previous_result_hash&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe ResponseHash -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ResponseHash
-</span><a href="#local-6989586621687853417"><span class="hs-identifier hs-var">prevResHash</span></a></span><span>
+</span><a href="#local-6989586621687856408"><span class="hs-identifier hs-var">prevResHash</span></a></span><span>
 </span><span id="line-221"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-222"></span><span>
 </span><span id="line-223"></span><span class="hs-keyword">data</span><span> </span><span id="CohortSnapshot"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortSnapshot"><span class="hs-identifier hs-var">CohortSnapshot</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CohortSnapshot"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortSnapshot"><span class="hs-identifier hs-var">CohortSnapshot</span></a></span></span><span>
@@ -624,9 +624,9 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><span id="line-237"></span><span class="hs-comment">-- In SQL, an 'Poller' corresponds to a single, multiplexed query, though in</span><span>
 </span><span id="line-238"></span><span class="hs-comment">-- practice, 'Poller's with large numbers of 'Cohort's are batched into</span><span>
 </span><span id="line-239"></span><span class="hs-comment">-- multiple concurrent queries for performance reasons.</span><span>
-</span><span id="line-240"></span><span class="hs-keyword">data</span><span> </span><span id="Poller"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-var">Poller</span></a></span></span><span> </span><span id="local-6989586621687852904"><span class="annot"><a href="#local-6989586621687852904"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Poller"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-var">Poller</span></a></span></span><span>
+</span><span id="line-240"></span><span class="hs-keyword">data</span><span> </span><span id="Poller"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-var">Poller</span></a></span></span><span> </span><span id="local-6989586621687855895"><span class="annot"><a href="#local-6989586621687855895"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Poller"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-var">Poller</span></a></span></span><span>
 </span><span id="line-241"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pCohorts"><span class="annot"><span class="annottext">forall streamCursor. Poller streamCursor -&gt; CohortMap streamCursor
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pCohorts"><span class="hs-identifier hs-var hs-var">_pCohorts</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-type">CohortMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852904"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pCohorts"><span class="hs-identifier hs-var hs-var">_pCohorts</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#CohortMap"><span class="hs-identifier hs-type">CohortMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855895"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-242"></span><span>    </span><span id="_pPollerState"><span class="annot"><span class="annottext">forall streamCursor.
 Poller streamCursor -&gt; TVar PollerResponseState
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pPollerState"><span class="hs-identifier hs-var hs-var">_pPollerState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerResponseState"><span class="hs-identifier hs-type">PollerResponseState</span></a></span><span class="hs-special">,</span><span>
@@ -660,7 +660,7 @@ Poller streamCursor -&gt; TMap (Maybe OperationName) Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pId"><span class="hs-identifier hs-var hs-var">_pId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerId"><span class="hs-identifier hs-type">PollerId</span></a></span><span>
 </span><span id="line-265"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-266"></span><span>
-</span><span id="line-267"></span><span class="hs-keyword">data</span><span> </span><span id="PollerKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-var">PollerKey</span></a></span></span><span> </span><span id="local-6989586621687852916"><span class="annot"><a href="#local-6989586621687852916"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-267"></span><span class="hs-keyword">data</span><span> </span><span id="PollerKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-var">PollerKey</span></a></span></span><span> </span><span id="local-6989586621687855907"><span class="annot"><a href="#local-6989586621687855907"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-268"></span><span>  </span><span class="hs-comment">-- we don't need operation name here as a subscription will only have a</span><span>
 </span><span id="line-269"></span><span>  </span><span class="hs-comment">-- single top level field</span><span>
 </span><span id="line-270"></span><span>  </span><span id="PollerKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-var">PollerKey</span></a></span></span><span>
@@ -672,11 +672,11 @@ Poller streamCursor -&gt; TMap (Maybe OperationName) Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_lgQuery"><span class="hs-identifier hs-var hs-var">_lgQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-274"></span><span>    </span><span id="_lgConnectionKey"><span class="annot"><span class="annottext">forall (b :: BackendType).
 PollerKey b -&gt; ResolvedConnectionTemplate b
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_lgConnectionKey"><span class="hs-identifier hs-var hs-var">_lgConnectionKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852916"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_lgConnectionKey"><span class="hs-identifier hs-var hs-var">_lgConnectionKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ResolvedConnectionTemplate"><span class="hs-identifier hs-type">ResolvedConnectionTemplate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855907"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-275"></span><span>    </span><span id="_lgParameterizedQueryHash"><span class="annot"><span class="annottext">forall (b :: BackendType). PollerKey b -&gt; ParameterizedQueryHash
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_lgParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">_lgParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-276"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-277"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853443"><span id="local-6989586621687853445"><span class="annot"><span class="annottext">(forall x. PollerKey b -&gt; Rep (PollerKey b) x)
+</span><span id="line-277"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856434"><span id="local-6989586621687856436"><span class="annot"><span class="annottext">(forall x. PollerKey b -&gt; Rep (PollerKey b) x)
 -&gt; (forall x. Rep (PollerKey b) x -&gt; PollerKey b)
 -&gt; Generic (PollerKey b)
 forall x. Rep (PollerKey b) x -&gt; PollerKey b
@@ -691,19 +691,19 @@ $cto :: forall (b :: BackendType) x. Rep (PollerKey b) x -&gt; PollerKey b
 to :: forall x. Rep (PollerKey b) x -&gt; PollerKey b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-278"></span><span>
-</span><span id="line-279"></span><span id="local-6989586621687852934"><span id="local-6989586621687853449"><span id="local-6989586621687853462"><span id="local-6989586621687853466"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852934"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852934"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-279"></span><span id="local-6989586621687855925"><span id="local-6989586621687856440"><span id="local-6989586621687856453"><span id="local-6989586621687856457"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-280"></span><span>
-</span><span id="line-281"></span><span id="local-6989586621687852936"><span id="local-6989586621687853472"><span id="local-6989586621687853484"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852936"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852936"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-281"></span><span id="local-6989586621687855927"><span id="local-6989586621687856463"><span id="local-6989586621687856475"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855927"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855927"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-282"></span><span>
-</span><span id="line-283"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687852951"><span id="local-6989586621687853492"><span id="local-6989586621687853499"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852951"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852951"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-283"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687855942"><span id="local-6989586621687856483"><span id="local-6989586621687856490"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-284"></span><span>
-</span><span id="line-285"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687852953"><span id="local-6989586621687853531"><span id="local-6989586621687853535"><span id="local-6989586621687853538"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852953"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-286"></span><span>  </span><span id="local-6989586621687853549"><span class="annot"><span class="annottext">toJSON :: PollerKey b -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span id="local-6989586621687853550"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687853550"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687853551"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687853551"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span id="local-6989586621687853552"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687853552"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687853553"><span class="annot"><span class="annottext">ResolvedConnectionTemplate b
-</span><a href="#local-6989586621687853553"><span class="hs-identifier hs-var">_connectionKey</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><span id="line-285"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687855944"><span id="local-6989586621687856522"><span id="local-6989586621687856526"><span id="local-6989586621687856529"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855944"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-286"></span><span>  </span><span id="local-6989586621687856540"><span class="annot"><span class="annottext">toJSON :: PollerKey b -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span id="local-6989586621687856541"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687856541"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687856542"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687856542"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span id="local-6989586621687856543"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687856543"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687856544"><span class="annot"><span class="annottext">ResolvedConnectionTemplate b
+</span><a href="#local-6989586621687856544"><span class="hs-identifier hs-var">_connectionKey</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-287"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
@@ -712,24 +712,24 @@ to :: forall x. Rep (PollerKey b) x -&gt; PollerKey b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687853550"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856541"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-289"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RoleName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687853551"><span class="hs-keyword hs-var">role</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856542"><span class="hs-keyword hs-var">role</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-290"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687853552"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><a href="#local-6989586621687856543"><span class="hs-identifier hs-var">query</span></a></span><span>
 </span><span id="line-291"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-292"></span><span>
 </span><span id="line-293"></span><span class="hs-keyword">newtype</span><span> </span><span id="BackendPollerKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BackendPollerKey"><span class="hs-identifier hs-var">BackendPollerKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendPollerKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BackendPollerKey"><span class="hs-identifier hs-var">BackendPollerKey</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unBackendPollerKey"><span class="annot"><span class="annottext">BackendPollerKey -&gt; AnyBackend PollerKey
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unBackendPollerKey"><span class="hs-identifier hs-var hs-var">unBackendPollerKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-294"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853557"><span id="local-6989586621687853563"><span class="annot"><span class="annottext">BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
+</span><span id="line-294"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856548"><span id="local-6989586621687856554"><span class="annot"><span class="annottext">BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
 (BackendPollerKey -&gt; BackendPollerKey -&gt; Bool)
 -&gt; (BackendPollerKey -&gt; BackendPollerKey -&gt; Bool)
 -&gt; Eq BackendPollerKey
@@ -738,7 +738,7 @@ $c== :: BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
 == :: BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
 $c/= :: BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
 /= :: BackendPollerKey -&gt; BackendPollerKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853647"><span id="local-6989586621687853653"><span id="local-6989586621687853657"><span class="annot"><span class="annottext">Int -&gt; BackendPollerKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856638"><span id="local-6989586621687856644"><span id="local-6989586621687856648"><span class="annot"><span class="annottext">Int -&gt; BackendPollerKey -&gt; ShowS
 [BackendPollerKey] -&gt; ShowS
 BackendPollerKey -&gt; String
 (Int -&gt; BackendPollerKey -&gt; ShowS)
@@ -753,7 +753,7 @@ $cshow :: BackendPollerKey -&gt; String
 show :: BackendPollerKey -&gt; String
 $cshowList :: [BackendPollerKey] -&gt; ShowS
 showList :: [BackendPollerKey] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853693"><span id="local-6989586621687853699"><span class="annot"><span class="annottext">Eq BackendPollerKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856684"><span id="local-6989586621687856690"><span class="annot"><span class="annottext">Eq BackendPollerKey
 Eq BackendPollerKey
 -&gt; (Int -&gt; BackendPollerKey -&gt; Int)
 -&gt; (BackendPollerKey -&gt; Int)
@@ -767,14 +767,14 @@ $chash :: BackendPollerKey -&gt; Int
 hash :: BackendPollerKey -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-295"></span><span>
-</span><span id="line-296"></span><span class="hs-keyword">type</span><span> </span><span id="PollerMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerMap"><span class="hs-identifier hs-var">PollerMap</span></a></span></span><span> </span><span id="local-6989586621687853766"><span class="annot"><a href="#local-6989586621687853766"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-b69fadc81478b9a6a5d56f01a2394fd5db61dec0fbf306b965c731a41523f0e2/share/doc/html/src/StmContainers.Map.html#Map"><span class="hs-identifier hs-type">STMMap.Map</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BackendPollerKey"><span class="hs-identifier hs-type">BackendPollerKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-type">Poller</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687853766"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-296"></span><span class="hs-keyword">type</span><span> </span><span id="PollerMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerMap"><span class="hs-identifier hs-var">PollerMap</span></a></span></span><span> </span><span id="local-6989586621687856757"><span class="annot"><a href="#local-6989586621687856757"><span class="hs-identifier hs-type">streamCursor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-b69fadc81478b9a6a5d56f01a2394fd5db61dec0fbf306b965c731a41523f0e2/share/doc/html/src/StmContainers.Map.html#Map"><span class="hs-identifier hs-type">STMMap.Map</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BackendPollerKey"><span class="hs-identifier hs-type">BackendPollerKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-type">Poller</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687856757"><span class="hs-identifier hs-type">streamCursor</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-297"></span><span>
 </span><span id="line-298"></span><span class="annot"><span class="hs-comment">-- | For dev debugging, output subject to change.</span></span><span>
-</span><span id="line-299"></span><span id="local-6989586621687852974"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpPollerMap"><span class="hs-identifier hs-type">dumpPollerMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerMap"><span class="hs-identifier hs-type">PollerMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687852974"><span class="hs-identifier hs-type">streamCursor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
+</span><span id="line-299"></span><span id="local-6989586621687855965"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpPollerMap"><span class="hs-identifier hs-type">dumpPollerMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerMap"><span class="hs-identifier hs-type">PollerMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687855965"><span class="hs-identifier hs-type">streamCursor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
 </span><span id="line-300"></span><span id="dumpPollerMap"><span class="annot"><span class="annottext">dumpPollerMap :: forall streamCursor. Bool -&gt; PollerMap streamCursor -&gt; IO Value
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpPollerMap"><span class="hs-identifier hs-var hs-var">dumpPollerMap</span></a></span></span><span> </span><span id="local-6989586621687853800"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687853800"><span class="hs-identifier hs-var">extended</span></a></span></span><span> </span><span id="local-6989586621687853801"><span class="annot"><span class="annottext">PollerMap streamCursor
-</span><a href="#local-6989586621687853801"><span class="hs-identifier hs-var">pollerMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpPollerMap"><span class="hs-identifier hs-var hs-var">dumpPollerMap</span></a></span></span><span> </span><span id="local-6989586621687856791"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687856791"><span class="hs-identifier hs-var">extended</span></a></span></span><span> </span><span id="local-6989586621687856792"><span class="annot"><span class="annottext">PollerMap streamCursor
+</span><a href="#local-6989586621687856792"><span class="hs-identifier hs-var">pollerMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-301"></span><span>  </span><span class="annot"><span class="annottext">([Value] -&gt; Value) -&gt; IO [Value] -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; IO a -&gt; IO b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -783,8 +783,8 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(IO [Value] -&gt; IO Value) -&gt; IO [Value] -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-302"></span><span>    </span><span id="local-6989586621687853802"><span class="annot"><span class="annottext">[(BackendPollerKey, Poller streamCursor)]
-</span><a href="#local-6989586621687853802"><span class="hs-identifier hs-var">entries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM [(BackendPollerKey, Poller streamCursor)]
+</span><span id="line-302"></span><span>    </span><span id="local-6989586621687856793"><span class="annot"><span class="annottext">[(BackendPollerKey, Poller streamCursor)]
+</span><a href="#local-6989586621687856793"><span class="hs-identifier hs-var">entries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM [(BackendPollerKey, Poller streamCursor)]
 -&gt; IO [(BackendPollerKey, Poller streamCursor)]
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM [(BackendPollerKey, Poller streamCursor)]
@@ -804,7 +804,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; ListT STM (BackendPollerKey, Poller streamCursor)
 forall key value. Map key value -&gt; ListT STM (key, value)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-b69fadc81478b9a6a5d56f01a2394fd5db61dec0fbf306b965c731a41523f0e2/share/doc/html/src/StmContainers.Map.html#listT"><span class="hs-identifier hs-var">STMMap.listT</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap streamCursor
-</span><a href="#local-6989586621687853801"><span class="hs-identifier hs-var">pollerMap</span></a></span><span>
+</span><a href="#local-6989586621687856792"><span class="hs-identifier hs-var">pollerMap</span></a></span><span>
 </span><span id="line-303"></span><span>    </span><span class="annot"><span class="annottext">[(BackendPollerKey, Poller streamCursor)]
 -&gt; ((BackendPollerKey, Poller streamCursor) -&gt; IO Value)
 -&gt; IO [Value]
@@ -812,39 +812,39 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[(BackendPollerKey, Poller streamCursor)]
-</span><a href="#local-6989586621687853802"><span class="hs-identifier hs-var">entries</span></a></span><span> </span><span class="annot"><span class="annottext">(((BackendPollerKey, Poller streamCursor) -&gt; IO Value)
+</span><a href="#local-6989586621687856793"><span class="hs-identifier hs-var">entries</span></a></span><span> </span><span class="annot"><span class="annottext">(((BackendPollerKey, Poller streamCursor) -&gt; IO Value)
  -&gt; IO [Value])
 -&gt; ((BackendPollerKey, Poller streamCursor) -&gt; IO Value)
 -&gt; IO [Value]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687853805"><span class="annot"><span class="annottext">BackendPollerKey
-</span><a href="#local-6989586621687853805"><span class="hs-identifier hs-var">pollerKey</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-type">Poller</span></a></span><span> </span><span id="local-6989586621687853806"><span class="annot"><span class="annottext">CohortMap streamCursor
-</span><a href="#local-6989586621687853806"><span class="hs-identifier hs-var">cohortsMap</span></a></span></span><span> </span><span id="local-6989586621687853807"><span class="annot"><span class="annottext">TVar PollerResponseState
-</span><a href="#local-6989586621687853807"><span class="hs-identifier hs-var">_responseState</span></a></span></span><span> </span><span id="local-6989586621687853808"><span class="annot"><span class="annottext">TMVar PollerIOState
-</span><a href="#local-6989586621687853808"><span class="hs-identifier hs-var">ioState</span></a></span></span><span> </span><span id="local-6989586621687853809"><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621687853809"><span class="hs-identifier hs-var">_paramQueryHash</span></a></span></span><span> </span><span id="local-6989586621687853810"><span class="annot"><span class="annottext">TMap (Maybe OperationName) Int
-</span><a href="#local-6989586621687853810"><span class="hs-identifier hs-var">_opNames</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687856796"><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="#local-6989586621687856796"><span class="hs-identifier hs-var">pollerKey</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#Poller"><span class="hs-identifier hs-type">Poller</span></a></span><span> </span><span id="local-6989586621687856797"><span class="annot"><span class="annottext">CohortMap streamCursor
+</span><a href="#local-6989586621687856797"><span class="hs-identifier hs-var">cohortsMap</span></a></span></span><span> </span><span id="local-6989586621687856798"><span class="annot"><span class="annottext">TVar PollerResponseState
+</span><a href="#local-6989586621687856798"><span class="hs-identifier hs-var">_responseState</span></a></span></span><span> </span><span id="local-6989586621687856799"><span class="annot"><span class="annottext">TMVar PollerIOState
+</span><a href="#local-6989586621687856799"><span class="hs-identifier hs-var">ioState</span></a></span></span><span> </span><span id="local-6989586621687856800"><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><a href="#local-6989586621687856800"><span class="hs-identifier hs-var">_paramQueryHash</span></a></span></span><span> </span><span id="local-6989586621687856801"><span class="annot"><span class="annottext">TMap (Maybe OperationName) Int
+</span><a href="#local-6989586621687856801"><span class="hs-identifier hs-var">_opNames</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-304"></span><span>      </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendPollerKey -&gt; AnyBackend PollerKey
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unBackendPollerKey"><span class="hs-identifier hs-var">unBackendPollerKey</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
-</span><a href="#local-6989586621687853805"><span class="hs-identifier hs-var">pollerKey</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType). Backend b =&gt; PollerKey b -&gt; IO Value)
+</span><a href="#local-6989586621687856796"><span class="hs-identifier hs-var">pollerKey</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType). Backend b =&gt; PollerKey b -&gt; IO Value)
  -&gt; IO Value)
 -&gt; (forall (b :: BackendType).
     Backend b =&gt;
     PollerKey b -&gt; IO Value)
 -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span id="local-6989586621687853843"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687853843"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687853844"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687853844"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span id="local-6989586621687853845"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687853845"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687853846"><span class="annot"><span class="annottext">ResolvedConnectionTemplate b
-</span><a href="#local-6989586621687853846"><span class="hs-identifier hs-var">_connectionKey</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerKey"><span class="hs-identifier hs-type">PollerKey</span></a></span><span> </span><span id="local-6989586621687856834"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687856834"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687856835"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687856835"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span id="local-6989586621687856836"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687856836"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span id="local-6989586621687856837"><span class="annot"><span class="annottext">ResolvedConnectionTemplate b
+</span><a href="#local-6989586621687856837"><span class="hs-identifier hs-var">_connectionKey</span></a></span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-305"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerIOState"><span class="hs-identifier hs-type">PollerIOState</span></a></span><span> </span><span id="local-6989586621687853847"><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621687853847"><span class="hs-identifier hs-var">threadId</span></a></span></span><span> </span><span id="local-6989586621687853848"><span class="annot"><span class="annottext">PollerId
-</span><a href="#local-6989586621687853848"><span class="hs-identifier hs-var">pollerId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM PollerIOState -&gt; IO PollerIOState
+</span><span id="line-305"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerIOState"><span class="hs-identifier hs-type">PollerIOState</span></a></span><span> </span><span id="local-6989586621687856838"><span class="annot"><span class="annottext">Thread
+</span><a href="#local-6989586621687856838"><span class="hs-identifier hs-var">threadId</span></a></span></span><span> </span><span id="local-6989586621687856839"><span class="annot"><span class="annottext">PollerId
+</span><a href="#local-6989586621687856839"><span class="hs-identifier hs-var">pollerId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">STM PollerIOState -&gt; IO PollerIOState
 forall a. STM a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM PollerIOState -&gt; IO PollerIOState)
 -&gt; STM PollerIOState -&gt; IO PollerIOState
@@ -852,11 +852,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TMVar PollerIOState -&gt; STM PollerIOState
 forall a. TMVar a -&gt; STM a
 </span><span class="hs-identifier hs-var">STM.readTMVar</span></span><span> </span><span class="annot"><span class="annottext">TMVar PollerIOState
-</span><a href="#local-6989586621687853808"><span class="hs-identifier hs-var">ioState</span></a></span><span>
-</span><span id="line-306"></span><span>        </span><span id="local-6989586621687853850"><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621687853850"><span class="hs-identifier hs-var">cohortsJ</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687856799"><span class="hs-identifier hs-var">ioState</span></a></span><span>
+</span><span id="line-306"></span><span>        </span><span id="local-6989586621687856841"><span class="annot"><span class="annottext">Maybe Value
+</span><a href="#local-6989586621687856841"><span class="hs-identifier hs-var">cohortsJ</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-307"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687853800"><span class="hs-identifier hs-var">extended</span></a></span><span>
+</span><a href="#local-6989586621687856791"><span class="hs-identifier hs-var">extended</span></a></span><span>
 </span><span id="line-308"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Maybe Value
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Maybe Value) -&gt; IO Value -&gt; IO (Maybe Value)
@@ -864,7 +864,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">CohortMap streamCursor -&gt; IO Value
 forall streamCursor. CohortMap streamCursor -&gt; IO Value
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#dumpCohortMap"><span class="hs-identifier hs-var">dumpCohortMap</span></a></span><span> </span><span class="annot"><span class="annottext">CohortMap streamCursor
-</span><a href="#local-6989586621687853806"><span class="hs-identifier hs-var">cohortsMap</span></a></span><span>
+</span><a href="#local-6989586621687856797"><span class="hs-identifier hs-var">cohortsMap</span></a></span><span>
 </span><span id="line-309"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe Value -&gt; IO (Maybe Value)
 forall a. a -&gt; IO a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -884,13 +884,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687853843"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856834"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-313"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RoleName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687853844"><span class="hs-keyword hs-var">role</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856835"><span class="hs-keyword hs-var">role</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-314"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;thread_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -899,38 +899,38 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Thread -&gt; ThreadId
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-e3bd4e0e64dc114baa3abc247b1e60df834aa7935cf82aff7a3976b9f7bb0e91/share/doc/html/src/Control.Immortal.html#threadId"><span class="hs-identifier hs-var">Immortal.threadId</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
-</span><a href="#local-6989586621687853847"><span class="hs-identifier hs-var">threadId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856838"><span class="hs-identifier hs-var">threadId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-315"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;poller_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; PollerId -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">PollerId
-</span><a href="#local-6989586621687853848"><span class="hs-identifier hs-var">pollerId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856839"><span class="hs-identifier hs-var">pollerId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-316"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;multiplexed_query&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687853845"><span class="hs-identifier hs-var">query</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856836"><span class="hs-identifier hs-var">query</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-317"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;cohorts&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621687853850"><span class="hs-identifier hs-var">cohortsJ</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687856841"><span class="hs-identifier hs-var">cohortsJ</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-318"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; ParameterizedQueryHash -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621687853809"><span class="hs-identifier hs-var">_paramQueryHash</span></a></span><span>
+</span><a href="#local-6989586621687856800"><span class="hs-identifier hs-var">_paramQueryHash</span></a></span><span>
 </span><span id="line-319"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-320"></span><span>
 </span><span id="line-321"></span><span class="hs-comment">-- | An ID to track unique 'Poller's, so that we can gather metrics about each</span><span>
 </span><span id="line-322"></span><span class="hs-comment">-- poller</span><span>
 </span><span id="line-323"></span><span class="hs-keyword">newtype</span><span> </span><span id="PollerId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerId"><span class="hs-identifier hs-var">PollerId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PollerId"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerId"><span class="hs-identifier hs-var">PollerId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPollerId"><span class="annot"><span class="annottext">PollerId -&gt; UUID
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#unPollerId"><span class="hs-identifier hs-var hs-var">unPollerId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-types-1.0.5-07c347266924b5864e7fa85e20a45e422e8afaa081f8ec1365ac0ba2259fb28b/share/doc/html/src/Data.UUID.Types.Internal.html#UUID"><span class="hs-identifier hs-type">UUID.UUID</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-324"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853855"><span id="local-6989586621687853859"><span id="local-6989586621687853863"><span class="annot"><span class="annottext">Int -&gt; PollerId -&gt; ShowS
+</span><span id="line-324"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856846"><span id="local-6989586621687856850"><span id="local-6989586621687856854"><span class="annot"><span class="annottext">Int -&gt; PollerId -&gt; ShowS
 [PollerId] -&gt; ShowS
 PollerId -&gt; String
 (Int -&gt; PollerId -&gt; ShowS)
@@ -943,7 +943,7 @@ $cshow :: PollerId -&gt; String
 show :: PollerId -&gt; String
 $cshowList :: [PollerId] -&gt; ShowS
 showList :: [PollerId] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853866"><span id="local-6989586621687853870"><span class="annot"><span class="annottext">PollerId -&gt; PollerId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856857"><span id="local-6989586621687856861"><span class="annot"><span class="annottext">PollerId -&gt; PollerId -&gt; Bool
 (PollerId -&gt; PollerId -&gt; Bool)
 -&gt; (PollerId -&gt; PollerId -&gt; Bool) -&gt; Eq PollerId
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -951,7 +951,7 @@ $c== :: PollerId -&gt; PollerId -&gt; Bool
 == :: PollerId -&gt; PollerId -&gt; Bool
 $c/= :: PollerId -&gt; PollerId -&gt; Bool
 /= :: PollerId -&gt; PollerId -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853875"><span id="local-6989586621687853877"><span class="annot"><span class="annottext">(forall x. PollerId -&gt; Rep PollerId x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856866"><span id="local-6989586621687856868"><span class="annot"><span class="annottext">(forall x. PollerId -&gt; Rep PollerId x)
 -&gt; (forall x. Rep PollerId x -&gt; PollerId) -&gt; Generic PollerId
 forall x. Rep PollerId x -&gt; PollerId
 forall x. PollerId -&gt; Rep PollerId x
@@ -961,7 +961,7 @@ $cfrom :: forall x. PollerId -&gt; Rep PollerId x
 from :: forall x. PollerId -&gt; Rep PollerId x
 $cto :: forall x. Rep PollerId x -&gt; PollerId
 to :: forall x. Rep PollerId x -&gt; PollerId
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853880"><span id="local-6989586621687853884"><span id="local-6989586621687853888"><span id="local-6989586621687853892"><span class="annot"><span class="annottext">[PollerId] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856871"><span id="local-6989586621687856875"><span id="local-6989586621687856879"><span id="local-6989586621687856883"><span class="annot"><span class="annottext">[PollerId] -&gt; Value
 [PollerId] -&gt; Encoding
 PollerId -&gt; Value
 PollerId -&gt; Encoding
@@ -992,7 +992,7 @@ toEncodingList :: [PollerId] -&gt; Encoding
 </span><span id="line-328"></span><span>    </span><span id="_sedSubscriberMetadata"><span class="annot"><span class="annottext">SubscriberExecutionDetails -&gt; SubscriberMetadata
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_sedSubscriberMetadata"><span class="hs-identifier hs-var hs-var">_sedSubscriberMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriberMetadata"><span class="hs-identifier hs-type">SubscriberMetadata</span></a></span><span>
 </span><span id="line-329"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-330"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853899"><span id="local-6989586621687853904"><span id="local-6989586621687853908"><span class="annot"><span class="annottext">Int -&gt; SubscriberExecutionDetails -&gt; ShowS
+</span><span id="line-330"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856890"><span id="local-6989586621687856895"><span id="local-6989586621687856899"><span class="annot"><span class="annottext">Int -&gt; SubscriberExecutionDetails -&gt; ShowS
 [SubscriberExecutionDetails] -&gt; ShowS
 SubscriberExecutionDetails -&gt; String
 (Int -&gt; SubscriberExecutionDetails -&gt; ShowS)
@@ -1007,7 +1007,7 @@ $cshow :: SubscriberExecutionDetails -&gt; String
 show :: SubscriberExecutionDetails -&gt; String
 $cshowList :: [SubscriberExecutionDetails] -&gt; ShowS
 showList :: [SubscriberExecutionDetails] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853911"><span id="local-6989586621687853915"><span class="annot"><span class="annottext">SubscriberExecutionDetails -&gt; SubscriberExecutionDetails -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856902"><span id="local-6989586621687856906"><span class="annot"><span class="annottext">SubscriberExecutionDetails -&gt; SubscriberExecutionDetails -&gt; Bool
 (SubscriberExecutionDetails -&gt; SubscriberExecutionDetails -&gt; Bool)
 -&gt; (SubscriberExecutionDetails
     -&gt; SubscriberExecutionDetails -&gt; Bool)
@@ -1041,7 +1041,7 @@ $c/= :: SubscriberExecutionDetails -&gt; SubscriberExecutionDetails -&gt; Bool
 </span><span id="line-346"></span><span>    </span><span id="_cedBatchId"><span class="annot"><span class="annottext">CohortExecutionDetails -&gt; BatchId
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_cedBatchId"><span class="hs-identifier hs-var hs-var">_cedBatchId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchId"><span class="hs-identifier hs-type">BatchId</span></a></span><span>
 </span><span id="line-347"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-348"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853926"><span id="local-6989586621687853941"><span id="local-6989586621687853945"><span class="annot"><span class="annottext">Int -&gt; CohortExecutionDetails -&gt; ShowS
+</span><span id="line-348"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856917"><span id="local-6989586621687856932"><span id="local-6989586621687856936"><span class="annot"><span class="annottext">Int -&gt; CohortExecutionDetails -&gt; ShowS
 [CohortExecutionDetails] -&gt; ShowS
 CohortExecutionDetails -&gt; String
 (Int -&gt; CohortExecutionDetails -&gt; ShowS)
@@ -1056,7 +1056,7 @@ $cshow :: CohortExecutionDetails -&gt; String
 show :: CohortExecutionDetails -&gt; String
 $cshowList :: [CohortExecutionDetails] -&gt; ShowS
 showList :: [CohortExecutionDetails] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853948"><span id="local-6989586621687853962"><span class="annot"><span class="annottext">CohortExecutionDetails -&gt; CohortExecutionDetails -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856939"><span id="local-6989586621687856953"><span class="annot"><span class="annottext">CohortExecutionDetails -&gt; CohortExecutionDetails -&gt; Bool
 (CohortExecutionDetails -&gt; CohortExecutionDetails -&gt; Bool)
 -&gt; (CohortExecutionDetails -&gt; CohortExecutionDetails -&gt; Bool)
 -&gt; Eq CohortExecutionDetails
@@ -1087,7 +1087,7 @@ $c/= :: CohortExecutionDetails -&gt; CohortExecutionDetails -&gt; Bool
 </span><span id="line-362"></span><span>    </span><span id="_bedBatchResponseSizeBytes"><span class="annot"><span class="annottext">BatchExecutionDetails -&gt; Maybe Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_bedBatchResponseSizeBytes"><span class="hs-identifier hs-var hs-var">_bedBatchResponseSizeBytes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-363"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-364"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687853973"><span id="local-6989586621687853985"><span id="local-6989586621687853989"><span class="annot"><span class="annottext">Int -&gt; BatchExecutionDetails -&gt; ShowS
+</span><span id="line-364"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687856964"><span id="local-6989586621687856976"><span id="local-6989586621687856980"><span class="annot"><span class="annottext">Int -&gt; BatchExecutionDetails -&gt; ShowS
 [BatchExecutionDetails] -&gt; ShowS
 BatchExecutionDetails -&gt; String
 (Int -&gt; BatchExecutionDetails -&gt; ShowS)
@@ -1102,7 +1102,7 @@ $cshow :: BatchExecutionDetails -&gt; String
 show :: BatchExecutionDetails -&gt; String
 $cshowList :: [BatchExecutionDetails] -&gt; ShowS
 showList :: [BatchExecutionDetails] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687853993"><span id="local-6989586621687854004"><span class="annot"><span class="annottext">BatchExecutionDetails -&gt; BatchExecutionDetails -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687856984"><span id="local-6989586621687856995"><span class="annot"><span class="annottext">BatchExecutionDetails -&gt; BatchExecutionDetails -&gt; Bool
 (BatchExecutionDetails -&gt; BatchExecutionDetails -&gt; Bool)
 -&gt; (BatchExecutionDetails -&gt; BatchExecutionDetails -&gt; Bool)
 -&gt; Eq BatchExecutionDetails
@@ -1116,7 +1116,7 @@ $c/= :: BatchExecutionDetails -&gt; BatchExecutionDetails -&gt; Bool
 </span><span id="line-366"></span><span class="annot"><span class="hs-comment">-- | see Note [Minimal LiveQuery Poller Log]</span></span><span>
 </span><span id="line-367"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#batchExecutionDetailMinimal"><span class="hs-identifier hs-type">batchExecutionDetailMinimal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchExecutionDetails"><span class="hs-identifier hs-type">BatchExecutionDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
 </span><span id="line-368"></span><span id="batchExecutionDetailMinimal"><span class="annot"><span class="annottext">batchExecutionDetailMinimal :: BatchExecutionDetails -&gt; Value
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#batchExecutionDetailMinimal"><span class="hs-identifier hs-var hs-var">batchExecutionDetailMinimal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchExecutionDetails"><span class="hs-identifier hs-type">BatchExecutionDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687854009"><span id="local-6989586621687854010"><span id="local-6989586621687854011"><span id="local-6989586621687854012"><span id="local-6989586621687854013"><span id="local-6989586621687854014"><span class="annot"><span class="annottext">[CohortExecutionDetails]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#batchExecutionDetailMinimal"><span class="hs-identifier hs-var hs-var">batchExecutionDetailMinimal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#BatchExecutionDetails"><span class="hs-identifier hs-type">BatchExecutionDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687857000"><span id="local-6989586621687857001"><span id="local-6989586621687857002"><span id="local-6989586621687857003"><span id="local-6989586621687857004"><span id="local-6989586621687857005"><span class="annot"><span class="annottext">[CohortExecutionDetails]
 Maybe Int
 Maybe DiffTime
 DiffTime
@@ -1134,40 +1134,40 @@ _bedBatchId :: BatchId
 _bedCohorts :: [CohortExecutionDetails]
 _bedBatchResponseSizeBytes :: Maybe Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_bedPgExecutionTime"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-369"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687854015"><span class="annot"><span class="annottext">batchRespSize :: [Pair]
-</span><a href="#local-6989586621687854015"><span class="hs-identifier hs-var hs-var">batchRespSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-369"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687857006"><span class="annot"><span class="annottext">batchRespSize :: [Pair]
+</span><a href="#local-6989586621687857006"><span class="hs-identifier hs-var hs-var">batchRespSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-370"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; (Int -&gt; [Pair]) -&gt; Maybe Int -&gt; [Pair]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span>
 </span><span id="line-371"></span><span>          </span><span class="annot"><span class="annottext">[Pair]
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-372"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687854017"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687854017"><span class="hs-identifier hs-var">respSize</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span id="line-372"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687857008"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687857008"><span class="hs-identifier hs-var">respSize</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;batch_response_size_bytes&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687854017"><span class="hs-identifier hs-var">respSize</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687857008"><span class="hs-identifier hs-var">respSize</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-373"></span><span>          </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621687854014"><span class="hs-identifier hs-var">_bedBatchResponseSizeBytes</span></a></span><span>
-</span><span id="line-374"></span><span>      </span><span id="local-6989586621687854018"><span class="annot"><span class="annottext">pgExecTime :: [Pair]
-</span><a href="#local-6989586621687854018"><span class="hs-identifier hs-var hs-var">pgExecTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687857005"><span class="hs-identifier hs-var">_bedBatchResponseSizeBytes</span></a></span><span>
+</span><span id="line-374"></span><span>      </span><span id="local-6989586621687857009"><span class="annot"><span class="annottext">pgExecTime :: [Pair]
+</span><a href="#local-6989586621687857009"><span class="hs-identifier hs-var hs-var">pgExecTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-375"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; (DiffTime -&gt; [Pair]) -&gt; Maybe DiffTime -&gt; [Pair]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span>
 </span><span id="line-376"></span><span>          </span><span class="annot"><span class="annottext">[Pair]
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-377"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687854019"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854019"><span class="hs-identifier hs-var">execTime</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span id="line-377"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687857010"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621687857010"><span class="hs-identifier hs-var">execTime</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;pg_execution_time&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; DiffTime -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854019"><span class="hs-identifier hs-var">execTime</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687857010"><span class="hs-identifier hs-var">execTime</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-378"></span><span>          </span><span class="annot"><span class="annottext">Maybe DiffTime
-</span><a href="#local-6989586621687854009"><span class="hs-identifier hs-var">_bedPgExecutionTime</span></a></span><span>
+</span><a href="#local-6989586621687857000"><span class="hs-identifier hs-var">_bedPgExecutionTime</span></a></span><span>
 </span><span id="line-379"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-380"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
@@ -1175,30 +1175,30 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854010"><span class="hs-identifier hs-var">_bedDbExecutionTime</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857001"><span class="hs-identifier hs-var">_bedDbExecutionTime</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-381"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;push_time&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; DiffTime -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854011"><span class="hs-identifier hs-var">_bedPushTime</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857002"><span class="hs-identifier hs-var">_bedPushTime</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-382"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;batch_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; BatchId -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">BatchId
-</span><a href="#local-6989586621687854012"><span class="hs-identifier hs-var">_bedBatchId</span></a></span><span>
+</span><a href="#local-6989586621687857003"><span class="hs-identifier hs-var">_bedBatchId</span></a></span><span>
 </span><span id="line-383"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-384"></span><span>            </span><span class="hs-comment">-- log pg exec time only when its not 'Nothing'</span><span>
 </span><span id="line-385"></span><span>            </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
-</span><a href="#local-6989586621687854018"><span class="hs-identifier hs-var">pgExecTime</span></a></span><span>
+</span><a href="#local-6989586621687857009"><span class="hs-identifier hs-var">pgExecTime</span></a></span><span>
 </span><span id="line-386"></span><span>            </span><span class="hs-comment">-- log batch resp size only when there are no errors</span><span>
 </span><span id="line-387"></span><span>            </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
-</span><a href="#local-6989586621687854015"><span class="hs-identifier hs-var">batchRespSize</span></a></span><span>
+</span><a href="#local-6989586621687857006"><span class="hs-identifier hs-var">batchRespSize</span></a></span><span>
 </span><span id="line-388"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-389"></span><span>
 </span><span id="line-390"></span><span class="hs-keyword">data</span><span> </span><span id="PollDetailsError"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-var">PollDetailsError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PollDetailsError"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-var">PollDetailsError</span></a></span></span><span>
@@ -1207,7 +1207,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-392"></span><span>    </span><span id="_pdeErrorDetails"><span class="annot"><span class="annottext">PollDetailsError -&gt; QErr
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pdeErrorDetails"><span class="hs-identifier hs-var hs-var">_pdeErrorDetails</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
 </span><span id="line-393"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-394"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687854024"><span id="local-6989586621687854029"><span class="annot"><span class="annottext">PollDetailsError -&gt; PollDetailsError -&gt; Bool
+</span><span id="line-394"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687857015"><span id="local-6989586621687857020"><span class="annot"><span class="annottext">PollDetailsError -&gt; PollDetailsError -&gt; Bool
 (PollDetailsError -&gt; PollDetailsError -&gt; Bool)
 -&gt; (PollDetailsError -&gt; PollDetailsError -&gt; Bool)
 -&gt; Eq PollDetailsError
@@ -1218,17 +1218,17 @@ $c/= :: PollDetailsError -&gt; PollDetailsError -&gt; Bool
 /= :: PollDetailsError -&gt; PollDetailsError -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-395"></span><span>
-</span><span id="line-396"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687854033"><span id="local-6989586621687854038"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-397"></span><span>  </span><span id="local-6989586621687854045"><span class="annot"><span class="annottext">show :: PollDetailsError -&gt; String
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span id="local-6989586621687854046"><span class="annot"><span class="annottext">PollDetailsError
-</span><a href="#local-6989586621687854046"><span class="hs-identifier hs-var">pde</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-396"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687857024"><span id="local-6989586621687857029"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-397"></span><span>  </span><span id="local-6989586621687857036"><span class="annot"><span class="annottext">show :: PollDetailsError -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span id="local-6989586621687857037"><span class="annot"><span class="annottext">PollDetailsError
+</span><a href="#local-6989586621687857037"><span class="hs-identifier hs-var">pde</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;batch_id = &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">BatchId -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PollDetailsError -&gt; BatchId
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pdeBatchId"><span class="hs-identifier hs-var">_pdeBatchId</span></a></span><span> </span><span class="annot"><span class="annottext">PollDetailsError
-</span><a href="#local-6989586621687854046"><span class="hs-identifier hs-var">pde</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621687857037"><span class="hs-identifier hs-var">pde</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;, detail = &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
@@ -1239,11 +1239,11 @@ forall a. [a] -&gt; [a] -&gt; [a]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PollDetailsError -&gt; QErr
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pdeErrorDetails"><span class="hs-identifier hs-var">_pdeErrorDetails</span></a></span><span> </span><span class="annot"><span class="annottext">PollDetailsError
-</span><a href="#local-6989586621687854046"><span class="hs-identifier hs-var">pde</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687857037"><span class="hs-identifier hs-var">pde</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-398"></span><span>
-</span><span id="line-399"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687854049"><span id="local-6989586621687854052"><span id="local-6989586621687854055"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-400"></span><span>  </span><span id="local-6989586621687854064"><span class="annot"><span class="annottext">toJSON :: PollDetailsError -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687854065"><span id="local-6989586621687854066"><span class="annot"><span class="annottext">QErr
+</span><span id="line-399"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687857040"><span id="local-6989586621687857043"><span id="local-6989586621687857046"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-400"></span><span>  </span><span id="local-6989586621687857055"><span class="annot"><span class="annottext">toJSON :: PollDetailsError -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687857056"><span id="local-6989586621687857057"><span class="annot"><span class="annottext">QErr
 BatchId
 _pdeBatchId :: PollDetailsError -&gt; BatchId
 _pdeErrorDetails :: PollDetailsError -&gt; QErr
@@ -1259,13 +1259,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">BatchId
-</span><a href="#local-6989586621687854065"><span class="hs-identifier hs-var">_pdeBatchId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857056"><span class="hs-identifier hs-var">_pdeBatchId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-403"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;detail&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; QErr -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687854066"><span class="hs-identifier hs-var">_pdeErrorDetails</span></a></span><span>
+</span><a href="#local-6989586621687857057"><span class="hs-identifier hs-var">_pdeErrorDetails</span></a></span><span>
 </span><span id="line-404"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-405"></span><span>
 </span><span id="line-406"></span><span class="hs-comment">-- TODO consider refactoring into two types: one that is returned from pollLiveQuery and pollStreamingQuery, and a parent type containing pollerId, sourceName, and so on, which is assembled at the callsites of those two functions. Move postPollHook out of those functions to callsites</span><span>
@@ -1305,7 +1305,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><span id="line-429"></span><span>    </span><span id="_pdErrors"><span class="annot"><span class="annottext">PollDetails -&gt; Maybe [PollDetailsError]
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pdErrors"><span class="hs-identifier hs-var hs-var">_pdErrors</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetailsError"><span class="hs-identifier hs-type">PollDetailsError</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-430"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-431"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687854081"><span id="local-6989586621687854101"><span id="local-6989586621687854105"><span class="annot"><span class="annottext">Int -&gt; PollDetails -&gt; ShowS
+</span><span id="line-431"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687857072"><span id="local-6989586621687857092"><span id="local-6989586621687857096"><span class="annot"><span class="annottext">Int -&gt; PollDetails -&gt; ShowS
 [PollDetails] -&gt; ShowS
 PollDetails -&gt; String
 (Int -&gt; PollDetails -&gt; ShowS)
@@ -1320,7 +1320,7 @@ $cshow :: PollDetails -&gt; String
 show :: PollDetails -&gt; String
 $cshowList :: [PollDetails] -&gt; ShowS
 showList :: [PollDetails] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687854109"><span id="local-6989586621687854128"><span class="annot"><span class="annottext">PollDetails -&gt; PollDetails -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687857100"><span id="local-6989586621687857119"><span class="annot"><span class="annottext">PollDetails -&gt; PollDetails -&gt; Bool
 (PollDetails -&gt; PollDetails -&gt; Bool)
 -&gt; (PollDetails -&gt; PollDetails -&gt; Bool) -&gt; Eq PollDetails
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1343,7 +1343,7 @@ they need to.
 </span><span id="line-443"></span><span class="annot"><span class="hs-comment">-- | see Note [Minimal LiveQuery Poller Log]</span></span><span>
 </span><span id="line-444"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#pollDetailMinimal"><span class="hs-identifier hs-type">pollDetailMinimal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetails"><span class="hs-identifier hs-type">PollDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
 </span><span id="line-445"></span><span id="pollDetailMinimal"><span class="annot"><span class="annottext">pollDetailMinimal :: PollDetails -&gt; Value
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#pollDetailMinimal"><span class="hs-identifier hs-var hs-var">pollDetailMinimal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetails"><span class="hs-identifier hs-type">PollDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687854133"><span id="local-6989586621687854134"><span id="local-6989586621687854135"><span id="local-6989586621687854136"><span id="local-6989586621687854137"><span id="local-6989586621687854138"><span id="local-6989586621687854139"><span id="local-6989586621687854140"><span id="local-6989586621687854141"><span id="local-6989586621687854142"><span id="local-6989586621687854143"><span id="local-6989586621687854144"><span class="annot"><span class="annottext">[BatchExecutionDetails]
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#pollDetailMinimal"><span class="hs-identifier hs-var hs-var">pollDetailMinimal</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetails"><span class="hs-identifier hs-type">PollDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687857124"><span id="local-6989586621687857125"><span id="local-6989586621687857126"><span id="local-6989586621687857127"><span id="local-6989586621687857128"><span id="local-6989586621687857129"><span id="local-6989586621687857130"><span id="local-6989586621687857131"><span id="local-6989586621687857132"><span id="local-6989586621687857133"><span id="local-6989586621687857134"><span id="local-6989586621687857135"><span class="annot"><span class="annottext">[BatchExecutionDetails]
 Maybe [PollDetailsError]
 Text
 DiffTime
@@ -1388,31 +1388,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">PollerId
-</span><a href="#local-6989586621687854133"><span class="hs-identifier hs-var">_pdPollerId</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857124"><span class="hs-identifier hs-var">_pdPollerId</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-448"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; SubscriptionType -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SubscriptionType
-</span><a href="#local-6989586621687854134"><span class="hs-identifier hs-var">_pdKind</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857125"><span class="hs-identifier hs-var">_pdKind</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-449"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;snapshot_time&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; DiffTime -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854136"><span class="hs-identifier hs-var">_pdSnapshotTime</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857127"><span class="hs-identifier hs-var">_pdSnapshotTime</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-450"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;batches&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [Value] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621687854145"><span class="hs-identifier hs-var">batches</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: deprecate this field</span><span>
+</span><a href="#local-6989586621687857136"><span class="hs-identifier hs-var">batches</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: deprecate this field</span><span>
 </span><span id="line-451"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;execution_batches&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [Value] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621687854145"><span class="hs-identifier hs-var">batches</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857136"><span class="hs-identifier hs-var">batches</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-452"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;subscriber_count&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -1432,37 +1432,37 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BatchExecutionDetails -&gt; [CohortExecutionDetails]
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_bedCohorts"><span class="hs-identifier hs-var">_bedCohorts</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[BatchExecutionDetails]
-</span><a href="#local-6989586621687854137"><span class="hs-identifier hs-var">_pdBatches</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857128"><span class="hs-identifier hs-var">_pdBatches</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-453"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;total_time&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; DiffTime -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621687854138"><span class="hs-identifier hs-var">_pdTotalTime</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857129"><span class="hs-identifier hs-var">_pdTotalTime</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-454"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; SourceName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687854140"><span class="hs-identifier hs-var">_pdSource</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857131"><span class="hs-identifier hs-var">_pdSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-455"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;generated_sql&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687854135"><span class="hs-identifier hs-var">_pdGeneratedSql</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857126"><span class="hs-identifier hs-var">_pdGeneratedSql</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-456"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RoleName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687854141"><span class="hs-identifier hs-var">_pdRole</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687857132"><span class="hs-identifier hs-var">_pdRole</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-457"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;subscription_options&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; SubscriptionsOptions -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SubscriptionsOptions
-</span><a href="#local-6989586621687854139"><span class="hs-identifier hs-var">_pdLiveQueryOptions</span></a></span><span>
+</span><a href="#local-6989586621687857130"><span class="hs-identifier hs-var">_pdLiveQueryOptions</span></a></span><span>
 </span><span id="line-458"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-459"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -1471,40 +1471,40 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; Maybe [PollDetailsError]
 -&gt; [Pair]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
-</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687854148"><span class="annot"><span class="annottext">[PollDetailsError]
-</span><a href="#local-6989586621687854148"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621687857139"><span class="annot"><span class="annottext">[PollDetailsError]
+</span><a href="#local-6989586621687857139"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;errors&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [PollDetailsError] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">[PollDetailsError]
-</span><a href="#local-6989586621687854148"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [PollDetailsError]
-</span><a href="#local-6989586621687854144"><span class="hs-identifier hs-var">_pdErrors</span></a></span><span>
+</span><a href="#local-6989586621687857139"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [PollDetailsError]
+</span><a href="#local-6989586621687857135"><span class="hs-identifier hs-var">_pdErrors</span></a></span><span>
 </span><span id="line-460"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-461"></span><span>    </span><span id="local-6989586621687854145"><span class="annot"><span class="annottext">batches :: [Value]
-</span><a href="#local-6989586621687854145"><span class="hs-identifier hs-var hs-var">batches</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(BatchExecutionDetails -&gt; Value)
+</span><span id="line-461"></span><span>    </span><span id="local-6989586621687857136"><span class="annot"><span class="annottext">batches :: [Value]
+</span><a href="#local-6989586621687857136"><span class="hs-identifier hs-var hs-var">batches</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(BatchExecutionDetails -&gt; Value)
 -&gt; [BatchExecutionDetails] -&gt; [Value]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">BatchExecutionDetails -&gt; Value
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#batchExecutionDetailMinimal"><span class="hs-identifier hs-var">batchExecutionDetailMinimal</span></a></span><span> </span><span class="annot"><span class="annottext">[BatchExecutionDetails]
-</span><a href="#local-6989586621687854137"><span class="hs-identifier hs-var">_pdBatches</span></a></span><span>
+</span><a href="#local-6989586621687857128"><span class="hs-identifier hs-var">_pdBatches</span></a></span><span>
 </span><span id="line-462"></span><span>
 </span><span id="line-463"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetails"><span class="hs-identifier hs-type">PollDetails</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-464"></span><span>  </span><span id="local-6989586621687854154"><span class="annot"><span class="annottext">toEngineLog :: PollDetails -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="#local-6989586621687854154"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621687854156"><span class="annot"><span class="annottext">PollDetails
-</span><a href="#local-6989586621687854156"><span class="hs-identifier hs-var">pl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PollDetails -&gt; LogLevel
+</span><span id="line-464"></span><span>  </span><span id="local-6989586621687857145"><span class="annot"><span class="annottext">toEngineLog :: PollDetails -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="#local-6989586621687857145"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621687857147"><span class="annot"><span class="annottext">PollDetails
+</span><a href="#local-6989586621687857147"><span class="hs-identifier hs-var">pl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PollDetails -&gt; LogLevel
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#_pdLogLevel"><span class="hs-identifier hs-var">_pdLogLevel</span></a></span><span> </span><span class="annot"><span class="annottext">PollDetails
-</span><a href="#local-6989586621687854156"><span class="hs-identifier hs-var">pl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="#local-6989586621687857147"><span class="hs-identifier hs-var">pl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTLivequeryPollerLog"><span class="hs-identifier hs-var">L.ELTLivequeryPollerLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PollDetails -&gt; Value
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#pollDetailMinimal"><span class="hs-identifier hs-var">pollDetailMinimal</span></a></span><span> </span><span class="annot"><span class="annottext">PollDetails
-</span><a href="#local-6989586621687854156"><span class="hs-identifier hs-var">pl</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687857147"><span class="hs-identifier hs-var">pl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-465"></span><span>
 </span><span id="line-466"></span><span class="hs-keyword">type</span><span> </span><span id="SubscriptionPostPollHook"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriptionPostPollHook"><span class="hs-identifier hs-var">SubscriptionPostPollHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollDetails"><span class="hs-identifier hs-type">PollDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-467"></span><span>
 </span><span id="line-468"></span><span class="hs-comment">-- the default SubscriptionPostPollHook</span><span>
 </span><span id="line-469"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#defaultSubscriptionPostPollHook"><span class="hs-identifier hs-type">defaultSubscriptionPostPollHook</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#SubscriptionPostPollHook"><span class="hs-identifier hs-type">SubscriptionPostPollHook</span></a></span><span>
 </span><span id="line-470"></span><span id="defaultSubscriptionPostPollHook"><span class="annot"><span class="annottext">defaultSubscriptionPostPollHook :: Logger Hasura -&gt; SubscriptionPostPollHook
-</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#defaultSubscriptionPostPollHook"><span class="hs-identifier hs-var hs-var">defaultSubscriptionPostPollHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687854158"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687854158"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#defaultSubscriptionPostPollHook"><span class="hs-identifier hs-var hs-var">defaultSubscriptionPostPollHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687857149"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687857149"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a Hasura, MonadIO m) =&gt;
    a -&gt; m ()
@@ -1514,5 +1514,5 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687854158"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621687857149"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-471"></span></pre></body></html>

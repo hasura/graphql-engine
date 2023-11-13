@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">empty</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">takeWhile</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toList</span></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">newtype</span><span> </span><span id="Key"><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-var">Key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Key"><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-var">Key</span></a></span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747084"><span id="local-6989586621687747090"><span id="local-6989586621687747094"><span class="annot"><span class="annottext">Int -&gt; Key -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687750046"><span id="local-6989586621687750052"><span id="local-6989586621687750056"><span class="annot"><span class="annottext">Int -&gt; Key -&gt; ShowS
 [Key] -&gt; ShowS
 Key -&gt; String
 (Int -&gt; Key -&gt; ShowS)
@@ -27,14 +27,14 @@ $cshow :: Key -&gt; String
 show :: Key -&gt; String
 $cshowList :: [Key] -&gt; ShowS
 showList :: [Key] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747098"><span id="local-6989586621687747103"><span class="annot"><span class="annottext">Key -&gt; Key -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750060"><span id="local-6989586621687750065"><span class="annot"><span class="annottext">Key -&gt; Key -&gt; Bool
 (Key -&gt; Key -&gt; Bool) -&gt; (Key -&gt; Key -&gt; Bool) -&gt; Eq Key
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c== :: Key -&gt; Key -&gt; Bool
 == :: Key -&gt; Key -&gt; Bool
 $c/= :: Key -&gt; Key -&gt; Bool
 /= :: Key -&gt; Key -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747111"><span id="local-6989586621687747116"><span id="local-6989586621687747120"><span id="local-6989586621687747124"><span id="local-6989586621687747128"><span id="local-6989586621687747132"><span id="local-6989586621687747136"><span class="annot"><span class="annottext">Eq Key
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750073"><span id="local-6989586621687750078"><span id="local-6989586621687750082"><span id="local-6989586621687750086"><span id="local-6989586621687750090"><span id="local-6989586621687750094"><span id="local-6989586621687750098"><span class="annot"><span class="annottext">Eq Key
 Eq Key
 -&gt; (Key -&gt; Key -&gt; Ordering)
 -&gt; (Key -&gt; Key -&gt; Bool)
@@ -74,7 +74,7 @@ min :: Key -&gt; Key -&gt; Key
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">newtype</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Value"><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747143"><span id="local-6989586621687747147"><span id="local-6989586621687747151"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687750105"><span id="local-6989586621687750109"><span id="local-6989586621687750113"><span class="annot"><span class="annottext">Int -&gt; Value -&gt; ShowS
 [Value] -&gt; ShowS
 Value -&gt; String
 (Int -&gt; Value -&gt; ShowS)
@@ -87,14 +87,14 @@ $cshow :: Value -&gt; String
 show :: Value -&gt; String
 $cshowList :: [Value] -&gt; ShowS
 showList :: [Value] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747154"><span id="local-6989586621687747158"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750116"><span id="local-6989586621687750120"><span class="annot"><span class="annottext">Value -&gt; Value -&gt; Bool
 (Value -&gt; Value -&gt; Bool) -&gt; (Value -&gt; Value -&gt; Bool) -&gt; Eq Value
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c== :: Value -&gt; Value -&gt; Bool
 == :: Value -&gt; Value -&gt; Bool
 $c/= :: Value -&gt; Value -&gt; Bool
 /= :: Value -&gt; Value -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747165"><span id="local-6989586621687747169"><span id="local-6989586621687747173"><span id="local-6989586621687747177"><span id="local-6989586621687747181"><span id="local-6989586621687747185"><span id="local-6989586621687747189"><span class="annot"><span class="annottext">Eq Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750127"><span id="local-6989586621687750131"><span id="local-6989586621687750135"><span id="local-6989586621687750139"><span id="local-6989586621687750143"><span id="local-6989586621687750147"><span id="local-6989586621687750151"><span class="annot"><span class="annottext">Eq Value
 Eq Value
 -&gt; (Value -&gt; Value -&gt; Ordering)
 -&gt; (Value -&gt; Value -&gt; Bool)
@@ -136,7 +136,7 @@ min :: Value -&gt; Value -&gt; Value
 </span><span id="line-22"></span><span class="hs-comment">-- | Data structure compliant with the storage and serialization needs of the W3C tracestate header.</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- https://www.w3.org/TR/trace-context/#tracestate-header</span><span>
 </span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="TraceState"><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-var">TraceState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TraceState"><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-var">TraceState</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687747195"><span id="local-6989586621687747201"><span id="local-6989586621687747205"><span class="annot"><span class="annottext">Int -&gt; TraceState -&gt; ShowS
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687750157"><span id="local-6989586621687750163"><span id="local-6989586621687750167"><span class="annot"><span class="annottext">Int -&gt; TraceState -&gt; ShowS
 [TraceState] -&gt; ShowS
 TraceState -&gt; String
 (Int -&gt; TraceState -&gt; ShowS)
@@ -151,7 +151,7 @@ $cshow :: TraceState -&gt; String
 show :: TraceState -&gt; String
 $cshowList :: [TraceState] -&gt; ShowS
 showList :: [TraceState] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747211"><span id="local-6989586621687747217"><span class="annot"><span class="annottext">TraceState -&gt; TraceState -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750173"><span id="local-6989586621687750179"><span class="annot"><span class="annottext">TraceState -&gt; TraceState -&gt; Bool
 (TraceState -&gt; TraceState -&gt; Bool)
 -&gt; (TraceState -&gt; TraceState -&gt; Bool) -&gt; Eq TraceState
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -159,7 +159,7 @@ $c== :: TraceState -&gt; TraceState -&gt; Bool
 == :: TraceState -&gt; TraceState -&gt; Bool
 $c/= :: TraceState -&gt; TraceState -&gt; Bool
 /= :: TraceState -&gt; TraceState -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687747230"><span id="local-6989586621687747236"><span id="local-6989586621687747241"><span id="local-6989586621687747246"><span id="local-6989586621687747251"><span id="local-6989586621687747256"><span id="local-6989586621687747261"><span class="annot"><span class="annottext">Eq TraceState
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687750192"><span id="local-6989586621687750198"><span id="local-6989586621687750203"><span id="local-6989586621687750208"><span id="local-6989586621687750213"><span id="local-6989586621687750218"><span id="local-6989586621687750223"><span class="annot"><span class="annottext">Eq TraceState
 Eq TraceState
 -&gt; (TraceState -&gt; TraceState -&gt; Ordering)
 -&gt; (TraceState -&gt; TraceState -&gt; Bool)
@@ -207,19 +207,19 @@ min :: TraceState -&gt; TraceState -&gt; TraceState
 </span><span id="line-31"></span><span class="annot"><span class="hs-comment">-- | Convert the 'TraceState' to a list.</span></span><span>
 </span><span id="line-32"></span><span class="annot"><a href="Hasura.Tracing.TraceState.html#toTraceStateList"><span class="hs-identifier hs-type">toTraceStateList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-33"></span><span id="toTraceStateList"><span class="annot"><span class="annottext">toTraceStateList :: TraceState -&gt; [(Key, Value)]
-</span><a href="Hasura.Tracing.TraceState.html#toTraceStateList"><span class="hs-identifier hs-var hs-var">toTraceStateList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span> </span><span id="local-6989586621687747281"><span class="annot"><span class="annottext">[(Key, Value)]
-</span><a href="#local-6989586621687747281"><span class="hs-identifier hs-var">ts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)]
-</span><a href="#local-6989586621687747281"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><a href="Hasura.Tracing.TraceState.html#toTraceStateList"><span class="hs-identifier hs-var hs-var">toTraceStateList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span> </span><span id="local-6989586621687750243"><span class="annot"><span class="annottext">[(Key, Value)]
+</span><a href="#local-6989586621687750243"><span class="hs-identifier hs-var">ts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)]
+</span><a href="#local-6989586621687750243"><span class="hs-identifier hs-var">ts</span></a></span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Hasura.Tracing.TraceState.html#traceStateParser"><span class="hs-identifier hs-type">traceStateParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span>
 </span><span id="line-36"></span><span id="traceStateParser"><span class="annot"><span class="annottext">traceStateParser :: Parser TraceState
 </span><a href="Hasura.Tracing.TraceState.html#traceStateParser"><span class="hs-identifier hs-var hs-var">traceStateParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621687747283"><span class="annot"><span class="annottext">[(Key, Value)]
-</span><a href="#local-6989586621687747283"><span class="hs-identifier hs-var">pairs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Key, Value) -&gt; Parser ByteString [(Key, Value)]
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621687750245"><span class="annot"><span class="annottext">[(Key, Value)]
+</span><a href="#local-6989586621687750245"><span class="hs-identifier hs-var">pairs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Key, Value) -&gt; Parser ByteString [(Key, Value)]
 forall a. Parser ByteString a -&gt; Parser ByteString [a]
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Key, Value)
-</span><a href="#local-6989586621687747285"><span class="hs-identifier hs-var">stateItemParser</span></a></span><span>
+</span><a href="#local-6989586621687750247"><span class="hs-identifier hs-var">stateItemParser</span></a></span><span>
 </span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">TraceState -&gt; Parser TraceState
 forall a. a -&gt; Parser ByteString a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -228,33 +228,33 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; TraceState
 </span><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-var">TraceState</span></a></span><span> </span><span class="annot"><span class="annottext">[(Key, Value)]
-</span><a href="#local-6989586621687747283"><span class="hs-identifier hs-var">pairs</span></a></span><span>
+</span><a href="#local-6989586621687750245"><span class="hs-identifier hs-var">pairs</span></a></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621687747286"><span class="annot"><span class="annottext">isValid :: Char -&gt; Bool
-</span><a href="#local-6989586621687747286"><span class="hs-identifier hs-var hs-var">isValid</span></a></span></span><span> </span><span id="local-6989586621687747287"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687747287"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621687750248"><span class="annot"><span class="annottext">isValid :: Char -&gt; Bool
+</span><a href="#local-6989586621687750248"><span class="hs-identifier hs-var hs-var">isValid</span></a></span></span><span> </span><span id="local-6989586621687750249"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687750249"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">isDigit</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687747287"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621687750249"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><span class="hs-identifier hs-var">isAsciiLower</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621687747287"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687750249"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-comment">-- The tracestate field value is a list of list-members separated by commas (,)</span><span>
 </span><span id="line-42"></span><span>    </span><span class="hs-comment">-- e.g. vendorname1=opaqueValue1,vendorname2=opaqueValue2</span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><a href="#local-6989586621687747285"><span class="hs-identifier hs-type">stateItemParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621687747285"><span class="annot"><span class="annottext">stateItemParser :: Parser ByteString (Key, Value)
-</span><a href="#local-6989586621687747285"><span class="hs-identifier hs-var hs-var">stateItemParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>      </span><span id="local-6989586621687747289"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747289"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="#local-6989586621687750247"><span class="hs-identifier hs-type">stateItemParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-type">Key</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621687750247"><span class="annot"><span class="annottext">stateItemParser :: Parser ByteString (Key, Value)
+</span><a href="#local-6989586621687750247"><span class="hs-identifier hs-var hs-var">stateItemParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>      </span><span id="local-6989586621687750251"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687750251"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Char8.html#takeWhile"><span class="hs-identifier hs-var">takeWhile</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
-</span><a href="#local-6989586621687747286"><span class="hs-identifier hs-var">isValid</span></a></span><span>
+</span><a href="#local-6989586621687750248"><span class="hs-identifier hs-var">isValid</span></a></span><span>
 </span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#string"><span class="hs-identifier hs-var">string</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;=&quot;</span></span><span>
-</span><span id="line-47"></span><span>      </span><span id="local-6989586621687747290"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747290"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621687750252"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687750252"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Parser ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Char8.html#takeWhile"><span class="hs-identifier hs-var">takeWhile</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
-</span><a href="#local-6989586621687747286"><span class="hs-identifier hs-var">isValid</span></a></span><span>
+</span><a href="#local-6989586621687750248"><span class="hs-identifier hs-var">isValid</span></a></span><span>
 </span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString -&gt; Parser ByteString
 forall i a. Parser i a -&gt; Parser i a
@@ -273,26 +273,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><a href="Hasura.Tracing.TraceState.html#Key"><span class="hs-identifier hs-var">Key</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747289"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621687750251"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="Hasura.Tracing.TraceState.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747290"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687750252"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="annot"><a href="Hasura.Tracing.TraceState.html#decodeTraceStateHeader"><span class="hs-identifier hs-type">decodeTraceStateHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ByteString.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceState.html#TraceState"><span class="hs-identifier hs-type">TraceState</span></a></span><span>
 </span><span id="line-52"></span><span id="decodeTraceStateHeader"><span class="annot"><span class="annottext">decodeTraceStateHeader :: ByteString -&gt; Maybe TraceState
-</span><a href="Hasura.Tracing.TraceState.html#decodeTraceStateHeader"><span class="hs-identifier hs-var hs-var">decodeTraceStateHeader</span></a></span></span><span> </span><span id="local-6989586621687747292"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747292"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Parser TraceState -&gt; ByteString -&gt; Either String TraceState
+</span><a href="Hasura.Tracing.TraceState.html#decodeTraceStateHeader"><span class="hs-identifier hs-var hs-var">decodeTraceStateHeader</span></a></span></span><span> </span><span id="local-6989586621687750254"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687750254"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Parser TraceState -&gt; ByteString -&gt; Either String TraceState
 forall a. Parser a -&gt; ByteString -&gt; Either String a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/attoparsec-0.14.4-4426088a925514790d632d2a472b066fdc8c23693e6cee2e8aa1c812826540ca/share/doc/html/src/Data.Attoparsec.ByteString.Internal.html#parseOnly"><span class="hs-identifier hs-var">parseOnly</span></a></span><span> </span><span class="annot"><span class="annottext">Parser TraceState
 </span><a href="Hasura.Tracing.TraceState.html#traceStateParser"><span class="hs-identifier hs-var">traceStateParser</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687747292"><span class="hs-identifier hs-var">ts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687750254"><span class="hs-identifier hs-var">ts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe TraceState
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687747293"><span class="annot"><span class="annottext">TraceState
-</span><a href="#local-6989586621687747293"><span class="hs-identifier hs-var">ok</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TraceState -&gt; Maybe TraceState
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687750255"><span class="annot"><span class="annottext">TraceState
+</span><a href="#local-6989586621687750255"><span class="hs-identifier hs-var">ok</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TraceState -&gt; Maybe TraceState
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TraceState
-</span><a href="#local-6989586621687747293"><span class="hs-identifier hs-var">ok</span></a></span><span>
+</span><a href="#local-6989586621687750255"><span class="hs-identifier hs-var">ok</span></a></span><span>
 </span><span id="line-55"></span></pre></body></html>
