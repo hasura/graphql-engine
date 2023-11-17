@@ -380,26 +380,28 @@ const SchemaCard: React.VFC<{
           </div>
           <div>
             {RolesList.map((roleBasedChange, index) => (
-              <div
-                className={`flex w-full px-2 py-1 ${
-                  isCurrentCardOpen && roleBasedChange.id === selectedRoleID
-                    ? 'bg-gray-200'
-                    : ''
-                } rounded hover:bg-gray-200`}
-                onClick={() => {
-                  handleRoleClick(roleBasedChange);
-                }}
-                key={index}
-              >
-                <div className="flex items-center justify-between w-full rounded">
-                  <div className="text-base rounded cursor-pointer">
-                    <p className="text-sm text-teal-800 font-bold bg-gray-200 px-1 rounded">
-                      {CapitalizeFirstLetter(roleBasedChange.role)}
-                    </p>
+              <Analytics name="schema-registry-schema-change-card">
+                <div
+                  className={`flex w-full px-2 py-1 ${
+                    isCurrentCardOpen && roleBasedChange.id === selectedRoleID
+                      ? 'bg-gray-200'
+                      : ''
+                  } rounded hover:bg-gray-200`}
+                  onClick={() => {
+                    handleRoleClick(roleBasedChange);
+                  }}
+                  key={index}
+                >
+                  <div className="flex items-center justify-between w-full rounded">
+                    <div className="text-base rounded cursor-pointer">
+                      <p className="text-sm text-teal-800 font-bold bg-gray-200 px-1 rounded">
+                        {CapitalizeFirstLetter(roleBasedChange.role)}
+                      </p>
+                    </div>
+                    <FaChevronRight />
                   </div>
-                  <FaChevronRight />
                 </div>
-              </div>
+              </Analytics>
             ))}
             {!defaultShowAllRoles && (
               <Analytics name="schema-registry-see-more-roles-btn">
