@@ -5,7 +5,8 @@ import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanne
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
-
+import AiChatBot from "@site/src/components/AiChatBot/AiChatBot";
+import BrowserOnly from '@docusaurus/BrowserOnly';
 const CustomDocItem = props => {
   useEffect(() => {
     // This function is adds <wbr> tags to code blocks within a table
@@ -77,6 +78,9 @@ const CustomDocItem = props => {
         {/*<PageHelpful />*/}
         <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
+        <BrowserOnly fallback={<div>Loading...</div>}>
+          {() => <AiChatBot/>}
+          </BrowserOnly>
         <CustomFooter />
       </div>
     </div>
