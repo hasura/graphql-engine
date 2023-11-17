@@ -169,6 +169,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
       Options.Don'tStringifyNumbers -> withOptionDefault Nothing stringifyNumOption
       stringifyNums -> pure stringifyNums
   soDangerousBooleanCollapse <- withOptionDefault rsoDangerousBooleanCollapse dangerousBooleanCollapseOption
+  soBackwardsCompatibleNullInNonNullableVariables <- withOptionDefault rsoBackwardsCompatibleNullInNonNullableVariables backwardsCompatibleNullInNonNullableVariablesOption
   soRemoteNullForwardingPolicy <- withOptionDefault rsoRemoteNullForwardingPolicy remoteNullForwardingPolicyOption
   soEnabledAPIs <- withOptionDefault rsoEnabledAPIs enabledAPIsOption
   soLiveQueryOpts <- do

@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Schema.Options
   ( SchemaOptions (..),
     StringifyNumbers (..),
     DangerouslyCollapseBooleans (..),
+    BackwardsCompatibleNullInNonNullableVariables (..),
     RemoteNullForwardingPolicy (..),
     InferFunctionPermissions (..),
     RemoteSchemaPermissions (..),
@@ -88,6 +89,27 @@ instance ToJSON DangerouslyCollapseBooleans where
   toJSON = \case
     DangerouslyCollapseBooleans -> Bool True
     Don'tDangerouslyCollapseBooleans -> Bool False
+
+-- | Should `null` values allowed for variables whose type is declared
+-- as non-nullable in a GraphQL query.
+-- Until version 2.34.0 (except 2.11.11), `null` value is validated for
+-- non-nullable variables. It is being fixed, to keep backwards compatible
+-- this option is introduced.
+data BackwardsCompatibleNullInNonNullableVariables
+  = AllowNullInNonNullableVariables
+  | Don'tAllowNullInNonNullableVariables
+  deriving (Eq, Show)
+
+instance FromJSON BackwardsCompatibleNullInNonNullableVariables where
+  parseJSON =
+    withBool "BackwardsCompatibleNullInNonNullableVariables"
+      $ pure
+      . bool Don'tAllowNullInNonNullableVariables AllowNullInNonNullableVariables
+
+instance ToJSON BackwardsCompatibleNullInNonNullableVariables where
+  toJSON = \case
+    AllowNullInNonNullableVariables -> Bool True
+    Don'tAllowNullInNonNullableVariables -> Bool False
 
 data RemoteNullForwardingPolicy
   = RemoteForwardAccurately

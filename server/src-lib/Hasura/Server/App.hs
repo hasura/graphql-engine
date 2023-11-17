@@ -79,6 +79,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SQLGenCtx (nullInNonNullableVariables))
 import Hasura.RQL.Types.Endpoint as EP
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
@@ -648,7 +649,8 @@ gqlExplainHandler query = do
   schemaCache <- asks hcSchemaCache
   reqHeaders <- asks hcReqHeaders
   licenseKeyCache <- asks hcLicenseKeyCache
-  res <- GE.explainGQLQuery (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query
+  nullInNonNullableVariables <- asks (nullInNonNullableVariables . acSQLGenCtx . hcAppContext)
+  res <- GE.explainGQLQuery nullInNonNullableVariables (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp

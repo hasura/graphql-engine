@@ -31,6 +31,7 @@ import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
@@ -93,12 +94,13 @@ explainGQLQuery ::
     MonadQueryTags m,
     MonadTrace m
   ) =>
+  Options.BackwardsCompatibleNullInNonNullableVariables ->
   SchemaCache ->
   Maybe (CredentialCache AgentLicenseKey) ->
   [HTTP.Header] ->
   GQLExplain ->
   m EncJSON
-explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -111,7 +113,7 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
       (unpreparedQueries, _, _) <-
-        E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+        E.parseGraphQLQuery nullInNonNullableVariables graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
         <$> for (InsOrdHashMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
@@ -120,6 +122,7 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do
       (_normalizedDirectives, normalizedSelectionSet) <-
         ER.resolveVariables
+          nullInNonNullableVariables
           varDefs
           (fromMaybe mempty (GH._grVariables query))
           directives

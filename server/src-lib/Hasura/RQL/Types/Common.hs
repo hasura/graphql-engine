@@ -301,6 +301,7 @@ isSystemDefined = unSystemDefined
 data SQLGenCtx = SQLGenCtx
   { stringifyNum :: Options.StringifyNumbers,
     dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
+    nullInNonNullableVariables :: Options.BackwardsCompatibleNullInNonNullableVariables,
     remoteNullForwardingPolicy :: Options.RemoteNullForwardingPolicy,
     optimizePermissionFilters :: Options.OptimizePermissionFilters,
     bigqueryStringNumericInput :: Options.BigQueryStringNumericInput
