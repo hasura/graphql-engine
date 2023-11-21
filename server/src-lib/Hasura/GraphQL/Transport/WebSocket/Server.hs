@@ -419,8 +419,8 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
             -- The bigqueryStringNumericInput of SQLGenCtx is built from the experimentalFeature, hence no need to check for this field
             -- in experimentalFeatures again.
             hasBigqueryStringNumericInputChanged = bigqueryStringNumericInput currSqlGenCtx /= bigqueryStringNumericInput prevSqlGenCtx
-            hasHideAggregationPredicatesChanged = (EFHideAggregationPredicates `elem` currExperimentalFeatures) && (EFHideAggregationPredicates `elem` prevExperimentalFeatures)
-            hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) && (EFHideStreamFields `elem` prevExperimentalFeatures)
+            hasHideAggregationPredicatesChanged = (EFHideAggregationPredicates `elem` currExperimentalFeatures) /= (EFHideAggregationPredicates `elem` prevExperimentalFeatures)
+            hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) /= (EFHideStreamFields `elem` prevExperimentalFeatures)
             hasDefaultNamingCaseChanged = hasNamingConventionChanged (prevExperimentalFeatures, prevDefaultNamingCase) (currExperimentalFeatures, currDefaultNamingCase)
         if
           -- if CORS policy has changed, close all connections
