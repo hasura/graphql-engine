@@ -43,9 +43,9 @@
 </span><span id="line-38"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span class="hs-comment">-- Should this be here? This implicitly ties Tracing to the name of fields in HTTP headers.</span><span>
-</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687750287"><span id="local-6989586621687750291"><span id="local-6989586621687750294"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621687750315"><span class="annot"><span class="annottext">toJSON :: TraceContext -&gt; Value
-</span><a href="#local-6989586621687750315"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687750317"><span id="local-6989586621687750318"><span id="local-6989586621687750319"><span id="local-6989586621687750320"><span id="local-6989586621687750321"><span class="annot"><span class="annottext">Maybe SpanId
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687750286"><span id="local-6989586621687750290"><span id="local-6989586621687750293"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621687750314"><span class="annot"><span class="annottext">toJSON :: TraceContext -&gt; Value
+</span><a href="#local-6989586621687750314"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687750316"><span id="local-6989586621687750317"><span id="local-6989586621687750318"><span id="local-6989586621687750319"><span id="local-6989586621687750320"><span class="annot"><span class="annottext">Maybe SpanId
 SamplingState
 SpanId
 TraceId
@@ -61,8 +61,8 @@ tcCurrentParent :: Maybe SpanId
 tcSamplingState :: SamplingState
 tcStateState :: TraceState
 </span><a href="Hasura.Tracing.Context.html#tcCurrentTrace"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687750322"><span class="annot"><span class="annottext">idFields :: [Pair]
-</span><a href="#local-6989586621687750322"><span class="hs-identifier hs-var hs-var">idFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687750321"><span class="annot"><span class="annottext">idFields :: [Pair]
+</span><a href="#local-6989586621687750321"><span class="hs-identifier hs-var hs-var">idFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-44"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;trace_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -70,7 +70,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TraceId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#traceIdToHex"><span class="hs-identifier hs-var">traceIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621687750317"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687750316"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-45"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;span_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -78,30 +78,30 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687750318"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687750317"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-47"></span><span>        </span><span id="local-6989586621687750326"><span class="annot"><span class="annottext">samplingFieldMaybe :: Maybe Pair
-</span><a href="#local-6989586621687750326"><span class="hs-identifier hs-var hs-var">samplingFieldMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-47"></span><span>        </span><span id="local-6989586621687750325"><span class="annot"><span class="annottext">samplingFieldMaybe :: Maybe Pair
+</span><a href="#local-6989586621687750325"><span class="hs-identifier hs-var hs-var">samplingFieldMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-48"></span><span>          </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; SamplingState -&gt; Maybe s
 </span><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier hs-var">samplingStateToHeader</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingState
-</span><a href="#local-6989586621687750320"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Pair) -&gt; Maybe Pair
+</span><a href="#local-6989586621687750319"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Pair) -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687750329"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687750329"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687750328"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687750328"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-49"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;sampling_state&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687750329"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621687750328"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-50"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
-</span><a href="#local-6989586621687750322"><span class="hs-identifier hs-var">idFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+</span><a href="#local-6989586621687750321"><span class="hs-identifier hs-var">idFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Maybe Pair -&gt; [Pair]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">Maybe Pair
-</span><a href="#local-6989586621687750326"><span class="hs-identifier hs-var">samplingFieldMaybe</span></a></span><span>
+</span><a href="#local-6989586621687750325"><span class="hs-identifier hs-var">samplingFieldMaybe</span></a></span><span>
 </span><span id="line-51"></span></pre></body></html>
