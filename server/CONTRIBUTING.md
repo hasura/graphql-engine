@@ -2,12 +2,17 @@
 
 This guide explains how to set up the graphql-engine server for development on your own machine and how to contribute.
 
-## Pre-requisites
+## Prerequisites
 
-- [GHC](https://www.haskell.org/ghc/) 9.4.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
-  - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+The following tools are required. Versions are typically specified in _VERSIONS.json_.
+
+- [GHC](https://www.haskell.org/ghc/)
+  - There are various ways this can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+  - If you are not using `ghcup`, make sure you install the GHC version specified in _.ghcversion_.
+- [Cabal](https://cabal.readthedocs.io/en/latest/)
+  - if you use `ghcup`, you can get Cabal from there too.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
-- Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
+- Additional Haskell tools:
   - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
   - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
 - [Docker](https://www.docker.com/get-started/)

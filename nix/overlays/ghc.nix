@@ -19,7 +19,7 @@ in
 {
   haskell = super.haskell // {
     compiler = super.haskell.compiler // {
-      ${ghcName} = (versions.ensureVersion super.haskell.compiler.${ghcName}).overrideAttrs (oldAttrs: {
+      ${ghcName} = super.haskell.compiler.${ghcName}.overrideAttrs (oldAttrs: {
         patches = (if oldAttrs ? patches then oldAttrs.patches else [ ]) ++ ghcPatches;
       });
     };
