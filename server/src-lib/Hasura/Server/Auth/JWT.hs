@@ -598,7 +598,7 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
                     >>= mkRoleName
                     . bsToTxt
 
-            when (requestedRole `notElem` allowedRoles)
+            unless (requestedRole `elem` allowedRoles)
               $ throw400 AccessDenied "Your requested role is not in allowed roles"
             let finalClaims =
                   HashMap.delete defaultRoleClaim . HashMap.delete allowedRolesClaim $ claimsMap
