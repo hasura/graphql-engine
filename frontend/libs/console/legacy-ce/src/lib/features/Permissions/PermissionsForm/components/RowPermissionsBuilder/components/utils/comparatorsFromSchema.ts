@@ -10,6 +10,7 @@ import { rowPermissionsContext } from '../RowPermissionsProvider';
 import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
 import { rootTableContext } from '../RootTableProvider';
 import { columnDataType } from '../../../../../../DataSource/utils';
+import { ComputedField } from '../../../../../../../metadata/types';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -152,7 +153,7 @@ export const mapScalarDataType = (
 export function useOperators({ path }: { path: string[] }) {
   const { comparators } = useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { columns, table } = useContext(tableContext);
+  const { columns, table, computedFields } = useContext(tableContext);
 
   const columnName = path[path.length - 2];
   const column = columns.find(c => c.name === columnName);
@@ -166,6 +167,7 @@ export function useOperators({ path }: { path: string[] }) {
     comparators,
     path,
     columns,
+    computedFields,
     tables,
     table,
   });
@@ -181,6 +183,7 @@ export type GetDataTypeOperatorsProps = {
   comparators: Comparators;
   path: string[];
   columns: Columns;
+  computedFields: ComputedField[];
   tables: Tables;
   table: Table;
 };

@@ -2,6 +2,7 @@ import * as z from 'zod';
 import { inputValidationSchema } from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 
 const columns = z.record(z.optional(z.boolean()));
+const computed_fields = z.record(z.optional(z.boolean()));
 const presets = z.optional(
   z.array(
     z.object({
@@ -40,6 +41,7 @@ export const schema = z.discriminatedUnion('queryType', [
     comment: z.string(),
     check: z.any(),
     columns,
+    computed_fields,
     presets,
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),
@@ -52,6 +54,7 @@ export const schema = z.discriminatedUnion('queryType', [
     comment: z.string(),
     filter: z.any(),
     columns,
+    computed_fields,
     presets,
     rowCount: z.string().optional(),
     aggregationEnabled: z.boolean().optional(),
@@ -64,6 +67,7 @@ export const schema = z.discriminatedUnion('queryType', [
   z.object({
     queryType: z.literal('update'),
     columns,
+    computed_fields,
     filterType: z.string(),
     comment: z.string(),
     filter: z.any(),

@@ -2,6 +2,7 @@ import { TableColumn } from '../../../../../../DataSource';
 import { Metadata } from '../../../../../../hasura-metadata-types';
 import { isPermission } from '../../../../../utils';
 import {
+  ComputedField,
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
@@ -75,10 +76,12 @@ export interface CreateFormDataArgs {
   metadataSource: MetadataDataSource;
   trackedTables: TableEntry[];
   validateInput: z.infer<typeof inputValidationSchema>;
+  computedFields: ComputedField[];
 }
 
 export const createFormData = (props: CreateFormDataArgs) => {
-  const { dataSourceName, table, tableColumns, trackedTables } = props;
+  const { dataSourceName, table, tableColumns, trackedTables, computedFields } =
+    props;
   // find the specific metadata table
   const metadataTable = getMetadataTable({
     dataSourceName,
@@ -93,5 +96,6 @@ export const createFormData = (props: CreateFormDataArgs) => {
     supportedQueries,
     tableNames: metadataTable.tableNames,
     columns: tableColumns?.map(({ name }) => name),
+    computed_fields: computedFields.map(({ name }) => name),
   };
 };

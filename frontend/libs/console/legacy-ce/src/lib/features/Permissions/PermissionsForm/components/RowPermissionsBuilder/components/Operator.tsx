@@ -21,7 +21,8 @@ export const Operator = ({
     rowPermissionsContext
   );
   const { tables } = useContext(rootTableContext);
-  const { columns, table, relationships } = useContext(tableContext);
+  const { columns, table, relationships, computedFields } =
+    useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
   const parent = path[path.length - 1];
   const operatorLevelId =
@@ -69,6 +70,19 @@ export const Operator = ({
               value={column.name}
             >
               {column.name}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+      {computedFields.length ? (
+        <optgroup label="Computed fields">
+          {computedFields.map((field, index) => (
+            <option
+              data-type="computedField"
+              key={'computedField' + index}
+              value={field.name}
+            >
+              {field.name}
             </option>
           ))}
         </optgroup>

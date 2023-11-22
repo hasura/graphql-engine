@@ -1,3 +1,4 @@
+import { QualifiedFunction } from '../../../metadata/types';
 import {
   InsertPermission,
   SelectPermission,
@@ -91,4 +92,11 @@ export type MetadataTable = {
   apollo_federation_config?: {
     enable: 'v1';
   } | null;
+
+  computed_fields?: {
+    name: string;
+    definition: {
+      function: QualifiedFunction;
+    };
+  }[];
 };

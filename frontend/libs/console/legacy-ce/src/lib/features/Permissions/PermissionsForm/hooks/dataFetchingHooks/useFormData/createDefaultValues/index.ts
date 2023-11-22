@@ -12,6 +12,7 @@ import { SourceCustomization } from '../../../../../../hasura-metadata-types/sou
 import { Operator } from '../../../../../../DataSource/types';
 
 import {
+  ComputedField,
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
@@ -41,6 +42,7 @@ export interface CreateDefaultValuesArgs {
   dataSourceName: string;
   metadata: Metadata | undefined;
   tableColumns: TableColumn[];
+  tableComputedFields: ComputedField[];
   defaultQueryRoot: string | never[];
   metadataSource: MetadataDataSource | undefined;
   supportedOperators: Operator[];
@@ -52,6 +54,7 @@ export const createDefaultValues = ({
   roleName,
   table,
   tableColumns,
+  tableComputedFields,
   defaultQueryRoot,
   metadataSource,
   supportedOperators,
@@ -74,6 +77,7 @@ export const createDefaultValues = ({
     comment: '',
     filterType: 'none',
     columns: {},
+    computed_fields: {},
     supportedOperators,
     validateInput,
   };
@@ -84,6 +88,7 @@ export const createDefaultValues = ({
       selectedTable,
       roleName,
       tableColumns,
+      tableComputedFields,
       tableName,
       metadataSource,
     });

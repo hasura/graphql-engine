@@ -30,6 +30,7 @@ const formatFilterValues = (formFilter: Record<string, any>[] = []) => {
 
 type SelectPermissionMetadata = {
   columns: string[];
+  computed_fields: string[];
   set: Record<string, any>;
   filter: Record<string, any>;
   allow_aggregations?: boolean;
@@ -43,12 +44,16 @@ const createSelectObject = (input: PermissionsSchema) => {
     const columns = Object.entries(input.columns)
       .filter(({ 1: value }) => value)
       .map(([key]) => key);
+    const computed_fields = Object.entries(input.computed_fields)
+      .filter(({ 1: value }) => value)
+      .map(([key]) => key);
 
     // Input may be undefined
     const filter = formatFilterValues(input.filter);
 
     const permissionObject: SelectPermissionMetadata = {
       columns,
+      computed_fields,
       filter,
       set: {},
       allow_aggregations: input.aggregationEnabled,
