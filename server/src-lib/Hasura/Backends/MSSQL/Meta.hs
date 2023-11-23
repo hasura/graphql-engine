@@ -95,7 +95,7 @@ data SysColumn = SysColumn
     scIsNullable :: Bool,
     scIsIdentity :: Bool,
     scIsComputed :: Bool,
-    scJoinedSysType :: SysType,
+    scJoinedSysType :: Maybe SysType,
     scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
   }
   deriving (Show, Generic)
@@ -166,7 +166,7 @@ transformColumn sysCol =
 
       rciIsNullable = scIsNullable sysCol
       rciDescription = Nothing
-      rciType = RawColumnTypeScalar $ parseScalarType $ styName $ scJoinedSysType sysCol
+      rciType = maybe (RawColumnTypeScalar (UnknownType (tshow (scUserTypeId sysCol)))) (RawColumnTypeScalar . parseScalarType . styName) $ scJoinedSysType sysCol
       foreignKeys =
         scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint (ConstraintName "fk_mssql") $ OID $ sfkcConstraintObjectId foreignKeyColumn
