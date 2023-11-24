@@ -15,8 +15,11 @@ slug: index
 ## Introduction
 
 A streaming subscription streams the response according to the cursor provided by the user while making the
-subscription. Streaming subscriptions can be used to subscribe only to the data which has been newly added to the result
-set.
+subscription. Streaming subscriptions can be used to subscribe only to the data which has been **newly added to the
+result set.**
+
+This is different from a [live query](/subscriptions/postgres/livequery/index.mdx) subscription where only the latest
+value is returned to the client.
 
 :::tip Supported from
 
@@ -35,7 +38,7 @@ Streaming subscriptions work well with other Hasura features like
 [relationships](/schema/postgres/table-relationships/index.mdx#table-relationships) and also leverage the power of
 [subscriptions multiplexing](/subscriptions/postgres/livequery/execution.mdx#subscription-multiplexing).
 
-:::info Confguration details
+:::info Configuration details
 
 In the case of streaming subscriptions, the multiplexed batch size can be configured via
 `HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE` and the refetch interval can be configured via
