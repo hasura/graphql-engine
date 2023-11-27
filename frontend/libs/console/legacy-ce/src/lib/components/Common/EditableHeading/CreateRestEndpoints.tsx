@@ -4,13 +4,16 @@ import { Button } from '../../../new-components/Button';
 import { FaLink } from 'react-icons/fa';
 import { Badge } from '../../../new-components/Badge';
 import { Analytics } from '../../../features/Analytics';
+import { Table } from '../../../features/hasura-metadata-types';
 
 interface CreateRestEndpointProps {
   tableName: string;
+  dataSourceName: string;
+  table: Table;
 }
 
 export const CreateRestEndpoint = (props: CreateRestEndpointProps) => {
-  const { tableName } = props;
+  const { tableName, dataSourceName, table } = props;
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const toggleModal = () => {
@@ -31,7 +34,12 @@ export const CreateRestEndpoint = (props: CreateRestEndpointProps) => {
         </Button>
       </Analytics>
       {isModalOpen && (
-        <RestEndpointModal onClose={toggleModal} tableName={tableName} />
+        <RestEndpointModal
+          onClose={toggleModal}
+          tableName={tableName}
+          dataSourceName={dataSourceName}
+          table={table}
+        />
       )}
     </>
   );

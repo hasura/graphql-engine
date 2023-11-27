@@ -75,7 +75,8 @@ export const generateViewEndpoint: Generator['generator'] = (
   root,
   table,
   operation,
-  microfiber
+  microfiber,
+  customTableName
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
@@ -97,7 +98,7 @@ export const generateViewEndpoint: Generator['generator'] = (
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/${path}`,
+    url: `${customTableName ? customTableName : table}/${path}`,
     methods: ['GET'],
     definition: {
       query: {
@@ -115,7 +116,8 @@ export const generateViewAllEndpoint: Generator['generator'] = (
   root,
   table,
   operation,
-  microfiber
+  microfiber,
+  customTableName
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
@@ -135,7 +137,7 @@ export const generateViewAllEndpoint: Generator['generator'] = (
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}`,
+    url: `${customTableName ? customTableName : table}`,
     methods: ['GET'],
     definition: {
       query: {
@@ -153,7 +155,8 @@ export const generateDeleteEndpoint: Generator['generator'] = (
   root,
   table,
   operation,
-  microfiber
+  microfiber,
+  customTableName
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
@@ -175,7 +178,7 @@ export const generateDeleteEndpoint: Generator['generator'] = (
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/${path}`,
+    url: `${customTableName ? customTableName : table}/${path}`,
     methods: ['DELETE'],
     definition: {
       query: {
@@ -193,7 +196,8 @@ export const generateInsertEndpoint: Generator['generator'] = (
   root,
   table,
   operation,
-  microfiber
+  microfiber,
+  customTableName
 ) => {
   const { fields } = extractFields(operation, microfiber);
   const inputType = recursiveType(
@@ -216,7 +220,7 @@ export const generateInsertEndpoint: Generator['generator'] = (
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}`,
+    url: `${customTableName ? customTableName : table}`,
     methods: ['POST'],
     definition: {
       query: {
@@ -234,7 +238,8 @@ export const generateUpdateEndpoint: Generator['generator'] = (
   root,
   table,
   operation,
-  microfiber
+  microfiber,
+  customTableName
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
@@ -278,7 +283,7 @@ export const generateUpdateEndpoint: Generator['generator'] = (
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/${path}`,
+    url: `${customTableName ? customTableName : table}/${path}`,
     methods: ['POST'],
     definition: {
       query: {

@@ -6,9 +6,13 @@ import {
   useRestEndpointDefinitions,
   EndpointDefinition,
 } from './useRestEndpointDefinitions';
+import { Table } from '../../hasura-metadata-types';
 
-export const useCreateRestEndpoints = () => {
-  const { data: endpointDefinitions } = useRestEndpointDefinitions();
+export const useCreateRestEndpoints = (props: {
+  dataSourceName: string;
+  table: Table;
+}) => {
+  const { data: endpointDefinitions } = useRestEndpointDefinitions(props);
 
   const { mutate, ...rest } = useMetadataMigration();
 
@@ -16,6 +20,7 @@ export const useCreateRestEndpoints = () => {
 
   const createRestEndpoints = useCallback(
     (
+      dataSourceName: string,
       table: string,
       types: EndpointType[],
       options?: Parameters<typeof mutate>[1]
