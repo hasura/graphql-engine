@@ -18,7 +18,7 @@ export const RestEndpointDetailsPage = (
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: 'Rest Endpoints',
+      title: 'REST Endpoints',
       onClick: () => browserHistory.push('/api/rest'),
     },
     {
