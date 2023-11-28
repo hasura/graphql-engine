@@ -10,6 +10,8 @@ import { useAppDispatch } from '../../../../storeHooks';
 import { getRoute } from '../../../../utils/getDataRoute';
 import _push from '../../../../components/Services/Data/push';
 import AceEditor from 'react-ace';
+import { CreateRestEndpoint } from '../../../../components/Common/EditableHeading/CreateRestEndpoints';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 
 export const TableName: React.VFC<{
   dataSourceName: string;
@@ -17,6 +19,9 @@ export const TableName: React.VFC<{
   tableName: string;
 }> = ({ tableName, dataSourceName, table }) => {
   const dispatch = useAppDispatch();
+  const { data: driver = '' } = useMetadata(
+    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+  );
   const { untrackTable } = useUntrackTable({
     onSuccess: () => {
       hasuraToast({
@@ -87,6 +92,13 @@ export const TableName: React.VFC<{
       <div>
         <Badge color="green">Tracked</Badge>
       </div>
+      {['postgres', 'mssql', 'bigquery'].includes(driver) && (
+        <CreateRestEndpoint
+          tableName={tableName.split('.')[tableName.split('.').length - 1]}
+          dataSourceName={dataSourceName}
+          table={table}
+        />
+      )}
     </div>
   );
 };
