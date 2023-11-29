@@ -306,8 +306,7 @@ services:
     environment:
       HASURA_GRAPHQL_EE_LICENSE_KEY: <YOUR_EE_LICENSE_KEY>
       HASURA_GRAPHQL_ADMIN_SECRET: <YOUR_ADMIN_SECRET>
-      HASURA_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres?sslmode=disable
-      PG_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres?sslmode=disable
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres?sslmode=disable
       HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
       HASURA_GRAPHQL_DEV_MODE: 'true'
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup,http-log,webhook-log,websocket-log,query-log

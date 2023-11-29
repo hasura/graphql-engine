@@ -85,8 +85,10 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Control.Monad.Writer.Strict
+import Data.HashMap.Lazy (HashMap)
 import Data.HashMap.Lazy qualified as Map
-import Hasura.Prelude
+import Data.Hashable (Hashable)
+import Prelude
 
 -- | CircularT is implemented as a state monad containing a lazy HashMap.
 --

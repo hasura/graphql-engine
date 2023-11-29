@@ -7,7 +7,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Text.Extended
-import Hasura.Backends.BigQuery.Types (BooleanOperators (..), ScalarType (StringScalarType))
+import Hasura.Backends.BigQuery.Types (ScalarType (StringScalarType))
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -50,14 +50,10 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         "$gte" -> parseGte
         "_lte" -> parseLte
         "$lte" -> parseLte
-        "$like" -> parseLike
         "_like" -> parseLike
-        "$nlike" -> parseNLike
-        "_nlike" -> parseNLike
-        "$ilike" -> parseILike
-        "_ilike" -> parseILike
-        "$nilike" -> parseNILike
-        "_nilike" -> parseNILike
+        "$like" -> parseLike
+        "_nlike" -> parseNlike
+        "$nlike" -> parseNlike
         "_in" -> parseIn
         "$in" -> parseIn
         "_nin" -> parseNin
@@ -79,9 +75,7 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseGte = AGTE <$> parseOne
         parseLte = ALTE <$> parseOne
         parseLike = guardType StringScalarType >> ALIKE <$> parseOne
-        parseILike = guardType StringScalarType >> ABackendSpecific . ASTILike <$> parseOne
-        parseNLike = guardType StringScalarType >> ANLIKE <$> parseOne
-        parseNILike = guardType StringScalarType >> ABackendSpecific . ASTNILike <$> parseOne
+        parseNlike = guardType StringScalarType >> ANLIKE <$> parseOne
         parseIn = AIN <$> parseManyWithType colTy
         parseNin = ANIN <$> parseManyWithType colTy
         parseIsNull = bool ANISNOTNULL ANISNULL <$> decodeValue val

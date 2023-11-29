@@ -108,7 +108,7 @@ export const Test: StoryObj<typeof ConnectPostgresWidget> = {
     // Find and click on advanced settings
     await userEvent.click(await canvas.findByText('Advanced Settings'));
     await expect(
-      await canvas.findByText('Max Connections')
+      await canvas.findByText('Total Max Connections')
     ).toBeInTheDocument();
     await expect(await canvas.findByText('Idle Timeout')).toBeInTheDocument();
     await expect(await canvas.findByText('Retries')).toBeInTheDocument();
@@ -174,7 +174,7 @@ export const PostgresEditConnection: StoryObj<typeof ConnectPostgresWidget> = {
     await userEvent.click(await canvas.findByText('Advanced Settings'));
     await expect(
       await canvas.findByTestId(
-        'configuration.connectionInfo.poolSettings.maxConnections'
+        'configuration.connectionInfo.poolSettings.totalMaxConnections'
       )
     ).toHaveValue(500);
     await expect(

@@ -1,8 +1,0 @@
-query MyQuery {
-  InstitutionMany(where: { location: { campuses: { _like: "White" } } }) {
-    name
-    location {
-      campuses
-    }
-  }
-}

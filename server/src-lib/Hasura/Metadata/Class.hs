@@ -18,8 +18,6 @@ where
 import Control.Monad.Trans.Extended
 import Control.Monad.Trans.Managed
 import Data.Aeson
-import Hasura.Authentication.Session (SessionVariables)
-import Hasura.Backends.Postgres.SQL.DML (OrderByItem)
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
@@ -32,6 +30,7 @@ import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
+import Hasura.Session
 import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
 
@@ -99,16 +98,9 @@ class (Monad m) => MonadMetadataStorage m where
   fetchMetadataResourceVersion :: m (Either QErr MetadataResourceVersion)
   fetchMetadata :: m (Either QErr MetadataWithResourceVersion)
   fetchMetadataNotifications :: MetadataResourceVersion -> InstanceId -> m (Either QErr [(MetadataResourceVersion, CacheInvalidations)])
-
+  setMetadata :: MetadataResourceVersion -> Metadata -> m (Either QErr MetadataResourceVersion)
+  notifySchemaCacheSync :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> m (Either QErr ())
   getCatalogState :: m (Either QErr CatalogState)
-
-  -- This function is used to update the metadata in the metadata storage with schema sync notifications.
-  updateMetadataAndNotifySchemaSync ::
-    InstanceId ->
-    MetadataResourceVersion ->
-    Metadata ->
-    CacheInvalidations ->
-    m (Either QErr MetadataResourceVersion)
 
   -- the `setCatalogState` function is used by the console and CLI to store its state
   -- it is disabled when maintenance mode is on
@@ -143,8 +135,8 @@ class (Monad m) => MonadMetadataStorage m where
   clearFutureCronEvents :: ClearCronEvents -> m (Either QErr ())
 
   -- Console API requirements
-  getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> [OrderByItem] -> m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
-  getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> [OrderByItem] -> m (Either QErr (WithOptionalTotalCount [CronEvent]))
+  getOneOffScheduledEvents :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (Either QErr (WithOptionalTotalCount [OneOffScheduledEvent]))
+  getCronEvents :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (Either QErr (WithOptionalTotalCount [CronEvent]))
   getScheduledEventInvocations :: GetScheduledEventInvocations -> m (Either QErr (WithOptionalTotalCount [ScheduledEventInvocation]))
   deleteScheduledEvent :: ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
 
@@ -165,11 +157,10 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   fetchMetadataResourceVersion = lift fetchMetadataResourceVersion
   fetchMetadata = lift fetchMetadata
   fetchMetadataNotifications a b = lift $ fetchMetadataNotifications a b
-
+  setMetadata r = lift . setMetadata r
+  notifySchemaCacheSync a b c = lift $ notifySchemaCacheSync a b c
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
-
-  updateMetadataAndNotifySchemaSync a b c d = lift $ updateMetadataAndNotifySchemaSync a b c d
 
   fetchSourceIntrospection = lift . fetchSourceIntrospection
   storeSourceIntrospection a b = lift $ storeSourceIntrospection a b
@@ -186,8 +177,8 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   unlockScheduledEvents a b = lift $ unlockScheduledEvents a b
   unlockAllLockedScheduledEvents = lift $ unlockAllLockedScheduledEvents
   clearFutureCronEvents = lift . clearFutureCronEvents
-  getOneOffScheduledEvents a b c d = lift $ getOneOffScheduledEvents a b c d
-  getCronEvents a b c d e = lift $ getCronEvents a b c d e
+  getOneOffScheduledEvents a b c = lift $ getOneOffScheduledEvents a b c
+  getCronEvents a b c d = lift $ getCronEvents a b c d
   getScheduledEventInvocations a = lift $ getScheduledEventInvocations a
   deleteScheduledEvent a b = lift $ deleteScheduledEvent a b
 
@@ -237,15 +228,12 @@ fetchScheduledEventInvocations = getScheduledEventInvocations
 fetchScheduledEvents :: (MonadMetadataStorage m) => GetScheduledEvents -> m (Either QErr Value)
 fetchScheduledEvents GetScheduledEvents {..} = do
   let totalCountToJSON WithOptionalTotalCount {..} =
-        object $ ("events" .= _wtcData)
+        object
+          $ ("events" .= _wtcData)
           : (maybe mempty (\count -> ["count" .= count]) _wtcCount)
   case _gseScheduledEvent of
-    SEOneOff ->
-      (fmap . fmap) totalCountToJSON
-        $ getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount _gseOrderBy
-    SECron name ->
-      (fmap . fmap) totalCountToJSON
-        $ getCronEvents name _gsePagination _gseStatus _gseGetRowsCount _gseOrderBy
+    SEOneOff -> (fmap . fmap) totalCountToJSON $ getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount
+    SECron name -> (fmap . fmap) totalCountToJSON $ getCronEvents name _gsePagination _gseStatus _gseGetRowsCount
 
 -- | Drop a cron/oneoff scheduled event
 dropEvent :: (MonadMetadataStorage m) => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())

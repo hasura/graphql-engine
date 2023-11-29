@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/supergraph_too_many_graphql_configs/metadata.json
----
-Error: graphql configuration should be defined only once in supergraph

@@ -127,11 +127,7 @@ export const ReadReplicas = ({
                         SSL Certificates Settings
                         <span className="px-1.5 italic font-light">
                           (Certificates will be loaded from{' '}
-                          <a
-                            href="https://hasura.io/docs/2.0/databases/postgres/gcp/#step-72-add-env-vars"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
+                          <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
                             environment variables
                           </a>
                           )

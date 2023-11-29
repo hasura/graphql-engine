@@ -111,10 +111,7 @@ runAddSource ::
   AddSource b ->
   m EncJSON
 runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration sourceCustomization healthCheckConfig) = do
-  -- Get the sources from metadata so that we can check if this is an update or a create operatoion;
-  -- it is important that this is from metadata directly and not from the schema cache because
-  -- the schema cache will not contain the source if it is inconsistent
-  sources <- _metaSources <$> getMetadata
+  sources <- scSources <$> askSchemaCache
   do
     -- version check
     result <- liftIO $ versionCheckImplementation @b env name sourceConfig
@@ -122,7 +119,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
 
   metadataModifier <-
     MetadataModifier
-      <$> if InsOrdHashMap.member name sources
+      <$> if HashMap.member name sources
         then
           if replaceConfiguration
             then do

@@ -1,8 +1,0 @@
-[
-  {
-    "GET": "/default/Authors"
-  },
-  {
-    "GET": "/default/Authors?fields[author]=author_id,first_name"
-  }
-]

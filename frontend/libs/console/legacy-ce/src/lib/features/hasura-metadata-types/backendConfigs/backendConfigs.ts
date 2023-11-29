@@ -1,9 +1,3 @@
 export type BackendConfigs = {
-  dataconnector: Record<string, DataConnectorBackendConfig>;
+  dataconnector: Record<string, { uri: string }>;
 };
-
-export type DataConnectorBackendConfig = {
-  uri: DataConnectorUri;
-};
-
-export type DataConnectorUri = string | { from_env: string };

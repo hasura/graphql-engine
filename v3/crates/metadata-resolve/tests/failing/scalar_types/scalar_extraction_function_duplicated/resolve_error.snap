@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/scalar_types/scalar_extraction_function_duplicated/metadata.json
----
-Error: Multiple year extraction functions found for type Int in data connector custom (in subgraph default)

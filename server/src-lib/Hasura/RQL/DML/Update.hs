@@ -10,7 +10,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Sequence qualified as DS
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.User (UserInfo (..), UserInfoM (..))
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -36,6 +35,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
+import Hasura.Session
 import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 

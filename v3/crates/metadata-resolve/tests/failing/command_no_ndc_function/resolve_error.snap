@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/command_no_ndc_function/metadata.json
----
-Error: NDC validation error: type foobar is not defined in the agent schema

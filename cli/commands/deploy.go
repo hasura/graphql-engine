@@ -55,7 +55,6 @@ Further reading:
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")
-			opts.NoTransaction = ec.Viper.GetBool("no_transaction")
 			if err := opts.Run(); err != nil {
 				return errors.E(op, err)
 			}
@@ -89,10 +88,6 @@ Further reading:
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
 
-	f.BoolVar(&opts.NoTransaction, "no-transaction", false, "disable transaction for migration")
-
-	util.BindPFlag(v, "no_transaction", f.Lookup("no-transaction"))
-
 	return deployCmd
 }
 
@@ -100,8 +95,6 @@ type DeployOptions struct {
 	EC *cli.ExecutionContext
 
 	WithSeeds bool
-
-	NoTransaction bool // apply migrations without using transactions
 }
 
 func (opts *DeployOptions) Run() error {
@@ -113,8 +106,6 @@ func (opts *DeployOptions) Run() error {
 		logger:    opts.EC.Logger,
 		err:       nil,
 		withSeeds: opts.WithSeeds,
-
-		noTransaction: opts.NoTransaction,
 	}
 
 	if opts.EC.Config.Version <= cli.V2 {
@@ -175,8 +166,6 @@ type deployCtx struct {
 	logger    *logrus.Logger
 	err       error
 	withSeeds bool
-
-	noTransaction bool
 }
 
 type applyingInitialMetadataAction struct{}
@@ -217,8 +206,7 @@ func (a *applyingMigrationsAction) Execute(ctx fsm.EventContext) eventType {
 
 	context.ec.Config.DisableInteractive = true
 	opts := MigrateApplyOptions{
-		EC:            context.ec,
-		NoTransaction: context.noTransaction,
+		EC: context.ec,
 	}
 	opts.EC.AllDatabases = true
 	if err := opts.Run(); err != nil {

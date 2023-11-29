@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_expression_in_relationship/disallow_object_relationships/metadata.json
----
-Error: The relationship customer on type Invoice (in subgraph default) defines an aggregate, but aggregates can only be used with array relationships, not object relationships

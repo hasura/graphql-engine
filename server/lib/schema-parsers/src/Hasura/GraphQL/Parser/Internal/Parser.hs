@@ -228,7 +228,10 @@ safeSelectionSet name description fields =
   where
     namesOrigins :: InsOrdHashMap Name [Maybe origin]
     namesOrigins =
-      foldr (uncurry (InsOrdHashMap.insertWith (<>)) . (dName &&& (pure . dOrigin)) . fDefinition) InsOrdHashMap.empty fields
+      foldr
+        (uncurry (InsOrdHashMap.insertWith (<>)))
+        InsOrdHashMap.empty
+        ((dName &&& (pure . dOrigin)) . fDefinition <$> fields)
     duplicates :: InsOrdHashMap Name [Maybe origin]
     duplicates = InsOrdHashMap.filter ((> 1) . length) namesOrigins
     uniques = S.toList . S.fromList

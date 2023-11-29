@@ -37,8 +37,6 @@ import Data.Aeson.Extended
 import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
-import Hasura.Authentication.Session (SessionVariables)
-import Hasura.Authentication.User (UserInfo (..), UserInfoM (..))
 import Hasura.Backends.Postgres.Execute.Types as ET
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -46,6 +44,7 @@ import Hasura.Base.Error
 import Hasura.Base.Instances ()
 import Hasura.Prelude
 import Hasura.SQL.Types
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
@@ -192,7 +191,6 @@ doesTableExist schemaName tableName =
       (schemaName, tableName)
       False
 
--- | Can we even try to do a @CREATE EXTENSION@?
 isExtensionAvailable :: (MonadTx m) => Text -> m Bool
 isExtensionAvailable extensionName =
   liftTx
@@ -207,39 +205,15 @@ isExtensionAvailable extensionName =
       (Identity extensionName)
       False
 
--- | Did someone already do @CREATE EXTENSION@?
-isExtensionCreated :: (MonadTx m) => Text -> m Bool
-isExtensionCreated extensionName =
-  liftTx
-    $ (runIdentity . PG.getRow)
-    <$> PG.withQE
-      defaultTxErrorHandler
-      [PG.sql|
-    SELECT EXISTS
-    ( SELECT 1 FROM pg_extension WHERE extname = $1
-    ) |]
-      (Identity extensionName)
-      False
-
 enablePgcryptoExtension :: forall m. (MonadTx m) => ExtensionsSchema -> m ()
 enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
   pgcryptoAvailable <- isExtensionAvailable "pgcrypto"
-  pgcryptoCreatedAlready <- isExtensionCreated "pgcrypto"
-  -- NOTE: On regular postgres a `CREATE EXTENSION IF NOT EXISTS` will succeed
-  -- when the extension exists regardless of the user’s permission, so formerly
-  -- we omitted the check here and just idempotently called `CREATE EXTENSION
-  -- IF NOT EXISTS pgcrypto`. Unfortunately though, on Azure `create extension`
-  -- causes a permissions error for unprivileged users, regardless of whether
-  -- the extension exists.  That means that without the check below, users who
-  -- don't want to run hasura as a super user aren't able to work around the
-  -- issue by first creating the extension themselves out of band.
-  unless pgcryptoCreatedAlready
-    $ if pgcryptoAvailable
-      then createPgcryptoExtension
-      else
-        throw400 Unexpected
-          $ "pgcrypto extension is required, but could not find the extension in the "
-          <> "PostgreSQL server. Please make sure this extension is available."
+  if pgcryptoAvailable
+    then createPgcryptoExtension
+    else
+      throw400 Unexpected
+        $ "pgcrypto extension is required, but could not find the extension in the "
+        <> "PostgreSQL server. Please make sure this extension is available."
   where
     createPgcryptoExtension :: m ()
     createPgcryptoExtension =

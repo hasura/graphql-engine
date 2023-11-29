@@ -1,6 +1,7 @@
 import { useMutation } from 'react-query';
 import { runGraphQL } from '../../DataSource';
 import { useHttpClient } from '../../Network';
+import { AxiosResponseHeaders } from 'axios';
 
 export function useGraphQLMutation({
   operationName,
@@ -9,7 +10,7 @@ export function useGraphQLMutation({
   onSuccess,
 }: {
   operationName: string;
-  headers?: Record<string, string>;
+  headers?: AxiosResponseHeaders;
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) {

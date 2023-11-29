@@ -1,12 +1,11 @@
 import { useContext } from 'react';
 import isEmpty from 'lodash/isEmpty';
-import { isComparator, isPrimitive } from './utils/helpers';
+import { isPrimitive } from './utils/helpers';
 import { tableContext } from './TableProvider';
 import { Key } from './Key';
 import { Token } from './Token';
 import { EntryType } from './EntryType';
 import { useOperators } from './utils/comparatorsFromSchema';
-import { InputSuggestion } from './InputSuggestion';
 
 export const Entry = ({
   k,
@@ -55,7 +54,7 @@ export const Entry = ({
           <OpenToken v={v} />
         </span>
         <EntryType k={k} v={v} path={path} />
-        <EndToken v={v} path={path} k={k} />
+        <EndToken v={v} />
       </div>
     </div>
   );
@@ -69,18 +68,11 @@ function OpenToken({ v }: { v: any }) {
   );
 }
 
-function EndToken({ v, path, k }: { v: any; path: string[]; k: string }) {
+function EndToken({ v }: { v: any }) {
   return Array.isArray(v) ? (
-    <div className="flex gap-2 pt-2 items-center">
+    <div className="flex gap-2">
       <Token token={']'} inline />
       <Token token={','} inline />
-      {isComparator(k)?.name === '_in' || isComparator(k)?.name === '_nin' ? (
-        <InputSuggestion
-          comparatorName={path[path.length - 1]}
-          componentLevelId={`${path.join('.')}-value-input`}
-          path={path}
-        />
-      ) : null}
     </div>
   ) : isPrimitive(v) ? null : (
     <div className="flex gap-2">

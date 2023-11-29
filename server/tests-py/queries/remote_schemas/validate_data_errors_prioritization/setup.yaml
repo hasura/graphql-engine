@@ -1,6 +1,0 @@
-type: add_remote_schema
-args:
-  name: my-remote-schema
-  definition:
-    url: "{{GRAPHQL_SERVICE}}"
-    forward_client_headers: true

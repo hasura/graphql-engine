@@ -30,157 +30,16 @@ Here are 2 ways you can get started with Hasura and Amazon Redshift:
 
 1.  [Hasura Cloud](/databases/redshift/getting-started/cloud.mdx): You'll need to be able to access your Amazon Redshift
     instance service from Hasura Cloud.
-2.  [Docker](/databases/redshift/getting-started/docker.mdx): Run Hasura with Docker and then connect your Amazon
-    Redshift instance to Hasura.
+2.  [Docker](/databases/redshift/getting-started/docker.mdx): Run Hasura with Docker and then connect your Amazon Redshift
+    instance to Hasura.
 
-## Feature Support
+## Supported features
 
-<div className="feature-matrix-tables">
+:::info Note
 
-<table>
-  <tr>
-    <td>Feature</td>
-    <td>Redshift</td>
-  </tr>
-  <tr>
-    <td>Remote Relationships</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Views</td>
-    <td>✅</td>
-  </tr>
-</table>
+Currently, Hasura supports read-only queries, relationships, and permissions on Amazon Redshift.
 
-### Queries
-
-<table>
-  <tr>
-    <td>Feature</td>
-    <td>Redshift</td>
-  </tr>
-  <tr>
-    <td>Simple</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Nested Object</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Aggregation</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Filter / Search</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Sort</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Distinct</td>
-    <td>✅ (supported for aggregations only)</td>
-  </tr>
-  <tr>
-    <td>Paginate</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Multiple Arguments</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Multiple Queries</td>
-    <td>✅</td>
-  </tr>
-  <tr>
-    <td>Variables / Aliases / Fragments</td>
-    <td>✅</td>
-  </tr>
-</table>
-
-### Mutations
-
-<table>
-  <tr>
-    <td>Feature</td>
-    <td>Redshift</td>
-  </tr>
-  <tr>
-    <td>Insert</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Upsert</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Update</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Delete</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Multiple per Request</td>
-    <td>❌</td>
-  </tr>
-</table>
-
-### Subscriptions
-
-<table>
-  <tr>
-    <td>Feature</td>
-    <td>Redshift</td>
-  </tr>
-  <tr>
-    <td>Value of Field</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Updates to Rows</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Value of Derived Field</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>Streaming Subscriptions</td>
-    <td>❌</td>
-  </tr>
-</table>
-
-### Event Triggers
-
-<table>
-  <tr>
-    <td>Feature</td>
-    <td>Redshift</td>
-  </tr>
-  <tr>
-    <td>INSERT</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>UPDATE</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>DELETE</td>
-    <td>❌</td>
-  </tr>
-  <tr>
-    <td>MANUAL</td>
-    <td>❌</td>
-  </tr>
-</table>
-
-</div>
+:::
 
 ## Managing data with the Hasura Console
 
@@ -193,8 +52,8 @@ in the `API` tab and interact with it using the GraphiQL interface.
 
 :::info Console support
 
-We recommend using your preferred Amazon Redshift client instead. The Hasura Console is designed to be a tool for
-managing your GraphQL API, and not a full-fledged database management tool.
+We recommend using your preferred Amazon Redshift client instead. The Hasura Console is designed to be a tool for managing
+your GraphQL API, and not a full-fledged database management tool.
 
 :::
 

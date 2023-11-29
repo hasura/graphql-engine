@@ -1,3 +1,0 @@
-fragment on User @example {
-    id
-}

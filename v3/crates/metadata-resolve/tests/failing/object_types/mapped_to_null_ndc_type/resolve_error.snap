@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_null_ndc_type/metadata.json
----
-Error: The field 'location' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.location' because: Type 'location! (in subgraph default)' is not compatible with NDC type 'location' - Expected a non-nullable type

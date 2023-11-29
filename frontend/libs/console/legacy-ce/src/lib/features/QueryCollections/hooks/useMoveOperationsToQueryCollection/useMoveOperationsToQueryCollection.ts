@@ -6,12 +6,14 @@ import { createAllowedQueriesIfNeeded } from '../useCreateQueryCollection';
 
 export const useMoveOperationsToQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();
+
   const { data: metadata } = useMetadata();
 
   const moveOperationToQueryCollection = useCallback(
     (
       fromCollection: string,
       toCollection: string,
+      // considering the move action can be done on multiple queries, this hook can handle multiple queries
       queries: QueryCollection[],
       options?: Parameters<typeof mutate>[1]
     ) => {
@@ -22,57 +24,8 @@ export const useMoveOperationsToQueryCollection = () => {
           } ${!queries && ', queries'} ${!toCollection && ', toCollection'}`
         );
 
-      const restEndpoints = metadata?.metadata?.rest_endpoints || [];
-      const args: {
-        type: string;
-        args:
-          | { name: string }
-          | { collection_name: string; query_name: string }
-          | { collection_name: string; query_name: string; query: string };
-      }[] = [];
-
-      queries.forEach(query => {
-        const isRestEndpoint = restEndpoints.some(e => e.name === query.name);
-        const restEndpoint = restEndpoints?.filter(e => e.name === query.name);
-
-        if (isRestEndpoint) {
-          // Drop the rest endpoint first
-          args.push({
-            type: 'drop_rest_endpoint',
-            args: {
-              name: query.name,
-            },
-          });
-        }
-
-        // Drop the query from the source collection
-        args.push({
-          type: 'drop_query_from_collection',
-          args: {
-            collection_name: fromCollection,
-            query_name: query.name,
-          },
-        });
-
-        // Add the query to the target collection
-        args.push({
-          type: 'add_query_to_collection',
-          args: {
-            collection_name: toCollection,
-            query_name: query.name,
-            query: query.query,
-          },
-        });
-
-        if (isRestEndpoint) {
-          restEndpoint[0].definition.query.collection_name = toCollection;
-          // Re-add the restified endpoint
-          args.push({
-            type: 'create_rest_endpoint',
-            args: restEndpoint[0],
-          });
-        }
-      });
+      // considering there is no direct API to edit an operation, we use bulk transaction to drop and add an operation.
+      // ie. drop_query_from_collection and then recreate with add_query_to_collection in a single transaction
 
       return mutate(
         {
@@ -81,10 +34,26 @@ export const useMoveOperationsToQueryCollection = () => {
             ...(metadata?.resource_version && {
               resource_version: metadata.resource_version,
             }),
-            args: [
-              ...createAllowedQueriesIfNeeded(toCollection, metadata),
-              ...args,
-            ].flat(),
+            args: queries
+              .map(query => [
+                ...createAllowedQueriesIfNeeded(toCollection, metadata),
+                {
+                  type: 'drop_query_from_collection',
+                  args: {
+                    collection_name: fromCollection,
+                    query_name: query.name,
+                  },
+                },
+                {
+                  type: 'add_query_to_collection',
+                  args: {
+                    collection_name: toCollection,
+                    query_name: query.name,
+                    query: query.query,
+                  },
+                },
+              ])
+              .flat(),
           },
         },
         {

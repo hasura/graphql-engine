@@ -1,3 +1,0 @@
-extend interface {
-    value: Int
-}

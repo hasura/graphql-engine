@@ -1,6 +1,0 @@
-query ($id: Int! = 1) {
-  AuthorMany(where: { author_id: { _eq: $id } }) {
-    author_id
-    first_name
-  }
-}

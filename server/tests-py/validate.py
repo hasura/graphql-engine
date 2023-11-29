@@ -302,13 +302,17 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
-
     if not headers or len(headers) == 0:
-        ws_client.init_as_admin()
-    else:
-        ws_client.init(headers)
+        ws_client.init({})
 
-    query_resp = ws_client.send_query(query, query_id='hge_test', timeout=15)
+    if ws_client.remote_closed or ws_client.is_closing:
+        ws_client.create_conn()
+        if not headers or len(headers) == 0 or hge_ctx.hge_key is None:
+            ws_client.init()
+        else:
+            ws_client.init_as_admin()
+
+    query_resp = ws_client.send_query(query, query_id='hge_test', headers=headers, timeout=15)
     resp = next(query_resp)
     print('websocket resp: ', resp)
 
@@ -316,7 +320,7 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         if retry:
             #Got query complete before payload. Retry once more
             print("Got query complete before getting query response payload. Retrying")
-            ws_client.tear_down()
+            ws_client.recreate_conn()
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
             assert resp['type'] in ['data', 'error', 'next'], resp
@@ -401,12 +405,14 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
 def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_assertion=False, exp_resp_hdrs={}):
+    print('Reponse Headers: ', resp_hdrs)
+    print(exp_resp_hdrs)
+
     # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
-    hdrs_matched = (exp_resp_hdrs or {}).items() <= resp_hdrs.items()
-    body_matched = equal_CommentedMap(resp, exp_response)
+    matched      = equal_CommentedMap(resp, exp_response) and (exp_resp_hdrs or {}).items() <= resp_hdrs.items()
 
     if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
@@ -434,10 +440,8 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                 'diff': (stringify_keys(jsondiff.diff(exp_resp_hdrs, diff_hdrs)))
             }
         yml.dump(test_output, stream=dump_str)
-        if hdrs_matched and body_matched:
-            return resp, True
-        elif not hdrs_matched:
-            assert False, dump_str.getvalue()
+        if matched:
+            return resp, matched
         else:
             def is_err_msg(msg):
                 return any(msg.get(x) for x in ['error','errors'])
@@ -449,13 +453,13 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
                 if is_err_msg(exp) and is_err_msg(out):
                     if not matched_:
                         warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
-                        return resp, matched_
+                        return resp, matched
                 else:
                     if skip_assertion:
                         return resp, matched_
                     else:
                         assert matched_, '\n' + dump_str.getvalue()
-    return resp, hdrs_matched and body_matched  # matched always True unless --accept
+    return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
 #   https://bitbucket.org/ruamel/yaml/issues/326/commentedmap-equality-no-longer-takes-into

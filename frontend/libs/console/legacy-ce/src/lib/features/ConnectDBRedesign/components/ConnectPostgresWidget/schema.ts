@@ -11,7 +11,6 @@ const numberSchema = z.preprocess(
 export const poolSettingsSchema = z
   .object({
     totalMaxConnections: numberSchema.optional(),
-    maxConnections: numberSchema.optional(),
     idleTimeout: numberSchema.optional(),
     retries: numberSchema.optional(),
     poolTimeout: numberSchema.optional(),

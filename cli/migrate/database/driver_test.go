@@ -29,7 +29,7 @@ func (m *mockDriver) UnLock() error {
 	return nil
 }
 
-func (m *mockDriver) Run(migration io.Reader, fileType, fileName string, noTransaction bool) error {
+func (m *mockDriver) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 func (m *mockDriver) Lock() error {

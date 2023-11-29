@@ -1,6 +1,3 @@
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-
 module Hasura.RQL.DML.Internal
   ( SessionVariableBuilder,
     askDelPermInfo,
@@ -37,9 +34,6 @@ import Data.Sequence qualified as DS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.Role (RoleName, adminRoleName)
-import Hasura.Authentication.Session (SessionVariable, fromSessionVariable, getSessionVariables)
-import Hasura.Authentication.User (UserInfoM, askCurRole, askUserInfo, _uiSession)
 import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -59,8 +53,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
+import Hasura.Session (SessionVariable, UserInfoM, askCurRole, askUserInfo, getSessionVariables, sessionVariableToText, _uiSession)
 import Hasura.Table.Cache
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
@@ -364,7 +360,7 @@ fromCurrentSession ::
 fromCurrentSession currentSessionExp sessVar =
   S.SEOpApp
     (S.SQLOp "->>")
-    [currentSessionExp, S.SELit $ fromSessionVariable sessVar]
+    [currentSessionExp, S.SELit $ sessionVariableToText sessVar]
 
 currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"

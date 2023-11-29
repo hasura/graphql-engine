@@ -98,12 +98,6 @@ subscriptions. Let's see how they can be used and how they differ from each othe
    `created_at` greater than the current value of the cursor maintained by the cursor, then we will get only the 5
    messages.
 
-The experimental feature flag
-[`remove_empty_subscription_responses`](/deployment/graphql-engine-flags/reference.mdx#experimental-features)
-can be used to reduce network overhead for projects making heavy use of
-streaming subscriptions where responses are often empty by only returning
-non-empty result sets.
-
 ## Communication protocol
 
 Hasura GraphQL Engine uses the

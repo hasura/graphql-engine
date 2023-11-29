@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/scalar_types/cannot_match_inbuilt_type_name/metadata.json
----
-Error: Scalar type String conflicts with existing inbuilt type

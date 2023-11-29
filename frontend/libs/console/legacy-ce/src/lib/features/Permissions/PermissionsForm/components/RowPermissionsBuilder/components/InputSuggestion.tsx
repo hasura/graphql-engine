@@ -31,25 +31,11 @@ export function InputSuggestion({
     return (
       <Button
         disabled={comparatorName === '_where' && isEmpty(table)}
-        size="sm"
-        onClick={() =>
-          setValue(
-            path,
-            comparatorName === '_in' || comparatorName === '_nin'
-              ? 'X-Hasura-Allowed-Ids'
-              : 'X-Hasura-User-Id'
-          )
-        }
-        data-testid={`${componentLevelId}-${
-          comparatorName.endsWith('_in') || comparatorName.endsWith('_nin')
-            ? 'x-hasura-allowed-ids'
-            : 'x-hasura-user-id'
-        }`}
+        onClick={() => setValue(path, 'X-Hasura-User-Id')}
+        data-testid={`${componentLevelId}-x-hasura-user-id`}
         mode="default"
       >
-        {comparatorName === '_in' || comparatorName === '_nin'
-          ? '[X-Hasura-Allowed-Ids]'
-          : '[X-Hasura-User-Id]'}
+        [x-hasura-user-id]
       </Button>
     );
   }

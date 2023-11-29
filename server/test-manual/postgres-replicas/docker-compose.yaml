@@ -1,3 +1,5 @@
+version: "3"
+
 name: hge-postgres-replicas
 
 services:

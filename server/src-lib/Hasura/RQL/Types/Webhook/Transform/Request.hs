@@ -8,9 +8,9 @@ where
 
 import Data.Aeson (FromJSON, ToJSON, (.=))
 import Data.Aeson qualified as J
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Prelude
 import Hasura.RQL.Types.Webhook.Transform.Class (TemplatingEngine (..))
+import Hasura.Session (SessionVariables)
 
 -- | Common context that is made available to all request transformations.
 data RequestTransformCtx = RequestTransformCtx

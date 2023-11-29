@@ -271,9 +271,9 @@ mergeCpuMemoryErrors cpuErr memErr = case (cpuErr, memErr) of
   (Just e1, Just e2) -> Just $ RCInternalError (show e1 <> "|" <> show e2)
 
 readFileT :: (MonadIO m, MonadError ResourceCheckerError m) => (String -> ResourceCheckerError) -> FilePath -> m T.Text
-readFileT mapErr path = do
+readFileT mapError path = do
   eContent <- liftIO $ catchIOError (Right <$> T.readFile path) (pure . Left . show)
-  liftEither $ mapLeft mapErr eContent
+  liftEither $ mapLeft mapError eContent
 
 parseUint :: (Integral a) => T.Text -> Either ResourceCheckerError a
 parseUint = bimap RCInternalError fst . T.decimal
@@ -283,4 +283,4 @@ readFileUint ::
   (String -> ResourceCheckerError) ->
   FilePath ->
   m a
-readFileUint mapErr p = (liftEither . parseUint) =<< readFileT mapErr p
+readFileUint mapError p = (liftEither . parseUint) =<< readFileT mapError p

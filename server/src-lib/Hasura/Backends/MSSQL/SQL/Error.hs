@@ -182,10 +182,9 @@ mkMSSQLTxErrorHandler isExpectedError = \case
                       "exception" .= odbcExceptionToJSONValue exception
                     ]
             }
-     in maybe
-          unexpectedQueryError
-          (\err -> err {Error.qeInternal = Just $ Error.ExtraInternal $ object ["query" .= ODBC.renderQuery query]})
-          (asExpectedError exception)
+     in fromMaybe unexpectedQueryError
+          $ asExpectedError exception
+          <&> \err -> err {Error.qeInternal = Just $ Error.ExtraInternal $ object ["query" .= ODBC.renderQuery query]}
   MSSQLConnError exception ->
     let unexpectedConnError =
           (Error.internalError "mssql connection error")

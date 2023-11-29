@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/commands/procedures/duplicate_command_name/metadata.json
----
-Error: Cannot add the command not_hello (in subgraph default) to GraphQL schema: Cannot add query root field hello as it already in use

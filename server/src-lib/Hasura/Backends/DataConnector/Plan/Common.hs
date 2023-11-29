@@ -53,7 +53,6 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Data.Tuple (swap)
-import Hasura.Authentication.Session (SessionVariable, SessionVariables, getSessionVariableValue)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -72,6 +71,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelMapping (..), RelTarget (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types (CollectableType (..))
+import Hasura.Session
 import Numeric (showIntAtBase)
 import Witch qualified
 

@@ -46,8 +46,6 @@ data ArgumentExp a
 
 instance (Hashable a) => Hashable (ArgumentExp a)
 
-instance (NFData a) => NFData (ArgumentExp a)
-
 -- | Eliminate 'ArgumentExp'
 --
 -- Used to ensure that the right column is used for 'AEActionResponsePayload'.

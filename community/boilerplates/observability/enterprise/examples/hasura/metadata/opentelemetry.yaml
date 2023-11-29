@@ -1,4 +1,4 @@
-status: "{{HGE_OTEL_STATUS}}"
+status: enabled
 data_types:
   - traces
   - logs

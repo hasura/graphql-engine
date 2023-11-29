@@ -32,6 +32,8 @@
 #   framework" in the "General" tab, and "Use Rosetta for x86/amd64 emulation on
 #   Apple Silicon" in the "Features in development" tab.
 
+version: "3.6"
+
 name: hge-manual-tests
 
 services:

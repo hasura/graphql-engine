@@ -1,8 +1,0 @@
-query {
-  Institution_aggregate {
-    count_all: _count
-    Name {
-      _count_distinct
-    }
-  }
-}

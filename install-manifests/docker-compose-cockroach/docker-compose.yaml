@@ -1,3 +1,4 @@
+version: "3.6"
 services:
   postgres:
     image: postgres:15
@@ -26,7 +27,7 @@ services:
       - "${PWD}/cockroach-data:/cockroach/cockroach-data"
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.46.0
+    image: hasura/graphql-engine:v2.35.1
     ports:
       - "8080:8080"
     depends_on:

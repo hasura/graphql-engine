@@ -283,8 +283,6 @@ uFromItem fromItem = case fromItem of
     S.FIIdentifier <$> getTableIdentifierAndPrefixHash identifier
   S.FIFunc funcExp ->
     S.FIFunc <$> uFunctionExp funcExp
-  S.FIUnqualifiedFunc funcExp ->
-    S.FIUnqualifiedFunc <$> uUnqualifiedFunctionExp funcExp
   -- We transform the arguments and result table alias
   -- Note: Potentially introduces a new alias
   S.FIUnnest args tableAlias columnAliases ->
@@ -321,13 +319,6 @@ uFromItem fromItem = case fromItem of
 uFunctionExp :: S.FunctionExp -> MyState S.FunctionExp
 uFunctionExp (S.FunctionExp functionName args maybeAlias) =
   S.FunctionExp functionName
-    <$> uFunctionArgs args
-    <*> mapM uFunctionAlias maybeAlias
-
--- | Transform a function call expression.
-uUnqualifiedFunctionExp :: S.UnqualifiedFunctionExp -> MyState S.UnqualifiedFunctionExp
-uUnqualifiedFunctionExp (S.UnqualifiedFunctionExp functionName args maybeAlias) =
-  S.UnqualifiedFunctionExp functionName
     <$> uFunctionArgs args
     <*> mapM uFunctionAlias maybeAlias
 

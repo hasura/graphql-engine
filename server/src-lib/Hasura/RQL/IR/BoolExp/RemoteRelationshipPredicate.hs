@@ -9,8 +9,8 @@ import Data.Aeson qualified as J
 import Data.Aeson.Extended (FromJSONKeyValue (..))
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Hasura.Authentication.Session (SessionVariable, parseSessionVariable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (SessionVariable, parseSessionVariable)
 
 data RemoteRelSessionVariableORLiteralValue
   = RemoteRelSessionVariable SessionVariable

@@ -17,7 +17,6 @@ import Control.Monad.Except
 import Control.Monad.Trans.Control
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
-import Data.Environment (Environment)
 import Data.Has
 import Data.Map.Strict qualified as Map
 import Data.Monoid
@@ -46,7 +45,7 @@ data DCAddAgent = DCAddAgent
   { -- | Source kind, ie., the backend type.
     _gdcaName :: DC.Types.DataConnectorName,
     -- | The Agent URL.
-    _gdcaUrl :: DC.Types.DataConnectorUri,
+    _gdcaUrl :: Servant.BaseUrl,
     -- | Override the display name provided by the Agent.
     _gdcaDisplayName :: Maybe Text,
     -- | Optionally skip the Agent Validation step.
@@ -87,19 +86,17 @@ runAddDataConnectorAgent ::
     MonadIO m,
     MonadBaseControl IO m
   ) =>
-  Environment ->
   DCAddAgent ->
   m EncJSON
-runAddDataConnectorAgent env DCAddAgent {..} = do
+runAddDataConnectorAgent DCAddAgent {..} = do
   let agent :: DC.Types.DataConnectorOptions
       agent = DC.Types.DataConnectorOptions _gdcaUrl _gdcaDisplayName
   sourceKinds <- (:) "postgres" . fmap _skiSourceKind . unSourceKinds <$> agentSourceKinds
   if
     | toTxt _gdcaName `elem` sourceKinds -> Error.throw400 Error.AlreadyExists $ "SourceKind '" <> toTxt _gdcaName <> "' already exists."
     | _gdcaSkipCheck == SkipCheck True -> addAgent _gdcaName agent
-    | otherwise -> do
-        dataConnectorUrl <- DC.Types.resolveDataConnectorUri env _gdcaUrl
-        checkAgentAvailability dataConnectorUrl >>= \case
+    | otherwise ->
+        checkAgentAvailability _gdcaUrl >>= \case
           NotAvailable err ->
             pure
               $ EncJSON.encJFromJValue

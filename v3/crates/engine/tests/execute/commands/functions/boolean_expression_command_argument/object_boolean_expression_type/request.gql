@@ -1,7 +1,0 @@
-query MyQuery {
-  getActorsByBoolExp {
-    actor_id
-    movie_id
-    name
-  }
-}

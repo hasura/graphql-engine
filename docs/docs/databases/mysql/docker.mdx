@@ -56,7 +56,7 @@ This tutorial assumes that the following prerequisites have been met:
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
 - To deploy Hasura Enterprise Edition, you will either need to sign up for the
-  [Hasura Enterprise Edition free trial](/enterprise/try-hasura-enterprise-edition.mdx) or you will need to
+  [Hasura Enterprise Edition free trial](/latest/enterprise/try-hasura-enterprise-edition/) or you will need to
   [contact Hasura Sales](mailto:sales@hasura.io) for a license key.
 - You have access to a MySQL database for which you would like to create an API.
 
@@ -126,19 +126,6 @@ b0b1aac0508d postgres                           ... 1m ago  Up 1m  5432/tcp ...
 7b5b2ee70ece hasura/graphql-data-connector      ... 1m ago  Up 1m  5005/tcp ..
 ```
 
-You can check the health of the connector using the `/health` endpoint. The connector is available at the following
-endpoint:
-
-```bash
-http://localhost:8081/api/v1/mysql/health
-```
-
-:::info Data connector
-
-This data source utilizes the `hasura/graphql-data-connector` to connect your data source to the GraphQL engine.
-
-:::
-
 ### Step 4: Load the Hasura Console
 
 Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key
@@ -180,7 +167,7 @@ jdbc:mysql://localhost:4533/mysqltest?user=abc&password=pqr        # assuming My
 ```
 
 For more information see
-[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/en/connector-j-reference-jdbc-url-format.html).
+[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
 
 Click `Connect Database`.
 

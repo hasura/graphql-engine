@@ -11,8 +11,8 @@
       }
   resp_headers:
     Cache-Control: max-age=300
-    X-Hasura-Query-Cache-Key: d4a71d5adf16ade24aef3c86a6db2a60c2bbf303
-    X-Hasura-Query-Family-Cache-Key: 5370009b358ff0d7725a05b0e999d28b16725671
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
   response:
     data:
       test_table:
@@ -35,8 +35,8 @@
         }
       }
   resp_headers:
-    X-Hasura-Query-Cache-Key: d4a71d5adf16ade24aef3c86a6db2a60c2bbf303
-    X-Hasura-Query-Family-Cache-Key: 5370009b358ff0d7725a05b0e999d28b16725671
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
   response:
     data:
       test_table:

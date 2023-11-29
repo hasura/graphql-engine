@@ -21,7 +21,6 @@ import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
-import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0 (FunctionInfo (_fiDescription, _fiName))
 import Hasura.Backends.DataConnector.API.V0.Table qualified as DC (TableType (..))
@@ -62,7 +61,7 @@ import Hasura.NativeQuery.Validation
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (ComparisonNullability (..), OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
-import Hasura.RQL.Types.Backend (FunctionReturnType, functionGraphQLName)
+import Hasura.RQL.Types.Backend (FunctionReturnType (..), functionGraphQLName)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (JsonAggSelect (JASMultipleRows, JASSingleObject), OID (..), SourceName, SystemDefined)
@@ -84,6 +83,7 @@ import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Services.Network
+import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Table.Cache (ForeignKey (_fkConstraint))
 import Hasura.Table.Cache qualified as RQL.T.T
 import Hasura.Tracing (ignoreTraceT)
@@ -117,7 +117,7 @@ instance BackendMetadata 'DataConnector where
   getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
-  validateNativeQuery _disableNativeQueryValidation sc _ nq = do
+  validateNativeQuery _ _ _ sc _ nq = do
     unless (isJust (API._cInterpolatedQueries (DC._scCapabilities sc))) do
       let nqName = _nqmRootFieldName nq
       throw400 NotSupported $ "validateNativeQuery: " <> toTxt nqName <> " - Native Queries not implemented for this Data Connector backend."
@@ -238,9 +238,8 @@ resolveBackendInfo' ::
     ProvidesNetwork m
   ) =>
   Logger Hasura ->
-  Environment ->
   (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), Map.Map DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
-resolveBackendInfo' logger env = proc (invalidationKeys, optionsMap) -> do
+resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
       Inc.keyed
@@ -265,13 +264,11 @@ resolveBackendInfo' logger env = proc (invalidationKeys, optionsMap) -> do
       HTTP.Manager ->
       ExceptT QErr m (Maybe DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager =
-      do
-        resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
-        ( ignoreTraceT
-            . flip runAgentClientT (AgentClientContext logger resolvedUri manager Nothing Nothing)
-            $ (Just . mkDataConnectorInfo options)
-            <$> Client.capabilities
-          )
+      ( ignoreTraceT
+          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
+          $ (Just . mkDataConnectorInfo options)
+          <$> Client.capabilities
+      )
         `catchError` ignoreConnectionErrors
 
     -- If we can't connect to a data connector agent to get its capabilities
@@ -308,13 +305,12 @@ resolveSourceConfig'
   env
   manager = runExceptT do
     DC.DataConnectorInfo {_dciOptions = DC.DataConnectorOptions {_dcoUri}, ..} <- getDataConnectorInfo dataConnectorName backendInfo
-    resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
 
     validateConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc Nothing env
 
     pure
       DC.SourceConfig
-        { _scEndpoint = resolvedUri,
+        { _scEndpoint = _dcoUri,
           _scConfig = originalConfig,
           _scTemplate = _cscTemplate,
           _scTemplateVariables = fromMaybe mempty _cscTemplateVariables,
@@ -610,8 +606,8 @@ parseCollectableType' ::
   m (PartialSQLExp 'DataConnector)
 parseCollectableType' collectableType = \case
   J.String t
-    | isSessionVariable t -> pure . mkTypedSessionVar collectableType $ unsafeMkSessionVariable t
-    | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
+    | HSU.isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
+    | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
     CollectableTypeScalar columnType ->
       PSESQLExp . DC.ValueLiteral (columnTypeToScalarType columnType) <$> RQL.T.C.parseScalarValueColumnType columnType val

@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_inner_non_null_ndc_type/metadata.json
----
-Error: The field 'departments' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.departments' because: Type '[String]!' is not compatible with NDC type '[String!]!' - Expected a nullable type

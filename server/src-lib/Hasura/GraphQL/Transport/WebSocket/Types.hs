@@ -12,7 +12,6 @@ where
 
 import Control.Concurrent.STM qualified as STM
 import Data.Time.Clock qualified as TC
-import Hasura.Authentication.User (UserInfo)
 import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -24,10 +23,10 @@ import Hasura.Prelude
 import Hasura.Server.AppStateRef
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
-import Hasura.Server.Logging (LoggingSettings (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -83,13 +82,12 @@ data WSServerEnv impl = WSServerEnv
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
     _wsePrometheusMetrics :: !PrometheusMetrics,
-    _wseTraceSamplingPolicy :: !Tracing.SamplingPolicy,
-    _wseLoggingSettings :: !LoggingSettings
+    _wseTraceSamplingPolicy :: !Tracing.SamplingPolicy
   }
 
 data SubscriberType
-  = LiveQuerySubscriber !ES.SubscriberDetails
-  | StreamingQuerySubscriber !ES.SubscriberDetails
+  = LiveQuerySubscriber !ES.LiveQuerySubscriberDetails
+  | StreamingQuerySubscriber !ES.StreamingSubscriberDetails
 
 type OperationMap =
   STMMap.Map OperationId (SubscriberType, Maybe OperationName)

@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_boolean_expressions/scalar/graphql_type_name_in_use/metadata.json
----
-Error: error in boolean expression type 'String_aggregate_bool_exp (in subgraph default)': multiple graphql types found with the same name: String_bool_exp

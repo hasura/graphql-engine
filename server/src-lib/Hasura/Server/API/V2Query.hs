@@ -16,7 +16,6 @@ import Data.Aeson.Types (Parser)
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
-import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
@@ -49,6 +48,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
 import Hasura.Services
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -123,7 +123,7 @@ runQuery appContext schemaCache rqlQuery = do
     $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let dynamicConfig = buildCacheDynamicConfig appContext
-  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" Tracing.SKInternal $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query
@@ -132,26 +132,31 @@ runQuery appContext schemaCache rqlQuery = do
   if queryModifiesSchema rqlQuery
     then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
-        -- set modified metadata in storage and notify schema sync
+        -- set modified metadata in storage
         newResourceVersion <-
-          Tracing.newSpan "updateMetadataAndNotifySchemaSync" Tracing.SKInternal
+          Tracing.newSpan "setMetadata"
             $ liftEitherM
-            $ updateMetadataAndNotifySchemaSync appEnvInstanceId currentResourceVersion updatedMetadata invalidations
-
-        -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection" Tracing.SKInternal
-          $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
+            $ setMetadata currentResourceVersion updatedMetadata
 
         (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
+
         -- run schema registry action
-        Tracing.newSpan "runSchemaRegistryAction" Tracing.SKInternal
+        Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
             liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata
+
+        -- notify schema cache sync
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
 
         pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->
@@ -188,7 +193,7 @@ runQueryM ::
   SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) Tracing.SKInternal $ case rq of
+runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQInsert q -> runInsert sqlGen q
   RQSelect q -> runSelect sqlGen q
   RQUpdate q -> runUpdate sqlGen q
