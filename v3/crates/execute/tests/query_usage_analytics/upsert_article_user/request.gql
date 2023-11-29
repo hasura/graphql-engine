@@ -1,9 +1,0 @@
-mutation MyMutation {
-  upsertArticle(
-    article: { article_id: 1, title: "Update Title for Article 1" }
-  ) {
-    article_id
-    author_id
-    title
-  }
-}

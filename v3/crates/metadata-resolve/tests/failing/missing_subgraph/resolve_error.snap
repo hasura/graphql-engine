@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/missing_subgraph/metadata.json
----
-unknown target model Authors (in subgraph author_namespace) used in relationship Author on type article (in subgraph article_namespace)

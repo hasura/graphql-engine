@@ -704,15 +704,15 @@ class ActionsWebhookServer(http.server.HTTPServer):
         return f'http://{self.server_address[0]}:{self.server_address[1]}'
 
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
-    server: 'EvtsWebhookServer'  # type: ignore
+    server: 'EvtsWebhookServer'
 
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
         self.end_headers()
 
     def do_POST(self):
-        content_len = int(self.headers['Content-Length'])
-        req_body = self.rfile.read(content_len).decode("utf-8")
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
         req_json = json.loads(req_body)
         req_headers = self.headers
         req_path = self.path
@@ -741,11 +741,9 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
 
-        self.server.resp_queue.put({
-            "path": req_path,
-            "body": req_json,
-            "headers": req_headers,
-        })
+        self.server.resp_queue.put({"path": req_path,
+                                    "body": req_json,
+                                    "headers": req_headers})
 
 # A very slightly more sane/performant http server.
 # See: https://stackoverflow.com/a/14089457/176841
@@ -755,19 +753,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
     @property
-    def host(self):
-        # We assume that everything runs on "localhost"
-        return 'localhost'
-
-    @property
-    def port(self):
-        if not self.server_address:
-            raise Exception('The server is not started.')
-        return self.server_address[1]
-
-    @property
     def url(self):
-        return f'http://{self.host}:{self.port}'
+        return f'http://{self.server_name}:{self.server_port}'
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
@@ -861,7 +848,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
-        self.engine: sqlalchemy.engine.Engine = sqlalchemy.create_engine(self.metadata_schema_url)  # type: ignore
+        self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
         self.meta = sqlalchemy.schema.MetaData()
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
@@ -968,10 +955,7 @@ class HGECtx:
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Don't assume `resp` is JSON object
-        try:
-            resp_obj = resp.json(object_pairs_hook=OrderedDict)
-        except requests.exceptions.JSONDecodeError:
-            resp_obj = resp.text
+        resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
         if expected_status_code:
             assert \
                 resp.status_code == expected_status_code, \

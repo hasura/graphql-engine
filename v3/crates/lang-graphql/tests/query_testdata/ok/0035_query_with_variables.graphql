@@ -1,3 +1,0 @@
-query Foo($bar: Int) {
-    name
-}

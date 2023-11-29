@@ -1,8 +1,8 @@
-# Contributing to Hasura GraphQL Engine
+# Contributing to Hasura graphql-engine
 
-_First_: if you feel insecure about how to start contributing, either to V2 or V3, feel free to ask us on our
-[Discord](https://discordapp.com/invite/hasura) in the `#contrib` channel. You can also just go ahead with your
-contribution, and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to
+_First_: if you feel insecure about how to start contributing, feel free to ask us on our
+[Discord channel](https://discordapp.com/invite/hasura) in the #contrib channel. You can also just go ahead with your
+contribution and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to
 change something. We appreciate any contributions, and we don't want a wall of rules to stand in the way of that.
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This
@@ -35,12 +35,8 @@ Please follow our [Code of conduct](code-of-conduct.md) in the context of any co
 
 ## 2. Repo overview
 
-[hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo for both the open source V2 and V3 
-Hasura versions.
-
-### V2
-
-This V2 portion consists of 3 components and each has their own contributing guide:
+[hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo consisting of 3 components. Each has
+their own contributing guides:
 
 1. [Server (Haskell)](server/CONTRIBUTING.md)
 
@@ -51,23 +47,15 @@ This V2 portion consists of 3 components and each has their own contributing gui
 All of the three components have a single version, denoted by either the git tag or a combination of branch name and git
 commit SHA.
 
-For all contributions, a CLA (Contributor License Agreement) needs to be signed 
+For all contributions, a CLA (Contributor License Agreement) needs to be signed
 [here](https://cla-assistant.io/hasura/graphql-engine) before (or after) the pull request has been submitted. A bot will
 prompt contributors to sign the CLA via a pull request comment, if necessary.
-
-### V3
-
-The V3 portion is the V3 engine exclusively, the heart of Hasura, which is written in Rust. 
-
-1. [V3 Engine (Rust)](v3/CONTRIBUTING.md)
-
-Check out the [V3 README here](/v3/README.md). 
 
 <a name="first-timers"></a>
 
 ## 3. First time contributors welcome!
 
-We appreciate first time contributors, and we are happy to assist you in getting started. In case of questions, just
+We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just
 reach out to us!
 
 You find all issues suitable for first time contributors
@@ -80,7 +68,7 @@ You find all issues suitable for first time contributors
 Of course, we appreciate contributions to all components of Hasura. However, we have identified three areas that are
 particularly suitable for open source contributions.
 
-### V2 Docs
+### Docs
 
 Our goal is to keep our docs comprehensive and updated. If you would like to help us in doing so, we are grateful for
 any kind of contribution:
@@ -93,7 +81,7 @@ any kind of contribution:
 
 The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
-### V2 Community content
+### Community content
 
 Since we launched our [learn page](https://hasura.io/learn/), we are happy about contributions:
 
@@ -123,7 +111,7 @@ check out our [community wiki](https://github.com/hasura/graphql-engine/wiki/Com
 
 Feel free to submit a pull request if you have something to add even if it's not related to anything mentioned above.
 
-### V2 CLI
+### Hasura CLI
 
 We have some issues on the CLI that are suitable for open source contributions. If you know Go or if you would like to
 learn it by doing, check out the following

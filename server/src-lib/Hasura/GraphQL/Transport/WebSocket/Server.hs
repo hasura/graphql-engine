@@ -72,7 +72,7 @@ import Hasura.Server.Auth (AuthMode, compareAuthMode)
 import Hasura.Server.Cors (CorsPolicy)
 import Hasura.Server.Init.Config (AllowListStatus (..), WSConnectionInitTimeout (..))
 import Hasura.Server.Prometheus
-  ( DynamicGraphqlOperationLabel (..),
+  ( DynamicSubscriptionLabel (..),
     PrometheusMetrics (..),
     recordMetricWithLabel,
   )
@@ -602,67 +602,63 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
             forceConnReconnect wsConn "shutting server down"
             closeHandler wsConn
           AcceptingConns _ -> do
-            let rcv = do
-                  labelMe "WebSocket rcv"
-                  forever $ do
-                    shouldCaptureVariables <- liftIO $ _mcAnalyzeQueryVariables <$> getMetricsConfig
-                    -- Process all messages serially (important!), in a separate thread:
-                    msg <-
-                      liftIO
-                        $
-                        -- Re-throw "receiveloop: resource vanished (Connection reset by peer)" :
-                        --   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112
-                        -- as WS exception signaling cleanup below. It's not clear why exactly this gets
-                        -- raised occasionally; I suspect an equivalent handler is missing from WS itself.
-                        -- Regardless this should be safe:
-                        handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed)
-                        $ WS.receiveData conn
-                    let messageLength = BL.length msg
-                        censoredMessage =
-                          MessageDetails
-                            (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
-                            messageLength
+            let rcv = forever $ do
+                  shouldCaptureVariables <- liftIO $ _mcAnalyzeQueryVariables <$> getMetricsConfig
+                  -- Process all messages serially (important!), in a separate thread:
+                  msg <-
                     liftIO
-                      $ Prometheus.Counter.add
-                        (pmWebSocketBytesReceived prometheusMetrics)
-                        messageLength
-                    logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
-                    messageHandler wsConn msg subProtocol
+                      $
+                      -- Re-throw "receiveloop: resource vanished (Connection reset by peer)" :
+                      --   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112
+                      -- as WS exception signaling cleanup below. It's not clear why exactly this gets
+                      -- raised occasionally; I suspect an equivalent handler is missing from WS itself.
+                      -- Regardless this should be safe:
+                      handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed)
+                      $ WS.receiveData conn
+                  let messageLength = BL.length msg
+                      censoredMessage =
+                        MessageDetails
+                          (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
+                          messageLength
+                  liftIO
+                    $ Prometheus.Counter.add
+                      (pmWebSocketBytesReceived prometheusMetrics)
+                      messageLength
+                  logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
+                  messageHandler wsConn msg subProtocol
 
-            let send = do
-                  labelMe "WebSocket send"
-                  forever $ do
-                    WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                    messageQueueTime <- liftIO $ realToFrac <$> wsTimer
-                    (messageWriteTime, _) <- liftIO $ withElapsedTime $ WS.sendTextData conn msg
-                    let messageLength = BL.length msg
-                        messageDetails = MessageDetails (SB.fromLBS msg) messageLength
-                        parameterizedQueryHash = wsInfo >>= _wseiParameterizedQueryHash
-                        operationName = wsInfo >>= _wseiOperationName
-                        promMetricGranularLabel = DynamicGraphqlOperationLabel parameterizedQueryHash operationName
-                        promMetricLabel = DynamicGraphqlOperationLabel Nothing Nothing
-                        websocketBytesSentMetric = pmWebSocketBytesSent prometheusMetrics
-                    granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-                    liftIO $ do
-                      recordMetricWithLabel
-                        granularPrometheusMetricsState
-                        True
-                        (CounterVector.add websocketBytesSentMetric promMetricGranularLabel messageLength)
-                        (CounterVector.add websocketBytesSentMetric promMetricLabel messageLength)
-                      Prometheus.Histogram.observe
-                        (pmWebsocketMsgQueueTimeSeconds prometheusMetrics)
-                        messageQueueTime
-                      Prometheus.Histogram.observe
-                        (pmWebsocketMsgWriteTimeSeconds prometheusMetrics)
-                        (realToFrac messageWriteTime)
-                    logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
+            let send = forever $ do
+                  WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                  messageQueueTime <- liftIO $ realToFrac <$> wsTimer
+                  (messageWriteTime, _) <- liftIO $ withElapsedTime $ WS.sendTextData conn msg
+                  let messageLength = BL.length msg
+                      messageDetails = MessageDetails (SB.fromLBS msg) messageLength
+                      parameterizedQueryHash = wsInfo >>= _wseiParameterizedQueryHash
+                      operationName = wsInfo >>= _wseiOperationName
+                      promMetricGranularLabel = DynamicSubscriptionLabel parameterizedQueryHash operationName
+                      promMetricLabel = DynamicSubscriptionLabel Nothing Nothing
+                      websocketBytesSentMetric = pmWebSocketBytesSent prometheusMetrics
+                  granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
+                  liftIO $ do
+                    recordMetricWithLabel
+                      granularPrometheusMetricsState
+                      True
+                      (CounterVector.add websocketBytesSentMetric promMetricGranularLabel messageLength)
+                      (CounterVector.add websocketBytesSentMetric promMetricLabel messageLength)
+                    Prometheus.Histogram.observe
+                      (pmWebsocketMsgQueueTimeSeconds prometheusMetrics)
+                      messageQueueTime
+                    Prometheus.Histogram.observe
+                      (pmWebsocketMsgWriteTimeSeconds prometheusMetrics)
+                      (realToFrac messageWriteTime)
+                  logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
 
             -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
             -- forking that the threads we launched will be cleaned up. See also below.
             LA.withAsync rcv $ \rcvRef -> do
               LA.withAsync send $ \sendRef -> do
-                LA.withAsync (liftIO $ labelMe "WebSocket keepAlive" >> keepAlive wsConn) $ \keepAliveRef -> do
-                  LA.withAsync (liftIO $ labelMe "WebSocket onJwtExpiry" >> onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
+                LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
+                  LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
                     -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
                     timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
                     when (timeoutStatus == Done && subProtocol == GraphQLWS)

@@ -5510,7 +5510,6 @@ __metadata:
     clsx: ^1.2.1
     cspell: ^6.18.1
     docusaurus-plugin-sass: ^0.2.2
-    dompurify: ^3.1.5
     graphiql: ^1.5.1
     graphql: ^15.7.2
     graphql-ws: ^5.11.2
@@ -5523,7 +5522,6 @@ __metadata:
     sass: ^1.49.8
     swc-loader: ^0.2.3
     typescript: ^4.8.4
-    usehooks-ts: ^2.9.1
     uuid: ^9.0.0
   languageName: unknown
   linkType: soft
@@ -5603,13 +5601,6 @@ __metadata:
   dependencies:
     domelementtype: ^2.3.0
   checksum: 0f58f4a6af63e6f3a4320aa446d28b5790a009018707bce2859dcb1d21144c7876482b5188395a188dfa974238c019e0a1e610d2fc269a12b2c192ea2b0b131c
-  languageName: node
-  linkType: hard
-
-"dompurify@npm:^3.1.5":
-  version: 3.1.5
-  resolution: "dompurify@npm:3.1.5"
-  checksum: 18ae2930cba3c260889b99e312c382c344d219bd113bc39fbb665a61987d25849021768f490395e6954aab94448a24b3c3721c160b53550547110c37cebe9feb
   languageName: node
   linkType: hard
 
@@ -11437,16 +11428,6 @@ __metadata:
     "@types/react":
       optional: true
   checksum: ed3f2ddddf6f21825e2ede4c2e0f0db8dcce5129802b69d1f0575fc1b42380436e8c76a6cd885d4e9aa8e292e60fb8b959c955f33c6a9123b83814a1a1875367
-  languageName: node
-  linkType: hard
-
-"usehooks-ts@npm:^2.9.1":
-  version: 2.9.1
-  resolution: "usehooks-ts@npm:2.9.1"
-  peerDependencies:
-    react: ^16.8.0  || ^17.0.0 || ^18.0.0
-    react-dom: ^16.8.0  || ^17.0.0 || ^18.0.0
-  checksum: 36f1e4142ce23bc019b81d2e93aefd7f2c350abcf255598c21627114a69a2f2f116b35dc3a353375f09c6e4c9b704a04f104e3d10e98280545c097feca66c30a
   languageName: node
   linkType: hard
 

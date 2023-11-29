@@ -15,7 +15,6 @@ module Database.PG.Query.Pool
     PGPoolStats (..),
     PGPoolMetrics (..),
     getInUseConnections,
-    getMaxConnections,
     defaultConnParams,
     initPGPool,
     resizePGPool,
@@ -97,9 +96,6 @@ data PGPoolMetrics = PGPoolMetrics
 
 getInUseConnections :: PGPool -> IO Int
 getInUseConnections = RP.getInUseResourceCount . _pool
-
-getMaxConnections :: PGPool -> IO Int
-getMaxConnections = RP.getMaxResources . _pool
 
 data ConnParams = ConnParams
   { cpStripes :: !Int,

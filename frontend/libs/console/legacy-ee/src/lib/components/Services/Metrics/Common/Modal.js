@@ -243,7 +243,7 @@ const Modal = props => {
           <div className="rounded bg-white text-sm">
             <CustomCopy
               label={
-                <LabelValue className="inline-block" label="Generated Query" />
+                <LabelValue className="inline-block" label="Generated SQL" />
               }
               copy={JSON.stringify(generatedSql, null, 2)}
               displayColon={false}

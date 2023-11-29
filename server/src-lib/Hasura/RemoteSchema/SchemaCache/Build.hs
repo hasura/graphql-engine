@@ -15,7 +15,6 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Authentication.Role (ParentRoles (..), Role (..), RoleName)
 import Hasura.Base.Error
 import Hasura.EncJSON (encJFromLBS)
 import Hasura.GraphQL.RemoteServer
@@ -26,6 +25,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build

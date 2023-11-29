@@ -188,7 +188,7 @@ instance HasSourceConfiguration 'DataConnector where
   type ScalarTypeParsingContext 'DataConnector = API.ScalarTypesCapabilities
 
   sourceConfigNumReadReplicas = const 0 -- not supported
-  sourceConfigConnectonTemplate = const Nothing -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
   sourceSupportsColumnRedaction DC.SourceConfig {..} =
     _scCapabilities & API._cQueries >>= API._qcRedaction & isJust
   sourceConfigBackendSourceKind DC.SourceConfig {..} = DataConnectorKind _scDataConnectorName

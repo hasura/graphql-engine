@@ -1,7 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.GraphQL.Schema.Common
   ( SchemaContext (..),
@@ -80,7 +78,6 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.Authentication.Role (RoleName, adminRoleName)
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Function.Cache
@@ -100,6 +97,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName)
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)

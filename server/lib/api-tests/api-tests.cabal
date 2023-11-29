@@ -9,9 +9,6 @@ common common-all
   ghc-options:
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
-    -Wno-missing-role-annotations
-    -Wno-term-variable-capture
-    -Wno-missing-poly-kind-signatures
     -Wno-missing-exported-signatures
     -Wno-missed-specialisations
     -Wno-missing-import-lists
@@ -77,7 +74,6 @@ library
     , lens-aeson
     , managed
     , morpheus-graphql
-    , morpheus-graphql-server
     , pg-client
     , postgres-options
     , postgresql-simple
@@ -141,7 +137,6 @@ library
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
-    Test.Databases.BigQuery.Queries.TextFunctionsSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
     Test.Databases.Postgres.ArraySpec
@@ -294,7 +289,6 @@ library feature-matrix
   build-depends:
     , aeson
     , attoparsec
-    , attoparsec-aeson
     , base
     , bytestring
     , containers

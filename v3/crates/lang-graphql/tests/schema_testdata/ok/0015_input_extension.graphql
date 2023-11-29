@@ -1,3 +1,0 @@
-extend input ExampleInputObject @skip {
-    a: String
-}

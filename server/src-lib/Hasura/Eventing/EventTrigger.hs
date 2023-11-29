@@ -318,7 +318,6 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
   where
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do
-      labelMe "popEventsBatch"
       {-
         SELECT FOR UPDATE .. SKIP LOCKED can throw serialization errors in RepeatableRead: https://stackoverflow.com/a/53289263/1911889
         We can avoid this safely by running it in ReadCommitted as Postgres will recheck the
@@ -335,8 +334,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
         . fmap concat
         $
         -- fetch pending events across all the sources asynchronously
-        LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) -> do
-          labelMe "processEventQueue forConcurrently"
+        LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
             let tables = HashMap.elems _siTables
                 triggerMap = _tiEventTriggerInfoMap <$> tables
@@ -405,13 +403,12 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                   modifyTVar' activeEventProcessingThreads (+ 1)
               -- since there is some capacity in our worker threads, we can launch another:
               t <-
-                LA.async $ do
-                  labelMe "processEventQueue t"
-                  flip runReaderT (logger, httpMgr)
-                    $ processEvent eventWithSource'
-                    `finally`
-                    -- NOTE!: this needs to happen IN THE FORKED THREAD:
-                    decrementActiveThreadCount
+                LA.async
+                  $ flip runReaderT (logger, httpMgr)
+                  $ processEvent eventWithSource'
+                  `finally`
+                  -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                  decrementActiveThreadCount
               LA.link t
 
         -- return when next batch ready; some 'processEvent' threads may be running.

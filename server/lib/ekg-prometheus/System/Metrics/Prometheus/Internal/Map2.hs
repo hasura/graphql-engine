@@ -9,6 +9,7 @@ module System.Metrics.Prometheus.Internal.Map2
   )
 where
 
+import Data.List (foldl')
 import qualified Data.Map.Strict as M
 import Prelude hiding (lookup)
 

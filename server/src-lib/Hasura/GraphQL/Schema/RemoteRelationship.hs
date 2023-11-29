@@ -8,7 +8,6 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.Authentication.Role (adminRoleName)
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -23,6 +22,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Common (FieldName, RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source

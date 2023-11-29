@@ -1,6 +1,0 @@
-query MyQuery {
-  InstitutionMany {
-    id
-    name(hash: "sha256")
-  }
-}

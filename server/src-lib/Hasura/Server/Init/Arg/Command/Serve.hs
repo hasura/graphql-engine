@@ -1,5 +1,4 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | The Arg Opt.Parser for the 'serve' subcommand.
 module Hasura.Server.Init.Arg.Command.Serve
@@ -31,7 +30,6 @@ module Hasura.Server.Init.Arg.Command.Serve
     enableTelemetryOption,
     wsReadCookieOption,
     stringifyNumOption,
-    disableNativeQueryValidationOption,
     dangerousBooleanCollapseOption,
     backwardsCompatibleNullInNonNullableVariablesOption,
     remoteNullForwardingPolicyOption,
@@ -70,9 +68,6 @@ module Hasura.Server.Init.Arg.Command.Serve
     asyncActionsFetchBatchSizeOption,
     persistedQueriesOption,
     persistedQueriesTtlOption,
-    remoteSchemaResponsePriorityOption,
-    configuredHeaderPrecedenceOption,
-    traceQueryStatusOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -85,16 +80,15 @@ import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Time qualified as Time
 import Database.PG.Query qualified as Query
-import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.Role qualified as Roles
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.Logging qualified as Logging
-import Hasura.NativeQuery.Validation qualified as NativeQuery
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
 import Hasura.RQL.Types.NamingCase qualified as NC
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
@@ -168,10 +162,6 @@ serveCommandParser =
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
-    <*> parseRemoteSchemaResponsePriority
-    <*> parseConfiguredHeaderPrecedence
-    <*> parseTraceQueryStatus
-    <*> parseDisableNativeQueryValidation
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -628,22 +618,6 @@ stringifyNumOption =
     { Config._default = Options.Don'tStringifyNumbers,
       Config._envVar = "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES",
       Config._helpMessage = "Stringify numeric types (default: false)"
-    }
-
-parseDisableNativeQueryValidation :: Opt.Parser NativeQuery.DisableNativeQueryValidation
-parseDisableNativeQueryValidation =
-  fmap (bool NativeQuery.AlwaysValidateNativeQueries NativeQuery.NeverValidateNativeQueries)
-    $ Opt.switch
-      ( Opt.long "disable-native-query-validation"
-          <> Opt.help (Config._helpMessage disableNativeQueryValidationOption)
-      )
-
-disableNativeQueryValidationOption :: Config.Option NativeQuery.DisableNativeQueryValidation
-disableNativeQueryValidationOption =
-  Config.Option
-    { Config._default = NativeQuery.AlwaysValidateNativeQueries,
-      Config._envVar = "HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION",
-      Config._helpMessage = "Disable Native Query validation (default: false)"
     }
 
 parseDangerousBooleanCollapse :: Opt.Parser (Maybe Options.DangerouslyCollapseBooleans)
@@ -1337,58 +1311,6 @@ parsePersistedQueriesTtl =
           <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
       )
 
-remoteSchemaResponsePriorityOption :: Config.Option (Types.RemoteSchemaResponsePriority)
-remoteSchemaResponsePriorityOption =
-  Config.Option
-    { Config._default = Types.RemoteSchemaResponseErrors,
-      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA",
-      Config._helpMessage = "Prioritize data over errors for remote schema responses (default: false)."
-    }
-
-parseRemoteSchemaResponsePriority :: Opt.Parser (Maybe Types.RemoteSchemaResponsePriority)
-parseRemoteSchemaResponsePriority =
-  (bool Nothing (Just Types.RemoteSchemaResponseData))
-    <$> Opt.switch
-      ( Opt.long "remote-schema-prioritize-data"
-          <> Opt.help (Config._helpMessage remoteSchemaResponsePriorityOption)
-      )
-
-parseConfiguredHeaderPrecedence :: Opt.Parser (Maybe Types.HeaderPrecedence)
-parseConfiguredHeaderPrecedence =
-  Opt.optional
-    $ Opt.option
-      (Opt.eitherReader Env.fromEnv)
-      ( Opt.long "configured-header-precedence"
-          <> Opt.help (Config._helpMessage configuredHeaderPrecedenceOption)
-      )
-
-parseTraceQueryStatus :: Opt.Parser (Maybe Types.TraceQueryStatus)
-parseTraceQueryStatus =
-  (bool Nothing (Just Types.TraceQueryEnabled))
-    <$> Opt.switch
-      ( Opt.long "trace-sql-query"
-          <> Opt.help (Config._helpMessage traceQueryStatusOption)
-      )
-
-configuredHeaderPrecedenceOption :: Config.Option Types.HeaderPrecedence
-configuredHeaderPrecedenceOption =
-  Config.Option
-    { Config._default = Types.ClientHeadersFirst,
-      Config._envVar = "HASURA_GRAPHQL_CONFIGURED_HEADER_PRECEDENCE",
-      Config._helpMessage =
-        "Forward configured metadata headers with higher precedence than client headers"
-          <> "when delivering payload to webhook for actions and input validations. (default: false)"
-    }
-
-traceQueryStatusOption :: Config.Option Types.TraceQueryStatus
-traceQueryStatusOption =
-  Config.Option
-    { Config._default = Types.TraceQueryDisabled,
-      Config._envVar = "HASURA_GRAPHQL_ENABLE_QUERY_TRACING",
-      Config._helpMessage =
-        "Enable query tracing for all queries. (default: false)"
-    }
-
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1494,7 +1416,6 @@ serveCmdFooter =
         Config.optionPP triggersErrorLogLevelStatusOption,
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
-        Config.optionPP persistedQueriesTtlOption,
-        Config.optionPP configuredHeaderPrecedenceOption
+        Config.optionPP persistedQueriesTtlOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

@@ -234,17 +234,6 @@ The request payload is of the format:
   `x-hasura-*`.
 - `data.input`: The schema of `data.input` varies per mutation type. This schema is defined below.
 
-:::info Note
-
-In case there are multiple headers with the same name, the order of precedence is: client headers \> resolved user
-(`x-hasura-*`) variables \> configuration headers.
-
-If you want to change the order of precedence to: configuration headers \> resolved user (`x-hasura-*`) variables
-\> client headers, use the [configured header
-precedence](deployment/graphql-engine-flags/reference.mdx/#configured-header-precedence) flag or environment variable.
-
-:::
-
 #### Insert Mutations
 
 ```json

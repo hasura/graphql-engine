@@ -31,28 +31,6 @@
                         },
                         "type": "array"
                     },
-                    "ignored_client_headers": {
-                        "default": [
-                            "Content-Length",
-                            "Content-MD5",
-                            "User-Agent",
-                            "Host",
-                            "Origin",
-                            "Referer",
-                            "Accept",
-                            "Accept-Encoding",
-                            "Accept-Language",
-                            "Accept-Datetime",
-                            "Cache-Control",
-                            "Connection",
-                            "DNT",
-                            "Content-Type"
-                        ],
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array"
-                    },
                     "kind": {
                         "default": "synchronous",
                         "enum": [
@@ -131,28 +109,6 @@
                                     "$ref": "#/components/schemas/HeaderConfFromEnv"
                                 }
                             ]
-                        },
-                        "type": "array"
-                    },
-                    "ignored_client_headers": {
-                        "default": [
-                            "Content-Length",
-                            "Content-MD5",
-                            "User-Agent",
-                            "Host",
-                            "Origin",
-                            "Referer",
-                            "Accept",
-                            "Accept-Encoding",
-                            "Accept-Language",
-                            "Accept-Datetime",
-                            "Cache-Control",
-                            "Connection",
-                            "DNT",
-                            "Content-Type"
-                        ],
-                        "items": {
-                            "type": "string"
                         },
                         "type": "array"
                     },
@@ -3798,14 +3754,7 @@
                         "type": "string"
                     },
                     "uri": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "$ref": "#/components/schemas/FromEnv"
-                            }
-                        ]
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -4931,10 +4880,10 @@
                 },
                 "oneOf": [
                     {
-                        "$ref": "#/components/schemas/TableFunctionResponse"
+                        "$ref": "#/components/schemas/InferredFunctionResponse"
                     },
                     {
-                        "$ref": "#/components/schemas/InferredFunctionResponse"
+                        "$ref": "#/components/schemas/TableFunctionResponse"
                     }
                 ]
             },
@@ -6664,6 +6613,10 @@
                     },
                     "status": {
                         "default": "disabled",
+                        "enum": [
+                            "enabled",
+                            "disabled"
+                        ],
                         "type": "string"
                     }
                 },

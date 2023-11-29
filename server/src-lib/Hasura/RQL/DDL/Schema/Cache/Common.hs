@@ -51,7 +51,6 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
-import Hasura.Authentication.Role
 import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
 import Hasura.LogicalModel.Types (LogicalModelLocation (..), LogicalModelName)
@@ -69,6 +68,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source

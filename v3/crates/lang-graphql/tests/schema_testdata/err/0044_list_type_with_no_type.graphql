@@ -1,4 +1,0 @@
-type List {
-  field: [] @coolDirective
-  deepError: [[[Item Type]]]
-}

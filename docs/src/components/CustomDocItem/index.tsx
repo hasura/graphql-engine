@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import ActualDocItem from '@theme/DocItem';
+import HasuraConBanner from '@site/src/components/HasuraConBanner';
 import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanner';
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
 import { Redirect } from '@docusaurus/router';
-import { AiChatBot } from "@site/src/components/AiChatBot/AiChatBot";
+import AiChatBot from "@site/src/components/AiChatBot/AiChatBot";
 import BrowserOnly from '@docusaurus/BrowserOnly';
-import { NewVersionModal } from "@site/src/components/NewVersionModal/NewVersionModal";
 const CustomDocItem = props => {
   useEffect(() => {
     // This function is adds <wbr> tags to code blocks within a table
@@ -76,13 +76,11 @@ const CustomDocItem = props => {
         }
       >
         {/*<PageHelpful />*/}
+        <HasuraConBanner {...props} />
         <GraphQLWithHasuraBanner />
         <BrowserOnly fallback={<div>Loading...</div>}>
           {() => <AiChatBot/>}
-        </BrowserOnly>
-        <BrowserOnly fallback={<div>Loading...</div>}>
-          {() => <NewVersionModal/>}
-        </BrowserOnly>
+          </BrowserOnly>
         <CustomFooter />
       </div>
     </div>

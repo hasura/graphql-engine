@@ -1,7 +1,6 @@
 # HGE
-HGE_IMAGE=hasura/graphql-engine:v2.40.0.cli-migrations-v3
+HGE_IMAGE=hasura/graphql-engine:v2.35.0.cli-migrations-v3
 HGE_PORT=8080
-HGE_PRO_KEY=
 HGE_EE_LICENSE_KEY=
 HGE_ADMIN_SECRET=myadminsecretkey
 HASURA_GRAPHQL_METRICS_SECRET=
@@ -10,8 +9,6 @@ HGE_DATABASE_URL=postgres://postgres:postgrespassword@postgres:5432/postgres
 HGE_DATABASE_REPLICA_URL=postgres://postgres:postgrespassword@postgres-replica:5432/postgres
 HGE_ENABLED_LOG_TYPES=startup,http-log,query-log,websocket-log,response-caching-log
 HGE_ENABLED_APIS=metadata,graphql,config,metrics
-HGE_OTEL_STATUS=enabled
-HGE_LOG_LEVEL=info
 
 # Redis
 REDIS_IMAGE=redis:7.0.11
@@ -26,36 +23,39 @@ PG_PASSWORD=postgrespassword
 PG_REPLICATION_PASSWORD=repl_password
 
 # Prometheus
-PROM_IMAGE=prom/prometheus:v2.52.0
+PROM_IMAGE=prom/prometheus:v2.44.0
 PROM_PORT=9090
 
 # Node-exporter
-NODE_EXPORTER_IMAGE=prom/node-exporter:v1.8.0
+NODE_EXPORTER_IMAGE=prom/node-exporter:v1.5.0
 NODE_EXPORTER_PORT=9100
 
 # Alert Manager
-ALERT_MANAGER_IMAGE=prom/alertmanager:v0.27.0
+ALERT_MANAGER_IMAGE=prom/alertmanager:v0.25.0
 ALERT_MANAGER_PORT=9093
 
 # Blackbox Exporter
-BLACKBOX_IMAGE=prom/blackbox-exporter:v0.25.0
+BLACKBOX_IMAGE=prom/blackbox-exporter:v0.24.0
 BLACKBOX_PORT=9115
 
 # Grafana
-GRAFANA_IMAGE=grafana/grafana:10.4.2
+GRAFANA_IMAGE=grafana/grafana:9.5.2
 GRAFANA_PORT=3000
 GRAFANA_ADMIN_PASSWORD=HGEMonitoring!
 
 # Jaeger
-JAEGER_IMAGE=jaegertracing/all-in-one:1.57
+JAEGER_IMAGE=jaegertracing/all-in-one:1.45
 JAEGER_UI_PORT=4002
 
 # Loki
-LOKI_IMAGE=grafana/loki:2.9.8
+LOKI_IMAGE=grafana/loki:2.8.2
 LOKI_PORT=3100
 
+# Promtail
+PROMTAIL_IMAGE=grafana/promtail:2.8.2
+
 # OpenTelemetry Collector
-OTEL_COLLECTOR_IMAGE=otel/opentelemetry-collector-contrib:0.100.0
+OTEL_COLLECTOR_IMAGE=otel/opentelemetry-collector-contrib:0.84.0
 
 # DataDog
 DD_API_KEY=
@@ -63,6 +63,3 @@ DD_API_KEY=
 # HoneyComb
 HONEYCOMB_API_KEY=
 HONEYCOMB_DATASET=
-
-# New Relic
-NEW_RELIC_API_KEY=

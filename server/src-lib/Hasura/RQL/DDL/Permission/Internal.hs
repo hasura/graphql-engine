@@ -24,8 +24,6 @@ import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.Session (fromSessionVariable, isSessionVariable, userIdHeader)
 import Hasura.Base.Error
 import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
 import Hasura.LogicalModel.Fields (LogicalModelFieldsRM (..))
@@ -41,10 +39,11 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote (DBJoinField (..), RemoteFieldInfo (..), RemoteFieldInfoRHS (..), RemoteSourceFieldInfo (..))
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Utils (isReqUserId)
+import Hasura.Server.Utils
 import Hasura.Table.Cache
 
 -- | Intrepet a 'PermColSpec' column specification, which can either refer to a
@@ -263,7 +262,7 @@ getDepHeadersFromVal val = case val of
     parseOnlyString v = case v of
       (String t)
         | isSessionVariable t -> [T.toLower t]
-        | isReqUserId t -> [fromSessionVariable userIdHeader]
+        | isReqUserId t -> [userIdHeader]
         | otherwise -> []
       _ -> []
     parseObject o =

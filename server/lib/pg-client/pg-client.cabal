@@ -24,9 +24,6 @@ common common-all
     -fmax-simplifier-iterations=2
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
-    -Wno-missing-role-annotations
-    -Wno-term-variable-capture
-    -Wno-missing-poly-kind-signatures
     -Wno-missing-exported-signatures
     -Wno-missing-import-lists
     -Wno-missed-specialisations
@@ -57,7 +54,6 @@ library
     Database.PG.Query.Pool
     Database.PG.Query.PTI
     Database.PG.Query.Transaction
-    Database.PG.Query.URL
 
   build-depends:
     , aeson
@@ -69,9 +65,6 @@ library
     , ekg-prometheus
     , hashable
     , hashtables
-    -- for our HASURA_SECRETS_BLOCKING_FORCE_REFRESH_URL hook
-    , http-client
-    , http-types
     , mmorph
     , monad-control
     , mtl
@@ -101,36 +94,34 @@ test-suite pg-client-tests
     Interrupt
     Timeout
     Jsonb
-    URL
 
   build-depends:
-    , aeson
     , async
     , base
     , bytestring
     , hspec
-    , mtl
     , pg-client
-    , postgresql-libpq
     , safe-exceptions
     , time
     , transformers
+    , aeson
+    , mtl
+    , postgresql-libpq
 
--- TODO fix these up for 9.10 someday, maybe
--- benchmark pg-client-bench
---  import:         common-all
---  type:           exitcode-stdio-1.0
---  hs-source-dirs: bench
---  main-is:        Main.hs
---  build-depends:
---    , aeson
---    , base
---    , bytestring
---    , file-embed
---    , hasql
---    , hasql-pool
---    , hasql-transaction
---    , pg-client
---    , tasty-bench
---    , text
---    , transformers
+benchmark pg-client-bench
+  import:         common-all
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is:        Main.hs
+  build-depends:
+    , aeson
+    , base
+    , bytestring
+    , file-embed
+    , hasql
+    , hasql-pool
+    , hasql-transaction
+    , pg-client
+    , tasty-bench
+    , text
+    , transformers

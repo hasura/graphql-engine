@@ -25,12 +25,12 @@ import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Time (UTCTime)
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.Role
 import Hasura.Backends.Postgres.Execute.Types qualified as SQLTypes
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata)
 import Hasura.RQL.Types.Metadata.Object (InconsistentMetadata)
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Utils
 

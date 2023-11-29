@@ -11,8 +11,8 @@
       }
   resp_headers:
     Cache-Control: max-age=300
-    X-Hasura-Query-Cache-Key: d4a71d5adf16ade24aef3c86a6db2a60c2bbf303
-    X-Hasura-Query-Family-Cache-Key: 5370009b358ff0d7725a05b0e999d28b16725671
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
   response:
     data:
       test_table:
@@ -36,8 +36,8 @@
       }
   resp_headers:
     Cache-Control: max-age=300
-    X-Hasura-Query-Cache-Key: d4a71d5adf16ade24aef3c86a6db2a60c2bbf303
-    X-Hasura-Query-Family-Cache-Key: 5370009b358ff0d7725a05b0e999d28b16725671
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
   response:
     data:
       test_table:
@@ -61,8 +61,8 @@
       }
   resp_headers:
     Cache-Control: max-age=300
-    X-Hasura-Query-Cache-Key: bb9ceebc18f3af265cdb29a43a4e3b2cfbe8c867
-    X-Hasura-Query-Family-Cache-Key: 89503bdbb87be61a1833dadeac2fa1f02c22dc69
+    X-Hasura-Query-Cache-Key: 582474f0dac03945ece4cc2dc8e27d0cde6fb9c2
+    X-Hasura-Query-Family-Cache-Key: 03f5229cdb87de891d1556e6bcca6b2389e14472
   response:
     data:
       test_table:
@@ -70,10 +70,10 @@
           last_name: Bar
 
 - description: call the cache clear endpoint
-  url: /pro/cache/clear?key=bb9ceebc18f3af265cdb29a43a4e3b2cfbe8c867
+  url: /pro/cache/clear?key=582474f0dac03945ece4cc2dc8e27d0cde6fb9c2
   method: POST
   status: 200
   query:
   response:
     message: success
-    clearedItemCount: 1
+    clearedItemCount: '1'

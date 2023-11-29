@@ -530,9 +530,12 @@ Native queries will inherit the permissions of the Logical Model that they retur
 
 ## Relationships
 
-Relationships are supported between Native Queries.
+Relationships are supported between Native Queries. This is how Native Queries may implement object and array fields of
+their referenced Logical Model.
 
-Unlike tables, relationships for a Native Query have to be given as part of tracking the Native Query.
+Unlike tables, relationships for a Native Query have to be given as part of tracking the Native Query: The schema of a
+Native Query is defined by its Logical Model, and the Native Query needs to implement all the fields of the Logical
+Model in order to be tracked successfully.
 
 Currently relationships are only supported between Native Queries and tables residing in the same source.
 

@@ -468,8 +468,6 @@ pgScalarTypeToText = \case
   PGLtree -> "ltree"
   PGLquery -> "lquery"
   PGLtxtquery -> "ltxtquery"
-  -- It's not really clear that this case is actually used for anything, since
-  -- arrays seem to always require special handling for callers of this function.
   PGArray t -> pgScalarTypeToText t <> "[]"
   PGUnknown t -> t
   PGCompositeScalar t -> t
@@ -556,19 +554,11 @@ instance HasCodec PGScalarType where
 
 instance ToSQL PGScalarType where
   toSQL =
-    TB.text . quoteType
-    where
-      -- Custom types may use non-lower casing and characters that do not belong to
-      -- identifiers lexicographically and thus need to be quoted.
-      quoteType :: PGScalarType -> Text
-      quoteType =
-        \case
-          -- Quoting an array type is e.g. '"MyType"[]', not '"MyType[]"', which necessitates this somewhat awkward recursion.
-          PGArray t -> quoteType t <> "[]"
-          PGUnknown t -> dquote t
-          PGCompositeScalar t -> dquote t
-          PGEnumScalar t -> dquote t
-          t -> pgScalarTypeToText t
+    TB.text . \case
+      -- Format enum type names as identifiers to preserve case sensitivity
+      -- https://github.com/hasura/graphql-engine/issues/4014
+      PGEnumScalar t -> pgFmtIdentifier t
+      scalarType -> pgScalarTypeToText scalarType
 
 instance ToJSON PGScalarType where
   toJSON = String . pgScalarTypeToText

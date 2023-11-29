@@ -19,7 +19,6 @@ import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NT
 import Database.PG.Query.Pool qualified as PG
-import Hasura.Authentication.Role (RoleName, adminRoleName, mkRoleNameSafe)
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
@@ -62,6 +61,7 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleNameSafe)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
@@ -205,7 +205,7 @@ buildGQLContext
         case res of
           Left err ->
             pure $ \_ _ _ ->
-              unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("Failed to fetch the time from metadata db correctly: " <> showQErr err)
+              unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
           Right now -> do
             let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
                 projectSchemaInfo = \metadataResourceVersion inconsistentMetadata metadata ->
@@ -253,7 +253,7 @@ buildSchemaOptions ::
   HashSet ExperimentalFeature ->
   SchemaOptions
 buildSchemaOptions
-  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables noNullUnboundVariableDefault removeEmptySubscriptionResponses remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
+  ( SQLGenCtx stringifyNum dangerousBooleanCollapse _nullInNonNullableVariables remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput,
     functionPermsCtx
     )
   expFeatures =
@@ -283,11 +283,7 @@ buildSchemaOptions
         soPostgresArrays =
           if EFDisablePostgresArrays `Set.member` expFeatures
             then Options.DontUsePostgresArrays
-            else Options.UsePostgresArrays,
-        soNoNullUnboundVariableDefault =
-          noNullUnboundVariableDefault,
-        soRemoveEmptySubscriptionResponses =
-          removeEmptySubscriptionResponses
+            else Options.UsePostgresArrays
       }
 
 -- | Build the @QueryHasura@ context for a given role.

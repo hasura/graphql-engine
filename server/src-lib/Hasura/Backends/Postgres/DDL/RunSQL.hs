@@ -26,7 +26,6 @@ import Data.HashSet qualified as HS
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.User (UserInfoM (..))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
@@ -58,6 +57,7 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (quoteRegex)
+import Hasura.Session
 import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 import Text.Regex.TDFA qualified as TDFA

@@ -1,8 +1,6 @@
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.
@@ -54,7 +52,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.User (UserInfoM (..))
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -71,6 +68,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Session
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Server.Types (MonadGetPolicies (..))

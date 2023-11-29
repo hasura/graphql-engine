@@ -69,29 +69,6 @@ schema =
 tests :: SpecWith TestEnvironment
 tests = do
   describe "Update many objects" do
-    it "When no updates are provided" \testEnvironment -> do
-      let expected :: Value
-          expected =
-            [yaml|
-              data:
-                update_hasura_author_many: []
-            |]
-
-          actual :: IO Value
-          actual =
-            postGraphql
-              testEnvironment
-              [graphql|
-                mutation {
-                  update_hasura_author_many(
-                    updates: []
-                  ) {
-                    affected_rows
-                  }
-                }
-              |]
-
-      shouldReturnYaml testEnvironment actual expected
     it "When many equals zero" \testEnvironment -> do
       let expected :: Value
           expected =

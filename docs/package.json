@@ -32,7 +32,6 @@
     "clsx": "^1.2.1",
     "cspell": "^6.18.1",
     "docusaurus-plugin-sass": "^0.2.2",
-    "dompurify": "^3.1.5",
     "graphiql": "^1.5.1",
     "graphql": "^15.7.2",
     "graphql-ws": "^5.11.2",
@@ -42,7 +41,6 @@
     "react-dom": "^17.0.2",
     "react-transition-group": "^4.4.2",
     "sass": "^1.49.8",
-    "usehooks-ts": "^2.9.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

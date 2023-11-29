@@ -18,7 +18,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions as KFunc
 import Data.ByteString (ByteString)
 import Data.Validation (Validation, fromEither)
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( Template (..),
@@ -28,6 +27,7 @@ import Hasura.RQL.DDL.Webhook.Transform.Class
     encodeScalar,
     wrapUnescapedTemplate,
   )
+import Hasura.Session (SessionVariables)
 
 -------------------------------------------------------------------------------
 

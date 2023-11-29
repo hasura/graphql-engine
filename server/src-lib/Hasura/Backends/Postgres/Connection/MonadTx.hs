@@ -37,8 +37,6 @@ import Data.Aeson.Extended
 import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
-import Hasura.Authentication.Session (SessionVariables)
-import Hasura.Authentication.User (UserInfo (..), UserInfoM (..))
 import Hasura.Backends.Postgres.Execute.Types as ET
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -46,6 +44,7 @@ import Hasura.Base.Error
 import Hasura.Base.Instances ()
 import Hasura.Prelude
 import Hasura.SQL.Types
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()

@@ -113,7 +113,7 @@ LEFT JOIN LATERAL
     LEFT JOIN pg_catalog.pg_type base_type
       ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
     LEFT JOIN pg_catalog.pg_type array_type
-      ON "type".typelem = array_type.oid AND "type".typcategory = 'A'
+      ON array_type.typarray = "type".oid
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0

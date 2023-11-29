@@ -42,8 +42,6 @@ tags
 docs/_build/
 docs/_ext/
 
-# cabal-plan artifacts
-licenses/
 
 # Ignore benchmark report output
 server/benchmarks/benchmark_sets/*/report.json

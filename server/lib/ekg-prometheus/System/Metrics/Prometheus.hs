@@ -1093,8 +1093,7 @@ emptyGCDetails =
       gcdetails_cpu_ns = 0,
       gcdetails_elapsed_ns = 0,
       gcdetails_nonmoving_gc_sync_cpu_ns = 0,
-      gcdetails_nonmoving_gc_sync_elapsed_ns = 0,
-      gcdetails_block_fragmentation_bytes = 0
+      gcdetails_nonmoving_gc_sync_elapsed_ns = 0
     }
 
 -- | The metrics registered by `registerGcMetrics`. These metrics are the

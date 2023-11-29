@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/disallow_model_filter_input_type_without_aggregate_expression/metadata.json
----
-an unnecessary filter input type name graphql configuration has been specified for model Invoice (in subgraph default) that does not use aggregates

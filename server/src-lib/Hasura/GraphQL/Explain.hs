@@ -6,10 +6,8 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Hasura.Authentication.Role (adminRoleName)
-import Hasura.Authentication.Session (SessionVariables)
-import Hasura.Authentication.User (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkUserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -32,18 +30,19 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.Config (ResponseInternalErrorsConfig)
+import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 data GQLExplain = GQLExplain
-  { _gqeQuery :: GH.GQLReqParsed,
-    _gqeUser :: Maybe SessionVariables,
-    _gqeIsRelay :: Maybe Bool
+  { _gqeQuery :: !GH.GQLReqParsed,
+    _gqeUser :: !(Maybe (HashMap.HashMap Text Text)),
+    _gqeIsRelay :: !(Maybe Bool)
   }
   deriving (Show, Eq, Generic)
 
@@ -95,29 +94,26 @@ explainGQLQuery ::
     MonadQueryTags m,
     MonadTrace m
   ) =>
-  Options.RemoveEmptySubscriptionResponses ->
   Options.BackwardsCompatibleNullInNonNullableVariables ->
-  Options.NoNullUnboundVariableDefault ->
   SchemaCache ->
   Maybe (CredentialCache AgentLicenseKey) ->
   [HTTP.Header] ->
   GQLExplain ->
-  ResponseInternalErrorsConfig ->
   m EncJSON
-explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNullUnboundVariableDefault sc agentLicenseKey reqHeaders (GQLExplain query sessionVariables maybeIsRelay) responseErrorsConfig = do
+explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
       (URBFromSessionVariablesFallback adminRoleName)
       UAdminSecretSent
-      (fromMaybe mempty sessionVariables)
+      sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
   let graphQLContext = E.makeGQLContext userInfo sc queryType
   queryParts <- GH.getSingleOperation query
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
       (unpreparedQueries, _, _) <-
-        E.parseGraphQLQuery nullInNonNullableVariables noNullUnboundVariableDefault graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
+        E.parseGraphQLQuery nullInNonNullableVariables graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
         <$> for (InsOrdHashMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
@@ -127,7 +123,6 @@ explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNu
       (_normalizedDirectives, normalizedSelectionSet) <-
         ER.resolveVariables
           nullInNonNullableVariables
-          noNullUnboundVariableDefault
           varDefs
           (fromMaybe mempty (GH._grVariables query))
           directives
@@ -138,7 +133,7 @@ explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNu
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      ((validSubscription, _), _) <- E.buildSubscriptionPlan removeEmptySubscriptionResponses userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query) responseErrorsConfig
+      ((validSubscription, _), _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
@@ -151,3 +146,4 @@ explainGQLQuery removeEmptySubscriptionResponses nullInNonNullableVariables noNu
             encJFromJValue <$> mkSubscriptionExplain execPlan
   where
     queryType = bool E.QueryHasura E.QueryRelay $ Just True == maybeIsRelay
+    sessionVariables = mkSessionVariablesText $ fromMaybe mempty userVarsRaw

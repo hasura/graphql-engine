@@ -1,4 +1,0 @@
-type Person {
-  name: String
-  picture(reference: "\a reference image"): Url
-}

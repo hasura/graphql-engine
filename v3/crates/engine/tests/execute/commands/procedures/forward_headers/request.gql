@@ -1,4 +1,0 @@
-mutation DoLogin {
-  login(username: "johndoe", password: "foobar")
-  another_login: login(username: "johndoe", password: "foobar")
-}

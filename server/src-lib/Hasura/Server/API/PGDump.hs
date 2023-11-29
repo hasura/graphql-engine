@@ -53,7 +53,7 @@ execPGDump b ci = do
     throwException text err = throwError (RTE.err500 RTE.Unexpected text) {RTE.qeInternal = Just (RTE.ExtraInternal (toJSON err))}
 
     execProcess = do
-      connString <- T.unpack . bsToTxt <$> PG.pgConnString (PG.ciDetails ci)
+      connString <- T.unpack . bsToTxt <$> (PG.pgConnString $ PG.ciDetails ci)
       let opts = connString : "--encoding=utf8" : prbOpts b
       (exitCode, stdOut, stdErr) <- readProcessWithExitCode "pg_dump" opts ""
       return $ case exitCode of

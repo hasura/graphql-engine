@@ -1,6 +1,0 @@
-query getSession {
-  getSessionInfo(userId: 123) {
-    token
-    expiry
-  }
-}

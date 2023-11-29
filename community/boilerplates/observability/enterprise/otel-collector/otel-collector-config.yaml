@@ -2,16 +2,14 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: "0.0.0.0:4317"
       http:
-        endpoint: "0.0.0.0:4318"
 
 exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
 
   # Data sources: traces, metrics, logs
-  debug:
+  logging:
     verbosity: detailed
 
   loki:
@@ -21,23 +19,17 @@ exporters:
   #   api:
   #     key: ${DD_API_KEY}
 
-  ## New Relic exporter
-  otlp/newrelic:
-    endpoint: otlp.nr-data.net:4317
-    headers:
-      api-key: ${NEW_RELIC_API_KEY}
-
-  ## Export traces to Jaeger via OTLP protocol.
-  ## You can also export traces directly to jaeger to graphql-engine.
-  ## However, the collector supports
-  otlp/jaeger:
-    endpoint: jaeger:4317
+  ## deprecated: can push traces directly to http://jaeger:4318/v1/traces
+  ## use this pipeline if you want exporting traces to multi-channels
+  ##
+  jaeger:
+    endpoint: jaeger:14250
     tls:
       insecure: true
 
   ## Honeycomb exporter
   ## Note: logs are sent to the service.name in trace (hasura), not to x-honeycomb-dataset
-  # otlp/honeycomb:
+  # otlp:
   #   endpoint: api.honeycomb.io:443
   #   headers:
   #     x-honeycomb-team: ${HONEYCOMB_API_KEY}
@@ -48,7 +40,7 @@ exporters:
   ## - roles/monitoring.metricWriter
   ## - roles/cloudtrace.agent
   ## - roles/logging.logWriter
-  ## download and rename to gcp-sa.json so the otel-collector can mount the service account
+  ## download and rename to gcp-sa.json so the otel-collector can mount the service account 
   ##
   # googlecloud:
   #   log:
@@ -90,44 +82,19 @@ processors:
     limit_percentage: 65
     spike_limit_percentage: 20
 
-  ## New Relic can parse body in JSON string only.
-  ## You must enable this transformer to convert the body to string
-  ##
-  # transform/new_relic_logs:
-  #   log_statements:
-  #     - context: log
-  #       statements:
-  #         - set(body, Concat([body, ""], ""))
-
-  filter:
-    error_mode: ignore
-    traces:
-      span:
-        # You can filter unused traces to save cost, for example:
-        # - 'IsMatch(name, "Event trigger")'
-        # - 'IsMatch(name, "Scheduled trigger")'
-        # - 'IsMatch(name, "websocket")'
-        - 'IsMatch(name, "/v1/version")'
-        - 'IsMatch(name, "/v1/entitlement")'
-        - 'IsMatch(name, "/v1alpha1/config")'
-
-    logs:
-      log_record:
-        # You can filter unused logs to save cost, or configure HASURA_GRAPHQL_ENABLED_LOG_TYPES in GraphQL Engine to disable unused log types
-        - 'attributes["type"] == "query-log" and IsMatch(body["query"]["operationName"], "UnknownQuery")'
-        - 'attributes["type"] == "http-log" and IsMatch(body["operation"]["query"]["operationName"], "UnknownQuery")'
-
 service:
   pipelines:
+    ## enable traces to DataDogs if require
+    ##
     traces:
       receivers: [otlp]
-      processors: [filter, memory_limiter, batch]
-      exporters: [otlp/jaeger, debug]
+      processors: [memory_limiter, batch]
+      exporters: [jaeger]
 
     logs:
       receivers: [otlp]
-      processors: [filter, memory_limiter, batch]
-      exporters: [loki]
+      processors: [memory_limiter, batch]
+      exporters: [logging, loki]
 
     metrics:
       receivers: [otlp]

@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Delete
   ( AnnDel,
@@ -40,7 +41,8 @@ type AnnDel b = AnnDelG b Void (SQLExpression b)
 
 deriving instance
   ( Backend b,
-    Show r,
+    Show (AnnBoolExp b a),
+    Show (MutationOutputG b r a),
     Show a
   ) =>
   Show (AnnDelG b r a)

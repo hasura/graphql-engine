@@ -1,3 +1,4 @@
+version: '3.6'
 services:
   postgres:
     image: mdillon/postgis:11
@@ -7,7 +8,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    image: hasura/graphql-engine:v2.42.0
+    image: hasura/graphql-engine:v2.35.1
     ports:
     - "8080:8080"
     depends_on:

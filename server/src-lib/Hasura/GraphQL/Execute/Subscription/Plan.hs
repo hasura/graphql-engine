@@ -128,13 +128,13 @@ import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
-import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.Session (SessionVariable, SessionVariables, filterSessionVariables)
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.Session (SessionVariable, SessionVariables, filterSessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Encoding qualified as PE
 

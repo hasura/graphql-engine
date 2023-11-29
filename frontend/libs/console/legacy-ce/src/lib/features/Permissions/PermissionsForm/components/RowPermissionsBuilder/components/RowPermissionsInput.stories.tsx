@@ -75,7 +75,7 @@ export const SetExistsPermission: StoryObj<typeof RowPermissionsInput> = {
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
-      'public.Label'
+      'Label'
     );
 
     await userEvent.selectOptions(
@@ -119,7 +119,7 @@ export const SetMultilevelExistsPermission: StoryObj<
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
-      'public.Label'
+      'Label'
     );
 
     await userEvent.selectOptions(
@@ -129,7 +129,7 @@ export const SetMultilevelExistsPermission: StoryObj<
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._where._exists._table-value-input'),
-      'public.Label'
+      'Label'
     );
 
     await userEvent.selectOptions(
@@ -396,7 +396,7 @@ export const SetDisabledExistsPermission: StoryObj<typeof RowPermissionsInput> =
 
       await userEvent.selectOptions(
         canvas.getByTestId('_exists._table-value-input'),
-        'public.Label'
+        'Label'
       );
 
       expect(existElement).not.toHaveAttribute('disabled');
@@ -536,7 +536,7 @@ export const RelationshipsColumns: StoryObj<typeof RowPermissionsInput> = {
       comparators={comparators}
       logicalModel={undefined}
       logicalModels={[]}
-      permissions={{ 'Public.Label': { id: { _eq: '' } } }}
+      permissions={{ Label: { id: { _eq: '' } } }}
     />
   ),
 };

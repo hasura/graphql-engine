@@ -15,7 +15,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
-import Hasura.Authentication.User (UserInfoM)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
@@ -74,6 +73,7 @@ import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
 import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Services
+import Hasura.Session
 import Hasura.StoredProcedure.API qualified as StoredProcedures
 import Hasura.Tracing qualified as Tracing
 
@@ -113,7 +113,7 @@ runMetadataQuery ::
 runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetadata {..} = do
   AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" Tracing.SKInternal $ liftEitherM fetchMetadata
+  MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
         RMV1 (RMExportMetadata _) -> True
         RMV2 (RMV2ExportMetadata _) -> True
@@ -158,43 +158,45 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Attempting to insert new metadata in storage"
-
         newResourceVersion <-
-          Tracing.newSpan "updateMetadataAndNotifySchemaSync" Tracing.SKInternal
+          Tracing.newSpan "setMetadata"
             $ liftEitherM
-            $ updateMetadataAndNotifySchemaSync appEnvInstanceId (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata cacheInvalidations
-
+            $ setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Successfully inserted new metadata in storage with resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
-        L.unLoggerTracing logger
-          $ SchemaSyncLog L.LevelInfo TTMetadataApi
-          $ String
-          $ "Inserted schema cache sync notification at resource version: "
-          <> showMetadataResourceVersion newResourceVersion
-
         -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection" Tracing.SKInternal
+        Tracing.newSpan "storeSourcesIntrospection"
           $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
 
         -- run the schema registry action
-        Tracing.newSpan "runSchemaRegistryAction" Tracing.SKInternal
+        Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
             liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache)) modMetadata
 
+        -- notify schema cache sync
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
+        L.unLoggerTracing logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Inserted schema cache sync notification at resource version:"
+          <> showMetadataResourceVersion newResourceVersion
+
         (_, modSchemaCache', _, _, _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" Tracing.SKInternal
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
         -- Close all subscriptions with 1012 code (subscribers should reconnect)
         -- and close poller threads
         when ((_cdcCloseWebsocketsOnMetadataChangeStatus dynamicConfig) == CWMCEnabled)
-          $ Tracing.newSpan "closeWebsocketsOnMetadataChange" Tracing.SKInternal
+          $ Tracing.newSpan "closeWebsocketsOnMetadataChange"
           $ liftIO
           $ WS.runWebsocketCloseOnMetadataChangeAction closeWebsocketsOnMetadataChange
 
@@ -369,10 +371,10 @@ runMetadataQueryM env schemaSampledFeatureFlags remoteSchemaPerms currentResourc
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
-      Tracing.newSpan ("v1 " <> T.pack (constrName q)) Tracing.SKInternal
+      Tracing.newSpan ("v1 " <> T.pack (constrName q))
         $ runMetadataQueryV1M env schemaSampledFeatureFlags remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
-      Tracing.newSpan ("v2 " <> T.pack (constrName q)) Tracing.SKInternal
+      Tracing.newSpan ("v2 " <> T.pack (constrName q))
         $ runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
@@ -517,7 +519,7 @@ runMetadataQueryV1M env schemaSampledFeatureFlags remoteSchemaPerms currentResou
   RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
-  RMDCAddAgent q -> runAddDataConnectorAgent env q
+  RMDCAddAgent q -> runAddDataConnectorAgent q
   RMDCDeleteAgent q -> runDeleteDataConnectorAgent q
   RMSetCustomTypes q -> runSetCustomTypes q
   RMSetApiLimits q -> runSetApiLimits q

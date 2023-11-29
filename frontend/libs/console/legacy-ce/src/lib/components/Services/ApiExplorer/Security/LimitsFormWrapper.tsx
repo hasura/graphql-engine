@@ -45,21 +45,13 @@ export const labels: Record<
     title: 'Request Rate Limit (Requests Per Minute)',
     info: (
       <div>
-        Set a{' '}
-        <a
-          href="https://hasura.io/docs/latest/security/api-limits/#rate-limits"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          request rate limit
-        </a>{' '}
-        for this role. You can also combine additional unique parameters for
-        more granularity.
+        Set a request rate limit for this role. You can also combine additional
+        unique parameters for more granularity.
       </div>
     ),
   },
   time_limit: {
-    title: 'Operation time limit (Seconds)',
+    title: 'Operation time limit',
     info: <div>Global timeout for GraphQL operations.</div>,
   },
 };

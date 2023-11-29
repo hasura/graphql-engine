@@ -14,9 +14,6 @@ module Hasura.Tracing.TraceId
     spanIdToBytes,
     spanIdFromHex,
     spanIdToHex,
-
-    -- * SpanKind
-    SpanKind (..),
   )
 where
 
@@ -153,24 +150,3 @@ spanIdFromHex = spanIdFromBytes <=< eitherToMaybe . Base16.decode
 -- | Serialize a 'SpanId' to the standard ASCII-encoded hex representation.
 spanIdToHex :: SpanId -> ByteString
 spanIdToHex = Base16.encode . spanIdToBytes
-
--- | SpanKind describes the relationship between the Span, its parents, and its children in a Trace.
---
--- Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#spankind
-data SpanKind
-  = -- Indicates that the span describes a request to some remote service.
-    -- Use this kind for outcoming webhook invocations (action, remote schema, etc...).
-    SKClient
-  | -- Indicates that the span covers server-side handling of a synchronous RPC or other remote request.
-    -- Use this kind for the root span of HTTP handlers.
-    SKServer
-  | -- Default value. Indicates that the span represents an internal operation within an application.
-    SKInternal
-
-instance J.ToJSON SpanKind where
-  toJSON = J.toJSON . show
-
-instance Show SpanKind where
-  show SKClient = "client"
-  show SKServer = "server"
-  show SKInternal = "internal"

@@ -13,7 +13,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.User (UserInfoM (..))
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -33,6 +32,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 validateDeleteQWith ::

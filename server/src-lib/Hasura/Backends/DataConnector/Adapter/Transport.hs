@@ -9,7 +9,6 @@ import Control.Exception.Safe (throwIO)
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
-import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Adapter.Execute (DataConnectorPreparedQuery (..), encodePreparedQueryToJsonText)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, AgentLicenseKey (..), runAgentClientT)
@@ -27,6 +26,7 @@ import Hasura.RQL.Types.Backend (ResolvedConnectionTemplate)
 import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
+import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
 --------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe sour
   --  _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName) Tracing.SKClient
+    . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName)
     . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
@@ -149,7 +149,7 @@ runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe s
   --   _ -> do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
-    . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName) Tracing.SKClient
+    . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName)
     . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad

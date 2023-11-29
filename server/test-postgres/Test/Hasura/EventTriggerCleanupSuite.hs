@@ -44,10 +44,9 @@ buildEventTriggerCleanupSuite = do
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
   pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams print
-  connInfoWithFinalizer <- liftIO $ mkConnInfoWithFinalizer pgConnInfo (pure ())
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext connInfoWithFinalizer Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
 
   pure $ do
     describe "Event trigger log cleanup" $ eventTriggerLogCleanupSpec dbSourceConfig
@@ -165,7 +164,7 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- run the core generator logic
-      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig $ pure (triggerName, autoTriggerCleanupConfig)
+      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig [(triggerName, autoTriggerCleanupConfig)]
       -- check if the cleanups are scheduled
       runSQLQuery (getCleanupStatusCount triggerName "scheduled") `shouldReturn` cleanupSchedulesToBeGenerated
       -- finally teardown
@@ -176,7 +175,7 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- add some cleanup schedules
-      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig $ pure (triggerName, autoTriggerCleanupConfig)
+      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig [(triggerName, autoTriggerCleanupConfig)]
       -- move 11 minutes into the future, this should do the following:
       -- 1. render 10 cleanup schedules as dead
       -- 2. 1 schedule as ready to be delivered
@@ -201,7 +200,7 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- add some cleanup schedules
-      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig $ pure (triggerName, autoTriggerCleanupConfig)
+      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig [(triggerName, autoTriggerCleanupConfig)]
       -- move 1 minute into the future
       runSQLQuery $ reduceScheduledAtBy triggerName 1
       -- get cleanup actions to deliver
@@ -221,7 +220,7 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- add some cleanup schedules
-      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig $ pure (triggerName, autoTriggerCleanupConfig)
+      liftIO $ runExceptQErr $ addCleanupSchedules sourceConfig [(triggerName, autoTriggerCleanupConfig)]
       -- move 1 minute into the future
       runSQLQuery $ reduceScheduledAtBy triggerName 1
       -- get cleanup actions to deliver

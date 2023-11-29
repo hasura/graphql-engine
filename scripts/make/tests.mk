@@ -102,7 +102,6 @@ test-data-connectors-mysql-pro: build-pro  start-api-tests-pro-backends remove-t
 ## test-backends-pro: run tests for HGE pro for all backends
 test-backends-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-postgres-pro
@@ -110,7 +109,6 @@ test-backends-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 test-postgres-pro: build-pro  start-api-tests-pro-postgres remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-citus-pro
@@ -118,7 +116,6 @@ test-postgres-pro: build-pro  start-api-tests-pro-postgres remove-tix-file
 test-citus-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
@@ -126,7 +123,6 @@ test-citus-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 test-cockroach-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-sqlserver-pro
@@ -134,7 +130,6 @@ test-cockroach-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 test-sqlserver-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
@@ -142,7 +137,6 @@ test-sqlserver-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 test-bigquery-pro: build-pro  start-api-tests-pro-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HASURA_OTEL_STATUS=enabled \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-unit

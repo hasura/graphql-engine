@@ -1,7 +1,0 @@
-query MyQuery {
-  getAllActors {
-    actor_id
-    name
-    movie_id
-  }
-}
