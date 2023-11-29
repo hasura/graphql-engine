@@ -16,7 +16,6 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MSSQL.Transaction (forJsonQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
@@ -38,6 +37,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
+import Hasura.Session
 import Hasura.Tracing
 
 instance BackendTransport 'MSSQL where
@@ -78,7 +78,7 @@ runQuery ::
 runQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime
-    $ newSpan ("MSSQL Query for root field " <>> fieldName) SKInternal
+    $ newSpan ("MSSQL Query for root field " <>> fieldName)
     $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ fmap snd (run tx)
 
@@ -116,7 +116,7 @@ runMutation ::
 runMutation reqId query fieldName _userInfo logger _ sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime
-    $ newSpan ("MSSQL Mutation for root field " <>> fieldName) SKInternal
+    $ newSpan ("MSSQL Mutation for root field " <>> fieldName)
     $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ run tx
 

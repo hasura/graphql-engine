@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_aggregate_exp_from_model/metadata.json
----
-Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) used with model Invoice (in subgraph default) has not been defined

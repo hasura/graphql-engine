@@ -1,6 +1,4 @@
 {-# LANGUAGE UndecidableInstances #-}
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Control.Monad.Memoize
   ( MonadMemoize (..),
@@ -11,16 +9,18 @@ module Control.Monad.Memoize
 where
 
 import Control.Monad.Except
+import Control.Monad.Reader (MonadReader, ReaderT, mapReaderT)
+import Control.Monad.State.Strict (MonadState (..), StateT, evalStateT)
 import Data.Dependent.Map (DMap)
 import Data.Dependent.Map qualified as DM
 import Data.Functor.Identity
 import Data.GADT.Compare.Extended
 import Data.IORef
 import Data.Kind qualified as K
-import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
-import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
+import Type.Reflection (Typeable, typeRep)
+import Prelude
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -174,17 +174,16 @@ instance
         -- the point at which the effect is performed can be unpredictable. But
         -- this action just reads, never writes, so that isn’t a concern.
         parserById <-
-          liftIO
-            $ unsafeInterleaveIO
-            $ readIORef cell
-            >>= \case
-              Just parser -> pure $ Identity parser
-              Nothing ->
-                error
-                  $ unlines
-                    [ "memoize: parser was forced before being fully constructed",
-                      "  parser constructor: " ++ TH.pprint name
-                    ]
+          liftIO $
+            unsafeInterleaveIO $
+              readIORef cell >>= \case
+                Just parser -> pure $ Identity parser
+                Nothing ->
+                  error $
+                    unlines
+                      [ "memoize: parser was forced before being fully constructed",
+                        "  parser constructor: " ++ TH.pprint name
+                      ]
         put $! DM.insert parserId parserById parsersById
 
         parser <- unMemoizeT buildParser

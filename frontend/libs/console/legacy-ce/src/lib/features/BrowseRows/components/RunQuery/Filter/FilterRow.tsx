@@ -27,15 +27,6 @@ export const FilterRow = ({
   const localValue = watch(`${name}.value`);
 
   /**
-   * Set operator to first operator if it is empty
-   */
-  useEffect(() => {
-    if (!localOperator && operatorOptions[0]?.value) {
-      setValue(`${name}.operator`, operatorOptions[0].value);
-    }
-  }, [localOperator, operatorOptions, setValue, name]);
-
-  /**
    * Set the default value into the input field depending on the operator type
    */
   useEffect(() => {

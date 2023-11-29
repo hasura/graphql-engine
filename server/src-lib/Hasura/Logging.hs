@@ -60,6 +60,7 @@ module Hasura.Logging
   )
 where
 
+import Control.AutoUpdate qualified as Auto
 import Control.Exception (ErrorCall (ErrorCallWithLocation), catch)
 import Control.FoldDebounce qualified as FDebounce
 import Control.Monad.Trans.Control
@@ -70,7 +71,6 @@ import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.HashSet qualified as Set
-import Data.IORef
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
@@ -81,7 +81,6 @@ import Data.Time.Clock.POSIX qualified as Time
 import Data.Time.Format qualified as Format
 import Data.Time.LocalTime qualified as Time
 import Hasura.Base.Error (QErr)
-import Hasura.CachedTime
 import Hasura.Prelude
 import Hasura.Tracing.Class qualified as Tracing
 import Hasura.Tracing.Context
@@ -359,8 +358,7 @@ instance ToEngineLog UnhandledInternalErrorLog Hasura where
 -- * LoggerSettings
 
 data LoggerSettings = LoggerSettings
-  { -- | should current time be cached (refreshed every sec)? For performance
-    -- impact, see benchmarks in: https://github.com/hasura/graphql-engine-mono/pull/10631
+  { -- | should current time be cached (refreshed every sec)
     _lsCachedTimestamp :: !Bool,
     _lsTimeZone :: !(Maybe Time.TimeZone),
     _lsLevel :: !LogLevel
@@ -378,12 +376,6 @@ getFormattedTime tzM = do
   t <- Time.getCurrentTime
   return $ FormattedTime t tz
 
--- | Get the current time, formatted with the current or specified timezone
-getCachedFormattedTime :: Maybe Time.TimeZone -> IO FormattedTime
-getCachedFormattedTime tzM = do
-  (t, tz, _) <- readIORef cachedRecentFormattedTimeAndZone
-  pure $ maybe (FormattedTime t tz) (FormattedTime t) tzM
-
 -- | Creates a new 'LoggerCtx', optionally fanning out to an OTLP endpoint
 -- (while enabled) as well.
 --
@@ -400,20 +392,21 @@ mkLoggerCtxOTLP ::
   LoggerSettings ->
   Set.HashSet (EngineLogType impl) ->
   ManagedT io (LoggerCtx impl)
-mkLoggerCtxOTLP logsExporter (LoggerSettings shouldCacheTime tzM logLevel) enabledLogs = do
+mkLoggerCtxOTLP logsExporter (LoggerSettings cacheTime tzM logLevel) enabledLogs = do
   loggerSet <- allocate acquire release
-  pure $ LoggerCtx loggerSet logLevel (timeGetter tzM) enabledLogs logsExporter
+  timeGetter <- liftIO $ bool (pure $ getFormattedTime tzM) cachedTimeGetter cacheTime
+  pure $ LoggerCtx loggerSet logLevel timeGetter enabledLogs logsExporter
   where
     acquire = liftIO do
       FL.newStdoutLoggerSet FL.defaultBufSize
     release loggerSet = liftIO do
       FL.flushLogStr loggerSet
       FL.rmLoggerSet loggerSet
-    -- use either a slower time lookup per log line, or quick reference to not
-    -- very granular current-ish timestamp
-    timeGetter
-      | shouldCacheTime = getCachedFormattedTime
-      | otherwise = getFormattedTime
+    cachedTimeGetter =
+      Auto.mkAutoUpdate
+        Auto.defaultUpdateSettings
+          { Auto.updateAction = getFormattedTime tzM
+          }
 
 -- | 'mkLoggerCtxOTLP' but with no otlp log shipping, for compatibility
 mkLoggerCtx ::

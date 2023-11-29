@@ -58,7 +58,6 @@ import Data.Text (unpack)
 import Data.Time.Clock qualified as Clock
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error (QErr, showQErr)
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -71,6 +70,7 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)

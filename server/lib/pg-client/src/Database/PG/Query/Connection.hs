@@ -48,14 +48,13 @@ where
 
 import Control.Concurrent.Interrupt (interruptOnAsyncException)
 import Control.Exception.Safe (Exception, SomeException (..), catch, throwIO)
-import Control.Monad (unless)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, withExceptT)
 import Control.Retry (RetryPolicyM)
 import Control.Retry qualified as Retry
-import Data.Aeson (ToJSON (toJSON), Value (String), encode, genericToJSON, object, (.=))
+import Data.Aeson (ToJSON (toJSON), Value (String), genericToJSON, object, (.=))
 import Data.Aeson.Casing (aesonDrop, snakeCase)
 import Data.Aeson.TH (mkToJSON)
 import Data.Bool (bool)
@@ -75,13 +74,9 @@ import Data.Text.Encoding (decodeUtf8, decodeUtf8With, encodeUtf8)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Time (NominalDiffTime, UTCTime)
 import Data.Word (Word16, Word32)
-import Database.PG.Query.URL (encodeURLPassword)
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Database.PostgreSQL.Simple.Options qualified as Options
 import GHC.Generics (Generic)
-import Network.HTTP.Client
-import Network.HTTP.Types.Status (statusCode)
-import System.Environment (lookupEnv)
 import Prelude
 
 {-# ANN module ("HLint: ignore Use tshow" :: String) #-}
@@ -123,7 +118,7 @@ readDynamicURIFile path = do
             <> Text.pack path
             <> ": "
             <> Text.pack (show e)
-  pure $ encodeURLPassword $ Text.strip uriDirty
+  pure $ Text.strip uriDirty
   where
     -- Text.readFile but explicit, ignoring locale:
     readFileUtf8 = fmap decodeUtf8 . BS.readFile
@@ -214,7 +209,6 @@ readConnErr conn = do
 pgRetrying ::
   (MonadIO m) =>
   Maybe String ->
-  -- | An action to perform on error
   IO () ->
   PGRetryPolicyM m ->
   PGLogger ->
@@ -248,46 +242,17 @@ initPQConn ::
   IO PQ.Connection
 initPQConn ci logger = do
   host <- extractHost (ciDetails ci)
-  -- if this is a dynamic connection, we'll signal to refresh the secret (if
-  -- configured) during each retry, ensuring we don't make too many connection
-  -- attempts with the wrong credentials and risk getting locked out
-  resetFn <- do
-    mbUrl <- lookupEnv "HASURA_SECRETS_BLOCKING_FORCE_REFRESH_URL"
-    case (mbUrl, ciDetails ci) of
-      (Just url, CDDynamicDatabaseURI path) -> do
-        manager <- newManager defaultManagerSettings
-
-        -- Create the request
-        let body = encode $ object ["filename" .= path]
-        initialRequest <- parseRequest url
-        let request =
-              initialRequest
-                { method = "POST",
-                  requestBody = RequestBodyLBS body,
-                  requestHeaders = [("Content-Type", "application/json")]
-                }
-
-        -- The action to perform on each retry. This must only return after
-        -- the secrets file has been refreshed.
-        return $ do
-          status <- statusCode . responseStatus <$> httpLbs request manager
-          unless (status >= 200 && status < 300) $
-            logger $
-              PLERetryMsg $
-                object
-                  ["message" .= String "Forcing refresh of secret file at HASURA_SECRETS_BLOCKING_FORCE_REFRESH_URL seems to have failed. Retrying anyway."]
-      _ -> pure $ pure ()
-
   -- Retry if postgres connection error occurs
   pgRetrying host resetFn retryP logger $ do
     -- Initialise the connection
-    conn <- PQ.connectdb =<< pgConnString (ciDetails ci)
+    conn <- PQ.connectdb =<< (pgConnString $ ciDetails ci)
 
     -- Check the status of the connection
     s <- liftIO $ PQ.status conn
     let connOk = s == PQ.ConnectionOk
     bool (whenConnNotOk conn) (whenConnOk conn) connOk
   where
+    resetFn = return ()
     retryP = mkPGRetryPolicy $ ciRetries ci
 
     whenConnNotOk conn = Left . PGConnErr <$> readConnErr conn

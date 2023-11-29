@@ -1,6 +1,4 @@
 {-# LANGUAGE Arrows #-}
--- new warning in 9.6 here mentions constraints not in this file...?:
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.IncrementalSpec (spec) where
 

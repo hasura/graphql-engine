@@ -6,6 +6,7 @@ import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import { Button } from '../../../../new-components/Button';
 import AceEditor from '../../../../components/Common/AceEditor/BaseEditor';
+import { allowedQueriesCollection } from '../../../../metadata/utils';
 import { DropdownButton } from '../../../../new-components/DropdownButton';
 import { BadgeColor } from '../../../../new-components/Badge';
 import { CardedTable } from '../../../../new-components/CardedTable';
@@ -54,6 +55,10 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
 
   const highlighted = (location.query?.highlight as string)?.split(',') || [];
 
+  const allowedQueries = queryCollections?.find(
+    collection => collection.name === allowedQueriesCollection
+  );
+
   const [search, setSearch] = React.useState('');
 
   const emptySearch = React.useRef(false);
@@ -95,18 +100,14 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
     return <div>Error getting REST Endpoints</div>;
   }
 
-  if (!queryCollections || !restEndpoints) {
+  if (!queryCollections || !allowedQueries || !restEndpoints) {
     return <Landing />;
   }
 
-  const findQuery = (name: string, collectionName: string) => {
-    const collection = queryCollections.find(q => q.name === collectionName);
-    if (collection) {
-      const query = collection.definition.queries.find(q => q.name === name);
-      return query ? query.query : '';
-    }
-    return '';
-  };
+  const allAllowedQueries = allowedQueries.definition.queries;
+
+  const findQuery = (name: string) =>
+    allAllowedQueries.find(q => q.name === name)?.query ?? '';
 
   const onClickDelete = (name: string, request: string) => () => {
     const confirmMessage = `This will delete the REST endpoint "${name}". Are you sure?`;
@@ -132,7 +133,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
   };
 
   const onClickEdit = (link: string) => () => {
-    browserHistory.push(`/api/rest/edit/${encodeURIComponent(link)}`);
+    browserHistory.push(`/api/rest/edit/${link}`);
   };
 
   const onSearchChange = debounce((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,15 +249,10 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
               <>
                 <Link
                   to={{
-                    pathname: `/api/rest/details/${encodeURIComponent(
-                      endpoint.endpoint.name
-                    )}`,
+                    pathname: `/api/rest/details/${endpoint.endpoint.name}`,
                     state: {
                       ...endpoint,
-                      currentQuery: findQuery(
-                        endpoint.endpoint.name,
-                        endpoint.endpoint.definition.query.collection_name
-                      ),
+                      currentQuery: findQuery(endpoint.endpoint.name),
                     },
                   }}
                 >
@@ -278,10 +274,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
                 <CollapsibleToggle title="GraphQL Request" useDefaultTitleStyle>
                   <AceEditor
                     name="query-viewer"
-                    value={findQuery(
-                      endpoint.endpoint.name,
-                      endpoint.endpoint.definition.query.collection_name
-                    )}
+                    value={findQuery(endpoint.endpoint.name)}
                     placeholder="query SampleQuery {}"
                     height="300px"
                     mode="graphqlschema"
@@ -306,10 +299,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
                     size="sm"
                     onClick={onClickDelete(
                       endpoint.endpoint.name,
-                      findQuery(
-                        endpoint.endpoint.name,
-                        endpoint.endpoint.definition.query.collection_name
-                      )
+                      findQuery(endpoint.endpoint.name)
                     )}
                     icon={<FaTimes />}
                     className="mr-1"

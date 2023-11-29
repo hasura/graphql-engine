@@ -1,8 +1,0 @@
-mutation UpdateArticleUser {
-  updateArticleTitleById(title: "Some title") {
-    article {
-      title
-    }
-    title
-  }
-}

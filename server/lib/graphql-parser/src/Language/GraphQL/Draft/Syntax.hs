@@ -1,6 +1,6 @@
 {-# HLINT ignore "Use onLeft" #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 -- | Description: The GraphQL AST

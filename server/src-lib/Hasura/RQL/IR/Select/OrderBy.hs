@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Select.OrderBy
   ( AnnotatedAggregateOrderBy (..),
@@ -45,19 +46,28 @@ data AnnotatedOrderByElement (b :: BackendType) v
 
 deriving stock instance
   ( Backend b,
-    Eq v
+    Eq (AnnBoolExp b v),
+    Eq (AnnotatedAggregateOrderBy b v),
+    Eq (ComputedFieldOrderBy b v),
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (AnnotatedOrderByElement b v)
 
 deriving stock instance
   ( Backend b,
-    Show v
+    Show (AnnBoolExp b v),
+    Show (AnnotatedAggregateOrderBy b v),
+    Show (ComputedFieldOrderBy b v),
+    Show (AnnRedactionExp b v)
   ) =>
   Show (AnnotatedOrderByElement b v)
 
 instance
   ( Backend b,
-    Hashable v
+    Hashable (AnnBoolExp b v),
+    Hashable (AnnotatedAggregateOrderBy b v),
+    Hashable (ComputedFieldOrderBy b v),
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (AnnotatedOrderByElement b v)
 
@@ -67,11 +77,11 @@ data AnnotatedAggregateOrderBy (b :: BackendType) v
     AAOOp (AggregateOrderByColumn b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v) => Eq (AnnotatedAggregateOrderBy b v)
+deriving stock instance (Backend b, Eq (AggregateOrderByColumn b v)) => Eq (AnnotatedAggregateOrderBy b v)
 
-deriving stock instance (Backend b, Show v) => Show (AnnotatedAggregateOrderBy b v)
+deriving stock instance (Backend b, Show (AggregateOrderByColumn b v)) => Show (AnnotatedAggregateOrderBy b v)
 
-instance (Backend b, Hashable v) => Hashable (AnnotatedAggregateOrderBy b v)
+instance (Backend b, Hashable (AggregateOrderByColumn b v)) => Hashable (AnnotatedAggregateOrderBy b v)
 
 data AggregateOrderByColumn b v = AggregateOrderByColumn
   { _aobcAggregateFunctionName :: Text,
@@ -83,11 +93,11 @@ data AggregateOrderByColumn b v = AggregateOrderByColumn
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq v) => Eq (AggregateOrderByColumn b v)
+deriving stock instance (Backend b, Eq (AnnRedactionExp b v)) => Eq (AggregateOrderByColumn b v)
 
-deriving stock instance (Backend b, Show v) => Show (AggregateOrderByColumn b v)
+deriving stock instance (Backend b, Show (AnnRedactionExp b v)) => Show (AggregateOrderByColumn b v)
 
-instance (Backend b, Hashable v) => Hashable (AggregateOrderByColumn b v)
+instance (Backend b, Hashable (AnnRedactionExp b v)) => Hashable (AggregateOrderByColumn b v)
 
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
@@ -111,19 +121,26 @@ data ComputedFieldOrderByElement (b :: BackendType) v
 
 deriving stock instance
   ( Backend b,
-    Eq v
+    Eq (AnnBoolExp b v),
+    Eq (AnnotatedAggregateOrderBy b v),
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (ComputedFieldOrderByElement b v)
 
 deriving stock instance
   ( Backend b,
-    Show v
+    Show v,
+    Show (AnnBoolExp b v),
+    Show (AnnotatedAggregateOrderBy b v),
+    Show (AnnRedactionExp b v)
   ) =>
   Show (ComputedFieldOrderByElement b v)
 
 instance
   ( Backend b,
-    Hashable v
+    Hashable (AnnBoolExp b v),
+    Hashable (AnnotatedAggregateOrderBy b v),
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (ComputedFieldOrderByElement b v)
 
@@ -144,18 +161,21 @@ deriving stock instance (Backend b) => Traversable (ComputedFieldOrderBy b)
 
 deriving stock instance
   ( Backend b,
-    Eq v
+    Eq (ComputedFieldOrderByElement b v),
+    Eq (FunctionArgsExp b v)
   ) =>
   Eq (ComputedFieldOrderBy b v)
 
 deriving stock instance
   ( Backend b,
-    Show v
+    Show (ComputedFieldOrderByElement b v),
+    Show (FunctionArgsExp b v)
   ) =>
   Show (ComputedFieldOrderBy b v)
 
 instance
   ( Backend b,
-    Hashable v
+    Hashable (ComputedFieldOrderByElement b v),
+    Hashable (FunctionArgsExp b v)
   ) =>
   Hashable (ComputedFieldOrderBy b v)

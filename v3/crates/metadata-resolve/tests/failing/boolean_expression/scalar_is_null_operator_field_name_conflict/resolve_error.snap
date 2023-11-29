@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/boolean_expression/scalar_is_null_operator_field_name_conflict/metadata.json
----
-Error: the boolean expression 'string_bool_exp (in subgraph default)' has a GraphQL field name conflict between the '_is_null' comparable operator and the '_is_null' is null operator. One of these will need to be renamed.

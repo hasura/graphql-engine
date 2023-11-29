@@ -137,23 +137,10 @@ class GraphiQLWrapper extends Component {
     const handleClickPrettifyButton = () => {
       trackGraphiQlToolbarButtonClick('Prettify');
 
-      const queryEditor = graphiqlContext.getQueryEditor();
-      const currentQueryText = queryEditor.getValue();
-      const prettyQueryText = print(sdlParse(currentQueryText));
-      queryEditor.setValue(prettyQueryText);
-
-      try {
-        const variableEditor = graphiqlContext.getVariableEditor();
-        const currentVariableText = variableEditor.getValue();
-        const prettyVariableText = JSON.stringify(
-          JSON.parse(currentVariableText),
-          null,
-          2
-        );
-        variableEditor.setValue(prettyVariableText);
-      } catch (err) {
-        // Ignore json parse errors, since we can't format invalid json anyway
-      }
+      const editor = graphiqlContext.getQueryEditor();
+      const currentText = editor.getValue();
+      const prettyText = print(sdlParse(currentText));
+      editor.setValue(prettyText);
     };
 
     const handleToggleHistory = () => {

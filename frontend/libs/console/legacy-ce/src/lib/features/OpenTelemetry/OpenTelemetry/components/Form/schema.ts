@@ -13,8 +13,7 @@ export const formSchema = z
   .object({
     // CONNECTION TYPE
     connectionType: z.enum(['http/protobuf']),
-    status: z.enum(['enabled', 'disabled', 'env']),
-    statusVariable: z.string(),
+    enabled: z.boolean(),
 
     dataType: z.enum(['traces', 'metrics', 'logs']).array(),
     // NOTE: We enforce more specific invariants below:
@@ -51,7 +50,7 @@ export const formSchema = z
   // corresponding data_type is enabled THEN a valid endpoint url is provided.
   .refine(
     obj =>
-      ['enabled', 'env'].includes(obj.status) && obj.dataType.includes('traces')
+      obj.enabled && obj.dataType.includes('traces')
         ? obj.tracesEndpoint
         : true,
     {
@@ -62,8 +61,7 @@ export const formSchema = z
   )
   .refine(
     obj =>
-      ['enabled', 'env'].includes(obj.status) &&
-      obj.dataType.includes('metrics')
+      obj.enabled && obj.dataType.includes('metrics')
         ? obj.metricsEndpoint
         : true,
     {
@@ -74,9 +72,7 @@ export const formSchema = z
   )
   .refine(
     obj =>
-      ['enabled', 'env'].includes(obj.status) && obj.dataType.includes('logs')
-        ? obj.logsEndpoint
-        : true,
+      obj.enabled && obj.dataType.includes('logs') ? obj.logsEndpoint : true,
     {
       message:
         'A valid logs endpoint must be supplied when logs export is enabled',
@@ -90,8 +86,7 @@ export const formSchema = z
 export type FormValues = z.infer<typeof formSchema>;
 
 export const defaultValues: FormValues = {
-  status: 'disabled',
-  statusVariable: '',
+  enabled: false,
 
   // At the time of writing, it's impossible to get a default value that satisfies the use cases.
   // localhost would not work because HGE is running inside Docker, and the OpenTelemetry host is not.

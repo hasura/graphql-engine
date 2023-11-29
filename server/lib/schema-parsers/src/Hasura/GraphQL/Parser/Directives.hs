@@ -46,7 +46,7 @@ import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
+import Type.Reflection (Typeable, typeRep)
 import Witherable (catMaybes)
 import Prelude
 
@@ -174,7 +174,6 @@ cachedDirective =
     True
     [G.DLExecutable G.EDLQUERY]
     (CachedDirective <$> ttlArgument <*> forcedArgument)
-    False
   where
     -- Optionally set the cache entry time to live
     ttlArgument :: InputFieldsParser origin m Int
@@ -199,7 +198,6 @@ multipleRootFieldsDirective =
     False -- not advertised in the schema
     [G.DLExecutable G.EDLSUBSCRIPTION]
     (pure ())
-    False
 
 multipleRootFields :: DirectiveKey ()
 multipleRootFields = DirectiveKey Name.__multiple_top_level_fields
@@ -217,7 +215,6 @@ skipDirective =
       G.DLExecutable G.EDLINLINE_FRAGMENT
     ]
     ifArgument
-    False
 
 includeDirective :: (MonadParse m) => Directive origin m
 includeDirective =
@@ -230,7 +227,6 @@ includeDirective =
       G.DLExecutable G.EDLINLINE_FRAGMENT
     ]
     ifArgument
-    False
 
 skip :: DirectiveKey Bool
 skip = DirectiveKey Name._skip
@@ -282,12 +278,11 @@ mkDirective ::
   Bool ->
   [G.DirectiveLocation] ->
   InputFieldsParser origin m a ->
-  Bool ->
   Directive origin m
 {-# INLINE mkDirective #-}
-mkDirective name description advertised location argsParser isRepeatable =
+mkDirective name description advertised location argsParser =
   Directive
-    { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location isRepeatable,
+    { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
       dAdvertised = advertised,
       dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (HashMap.keys arguments) \argumentName ->

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -127,14 +127,6 @@ const RawSQL = ({
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [suggestLangChange, setSuggestLangChange] = useState(false);
 
-  const selectedDriverRef = useRef(selectedDriver);
-  const sqlTextRef = useRef(sqlText);
-
-  useEffect(() => {
-    selectedDriverRef.current = selectedDriver;
-    sqlTextRef.current = sqlText;
-  }, [selectedDriver, sqlText]);
-
   useEffect(() => {
     const driver = getSourceDriver(metadataSources, selectedDatabase);
     setSelectedDriver(driver);
@@ -189,21 +181,21 @@ const RawSQL = ({
   }, [sql, selectedDriver]);
 
   const submitSQL = () => {
-    if (!nativeDrivers.includes(selectedDriverRef.current)) {
+    if (!nativeDrivers.includes(selectedDriver)) {
       fetchRunSQLResult({
-        driver: selectedDriverRef.current,
+        driver: selectedDriver,
         dataSourceName: selectedDatabase,
-        sql: sqlTextRef.current,
+        sql: sqlText,
       });
       return;
     }
 
-    if (!sqlTextRef.current) {
+    if (!sqlText) {
       setLSItem(LS_KEYS.rawSQLKey, '');
       return;
-    } else if (checkTextLength(sqlTextRef.current)) {
+    } else if (checkTextLength(sqlText)) {
       // set SQL to LS
-      setLSItem(LS_KEYS.rawSQLKey, sqlTextRef.current);
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     }
 
     // check migration mode global
@@ -217,11 +209,7 @@ const RawSQL = ({
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
         // if migration is not checked, check if is schema modification
-        if (
-          services[selectedDriverRef.current].checkSchemaModification(
-            sqlTextRef.current
-          )
-        ) {
+        if (services[selectedDriver].checkSchemaModification(sqlText)) {
           dispatch(modalOpen());
           return;
         }
@@ -232,7 +220,7 @@ const RawSQL = ({
           migrationName,
           statementTimeout,
           selectedDatabase,
-          selectedDriverRef.current
+          selectedDriver
         )
       );
       dispatch(_push('/data/sql'));
@@ -339,8 +327,8 @@ const RawSQL = ({
             {
               name: 'submit',
               bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
-              exec: editor => {
-                if (editor?.getValue()) {
+              exec: () => {
+                if (sqlText) {
                   submitSQL();
                 }
               },

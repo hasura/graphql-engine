@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/subgraph_invalid_name/metadata.json
----
-__ is a reserved prefix for subgraph names at path $.subgraphs[0].name

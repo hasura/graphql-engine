@@ -1,1 +1,0 @@
-extend union SearchResult @deprecated = Photo | Person

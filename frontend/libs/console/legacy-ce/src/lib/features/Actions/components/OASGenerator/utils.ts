@@ -74,7 +74,7 @@ export const generateQueryParams = (parameters: OperationParameters) => {
   if (isThereArray) {
     const stringParams = parameters.map(param => {
       if (isSchemaObject(param?.schema) && param.schema.type === 'array') {
-        return `{{ if empty($body.input?.${param.name}) }} [] {{ else }} concat({{ range _, x := $body.input?.${param.name} }} "${param.name}={{x}}&" {{ end }}) {{ end }}`;
+        return `concat({{ range _, x := $body.input?.${param.name} }} "${param.name}={{x}}&" {{ end }})`;
       }
       return `"${param.name}={{$body.input?.${param.name}}}&"`;
     });
@@ -114,8 +114,7 @@ const createTransform = (
       'preferredName' in definition &&
       typeof definition.preferredName === 'string'
     ) {
-      const newPrefix =
-        prefix === '$body' ? 'item' : prefix.match(/\['(.*?)'\]/)?.[1] || '';
+      const newPrefix = prefix.match(/\['(.*?)'\]/)?.[1] || '';
       const { transform, needTransform } = createTransform(
         definition.subDefinitions,
         newPrefix,

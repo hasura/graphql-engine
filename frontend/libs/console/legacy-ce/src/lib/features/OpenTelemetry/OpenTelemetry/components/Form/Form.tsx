@@ -6,12 +6,12 @@ import {
   useConsoleForm,
   InputField,
   CheckboxesField,
-  Radio,
 } from '../../../../../new-components/Form';
 import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
 import { formSchema, tracesPropagatorSchema } from './schema';
+import { Toggle } from './components/Toggle';
 import { useResetDefaultFormValues } from './hooks/useResetDefaultFormValues';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
 import { z } from 'zod';
@@ -44,7 +44,6 @@ export function Form(props: FormProps) {
 
   const dataType: z.infer<typeof formSchema>['dataType'] = watch('dataType');
 
-  const status: z.infer<typeof formSchema>['status'] = watch('status');
   const traceType = dataType.includes('traces');
   const metricsType = dataType.includes('metrics');
   const logsType = dataType.includes('logs');
@@ -59,34 +58,12 @@ export function Form(props: FormProps) {
         onSubmit(data);
       }}
     >
-      <Radio
-        name="status"
+      <Toggle
+        name="enabled"
         label="Status"
+        writtenStatus={{ true: 'Enabled', false: 'Disabled' }}
         loading={skeletonMode}
-        orientation="horizontal"
-        options={[
-          {
-            label: 'Enabled',
-            value: 'enabled',
-          },
-          {
-            label: 'Disabled',
-            value: 'disabled',
-          },
-          {
-            label: 'Variable',
-            value: 'env',
-          },
-        ]}
       />
-      {status === 'env' && (
-        <InputField
-          name="statusVariable"
-          placeholder="An environment variable for status"
-          clearButton
-          loading={skeletonMode}
-        />
-      )}
       {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
       <div>
         <InputField
@@ -94,7 +71,7 @@ export function Form(props: FormProps) {
           label="Traces Endpoint"
           placeholder="Your OpenTelemetry traces endpoint"
           tooltip="OpenTelemetry-compliant traces receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/traces. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!traceType}
@@ -117,7 +94,7 @@ export function Form(props: FormProps) {
           label="Metrics Endpoint"
           placeholder="Your OpenTelemetry metrics endpoint"
           tooltip="OpenTelemetry-compliant metrics receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/metrics. Metrics will be sampled and exported every 15 seconds. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!metricsType}
@@ -140,7 +117,7 @@ export function Form(props: FormProps) {
           label="Logs Endpoint"
           placeholder="Your OpenTelemetry logs endpoint"
           tooltip="OpenTelemetry-compliant logs receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/logs. Environment variable templating is available using the {{VARIABLE}} tag"
-          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#endpoint"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!logsType}
@@ -165,7 +142,7 @@ export function Form(props: FormProps) {
         label="Batch Size"
         placeholder="A number between 1 and 512"
         tooltip="The maximum number of data points in an export request. The value should be between 1-512. Default value is 512."
-        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#batch-size"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#batch-size"
         clearButton
         loading={skeletonMode}
       />
@@ -175,7 +152,7 @@ export function Form(props: FormProps) {
           label="Trace Propagations"
           orientation="horizontal"
           tooltip="The specification that exchanges trace context propagation data between services and processes. The b3 propagation is enabled by default."
-          learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#trace-propagations"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#trace-propagations"
           loading={skeletonMode}
           options={tracesPropagatorSchema.options.map(option => ({
             label: option,
@@ -188,7 +165,7 @@ export function Form(props: FormProps) {
         inputFieldName="headers"
         label="Headers"
         tooltip="Additional custom headers added to export request."
-        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#headers"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#headers"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
@@ -198,7 +175,7 @@ export function Form(props: FormProps) {
         inputFieldName="attributes"
         label="Attributes"
         tooltip="Additional custom tags added to export request."
-        learnMoreLink="https://hasura.io/docs/2.0/observability/opentelemetry/graphql-engine/#attributes"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#attributes"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}

@@ -5,9 +5,10 @@ module Hasura.Backends.Postgres.Instances.NativeQueries
   )
 where
 
-import Control.Exception.Lifted (finally)
 import Data.Aeson (toJSON)
 import Data.Bifunctor
+import Data.ByteString qualified as BS
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Map.Strict (Map)
@@ -20,7 +21,8 @@ import Data.Text.Extended (commaSeparated, dquoteList, toTxt)
 import Data.Tuple (swap)
 import Database.PG.Query qualified as PG
 import Database.PostgreSQL.LibPQ qualified as PQ
-import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig, runPgSourceReadTx)
+import Hasura.Backends.Postgres.Connection qualified as PG
+import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
@@ -34,76 +36,67 @@ import Hasura.NativeQuery.Metadata
     NativeQueryMetadata (..),
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
-import Hasura.NativeQuery.Validation (DisableNativeQueryValidation (..), validateArgumentDeclaration)
+import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SourceName)
 
 -- | Prepare a native query query against a postgres-like database to validate it.
 validateNativeQuery ::
-  forall m pgKind.
+  forall m pgKind sourceConfig.
   (MonadIO m, MonadError QErr m) =>
   InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
-  DisableNativeQueryValidation ->
-  PGSourceConfig ->
+  Env.Environment ->
+  SourceName ->
+  PG.PostgresConnConfiguration ->
+  sourceConfig ->
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (InterpolatedQuery ArgumentName)
-validateNativeQuery pgTypeOidMapping disableNativeQueryValidation sourceConfig logicalModel nq = do
+validateNativeQuery pgTypeOidMapping env sourceName connConf _sourceConfig logicalModel nq = do
   validateArgumentDeclaration nq
   let nqmCode = trimQueryEnd (_nqmCode nq)
       model = nq {_nqmCode = nqmCode}
-  case disableNativeQueryValidation of
-    NeverValidateNativeQueries ->
-      pure ()
-    AlwaysValidateNativeQueries -> do
-      (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
-      description <- runCheck prepname (PG.fromText preparedQuery)
-      let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmiFields logicalModel)
-      for_ (toList returnColumns) (matchTypes description)
+  (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
+  description <- runCheck prepname (PG.fromText preparedQuery)
+  let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmiFields logicalModel)
 
+  for_ (toList returnColumns) (matchTypes description)
   pure nqmCode
   where
     -- Run stuff against the database.
     --
-    -- Prepares this query as a statement, fetches the prepared description,
-    -- and deallocates the statement.
-    runCheck :: Text -> PG.Query -> m (PG.PreparedDescription PQ.Oid)
+    -- We don't need to deallocate the prepared statement because 'withPostgresDB'
+    -- opens a new connection, runs a statement, and then closes the connection.
+    -- Since a prepared statement only lasts for the duration of the session, once
+    -- the session closes, the prepared statement is deallocated as well.
+    runCheck :: BS.ByteString -> PG.Query -> m (PG.PreparedDescription PQ.Oid)
     runCheck prepname stmt =
       liftEither
         =<< liftIO
-          ( runPgSourceReadTx
-              sourceConfig
-              ( ( do
-                    -- prepare statement
-                    PG.rawQE @_ @()
-                      ( \e ->
-                          (err400 ValidationFailed "Failed to validate query")
-                            { qeInternal = Just $ ExtraInternal $ toJSON e
-                            }
-                      )
-                      stmt
-                      []
-                      False
-                    -- extract description
-                    PG.describePreparedStatement
-                      ( \e ->
-                          (err400 ValidationFailed "Failed to validate query")
-                            { qeInternal = Just $ ExtraInternal $ toJSON e
-                            }
-                      )
-                      (Text.encodeUtf8 prepname)
-                )
-                  `finally` do
-                    -- deallocate prepare statement
-                    PG.rawQE @_ @()
-                      ( \e ->
-                          (err400 ValidationFailed "Failed to validate query")
-                            { qeInternal = Just $ ExtraInternal $ toJSON e
-                            }
-                      )
-                      (PG.fromText $ "DEALLOCATE PREPARE " <> prepname)
-                      []
-                      False
+          ( withPostgresDB
+              env
+              sourceName
+              connConf
+              ( do
+                  -- prepare statement
+                  PG.rawQE @_ @()
+                    ( \e ->
+                        (err400 ValidationFailed "Failed to validate query")
+                          { qeInternal = Just $ ExtraInternal $ toJSON e
+                          }
+                    )
+                    stmt
+                    []
+                    False
+                  -- extract description
+                  PG.describePreparedStatement
+                    ( \e ->
+                        (err400 ValidationFailed "Failed to validate query")
+                          { qeInternal = Just $ ExtraInternal $ toJSON e
+                          }
+                    )
+                    prepname
               )
           )
 
@@ -222,7 +215,7 @@ nativeQueryToPreparedStatement ::
   (MonadError QErr m) =>
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
-  m (Text, Text)
+  m (BS.ByteString, Text)
 nativeQueryToPreparedStatement logicalModel model = do
   let (preparedIQ, argumentMapping) = renameIQ $ _nqmCode model
       logimoCode :: Text
@@ -266,4 +259,4 @@ nativeQueryToPreparedStatement logicalModel model = do
     $ "Undeclared arguments: "
     <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
 
-  pure (prepname, preparedQuery)
+  pure (Text.encodeUtf8 prepname, preparedQuery)

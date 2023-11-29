@@ -32,7 +32,7 @@ class Backend:
 
 
 # Switch to a new schema using the same connection details as the given engine.
-def switch_schema(engine: sqlalchemy.engine.Engine, new_schema: str) -> sqlalchemy.engine.Engine:
+def switch_schema(engine: sqlalchemy.engine.Engine, new_schema: str):
     parsed_url = urllib.parse.urlparse(str(engine.url))
     new_url = urllib.parse.urlunparse(parsed_url._replace(path = f'/{new_schema}'))
     return sqlalchemy.engine.create_engine(new_url)

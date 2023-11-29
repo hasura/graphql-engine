@@ -654,8 +654,7 @@ data DirectiveInfo origin = DirectiveInfo
   { diName :: !Name,
     diDescription :: !(Maybe Description),
     diArguments :: ![Definition origin (InputFieldInfo origin)],
-    diLocations :: ![DirectiveLocation],
-    diIsRepeatable :: !Bool
+    diLocations :: ![DirectiveLocation]
   }
 
 -- | This type contains all the information needed to efficiently serve GraphQL

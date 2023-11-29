@@ -1,1 +1,0 @@
-fields[institution]=name,location,staff&fields[location]=city,country&fields[staff_member]=first_name,specialities&page[limit]=5

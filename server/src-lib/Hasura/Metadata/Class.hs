@@ -18,7 +18,6 @@ where
 import Control.Monad.Trans.Extended
 import Control.Monad.Trans.Managed
 import Data.Aeson
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
@@ -31,6 +30,7 @@ import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Types
+import Hasura.Session
 import Hasura.Tracing.Monad (TraceT)
 import Network.HTTP.Types qualified as HTTP
 
@@ -98,16 +98,9 @@ class (Monad m) => MonadMetadataStorage m where
   fetchMetadataResourceVersion :: m (Either QErr MetadataResourceVersion)
   fetchMetadata :: m (Either QErr MetadataWithResourceVersion)
   fetchMetadataNotifications :: MetadataResourceVersion -> InstanceId -> m (Either QErr [(MetadataResourceVersion, CacheInvalidations)])
-
+  setMetadata :: MetadataResourceVersion -> Metadata -> m (Either QErr MetadataResourceVersion)
+  notifySchemaCacheSync :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> m (Either QErr ())
   getCatalogState :: m (Either QErr CatalogState)
-
-  -- This function is used to update the metadata in the metadata storage with schema sync notifications.
-  updateMetadataAndNotifySchemaSync ::
-    InstanceId ->
-    MetadataResourceVersion ->
-    Metadata ->
-    CacheInvalidations ->
-    m (Either QErr MetadataResourceVersion)
 
   -- the `setCatalogState` function is used by the console and CLI to store its state
   -- it is disabled when maintenance mode is on
@@ -164,11 +157,10 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   fetchMetadataResourceVersion = lift fetchMetadataResourceVersion
   fetchMetadata = lift fetchMetadata
   fetchMetadataNotifications a b = lift $ fetchMetadataNotifications a b
-
+  setMetadata r = lift . setMetadata r
+  notifySchemaCacheSync a b c = lift $ notifySchemaCacheSync a b c
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
-
-  updateMetadataAndNotifySchemaSync a b c d = lift $ updateMetadataAndNotifySchemaSync a b c d
 
   fetchSourceIntrospection = lift . fetchSourceIntrospection
   storeSourceIntrospection a b = lift $ storeSourceIntrospection a b

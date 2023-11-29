@@ -83,7 +83,7 @@ jdbc:mysql://localhost:4533/mysqltest?user=abc&password=pqr        # assuming My
 ```
 
 For more information see
-[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/en/connector-j-reference-jdbc-url-format.html).
+[MySQL Connection URL syntax](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html).
 
 Click `Connect Database`.
 
@@ -92,13 +92,6 @@ Click `Connect Database`.
 Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
 connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
 database's driver's documentation.
-
-:::
-
-:::info Running MySQL locally?
-
-If so, remember that your database will only be accessible to the outside internet if you tunnel your connection using a
-service like [ngrok](https://ngrok.com).
 
 :::
 

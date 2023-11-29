@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.RQL.IR.Value
   ( UnpreparedValue (..),
     Provenance (..),
@@ -7,12 +9,12 @@ module Hasura.RQL.IR.Value
   )
 where
 
-import Hasura.Authentication.Session (SessionVariable)
 import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.Session (SessionVariable)
 
 -- | Where did this variable come from?
 data Provenance
@@ -37,12 +39,14 @@ data UnpreparedValue (b :: BackendType)
     UVSessionVar (SessionVarType b) SessionVariable
 
 deriving instance
-  ( Backend b
+  ( Backend b,
+    Eq (ColumnValue b)
   ) =>
   Eq (UnpreparedValue b)
 
 deriving instance
-  ( Backend b
+  ( Backend b,
+    Show (ColumnValue b)
   ) =>
   Show (UnpreparedValue b)
 

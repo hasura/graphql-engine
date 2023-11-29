@@ -39,7 +39,6 @@ import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.Authentication.Role (RoleName)
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -50,6 +49,7 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles
 import Hasura.Table.Cache (TableConfig (..), emptyTableConfig)
 
 -- | Parse a list of objects into a map from a derived key,

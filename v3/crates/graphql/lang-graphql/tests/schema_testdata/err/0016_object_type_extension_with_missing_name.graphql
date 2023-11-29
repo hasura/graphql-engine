@@ -1,5 +1,0 @@
-extend type {
-    name: String
-    age: Int
-    picture: Url
-}

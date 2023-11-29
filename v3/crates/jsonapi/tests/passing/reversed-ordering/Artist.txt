@@ -1,1 +1,0 @@
-fields[Artist]=ArtistId,Name&page[offset]=0&page[limit]=5&sort=-Name

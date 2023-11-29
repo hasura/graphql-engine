@@ -3,7 +3,6 @@
 -- | Helper functions for HTTP requests.
 module Harness.Http
   ( get_,
-    get,
     getWithStatus,
     post,
     postValue,
@@ -25,7 +24,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Text.Lazy qualified as TL
 import GHC.Stack
-import Hasura.Prelude hiding (get)
+import Hasura.Prelude
 import Network.HTTP.Client.Conduit qualified as Http.Conduit
 import Network.HTTP.Simple qualified as Http
 import Network.HTTP.Types qualified as Http
@@ -37,21 +36,16 @@ import Text.Pretty.Simple (pShow)
 -- | Performs get, doesn't return the result. Simply throws if there's
 -- not a 200 response.
 get_ :: (HasCallStack) => String -> IO ()
-get_ = void . getWithStatus [200]
-
--- | Performs get, returns the response body as 'Text'. Throws if there's not a
--- 200 response.
-get :: (HasCallStack) => String -> IO Text
-get = getWithStatus [200]
+get_ = getWithStatus [200]
 
 -- | Performs get, doesn't return the result. Simply throws if there's
 -- not an expected response status code.
-getWithStatus :: (HasCallStack) => [Int] -> String -> IO Text
+getWithStatus :: (HasCallStack) => [Int] -> String -> IO ()
 getWithStatus acceptableStatusCodes url =
   Http.withResponse @_ @IO (fromString url) \response -> do
     let actualStatusCode = Http.getResponseStatusCode response
-    body <- runConduit $ Http.getResponseBody response .| foldMapC id
     unless (actualStatusCode `elem` acceptableStatusCodes) $ do
+      body <- runConduit $ Http.getResponseBody response .| foldMapC id
       fail
         $ unlines
           [ "The HTTP response had an unexpected response code.",
@@ -61,7 +55,6 @@ getWithStatus acceptableStatusCodes url =
             "Body:",
             T.unpack $ T.decodeUtf8 body
           ]
-    pure $ T.decodeUtf8 body
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.

@@ -24,7 +24,7 @@ export const getTableDisplayName = (table: Table): string => {
   }
 
   if (typeof table === 'object' && isSchemaTable(table)) {
-    return [table.schema, table.name].join('.');
+    return table.name;
   }
 
   if (isObject(table)) {

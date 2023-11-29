@@ -31,5 +31,3 @@ yarn-error.log*
 .tool-versions
 
 spell_check_results.txt
-
-.env*

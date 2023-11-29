@@ -23,9 +23,9 @@ import Data.Text.Extended ((<>>))
 import Harness.Http qualified as Http
 import Harness.Test.TestResource (AcquiredResource (..), Managed, mkTestResource)
 import Harness.TestEnvironment (Server (..), serverUrl)
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error (iResultToMaybe)
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.Server.Utils (executeJSONPath, quoteRegex)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Socket qualified as Socket

@@ -1,6 +1,0 @@
-query ($id: int4! = null) {
-  AuthorByID(author_id: $id) {
-    author_id
-    first_name
-  }
-}

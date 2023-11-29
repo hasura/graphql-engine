@@ -1,38 +1,38 @@
 {
+  "__elements": {},
   "__inputs": [
     {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
       "description": "",
-      "type": "datasource",
+      "label": "Prometheus",
+      "name": "DS_PROMETHEUS",
       "pluginId": "prometheus",
-      "pluginName": "Prometheus"
+      "pluginName": "Prometheus",
+      "type": "datasource"
     }
   ],
-  "__elements": {},
   "__requires": [
     {
-      "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.4.2"
+      "type": "grafana",
+      "version": "9.5.2"
     },
     {
-      "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
+      "type": "datasource",
       "version": "1.0.0"
     },
     {
-      "type": "panel",
       "id": "stat",
       "name": "Stat",
+      "type": "panel",
       "version": ""
     },
     {
-      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
+      "type": "panel",
       "version": ""
     }
   ],
@@ -110,6 +110,7 @@
         "y": 0
       },
       "id": 6,
+      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -117,17 +118,13 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -202,6 +199,7 @@
         "y": 0
       },
       "id": 7,
+      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -209,17 +207,13 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -227,8 +221,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (job, source_name) (hasura_source_health{job=~\"$job\"})",
-          "legendFormat": "{{source_name}} ({{job}})",
+          "expr": "max by (source_name) (hasura_source_health{job=~\"$job\"})",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
@@ -268,6 +262,7 @@
         "y": 0
       },
       "id": 9,
+      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "none",
@@ -275,17 +270,13 @@
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "textMode": "auto"
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -315,7 +306,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -329,7 +319,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 4,
@@ -371,14 +360,10 @@
         "y": 6
       },
       "id": 4,
+      "links": [],
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max",
-            "min"
-          ],
+          "calcs": ["mean", "lastNotNull", "max", "min"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -419,7 +404,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -433,7 +417,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineStyle": {
               "fill": "solid"
@@ -497,7 +480,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,role,conn_info,source_name) (hasura_postgres_connections{job=~\"$job\",instance=~\"$instance\"})",
+          "expr": "sum by (role,conn_info,source_name) (hasura_postgres_connections{job=~\"$job\",instance=~\"$instance\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -508,17 +491,16 @@
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 39,
-  "tags": [
-    "hasura"
-  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["hasura"],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
           "text": "Prometheus",
-          "value": "PBFA97CFB590B2093"
+          "value": "Prometheus"
         },
         "description": "Prometheus source",
         "hide": 0,
@@ -602,21 +584,11 @@
       "2h",
       "1d"
     ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
   },
   "timezone": "browser",
   "title": "Hasura Health",
   "uid": "f477a6f2-95ce-4bf8-9483-7af6879f48d2",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

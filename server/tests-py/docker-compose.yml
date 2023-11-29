@@ -1,5 +1,7 @@
 # These services are brought up in 'run.sh' (see that file)
 
+version: "3.6"
+
 name: hge-python-tests
 
 services:
@@ -25,8 +27,3 @@ services:
     extends:
       file: ../../docker-compose/databases.yaml
       service: sqlserver
-
-  redis:
-    image: redis:5
-    ports:
-      - 6379

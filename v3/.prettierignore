@@ -1,3 +1,0 @@
-crates/custom-connector/data/*.json
-crates/graphql/lang-graphql/tests/**/*.graphql
-flake.lock

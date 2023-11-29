@@ -31,7 +31,6 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt, (<<>), (<>>))
 import Data.Validation (Validation (..), toEither)
-import Hasura.Authentication.User (UserInfo)
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (fromErrorMessage)
 import Hasura.GraphQL.Execute.Remote
@@ -47,6 +46,7 @@ import Hasura.RQL.IR.RemoteSchema (convertSelectionSet)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RemoteSchema.SchemaCache
+import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -70,17 +70,17 @@ makeRemoteSchemaJoinCall ::
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
 makeRemoteSchemaJoinCall networkFunction userInfo remoteSchemaJoin jaFieldName joinArguments = do
-  Tracing.newSpan ("Remote join to remote schema for field " <>> jaFieldName) Tracing.SKClient do
+  Tracing.newSpan ("Remote join to remote schema for field " <>> jaFieldName) do
     -- step 1: construct the internal intermediary representation
     maybeRemoteCall <-
-      Tracing.newSpan "Resolve execution step for remote join field" Tracing.SKInternal
+      Tracing.newSpan "Resolve execution step for remote join field"
         $ buildRemoteSchemaCall remoteSchemaJoin joinArguments userInfo
     -- if there actually is a remote call:
     for maybeRemoteCall \remoteCall -> do
       -- step 2: execute it over the network
       responseValue <- executeRemoteSchemaCall networkFunction remoteCall
       -- step 3: build the join index
-      Tracing.newSpan "Build remote join index" Tracing.SKInternal
+      Tracing.newSpan "Build remote join index"
         $ buildJoinIndex remoteCall responseValue
 
 -------------------------------------------------------------------------------

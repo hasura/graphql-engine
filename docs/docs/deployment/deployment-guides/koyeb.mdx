@@ -32,7 +32,7 @@ To deploy Hasura to Koyeb quickly, click the button below:
 
 [![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?name=hasura-demo&type=docker&image=hasura/graphql-engine&env[HASURA_GRAPHQL_DATABASE_URL]=CHANGE_ME&env[HASURA_GRAPHQL_ENABLE_CONSOLE]=true&env[HASURA_GRAPHQL_ADMIN_SECRET]=CHANGE_ME&ports=8080;http;/)
 
-On the configuration screen, set the `HASURA_METADATA_DATABASE_URL` (depicted as `HASURA_GRAPHQL_ENGINE_DATABASE_URL` in this screenshot) environment variable to the connection string for your database and the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable to a secret value to access the Hasura Console.
+On the configuration screen, set the `HASURA_GRAPHQL_DATABASE_URL` environment variable to the connection string for your database and the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable to a secret value to access the Hasura Console.
 
 Click the **Deploy** button when you are finished.  When the deployment completes, you can [access the Hasura Console](#access-the-hasura-console).
 
@@ -52,10 +52,9 @@ On the [Koyeb control panel](https://app.koyeb.com/), click the **Create App** b
 
 4. In the **Environment variables** section, configure the environment variables required to properly run the Hasura GraphQL Engine:
 
-   - `HASURA_METADATA_DATABASE_URL`: Hasura requires a PostgreSQL database to store its metadata.  This can be the same database as `PG_DATABASE_URL` or a different one.  We strongly recommend using a secret to store this value.
-   - `PG_DATABASE_URL`: The environment variable containing the PostgreSQL URL, i.e.  `postgres://<user>:<password>@<host>:<port>/<database>`. Since this value contains sensitive information, select the "Secret" type.  Secrets are encrypted at rest and are ideal for storing sensitive data like API keys, OAuth tokens, etc.  Choose "Create secret" in the "Value" drop-down menu and enter the secret value in the "Create secret" form.
+   - `HASURA_GRAPHQL_DATABASE_URL`: The environment variable containing the PostgreSQL URL, i.e.  `postgres://<user>:<password>@<host>:<port>/<database>`. Since this value contains sensitive information, select the "Secret" type.  Secrets are encrypted at rest and are ideal for storing sensitive data like API keys, OAuth tokens, etc.  Choose "Create secret" in the "Value" drop-down menu and enter the secret value in the "Create secret" form.
    - `HASURA_GRAPHQL_ENABLE_CONSOLE`: Set to `true`. This will expose and allow you to access the Hasura Console.
-   - `HASURA_GRAPHQL_ADMIN_SECRET`: The secret to access the Hasura Console. As with the other environment variables, we strongly recommend using a secret to store this value.
+   - `HASURA_GRAPHQL_ADMIN_SECRET`: The secret to access the Hasura Console. As with the `HASURA_GRAPHQL_DATABASE_URL`, we strongly recommend using a secret to store this value.
 
 5. In the **Exposing your service** section, change the `Port` from `80` to `8080` to match the port that the `hasura/graphql-engine` Docker image app listens on. Koyeb uses this setting to perform application health checks and to properly route incoming HTTP requests. If you want the Hasura GraphQL Engine to be available on a specific path, you can change the default one (`/`) to the path of your choice.
 

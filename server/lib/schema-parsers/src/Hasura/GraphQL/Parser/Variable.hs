@@ -98,22 +98,10 @@ instance HasName Variable where
 
 data VariableInfo
   = VIRequired Name
-  | -- | The difference between a nullable variable with no default and a
-    -- variable with a default value of @null@ can be illustrated plainly with
-    -- a mutation:
-    --
-    -- @
-    --     mutation($unset: String) {
-    --       update_author(_set: { name: $unset }) {
-    --         affected_rows
-    --       }
-    --     }
-    -- @
-    --
-    -- If we don't set a value for @$unset@, this should be a no-op that
-    -- returns zero affected rows. However, with a default value of @null@,
-    -- this would update every author name to be @null@.
-    VIOptional Name (Maybe (Value Void))
+  | -- | Unlike fields (see 'InputFieldInfo'), nullable variables with no
+    -- default value are indistinguishable from variables with a default value
+    -- of null, so we don’t distinguish those cases here.
+    VIOptional Name (Value Void)
   deriving (Show, Eq, Generic, Ord, TH.Lift)
 
 instance Hashable VariableInfo

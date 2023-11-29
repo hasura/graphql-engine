@@ -13,7 +13,6 @@ import Data.Ratio ((%))
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Trie qualified as Trie
-import Hasura.Authentication.Session (SessionVariable, mkSessionVariable)
 import Hasura.Base.Error (QErr (..), QErrExtra (..))
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.Namespace (NamespacedField (..), namespacedField)
@@ -32,6 +31,7 @@ import Hasura.RemoteSchema.SchemaCache
     getTypeName,
   )
 import Hasura.Server.Utils qualified as Utils
+import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as GraphQL
 import Network.HTTP.Types qualified as HTTP.Types
@@ -39,6 +39,16 @@ import Test.QuickCheck.Extended
 
 -------------------------------------------------------------------------------
 -- Orphan instances for third-party libraries types
+
+instance Arbitrary Text where
+  arbitrary = T.pack <$> listOf arbitraryUnicodeChar
+
+instance
+  (Arbitrary k, Hashable k, Arbitrary v) =>
+  Arbitrary (HashMap k v)
+  where
+  arbitrary = HashMap.fromList <$> arbitrary
+  shrink = fmap HashMap.fromList . shrink . HashMap.toList
 
 instance
   (Arbitrary k, Hashable k, Arbitrary v) =>
@@ -231,9 +241,9 @@ instance (Arbitrary a) => Arbitrary (PathComponent a) where
       ]
 
 instance Arbitrary SessionVariable where
-  arbitrary =
-    arbitrary `suchThatMap` \name ->
-      mkSessionVariable $ Utils.sessionVariablePrefix <> name
+  arbitrary = do
+    name <- arbitrary
+    pure $ mkSessionVariable $ Utils.sessionVariablePrefix <> name
 
 instance Arbitrary IntrospectionResult where
   arbitrary = do

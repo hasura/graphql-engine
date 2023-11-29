@@ -49,7 +49,7 @@ command on `graphql-engine` itself. The way to execute this command is
 to run:
 
 ```bash
-docker run -e HASURA_METADATA_DATABASE_URL=$DATABASE_URL hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>
+docker run -e HASURA_GRAPHQL_DATABASE_URL=$DATABASE_URL hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>
 ```
 
 You need to use a newer version of `graphql-engine` to downgrade to an

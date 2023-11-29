@@ -7,10 +7,10 @@ where
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Prelude
-import Hasura.QueryTags
+import Hasura.QueryTags (QueryTagsComment (_unQueryTagsComment))
 
 withQueryTags :: ODBC.Query -> QueryTagsComment -> ODBC.Query
-withQueryTags = addQueryTagsCommentGeneral (<>) ODBC.rawUnescapedText
+withQueryTags query queryTags = query <> ODBC.rawUnescapedText (_unQueryTagsComment queryTags)
 
 withQueryTagsPrinter :: TQ.Printer -> QueryTagsComment -> TQ.Printer
-withQueryTagsPrinter = addQueryTagsCommentGeneral (TQ.<+>) TQ.fromRawUnescapedText
+withQueryTagsPrinter printer queryTags = printer TQ.<+> TQ.fromRawUnescapedText (_unQueryTagsComment queryTags)

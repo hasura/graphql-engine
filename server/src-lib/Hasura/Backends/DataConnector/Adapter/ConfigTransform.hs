@@ -16,7 +16,6 @@ import Data.List (isPrefixOf)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
 import Data.Text.Extended qualified as Text
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.DataConnector.API (ConfigSchemaResponse)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (..), SourceConfig (..))
@@ -24,6 +23,7 @@ import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (..), QErr, internalError, throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common as Common
+import Hasura.Session (SessionVariables)
 import Kriti.Error qualified as Kriti
 import System.Directory (canonicalizePath)
 

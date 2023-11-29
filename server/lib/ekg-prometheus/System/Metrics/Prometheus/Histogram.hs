@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-
 The module is based on the System.Metrics.Prometheus.Prometheus.Metric.Histogram
 module of the prometheus-2.2.3 package:
@@ -44,7 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module System.Metrics.Prometheus.Histogram
   ( Histogram,
     HistogramSample (..),
-    histLastBucketCount,
     UpperBound,
     new,
     read,
@@ -65,15 +63,9 @@ type UpperBound = Double -- Inclusive upper bounds
 data HistogramSample = HistogramSample
   { histBuckets :: !(Map UpperBound Int64), -- Non-cumulative counts
     histSum :: !Double,
-    -- | This count contains the sum of all the individual 'histBucket' counts plus
-    -- the count of the last overflow (upper bound of infinity) bucket.
     histCount :: !Int64
   }
   deriving (Eq, Show)
-
--- | The count of the implicit last bucket, with upper bound of positive infinity
-histLastBucketCount :: HistogramSample -> Int64
-histLastBucketCount HistogramSample {histBuckets, histCount} = histCount - sum histBuckets
 
 -- | Create a new, empty histogram. The buckets of the histogram are fixed and
 -- defined by the given upper bounds.
@@ -99,12 +91,10 @@ observe (Histogram histRef) x =
           HistogramSample
             { histBuckets = updateBuckets x (histBuckets histData),
               histSum = histSum histData + x,
-              -- NOTE: we increment even if 'updateBuckets' was a noop:
               histCount = histCount histData + 1
             }
      in (newHistData, ())
 
--- | A noop when @x@ is greater than the last bucket
 updateBuckets :: Double -> Map UpperBound Int64 -> Map UpperBound Int64
 updateBuckets x buckets =
   case Map.lookupGE x buckets of

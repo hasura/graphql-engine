@@ -54,7 +54,7 @@ genSchemaFilters =
 
 genDetailLevel :: (MonadGen m) => m DetailLevel
 genDetailLevel =
-  Gen.element ([Everything, BasicInfo] :: [DetailLevel])
+  Gen.element [Everything, BasicInfo]
 
 genSchemaResponse :: Gen SchemaResponse
 genSchemaResponse = do

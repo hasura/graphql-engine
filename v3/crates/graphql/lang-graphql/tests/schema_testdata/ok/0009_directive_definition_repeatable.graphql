@@ -1,1 +1,0 @@
-directive @example(isTreat: Boolean, treatKind: String) repeatable on FIELD | MUTATION

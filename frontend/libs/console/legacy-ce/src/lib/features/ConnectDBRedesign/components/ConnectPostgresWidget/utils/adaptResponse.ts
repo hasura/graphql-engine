@@ -43,7 +43,6 @@ export const adaptPostgresConnectionInfo = (
     databaseUrl: adaptDatabaseUrl(connectionInfo.database_url),
     poolSettings: {
       totalMaxConnections: connectionInfo.pool_settings?.total_max_connections,
-      maxConnections: connectionInfo.pool_settings?.max_connections,
       idleTimeout: connectionInfo.pool_settings?.idle_timeout,
       retries: connectionInfo.pool_settings?.retries,
       poolTimeout: connectionInfo.pool_settings?.pool_timeout,

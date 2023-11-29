@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_operand_object_type/metadata.json
----
-Error: the aggregate expression Invoice_aggregate_exp (in subgraph default) specifies an operand object type that cannot be found: Invoice (in subgraph default)

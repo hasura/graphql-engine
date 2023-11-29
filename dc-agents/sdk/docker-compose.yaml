@@ -1,5 +1,7 @@
 # Based on the template from https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
 
+version: "3.9"
+
 services:
   reference-agent:
     image: "hasura/dc-reference-agent:${HASURA_VERSION}"

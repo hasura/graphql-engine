@@ -1,3 +1,0 @@
-extend interface ValuedEntity @skip {
-    value: Int
-}

@@ -19,7 +19,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Int (Int64)
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -32,6 +31,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 
@@ -111,9 +111,8 @@ type ActionWebhookResponse = J.Value
 
 data ActionRequestInfo = ActionRequestInfo
   { _areqiUrl :: !Text,
-    _areqiAction :: !ActionContext,
-    _areqiInput :: !J.Value,
-    _areqiRequestQuery :: !(Maybe GQLQueryText),
+    _areqiBody :: !J.Value,
+    _areqiHeaders :: ![HeaderConf],
     _areqiTransformedRequest :: !(Maybe HTTP.Request)
   }
   deriving (Show, Generic)
@@ -155,8 +154,7 @@ data ActionHandlerLog = ActionHandlerLog
     _ahlRequestSize :: !Int64,
     _ahlTransformedRequestSize :: !(Maybe Int64),
     _ahlResponseSize :: !Int64,
-    _ahlActionName :: !ActionName,
-    _ahlActionType :: !ActionType
+    _ahlActionName :: !ActionName
   }
   deriving (Show, Generic)
 

@@ -18,7 +18,6 @@ module Hasura.Backends.MSSQL.DDL
 where
 
 import Data.Aeson
-import Hasura.Authentication.Session (SessionVariable, isSessionVariable, unsafeMkSessionVariable, userIdHeader)
 import Hasura.Backends.MSSQL.DDL.BoolExp as M
 import Hasura.Backends.MSSQL.DDL.Source as M
 import Hasura.Backends.MSSQL.Types.Internal qualified as MT
@@ -35,7 +34,8 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
-import Hasura.Server.Utils (isReqUserId)
+import Hasura.Server.Utils
+import Hasura.Session
 import Hasura.StoredProcedure.Types
 import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -94,7 +94,7 @@ parseCollectableType ::
   m (PartialSQLExp 'MSSQL)
 parseCollectableType collectableType = \case
   String t
-    | isSessionVariable t -> pure . mkTypedSessionVar collectableType $ unsafeMkSessionVariable t
+    | isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
     | isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->

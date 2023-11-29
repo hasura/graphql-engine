@@ -1,4 +1,3 @@
-import { PostgresConfiguration } from '../../../../hasura-metadata-types';
 import { DatabaseConnection } from '../../../types';
 import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization/utils/generateRequest';
 import { PostgresConnectionSchema } from '../schema';
@@ -25,7 +24,6 @@ export const generateConnectionInfo = (
         },
   pool_settings: {
     total_max_connections: values.poolSettings?.totalMaxConnections,
-    max_connections: values.poolSettings?.maxConnections,
     idle_timeout: values.poolSettings?.idleTimeout,
     retries: values.poolSettings?.retries,
     pool_timeout: values.poolSettings?.poolTimeout,
@@ -53,13 +51,9 @@ export const generateConnectionInfo = (
 export const generatePostgresRequestPayload = ({
   driver,
   values,
-  connectionTemplate,
-  connectionSet,
 }: {
   driver: string;
   values: PostgresConnectionSchema;
-  connectionTemplate?: PostgresConfiguration['connection_template'];
-  connectionSet?: PostgresConfiguration['connection_set'];
 }): DatabaseConnection => {
   const payload = {
     driver,
@@ -73,8 +67,6 @@ export const generatePostgresRequestPayload = ({
           generateConnectionInfo(readReplica)
         ),
         extensions_schema: values.configuration.extensionSchema,
-        connection_template: connectionTemplate,
-        connection_set: connectionSet,
       },
       customization: generateGraphQLCustomizationInfo(
         values.customization ?? {}

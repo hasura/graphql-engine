@@ -12,6 +12,7 @@ module Harness.Quoter.Yaml
 where
 
 import Control.Exception.Safe (Exception, impureThrow, throwM)
+import Control.Monad.Identity
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson qualified as J
 import Data.Conduit (runConduitRes, (.|))

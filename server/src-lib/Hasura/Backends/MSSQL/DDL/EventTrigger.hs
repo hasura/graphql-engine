@@ -49,7 +49,6 @@ import Data.Time.Format.ISO8601 (iso8601Show)
 import Database.MSSQL.Transaction (TxE, TxET, multiRowQueryE, singleRowQueryE, unitQueryE)
 import Database.ODBC.SQLServer (Datetime2 (..), Datetimeoffset (..), rawUnescapedText, toSql)
 import Database.ODBC.TH qualified as ODBC
-import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.DDL.Source.Version
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
@@ -67,19 +66,20 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Types
 import Hasura.Server.Types
+import Hasura.Session
 import Hasura.Table.Cache (PrimaryKey (..))
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
 
 -- | creates a SQL Values list from haskell list  (('123-abc'), ('456-vgh'), ('234-asd'))
-generateSQLValuesFromList :: (Functor f, Foldable f, ToTxt a) => f a -> Text
+generateSQLValuesFromList :: (ToTxt a) => [a] -> Text
 generateSQLValuesFromList = generateSQLValuesFromListWith (\t -> "'" <> toTxt t <> "'")
 
-generateSQLValuesFromListWith :: (Functor f, Foldable f) => (a -> Text) -> f a -> Text
+generateSQLValuesFromListWith :: (a -> Text) -> [a] -> Text
 generateSQLValuesFromListWith f events = commaSeparated values
   where
-    values = fmap (\e -> "(" <> f e <> ")") events
+    values = map (\e -> "(" <> f e <> ")") events
 
 fetchUndeliveredEvents ::
   (MonadIO m, MonadError QErr m) =>
@@ -905,16 +905,16 @@ mkUpdateTriggerQuery
 addCleanupSchedules ::
   (MonadIO m, MonadError QErr m) =>
   MSSQLSourceConfig ->
-  NonEmpty (TriggerName, AutoTriggerLogCleanupConfig) ->
+  [(TriggerName, AutoTriggerLogCleanupConfig)] ->
   m ()
-addCleanupSchedules sourceConfig triggersWithCleanupConfig =
-  unless (null triggersWithCleanupConfig) $ do
+addCleanupSchedules sourceConfig triggersWithcleanupConfig =
+  unless (null triggersWithcleanupConfig) $ do
     currTimeUTC <- liftIO getCurrentTime
     let currTime = utcToZonedTime utc currTimeUTC
-        triggerNames = fmap fst triggersWithCleanupConfig
+        triggerNames = map fst triggersWithcleanupConfig
     allScheduledCleanupsInDB <- liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
     let triggerMap = HashMap.fromList $ allScheduledCleanupsInDB
-        scheduledTriggersAndTimestampsMaybe =
+        scheduledTriggersAndTimestamps =
           mapMaybe
             ( \(tName, cConfig) ->
                 let lastScheduledTime = case HashMap.lookup tName triggerMap of
@@ -926,18 +926,15 @@ addCleanupSchedules sourceConfig triggersWithCleanupConfig =
                       )
                       lastScheduledTime
             )
-            (toList triggersWithCleanupConfig)
-    fmap (fromMaybe ())
-      $ for
-        (nonEmpty scheduledTriggersAndTimestampsMaybe)
-        ( liftEitherM
-            . liftIO
-            . runMSSQLSourceWriteTx sourceConfig
-            . insertEventTriggerCleanupLogsTx
-        )
+            triggersWithcleanupConfig
+    unless (null scheduledTriggersAndTimestamps)
+      $ liftEitherM
+      $ liftIO
+      $ runMSSQLSourceWriteTx sourceConfig
+      $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the given trigger name and schedules
-insertEventTriggerCleanupLogsTx :: NonEmpty (TriggerName, [Datetimeoffset]) -> TxET QErr IO ()
+insertEventTriggerCleanupLogsTx :: [(TriggerName, [Datetimeoffset])] -> TxET QErr IO ()
 insertEventTriggerCleanupLogsTx triggerNameWithSchedules =
   unitQueryE
     HGE.defaultMSSQLTxErrorHandler
@@ -958,10 +955,10 @@ insertEventTriggerCleanupLogsTx triggerNameWithSchedules =
                 )
                 schedules
           )
-          (toList triggerNameWithSchedules)
+          triggerNameWithSchedules
 
 -- | Get the last scheduled timestamp for a given event trigger name
-selectLastCleanupScheduledTimestamp :: NonEmpty TriggerName -> TxET QErr IO [(TriggerName, (Int, ZonedTime))]
+selectLastCleanupScheduledTimestamp :: [TriggerName] -> TxET QErr IO [(TriggerName, (Int, ZonedTime))]
 selectLastCleanupScheduledTimestamp triggerNames =
   map
     ( \(triggerName, count, lastScheduledTime) ->
@@ -979,7 +976,7 @@ selectLastCleanupScheduledTimestamp triggerNames =
         |]
       )
   where
-    triggerNamesValues = generateSQLValuesFromListWith triggerNameToTxt triggerNames
+    triggerNamesValues = generateSQLValuesFromList $ map triggerNameToTxt triggerNames
 
 deleteAllScheduledCleanupsTx :: TriggerName -> TxE QErr ()
 deleteAllScheduledCleanupsTx triggerName = do

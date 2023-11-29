@@ -4,7 +4,6 @@ import json
 import inspect
 import os
 import pytest
-import redis
 import socket
 import sqlalchemy
 import subprocess
@@ -261,7 +260,7 @@ def add_source(
                 },
             })))
 
-            engine: sqlalchemy.engine.Engine = sqlalchemy.create_engine(os.environ[env_var])  # type: ignore
+            engine = sqlalchemy.create_engine(os.environ[env_var])
             return fixtures.postgres.Backend(name, engine)
 
         return impl
@@ -368,18 +367,6 @@ def hge_key(
         return env_key
 
 @pytest.fixture(scope='class')
-@pytest.mark.early
-def enterprise_edition(
-    hge_fixture_env: dict[str, str],
-    pro_tests_fixtures,  # only run when pro tests are enabled
-    redis_url,  # set up HGE with a Redis URL
-) -> Optional[str]:
-    key = os.getenv('HASURA_GRAPHQL_EE_LICENSE_KEY')
-    if not key:
-        raise Exception('This test requires that an Enterprise Edition license key is provided via the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable.')
-    hge_fixture_env['HASURA_GRAPHQL_EE_LICENSE_KEY'] = key
-
-@pytest.fixture(scope='class')
 def hge_server(
     request: pytest.FixtureRequest,
     hge_bin: Optional[str],
@@ -452,30 +439,6 @@ def hge_ctx(
     source_backend,
 ):
     return hge_ctx_fixture
-
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def redis_url(
-    request: pytest.FixtureRequest,
-    hge_fixture_env: dict[str, str],
-):
-    redis_url: Optional[str] = request.config.getoption('--redis-url')  # type: ignore
-    if not redis_url:
-        raise Exception('No Redis URL provided.')
-    hge_fixture_env['HASURA_GRAPHQL_REDIS_URL'] = redis_url
-    return redis_url
-
-@pytest.fixture(scope='class')
-def redis_connection(redis_url):
-    with redis.from_url(redis_url) as connection:
-        yield connection
-
-@pytest.fixture(scope='function')
-def flush_redis(redis_connection):
-    """
-    Flush Redis before each test.
-    """
-    redis_connection.flushall()
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
@@ -572,9 +535,8 @@ def webhook_server(
     return HGECtxWebhook(tls_trust=tls_trust)
 
 @pytest.fixture(scope='class')
-@pytest.mark.early
-def pro_tests_fixtures(request: pytest.FixtureRequest):
-    if not request.config.getoption('--pro-tests'):
+def pro_tests_fixtures(hge_ctx):
+    if not hge_ctx.pro_tests:
         pytest.skip('These tests are meant to be run with --pro-tests set')
 
 @pytest.fixture(scope='class')

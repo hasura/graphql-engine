@@ -33,10 +33,10 @@ const Modal = props => {
 
   const getLinkToOperationsPage = (withError = false) => {
     /* Get the groupBys */
-    if (groupBys?.length > 0) {
+    if (groupBys.length > 0) {
       const filters = groupBys.map(n => {
         const getValue = () => {
-          const valLen = d[getActualIfAliased(n)]?.length;
+          const valLen = d[getActualIfAliased(n)].length;
           /* Return appropriate
            * values so as to link to operations
            * with right filters applied
@@ -95,7 +95,7 @@ const Modal = props => {
       if (error) {
         return 'Failed to fetch query log';
       }
-      if (data && data?.operation_logs?.length > 0) {
+      if (data && data.operation_logs.length > 0) {
         const { query } = data.operation_logs[0];
         const renderOperationQuery = () => {
           const renderItem = [];

@@ -60,7 +60,6 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.URL.Template (mkPlainTemplate, printTemplate)
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
@@ -70,6 +69,7 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers
 import Hasura.Server.Types (TriggersErrorLogLevelStatus, isTriggersErrorLogLevelEnabled)
+import Hasura.Session (SessionVariables)
 import Hasura.Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 

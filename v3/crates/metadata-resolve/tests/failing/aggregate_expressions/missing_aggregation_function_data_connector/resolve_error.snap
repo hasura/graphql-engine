@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/missing_aggregation_function_data_connector/metadata.json
----
-Error: the aggregate expression Int4_aggregate_exp (in subgraph default) defines an aggregation function mapping to an unknown data connector: mypg (in subgraph default)

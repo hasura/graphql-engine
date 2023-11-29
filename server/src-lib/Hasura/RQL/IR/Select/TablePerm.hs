@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Arbitrarily putting leaves from RQL.IR.Select into own files to
 -- parallelise compilation
@@ -24,19 +25,19 @@ data TablePermG (b :: BackendType) v = TablePerm
 
 deriving stock instance
   ( Backend b,
-    Eq v
+    Eq (AnnBoolExp b v)
   ) =>
   Eq (TablePermG b v)
 
 deriving stock instance
   ( Backend b,
-    Show v
+    Show (AnnBoolExp b v)
   ) =>
   Show (TablePermG b v)
 
 instance
   ( Backend b,
-    Hashable v
+    Hashable (AnnBoolExp b v)
   ) =>
   Hashable (TablePermG b v)
 

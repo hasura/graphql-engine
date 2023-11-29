@@ -1,3 +1,0 @@
-query MyQuery {
-  getActorNamesByMovieId(movie_id: 1)
-}

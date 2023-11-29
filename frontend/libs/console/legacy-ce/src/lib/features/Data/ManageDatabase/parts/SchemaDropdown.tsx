@@ -87,6 +87,10 @@ export function SchemaDropdown({
     });
   };
 
+  const handlePermissionsSummary = (schema: string) => {
+    push(`data/${dataSourceName}/schema/${schema}/permissions`);
+  };
+
   const handleCreateTable = (schema: string) => {
     push(`data/${dataSourceName}/schema/${schema}/table/add`);
   };
@@ -141,7 +145,17 @@ export function SchemaDropdown({
           </DropDown.BasicItem>
         ))}
       </DropDown.SubMenu>
-
+      <DropDown.SubMenu label="Permissions Summary">
+        <DropDown.Label>Choose Schema To View...</DropDown.Label>
+        {schemas.map(name => (
+          <DropDown.BasicItem
+            onClick={() => handlePermissionsSummary(name)}
+            key={name}
+          >
+            {name}
+          </DropDown.BasicItem>
+        ))}
+      </DropDown.SubMenu>
       <DropDown.Label>Tables</DropDown.Label>
       <DropDown.SubMenu
         label={

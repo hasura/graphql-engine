@@ -47,9 +47,7 @@ export default class QueryAnalyser extends React.Component {
       .then(data => {
         // todo: unsure if this guard is necessary. Replaces previous guard that would silently return
         // this was previously necessary as the analyze fetcher would handle errors without throwing
-        const isNotValidData =
-          data && data[0]?.plan === null && data[0]?.sql === null;
-        if (isNotValidData) {
+        if (!data) {
           console.error(
             'Missing data from analyze result. This should never happen.'
           );
@@ -72,7 +70,7 @@ export default class QueryAnalyser extends React.Component {
       <Modal
         className="flex flex-col p-10 rounded-xl w-full z-[101]"
         overlayClassName="fixed top-0 left-0 right-0 bottom-6 bg-white bg-opacity-75 z-[101]"
-        isOpen={show && !!this.state?.analyseData?.length}
+        isOpen={show && this.state.analyseData.length > 0}
       >
         <div className="bg-[#43495a] border-b border-gray-200 py-sm px-md flex justify-between">
           <div className="font-xl font-bold text-[#ffc627]">Query Analysis</div>
@@ -97,7 +95,7 @@ export default class QueryAnalyser extends React.Component {
             <div className="w-full">
               <div className="p-md pt-0">
                 <div className="text-[#767e93] font-bold py-sm">
-                  Generated Query
+                  Generated SQL
                 </div>
                 <div className="w-full overflow-y-scroll h-[calc(30vh)] mb-sm">
                   <Button
@@ -120,7 +118,7 @@ export default class QueryAnalyser extends React.Component {
                       dangerouslySetInnerHTML={{
                         __html:
                           this.state.activeNode >= 0 &&
-                          !!this.state?.analyseData?.length &&
+                          this.state.analyseData.length > 0 &&
                           hljs.highlight(
                             'sql',
                             sqlFormatter.format(
@@ -158,7 +156,7 @@ export default class QueryAnalyser extends React.Component {
                       </Button>
                       <code>
                         {this.state.activeNode >= 0 &&
-                        !!this.state?.analyseData?.length
+                        this.state.analyseData.length > 0
                           ? this.state.analyseData[
                               this.state.activeNode
                             ].plan.join('\n')
