@@ -1,3 +1,0 @@
-extend input {
-    a: String
-}

@@ -26,7 +26,6 @@ import Data.Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Function.Cache
@@ -40,6 +39,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB

@@ -27,7 +27,6 @@ describe('adaptPostgresConnection works for ', () => {
             "poolSettings": {
               "connectionLifetime": undefined,
               "idleTimeout": undefined,
-              "maxConnections": undefined,
               "poolTimeout": undefined,
               "retries": undefined,
               "totalMaxConnections": undefined,
@@ -99,7 +98,6 @@ describe('adaptPostgresConnection works for ', () => {
             "poolSettings": {
               "connectionLifetime": undefined,
               "idleTimeout": undefined,
-              "maxConnections": undefined,
               "poolTimeout": undefined,
               "retries": undefined,
               "totalMaxConnections": undefined,

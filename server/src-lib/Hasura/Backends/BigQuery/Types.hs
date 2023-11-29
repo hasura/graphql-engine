@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Types for BigQuery
 module Hasura.Backends.BigQuery.Types
@@ -338,15 +339,27 @@ data Aggregate
 
 newtype CountType field = CountType {getCountType :: Countable (ColumnName, AnnRedactionExp 'BigQuery field)}
 
+deriving stock instance (Backend.Backend 'BigQuery) => Foldable CountType
+
+deriving stock instance (Backend.Backend 'BigQuery) => Functor CountType
+
+deriving stock instance (Backend.Backend 'BigQuery) => Traversable CountType
+
 deriving stock instance
   ( Backend.Backend 'BigQuery,
-    Eq field
+    Eq field,
+    Eq (Backend.AggregationPredicates 'BigQuery field),
+    Eq (Backend.BooleanOperators 'BigQuery field),
+    Eq (Backend.FunctionArgumentExp 'BigQuery field)
   ) =>
   Eq (CountType field)
 
 deriving stock instance
   ( Backend.Backend 'BigQuery,
-    Show field
+    Show field,
+    Show (Backend.AggregationPredicates 'BigQuery field),
+    Show (Backend.BooleanOperators 'BigQuery field),
+    Show (Backend.FunctionArgumentExp 'BigQuery field)
   ) =>
   Show (CountType field)
 
@@ -488,9 +501,9 @@ data Op
   | NotInOp
   | LikeOp
   | NotLikeOp
-  | --  | SNE
-    ILikeOp
-  | NotILikeOp
+  --  | SNE
+  --  | SILIKE
+  --  | SNILIKE
   --  | SSIMILAR
   --  | SNSIMILAR
   --  | SGTE
@@ -777,8 +790,6 @@ data BooleanOperators a
   | ASTWithin a
   | ASTIntersects a
   | ASTDWithin (DWithinGeogOp a)
-  | ASTILike a
-  | ASTNILike a
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
 instance (NFData a) => NFData (BooleanOperators a)
@@ -793,8 +804,6 @@ instance (ToJSON a) => J.ToJSONKeyValue (BooleanOperators a) where
     ASTTouches a -> ("_st_touches", J.toJSON a)
     ASTWithin a -> ("_st_within", J.toJSON a)
     ASTDWithin a -> ("_st_dwithin", J.toJSON a)
-    ASTILike a -> ("_st_ilike", J.toJSON a)
-    ASTNILike a -> ("_st_nilike", J.toJSON a)
 
 data FunctionName = FunctionName
   { functionName :: Text,
@@ -870,8 +879,6 @@ data ArgumentExp v
   deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
 
 instance (Hashable v) => Hashable (ArgumentExp v)
-
-instance (NFData a) => NFData (ArgumentExp a)
 
 type ComputedFieldImplicitArguments = HashMap FunctionArgName ColumnName
 

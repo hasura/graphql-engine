@@ -1,7 +1,0 @@
-mutation MyMutation {
-  uppercaseActorNameById(id: 1) {
-    actor_id
-    movie_id
-    name
-  }
-}

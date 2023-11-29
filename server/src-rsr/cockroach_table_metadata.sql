@@ -41,7 +41,7 @@ FROM "tabletable" "table"
 -- $1 parameter provides JSON array of tracked tables
 -- FROM
 --   ( SELECT "tracked"."name" AS "table_name",
---            "tracked"."schema" AS "table_schema"cockroach
+--            "tracked"."schema" AS "table_schema"
 --       FROM jsonb_to_recordset($1::jsonb) AS "tracked"("schema" text, "name" text)
 --   ) "tracked_table"
 
@@ -86,7 +86,7 @@ LEFT JOIN LATERAL
     LEFT JOIN pg_catalog.pg_type base_type
       ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
     LEFT JOIN pg_catalog.pg_type array_type
-      ON "type".typelem = array_type.oid AND "type".typcategory = 'A'
+      ON array_type.typarray = "type".oid
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0

@@ -16,7 +16,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
-import Hasura.Authentication.Role
 import Hasura.Base.Error
 import Hasura.LogicalModel.API (LogicalModelName)
 import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT (..), LogicalModelFieldsRM (..), runLogicalModelFieldsLookup)
@@ -33,6 +32,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal
   ( CheckPermission (..),
     CombineRolePermInfo (..),
@@ -459,8 +459,8 @@ buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalMode
           $ SOILogicalModelObj @b logicalModelLocation
           $ LMOPerm role PTSelect
 
-      addErrContext :: ExceptT QErr m a -> ExceptT QErr m a
-      addErrContext = modifyErr \err ->
+      modifyError :: ExceptT QErr m a -> ExceptT QErr m a
+      modifyError = modifyErr \err ->
         addLogicalModelContext logicalModelLocation
           $ "in permission for role "
           <> role
@@ -468,7 +468,7 @@ buildLogicalModelSelectPermission sourceName sourceConfig tableCache logicalMode
           <> err
 
   logicalModels <- getLogicalModelFieldsLookup @b
-  select <- withRecordInconsistencyM metadataObject $ addErrContext do
+  select <- withRecordInconsistencyM metadataObject $ modifyError do
     when (role == adminRoleName)
       $ throw400 ConstraintViolation "cannot define permission for admin role"
 

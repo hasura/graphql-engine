@@ -39,7 +39,6 @@ import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
 import Data.Text.Extended (toTxt)
 import Hasura.App.State qualified as State
-import Hasura.Authentication.Role (RoleName)
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
@@ -52,6 +51,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as Any

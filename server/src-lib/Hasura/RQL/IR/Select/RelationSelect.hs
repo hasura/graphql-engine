@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | More leaves cut from RQL.IR.Select for sake of breaking up the big pile of
 -- things

@@ -1,14 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
--- ghc 9.6 seems to be doing something screwy with...
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.LogicalModel.Fields (LogicalModelFieldsRM (..), LogicalModelFieldsLookupRT (..), runLogicalModelFieldsLookup) where
 
 import Data.HashMap.Strict qualified as HashMap
-import Hasura.Authentication.User (UserInfoM)
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.Tracing (TraceT)
 
 -- | Class for looking up Logical Models

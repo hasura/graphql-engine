@@ -1,6 +1,0 @@
-query {
-  Artist {
-    ArtistId
-    Name(hash: "sha256")
-  }
-}

@@ -18,7 +18,6 @@ import Data.List.Split (chunksOf)
 import Data.Monoid (Endo (..), Sum (..))
 import Data.Text.Extended
 import GHC.AssertNF.CPP
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options
@@ -38,10 +37,11 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendTag, reify)
 import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
 import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubscriptionMetric, streamingSubscriptionLabel)
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubcriptionMetric, streamingSubscriptionLabel)
 import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
@@ -289,7 +289,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
           (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
           resolvedConnectionTemplate
       let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
-      recordSubscriptionMetric
+      recordSubcriptionMetric
         granularPrometheusMetricsState
         True
         operationNames
@@ -470,7 +470,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
       unLogger logger $ ModelInfoLog LevelInfo $ ModelInfo modelName (toTxt modelType) (toTxt <$> modelSourceName) (toTxt <$> modelSourceType) (toTxt modelQueryType) False
   postPollHook pollDetails
   let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
-  recordSubscriptionMetric
+  recordSubcriptionMetric
     granularPrometheusMetricsState
     True
     operationNames
@@ -515,7 +515,7 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
 
     getCohortOperations cohorts = \case
       Left e ->
-        let resp = throwError $ GQExecError [encodeGQLErr HideInternalErrors e]
+        let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
         let cohortSnapshotMap = HashMap.fromList cohorts

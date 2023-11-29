@@ -49,8 +49,7 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
 
     skeletonMode: false,
     metadataFormValues: {
-      status: 'disabled',
-      statusVariable: '',
+      enabled: false,
 
       headers: [],
       tracesEndpoint: '',
@@ -85,8 +84,7 @@ export const Enabled: StoryObj<typeof OpenTelemetry> = {
 
     skeletonMode: false,
     metadataFormValues: {
-      status: 'enabled',
-      statusVariable: '',
+      enabled: true,
 
       headers: [],
       tracesEndpoint: '',
@@ -156,8 +154,7 @@ const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
 
   metadataFormValues: {
     // Using non-default values
-    status: 'enabled',
-    statusVariable: '',
+    enabled: true,
     batchSize: 99,
     dataType: ['traces', 'metrics', 'logs'],
     connectionType: 'http/protobuf',

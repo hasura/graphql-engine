@@ -24,7 +24,6 @@ import Hasura.App.State
   )
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
-import Hasura.CpuDetect qualified as CpuDetect
 import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
@@ -112,8 +111,6 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
 
         let Loggers _ logger _ = appEnvLoggers appEnv
-
-        liftIO $ CpuDetect.tryAutoSetNumCapabilities logger
 
         _idleGCThread <-
           C.forkImmortal "ourIdleGC" logger

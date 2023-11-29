@@ -14,7 +14,6 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.NativeQuery.Metadata (ArgumentName, InterpolatedQuery, NativeQueryMetadata)
-import Hasura.NativeQuery.Validation (DisableNativeQueryValidation)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -85,16 +84,14 @@ class
       ProvidesNetwork m
     ) =>
     Logger Hasura ->
-    Env.Environment ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   default resolveBackendInfo ::
     ( Arrow arr,
       BackendInfo b ~ ()
     ) =>
     Logger Hasura ->
-    Env.Environment ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
-  resolveBackendInfo _env = const $ arr $ const ()
+  resolveBackendInfo = const $ arr $ const ()
 
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process
@@ -243,12 +240,14 @@ class
 
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
-    DisableNativeQueryValidation ->
+    Env.Environment ->
+    SourceName ->
+    SourceConnConfiguration b ->
     SourceConfig b ->
     LogicalModelInfo b ->
     NativeQueryMetadata b ->
     m (InterpolatedQuery ArgumentName)
-  validateNativeQuery _ _ _ _ =
+  validateNativeQuery _ _ _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
   validateStoredProcedure ::

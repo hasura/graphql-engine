@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/object_types/mapped_to_non_compatible_ndc_type/metadata.json
----
-Error: The field 'id' in object type 'institution (in subgraph default)' cannot be mapped to data connector 'custom (in subgraph default)' field 'institution.id' because: Type 'Float!' is not compatible with NDC type 'Int!' - Inbuilt type 'Float' is not compatible with the data connector's type representation 'Int32'

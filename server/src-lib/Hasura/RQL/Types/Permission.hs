@@ -43,7 +43,6 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -53,6 +52,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Headers
+import Hasura.RQL.Types.Roles (RoleName)
 import PostgreSQL.Binary.Decoding qualified as PD
 
 data PermType

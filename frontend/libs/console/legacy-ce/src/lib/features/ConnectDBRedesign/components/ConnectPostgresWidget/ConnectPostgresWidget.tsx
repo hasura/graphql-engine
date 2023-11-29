@@ -1,34 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Button } from '../../../../new-components/Button';
 import { useConsoleForm } from '../../../../new-components/Form';
-import { Tabs } from '../../../../new-components/Tabs';
+import { getDefaultValues, PostgresConnectionSchema, schema } from './schema';
+import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
-import { Source } from '../../../hasura-metadata-types/source/source';
-import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
-import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { ConnectPostgresForm } from './parts/ConnectPostgresForm';
-import { DynamicDBRouting } from './parts/DynamicDBRouting';
-import { getDefaultValues, PostgresConnectionSchema, schema } from './schema';
 import { generatePostgresRequestPayload } from './utils/generateRequests';
-
-type PostgresLikeSource = Extract<
-  Source,
-  {
-    kind: 'postgres' | 'citus' | 'cockroach';
-  }
->;
-
-const isPostgresLikeSource = (
-  source: Source | undefined
-): source is PostgresLikeSource => {
-  return (
-    source?.kind === 'postgres' ||
-    source?.kind === 'citus' ||
-    source?.kind === 'cockroach'
-  );
-};
+import { useEffect, useState } from 'react';
+import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { DynamicDBRouting } from './parts/DynamicDBRouting';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { ConnectPostgresForm } from './parts/ConnectPostgresForm';
+import { Button } from '../../../../new-components/Button';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -71,12 +53,6 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     const payload = generatePostgresRequestPayload({
       driver: overrideDriver ?? 'postgres',
       values: formValues,
-      connectionTemplate: isPostgresLikeSource(metadataSource)
-        ? metadataSource.configuration.connection_template
-        : undefined,
-      connectionSet: isPostgresLikeSource(metadataSource)
-        ? metadataSource.configuration.connection_set
-        : undefined,
     });
 
     if (isEditMode) {

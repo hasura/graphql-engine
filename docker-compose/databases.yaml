@@ -1,6 +1,8 @@
+version: "3.6"
+
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:16-3.4-alpine
     platform: linux/amd64
     command:
       - -F # turn fsync off for speed
@@ -15,83 +17,6 @@ services:
       test:
         - CMD-SHELL
         - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  # setup for read replicas
-  postgresql-primary:
-    image: 'bitnami/postgresql:16'
-    ports:
-      - 5432
-    volumes:
-      - '/bitnami/postgresql'
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=master
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
-      - POSTGRESQL_USERNAME=hasura
-      - POSTGRESQL_PASSWORD=hasura
-      - POSTGRESQL_DATABASE=hasura
-      - ALLOW_EMPTY_PASSWORD=yes
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - export PGPASSWORD="$${POSTGRESQL_PASSWORD:-password}"
-        - psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  postgresql-replica-1:
-    image: 'bitnami/postgresql:16'
-    ports:
-      - 5432
-    depends_on:
-      postgresql-primary:
-        condition: service_healthy
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
-      - POSTGRESQL_MASTER_HOST=postgresql-primary
-      - POSTGRESQL_USERNAME=hasura
-      - POSTGRESQL_PASSWORD=hasura
-      - POSTGRESQL_MASTER_PORT_NUMBER=5432
-      - ALLOW_EMPTY_PASSWORD=yes
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - export PGPASSWORD="$${POSTGRESQL_PASSWORD:-password}"
-        - psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
-  postgresql-replica-2:
-    image: 'bitnami/postgresql:16'
-    ports:
-      - 5432
-    depends_on:
-      postgresql-primary:
-        condition: service_healthy
-    environment:
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
-      - POSTGRESQL_MASTER_HOST=postgresql-primary
-      - POSTGRESQL_USERNAME=hasura
-      - POSTGRESQL_PASSWORD=hasura
-      - POSTGRESQL_MASTER_PORT_NUMBER=5432
-      - ALLOW_EMPTY_PASSWORD=yes
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - export PGPASSWORD="$${POSTGRESQL_PASSWORD:-password}"
-        - psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRESQL_USERNAME:-postgres}" < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s

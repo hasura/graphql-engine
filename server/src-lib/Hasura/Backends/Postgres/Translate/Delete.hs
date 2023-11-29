@@ -8,7 +8,6 @@ module Hasura.Backends.Postgres.Translate.Delete
   )
 where
 
-import Hasura.Authentication.User (UserInfo)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Base.Error (QErr)
@@ -17,6 +16,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Session (UserInfo)
 
 mkDelete ::
   (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>

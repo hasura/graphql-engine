@@ -1,8 +1,0 @@
-query IntrospectArticlesBooleanExpression {
-  __type(name: "ArticleBooleanExpression") {
-    kind
-    inputFields {
-      name
-    }
-  }
-}

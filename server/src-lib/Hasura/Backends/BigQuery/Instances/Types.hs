@@ -126,15 +126,6 @@ instance HasSourceConfiguration 'BigQuery where
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   sourceConfigNumReadReplicas = const 0 -- not supported
-  sourceConfigConnectonTemplate = const Nothing -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
   sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = BigQueryKind
-
--- NOTE: these moved here from Backend.BigQuery.Types to avoid Backend
--- constraint requiring UndecidableInstances
-
-deriving stock instance Foldable BigQuery.CountType
-
-deriving stock instance Functor BigQuery.CountType
-
-deriving stock instance Traversable BigQuery.CountType

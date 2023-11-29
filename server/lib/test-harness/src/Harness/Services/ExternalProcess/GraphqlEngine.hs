@@ -27,10 +27,8 @@ import Control.Concurrent.MVar
 import Control.Lens
 import Control.Monad.Managed
 import Data.Aeson qualified as J
-import Data.Aeson.Parser qualified as J
 import Data.Attoparsec.ByteString as Atto
 import Data.ByteString qualified as BS
-import Data.ByteString.Char8 qualified as B8
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.IORef
@@ -333,7 +331,7 @@ instance LoggableMessage HgeStdErrLogMessage where
 hgeStdErrRelayThread :: Logger -> Handle -> IO (IO ())
 hgeStdErrRelayThread logger hgeOutput = do
   async <- Async.async $ forever $ do
-    nextChunk <- decodeUtf8 <$> B8.hGetLine hgeOutput
+    nextChunk <- decodeUtf8 <$> BS.hGetLine hgeOutput
     T.putStrLn nextChunk
     runLogger logger $ HgeStdErrLogMessage nextChunk
   return $ Async.cancel async
@@ -344,7 +342,7 @@ hgeLogRelayThread :: Logger -> Handle -> IO (IO ())
 hgeLogRelayThread logger hgeOutput = do
   resultRef <- newIORef (Atto.parse logParser "")
   threadHandle <- Async.async $ forever $ do
-    nextChunk <- (<> "\n") <$> B8.hGetLine hgeOutput
+    nextChunk <- (<> "\n") <$> BS.hGetLine hgeOutput
     processChunk resultRef nextChunk
   return
     ( do

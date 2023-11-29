@@ -1,7 +1,0 @@
-query {
-  __typename
-  _service {
-    __typename
-    sdl
-  }
-}

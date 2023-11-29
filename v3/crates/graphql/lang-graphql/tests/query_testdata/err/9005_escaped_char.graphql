@@ -1,5 +1,0 @@
-{
-    sku: "\a invalidly escaped"
-    stringValue: "\"properly escaped\""
-    name: "\invalidly escaped\""
-}

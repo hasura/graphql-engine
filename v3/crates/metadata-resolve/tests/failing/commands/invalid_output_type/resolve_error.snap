@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/commands/invalid_output_type/metadata.json
----
-Error: Command 'testCommand (in subgraph default)' has an invalid output type 'NonExistentType'

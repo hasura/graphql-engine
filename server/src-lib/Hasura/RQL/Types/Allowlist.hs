@@ -25,10 +25,10 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
-import Hasura.Authentication.Role (RoleName)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype DropCollectionFromAllowlist = DropCollectionFromAllowlist

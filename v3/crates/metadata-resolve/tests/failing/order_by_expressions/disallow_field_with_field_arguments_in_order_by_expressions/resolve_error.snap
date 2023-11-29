@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_field_with_field_arguments_in_order_by_expressions/metadata.json
----
-Error: The orderable field "name" has field arguments and cannot be used in order by expressions.

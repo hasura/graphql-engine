@@ -85,21 +85,6 @@ Now, start the containers:
 docker compose up -d
 ```
 
-:::tip Trying this on a Mac with a Silicon processor?
-
-Update your `docker-compose.yml` file to specify platform.
-
-```bash
-graphql-engine:
-    image: hasura/graphql-engine:v2.36.0
-    #highlight-start
-    platform: linux/arm64
-    #highlight-end
-    ...
-```
-
-:::
-
 ## Step 3: Run the Hasura Console
 
 If you've followed our [simple getting started guide for Docker](/getting-started/docker-simple.mdx), you'll already be
@@ -132,7 +117,8 @@ PG_DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
 ```
 
 We'll enter the name `default` for the ` Database Display Name` field. This name is used to identify the data source in
-Hasura's Metadata and is not your database's name.
+Hasura's Metadata and is not your database's name. Should you choose to use the `HASURA_GRAPHQL_DATABASE_URL`
+environment variable instead, `default` is the default name assigned to your data source by Hasura.
 
 Next, we'll choose `Environment Variable` from the `Connect Database Via` options; enter `PG_DATABASE_URL` as the name:
 
@@ -213,8 +199,8 @@ deploying to, you'll need to use a different method. You can pick up right where
 ## Step 7: Deploy to another environment
 
 If you're deploying to Hasura Cloud, you can use the Hasura CLI or our
-[GitHub integration](/cloud-ci-cd/github-integration.mdx). If you're deploying to a different environment, you'll need
-to use the Hasura CLI.
+[GitHub integration](/cloud-ci-cd/github-integration.mdx). If you're deploying to a different environment, you'll
+need to use the Hasura CLI.
 
 ### Deploy to Hasura Cloud
 
@@ -231,9 +217,9 @@ git push -u origin main
 ```
 
 From here, you can follow the instructions in the
-[GitHub integration guide](/cloud-ci-cd/github-integration.mdx#initial-setup) to deploy your project to Hasura Cloud.
-With this connection in place, you can iterate and develop your project locally - and then push your changes to GitHub
-to deploy to Hasura Cloud 🎉
+[GitHub integration guide](/cloud-ci-cd/github-integration.mdx#initial-setup) to deploy your project to Hasura
+Cloud. With this connection in place, you can iterate and develop your project locally - and then push your changes to
+GitHub to deploy to Hasura Cloud 🎉
 
 Head down to the [recap section](#recap) to learn more about some of the design decisions we made in this guide.
 

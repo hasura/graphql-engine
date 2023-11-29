@@ -126,6 +126,8 @@ export const ManageTable: React.VFC<ManageTableProps> = (
   const urlData = useTableDefinition(window.location);
   const dispatch = useDispatch();
 
+  console.log('>>> urlData', urlData);
+
   if (urlData.querystringParseResult === 'error')
     throw Error('Unable to render');
 

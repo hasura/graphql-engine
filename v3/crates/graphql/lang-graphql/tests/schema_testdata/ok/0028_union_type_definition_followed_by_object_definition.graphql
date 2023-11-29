@@ -1,5 +1,0 @@
-union SearchResult = Photo | Person
-
-type Error {
-    code: Int
-}

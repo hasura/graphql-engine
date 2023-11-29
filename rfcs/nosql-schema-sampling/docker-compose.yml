@@ -1,3 +1,4 @@
+version: '3'
 services:
 
   # External MongoDB sample database

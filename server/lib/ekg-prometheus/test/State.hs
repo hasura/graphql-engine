@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -Wno-x-partial #-}
 
 module State
   ( tests,
@@ -10,6 +9,7 @@ where
 
 import Control.Applicative
 import Control.Arrow ((&&&))
+import Data.Foldable (foldl')
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust)

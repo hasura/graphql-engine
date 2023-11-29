@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/object_types/data_connector_scalars_mismatch/metadata.json
----
-Error: the field id in author (in subgraph default) should have the type Int for data connector db (in subgraph default) but the field has type String

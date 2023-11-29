@@ -15,6 +15,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
   )
 where
 
+import Control.Monad.Writer.Strict
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended

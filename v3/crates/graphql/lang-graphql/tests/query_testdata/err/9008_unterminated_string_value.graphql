@@ -1,5 +1,0 @@
-mutation {
-  createstore {
-    name(locale: "en)
-  }
-}

@@ -12,7 +12,6 @@ import Data.Aeson
 import Data.ByteString.Builder qualified as BB
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
-import Hasura.Authentication.User (UserInfo, UserInfoM (..))
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -31,6 +30,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
+import Hasura.Session
 import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 

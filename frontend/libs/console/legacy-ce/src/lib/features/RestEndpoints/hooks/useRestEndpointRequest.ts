@@ -49,54 +49,27 @@ export const useRestEndpointRequest = () => {
     }));
 
     const bodyVariables = [];
-    const queryParams = [];
 
     if (!endpoint) {
       return;
     }
 
     let url = endpoint.url;
-    const method = endpoint.methods?.[0];
 
     for (const variable of processedVariable) {
       if (url.match(`/:${variable.name}`)) {
         url = url.replace(`/:${variable.name}`, `/${variable.value}`);
-      } else if (method === 'GET') {
-        // For GET requests, add variables as query parameters
-        // Only handle scalar types (string, number, boolean) for GET requests
-        // Check if it's a scalar type (not an array or object)
-        const isScalar =
-          typeof variable.value !== 'object' || variable.value === null;
-
-        if (isScalar) {
-          // Use the value directly as processed by getValueWithType
-          // This ensures consistent handling between GET and other methods
-          queryParams.push(
-            `${variable.name}=${encodeURIComponent(String(variable.value))}`
-          );
-        } else {
-          // For non-scalar types (arrays, objects), switch to using the body
-          // This will make the request fail with a clear error message
-          bodyVariables.push(variable);
-        }
       } else {
         bodyVariables.push(variable);
       }
     }
 
-    // Append query parameters to the URL if using GET
-    let fullUrl = `${getCurrentPageHost()}/api/rest/${url}`;
-    if (method === 'GET' && queryParams.length > 0) {
-      fullUrl += `?${queryParams.join('&')}`;
-    }
-
     return fetchApi({
-      method: method,
-      url: fullUrl,
+      method: endpoint.methods?.[0],
+      url: `${getCurrentPageHost()}/api/rest/${url}`,
       body:
-        bodyVariables.length > 0 && method !== 'GET'
+        bodyVariables.length > 0
           ? bodyVariables.reduce((acc, curr) => {
-              // Use the value directly as processed by getValueWithType
               acc[curr.name] = curr.value;
               return acc;
             }, {} as Record<string, unknown>)

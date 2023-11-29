@@ -74,9 +74,7 @@ const LeftSidebar: React.FC<Props> = props => {
     >
       {service === 'data' ? (
         <TreeView
-          items={[...(items as EventTrigger[])].sort((a, b) =>
-            a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-          )}
+          items={items as EventTrigger[]}
           icon={getSidebarIcon()}
           service="triggers"
           currentItem={currentTrigger as EventTrigger}

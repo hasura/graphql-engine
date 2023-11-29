@@ -144,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
     sectionsData.monitoring.items.push({
       key: 'opentelemetry-settings',
-      label: 'OpenTelemetry Exporter',
+      label: 'OpenTelemetry Exporter (Beta)',
       status:
         eeLiteAccess.access !== 'active' &&
         !isOpenTelemetrySupported(window.__env)

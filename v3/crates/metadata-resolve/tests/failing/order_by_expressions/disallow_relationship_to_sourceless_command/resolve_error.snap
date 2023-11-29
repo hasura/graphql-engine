@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_relationship_to_sourceless_command/metadata.json
----
-Error: The target command 'my_command (in subgraph default)' of the orderable relationship 'SecondRowTypeRelationship' in order by expression 'MyOrderByExpression (in subgraph default)' used in model 'mymodel (in subgraph default)' must have a source

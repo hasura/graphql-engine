@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: msg
-input_file: crates/metadata-resolve/tests/failing/simple/metadata.json
----
-invalid type: not a sequence or map, expected a sequence or map at path $

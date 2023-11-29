@@ -95,13 +95,8 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
     (maybeToCheckPermission _permDel)
   where
     modifySingleSelectPerm SelPermInfo {..} =
-      let colsWithRedactionExp = buildFieldAccessFilter <$> spiCols
-          scalarCompFieldsWithRedactionExp = buildFieldAccessFilter <$> spiComputedFields
-          buildFieldAccessFilter redactExp =
-            FieldAccessFilter
-              { _fafPermissionFilter = spiFilter,
-                _fafRedactionExp = redactExp
-              }
+      let colsWithRedactionExp = spiCols $> RedactIfFalse spiFilter
+          scalarCompFieldsWithRedactionExp = spiComputedFields $> RedactIfFalse spiFilter
        in CombinedSelPermInfo
             [colsWithRedactionExp]
             [scalarCompFieldsWithRedactionExp]
@@ -268,7 +263,7 @@ instance OnlyRelevantEq G.Name where
 instance (OnlyRelevantEq a) => OnlyRelevantEq [a] where
   l ==~ r =
     (length r == length r)
-      && and (zipWith (==~) l r)
+      && (all (== True) (zipWith (==~) l r))
 
 instance OnlyRelevantEq G.ScalarTypeDefinition where
   G.ScalarTypeDefinition _descL nameL directivesL

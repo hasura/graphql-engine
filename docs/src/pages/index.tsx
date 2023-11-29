@@ -4,6 +4,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import hasuras from '@site/static/img/hasuras.png';
+import VersionedLink from '@site/src/components/VersionedLink';
 import styles from './index.module.scss';
 
 function HomepageHeader() {
@@ -16,9 +17,9 @@ function HomepageHeader() {
           <p className="hero__subtitle">{siteConfig.tagline}</p>
         </div>
         <div className={styles.links}>
-          <Link to={"/index"} className="button button--primary button--lg">
+          <VersionedLink className="button button--primary button--lg" to="/index">
             Hasura Docs
-          </Link>
+          </VersionedLink>
           <div className={styles.links}>
             <Link className="button button--secondary button--lg" to="/wiki/">
               Docs Wiki

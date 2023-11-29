@@ -44,16 +44,15 @@ the list of connected data sources.
 
 :::info Note
 
-This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. **In versions `v2.0`
-and above, databases can be connected using any custom environment variables of your choice. Our `docker-compose.yaml`
-files in the install manifests reference `PG_DATABASE_URL` as the environment variable to use for connecting to a
-database, but this can be any plaintext value which does not start with `HASURA_`.**
+This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. In versions `v2.0` and
+above, databases can be connected using any custom environment variables of your choice.
 
 :::
 
 ### Metadata Database URL
 
-This Postgres database URL is used to store Hasura's Metadata. This can also be a URI of the form
+This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
+`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata. This can also be a URI of the form
 `dynamic-from-file:///path/to/file`, where the referenced file contains a postgres connection string, which will be read
 dynamically every time a new connection is established. This allows the server to be used in an environment where
 secrets are rotated frequently.
@@ -69,7 +68,7 @@ secrets are rotated frequently.
 
 :::info Note
 
-THe metadata database URL needs to be set for Hasura to start.
+Either one of the Metadata Database URL or the Database URL needs to be provided for Hasura to start.
 
 :::
 
@@ -222,18 +221,6 @@ for JSON encoding-decoding.
 | **Default**         | `false`                                        |
 | **Supported in**    | CE, Enterprise Edition                         |
 
-### Cache Max Entry TTL
-
-The maximum Query Cache TTL value in seconds, defaulting to 3600 seconds (1 hour).
-
-|                     |                                      |
-| ------------------- | ------------------------------------ |
-| **Flag**            | `--query-cache-max-ttl`              |
-| **Env var**         | `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL` |
-| **Accepted values** | Integer                              |
-| **Default**         | `3600`                               |
-| **Supported in**    | Enterprise Edition only              |
-
 ### Close WebSocket connections on metadata change
 
 When metadata changes, close all WebSocket connections (with error code `1012`). This is useful when you want to ensure
@@ -247,21 +234,6 @@ that all clients reconnect to the latest metadata.
 | **Options**         | `true` or `false`                                    |
 | **Default**         | `true`                                               |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
-
-### Configured Header Precedence
-
-Whether the metadata configured headers are given higher precedence than client headers for
-[Actions](actions/action-handlers.mdx/#add-a-header-to-your-action) and
-[postgres input validations](schema/postgres/input-validations.mdx/#request).
-
-|                     |                                               |
-| ------------------- | --------------------------------------------- |
-| **Flag**            | `--configured-header-precedence`              |
-| **Env var**         | `HASURA_GRAPHQL_CONFIGURED_HEADER_PRECEDENCE` |
-| **Accepted values** | Boolean                                       |
-| **Options**         | `true` or `false`                             |
-| **Default**         | `false`                                       |
-| **Supported in**    | CE, Enterprise Edition, Cloud                 |
 
 ### Connections per Read-Replica
 
@@ -294,33 +266,18 @@ instead of the CDN, set the value to `/srv/console-assets`.
 
 ### CORS Domain
 
-List of domains, **including scheme (http/https) and port**, to allow for CORS.  
-[Wildcard domains are allowed](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors), but there are
-important **limitations**:
+List of domains, **including scheme (http/https) and port**, to allow for CORS.
+[Wildcard domains are allowed](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors). **Setting an empty
+value will block requests from all other domains**.
 
-1. **Wildcard for subdomains**:
-
-   - Wildcards (`*`) can indicate **only a single subdomain position** and must be the **starting subdomain**.
-     - Example: `http://*.foo.com` will match `http://app.foo.com` but **not** `http://www.app.foo.com`.
-     - Similarly, `http://www.*.foo.com` will **not** handle `http://www.app.foo.com`.
-   - To allow multiple subdomains, you need to explicitly list entries for each required subdomain.
-     - Example: Use `http://*.app.foo.com` and `http://*.app2.foo.com` for `http://bar.app.foo.com` and
-       `http://baz.app2.foo.com`.
-
-2. **Wildcard for ports is not supported**:
-   - Ports must be specified explicitly.
-     - Example: Use `http://localhost:3000` instead of `http://localhost:*`.
-
-**Setting an empty value will block requests from all other domains.**
-
-|                     |                                                                                             |
-| ------------------- | ------------------------------------------------------------------------------------------- |
-| **Flag**            | `--cors-domain <DOMAINS>`                                                                   |
-| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                |
-| **Accepted values** | String (comma separated list of domains)                                                    |
-| **Default**         | **CE**, **Enterprise Edition**: `null` <br />**Cloud**: `*`                                 |
-| **Example**         | `https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com` |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                               |
+|                     |                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| **Flag**            | `--cors-domain <DOMAINS>`                                                                     |
+| **Env var**         | `HASURA_GRAPHQL_CORS_DOMAIN`                                                                  |
+| **Accepted values** | String (comma separated list of domains)                                                      |
+| **Default**         | **CE**, **Enterprise Edition**: `null` <br />**Cloud**: `*`                                   |
+| **Example**         | "https://\*.foo.bar.com:8080, http://\*.localhost, http://localhost:3000, http://example.com" |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                 |
 
 :::info Note
 
@@ -370,19 +327,6 @@ headers on any request.
 | **Default**         | `false`                       |
 | **Supported in**    | CE, Enterprise Edition        |
 
-### Disable Native Query validation
-
-Disable validation of Native Queries against the database.
-
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--disable-native-query-validation`              |
-| **Env var**         | `HASURA_GRAPHQL_DISABLE_NATIVE_QUERY_VALIDATION` |
-| **Accepted values** | Boolean                                          |
-| **Options**         | `true` or `false`                                |
-| **Default**         | `false`                                          |
-| **Supported in**    | CE, Enterprise Edition, Cloud                    |
-
 ### Dynamic Secrets Allowed Path Prefix
 
 Enables the ability to source Postgres connection strings from files on disk using
@@ -427,29 +371,17 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
-### Enable Automated Persisted Queries
+### Header Size Limit
 
-Enables the [Automated Persisted Queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) feature.
+Sets the maximum cumulative length of all headers in bytes.
 
-|                     |                                           |
-| ------------------- | ----------------------------------------- |
-| **Flag**            | `--enable-persisted-queries`              |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES` |
-| **Accepted values** | Boolean                                   |
-| **Default**         | `false`                                   |
-| **Supported in**    | Enterprise Edition                        |
-
-### Set Automated Persisted Queries TTL
-
-Sets the query TTL in the cache store for Automated Persisted Queries.
-
-|                     |                                        |
-| ------------------- | -------------------------------------- |
-| **Flag**            | `--persisted-queries-ttl`              |
-| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL` |
-| **Accepted values** | Integer                                |
-| **Default**         | `5` (seconds)                          |
-| **Supported in**    | Enterprise Edition                     |
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
 
 ### Enable Error Log Level for Trigger Errors
 
@@ -490,21 +422,6 @@ metrics).
 | **Options**         | `true` or `false`                                       |
 | **Default**         | `true`                                                  |
 | **Supported in**    | Enterprise Edition                                      |
-
-The list of affected metrics are:
-
-| Metric                                                                                                                                         | High Cardinality enabled                                                  | High Cardinality disabled       |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
-| [hasura_event_queue_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-queue-time)                                  | trigger_name, source_name                                                 | None                            |
-| [hasura_event_processed_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processed-total)                                | trigger_name, source_name                                                 | None                            |
-| [hasura_event_webhook_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-webhook-processing-time)        | trigger_name, source_name                                                 | None                            |
-| [hasura_event_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processing-time)                        | trigger_name, source_name                                                 | None                            |
-| [hasura_event_invocations_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-invocations-total)                            | trigger_name, source_name                                                 | None                            |
-| [hasura_graphql_requests_total](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-graphql-requests-total)                       | operation_type, response_status, parameterized_query_hash, operation_name | operation_type, response_status |
-| [hasura_websocket_messages_sent_bytes_total](/observability/enterprise-edition/prometheus/metrics.mdx/#websocket-egress)                       | parameterized_query_hash, operation_name                                  | None                            |
-| [hasura_subscription_total_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-total-time)                     | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
-| [hasura_subscription_db_execution_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-database-execution-time) | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
-| [hasura_active_subscriptions](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscriptions)                                   | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
 
 ### Enable Log Compression
 
@@ -596,7 +513,7 @@ log types — can be found [here](/deployment/logging.mdx#log-types).
 | **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
 | **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
 | **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                               |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh`                                                                                                                                   |
 | **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
@@ -626,40 +543,28 @@ The maximum number of events to be fetched from the DB in a single batch.
 ### Events Fetch Interval
 
 The interval, in milliseconds, to sleep before trying to fetch events again after a fetch returned no events from
-Postgres. Setting this value to `0` will stop event trigger processing.
+Postgres.
 
 |                     |                                            |
 | ------------------- | ------------------------------------------ |
 | **Flag**            | `--events-fetch-interval <INTERVAL_IN_MS>` |
 | **Env var**         | `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`     |
 | **Accepted values** | Integer                                    |
-| **Default**         | `1000`                                     |
-| **Supported in**    | CE, Enterprise Edition                     |
+| **Default**         | `null`                                     |
+| **Supported in**    | CE, Enterprise Edition, Cloud              |
 
 ### Experimental Features
 
 List of experimental features to be enabled.
 
-|                     |                                                                                                                                                                                                                                                                                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                                                                                                         |
-| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                                                                                                       |
-| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                                                                                                |
-| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays`, `remove_empty_subscription_responses`, `no_null_unbound_variable_default` |
-| **Default**         | `null`                                                                                                                                                                                                                                                                                                                                       |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                                                                                                |
-
-### Header Size Limit
-
-Sets the maximum cumulative length of all headers in bytes.
-
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--max-total-header-length`              |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
-| **Accepted values** | Integer                                  |
-| **Default**         | `1024*1024` (1MB)                        |
-| **Supported in**    | CE, Enterprise Edition                   |
+|                     |                                                                                                                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
+| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
+| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
+| **Default**         | `null`                                                                                                                                                                                                                                                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
 
 ### Graceful Shutdown Timeout
 
@@ -799,41 +704,6 @@ Multiplexed live queries are split into
 | **Default**         | `100`                                                |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
-### Null in Non-nullable Variables
-
-GraphQL query validation is fixed in [`v2.36.0-beta.1`](https://hasura.io/changelog/community-edition/v2.36.0-beta.1),
-where queries that assigned a `null` value to variables with non-nullable type were allowed.
-
-Example:
-
-```graphql
-query ($user_id: Int!) {
-  users(where: { id: { _eq: $user_id } }) {
-    id
-    name
-  }
-}
-```
-
-variables
-
-```json
-{
-  "user_id": null
-}
-```
-
-To rollback to the old behavior, i.e., allow `null` value for non-nullable variables, use this option.
-
-|                     |                                                                 |
-| ------------------- | --------------------------------------------------------------- |
-| **Flag**            | `--null-in-nonnullable-variables <true-or-false>`               |
-| **Env var**         | `HASURA_GRAPHQL_BACKWARDS_COMPAT_NULL_IN_NONNULLABLE_VARIABLES` |
-| **Accepted values** | Boolean                                                         |
-| **Options**         | `true` or `false`                                               |
-| **Default**         | `false`                                                         |
-| **Supported in**    | CE, Enterprise Edition, Cloud - from `v2.36.0-beta.1`           |
-
 ### Number of Retries
 
 :::warning Notice
@@ -958,19 +828,6 @@ Each connection's idle time, measured in seconds, before it's closed.
 | **Default**         | `180`                                                  |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                      |
 
-### Preserve 401 Errors
-
-Preserves HTTP 401 (Unauthorized) status codes from webhook auth responses and JWT auth failures. By default, all GraphQL errors are returned with HTTP status code 200, even authentication errors. When enabled, 401 errors will be propagated back to the client.
-
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--preserve-401-errors`                          |
-| **Env var**         | `HASURA_GRAPHQL_PRESERVE_401_ERRORS`             |
-| **Accepted values** | Boolean                                          |
-| **Options**         | `true` or `false`                                |
-| **Default**         | `false`                                          |
-| **Supported in**    | CE, Enterprise Edition                           |
-
 ### Query Plan Cache Size
 
 :::warning Notice
@@ -1047,33 +904,6 @@ The [URL for a read replica](/databases/database-config/read-replicas.mdx#adding
 | **Default**         | `null`                                  |
 | **Supported in**    | Deprecated in versions > `v2.0.0`       |
 
-### Redis Timeout
-
-The timeout for redis queries while serving requests. The timeout is in seconds.
-
-|                     |                                               |
-| ------------------- | --------------------------------------------- |
-| **Flag**            | N/A                                           |
-| **Env var**         | `HASURA_GRAPHQL_REDIS_TIMEOUT`                |
-| **Accepted values** | Integer (Representing an interval in seconds) |
-| **Default**         | `null` (No timeout)                           |
-| **Supported in**    | Enterprise Edition only                       |
-
-### Redis no-fail on Startup
-
-Whether to proceed if redis is unavailable at engine startup. If set to `true` and there are issues with redis on
-startup then the server will start as though caching and rate limiting were disabled until the next engine restart. A
-startup log message will be displayed in this case mentioning "redis operation failed".
-
-|                     |                                           |
-| ------------------- | ----------------------------------------- |
-| **Flag**            | `--redis-no-fail-on-startup`              |
-| **Env var**         | `HASURA_GRAPHQL_REDIS_NO_FAIL_ON_STARTUP` |
-| **Accepted values** | Boolean                                   |
-| **Options**         | `true` or `false`                         |
-| **Default**         | `false`                                   |
-| **Supported in**    | Enterprise Edition only                   |
-
 ### Redis TLS Hostname
 
 The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/caching/enterprise-caching.mdx).
@@ -1112,19 +942,6 @@ The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
 | **Default**         | `null`                                   |
 | **Example**         | `redis://username:password@host:port/db` |
 | **Supported in**    | Enterprise Edition only                  |
-
-### Remote Schema prioritize data
-
-Setting this will prioritize `data` or `errors` if both fields are present in the Remote Schema response.
-
-|                     |                                                |
-| ------------------- | ---------------------------------------------- |
-| **Flag**            | `--remote-schema-prioritize-data`              |
-| **Env var**         | `HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA` |
-| **Accepted values** | Boolean                                        |
-| **Options**         | `true` or `false`                              |
-| **Default**         | `false`                                        |
-| **Supported in**    | CE, Enterprise Edition, Cloud                  |
 
 ### Schema Sync Poll Interval
 
@@ -1173,7 +990,7 @@ List of third-party identity providers to enable Single Sign-on authentication f
 | **Accepted values** | JSON array of objects (containing identity provider configs and the JWK used for verification)                                                                                                                                                                                                                       |
 | **Default**         | `null`                                                                                                                                                                                                                                                                                                               |
 | **Example**         | `[{\"client_id\": \"<client-id-from-idp>\", \"name\": \"<display-name>\", \"scope\": \"openid\", \"authorization_url\": \"<login-url>\", \"request_token_url\": \"<request-token-url>\", \"admin_roles\": [\"admin\"], \"jwt_secret\": {\"type\": \"RS256\", \"jwk_url\": \"https://...\", \"issuer\": \"myapp\"}}]` |
-| **Supported in**    | Enterprise Edition                                                                                                                                                                                                                                                                                                   |
+| **Supported in**    | EE                                                                                                                                                                                                                                                                                                                   |
 
 ### Skip Arguments with `null` Values for Remote Schema
 
@@ -1285,19 +1102,6 @@ This sets transaction isolation.
 | **Default**         | `read-committed`                                    |
 | **Supported in**    | Deprecated in versions > `v2.0.0`                   |
 
-### Trace SQL and GraphQL Queries
-
-Add SQL and GraphQL queries to the OTLP traces.
-
-|                     |                                       |
-| ------------------- | ------------------------------------- |
-| **Flag**            | `--trace-sql-query`                   |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_QUERY_TRACING` |
-| **Accepted values** | Boolean                               |
-| **Options**         | `true` or `false`                     |
-| **Default**         | `false`                               |
-| **Supported in**    | Enterprise Edition, Cloud             |
-
 ### Unauthorized Role
 
 This identifies an [unauthorized role](/auth/authentication/unauthenticated-access.mdx), used when the
@@ -1360,8 +1164,8 @@ Enable WebSocket `permessage-deflate` compression.
 
 ### Websocket Connection Init Timeout
 
-Used to set the connection initialization timeout for GraphQL subscription protocols (`graphql-transport-ws` and
-`subscriptions-transport-ws`).
+Used to set the connection initialization timeout for `graphql-ws` clients. This is ignored for
+[`subscription-transport-ws` (Apollo) clients](/subscriptions/postgres/index.mdx).
 
 |                     |                                                            |
 | ------------------- | ---------------------------------------------------------- |
@@ -1373,16 +1177,16 @@ Used to set the connection initialization timeout for GraphQL subscription proto
 
 ### Websocket Keepalive
 
-Used to set the `Keep Alive` delay for clients that use the `subscriptions-transport-ws` (Apollo) protocol. For
+Used to set the `Keep Alive` delay for clients that use the `subscription-transport-ws` (Apollo) protocol. For
 `graphql-ws` clients, the `graphql-engine` sends `PING` messages instead.
 
-|                     |                                           |
-| ------------------- | ----------------------------------------- |
-| **Flag**            | `--websocket-keepalive <TIME_IN_SECONDS>` |
-| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE`      |
-| **Accepted values** | Integer (Representing a delay in seconds) |
-| **Default**         | `5`                                       |
-| **Supported in**    | CE, Enterprise Edition                    |
+|                     |                                                      |
+| ------------------- | ---------------------------------------------------- |
+| **Flag**            | `--websocket-keepalive <TIME_IN_SECONDS>`            |
+| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_KEnterprise EditionPALIVE` |
+| **Accepted values** | Integer (Representing a delay in seconds)            |
+| **Default**         | `5`                                                  |
+| **Supported in**    | CE, Enterprise Edition                               |
 
 ### WS Read Cookie
 

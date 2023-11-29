@@ -3,7 +3,6 @@ import React from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { useListAvailableAgentsFromMetadata } from '../hooks';
 import { useRemoveAgent } from '../hooks/useRemoveAgent';
-import { DataConnectorUri } from '../../hasura-metadata-types';
 
 export const ManageAgentsTable = () => {
   const { data, isLoading } = useListAvailableAgentsFromMetadata();
@@ -40,7 +39,7 @@ export const ManageAgentsTable = () => {
                   {agent.name}
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell>
-                  <DataConnectorUriLabel uri={agent.uri} />
+                  {agent.url}
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell>
                   <div className="flex items-center justify-end whitespace-nowrap text-right opacity-0 transition-all duration-200 group-hover:opacity-100">
@@ -62,18 +61,4 @@ export const ManageAgentsTable = () => {
       </CardedTable.Table>
     </div>
   );
-};
-
-const DataConnectorUriLabel = (props: {
-  uri: DataConnectorUri;
-}): JSX.Element => {
-  if (typeof props.uri === 'string') {
-    return <>{props.uri}</>;
-  } else {
-    return (
-      <>
-        Environment Variable: <code>{props.uri.from_env}</code>
-      </>
-    );
-  }
 };

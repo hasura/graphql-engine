@@ -43,7 +43,7 @@ class GQLWsClient():
         self.ws_queue = queue.Queue(maxsize=-1)
         self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
                                                          path=endpoint)
-        self.conn_created = False
+        self.create_conn()
 
     def create_conn(self):
         self.ws_queue.queue.clear()
@@ -60,7 +60,10 @@ class GQLWsClient():
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
-        self.conn_created = True
+
+    def recreate_conn(self):
+        self.teardown()
+        self.create_conn()
 
     def wait_for_connection(self, timeout=10):
         assert not self.is_closing
@@ -75,7 +78,7 @@ class GQLWsClient():
     def get_ws_query_event(self, query_id, timeout):
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
-    def send(self, frame, headers={}, count=0):
+    def send(self, frame, count=0):
         self.wait_for_connection()
         if frame.get('type') == 'stop':
             self.ws_active_query_ids.discard( frame.get('id') )
@@ -87,7 +90,7 @@ class GQLWsClient():
             if count > 2:
                 raise websocket.WebSocketConnectionClosedException("Connection is already closed and cannot be recreated even after 3 attempts")
             # Connection closed, try to recreate the connection and send the frame again
-            self.init(headers)
+            self.recreate_conn()
             self.send(frame, count+1)
 
     def init_as_admin(self):
@@ -97,7 +100,6 @@ class GQLWsClient():
         self.init(headers)
 
     def init(self, headers={}):
-        self.create_conn()
         payload = {'type': 'connection_init', 'payload': {}}
 
         if headers and len(headers) > 0:
@@ -119,10 +121,13 @@ class GQLWsClient():
             return self.gen_id(size, chars)
         return new_id
 
-    def send_query(self, query, query_id=None, timeout=60):
-        if not self.init_done:
-            self.init()
+    def send_query(self, query, query_id=None, headers={}, timeout=60):
         graphql.parse(query['query'])
+        if headers and len(headers) > 0:
+            #Do init If headers are provided
+            self.init(headers)
+        elif not self.init_done:
+            self.init()
         if query_id == None:
             query_id = self.gen_id()
         frame = {
@@ -164,12 +169,10 @@ class GQLWsClient():
         return self.remote_closed or self.is_closing
 
     def teardown(self):
-        if self.conn_created:
-            self.is_closing = True
-            if not self.remote_closed:
-                self._ws.close()
-                self.wst.join()
-            self.conn_created = False
+        self.is_closing = True
+        if not self.remote_closed:
+            self._ws.close()
+        self.wst.join()
 
 # NOTE: use this to generate a GraphQL client that uses the `graphql-ws` sub-protocol
 class GraphQLWSClient():
@@ -179,7 +182,7 @@ class GraphQLWSClient():
         self.ws_queue = queue.Queue(maxsize=-1)
         self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
                                                          path=endpoint)
-        self.conn_created = False
+        self.create_conn()
 
     def get_queue(self):
         return self.ws_queue.queue
@@ -202,7 +205,10 @@ class GraphQLWSClient():
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
-        self.conn_created = True
+
+    def recreate_conn(self):
+        self.teardown()
+        self.create_conn()
 
     def wait_for_connection(self, timeout=10):
         assert not self.is_closing
@@ -233,7 +239,6 @@ class GraphQLWSClient():
         self.init(headers)
 
     def init(self, headers={}):
-        self.create_conn()
         payload = {'type': 'connection_init', 'payload': {}}
 
         if headers and len(headers) > 0:
@@ -255,9 +260,13 @@ class GraphQLWSClient():
             return self.gen_id(size, chars)
         return new_id
 
-    def send_query(self, query, query_id=None, timeout=60):
+    def send_query(self, query, query_id=None, headers={}, timeout=60):
         graphql.parse(query['query'])
-        if not self.init_done:
+        if headers and len(headers) > 0:
+            #Do init If headers are provided
+            self.clear_queue()
+            self.init(headers)
+        elif not self.init_done:
             self.init()
         if query_id == None:
             query_id = self.gen_id()
@@ -309,11 +318,10 @@ class GraphQLWSClient():
         return self.remote_closed or self.is_closing
 
     def teardown(self):
-        if self.conn_created:
-            self.is_closing = True
-            if not self.remote_closed:
-                self._ws.close()
-                self.wst.join()
+        self.is_closing = True
+        if not self.remote_closed:
+            self._ws.close()
+        self.wst.join()
 
 class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     hge_url: str
@@ -379,7 +387,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/null-response":
             resp, status = self.null_response()
             self._send_response(status, resp)
-
+        
         elif req_path == "/omitted-response-field":
             self._send_response(
                 HTTPStatus.OK,
@@ -616,7 +624,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             'id': 1,
             'child': None
         }
-
+    
     def get_omitted_response_field(self):
         return {
             'country': 'India'
@@ -696,15 +704,15 @@ class ActionsWebhookServer(http.server.HTTPServer):
         return f'http://{self.server_address[0]}:{self.server_address[1]}'
 
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
-    server: 'EvtsWebhookServer'  # type: ignore
+    server: 'EvtsWebhookServer'
 
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
         self.end_headers()
 
     def do_POST(self):
-        content_len = int(self.headers['Content-Length'])
-        req_body = self.rfile.read(content_len).decode("utf-8")
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
         req_json = json.loads(req_body)
         req_headers = self.headers
         req_path = self.path
@@ -733,11 +741,9 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
 
-        self.server.resp_queue.put({
-            "path": req_path,
-            "body": req_json,
-            "headers": req_headers,
-        })
+        self.server.resp_queue.put({"path": req_path,
+                                    "body": req_json,
+                                    "headers": req_headers})
 
 # A very slightly more sane/performant http server.
 # See: https://stackoverflow.com/a/14089457/176841
@@ -747,19 +753,8 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
     @property
-    def host(self):
-        # We assume that everything runs on "localhost"
-        return 'localhost'
-
-    @property
-    def port(self):
-        if not self.server_address:
-            raise Exception('The server is not started.')
-        return self.server_address[1]
-
-    @property
     def url(self):
-        return f'http://{self.host}:{self.port}'
+        return f'http://{self.server_name}:{self.server_port}'
 
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
@@ -853,7 +848,7 @@ class HGECtx:
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
-        self.engine: sqlalchemy.engine.Engine = sqlalchemy.create_engine(self.metadata_schema_url)  # type: ignore
+        self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
         self.meta = sqlalchemy.schema.MetaData()
 
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
@@ -960,10 +955,7 @@ class HGECtx:
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
         # Don't assume `resp` is JSON object
-        try:
-            resp_obj = resp.json(object_pairs_hook=OrderedDict)
-        except requests.exceptions.JSONDecodeError:
-            resp_obj = resp.text
+        resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
         if expected_status_code:
             assert \
                 resp.status_code == expected_status_code, \

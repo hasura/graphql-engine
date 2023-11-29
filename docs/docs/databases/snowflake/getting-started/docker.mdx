@@ -34,19 +34,6 @@ When you use these to launch the services, you'll see three containers running i
 the Snowflake GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the Snowflake
 data source as a type that can now be added to your Hasura GraphQL Service instance.
 
-You can check the health of the connector using the `/health` endpoint. The connector is available at the following
-endpoint:
-
-```bash
-http://localhost:8081/api/v1/snowflake/health
-```
-
-:::info Data connector
-
-This data source utilizes the `hasura/graphql-data-connector` to connect your data source to the GraphQL engine.
-
-:::
-
 ### Snowflake Connector Configuration
 
 You can directly add your JDBC connection string to the Snowflake Connector agent in the Hasura Console, or you can add
@@ -79,12 +66,6 @@ the [metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-apply
 Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
 connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
 database's driver's documentation.
-
-:::
-
-:::warning Encrypted keys
-
-Encrypted Keys are supported only with [Hasura Enterprise Edition](/enterprise/overview.mdx).
 
 :::
 

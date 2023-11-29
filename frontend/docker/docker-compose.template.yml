@@ -1,3 +1,4 @@
+version: '3.6'
 services:
   engine-metadata-db:
     image: postgres:15

@@ -4,23 +4,42 @@ module Hasura.Server.Utils
   ( APIVersion (..),
     DeprecatedEnvVars (..),
     EnvVarsMovedToMetadata (..),
+    adminSecretHeader,
+    commonClientHeadersIgnored,
     cryptoHash,
+    deprecatedAccessKeyHeader,
     deprecatedEnvVars,
     englishList,
     envVarsMovedToMetadata,
     executeJSONPath,
+    filterHeaders,
     fmapL,
     generateFingerprint,
+    getRequestHeader,
+    gzipHeader,
     httpExceptToJSON,
     isReqUserId,
+    isSessionVariable,
+    jsonHeader,
     makeReasonMessage,
+    mkClientHeadersForward,
+    mkSetCookieHeaders,
     parseConnLifeTime,
+    parseStringAsBool,
     quoteRegex,
     readIsoLevel,
+    redactSensitiveHeader,
+    requestIdHeader,
+    sqlHeader,
+    useBackendOnlyPermissionsHeader,
+    userIdHeader,
+    userRoleHeader,
+    contentLengthHeader,
     sessionVariablePrefix,
   )
 where
 
+import Control.Lens ((^..))
 import Crypto.Hash qualified as Crypto
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -29,6 +48,9 @@ import Data.ByteArray (convert)
 import Data.ByteString qualified as B
 import Data.ByteString.Base16 qualified as Base16
 import Data.ByteString.Lazy qualified as BL
+import Data.CaseInsensitive qualified as CI
+import Data.Char
+import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -39,11 +61,66 @@ import Data.Vector qualified as V
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (isSessionVariable)
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.HTTP.Client qualified as HC
+import Network.HTTP.Types qualified as HTTP
+import Network.Wreq qualified as Wreq
 import Text.Regex.TDFA qualified as TDFA
 import Text.Regex.TDFA.ReadRegex qualified as TDFA
 import Text.Regex.TDFA.TDFA qualified as TDFA
+
+jsonHeader :: HTTP.Header
+jsonHeader = ("Content-Type", "application/json; charset=utf-8")
+
+sqlHeader :: HTTP.Header
+sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
+
+gzipHeader :: HTTP.Header
+gzipHeader = ("Content-Encoding", "gzip")
+
+userRoleHeader :: (IsString a) => a
+userRoleHeader = "x-hasura-role"
+
+deprecatedAccessKeyHeader :: (IsString a) => a
+deprecatedAccessKeyHeader = "x-hasura-access-key"
+
+adminSecretHeader :: (IsString a) => a
+adminSecretHeader = "x-hasura-admin-secret"
+
+userIdHeader :: (IsString a) => a
+userIdHeader = "x-hasura-user-id"
+
+requestIdHeader :: (IsString a) => a
+requestIdHeader = "x-request-id"
+
+contentLengthHeader :: (IsString a) => a
+contentLengthHeader = "Content-Length"
+
+useBackendOnlyPermissionsHeader :: (IsString a) => a
+useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
+
+getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
+getRequestHeader hdrName hdrs = snd <$> mHeader
+  where
+    mHeader = find (\h -> fst h == hdrName) hdrs
+
+parseStringAsBool :: String -> Either String Bool
+parseStringAsBool t
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
+  | otherwise = Left errMsg
+  where
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    errMsg =
+      " Not a valid boolean text. "
+        ++ "True values are "
+        ++ show truthVals
+        ++ " and  False values are "
+        ++ show falseVals
+        ++ ". All values are case insensitive"
 
 {- NOTE: Something like this is not safe in the presence of caching. The only
     way for metaprogramming to depend on some external data and recompile
@@ -106,11 +183,55 @@ httpExceptToJSON e = case e of
     showProxy (HC.Proxy h p) =
       "host: " <> bsToTxt h <> " port: " <> tshow p
 
+-- ignore the following request headers from the client
+commonClientHeadersIgnored :: (IsString a) => [a]
+commonClientHeadersIgnored =
+  [ "Content-Length",
+    "Content-MD5",
+    "User-Agent",
+    "Host",
+    "Origin",
+    "Referer",
+    "Accept",
+    "Accept-Encoding",
+    "Accept-Language",
+    "Accept-Datetime",
+    "Cache-Control",
+    "Connection",
+    "DNT",
+    "Content-Type"
+  ]
+
 sessionVariablePrefix :: Text
 sessionVariablePrefix = "x-hasura-"
 
 isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
+
+mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
+mkClientHeadersForward reqHeaders =
+  xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders
+  where
+    filterSessionVariables = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
+    xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host" -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        "Origin" -> Just ("X-Forwarded-Origin", hdrValue)
+        _ -> Nothing
+
+mkSetCookieHeaders :: Wreq.Response a -> HTTP.ResponseHeaders
+mkSetCookieHeaders resp =
+  map (headerName,) $ resp ^.. Wreq.responseHeader headerName
+  where
+    headerName = "Set-Cookie"
+
+filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
+filterRequestHeaders =
+  filterHeaders $ Set.fromList commonClientHeadersIgnored
+
+filterHeaders :: Set.HashSet HTTP.HeaderName -> [HTTP.Header] -> [HTTP.Header]
+filterHeaders list = filter (\(n, _) -> not $ n `Set.member` list)
 
 -- | The version integer
 data APIVersion
@@ -214,3 +335,13 @@ deprecatedEnvVars =
       "HASURA_GRAPHQL_QUERY_PLAN_CACHE_SIZE",
       "HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA"
     ]
+
+sensitiveHeaders :: HashSet HTTP.HeaderName
+sensitiveHeaders =
+  Set.fromList
+    [ "Authorization",
+      "Cookie"
+    ]
+
+redactSensitiveHeader :: HTTP.Header -> HTTP.Header
+redactSensitiveHeader (headerName, value) = (headerName, if headerName `elem` sensitiveHeaders then "<REDACTED>" else value)

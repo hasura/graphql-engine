@@ -30,8 +30,8 @@ import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), convertText)
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
-import Hasura.Authentication.Header (redactSensitiveHeader)
 import Hasura.Prelude
+import Hasura.Server.Utils (redactSensitiveHeader)
 import Hasura.Server.Version (currentVersion)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Restricted qualified as Restricted

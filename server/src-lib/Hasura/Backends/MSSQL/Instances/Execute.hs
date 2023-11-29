@@ -27,8 +27,6 @@ import Data.Text.Extended
 import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer qualified as ODBC
-import Hasura.Authentication.Session (SessionVariables, filterSessionVariables, getSessionVariables)
-import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.Delete
 import Hasura.Backends.MSSQL.Execute.Insert
@@ -57,7 +55,7 @@ import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (HeaderPrecedence, TraceQueryStatus)
+import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP
@@ -69,10 +67,7 @@ instance BackendExecute 'MSSQL where
 
   mkDBQueryPlan = msDBQueryPlan
   mkDBMutationPlan = msDBMutationPlan
-
-  -- TODO: MSSQL currently does not recognise the
-  -- RemoveEmptySubscriptionResponses flag.
-  mkLiveQuerySubscriptionPlan _ = msDBLiveQuerySubscriptionPlan
+  mkLiveQuerySubscriptionPlan = msDBLiveQuerySubscriptionPlan
   mkDBStreamingSubscriptionPlan _ _ _ _ _ _ = throw500 "Streaming subscriptions are not supported for MS-SQL sources yet"
   mkDBQueryExplain = msDBQueryExplain
   mkSubscriptionExplain = msDBSubscriptionExplain
@@ -104,9 +99,8 @@ msDBQueryPlan ::
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ _ = do
+msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
   QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement} <- planQuery sessionVariables qrf
   queryTags <- ask
@@ -323,10 +317,8 @@ msDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
-  HeaderPrecedence ->
-  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs _ _ = do
+msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annDelete
@@ -531,9 +523,8 @@ msDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
-  TraceQueryStatus ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers _traceQueryStatus = do
+msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship _headers _gName _stringifyNumbers = do
   -- `stringifyNumbers` is not currently handled in any SQL Server operation
   statement <- planSourceRelationship (_uiSession userInfo) lhs lhsSchema argumentId relationship
 

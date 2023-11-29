@@ -8,7 +8,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
 import Data.Text.Extended (toTxt, (<>>))
-import Hasura.Authentication.User (UserInfo (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -40,6 +39,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types
 import Hasura.Services
+import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -58,14 +58,12 @@ convertMutationAction ::
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
   ActionMutation Void ->
-  IncludeInternalErrors ->
-  HeaderPrecedence ->
   m ActionExecutionPlan
-convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action includeInternalErrors headerPrecedence = do
+convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action = do
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText includeInternalErrors headerPrecedence
+      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
@@ -98,9 +96,6 @@ convertMutationSelectionSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
-  IncludeInternalErrors ->
-  HeaderPrecedence ->
-  TraceQueryStatus ->
   m (ExecutionPlan, ParameterizedQueryHash, [ModelInfoPart])
 convertMutationSelectionSet
   env
@@ -108,7 +103,7 @@ convertMutationSelectionSet
   tracesPropagator
   prometheusMetrics
   gqlContext
-  SQLGenCtx {stringifyNum, noNullUnboundVariableDefault, nullInNonNullableVariables}
+  SQLGenCtx {stringifyNum, nullInNonNullableVariables}
   userInfo
   reqHeaders
   directives
@@ -117,23 +112,21 @@ convertMutationSelectionSet
   gqlUnparsed
   introspectionDisabledRoles
   reqId
-  maybeOperationName
-  includeInternalErrors
-  headerPrecedence
-  traceQueryStatus = do
+  maybeOperationName = do
     mutationParser <-
       onNothing (gqlMutationParser gqlContext)
         $ throw400 ValidationFailed "no mutations exist"
 
-    (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables noNullUnboundVariableDefault varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
+    (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
-      Tracing.newSpan "Parse mutation IR" Tracing.SKInternal $ liftEither $ mutationParser resolvedSelSet
+      Tracing.newSpan "Parse mutation IR" $ liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
     _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) Tracing.SKInternal do
+
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
           case rootFieldUnpreparedValue of
             RFDB sourceName exists ->
               AB.dispatchAnyBackend @BackendExecute
@@ -150,7 +143,7 @@ convertMutationSelectionSet
 
                   httpManager <- askHTTPManager
                   let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
-                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments headerPrecedence traceQueryStatus
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
                   pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
             RFRemote (RemoteSchemaName rName) remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
@@ -163,7 +156,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST includeInternalErrors headerPrecedence
+              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
               let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeMutation)
               pure $ (ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins, [actionsModel]) -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations

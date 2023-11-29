@@ -15,7 +15,6 @@ import Database.Redis.Connection (ConnectInfo(..), defaultConnectInfo)
 import qualified Database.Redis.ConnectionContext as CC
 import Network.HTTP.Base
 import Network.URI (parseURI, uriPath, uriScheme)
-import Network.URI.Encode (decode)
 import Text.Read (readMaybe)
 
 import qualified Data.ByteString.Char8 as C8
@@ -61,6 +60,6 @@ parseConnectInfo url = do
             then connectHost defaultConnectInfo
             else h
         , connectPort = maybe (connectPort defaultConnectInfo) (CC.PortNumber . fromIntegral) (port uriAuth)
-        , connectAuth = (C8.pack . decode) <$> password uriAuth
+        , connectAuth = C8.pack <$> password uriAuth
         , connectDatabase = db
         }

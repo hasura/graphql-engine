@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/order_by_expressions/unknown_relationship/metadata.json
----
-Error: Error in order by expression MyOrderByExpression (in subgraph default): The relationship NonExistentRelationship on object type RowType (in subgraph default) could not be found

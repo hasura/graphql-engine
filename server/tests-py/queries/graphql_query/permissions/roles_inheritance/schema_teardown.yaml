@@ -1,5 +1,0 @@
-type: run_sql
-args:
-  sql: |
-    DROP TABLE IF EXISTS users;
-    DROP TABLE IF EXISTS dummy_table;

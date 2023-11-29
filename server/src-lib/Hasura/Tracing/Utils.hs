@@ -5,7 +5,6 @@
 module Hasura.Tracing.Utils
   ( traceHTTPRequest,
     attachSourceConfigAttributes,
-    composedPropagator,
   )
 where
 
@@ -16,10 +15,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.SourceConfiguration (HasSourceConfiguration (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context
-import Hasura.Tracing.Propagator
-import Hasura.Tracing.Propagator.B3 (b3TraceContextPropagator)
-import Hasura.Tracing.Propagator.W3CTraceContext (w3cTraceContextPropagator)
-import Hasura.Tracing.TraceId (SpanKind (SKClient))
+import Hasura.Tracing.Propagator (HttpPropagator, inject)
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | Wrap the execution of an HTTP request in a span in the current
@@ -40,7 +36,7 @@ traceHTTPRequest ::
 traceHTTPRequest propagator req f = do
   let method = bsToTxt (view HTTP.method req)
       uri = view HTTP.url req
-  newSpan (method <> " " <> uri) SKClient do
+  newSpan (method <> " " <> uri) do
     let reqBytes = HTTP.getReqSize req
     attachMetadata [("request_body_bytes", fromString (show reqBytes))]
     headers <- fmap (maybe [] toHeaders) currentContext
@@ -53,7 +49,3 @@ attachSourceConfigAttributes :: forall b m. (HasSourceConfiguration b, MonadTrac
 attachSourceConfigAttributes sourceConfig = do
   let backendSourceKind = sourceConfigBackendSourceKind @b sourceConfig
   attachMetadata [("source.kind", toTxt $ backendSourceKind)]
-
--- | Propagator composition of Trace Context and ZipKin B3.
-composedPropagator :: HttpPropagator
-composedPropagator = b3TraceContextPropagator <> w3cTraceContextPropagator

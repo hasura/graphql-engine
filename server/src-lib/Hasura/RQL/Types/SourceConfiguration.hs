@@ -13,7 +13,6 @@ import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
-import Kriti.Parser qualified as Kriti
 
 type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
@@ -21,7 +20,6 @@ class
   ( Representable (SourceConnConfiguration b),
     HasCodec (SourceConnConfiguration b),
     FromJSON (SourceConnConfiguration b),
-    Show (SourceConfig b),
     ToJSON (SourceConfig b),
     ToJSON (SourceConnConfiguration b),
     Eq (SourceConfig b),
@@ -48,8 +46,9 @@ class
   -- | The number of read replicas specified in the source configuration
   sourceConfigNumReadReplicas :: SourceConfig b -> Int
 
-  -- | The connection template specified in the source configuration, if any
-  sourceConfigConnectonTemplate :: SourceConfig b -> Maybe Kriti.ValueExt
+  -- | Whether the source configuration specifies the use of a connection
+  -- template
+  sourceConfigConnectonTemplateEnabled :: SourceConfig b -> Bool
 
   -- | Whether or not the source supports performing column redaction.
   -- See note [SQL generation for inherited roles] for more information

@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/boolean_expression/object_comparable_field_duplicated/metadata.json
----
-Error: the comparable field 'name' is defined more than once in the boolean expression type 'institution_bool_exp (in subgraph default)'

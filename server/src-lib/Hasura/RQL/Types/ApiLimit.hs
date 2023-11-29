@@ -37,9 +37,9 @@ import Data.Map (Map)
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
-import Hasura.Authentication.Role (RoleName)
-import Hasura.Authentication.Session (isSessionVariable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Session (isSessionVariable)
 
 data ApiLimit = ApiLimit
   { _alRateLimit :: Maybe RateLimit,

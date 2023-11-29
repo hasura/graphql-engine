@@ -75,28 +75,34 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add/update _health check_ for a database using the
-[pg_update_source](/api-reference/metadata-api/source.mdx#metadata-pg-update-source) Metadata API.
+You can add _health check_ for a database using the
+[pg_add_source](/api-reference/metadata-api/source.mdx#metadata-pg-add-source) Metadata API.
 
-```http {7-18}
+```http {17-24}
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  {
-    "type": "pg_update_source",
-    "args": {
-      "name": "default",
-      "health_check": {
-        "test": {
-          "sql": "SELECT 1"
-        },
-        "interval": 100,
-        "timeout": 2,
-        "retries": 3,
-        "retry_interval": 2
+  "type":"pg_add_source",
+  "args":{
+    "name":"<db_name>",
+    "replace_configuration":true,
+    "configuration":{
+      "connection_info":{
+        "database_url":{
+          "from_env":"<DATABASE_URL_ENV>"
+        }
       }
+    },
+    "health_check": {
+      "test": {
+        "sql": "SELECT 1"
+      },
+      "interval": 300,
+      "timeout": 5,
+      "retries": 3,
+      "retry_interval": 5
     }
   }
 }

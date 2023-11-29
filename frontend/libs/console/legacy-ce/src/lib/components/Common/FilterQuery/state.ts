@@ -25,7 +25,7 @@ import { EventKind } from '../../Services/Events/types';
 import { isNotDefined } from '../utils/jsUtils';
 
 const defaultFilter = makeValueFilter('', null, '');
-const defaultSort = makeOrderBy('created_at', 'asc', 'last');
+const defaultSort = makeOrderBy('', 'asc');
 const defaultState = makeFilterState([defaultFilter], [defaultSort], 10, 0);
 
 export type TriggerOperation = 'pending' | 'processed' | 'invocation';
@@ -56,7 +56,6 @@ export const useFilterQuery = (
 
     const offsetValue = isNotDefined(offset) ? state.offset : offset;
     const limitValue = isNotDefined(limit) ? state.limit : limit;
-    const sortsValue = newSorts ?? state.sorts;
 
     let query = {};
     const endpoint = endpoints.metadata;
@@ -67,16 +66,13 @@ export const useFilterQuery = (
           'one_off',
           limitValue ?? 10,
           offsetValue ?? 0,
-          triggerOp,
-          undefined,
-          sortsValue
+          triggerOp
         );
       } else {
         query = getEventInvocations(
           'one_off',
           limitValue ?? 10,
-          offsetValue ?? 0,
-          undefined
+          offsetValue ?? 0
         );
       }
     } else if (triggerType === 'cron') {
@@ -86,8 +82,7 @@ export const useFilterQuery = (
           limitValue ?? 10,
           offsetValue ?? 0,
           triggerOp,
-          triggerName,
-          sortsValue
+          triggerName
         );
       } else {
         query = getEventInvocations(
@@ -165,8 +160,8 @@ export const useFilterQuery = (
   const setter: SetFilterState = {
     sorts: (sorts: OrderBy[]) => {
       const newSorts = [...sorts];
-      if (!sorts.some(s => s.column === 'created_at')) {
-        newSorts.push(makeOrderBy('created_at', 'asc', 'last'));
+      if (!sorts.length || sorts[sorts.length - 1].column) {
+        newSorts.push(defaultSort);
       }
       setState(s => ({
         ...s,

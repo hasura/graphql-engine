@@ -90,4 +90,4 @@ genColumnInfo =
 
 genColumnValueGenerationStrategy :: (MonadGen m) => m ColumnValueGenerationStrategy
 genColumnValueGenerationStrategy =
-  Gen.element ([AutoIncrement, UniqueIdentifier, DefaultValue] :: [ColumnValueGenerationStrategy])
+  Gen.element [AutoIncrement, UniqueIdentifier, DefaultValue]

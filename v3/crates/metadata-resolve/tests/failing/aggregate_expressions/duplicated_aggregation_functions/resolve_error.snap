@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/aggregate_expressions/duplicated_aggregation_functions/metadata.json
----
-Error: the aggregate expression Int4_aggregate_exp (in subgraph default) has duplicate definitions of the aggregation function 'sum'

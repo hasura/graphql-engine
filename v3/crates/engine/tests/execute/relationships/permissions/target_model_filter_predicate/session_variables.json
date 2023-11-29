@@ -1,9 +1,0 @@
-[
-  {
-    "x-hasura-role": "admin"
-  },
-  {
-    "x-hasura-role": "user",
-    "x-hasura-movie-id": "2"
-  }
-]

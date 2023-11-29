@@ -22,10 +22,6 @@ import Test.Sandwich (describe)
 import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
 
-{-# ANN module ("HLint: ignore Functor law" :: String) #-}
-
-{-# ANN module ("HLint: ignore Redundant <&>" :: String) #-}
-
 spec :: TestData -> Capabilities -> AgentDatasetTestSpec
 spec TestData {..} Capabilities {..} = describe "Data Redaction in Queries" $ do
   describe "Column Field Redaction" $ do

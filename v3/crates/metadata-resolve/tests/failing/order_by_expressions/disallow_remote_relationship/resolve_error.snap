@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/order_by_expressions/disallow_remote_relationship/metadata.json
----
-Error: Issue in order by expression 'MyOrderByExpression (in subgraph default)' used by model 'mymodel (in subgraph default)': The orderable relationship 'SecondRowTypeRelationship' defined for 'RowType (in subgraph default)' is a remote relationship and remote relationships are not supported in ordering

@@ -1,37 +1,28 @@
 {-# LANGUAGE UndecidableInstances #-}
--- TODO:
--- In the use of ‘unregisteredClaims’ (imported from Crypto.JWT):
---     Deprecated: "use a sub-type"
-{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module Hasura.Server.AuthSpec (spec) where
 
 import Control.Concurrent.Extended (ForkableMonadIO)
 import Control.Lens hiding ((.=))
-import Control.Monad.Catch (MonadMask)
 import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.ByteString.Lazy qualified as BL
-import Data.CaseInsensitive qualified as CI
-import Data.Either (isRight)
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
 import Data.Text qualified as T
-import Hasura.Authentication.Role (RoleName, adminRoleName, mkRoleName)
-import Hasura.Authentication.Session
-import Hasura.Authentication.User (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkUserInfo)
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging (Logger (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName)
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
-import Hasura.Server.Utils ()
+import Hasura.Server.Utils
+import Hasura.Session (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkUserInfo, sessionVariableToText)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec
@@ -41,14 +32,12 @@ spec = do
   getUserInfoWithExpTimeTests
   setupAuthModeTests
   parseClaimsMapTests
-  parseCognitoJwksTests
-  filterOutUnknownKeyTypesTests
 
 allowedRolesClaimText :: K.Key
-allowedRolesClaimText = fromSessionVariable allowedRolesClaim
+allowedRolesClaimText = K.fromText $ sessionVariableToText allowedRolesClaim
 
 defaultRoleClaimText :: K.Key
-defaultRoleClaimText = fromSessionVariable defaultRoleClaim
+defaultRoleClaimText = K.fromText $ sessionVariableToText defaultRoleClaim
 
 -- Unit test the core of our authentication code. This doesn't test the details
 -- of resolving roles from JWT or webhook.
@@ -79,7 +68,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                   (URBFromSessionVariablesFallback $ mkRoleNameE nm)
                   UAdminSecretNotSent
                   (mkSessionVariablesHeaders mempty)
-          processAuthZHeader _jwtCtx _authzHeader = pure (parseObjectAsClaims claims, Nothing)
+
+          processAuthZHeader _jwtCtx _authzHeader =
+            pure (HashMap.fromList $ map (first (mkSessionVariable . K.toText)) $ KM.toList claims, Nothing)
+
           processJwt = processJwt_ processAuthZHeader tokenIssuer (const JHAuthorization)
 
   let getUserInfoWithExpTime ::
@@ -88,6 +80,10 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         AuthMode ->
         IO (Either Code RoleName)
       getUserInfoWithExpTime o claims authMode = gqlUserInfoWithExpTime o claims authMode Nothing
+
+  let setupAuthMode'E a b c d =
+        either (const $ error "fixme") id
+          <$> setupAuthMode' a b c d
 
   let ourUnauthRole = mkRoleNameE "an0nymous"
 
@@ -98,7 +94,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         `shouldReturn` Right adminRoleName
     it "allows any requested role" $ do
       mode <- setupAuthMode'E Nothing Nothing mempty Nothing
-      getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t"] mode
+      getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
         `shouldReturn` Right (mkRoleNameE "r00t")
 
   describe "admin secret only" $ do
@@ -106,33 +102,33 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       mode <- runIO $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty Nothing
 
       it "accepts when admin secret matches" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
       it "accepts when admin secret matches, honoring role request" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
           `shouldReturn` Right (mkRoleNameE "r00t")
 
       it "rejects when doesn't match" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader ""] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (adminSecretHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
         -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (deprecatedAccessKeyHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
 
       it "rejects when no secret sent, since no fallback unauth role" $ do
         getUserInfoWithExpTime mempty mempty mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t", sessionVariableToHeader userRoleHeader "admin"] mode
+        getUserInfoWithExpTime mempty [(userRoleHeader, "r00t"), (userRoleHeader, "admin")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
           `shouldReturn` Left AccessDenied
         getUserInfoWithExpTime mempty [("blah", "blah")] mode
           `shouldReturn` Left AccessDenied
@@ -142,27 +138,27 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         runIO
           $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", ("heh", "heh")] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), ("heh", "heh")] mode
           `shouldReturn` Right adminRoleName
       it "accepts when admin secret matches, honoring role request" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
           `shouldReturn` Right (mkRoleNameE "r00t")
 
       it "rejects when doesn't match" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader ""] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (adminSecretHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
         -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (deprecatedAccessKeyHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
 
       it "accepts when no secret sent and unauth role defined" $ do
@@ -171,7 +167,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         getUserInfoWithExpTime mempty [("heh", "heh")] mode
           `shouldReturn` Right ourUnauthRole
         -- FIXME MAYBE (see NOTE (*))
-        getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
           `shouldReturn` Right ourUnauthRole
 
   -- Unauthorized role is not supported for webhook
@@ -181,25 +177,25 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) mempty Nothing
 
     it "accepts when admin secret matches" $ do
-      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+      getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
         `shouldReturn` Right adminRoleName
     it "accepts when admin secret matches, honoring role request" $ do
-      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", sessionVariableToHeader userRoleHeader "r00t"] mode
+      getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
         `shouldReturn` Right (mkRoleNameE "r00t")
 
     it "rejects when admin secret doesn't match" $ do
-      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+      getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
         `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader ""] mode
+      getUserInfoWithExpTime mempty [(adminSecretHeader, "")] mode
         `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
+      getUserInfoWithExpTime mempty [("blah", "blah"), (adminSecretHeader, "blah")] mode
         `shouldReturn` Left AccessDenied
       -- with deprecated header:
-      getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
+      getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "bad secret")] mode
         `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
+      getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "")] mode
         `shouldReturn` Left AccessDenied
-      getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+      getUserInfoWithExpTime mempty [("blah", "blah"), (deprecatedAccessKeyHeader, "blah")] mode
         `shouldReturn` Left AccessDenied
 
     it "authenticates with webhook when no admin secret sent" $ do
@@ -207,14 +203,14 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
         `shouldReturn` Right (mkRoleNameE "hook")
       getUserInfoWithExpTime mempty [("blah", "blah")] mode
         `shouldReturn` Right (mkRoleNameE "hook")
-      getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "hook"] mode
+      getUserInfoWithExpTime mempty [(userRoleHeader, "hook")] mode
         `shouldReturn` Right (mkRoleNameE "hook")
 
     -- FIXME MAYBE (see NOTE (*))
     it "ignores requested role, uses webhook role" $ do
-      getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t", sessionVariableToHeader userRoleHeader "admin"] mode
+      getUserInfoWithExpTime mempty [(userRoleHeader, "r00t"), (userRoleHeader, "admin")] mode
         `shouldReturn` Right (mkRoleNameE "hook")
-      getUserInfoWithExpTime mempty [sessionVariableToHeader userRoleHeader "r00t"] mode
+      getUserInfoWithExpTime mempty [(userRoleHeader, "r00t")] mode
         `shouldReturn` Right (mkRoleNameE "hook")
 
   -- helper for generating mocked up verified JWT token claims, as though returned by 'processAuthZHeader':
@@ -229,25 +225,25 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
           $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing [fakeJWTConfig] Nothing
 
       it "accepts when admin secret matches" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
       it "accepts when admin secret matches, honoring role request" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
           `shouldReturn` Right (mkRoleNameE "r00t")
 
       it "rejects when admin secret doesn't match" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader ""] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (adminSecretHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
         -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (deprecatedAccessKeyHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
 
       it "rejects when admin secret not sent and no 'Authorization' header" $ do
@@ -266,27 +262,27 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
             (Just ourUnauthRole)
 
       it "accepts when admin secret matches" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", ("heh", "heh")] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), ("heh", "heh")] mode
           `shouldReturn` Right adminRoleName
       it "accepts when admin secret matches, honoring role request" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "secret", sessionVariableToHeader userRoleHeader "r00t"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "secret"), (userRoleHeader, "r00t")] mode
           `shouldReturn` Right (mkRoleNameE "r00t")
 
       it "rejects when admin secret doesn't match" $ do
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader adminSecretHeader ""] mode
+        getUserInfoWithExpTime mempty [(adminSecretHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader adminSecretHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (adminSecretHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
         -- with deprecated header:
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader "bad secret"] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "bad secret")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [sessionVariableToHeader deprecatedAccessKeyHeader ""] mode
+        getUserInfoWithExpTime mempty [(deprecatedAccessKeyHeader, "")] mode
           `shouldReturn` Left AccessDenied
-        getUserInfoWithExpTime mempty [("blah", "blah"), sessionVariableToHeader deprecatedAccessKeyHeader "blah"] mode
+        getUserInfoWithExpTime mempty [("blah", "blah"), (deprecatedAccessKeyHeader, "blah")] mode
           `shouldReturn` Left AccessDenied
 
       it "authorizes as unauth role when no 'Authorization' header" $ do
@@ -320,7 +316,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                     [ allowedRolesClaimText .= (["editor", "user", "mod"] :: [Text]),
                       defaultRoleClaimText .= ("user" :: Text)
                     ]
-            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), sessionVariableToHeader userRoleHeader "editor"] mode
+            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), (userRoleHeader, "editor")] mode
               `shouldReturn` Right (mkRoleNameE "editor")
             -- Uses the defaultRoleClaimText:
             getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED")] mode
@@ -332,17 +328,17 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                     [ allowedRolesClaimText .= (["editor", "user", "mod"] :: [Text]),
                       defaultRoleClaimText .= ("user" :: Text)
                     ]
-            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), sessionVariableToHeader userRoleHeader "r00t"] mode
+            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), (userRoleHeader, "r00t")] mode
               `shouldReturn` Left AccessDenied
-            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), sessionVariableToHeader userRoleHeader "admin"] mode
+            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), (userRoleHeader, "admin")] mode
               `shouldReturn` Left AccessDenied
 
           -- A corner case, but the behavior seems desirable:
           it "always rejects when token has empty allowedRolesClaimText" $ do
             let claim = unObject [allowedRolesClaimText .= (mempty :: [Text]), defaultRoleClaimText .= ("user" :: Text)]
-            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), sessionVariableToHeader userRoleHeader "admin"] mode
+            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), (userRoleHeader, "admin")] mode
               `shouldReturn` Left AccessDenied
-            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), sessionVariableToHeader userRoleHeader "user"] mode
+            getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED"), (userRoleHeader, "user")] mode
               `shouldReturn` Left AccessDenied
             getUserInfoWithExpTime claim [("Authorization", "Bearer IGNORED")] mode
               `shouldReturn` Left AccessDenied
@@ -509,7 +505,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
                 "user" .= userId
               ]
         claimsSet = mkClaimsSetWithUnregisteredClaims obj
-        userIdClaim = unsafeMkSessionVariable ("x-hasura-user-id" :: CI.CI Text)
+        userIdClaim = mkSessionVariable "x-hasura-user-id"
 
     describe "custom claims with JSON paths to the claim location in the JWT token" $ do
       it "parse custom claims values, with correct values" $ do
@@ -629,8 +625,7 @@ mkJSONPathE :: Text -> J.JSONPath
 mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
 setupAuthMode' ::
-  ( ForkableMonadIO m,
-    MonadMask m
+  ( ForkableMonadIO m
   ) =>
   Maybe (HashSet AdminSecretHash) ->
   Maybe AuthHook ->
@@ -649,66 +644,6 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
       (Logger $ void . return)
       httpManager
 
-setupAuthMode'E ::
-  ( ForkableMonadIO m,
-    MonadMask m
-  ) =>
-  Maybe (HashSet AdminSecretHash) ->
-  Maybe AuthHook ->
-  [JWTConfig] ->
-  Maybe RoleName ->
-  m AuthMode
-setupAuthMode'E a b c d =
-  either (const $ error "fixme") id
-    <$> setupAuthMode' a b c d
-
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =
   JWT.emptyClaimsSet & JWT.unregisteredClaims .~ KM.toMapText unregisteredClaims
-
--- | Sample cognito JWKS for testing, the first few from:
--- https://cognito-identity.amazonaws.com/.well-known/jwks_uri
-cognitoJwksJson :: BL.ByteString
-cognitoJwksJson = "{\"keys\":[{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-8\",\"alg\":\"RS512\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-7\",\"alg\":\"RS512\",\"n\":\"AKBuwnAJ/XUhykMo4UaEdnhtQiNHUdWnF/or3nmvvDXOCbLfNX6XMKa9GQiFAfzCTJAxHvArPt0v6R0sBtrYWw6ioBvV+pZrV1r1nYZ4ZxqZtV+Gc/CnjhNn/8JEzM8oZ1XchZ3/Mh3/bw2/Auyu/3FCn92pHAihTkMtJ55JDmM6AXybqEZBjTCKPzjkTf7A6kusUzCseShpkhCWtL2sJRLk5mmFoDISKeE8/HXNiUuYn0waWtM/qQLWfAjJaLJXhhMHE2cwGCDwIxAIp8uz7iA2BtFdt4aB6aDxS+shVn9nUUetvFGDj4Goyt1qqrwc/ZepAnvTLlFUatBM71FfFE0=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-1-6\",\"alg\":\"RS512\",\"n\":\"AIkxdCCZssUqsUL+hL2n8/Eht3X98DENiGmF+xXPTlBaFzR8kTWxl6F03cwGsE6fuRh5Rb+qrcJCMKWi2tTMt6qGUyNraPCB0aVnn2gqEjMAYgZRkrHBikEwzD9KzZys183vzeoF12VYRft5IDGJeoouxnx0MO3D8q/VCuUacKNs+B9lvcaNYi+V68aw0ZMVUHuOZyb74A/+2JxeJnLeW17gxDF2RP+vp/4/h9zhtMzmPClHJF62bUA4TW14Z+rVtkELXdOTb655Aw3nlzeeSSN8aKlR9+z0qTwO/YWIbMbIbYXyEYfTG28IWIbkyLEpfpFulhK6JshcJ94rjgJb5Vk=\"},{\"kty\":\"RSA\",\"e\":\"AQAB\",\"use\":\"sig\",\"kid\":\"ap-northeast-15\",\"alg\":\"RS512\",\"n\":\"AJw/MmbJh6myaqNmgQ7PTymwwVdVZq27L79cGGXcnlRvkqT3MFJXX10VSbhwXqz3YoVhtNf6C8LKxJSjsEcFDHEwHc5+7vkOi+iOmTX1D1dmehb1exz2D9RuH8VE6Bl6Y429Y3k+9Fgbe6WqtyPr9bIQt+mno0lXOkeyxKuNldqJkbuYdHSgPsUKfd+gdkGyQuB6DZ83i6u5EHKepk1yhjsMngt0+/a0ZODMAEkJz9dM9F61dSgLTLIyC6Kkn/Ok2yuTBryZ/eI8UGIhsqZWt/1Syrwf4kF0Uvjwyzx+iqG+fkce0LMAS4f1UuJOCFSAdbng6TYkcxQRe1RvTcUtxSk=\"}]}"
-
-parseCognitoJwksTests :: Spec
-parseCognitoJwksTests = describe "parseCognitoJwks" $ do
-  -- make sure canonicalizeJWKJson works as expected
-  it "internals should leave unexpectedly shaped json untouched" $ do
-    let inputs = ["[]", "{\"keys\":[]}", "{\"foo\":[1,2,3]}"]
-    for_ inputs $ \input -> do
-      case J.decode input of
-        Nothing -> error "fix test inputs"
-        Just inputV -> canonicalizeJWKJson inputV `shouldBe` inputV
-
-  it "should successfully parse Cognito JWKs" $ do
-    let result = parseJWKSetRobustly cognitoJwksJson
-    result `shouldSatisfy` isRight
-
-  it "should be idempotent when encoding and parsing again" $ do
-    case parseJWKSetRobustly cognitoJwksJson of
-      Left err -> expectationFailure $ "Failed to parse JWKS: " ++ err
-      Right jwkSet -> do
-        let encodedJwkSet = J.encode jwkSet
-        let reparsedResult = parseJWKSetRobustly encodedJwkSet
-
-        case reparsedResult of
-          Left err -> expectationFailure $ "Failed to reparse encoded JWKS: " ++ err
-          Right reparsedJwkSet -> reparsedJwkSet `shouldBe` jwkSet
-
--- https://github.com/hasura/graphql-engine/issues/10733#issuecomment-2912141757
-unknownUseJson, unknownUseJsonOnlyKnowns :: BL.ByteString
-unknownUseJson = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"saml_response_sig\",\"kty\":\"RSA\",\"kid\":\"321336135382996543\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
-unknownUseJsonOnlyKnowns = "{\"keys\":[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321693135832881917\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"},{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"321838209426266877\",\"alg\":\"RS256\",\"n\":\"AIKA9NEvE3TfOWZo2V72bCtDTeJQynYa1xV7wJcqS1A5nplcFTvM1HRDkVWzFf9ofzDlHR2x/iDNrl9GcEJMslX7mMMsVnUU5p64KfBFAk6mfNVtyu2glv0pVfxcQyDvYUIRppz6FHosNEK4/5ad6J/wzfqh21xF5Wg28PsLbMK3SPAQHQ/Bw3fB1+Y+CJL/jyk/0Rbhsl4mVLYsyN/NvohQEAAQV/z1L1v72uLnbz0by8+eaZfqEeAimeLsaa2ampcXJY5bReqme5gmvrtoWCVbzbsjG/ZRBtb8kJ65uB2brH6Zi7Br67l+QQGM2N1fLG9mEo4gc1+gpAXaVHg0wBM=\",\"e\":\"AQAB\"}]}"
-
-filterOutUnknownKeyTypesTests :: Spec
-filterOutUnknownKeyTypesTests = describe "filterOutUnknownKeyTypes" $ do
-  it "should filter JWKs with unknown 'use' field value" $ do
-    let expected = case parseJWKSetRobustly unknownUseJsonOnlyKnowns of
-          Right (JWKSet s) -> s
-          _ -> error "bad parse in unknownUseJsonOnlyKnowns"
-    case parseJWKSetRobustly unknownUseJson of
-      Right (JWKSet s) -> do
-        length s `shouldBe` 2
-        s `shouldBe` expected
-      _ -> error "bad parse"

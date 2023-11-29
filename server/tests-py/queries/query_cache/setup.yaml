@@ -1,5 +1,13 @@
 type: bulk
 args:
+- type: create_query_collection
+  args:
+    name: test_collection
+    definition:
+      queries:
+      - name: simple_query_cached
+        query: "query @cached(ttl: 5) { test_table { first_name last_name } }"
+
 - type: run_sql
   args:
     sql: |
@@ -7,10 +15,6 @@ args:
           first_name text,
           last_name text
       );
-      insert into test_table (first_name, last_name) values
-      ('Foo', 'Bar'),
-      ('Baz', 'Qux'),
-      ('X%20Y', 'Test');
 
 - type: track_table
   args:
@@ -28,6 +32,15 @@ args:
 - type: run_sql
   args:
     sql: |
+      insert into test_table (first_name, last_name)
+      values
+      ('Foo', 'Bar'),
+      ('Baz', 'Qux'),
+      ('X%20Y', 'Test');
+
+- type: run_sql
+  args:
+    sql: |
       CREATE TABLE "user"(
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -36,47 +49,33 @@ args:
       INSERT INTO "user" (name, email) VALUES ('Clarke 1', 'clarke1@gmail.com');
       INSERT INTO "user" (name, email) VALUES ('Clarke 2', 'clarke2@gmail.com');
 
-- type: track_table
-  args:
-    schema: public
-    name: user
-
-- type: create_query_collection
-  args:
-    name: test_collection
-    definition:
-     queries:
-      - name: simple_query_cached
-        query: "query @cached(ttl: 5) { test_table { first_name last_name } }"
-
 - type: set_custom_types
   args:
     objects:
-    - name: UserId
+    - name: EmailResponse
       fields:
-      - name: id
-        type: Int!
+      - name: user
+        type: String!
 
 - type: create_action
   args:
-    name: get_user_by_email
+    name: get_user_by_email_1    # this action is being created with forward_client_headers set to `true`
     definition:
       type: query
       arguments:
       - name: email
         type: String!
-      output_type: UserId!
-      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"
-
-# this action is being created with forward_client_headers set to `true`
-- type: create_action
-  args:
-    name: get_user_by_email_with_client_header_forwarding
-    definition:
-      type: query
-      arguments:
-      - name: email
-        type: String!
-      output_type: UserId!
+      output_type: EmailResponse
       handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"
       forward_client_headers: true
+
+- type: create_action
+  args:
+    name: get_user_by_email_2    # this action is being created with forward_client_headers set to `false`
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: EmailResponse
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"

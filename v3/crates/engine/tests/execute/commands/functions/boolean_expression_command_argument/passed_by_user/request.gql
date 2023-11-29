@@ -1,9 +1,0 @@
-query MyQuery {
-  getActorsByBoolExp(
-    actor_boolean_expression: { actor_id: { fancy_equals_operator: 2 } }
-  ) {
-    actor_id
-    movie_id
-    name
-  }
-}

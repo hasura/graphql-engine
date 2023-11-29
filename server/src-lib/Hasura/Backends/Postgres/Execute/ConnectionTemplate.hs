@@ -23,9 +23,9 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
-import Hasura.Authentication.Session (SessionVariables)
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Prelude
+import Hasura.Session (SessionVariables)
 import Kriti.Eval qualified as Kriti
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP

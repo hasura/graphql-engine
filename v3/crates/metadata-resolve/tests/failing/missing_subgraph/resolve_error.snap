@@ -1,6 +1,0 @@
----
-source: crates/metadata-resolve/tests/metadata_golden_tests.rs
-expression: string
-input_file: crates/metadata-resolve/tests/failing/missing_subgraph/metadata.json
----
-Error: unknown target model Authors (in subgraph author_namespace) used in relationship Author on type article (in subgraph article_namespace)

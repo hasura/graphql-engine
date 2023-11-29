@@ -42,7 +42,6 @@ import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Extended
-import Hasura.Authentication.Role (RoleName)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
@@ -59,6 +58,7 @@ import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
