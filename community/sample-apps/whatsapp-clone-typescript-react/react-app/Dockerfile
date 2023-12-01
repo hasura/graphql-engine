@@ -1,4 +1,4 @@
-FROM node:carbon
+FROM node:21.1-bookworm-slim
 
 # Create app directory
 WORKDIR /app
