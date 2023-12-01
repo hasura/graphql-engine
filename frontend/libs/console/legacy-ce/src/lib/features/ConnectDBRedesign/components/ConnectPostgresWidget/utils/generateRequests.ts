@@ -24,6 +24,7 @@ export const generateConnectionInfo = (
         },
   pool_settings: {
     total_max_connections: values.poolSettings?.totalMaxConnections,
+    max_connections: values.poolSettings?.maxConnections,
     idle_timeout: values.poolSettings?.idleTimeout,
     retries: values.poolSettings?.retries,
     pool_timeout: values.poolSettings?.poolTimeout,
