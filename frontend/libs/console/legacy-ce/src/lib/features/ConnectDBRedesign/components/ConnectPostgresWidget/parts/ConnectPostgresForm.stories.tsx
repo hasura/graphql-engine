@@ -8,10 +8,14 @@ import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-q
 import { useState } from 'react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
+import { ConsoleTypeDecorator } from '../../../../../storybook/decorators';
 
 export default {
   component: ConnectPostgresForm,
-  decorators: [ReactQueryDecorator()],
+  decorators: [
+    ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'cloud' }),
+  ],
 } as Meta<typeof ConnectPostgresForm>;
 
 export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
@@ -166,7 +170,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
     );
 
     await userEvent.click(await canvas.findByText('Advanced Settings'));
-    await userEvent.type(await canvas.findByPlaceholderText('1000'), '100');
+    await userEvent.type(await canvas.findByPlaceholderText('50'), '100');
     await userEvent.type(await canvas.findByPlaceholderText('180'), '100');
     await userEvent.type(await canvas.findByPlaceholderText('1'), '100');
     await userEvent.type(await canvas.findByPlaceholderText('360'), '100');
@@ -194,7 +198,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                   port: 5432,
                 },
                 poolSettings: {
-                  totalMaxConnections: 100,
+                  maxConnections: 100,
                   idleTimeout: 100,
                   retries: 100,
                   poolTimeout: 100,
@@ -252,7 +256,7 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
                   port: 5432,
                 },
                 poolSettings: {
-                  totalMaxConnections: 100,
+                  maxConnections: 100,
                   idleTimeout: 100,
                   retries: 100,
                   poolTimeout: 100,
