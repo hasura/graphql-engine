@@ -704,6 +704,37 @@ Multiplexed live queries are split into
 | **Default**         | `100`                                                |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
+### Null in Non-nullable Variables
+
+GraphQL query validation is fixed in [`v2.36.0-beta.1`](https://hasura.io/changelog/community-edition/v2.36.0-beta.1),
+where queries that assigned a `null` value to variables with non-nullable type were allowed.
+
+Example:
+```graphql
+query ($user_id: Int!) {
+  users(where: {id: {_eq: $user_id}}){
+    id name
+  }
+}
+```
+variables
+```json
+{
+  "user_id": null
+}
+```
+
+To rollback to the old behavior, i.e., allow `null` value for non-nullable variables, use this option.
+
+|                     |                                                                 |
+|---------------------|-----------------------------------------------------------------|
+| **Flag**            | `--null-in-nonnullable-variables <true-or-false>`               |
+| **Env var**         | `HASURA_GRAPHQL_BACKWARDS_COMPAT_NULL_IN_NONNULLABLE_VARIABLES` |
+| **Accepted values** | Boolean                                                         |
+| **Options**         | `true` or `false`                                               |
+| **Default**         | `false`                                                         |
+| **Supported in**    | CE, Enterprise Edition, Cloud - from `v2.36.0-beta.1`           |
+
 ### Number of Retries
 
 :::warning Notice
