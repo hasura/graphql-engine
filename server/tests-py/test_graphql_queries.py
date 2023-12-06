@@ -180,6 +180,10 @@ class TestGraphQLQueryBasicPostgres:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
         assert resp['error'] == "Expecting object { table, columns }."
+    
+    def test_select_query_with_extensions(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_with_extensions.yaml", transport)
 
     @classmethod
     def dir(cls):

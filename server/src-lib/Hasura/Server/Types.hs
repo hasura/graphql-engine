@@ -328,8 +328,8 @@ instance ToJSON ExtQueryReqs where
 instance FromJSON ExtQueryReqs where
   parseJSON arr@Array {} = EqrGQLReq <$> (GH.GQLBatchedReqs <$> parseJSON arr)
   parseJSON json
-    -- The APQ requests, have a special key called as Extensions
-    | isJust (json Lens.^? key "extensions") = EqrAPQReq <$> parseJSON json
+    -- The APQ requests, have a special object in the key `Extentions` called as `persistedQuery`
+    | isJust (json Lens.^? key "extensions" . key "persistedQuery") = EqrAPQReq <$> parseJSON json
     | otherwise = EqrGQLReq <$> (GH.GQLSingleRequest <$> parseJSON json)
 
 class (Monad m) => MonadGetPolicies m where
