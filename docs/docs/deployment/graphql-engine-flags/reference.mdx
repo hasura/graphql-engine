@@ -710,14 +710,18 @@ GraphQL query validation is fixed in [`v2.36.0-beta.1`](https://hasura.io/change
 where queries that assigned a `null` value to variables with non-nullable type were allowed.
 
 Example:
+
 ```graphql
 query ($user_id: Int!) {
-  users(where: {id: {_eq: $user_id}}){
-    id name
+  users(where: { id: { _eq: $user_id } }) {
+    id
+    name
   }
 }
 ```
+
 variables
+
 ```json
 {
   "user_id": null
@@ -727,7 +731,7 @@ variables
 To rollback to the old behavior, i.e., allow `null` value for non-nullable variables, use this option.
 
 |                     |                                                                 |
-|---------------------|-----------------------------------------------------------------|
+| ------------------- | --------------------------------------------------------------- |
 | **Flag**            | `--null-in-nonnullable-variables <true-or-false>`               |
 | **Env var**         | `HASURA_GRAPHQL_BACKWARDS_COMPAT_NULL_IN_NONNULLABLE_VARIABLES` |
 | **Accepted values** | Boolean                                                         |
@@ -1211,13 +1215,13 @@ Used to set the connection initialization timeout for `graphql-ws` clients. This
 Used to set the `Keep Alive` delay for clients that use the `subscription-transport-ws` (Apollo) protocol. For
 `graphql-ws` clients, the `graphql-engine` sends `PING` messages instead.
 
-|                     |                                                      |
-| ------------------- | ---------------------------------------------------- |
-| **Flag**            | `--websocket-keepalive <TIME_IN_SECONDS>`            |
-| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_KEnterprise EditionPALIVE` |
-| **Accepted values** | Integer (Representing a delay in seconds)            |
-| **Default**         | `5`                                                  |
-| **Supported in**    | CE, Enterprise Edition                               |
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--websocket-keepalive <TIME_IN_SECONDS>` |
+| **Env var**         | `HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE`      |
+| **Accepted values** | Integer (Representing a delay in seconds) |
+| **Default**         | `5`                                       |
+| **Supported in**    | CE, Enterprise Edition                    |
 
 ### WS Read Cookie
 
