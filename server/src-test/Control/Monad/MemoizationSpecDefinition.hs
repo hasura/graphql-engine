@@ -122,7 +122,7 @@ checkMemoization = do
                 _ -> (+) <$> fibo (n - 2) <*> fibo (n - 1)
         traverse fibo [0 .. 20]
     fibos !! 20 `shouldBe` (6765 :: Int)
-    count `shouldBe` HashMap.fromList (zip [0 .. 20] (repeat 1))
+    count `shouldBe` HashMap.fromList (map (,1) [0 .. 20])
 
 --------------------------------------------------------------------------------
 -- Failure

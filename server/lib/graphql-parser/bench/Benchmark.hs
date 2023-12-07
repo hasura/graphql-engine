@@ -5,6 +5,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Control.Monad (replicateM)
 import Data.Bifunctor (second)
 import Data.ByteString.Builder qualified as BS
 import Data.Function ((&))
@@ -31,7 +32,7 @@ genDocs num =
 genTexts :: Int -> IO [(Int, [Text])]
 genTexts num =
   for [1 .. num] $ \n -> do
-    texts <- for [1 .. 500 :: Int] \_ -> generate genText
+    texts <- replicateM (500 :: Int) (generate genText)
     pure (n, texts)
 
 main :: IO ()

@@ -41,6 +41,8 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
+{-# ANN module ("HLint: ignore Functor law" :: String) #-}
+
 --------------------------------------------------------------------------------
 -- DataConnector Agent Query Tests
 

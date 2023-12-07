@@ -168,7 +168,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
 
     -- Collect all the non-failed branches, failing if all branches failed.
     succeedingBranchesNE :: forall f a. (Applicative f) => NonEmpty (MaybeT f a) -> MaybeT f (NonEmpty a)
-    succeedingBranchesNE xs = MaybeT $ NE.nonEmpty . catMaybes . NE.toList <$> sequenceA (xs <&> runMaybeT)
+    succeedingBranchesNE xs = MaybeT $ NE.nonEmpty . catMaybes . NE.toList <$> traverse runMaybeT xs
 
     -- Collect a non-empty list of input field parsers into one input field
     -- parser parsing a non-empty list of the specified values.

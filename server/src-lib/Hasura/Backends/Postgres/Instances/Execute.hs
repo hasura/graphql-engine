@@ -415,10 +415,9 @@ convertFunction sourceName modelSourceType userInfo jsonAggSelect unpreparedQuer
   modelNames <- irToModelInfoGen sourceName modelSourceType $ queryResultFn preparedQuery
   let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTags
   pure
-    $! ( fst
-           $ mkCurPlanTx userInfo preparedSQLWithQueryTags, -- forget (Maybe PreparedSql)
-         modelNames
-       )
+    ( fst (mkCurPlanTx userInfo preparedSQLWithQueryTags), -- forget (Maybe PreparedSql)
+      modelNames
+    )
 
 pgDBMutationPlan ::
   forall pgKind m.

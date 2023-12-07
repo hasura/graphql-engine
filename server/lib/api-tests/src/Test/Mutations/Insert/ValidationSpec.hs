@@ -91,7 +91,7 @@ createInsertPermissions testEnvironment server =
               { insertPermissionTable = "user",
                 insertPermissionRole = "user_1",
                 insertPermissionColumns = (["id", "name", "email", "phone_number"] :: [Text]),
-                insertPermissionValidationWebhook = Just $ (T.pack $ serverUrl server) <> "/validateUser"
+                insertPermissionValidationWebhook = Just $ T.pack (serverUrl server) <> "/validateUser"
               }
 
         GraphqlEngine.postMetadata_ testEnvironment
@@ -104,7 +104,7 @@ createInsertPermissions testEnvironment server =
               { insertPermissionTable = "tweet",
                 insertPermissionRole = "user_1",
                 insertPermissionColumns = (["id", "user_id", "content"] :: [Text]),
-                insertPermissionValidationWebhook = Just $ (T.pack $ serverUrl server) <> "/validateTweet"
+                insertPermissionValidationWebhook = Just $ T.pack (serverUrl server) <> "/validateTweet"
               },
       Fixture.teardownAction = \_ -> pure ()
     }
