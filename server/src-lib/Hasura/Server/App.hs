@@ -197,10 +197,6 @@ data APIHandler m a where
   AHGraphQLRequest :: !(GH.ReqsText -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m GH.ReqsText
   AHPersistedGraphQLRequest :: !(ExtQueryReqs -> Handler m (HttpLogGraphQLInfo, APIResp)) -> APIHandler m ExtQueryReqs
 
-data RequestInfo = RequestInfo
-  { fullPath :: Text }
-  deriving (Show)
-
 boolToText :: Bool -> Text
 boolToText = bool "false" "true"
 
@@ -260,6 +256,13 @@ onlyAdmin = do
 setHeader :: (MonadIO m) => HTTP.Header -> Spock.ActionCtxT ctx m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
+
+createReqsText :: ByteString -> ByteString -> ReqsText
+createReqsText operationName query = GQLSingleRequest gqlReq
+  where
+    gqlQueryText = GQLQueryText $ bsToTxt query
+    gqlOperationName = OperationName $ bsToTxt operationName
+    gqlReq = GQLReq (Just gqlOperationName) gqlQueryText Nothing
 
 -- | Typeclass representing the metadata API authorization effect
 class (Monad m) => MonadMetadataApiAuthorization m where
@@ -330,9 +333,9 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
       pathInfo = Wai.rawPathInfo req
-      fullPath = bsToTxt $ pathInfo <> Wai.rawQueryString req
+      queryParams = Wai.rawQueryString req
       propagators = getOtelTracesPropagator scOpenTelemetryConfig
-      requestInfo = RequestInfo { fullPath = fullPath }
+      requestInfo = createReqsText pathInfo queryParams
 
   -- Bytes are actually read from the socket here. Time this.
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
