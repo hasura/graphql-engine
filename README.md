@@ -113,7 +113,7 @@ Hasura works with any GraphQL client. See [awesome-graphql](https://github.com/c
 
 ## Add business logic
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine provides easy-to-reason, scalable, and performant methods for adding custom business logic to your backend:
 
 ### Remote schemas
 
