@@ -1,0 +1,421 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.WithOptional</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier">WithOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptional"><span class="hs-identifier">withOptional</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalField%27"><span class="hs-identifier">withOptionalField'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalFieldWith%27"><span class="hs-identifier">withOptionalFieldWith'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#ObjectCodec"><span class="hs-identifier">ObjectCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#ValueCodec"><span class="hs-identifier">ValueCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier">dimapCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWith%27"><span class="hs-identifier">optionalFieldWith'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Coercible</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- | Enrich a 'Functor' @f@ with optionality; this is primarily useful when</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- one wants to annotate fields as optional when using the Higher-Kinded Data</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- pattern.</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- 'WithOptional'@ f@ is equivalent to @Compose Maybe f@.</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">newtype</span><span> </span><span id="WithOptional"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span></span><span> </span><span id="local-6989586621687582877"><span class="annot"><a href="#local-6989586621687582877"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span id="local-6989586621687582878"><span class="annot"><a href="#local-6989586621687582878"><span class="hs-identifier hs-type">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WithOptional"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="getOptional"><span class="annot"><span class="annottext">forall (f :: * -&gt; *) result.
+WithOptional f result -&gt; Maybe (f result)
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#getOptional"><span class="hs-identifier hs-var hs-var">getOptional</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687582877"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582878"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687583010"><span id="local-6989586621687583014"><span class="annot"><span class="annottext">WithOptional f result -&gt; WithOptional f result -&gt; Bool
+(WithOptional f result -&gt; WithOptional f result -&gt; Bool)
+-&gt; (WithOptional f result -&gt; WithOptional f result -&gt; Bool)
+-&gt; Eq (WithOptional f result)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (f :: * -&gt; *) result.
+Eq (f result) =&gt;
+WithOptional f result -&gt; WithOptional f result -&gt; Bool
+$c== :: forall (f :: * -&gt; *) result.
+Eq (f result) =&gt;
+WithOptional f result -&gt; WithOptional f result -&gt; Bool
+== :: WithOptional f result -&gt; WithOptional f result -&gt; Bool
+$c/= :: forall (f :: * -&gt; *) result.
+Eq (f result) =&gt;
+WithOptional f result -&gt; WithOptional f result -&gt; Bool
+/= :: WithOptional f result -&gt; WithOptional f result -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687583020"><span id="local-6989586621687583025"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; WithOptional f a -&gt; WithOptional f b)
+-&gt; (forall a b. a -&gt; WithOptional f b -&gt; WithOptional f a)
+-&gt; Functor (WithOptional f)
+forall a b. a -&gt; WithOptional f b -&gt; WithOptional f a
+forall a b. (a -&gt; b) -&gt; WithOptional f a -&gt; WithOptional f b
+forall (f :: * -&gt; *) a b.
+Functor f =&gt;
+a -&gt; WithOptional f b -&gt; WithOptional f a
+forall (f :: * -&gt; *) a b.
+Functor f =&gt;
+(a -&gt; b) -&gt; WithOptional f a -&gt; WithOptional f b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (f :: * -&gt; *) a b.
+Functor f =&gt;
+(a -&gt; b) -&gt; WithOptional f a -&gt; WithOptional f b
+fmap :: forall a b. (a -&gt; b) -&gt; WithOptional f a -&gt; WithOptional f b
+$c&lt;$ :: forall (f :: * -&gt; *) a b.
+Functor f =&gt;
+a -&gt; WithOptional f b -&gt; WithOptional f a
+&lt;$ :: forall a b. a -&gt; WithOptional f b -&gt; WithOptional f a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687583032"><span id="local-6989586621687583038"><span id="local-6989586621687583046"><span id="local-6989586621687583051"><span id="local-6989586621687583055"><span id="local-6989586621687583058"><span id="local-6989586621687583061"><span id="local-6989586621687583064"><span id="local-6989586621687583067"><span id="local-6989586621687583070"><span id="local-6989586621687583073"><span id="local-6989586621687583077"><span id="local-6989586621687583080"><span id="local-6989586621687583085"><span id="local-6989586621687583090"><span id="local-6989586621687583095"><span id="local-6989586621687583100"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; WithOptional f m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithOptional f a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithOptional f a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a)
+-&gt; (forall a. WithOptional f a -&gt; [a])
+-&gt; (forall a. WithOptional f a -&gt; Bool)
+-&gt; (forall a. WithOptional f a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; WithOptional f a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; WithOptional f a -&gt; a)
+-&gt; (forall a. Ord a =&gt; WithOptional f a -&gt; a)
+-&gt; (forall a. Num a =&gt; WithOptional f a -&gt; a)
+-&gt; (forall a. Num a =&gt; WithOptional f a -&gt; a)
+-&gt; Foldable (WithOptional f)
+forall a. Eq a =&gt; a -&gt; WithOptional f a -&gt; Bool
+forall a. Num a =&gt; WithOptional f a -&gt; a
+forall a. Ord a =&gt; WithOptional f a -&gt; a
+forall m. Monoid m =&gt; WithOptional f m -&gt; m
+forall a. WithOptional f a -&gt; Bool
+forall a. WithOptional f a -&gt; Int
+forall a. WithOptional f a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithOptional f a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+forall (f :: * -&gt; *) a.
+(Foldable f, Eq a) =&gt;
+a -&gt; WithOptional f a -&gt; Bool
+forall (f :: * -&gt; *) a.
+(Foldable f, Num a) =&gt;
+WithOptional f a -&gt; a
+forall (f :: * -&gt; *) a.
+(Foldable f, Ord a) =&gt;
+WithOptional f a -&gt; a
+forall (f :: * -&gt; *) m.
+(Foldable f, Monoid m) =&gt;
+WithOptional f m -&gt; m
+forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; Bool
+forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; Int
+forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; [a]
+forall (f :: * -&gt; *) a.
+Foldable f =&gt;
+(a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+forall (f :: * -&gt; *) m a.
+(Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; WithOptional f a -&gt; m
+forall (f :: * -&gt; *) b a.
+Foldable f =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+forall (f :: * -&gt; *) a b.
+Foldable f =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (f :: * -&gt; *) m.
+(Foldable f, Monoid m) =&gt;
+WithOptional f m -&gt; m
+fold :: forall m. Monoid m =&gt; WithOptional f m -&gt; m
+$cfoldMap :: forall (f :: * -&gt; *) m a.
+(Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; WithOptional f a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithOptional f a -&gt; m
+$cfoldMap' :: forall (f :: * -&gt; *) m a.
+(Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; WithOptional f a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; WithOptional f a -&gt; m
+$cfoldr :: forall (f :: * -&gt; *) a b.
+Foldable f =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+$cfoldr' :: forall (f :: * -&gt; *) a b.
+Foldable f =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+$cfoldl :: forall (f :: * -&gt; *) b a.
+Foldable f =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+$cfoldl' :: forall (f :: * -&gt; *) b a.
+Foldable f =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; WithOptional f a -&gt; b
+$cfoldr1 :: forall (f :: * -&gt; *) a.
+Foldable f =&gt;
+(a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+$cfoldl1 :: forall (f :: * -&gt; *) a.
+Foldable f =&gt;
+(a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; WithOptional f a -&gt; a
+$ctoList :: forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; [a]
+toList :: forall a. WithOptional f a -&gt; [a]
+$cnull :: forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; Bool
+null :: forall a. WithOptional f a -&gt; Bool
+$clength :: forall (f :: * -&gt; *) a. Foldable f =&gt; WithOptional f a -&gt; Int
+length :: forall a. WithOptional f a -&gt; Int
+$celem :: forall (f :: * -&gt; *) a.
+(Foldable f, Eq a) =&gt;
+a -&gt; WithOptional f a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; WithOptional f a -&gt; Bool
+$cmaximum :: forall (f :: * -&gt; *) a.
+(Foldable f, Ord a) =&gt;
+WithOptional f a -&gt; a
+maximum :: forall a. Ord a =&gt; WithOptional f a -&gt; a
+$cminimum :: forall (f :: * -&gt; *) a.
+(Foldable f, Ord a) =&gt;
+WithOptional f a -&gt; a
+minimum :: forall a. Ord a =&gt; WithOptional f a -&gt; a
+$csum :: forall (f :: * -&gt; *) a.
+(Foldable f, Num a) =&gt;
+WithOptional f a -&gt; a
+sum :: forall a. Num a =&gt; WithOptional f a -&gt; a
+$cproduct :: forall (f :: * -&gt; *) a.
+(Foldable f, Num a) =&gt;
+WithOptional f a -&gt; a
+product :: forall a. Num a =&gt; WithOptional f a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687583106"><span id="local-6989586621687583108"><span class="annot"><span class="annottext">(forall x. WithOptional f result -&gt; Rep (WithOptional f result) x)
+-&gt; (forall x.
+    Rep (WithOptional f result) x -&gt; WithOptional f result)
+-&gt; Generic (WithOptional f result)
+forall x. Rep (WithOptional f result) x -&gt; WithOptional f result
+forall x. WithOptional f result -&gt; Rep (WithOptional f result) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (f :: * -&gt; *) result x.
+Rep (WithOptional f result) x -&gt; WithOptional f result
+forall (f :: * -&gt; *) result x.
+WithOptional f result -&gt; Rep (WithOptional f result) x
+$cfrom :: forall (f :: * -&gt; *) result x.
+WithOptional f result -&gt; Rep (WithOptional f result) x
+from :: forall x. WithOptional f result -&gt; Rep (WithOptional f result) x
+$cto :: forall (f :: * -&gt; *) result x.
+Rep (WithOptional f result) x -&gt; WithOptional f result
+to :: forall x. Rep (WithOptional f result) x -&gt; WithOptional f result
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687583113"><span id="local-6989586621687583119"><span id="local-6989586621687583123"><span class="annot"><span class="annottext">Int -&gt; WithOptional f result -&gt; ShowS
+[WithOptional f result] -&gt; ShowS
+WithOptional f result -&gt; String
+(Int -&gt; WithOptional f result -&gt; ShowS)
+-&gt; (WithOptional f result -&gt; String)
+-&gt; ([WithOptional f result] -&gt; ShowS)
+-&gt; Show (WithOptional f result)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+Int -&gt; WithOptional f result -&gt; ShowS
+forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+[WithOptional f result] -&gt; ShowS
+forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+WithOptional f result -&gt; String
+$cshowsPrec :: forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+Int -&gt; WithOptional f result -&gt; ShowS
+showsPrec :: Int -&gt; WithOptional f result -&gt; ShowS
+$cshow :: forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+WithOptional f result -&gt; String
+show :: WithOptional f result -&gt; String
+$cshowList :: forall (f :: * -&gt; *) result.
+Show (f result) =&gt;
+[WithOptional f result] -&gt; ShowS
+showList :: [WithOptional f result] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687583128"><span id="local-6989586621687583133"><span class="annot"><span class="annottext">Value -&gt; Parser [WithOptional f result]
+Value -&gt; Parser (WithOptional f result)
+(Value -&gt; Parser (WithOptional f result))
+-&gt; (Value -&gt; Parser [WithOptional f result])
+-&gt; FromJSON (WithOptional f result)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (f :: * -&gt; *) result.
+FromJSON (f result) =&gt;
+Value -&gt; Parser [WithOptional f result]
+forall (f :: * -&gt; *) result.
+FromJSON (f result) =&gt;
+Value -&gt; Parser (WithOptional f result)
+$cparseJSON :: forall (f :: * -&gt; *) result.
+FromJSON (f result) =&gt;
+Value -&gt; Parser (WithOptional f result)
+parseJSON :: Value -&gt; Parser (WithOptional f result)
+$cparseJSONList :: forall (f :: * -&gt; *) result.
+FromJSON (f result) =&gt;
+Value -&gt; Parser [WithOptional f result]
+parseJSONList :: Value -&gt; Parser [WithOptional f result]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687583140"><span id="local-6989586621687583145"><span id="local-6989586621687583149"><span id="local-6989586621687583153"><span class="annot"><span class="annottext">[WithOptional f result] -&gt; Value
+[WithOptional f result] -&gt; Encoding
+WithOptional f result -&gt; Value
+WithOptional f result -&gt; Encoding
+(WithOptional f result -&gt; Value)
+-&gt; (WithOptional f result -&gt; Encoding)
+-&gt; ([WithOptional f result] -&gt; Value)
+-&gt; ([WithOptional f result] -&gt; Encoding)
+-&gt; ToJSON (WithOptional f result)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+[WithOptional f result] -&gt; Value
+forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+[WithOptional f result] -&gt; Encoding
+forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+WithOptional f result -&gt; Value
+forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+WithOptional f result -&gt; Encoding
+$ctoJSON :: forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+WithOptional f result -&gt; Value
+toJSON :: WithOptional f result -&gt; Value
+$ctoEncoding :: forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+WithOptional f result -&gt; Encoding
+toEncoding :: WithOptional f result -&gt; Encoding
+$ctoJSONList :: forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+[WithOptional f result] -&gt; Value
+toJSONList :: [WithOptional f result] -&gt; Value
+$ctoEncodingList :: forall (f :: * -&gt; *) result.
+ToJSON (f result) =&gt;
+[WithOptional f result] -&gt; Encoding
+toEncodingList :: [WithOptional f result] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span id="local-6989586621687583160"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687582956"><span id="local-6989586621687582957"><span class="annot"><a href="#local-6989586621687582956"><span class="hs-keyword hs-type hs-type">newtype</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687582956"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582957"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582956"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582957"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- | 'WithOptional' smart constructor for the special case of optional values</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- that are representationally equivalent to some &quot;wrapper&quot; type.</span><span>
+</span><span id="line-33"></span><span class="hs-comment">--</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- For example:</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- withOptional \@HeaderTransformsAction headers == WithOptional $ fmap HeadersTransform headers</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-38"></span><span class="hs-comment">--</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- In other words: this function observes the isomorphism between @'Maybe' a@</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- and  @'WithOptional' f b@ if an isomorphism exists between @a@ and @f b@.</span><span>
+</span><span id="line-41"></span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptional"><span class="hs-identifier hs-type">withOptional</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687582958"><span class="annot"><a href="#local-6989586621687582958"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621687582960"><span class="annot"><a href="#local-6989586621687582960"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687582959"><span class="annot"><a href="#local-6989586621687582959"><span class="hs-identifier hs-type">f</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coercible</span></span><span> </span><span class="annot"><a href="#local-6989586621687582958"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687582959"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582960"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687582958"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582959"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582960"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-46"></span><span id="withOptional"><span class="annot"><span class="annottext">withOptional :: forall a b (f :: * -&gt; *).
+Coercible a (f b) =&gt;
+Maybe a -&gt; WithOptional f b
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptional"><span class="hs-identifier hs-var hs-var">withOptional</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; WithOptional f b
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- | Define a field in an object codec that applies 'withOptional' when</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- decoding, and applies 'getOptional' when encoding.</span><span>
+</span><span id="line-50"></span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalField%27"><span class="hs-identifier hs-type">withOptionalField'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687582967"><span class="annot"><a href="#local-6989586621687582967"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621687582969"><span class="annot"><a href="#local-6989586621687582969"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687582968"><span class="annot"><a href="#local-6989586621687582968"><span class="hs-identifier hs-type">f</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coercible</span></span><span> </span><span class="annot"><a href="#local-6989586621687582967"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687582968"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582969"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582967"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#ObjectCodec"><span class="hs-identifier hs-type">ObjectCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582968"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582969"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582968"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582969"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span id="withOptionalField%27"><span class="annot"><span class="annottext">withOptionalField' :: forall a b (f :: * -&gt; *).
+(Coercible a (f b), HasCodec a) =&gt;
+Text -&gt; ObjectCodec (WithOptional f b) (WithOptional f b)
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalField%27"><span class="hs-identifier hs-var hs-var">withOptionalField'</span></a></span></span><span> </span><span id="local-6989586621687583173"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687583173"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec a a
+-&gt; ObjectCodec (WithOptional f b) (WithOptional f b)
+forall a b (f :: * -&gt; *).
+Coercible a (f b) =&gt;
+Text
+-&gt; ValueCodec a a
+-&gt; ObjectCodec (WithOptional f b) (WithOptional f b)
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalFieldWith%27"><span class="hs-identifier hs-var">withOptionalFieldWith'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687583173"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687582967"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Define a field in an object codec that applies 'withOptional' when</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- decoding, and applies 'getOptional' when encoding.</span><span>
+</span><span id="line-59"></span><span class="hs-comment">--</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- This version takes a codec for the underlying value type as an argument.</span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalFieldWith%27"><span class="hs-identifier hs-type">withOptionalFieldWith'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687582977"><span class="annot"><a href="#local-6989586621687582977"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621687582979"><span class="annot"><a href="#local-6989586621687582979"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687582978"><span class="annot"><a href="#local-6989586621687582978"><span class="hs-identifier hs-type">f</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coercible</span></span><span> </span><span class="annot"><a href="#local-6989586621687582977"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687582978"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582979"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#ValueCodec"><span class="hs-identifier hs-type">ValueCodec</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582977"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582977"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#ObjectCodec"><span class="hs-identifier hs-type">ObjectCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582978"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582979"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582978"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687582979"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span id="withOptionalFieldWith%27"><span class="annot"><span class="annottext">withOptionalFieldWith' :: forall a b (f :: * -&gt; *).
+Coercible a (f b) =&gt;
+Text
+-&gt; ValueCodec a a
+-&gt; ObjectCodec (WithOptional f b) (WithOptional f b)
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptionalFieldWith%27"><span class="hs-identifier hs-var hs-var">withOptionalFieldWith'</span></a></span></span><span> </span><span id="local-6989586621687583179"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687583179"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621687583180"><span class="annot"><span class="annottext">ValueCodec a a
+</span><a href="#local-6989586621687583180"><span class="hs-identifier hs-var">aCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">(Maybe a -&gt; WithOptional f b)
+-&gt; (WithOptional f b -&gt; Maybe a)
+-&gt; Codec Object (Maybe a) (Maybe a)
+-&gt; Codec Object (WithOptional f b) (WithOptional f b)
+forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; WithOptional f b
+forall a b (f :: * -&gt; *).
+Coercible a (f b) =&gt;
+Maybe a -&gt; WithOptional f b
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#withOptional"><span class="hs-identifier hs-var">withOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(f b -&gt; a) -&gt; Maybe (f b) -&gt; Maybe a
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">f b -&gt; a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (f b) -&gt; Maybe a)
+-&gt; (WithOptional f b -&gt; Maybe (f b)) -&gt; WithOptional f b -&gt; Maybe a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">WithOptional f b -&gt; Maybe (f b)
+forall (f :: * -&gt; *) result.
+WithOptional f result -&gt; Maybe (f result)
+</span><a href="Hasura.RQL.Types.Webhook.Transform.WithOptional.html#getOptional"><span class="hs-identifier hs-var">getOptional</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">(Codec Object (Maybe a) (Maybe a)
+ -&gt; Codec Object (WithOptional f b) (WithOptional f b))
+-&gt; Codec Object (Maybe a) (Maybe a)
+-&gt; Codec Object (WithOptional f b) (WithOptional f b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ValueCodec a a -&gt; Codec Object (Maybe a) (Maybe a)
+forall input output.
+Text
+-&gt; ValueCodec input output
+-&gt; ObjectCodec (Maybe input) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWith%27"><span class="hs-identifier hs-var">optionalFieldWith'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687583179"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec a a
+</span><a href="#local-6989586621687583180"><span class="hs-identifier hs-var">aCodec</span></a></span><span>
+</span><span id="line-70"></span></pre></body></html>
