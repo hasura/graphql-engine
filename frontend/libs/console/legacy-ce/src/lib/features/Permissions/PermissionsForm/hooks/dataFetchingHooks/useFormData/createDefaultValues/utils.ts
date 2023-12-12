@@ -14,6 +14,7 @@ import { createDefaultValues } from '../../../../components/RowPermissionsBuilde
 
 import type { QueryType } from '../../../../../types';
 import {
+  ComputedField,
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
@@ -83,6 +84,17 @@ const getColumns = (
   }, {});
 };
 
+const getComputedFields = (
+  permissionComputedFields: string[],
+  tableComputedFields: ComputedField[]
+) => {
+  return tableComputedFields.reduce<Record<string, boolean>>((acc, each) => {
+    const computedFieldIncluded = permissionComputedFields?.includes(each.name);
+    acc[each.name] = !!computedFieldIncluded;
+    return acc;
+  }, {});
+};
+
 export const createPermission = {
   insert: (
     permission: InsertPermissionDefinition,
@@ -110,6 +122,7 @@ export const createPermission = {
   select: (
     permission: SelectPermissionDefinition,
     tableColumns: TableColumn[],
+    tableComputedFields: ComputedField[],
     tableName: string,
     metadataSource: MetadataDataSource | undefined
   ) => {
@@ -123,6 +136,10 @@ export const createPermission = {
     const filterType = getCheckType(permission?.filter);
 
     const columns = getColumns(permission?.columns || [], tableColumns);
+    const computed_fields = getComputedFields(
+      permission?.computed_fields || [],
+      tableComputedFields
+    );
 
     const rowCount = getRowCount({
       currentQueryPermissions: permission,
@@ -135,6 +152,7 @@ export const createPermission = {
       filter,
       filterType,
       columns,
+      computed_fields,
       rowCount,
       aggregationEnabled,
       operators: ops,
@@ -238,6 +256,7 @@ interface ObjArgs {
   queryType: QueryType;
   selectedTable: TableEntry;
   tableColumns: TableColumn[];
+  tableComputedFields: ComputedField[];
   roleName: string;
   tableName: string;
   metadataSource: MetadataDataSource | undefined;
@@ -247,6 +266,7 @@ export const createPermissionsObject = ({
   queryType,
   selectedTable,
   tableColumns,
+  tableComputedFields,
   roleName,
   tableName,
   metadataSource,
@@ -267,6 +287,7 @@ export const createPermissionsObject = ({
       return createPermission.select(
         selectedPermission.permission as SelectPermissionDefinition,
         tableColumns,
+        tableComputedFields,
         tableName,
         // selectedTable.configuration,
         metadataSource

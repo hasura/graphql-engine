@@ -245,7 +245,7 @@ initPQConn ci logger = do
   -- Retry if postgres connection error occurs
   pgRetrying host resetFn retryP logger $ do
     -- Initialise the connection
-    conn <- PQ.connectdb =<< (pgConnString $ ciDetails ci)
+    conn <- PQ.connectdb =<< pgConnString (ciDetails ci)
 
     -- Check the status of the connection
     s <- liftIO $ PQ.status conn

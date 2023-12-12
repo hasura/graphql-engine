@@ -54,7 +54,11 @@ class Heading extends React.Component {
             <h2>{currentValue}</h2>
             <div className="text-base font-normal flex gap-2">
               <TryOperation table={table} dispatch={dispatch} source={source} />
-              <CreateRestEndpoint tableName={table.table_name} />
+              <CreateRestEndpoint
+                tableName={table.table_name}
+                dataSourceName={source}
+                table={{ name: table.table_name, schema: table.table_schema }}
+              />
             </div>
           </div>
           <div className="pb-5">
@@ -75,7 +79,11 @@ class Heading extends React.Component {
             <h2>{currentValue}</h2>
             <div className="text-base font-normal flex gap-2">
               <TryOperation table={table} dispatch={dispatch} source={source} />
-              <CreateRestEndpoint tableName={table.table_name} />
+              <CreateRestEndpoint
+                tableName={table.table_name}
+                dataSourceName={source}
+                table={{ name: table.table_name, schema: table.table_schema }}
+              />
             </div>
             <div
               onClick={this.toggleEditting}

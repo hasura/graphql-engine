@@ -160,7 +160,7 @@ runQueryParser ::
   HashMap.HashMap G.Name J.Value ->
   any
 runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
-  (_, resolvedSelSet) <- resolveVariables varDefs vars [] selSet
+  (_, resolvedSelSet) <- resolveVariables Options.Don'tAllowNullInNonNullableVariables varDefs vars [] selSet
   field <- case resolvedSelSet of
     [G.SelectionField f] -> pure f
     _ -> error "expecting only one field in the query"

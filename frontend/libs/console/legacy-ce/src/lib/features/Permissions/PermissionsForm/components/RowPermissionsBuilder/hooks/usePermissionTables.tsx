@@ -39,6 +39,7 @@ export const usePermissionTables = ({
             suggestedRelationships
           ),
           columns,
+          computedFields: metadataTable.computed_fields ?? [],
         };
       }) ?? [],
   };

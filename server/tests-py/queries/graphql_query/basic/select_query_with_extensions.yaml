@@ -1,0 +1,49 @@
+- description: Simple GraphQL object query on author, where the request includes extensions (normal request).
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    data:
+      author:
+      - id: 1
+        name: Author 1
+      - id: 2
+        name: Author 2
+  query:
+    # https://graphql.org/learn/serving-over-http/#post-request
+    operationName: chooseThisOne
+    extensions: null
+    query: |
+      query chooseThisOne {
+        author {
+          id
+          name
+        }
+      }
+
+- description: Simple GraphQL object query on author, where the request includes persisted query extension.
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: not-supported
+      message: Automatic Persisted Queries is not enabled
+  query:
+    # https://graphql.org/learn/serving-over-http/#post-request
+    operationName: chooseThisOne
+    extensions: 
+      persistedQuery: 
+        version: 1
+        sha256Hash: randomhash
+    query: |
+      query chooseThisOne {
+        author {
+          id
+          name
+        }
+      }

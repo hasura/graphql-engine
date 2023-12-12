@@ -103,7 +103,7 @@ convertMutationSelectionSet
   tracesPropagator
   prometheusMetrics
   gqlContext
-  SQLGenCtx {stringifyNum}
+  SQLGenCtx {stringifyNum, nullInNonNullableVariables}
   userInfo
   reqHeaders
   directives
@@ -117,7 +117,7 @@ convertMutationSelectionSet
       onNothing (gqlMutationParser gqlContext)
         $ throw400 ValidationFailed "no mutations exist"
 
-    (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
+    (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
     (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
       Tracing.newSpan "Parse mutation IR" $ liftEither $ mutationParser resolvedSelSet

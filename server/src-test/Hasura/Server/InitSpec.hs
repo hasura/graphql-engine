@@ -64,6 +64,7 @@ emptyServeOptionsRaw =
       rsoWsReadCookie = UUT.WsReadCookieDisabled,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
+      rsoBackwardsCompatibleNullInNonNullableVariables = Nothing,
       rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
@@ -626,6 +627,37 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.Don'tDangerouslyCollapseBooleans
+
+    Hspec.describe "soBackwardsCompatibleNullInNonNullableVariables" $ do
+      Hspec.it "Default == False" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right (UUT._default UUT.backwardsCompatibleNullInNonNullableVariablesOption)
+
+      Hspec.it "Env > Nothing" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = [(UUT._envVar UUT.backwardsCompatibleNullInNonNullableVariablesOption, "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.AllowNullInNonNullableVariables
+
+      Hspec.it "Arg > Env" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoBackwardsCompatibleNullInNonNullableVariables = Just Options.Don'tAllowNullInNonNullableVariables}
+            -- When
+            env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.Don'tAllowNullInNonNullableVariables
 
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do

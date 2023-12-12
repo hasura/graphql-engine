@@ -110,6 +110,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
                   <FaExternalLinkAlt />
                 </span>
               ) : (
+                // eslint-disable-next-line jsx-a11y/anchor-is-valid
                 <a
                   onClick={() => {
                     relationships?.onClick({
@@ -269,6 +270,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
                     key={`${row.id}-${i}`}
                     data-testid={`@table-cell-${row.id}-${i}`}
                     style={{ maxWidth: '20ch' }}
+                    className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </CardedTable.TableBodyCell>

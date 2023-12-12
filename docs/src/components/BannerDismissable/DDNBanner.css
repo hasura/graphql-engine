@@ -1,0 +1,30 @@
+.banner {
+    background-color: #1699e2;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 15px;
+    font-size: 16px;
+}
+
+.close-btn {
+    background: none;
+    color: white;
+    border: none;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.close-btn:focus {
+    outline: none;
+}
+
+.banner a {
+    color: white;
+    cursor: pointer;
+}

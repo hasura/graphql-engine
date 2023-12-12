@@ -69,6 +69,14 @@ This will create a new folder named in the format `<timestamp>_init` within anot
 in Hasura which is being referenced. It will contain only an `up.sql` file which describes in SQL how to create the
 schema in full for that database.
 
+:::info When using a non-Postgres database
+
+Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
+Should you wish to use a different database, you will need to manually create the migration files. For more information,
+please see the section below.
+
+:::
+
 ### Create a Migration manually {#create-manual-migrations}
 
 While the Hasura Console can auto generate Migrations for every action, sometimes you might want to write the migrations

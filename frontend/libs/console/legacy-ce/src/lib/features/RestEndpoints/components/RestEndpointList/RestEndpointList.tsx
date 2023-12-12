@@ -65,7 +65,7 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
 
   const processedEndpoints = React.useMemo(() => {
     let localEmptySearch = true;
-    const localRestEnpoints = restEndpoints
+    const localRestEndpoints = restEndpoints
       ?.map(endpoint => {
         const searchMatch =
           !search ||
@@ -89,15 +89,15 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
         highlighted.includes(endpoint?.endpoint?.name) ? -1 : 1
       );
     emptySearch.current = localEmptySearch;
-    return localRestEnpoints;
+    return localRestEndpoints;
   }, [highlighted, restEndpoints, search, selectedMethods]);
 
   if (isLoading) {
-    return <div className="pl-10 mt-5 mb-xs">Loading Rest Enpoints...</div>;
+    return <div className="pl-10 mt-5 mb-xs">Loading REST Endpoints...</div>;
   }
 
   if (isError) {
-    return <div>Error getting Rest Endpoints</div>;
+    return <div>Error getting REST Endpoints</div>;
   }
 
   if (!queryCollections || !allowedQueries || !restEndpoints) {
@@ -323,7 +323,8 @@ export const RestEndpointList: React.FC<ListComponentProps> = ({
             ]) ?? [[]]
           }
         />
-        {emptySearch.current && 'No Rest Enpoints available for currect search'}
+        {emptySearch.current &&
+          'No REST Endpoints available for current search'}
       </div>
     </Analytics>
   );

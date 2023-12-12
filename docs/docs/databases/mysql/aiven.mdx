@@ -1,0 +1,167 @@
+---
+description: "Learn how to connect Hasura Cloud to Aiven MySQL databases, including set up instructions, service configuration, and secure connection details."
+title: 'Cloud: Using Hasura Cloud with an Aiven MySQL database'
+keywords:
+  - hasura cloud
+  - aiven mysql integration
+  - graphql database connection
+  - mysql jdbc string
+  - secure database setup
+  - hasura console guide
+  - cloud database management
+  - mysql service configuration
+  - aiven service creation
+  - connect hasura to mysql
+sidebar_label: Aiven MySQL
+sidebar_position: 4
+seoFrontMatterUpdated: true
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to an Aiven MySQL Database
+
+## Introduction
+
+This guide explains how to connect a new or existing [Aiven MySQL](https://aiven.io/mysql?utm_source=website&utm_medium=referral&utm_campaign=hasura) database to a Hasura
+instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions.
+
+:::info Note
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-mysql-db-aiven).
+
+:::
+
+:::tip Supported From
+
+Aiven-hosted MySQL databases are supported from Hasura `v2.35.0` onwards.
+
+:::
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-aiven}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Choose the MySQL driver and
+then click `Connect Existing Database`:
+
+<Thumbnail src="/img/databases/mysql/aiven/aiven-mysql-choose-driver.png" alt="Choose MySQL driver" width="1000px" />
+
+We'll provision the database on Aiven in the next step and then return to this page to complete the connection.
+
+## Step 3: Create a MySQL DB on Aiven {#create-mysql-db-aiven}
+
+:::info Note
+
+If you have an existing Aiven MySQL database, you can skip this step and move on to [step 4](#connect-hasura-aiven).
+
+:::
+
+Log into the [Aiven console](https://console.aiven.io/signup?utm_source=website&utm_medium=referral&utm_campaign=hasura).
+
+On the Aiven console, click `+ Create a new service` and choose `MySQL`:
+
+<Thumbnail
+  src="/img/databases/mysql/aiven/aiven-create-mysql.png"
+  alt="Create MySQL instance on Aiven"
+  width="1000px"
+/>
+
+Scroll down and select the `Cloud Provider`, `Region` and `Service Plan` based on your requirements. Then click
+`Create free service`:
+
+<Thumbnail
+  src="/img/databases/mysql/aiven/aiven-mysql-configuration.png"
+  alt="Configure MySQL service"
+  width="1000px"
+/>
+
+## Step 4: Allow connections to your DB from Hasura {#connect-hasura-aiven}
+
+On the `Services` dashboard, click on your DB and scroll down to `Allowed IP Addresses` and click on `Change`:
+
+<Thumbnail
+  src="/img/databases/mysql/aiven/aiven-mysql-change-ip.png"
+  alt="Change allowed IP addresses on Aiven"
+  width="1000px"
+/>
+
+If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
+details view:
+
+<Thumbnail src="/img/databases/mysql/aiven/aiven-mysql-hasura-cloud-ip.png" alt="Hasura Cloud IP" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
+
+Add the Hasura IP address that you copied, click on the `+`:
+
+<Thumbnail src="/img/databases/mysql/aiven/aiven-mysql-hasura-cloud-ip-set.png" alt="Hasura Cloud IP" width="1000px" />
+
+Then click on `Close`.
+
+## Step 5: Get the database connection URL {#get-db-url-aiven}
+
+The MySQL connector utilizes JDBC connection strings to connect to the database. The format of the connection string is
+as follows:
+
+```bash
+jdbc:mysql://<hostname>:<port>/<database name>?user=<username>&password=<password>
+```
+
+You'll have to transform the connection string provided by Aiven into the format above. Navigate to the `Overview` tab
+of your database dashboard and use the `Service URI` to construct the connection string:
+
+<Thumbnail src="/img/databases/mysql/aiven/aiven-mysql-connection-uri.png" alt="Connection URI" width="1000px" />
+
+## Step 6: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#get-db-url-aiven):
+
+<Thumbnail src="/img/databases/mysql/aiven/aiven-mysql-finish-connecting.png" alt="Finish connecting" width="1000px" />
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and
+using the env vars to connect to the databases in place of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" width="1100px" />
+
+## Next steps
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/domains.mdx)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info Note
+
+For more information on which MySQL features we support, check out [this page](/databases/feature-support.mdx).
+
+:::

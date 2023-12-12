@@ -263,7 +263,7 @@ instance OnlyRelevantEq G.Name where
 instance (OnlyRelevantEq a) => OnlyRelevantEq [a] where
   l ==~ r =
     (length r == length r)
-      && (all (== True) (zipWith (==~) l r))
+      && and (zipWith (==~) l r)
 
 instance OnlyRelevantEq G.ScalarTypeDefinition where
   G.ScalarTypeDefinition _descL nameL directivesL

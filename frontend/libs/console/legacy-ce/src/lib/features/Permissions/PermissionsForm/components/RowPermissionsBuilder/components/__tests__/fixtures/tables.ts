@@ -19,6 +19,7 @@ export const tables: Tables = [
       },
     ],
     relationships: [],
+    computedFields: [],
   },
   {
     table: ['Artist'],
@@ -38,6 +39,7 @@ export const tables: Tables = [
       },
     ],
     relationships: [],
+    computedFields: [],
   },
   {
     table: ['Album'],
@@ -80,12 +82,14 @@ export const tables: Tables = [
         },
       },
     ],
+    computedFields: [],
   },
   {
     table: ['Customer'],
     dataSource: { name: 'SQLite', kind: 'SQLite' },
     columns: [],
     relationships: [],
+    computedFields: [],
   },
   {
     table: { dataset: 'bigquery_sample', name: 'sample_table' },
@@ -149,6 +153,7 @@ export const tables: Tables = [
       },
     ],
     relationships: [],
+    computedFields: [],
   },
 ];
 
@@ -189,6 +194,7 @@ export const tableWithGeolocationSupport = [
       },
     },
     relationships: [],
+    computedFields: [],
     columns: [
       {
         name: 'user_id',

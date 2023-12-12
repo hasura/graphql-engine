@@ -32,7 +32,9 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.Schema.Options as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
@@ -46,6 +48,7 @@ import Network.HTTP.Types qualified as HTTP
 
 parseGraphQLQuery ::
   (MonadError QErr m) =>
+  Options.BackwardsCompatibleNullInNonNullableVariables ->
   GQLContext ->
   [G.VariableDefinition] ->
   Maybe (HashMap G.Name J.Value) ->
@@ -56,8 +59,8 @@ parseGraphQLQuery ::
       [G.Directive Variable],
       G.SelectionSet G.NoFragments Variable
     )
-parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
-  (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty varValsM) directives fields
+parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs varValsM directives fields = do
+  (resolvedDirectives, resolvedSelSet) <- resolveVariables nullInNonNullableVariables varDefs (fromMaybe HashMap.empty varValsM) directives fields
   parsedQuery <- liftEither $ gqlQueryParser gqlContext resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
@@ -77,6 +80,7 @@ convertQuerySelSet ::
   Tracing.HttpPropagator ->
   PrometheusMetrics ->
   GQLContext ->
+  SQLGenCtx ->
   UserInfo ->
   HTTP.RequestHeaders ->
   [G.Directive G.Name] ->
@@ -94,6 +98,7 @@ convertQuerySelSet
   tracingPropagator
   prometheusMetrics
   gqlContext
+  SQLGenCtx {nullInNonNullableVariables}
   userInfo
   reqHeaders
   directives
@@ -105,7 +110,7 @@ convertQuerySelSet
   maybeOperationName = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-      Tracing.newSpan "Parse query IR" $ parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
+      Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
     dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)

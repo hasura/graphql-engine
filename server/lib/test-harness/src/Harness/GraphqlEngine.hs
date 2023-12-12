@@ -192,7 +192,7 @@ postWithHeadersStatusViaWebSocket testEnv headers requestBody = do
           ]
       ]
     responseListener testEnv connection \_ type' payload -> do
-      when (type' `notElem` ["data", "error"]) $ fail ("Websocket message type " <> T.unpack type' <> " received. Payload: " <> Char8.unpack (encode payload))
+      unless (type' `elem` ["data", "error"]) $ fail ("Websocket message type " <> T.unpack type' <> " received. Payload: " <> Char8.unpack (encode payload))
       pure payload
 
 -- | Post some JSON to graphql-engine, getting back more JSON.

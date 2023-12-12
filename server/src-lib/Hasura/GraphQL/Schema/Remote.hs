@@ -947,7 +947,7 @@ remoteField sdoc remoteRelationships parentTypeName fieldName description argsDe
       remoteSchemaObjFields <- remoteSchemaObject sdoc remoteRelationships objTypeDefn
       -- converting [Field NoFragments Name] to (SelectionSet NoFragments G.Name)
       let remoteSchemaObjSelSet = IR.SelectionSetObject <$> remoteSchemaObjFields
-      pure remoteSchemaObjSelSet <&> mkFieldParserWithSelectionSet customizedFieldName argsParser
+      pure $ mkFieldParserWithSelectionSet customizedFieldName argsParser remoteSchemaObjSelSet
     G.TypeDefinitionScalar scalarTypeDefn ->
       pure $ mkFieldParserWithoutSelectionSet customizedFieldName argsParser $ void $ remoteFieldScalarParser customizeTypename scalarTypeDefn
     G.TypeDefinitionEnum enumTypeDefn ->

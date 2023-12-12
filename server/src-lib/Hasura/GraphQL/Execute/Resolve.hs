@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Resolve
   )
 where
 
+import Data.Aeson qualified as J
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
@@ -15,11 +16,13 @@ import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Language.GraphQL.Draft.Syntax qualified as G
 
 resolveVariables ::
   forall m fragments.
   (MonadError QErr m, Traversable fragments) =>
+  Options.BackwardsCompatibleNullInNonNullableVariables ->
   [G.VariableDefinition] ->
   GH.VariableValues ->
   [G.Directive G.Name] ->
@@ -28,7 +31,7 @@ resolveVariables ::
     ( [G.Directive Variable],
       G.SelectionSet fragments Variable
     )
-resolveVariables definitions jsonValues directives selSet = do
+resolveVariables nullInNonNullableVariables definitions jsonValues directives selSet = do
   variablesByName <- HashMap.groupOnNE getName <$> traverse buildVariable definitions
   uniqueVariables <- flip
     HashMap.traverseWithKey
@@ -83,7 +86,21 @@ resolveVariables definitions jsonValues directives selSet = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
           isOptional = isJust _vdDefaultValue || G.isNullable _vdType
       value <- case HashMap.lookup _vdName jsonValues of
-        Just jsonValue -> pure $ Just $ JSONValue jsonValue
+        Just jsonValue ->
+          -- If variable type is non-nullalbe , then raise exception if 'null' is provided
+          if not (G.isNullable _vdType)
+            -- `HASURA_GRAPHQL_BACKWARDS_COMPAT_NULL_IN_NONNULLABLE_VARIABLES` option set to `false`
+            && nullInNonNullableVariables
+            == Options.Don'tAllowNullInNonNullableVariables
+            -- A 'null' value provided
+            && jsonValue
+            == J.Null
+            then -- raise validation exception
+
+              throw400 ValidationFailed
+                $ "null value found for non-nullable type: "
+                <>> G.showGT _vdType
+            else pure $ Just $ JSONValue jsonValue
         Nothing
           -- If the variable value was not provided, and the variable has no
           -- default value, then don't store a value for the variable.

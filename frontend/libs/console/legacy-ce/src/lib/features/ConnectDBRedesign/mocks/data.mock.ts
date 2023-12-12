@@ -35,6 +35,7 @@ export const mockMetadata: Metadata = {
               pool_timeout: 300,
               retries: 400,
               total_max_connections: 500,
+              max_connections: 500,
             },
             use_prepared_statements: true,
           },

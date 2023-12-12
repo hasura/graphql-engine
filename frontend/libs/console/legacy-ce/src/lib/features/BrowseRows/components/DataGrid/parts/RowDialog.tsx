@@ -6,9 +6,9 @@ import {
   Textarea,
   InputField,
   SimpleForm,
-  CodeEditorField,
 } from '../../../../../new-components/Form';
 import { TableColumn } from '../../../../DataSource';
+import ReactJson from 'react-json-view';
 
 interface RowDialogProps {
   row: Record<string, any>;
@@ -28,7 +28,19 @@ export const RowDialog = ({ onClose, row, columns }: RowDialogProps) => {
     )?.consoleDataType;
 
     if (columnDataType === 'json')
-      return <CodeEditorField name={key} label={key} disabled />;
+      return (
+        <div>
+          <div className="font-semibold">{key}</div>
+          <div className="border p-4 rounded">
+            <ReactJson
+              src={
+                typeof row[key] === 'string' ? JSON.parse(row[key]) : row[key]
+              }
+              collapsed
+            />
+          </div>
+        </div>
+      );
 
     if (columnDataType === 'string')
       return <InputField disabled type="text" name={key} label={key} />;

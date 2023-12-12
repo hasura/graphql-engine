@@ -2,6 +2,7 @@ import { Source, Table } from '../../../../../hasura-metadata-types';
 import { GraphQLType } from 'graphql';
 import { Relationship } from '../../../../../DatabaseRelationships';
 import { TableColumn } from '../../../../../DataSource';
+import { ComputedField } from '../../../../../../metadata/types';
 
 export type Operators = Record<
   string,
@@ -22,6 +23,7 @@ export type Tables = Array<{
   columns: Columns;
   relationships: Relationships;
   dataSource: Pick<Source, 'kind' | 'name'> | undefined;
+  computedFields: ComputedField[];
 }>;
 
 export type Operator = {
@@ -40,6 +42,7 @@ export type Comparators = Record<string, Comparator>;
 
 export type PermissionType =
   | 'column'
+  | 'computedField'
   | 'exist'
   | 'relationship'
   | 'object'
@@ -77,6 +80,8 @@ export type TableContext = {
   setComparator: (comparator: string | undefined) => void;
   columns: Columns;
   setColumns: (columns: Columns) => void;
+  computedFields: ComputedField[];
+  setComputedFields: (computedFields: ComputedField[]) => void;
   relationships: Relationships;
   setRelationships: (relationships: Relationships) => void;
 };

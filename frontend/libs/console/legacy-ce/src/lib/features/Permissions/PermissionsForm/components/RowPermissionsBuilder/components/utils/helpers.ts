@@ -92,6 +92,7 @@ const getInitialValue = (key: string, type?: PermissionType) => {
 
   switch (type) {
     case 'column':
+    case 'computedField':
       // Depends on column type
       return { _eq: '' };
     case 'comparator':

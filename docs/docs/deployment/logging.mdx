@@ -42,7 +42,7 @@ the websocket layer are called `websocket-log`, logs from the Event Trigger syst
 
 You can configure the GraphQL Engine to enable/disable certain log-types using the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
-[GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
+[GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx#log-level)
 
 The default enabled **Community Edition** log-types are:
 `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
@@ -108,7 +108,7 @@ Apart from the above, there are other internal log-types which cannot be configu
 ## Logging levels
 
 You can set the desired logging level on the server using the `log-level` flag or the `HASURA_GRAPHQL_LOG_LEVEL` env
-var. See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx).
+var. See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx#log-level).
 
 The default log-level is `info`.
 

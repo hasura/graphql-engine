@@ -18,13 +18,11 @@ const config = {
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
-  scripts: [
-    {
-      src: "https://www.chatbase.co/embed.min.js",
-      id: "iiL6XJbYo6tRR_M4rUB9F",
-      defer: true,
-    }
-  ],
+  customFields: {
+    docsBotEndpointURL: process.env.NODE_ENV === "development" ? "ws://localhost:8000/hasura-docs-ai" : "wss://hasura-docs-bot.deno.dev/hasura-docs-ai",
+    hasuraVersion: 2,
+  },
+  scripts: [],
   webpack: {
     jsLoader: isServer => ({
       loader: require.resolve('swc-loader'),

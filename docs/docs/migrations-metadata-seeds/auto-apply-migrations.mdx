@@ -17,6 +17,14 @@ keywords:
 Hasura ships a special `cli-migrations` Docker image which can be used to automatically apply Migrations and Metadata
 when the server starts.
 
+### What does it mean to "auto-apply" Migrations and Metadata?
+
+Auto-applying migrations means that Hasura can automatically apply database schema changes or migrations to your
+underlying database without requiring manual intervention. This feature simplifies the process of keeping your database
+schema in sync with your GraphQL schema and makes it easier to evolve your application over time.
+
+### How does it work?
+
 This image is a drop-in place replacement for the standard Hasura GraphQL Engine
 [images](https://hub.docker.com/r/hasura/graphql-engine). This container provides a method to apply
 [Migrations and Metadata](/migrations-metadata-seeds/overview.mdx) automatically when the container starts up. It works
@@ -65,9 +73,10 @@ For `config v2`, see
 ## Applying Migrations
 
 The `migrations` and `metadata` directories created by the Hasura CLI in a Hasura Project can be mounted at the
-`/hasura-migrations` and `/hasura-metadata` paths of this Docker container and the container's entrypoint script will
-automatically apply the Migrations and Metadata before starting the server. If no directory is mounted at the designated
-paths, the server will start and ignore the Migrations and/or Metadata.
+`/hasura-migrations` and `/hasura-metadata`
+[paths of this Docker container and the container's entrypoint script](https://github.com/hasura/graphql-engine/blob/master/packaging/cli-migrations/v3/docker-entrypoint.sh#L12C1-L13)
+will automatically apply the Migrations and Metadata before starting the server. If no directory is mounted at the
+designated paths, the server will start and ignore the Migrations and/or Metadata.
 
 You can also mount the Migrations/Metadata directories at some location other than the above by setting the following
 environment variables:
@@ -93,5 +102,6 @@ docker run -p 8080:8080 \
 ## Applying only Metadata {#auto-apply-metadata}
 
 If you're managing Migrations with a different tool and want to use this image to apply only the metadata, mount the
-`metadata` directory of your Hasura Project at the `/hasura-metadata` path of this Docker container the container’s
-entry point script will apply the Metadata before starting the server.
+`metadata` directory of your Hasura Project at the `/hasura-metadata`
+[path of this Docker container the container's entry point script](https://github.com/hasura/graphql-engine/blob/master/packaging/cli-migrations/v3/docker-entrypoint.sh#L13)
+will apply the Metadata before starting the server.

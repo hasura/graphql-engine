@@ -84,6 +84,7 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
         ?.schema_registry_dumps_v2[0] || [];
     if (
       data &&
+      data.diff_with_previous_schema &&
       data.diff_with_previous_schema[0] &&
       data.diff_with_previous_schema[0].schema_diff_data &&
       data.change_recorded_at

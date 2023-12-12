@@ -17,11 +17,13 @@ test('create select args object from form data', () => {
       args: {
         table: ['Album'],
         role: 'user',
+        comment: '',
         permission: {
           columns: ['AlbumId', 'Title', 'ArtistId'],
           filter: { _not: { AlbumId: { _eq: 'X-Hasura-User-Id' } } },
           set: {},
           allow_aggregations: false,
+          computed_fields: [],
         },
         source: 'Chinook',
       },
@@ -42,6 +44,7 @@ test('create delete args object from form data', () => {
       args: {
         table: ['Album'],
         role: 'user',
+        comment: '',
         permission: { backend_only: false, filter: { Title: { _eq: 'Test' } } },
         source: 'Chinook',
       },
@@ -58,6 +61,7 @@ test('create insert args object from form data', () => {
       args: {
         table: ['Album'],
         role: 'user',
+        comment: '',
         permission: {
           columns: [],
           check: {
@@ -69,6 +73,7 @@ test('create insert args object from form data', () => {
           },
           allow_upsert: true,
           set: {},
+          validate_input: undefined,
           backend_only: false,
         },
         source: 'Chinook',

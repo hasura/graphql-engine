@@ -280,6 +280,7 @@ serveOptions =
       soEnableTelemetry = Init.TelemetryDisabled,
       soStringifyNum = Options.Don'tStringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soBackwardsCompatibleNullInNonNullableVariables = Options.Don'tAllowNullInNonNullableVariables,
       soRemoteNullForwardingPolicy = Options.RemoteForwardAccurately,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,

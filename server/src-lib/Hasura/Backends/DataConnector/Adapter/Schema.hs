@@ -418,9 +418,7 @@ updateCustomOp (API.UpdateColumnOperatorName operatorName) operatorUsages = GS.U
     updateOperatorApplicableColumn :: RQL.ColumnInfo 'DataConnector -> Bool
     updateOperatorApplicableColumn columnInfo =
       -- ColumnEnumReferences are not supported at this time
-      extractColumnScalarType columnInfo
-        <&> (\columnScalarType -> HashMap.member columnScalarType operatorUsages)
-        & fromMaybe False
+      maybe False (\columnScalarType -> HashMap.member columnScalarType operatorUsages) (extractColumnScalarType columnInfo)
 
     -- Prepend the operator name with underscore
     operatorGraphqlFieldIdentifier :: GQLNameIdentifier
