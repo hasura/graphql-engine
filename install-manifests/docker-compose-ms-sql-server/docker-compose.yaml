@@ -15,7 +15,7 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
   graphql-engine:
-    image: hasura/graphql-engine:v2.35.1
+    image: hasura/graphql-engine:v2.36.0
     ports:
       - "8080:8080"
     depends_on:
