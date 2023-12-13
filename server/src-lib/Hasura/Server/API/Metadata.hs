@@ -168,16 +168,6 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           $ "Successfully inserted new metadata in storage with resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
-        -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection"
-          $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
-
-        -- run the schema registry action
-        Tracing.newSpan "runSchemaRegistryAction"
-          $ for_ schemaRegistryAction
-          $ \action -> do
-            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache)) modMetadata
-
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM
@@ -187,6 +177,16 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           $ String
           $ "Inserted schema cache sync notification at resource version:"
           <> showMetadataResourceVersion newResourceVersion
+
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+
+        -- run the schema registry action
+        Tracing.newSpan "runSchemaRegistryAction"
+          $ for_ schemaRegistryAction
+          $ \action -> do
+            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache)) modMetadata
 
         (_, modSchemaCache', _, _, _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
