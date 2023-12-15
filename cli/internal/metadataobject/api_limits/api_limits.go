@@ -50,6 +50,7 @@ type apiLimitsObject struct {
 	DepthLimit yaml.Node `yaml:"depth_limit,omitempty"`
 	NodeLimit  yaml.Node `yaml:"node_limit,omitempty"`
 	TimeLimit  yaml.Node `yaml:"time_limit,omitempty"`
+	BatchLimit yaml.Node `yaml:"batch_limit,omitempty"`
 }
 
 func (o *MetadataObject) Build() (map[string]interface{}, error) {
