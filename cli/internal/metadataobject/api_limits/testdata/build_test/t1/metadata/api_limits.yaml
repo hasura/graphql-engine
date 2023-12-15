@@ -1,6 +1,25 @@
+batch_limit:
+  global: 5
+  per_role:
+    user: 2
+depth_limit:
+  global: 5
+  per_role:
+    user: 2
 disabled: false
+node_limit:
+  global: 5
+  per_role:
+    user: 2
 rate_limit:
-  per_role: {}
   global:
+    max_reqs_per_min: 30
     unique_params: IP
-    max_reqs_per_min: 1
+  per_role:
+    user:
+      max_reqs_per_min: 10
+      unique_params: null
+time_limit:
+  global: 30
+  per_role:
+    user: 10
