@@ -101,10 +101,29 @@ func TestMetadataObject_Export(t *testing.T) {
 			map[string][]byte{
 				"testdata/export_test/api_limits.yaml": []byte(`disabled: false
 rate_limit:
-  per_role: {}
   global:
+    max_reqs_per_min: 30
     unique_params: IP
-    max_reqs_per_min: 1
+  per_role:
+    user:
+      max_reqs_per_min: 10
+      unique_params: null
+depth_limit:
+  global: 5
+  per_role:
+    user: 2
+node_limit:
+  global: 5
+  per_role:
+    user: 2
+time_limit:
+  global: 30
+  per_role:
+    user: 10
+batch_limit:
+  global: 5
+  per_role:
+    user: 2
 `)},
 			false,
 			require.NoError,
