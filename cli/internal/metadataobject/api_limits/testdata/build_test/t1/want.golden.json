@@ -1,1 +1,1 @@
-{"api_limits": {"disabled": false, "rate_limit": {"per_role": {}, "global": {"unique_params": "IP", "max_reqs_per_min": 1}}}}
+{"api_limits": {"disabled": false, "rate_limit": {"global": {"max_reqs_per_min": 30, "unique_params": "IP"}, "per_role": {"user": {"max_reqs_per_min": 10, "unique_params": null}}}, "depth_limit": {"global": 5, "per_role": {"user": 2}}, "node_limit": {"global": 5, "per_role": {"user": 2}}, "time_limit": {"global": 30, "per_role": {"user": 10}}, "batch_limit": {"global": 5, "per_role": {"user": 2}}}}
