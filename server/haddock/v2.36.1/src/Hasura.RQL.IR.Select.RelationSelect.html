@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DuplicateRecordFields #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | More leaves cut from RQL.IR.Select for sake of breaking up the big pile of</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- things</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Select.RelationSelect</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.RelationSelect.html#AnnRelationSelectG"><span class="hs-identifier">AnnRelationSelectG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#Nullable"><span class="hs-identifier">Nullable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- Local relationship</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">data</span><span> </span><span id="AnnRelationSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.RelationSelect.html#AnnRelationSelectG"><span class="hs-identifier hs-var">AnnRelationSelectG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687618991"><span class="annot"><a href="#local-6989586621687618991"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687618992"><span class="annot"><a href="#local-6989586621687618992"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnRelationSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.RelationSelect.html#AnnRelationSelectG"><span class="hs-identifier hs-var">AnnRelationSelectG</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_aarRelationshipName%3AAnnRelationSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; RelName
+</span><a href="Hasura.RQL.IR.Select.RelationSelect.html#%24sel%3A_aarRelationshipName%3AAnnRelationSelectG"><span class="hs-identifier hs-var hs-var">_aarRelationshipName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Relationship name</span><span>
+</span><span id="line-21"></span><span>    </span><span id="%24sel%3A_aarColumnMapping%3AAnnRelationSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) a.
+AnnRelationSelectG b a -&gt; HashMap (ColumnPath b) (ColumnPath b)
+</span><a href="Hasura.RQL.IR.Select.RelationSelect.html#%24sel%3A_aarColumnMapping%3AAnnRelationSelectG"><span class="hs-identifier hs-var hs-var">_aarColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ColumnPath"><span class="hs-identifier hs-type">ColumnPath</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687618991"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ColumnPath"><span class="hs-identifier hs-type">ColumnPath</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687618991"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Column of left table to join with</span><span>
+</span><span id="line-22"></span><span>    </span><span id="%24sel%3A_aarNullable%3AAnnRelationSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; Nullable
+</span><a href="Hasura.RQL.IR.Select.RelationSelect.html#%24sel%3A_aarNullable%3AAnnRelationSelectG"><span class="hs-identifier hs-var hs-var">_aarNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#Nullable"><span class="hs-identifier hs-type">Nullable</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- is the target object allowed to be missing?</span><span>
+</span><span id="line-23"></span><span>    </span><span id="%24sel%3A_aarAnnSelect%3AAnnRelationSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; a
+</span><a href="Hasura.RQL.IR.Select.RelationSelect.html#%24sel%3A_aarAnnSelect%3AAnnRelationSelectG"><span class="hs-identifier hs-var hs-var">_aarAnnSelect</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687618992"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-comment">-- Current table. Almost ~ to SQL Select</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687619084"><span id="local-6989586621687619086"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; AnnRelationSelectG b a -&gt; AnnRelationSelectG b b)
+-&gt; (forall a b.
+    a -&gt; AnnRelationSelectG b b -&gt; AnnRelationSelectG b a)
+-&gt; Functor (AnnRelationSelectG b)
+forall a b. a -&gt; AnnRelationSelectG b b -&gt; AnnRelationSelectG b a
+forall a b.
+(a -&gt; b) -&gt; AnnRelationSelectG b a -&gt; AnnRelationSelectG b b
+forall (b :: BackendType) a b.
+a -&gt; AnnRelationSelectG b b -&gt; AnnRelationSelectG b a
+forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; AnnRelationSelectG b a -&gt; AnnRelationSelectG b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; AnnRelationSelectG b a -&gt; AnnRelationSelectG b b
+fmap :: forall a b.
+(a -&gt; b) -&gt; AnnRelationSelectG b a -&gt; AnnRelationSelectG b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+a -&gt; AnnRelationSelectG b b -&gt; AnnRelationSelectG b a
+&lt;$ :: forall a b. a -&gt; AnnRelationSelectG b b -&gt; AnnRelationSelectG b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687619090"><span id="local-6989586621687619096"><span id="local-6989586621687619099"><span id="local-6989586621687619104"><span id="local-6989586621687619106"><span id="local-6989586621687619109"><span id="local-6989586621687619112"><span id="local-6989586621687619115"><span id="local-6989586621687619118"><span id="local-6989586621687619121"><span id="local-6989586621687619124"><span id="local-6989586621687619126"><span id="local-6989586621687619129"><span id="local-6989586621687619134"><span id="local-6989586621687619139"><span id="local-6989586621687619144"><span id="local-6989586621687619149"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnRelationSelectG b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; (forall a. AnnRelationSelectG b a -&gt; [a])
+-&gt; (forall a. AnnRelationSelectG b a -&gt; Bool)
+-&gt; (forall a. AnnRelationSelectG b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnRelationSelectG b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnRelationSelectG b a -&gt; a)
+-&gt; Foldable (AnnRelationSelectG b)
+forall a. Eq a =&gt; a -&gt; AnnRelationSelectG b a -&gt; Bool
+forall a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+forall a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+forall m. Monoid m =&gt; AnnRelationSelectG b m -&gt; m
+forall a. AnnRelationSelectG b a -&gt; Bool
+forall a. AnnRelationSelectG b a -&gt; Int
+forall a. AnnRelationSelectG b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; AnnRelationSelectG b a -&gt; Bool
+forall (b :: BackendType) a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+forall (b :: BackendType) a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+forall (b :: BackendType) m.
+Monoid m =&gt;
+AnnRelationSelectG b m -&gt; m
+forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; Bool
+forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; Int
+forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; [a]
+forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+Monoid m =&gt;
+AnnRelationSelectG b m -&gt; m
+fold :: forall m. Monoid m =&gt; AnnRelationSelectG b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnRelationSelectG b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnRelationSelectG b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnRelationSelectG b a -&gt; a
+$ctoList :: forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; [a]
+toList :: forall a. AnnRelationSelectG b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; Bool
+null :: forall a. AnnRelationSelectG b a -&gt; Bool
+$clength :: forall (b :: BackendType) a. AnnRelationSelectG b a -&gt; Int
+length :: forall a. AnnRelationSelectG b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; AnnRelationSelectG b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnRelationSelectG b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+$cminimum :: forall (b :: BackendType) a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnRelationSelectG b a -&gt; a
+$csum :: forall (b :: BackendType) a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+sum :: forall a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+$cproduct :: forall (b :: BackendType) a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+product :: forall a. Num a =&gt; AnnRelationSelectG b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687619159"><span id="local-6989586621687619164"><span id="local-6989586621687619170"><span id="local-6989586621687619175"><span class="annot"><span class="annottext">Functor (AnnRelationSelectG b)
+Foldable (AnnRelationSelectG b)
+Functor (AnnRelationSelectG b)
+-&gt; Foldable (AnnRelationSelectG b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; AnnRelationSelectG b a -&gt; f (AnnRelationSelectG b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnRelationSelectG b (f a) -&gt; f (AnnRelationSelectG b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; AnnRelationSelectG b a -&gt; m (AnnRelationSelectG b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnRelationSelectG b (m a) -&gt; m (AnnRelationSelectG b a))
+-&gt; Traversable (AnnRelationSelectG b)
+forall (b :: BackendType). Functor (AnnRelationSelectG b)
+forall (b :: BackendType). Foldable (AnnRelationSelectG b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnRelationSelectG b (m a) -&gt; m (AnnRelationSelectG b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnRelationSelectG b (f a) -&gt; f (AnnRelationSelectG b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnRelationSelectG b a -&gt; m (AnnRelationSelectG b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnRelationSelectG b a -&gt; f (AnnRelationSelectG b b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnRelationSelectG b (m a) -&gt; m (AnnRelationSelectG b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnRelationSelectG b (f a) -&gt; f (AnnRelationSelectG b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnRelationSelectG b a -&gt; m (AnnRelationSelectG b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnRelationSelectG b a -&gt; f (AnnRelationSelectG b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnRelationSelectG b a -&gt; f (AnnRelationSelectG b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnRelationSelectG b a -&gt; f (AnnRelationSelectG b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnRelationSelectG b (f a) -&gt; f (AnnRelationSelectG b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnRelationSelectG b (f a) -&gt; f (AnnRelationSelectG b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnRelationSelectG b a -&gt; m (AnnRelationSelectG b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnRelationSelectG b a -&gt; m (AnnRelationSelectG b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnRelationSelectG b (m a) -&gt; m (AnnRelationSelectG b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnRelationSelectG b (m a) -&gt; m (AnnRelationSelectG b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span id="local-6989586621687619184"><span id="local-6989586621687619194"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687619068"><span id="local-6989586621687619069"><span class="annot"><a href="#local-6989586621687619068"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619068"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687619069"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.RelationSelect.html#AnnRelationSelectG"><span class="hs-identifier hs-type">AnnRelationSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619068"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619069"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span id="local-6989586621687619203"><span id="local-6989586621687619215"><span id="local-6989586621687619219"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687619076"><span id="local-6989586621687619077"><span class="annot"><a href="#local-6989586621687619076"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619076"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687619077"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.RelationSelect.html#AnnRelationSelectG"><span class="hs-identifier hs-type">AnnRelationSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619076"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687619077"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-30"></span></pre></body></html>
