@@ -96,3 +96,19 @@ args:
         type: String!
       output_type: UserIdNested
       handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user-nested"
+
+- type: create_action
+  args:
+    name: test_async_action_error_response
+    definition:
+      kind: asynchronous
+      output_type: UserId
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/test-action-user-role-async"
+
+- type: create_action_permission
+  args:
+    action: test_async_action_error_response
+    role: user
+    definition:
+      select:
+        filter: {}

@@ -508,7 +508,100 @@ class TestActionsAsync:
             'response': response
         }
         check_query_timeout(hge_ctx, conf, True, 10)
+    
+    def test_async_actions_error_response_user_role(self, hge_ctx):
+        graphql_mutation = '''
+        mutation {
+          test_async_action_error_response
+        }
+        '''
+        query = {
+            'query': graphql_mutation,
+            'variables': {}
+        }
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx, {'x-hasura-role': 'user'}))
+        assert status == 200, resp
+        assert 'data' in resp
+        action_id = resp['data']['test_async_action_error_response']
+        query_async = '''
+        query ($action_id: uuid!){
+          test_async_action_error_response(id: $action_id){
+            id
+            errors
+          }
+        }
+        '''
+        query = {
+            'query': query_async,
+            'variables': {
+                'action_id': action_id
+            }
+        }
+        response = {
+            'data': {
+                'test_async_action_error_response': {
+                    'id': action_id,
+                    'errors': {
+                        'code': 'unexpected',
+                        'path': '$',
+                        'error': 'not a valid json response from webhook'
+                    }
+                }
+            }
+        }
+        conf = {
+            'url': '/v1/graphql',
+            'headers': {
+                'x-hasura-role': 'user',
+            },
+            'query': query,
+            'status': 200,
+            'response': response
+        }
+        check_query_timeout(hge_ctx, conf, True, 10)
+    
+    def test_async_actions_error_response_admin_role(self, hge_ctx):
+        graphql_mutation = '''
+        mutation {
+          test_async_action_error_response
+        }
+        '''
+        query = {
+            'query': graphql_mutation,
+            'variables': {}
+        }
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx, {'x-hasura-role': 'admin'}))
+        assert status == 200, resp
+        assert 'data' in resp
+        action_id = resp['data']['test_async_action_error_response']
+        query_async = '''
+        query ($action_id: uuid!){
+          test_async_action_error_response(id: $action_id){
+            id
+            errors
+          }
+        }
+        '''
+        query = {
+            'query': query_async,
+            'variables': {
+                'action_id': action_id
+            }
+        }
+        conf = {
+            'url': '/v1/graphql',
+            'headers': {
+                'x-hasura-role': 'admin',
+            },
+            'query': query,
+            'status': 200,
+        }
+        time.sleep(10)
+        response, _ = check_query(hge_ctx, conf)
 
+        assert 'errors' in response['data']['test_async_action_error_response']
+        assert 'internal' in response['data']['test_async_action_error_response']['errors']
+    
     def test_create_user_success(self, hge_ctx):
         graphql_mutation = '''
         mutation {
