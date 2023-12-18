@@ -11,6 +11,10 @@ args:
 - type: drop_action
   args:
     name: create_user_nested
+- type: drop_action # also drops the permissions
+  args:
+    name: test_async_action_error_response
+    clear_data: true
 # clear custom types
 - type: set_custom_types
   args: {}

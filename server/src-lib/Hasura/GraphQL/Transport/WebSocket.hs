@@ -91,7 +91,7 @@ import Hasura.Server.Auth
     resolveUserInfo,
   )
 import Hasura.Server.Cors
-import Hasura.Server.Init.Config (KeepAliveDelay (..))
+import Hasura.Server.Init.Config (KeepAliveDelay (..), ResponseInternalErrorsConfig)
 import Hasura.Server.Limits
   ( HasResourceLimits (..),
     ResourceLimits (..),
@@ -445,8 +445,9 @@ onStart ::
   ShouldCaptureQueryVariables ->
   StartMsg ->
   WS.WSActions WSConnData ->
+  ResponseInternalErrorsConfig ->
   m ()
-onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions responseErrorsConfig = catchAndIgnore $ do
   modelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO modelInfoLogStatus'
   timerTot <- startTimer
@@ -513,6 +514,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         queryParts
         maybeOperationName
         requestId
+        responseErrorsConfig
 
   (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
 
@@ -1090,8 +1092,9 @@ onMessage ::
   LBS.ByteString ->
   WS.WSActions WSConnData ->
   Maybe (CredentialCache AgentLicenseKey) ->
+  ResponseInternalErrorsConfig ->
   m ()
-onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey =
+onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agentLicenseKey responseErrorsConfig = do
   Tracing.newTrace (_wseTraceSamplingPolicy serverEnv) "websocket" do
     case J.eitherDecode msgRaw of
       Left e -> do
@@ -1115,7 +1118,7 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
                 if _mcAnalyzeQueryVariables (scMetricsConfig schemaCache)
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
-          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
+          onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions responseErrorsConfig
         CMStop stopMsg -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
           onStop serverEnv wsConn stopMsg granularPrometheusMetricsState

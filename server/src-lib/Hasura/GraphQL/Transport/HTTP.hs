@@ -318,8 +318,9 @@ runGQ ::
   [HTTP.Header] ->
   E.GraphQLQueryType ->
   GQLReqUnparsed ->
+  ResponseInternalErrorsConfig ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
+runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed responseErrorsConfig = do
   getModelInfoLogStatus' <- runGetModelInfoLogStatus
   modelInfoLogStatus <- liftIO getModelInfoLogStatus'
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
@@ -360,6 +361,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
           queryParts
           maybeOperationName
           reqId
+          responseErrorsConfig
 
       -- 4. Execute the execution plan producing a 'AnnotatedResponse'.
       (response, queryCachedStatus, modelInfoFromExecution) <- executePlan reqParsed runLimits execPlan
@@ -755,7 +757,7 @@ runGQBatched ::
 runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
@@ -768,7 +770,7 @@ runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger age
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
-      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req responseErrorsConfig
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map

@@ -34,6 +34,7 @@ import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.Config (ResponseInternalErrorsConfig)
 import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -99,8 +100,9 @@ explainGQLQuery ::
   Maybe (CredentialCache AgentLicenseKey) ->
   [HTTP.Header] ->
   GQLExplain ->
+  ResponseInternalErrorsConfig ->
   m EncJSON
-explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) responseErrorsConfig = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -133,7 +135,7 @@ explainGQLQuery nullInNonNullableVariables sc agentLicenseKey reqHeaders (GQLExp
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      ((validSubscription, _), _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
+      ((validSubscription, _), _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query) responseErrorsConfig
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do

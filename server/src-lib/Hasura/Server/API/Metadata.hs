@@ -158,24 +158,22 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Attempting to insert new metadata in storage"
+
         newResourceVersion <-
-          Tracing.newSpan "setMetadata"
+          Tracing.newSpan "updateMetadataAndNotifySchemaSync"
             $ liftEitherM
-            $ setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+            $ updateMetadataAndNotifySchemaSync appEnvInstanceId (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata cacheInvalidations
+
         L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
           $ "Successfully inserted new metadata in storage with resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
-        -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync"
-          $ liftEitherM
-          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
         L.unLoggerTracing logger
           $ SchemaSyncLog L.LevelInfo TTMetadataApi
           $ String
-          $ "Inserted schema cache sync notification at resource version:"
+          $ "Inserted schema cache sync notification at resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
         -- save sources introspection to stored-introspection DB

@@ -217,17 +217,18 @@ runQuery appContext sc query = do
     then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
-        newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
-        -- notify schema cache sync
-        liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+        newResourceVersion <-
+          liftEitherM
+            $ updateMetadataAndNotifySchemaSync appEnvInstanceId currentResourceVersion updatedMetadata invalidations
+
+        -- save sources introspection to stored-introspection DB
+        saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
 
         (_, modSchemaCache', _, _, _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
-        -- save sources introspection to stored-introspection DB
-        saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
         -- run schema registry action
         for_ schemaRegistryAction $ \action -> do
           liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata

@@ -812,10 +812,15 @@ instance MonadMetadataStorage AppM where
   fetchMetadataResourceVersion = runInSeparateTx fetchMetadataResourceVersionFromCatalog
   fetchMetadata = runInSeparateTx fetchMetadataAndResourceVersionFromCatalog
   fetchMetadataNotifications a b = runInSeparateTx $ fetchMetadataNotificationsFromCatalog a b
-  setMetadata r = runInSeparateTx . setMetadataInCatalog r
-  notifySchemaCacheSync a b c = runInSeparateTx $ notifySchemaCacheSyncTx a b c
+
   getCatalogState = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
+
+  updateMetadataAndNotifySchemaSync instanceId resourceVersion metadata cacheInvalidations =
+    runInSeparateTx $ do
+      newResourceVersion <- setMetadataInCatalog resourceVersion metadata
+      notifySchemaCacheSyncTx newResourceVersion instanceId cacheInvalidations
+      pure newResourceVersion
 
   -- stored source introspection is not available in this distribution
   fetchSourceIntrospection _ = pure $ Right Nothing

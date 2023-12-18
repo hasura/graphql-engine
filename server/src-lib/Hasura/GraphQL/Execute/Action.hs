@@ -27,6 +27,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Lens
 import Data.Aeson.Ordered qualified as AO
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -78,7 +79,7 @@ import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
-import Hasura.Server.Init.Config (OptionalInterval (..))
+import Hasura.Server.Init.Config (OptionalInterval (..), ResponseInternalErrorsConfig (..), shouldIncludeInternal)
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
@@ -342,8 +343,9 @@ Resolving async action query happens in two steps;
 resolveAsyncActionQuery ::
   UserInfo ->
   IR.AnnActionAsyncQuery ('Postgres 'Vanilla) Void ->
+  ResponseInternalErrorsConfig ->
   AsyncActionQueryExecution (IR.UnpreparedValue ('Postgres 'Vanilla))
-resolveAsyncActionQuery userInfo annAction =
+resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
   case actionSource of
     IR.ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
       let ActionLogResponse {..} = actionLogResponse
@@ -357,7 +359,7 @@ resolveAsyncActionQuery userInfo annAction =
               \response -> makeActionResponseNoRelations annFields outputType HashMap.empty False <$> decodeValue response
           IR.AsyncId -> pure $ AO.String $ actionIdToText actionId
           IR.AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
-          IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON _alrErrors
+          IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON $ mkQErrFromErrorValue _alrErrors
       pure $ encJFromOrderedValue $ AO.object resolvedFields
     IR.ASISource sourceName sourceConfig ->
       let jsonAggSelect = mkJsonAggSelect outputType
@@ -373,7 +375,20 @@ resolveAsyncActionQuery userInfo annAction =
                           $ processOutputSelectionSet TF.AEActionResponsePayload outputType definitionList annFields stringifyNumerics
                       IR.AsyncId -> mkAnnFldFromPGCol idColumn
                       IR.AsyncCreatedAt -> mkAnnFldFromPGCol createdAtColumn
-                      IR.AsyncErrors -> mkAnnFldFromPGCol errorsColumn
+                      IR.AsyncErrors ->
+                        if (shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig)
+                          then RS.mkAnnColumnField (fst errorsColumn) (ColumnScalar (snd errorsColumn)) NoRedaction Nothing
+                          else
+                            RS.mkAnnColumnField
+                              (fst errorsColumn)
+                              (ColumnScalar (snd errorsColumn))
+                              NoRedaction
+                              ( Just
+                                  $ S.ColumnOp
+                                    { _colOp = S.jsonbDeleteOp,
+                                      _colExp = S.SELit "internal"
+                                    }
+                              )
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
@@ -394,6 +409,14 @@ resolveAsyncActionQuery userInfo annAction =
                   tablePermissions = RS.TablePerm annBoolExpTrue Nothing
                in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics Nothing
   where
+    mkQErrFromErrorValue :: Maybe J.Value -> QErr
+    mkQErrFromErrorValue actionLogResponseError =
+      let internal = ExtraInternal <$> (actionLogResponseError >>= (^? key "internal"))
+          internal' = if shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig then internal else Nothing
+          errorMessageText = fromMaybe "internal: error in parsing the action log" $ actionLogResponseError >>= (^? key "error" . _String)
+          codeMaybe = actionLogResponseError >>= (^? key "code" . _String)
+          code = maybe Unexpected ActionWebhookCode codeMaybe
+       in QErr [] HTTP.status500 errorMessageText code internal'
     IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
     idColumn = (unsafePGCol "id", PGUUID)
