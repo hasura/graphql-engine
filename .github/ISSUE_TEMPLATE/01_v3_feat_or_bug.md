@@ -1,11 +1,11 @@
 ---
-name: 🚀 V2 Feature Request or 🦟 Bug report
-about: If something isn't working or should work differently in Hasura V2 🔧
+name: 🚀 V3 Feature Request or 🦟 Bug report
+about: If something isn't working or should work differently in Hasura V3 🔧
 ---
 
-Either complete the 🚀 Feature or 🦟 Bug section for V2. You can delete the other. 😊
+Either complete the 🚀 Feature or 🦟 Bug section for V3. You can delete the other. 😊
 
-## ⭐️ V2 Feature Request
+## 🚀 V3 Feature Request
 
 ### Is your proposal related to a problem?
 
@@ -24,7 +24,7 @@ Either complete the 🚀 Feature or 🦟 Bug section for V2. You can delete the 
 
 <!-- Provide your answer here. -->
 
-## 🦟 V2 Bug Report
+## 🦟 V3 Bug Report
 
 ### Version Information
 
