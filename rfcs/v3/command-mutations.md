@@ -37,7 +37,7 @@ We can have something like transactional_command_set. As part of the engine's re
 What if I want nested inserts?
 ------------------------------
 
-You may find that, in many cases, manipulating data atomically might be more pertinent than specifically aiming for nested inserts - what you more likely want is a way to manipulate data atomically. Nested inserts are tricky because of all the things you have to worry about (which way do the foreign key constraints go? Which data should I insert first?), but in this model, that's the user's concern, and they're free to design their commands in a chunk of code.
+You may find that, in many cases, manipulating data atomically might be more pertinent than specifically aiming for nested inserts. The reason for this lies in the complexities associated with nested inserts, such as managing foreign key constraints and determining the order of data insertion. However, in our proposed model, the user has the flexibility to design their commands in a way that best suits their requirements, keeping in mind the intricacies of nested operations. This approach allows users to have fine-grained control over the data manipulation process.
 
 What if I want event sourcing?
 ------------------------------
@@ -55,3 +55,30 @@ What if I want arbitrary validation?
 Let's imagine I want to forbid users from calling add_user on the ndc-postgres connector directly, and instead require them to go via the TypeScript connector (for example, maybe I need to check their email address against a spam directory online).
 
 Our proposal was that we take a model similar to Docker networking: permissions apply to users when they reach the border of the Hasura cluster, but once you're inside, permissions are not re-applied. So, if the user doesn't have permission to call add_user, the TS connector can call add_user because it's calling the engine from within the network.
+
+---
+
+## Ongoing Considerations and Research
+
+### Point Mutations in ndc-postgres
+
+We propose the addition of point mutations (insert, update, delete) to ndc-postgres as procedures. This enhancement is designed to be compatible with the existing architecture and poses minimal risk. With this addition, along with the concept of "native mutations," we believe we achieve a robust and expressive solution for working with PostgreSQL.
+
+### Enhancements to NDC Mutations
+
+Continuing forward, we are exploring options to enhance NDC mutations to facilitate no-code mutations for users who find value in them. Proposed additions include:
+
+- **Boolexps as Input Arguments:** Allow boolexps as input arguments for more dynamic and flexible mutations.
+- **SELECT INTO Proposal:** Explore the possibility of introducing a "select into" proposal to enrich mutation capabilities.
+- **Mutations with Constraints Proposal:** Considerations for mutations with constraints to provide a more nuanced mutation experience.
+
+These proposals are subject to further exploration, and their implementation can be gated behind capabilities, ensuring a controlled rollout. Product research will be conducted to determine the feasibility and usefulness of these enhancements.
+
+### TypeScript/Wasm Options and Transaction Support
+
+Simultaneously, ongoing research and discussions are in progress regarding:
+
+- **TypeScript/Wasm Options:** Exploring options for scripting complex mutations using TypeScript or WebAssembly.
+- **Support for Transactions:** Investigating the feasibility and potential implementations for transaction support.
+
+These initiatives reflect our commitment to continuous improvement and innovation within the Hasura ecosystem. Your feedback and insights are welcomed as we navigate these evolving aspects of our platform.
