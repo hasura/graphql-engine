@@ -1,8 +1,29 @@
 ---
-name: 🐜 Bug report
-about: If something isn't working 🔧
+name: V2 Feature Request or Bug report
+about: If something isn't working in Hasura V2 🔧
 labels: "k/bug"
 ---
+
+## ⭐️ V2 Feature Request
+
+### Is your proposal related to a problem?
+
+<!--
+  Provide a clear and concise description of what the problem is.
+  For example, "I'm always frustrated when..."
+-->
+
+### Describe the solution you'd like
+
+<!--
+  Provide a clear and concise description of what you want to happen.
+-->
+
+### Describe alternatives you've considered
+
+<!-- Provide your answer here. -->
+
+## 🦟 V2 Bug Report
 
 ### Version Information
 
@@ -11,7 +32,7 @@ CLI Version (for CLI related issue):
 
 ### Environment
 
-<!--Cloud/ OSS / EE -->
+<!-- Cloud / OSS / EE -->
 
 ### What is the current behaviour?
 
