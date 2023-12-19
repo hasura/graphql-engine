@@ -68,6 +68,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     asyncActionsFetchBatchSizeOption,
     persistedQueriesOption,
     persistedQueriesTtlOption,
+    remoteSchemaResponsePriorityOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -162,6 +163,7 @@ serveCommandParser =
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
+    <*> parseRemoteSchemaResponsePriority
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1309,6 +1311,22 @@ parsePersistedQueriesTtl =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "persisted-queries-ttl"
           <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
+      )
+
+remoteSchemaResponsePriorityOption :: Config.Option (Types.RemoteSchemaResponsePriority)
+remoteSchemaResponsePriorityOption =
+  Config.Option
+    { Config._default = Types.RemoteSchemaResponseErrors,
+      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA",
+      Config._helpMessage = "Prioritize data over errors for remote schema responses (default: false)."
+    }
+
+parseRemoteSchemaResponsePriority :: Opt.Parser (Maybe Types.RemoteSchemaResponsePriority)
+parseRemoteSchemaResponsePriority =
+  (bool Nothing (Just Types.RemoteSchemaResponseData))
+    <$> Opt.switch
+      ( Opt.long "remote-schema-prioritize-data"
+          <> Opt.help (Config._helpMessage remoteSchemaResponsePriorityOption)
       )
 
 --------------------------------------------------------------------------------

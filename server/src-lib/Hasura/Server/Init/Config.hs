@@ -328,7 +328,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoTriggersErrorLogLevelStatus :: Maybe Server.Types.TriggersErrorLogLevelStatus,
     rsoAsyncActionsFetchBatchSize :: Maybe Int,
     rsoPersistedQueries :: Maybe Server.Types.PersistedQueriesState,
-    rsoPersistedQueriesTtl :: Maybe Int
+    rsoPersistedQueriesTtl :: Maybe Int,
+    rsoRemoteSchemaResponsePriority :: Maybe Server.Types.RemoteSchemaResponsePriority
   }
 
 -- | Whether or not to serve Console assets.
@@ -634,7 +635,8 @@ data ServeOptions impl = ServeOptions
     soTriggersErrorLogLevelStatus :: Server.Types.TriggersErrorLogLevelStatus,
     soAsyncActionsFetchBatchSize :: Int,
     soPersistedQueries :: Server.Types.PersistedQueriesState,
-    soPersistedQueriesTtl :: Int
+    soPersistedQueriesTtl :: Int,
+    soRemoteSchemaResponsePriority :: Server.Types.RemoteSchemaResponsePriority
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

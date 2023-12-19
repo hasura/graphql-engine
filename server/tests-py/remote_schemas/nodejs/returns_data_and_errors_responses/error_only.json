@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "message": "field 'test' not found in type: 'query_root'",
+            "extensions": {
+                "path": "$.selectionSet.test_lol",
+                "code": "validation-failed"
+            }
+        }
+    ]
+}

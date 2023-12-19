@@ -703,6 +703,32 @@ remote-schema-permissions)
 	kill_hge_servers
 	;;
 
+remote-schema-prioritize-data)
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH REMOTE SCHEMA PRIORITIZE DATA/ERRORS ########>\n"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		test_remote_schema_prioritize_none.py
+
+	kill_hge_servers
+
+	export HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA=true
+
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		test_remote_schema_prioritize_data.py
+
+	unset HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA
+
+	kill_hge_servers
+
+	;;
+
 function-permissions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH FUNCTION PERMISSIONS ENABLED ########>\n"
 	export HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false

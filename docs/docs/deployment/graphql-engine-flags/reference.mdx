@@ -978,6 +978,19 @@ The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
 | **Example**         | `redis://username:password@host:port/db` |
 | **Supported in**    | Enterprise Edition only                  |
 
+### Remote Schema prioritize data
+
+Setting this will prioritize `data` or `errors` if both fields are present in the Remote Schema response.
+
+|                     |                                                |
+| ------------------- | ---------------------------------------------- |
+| **Flag**            | `--remote-schema-prioritize-data`              |
+| **Env var**         | `HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA` |
+| **Accepted values** | Boolean                                        |
+| **Options**         | `true` or `false`                              |
+| **Default**         | `false`                                        |
+| **Supported in**    | CE, Enterprise Edition, Cloud                  |
+
 ### Schema Sync Poll Interval
 
 The interval, in milliseconds, to poll Metadata storage for updates. To disable, set this value to `0`.
