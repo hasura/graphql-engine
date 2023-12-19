@@ -24,15 +24,15 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 
 ## Features
 
-* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
-* **Works with existing, live databases**: Point it to an existing database to instantly get a ready-to-use GraphQL API
-* **Realtime**: Convert any GraphQL query to a live query by using subscriptions
+* **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations.
+* **Works with existing, live databases**: Point it to an existing database to instantly get a ready-to-use GraphQL API.
+* **Realtime**: Convert any GraphQL query to a live query by using subscriptions.
 * **Merge remote schemas**: Access custom GraphQL schemas for business logic via a single GraphQL Engine endpoint. [**Read more**](remote-schemas.md).
 * **Extend with Actions**: Write REST APIs to extend Hasura’s schema with custom business logic.
 * **Trigger webhooks or serverless functions**: On Postgres insert/update/delete events ([read more](event-triggers.md))
 * **Scheduled Triggers**: Execute custom business logic at specific points in time using a cron config or a one-off event.
-* **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
-* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
+* **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth).
+* **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations.
 * **Supported Databases**: Supports PostgreSQL (and its flavors), MS SQL Server and Big Query. Support for more [databases](https://hasura.io/graphql/database/) coming soon.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
@@ -121,7 +121,7 @@ Add custom resolvers in a remote schema in addition to Hasura's database-based G
 
 ### Actions
 
-Actions are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. Actions can be added to Hasura to handle various use cases such as data validation, data enrichment from external sources and any other complex business logic - [read more](https://hasura.io/docs/latest/graphql/core/actions/index.html)
+Actions are a way to extend Hasura’s schema with custom business logic using custom queries and mutations. Actions can be added to Hasura to handle various use cases such as data validation, data enrichment from external sources and any other complex business logic - [read more].(https://hasura.io/docs/latest/graphql/core/actions/index.html)
 
 ### Trigger webhooks on database events
 
