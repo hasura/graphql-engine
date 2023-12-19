@@ -1,0 +1,9 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": []
+    }
+  ]
+}

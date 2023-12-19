@@ -1,0 +1,8 @@
+[
+  {
+    "x-hasura-role": "user"
+  },
+  {
+    "x-hasura-role": "article_type_only"
+  }
+]

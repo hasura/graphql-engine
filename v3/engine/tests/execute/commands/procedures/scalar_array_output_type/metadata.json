@@ -1,0 +1,50 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "uppercase_all_actor_names_return_names_list",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "uppercase_all_actor_names_return_names_list",
+            "arguments": [],
+            "outputType": "[String]",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "uppercase_all_actor_names_return_names_list"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "uppercaseAllActorNamesReturnNames",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

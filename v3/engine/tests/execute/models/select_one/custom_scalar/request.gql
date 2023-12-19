@@ -1,0 +1,7 @@
+query MyQuery {
+  AuthorByID(author_id: 1) {
+    author_id
+    first_name
+    last_name
+  }
+}

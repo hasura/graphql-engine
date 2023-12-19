@@ -1,0 +1,12 @@
+query MyQuery {
+  node(
+    id: "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6MX19"
+  ) {
+    __typename
+    ... on Author {
+      id
+      first_name
+      author_id
+    }
+  }
+}

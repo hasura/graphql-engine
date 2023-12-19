@@ -1,0 +1,50 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "noop_procedure",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "noop_procedure",
+            "arguments": [],
+            "outputType": "String",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "noop_procedure"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "noopProcedure",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

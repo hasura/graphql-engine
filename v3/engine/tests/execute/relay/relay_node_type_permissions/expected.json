@@ -1,0 +1,18 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field first_name on type Author is not allowed for user"
+      }
+    ]
+  },
+  {
+    "data": {
+      "node": {
+        "first_name": "Peter",
+        "author_id": 1
+      }
+    }
+  }
+]

@@ -1,0 +1,8 @@
+query MyQuery {
+  ArticleByID(article_id: 1) {
+    title
+    Author {
+      first_name
+    }
+  }
+}

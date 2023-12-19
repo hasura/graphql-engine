@@ -1,0 +1,54 @@
+[
+  {
+    "data": {
+      "AuthorManyWithLimit0Offset0": [],
+      "AuthorManyWithLimit1Offset0": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ],
+      "AuthorManyWithLimit1Offset1": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithLimit2Offset1": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithLimit2Offset2": []
+    }
+  },
+  {
+    "data": {
+      "AuthorManyWithLimit0Offset0": [],
+      "AuthorManyWithLimit1Offset0": [
+        {
+          "author_id": 1,
+          "first_name": "Peter"
+        }
+      ],
+      "AuthorManyWithLimit1Offset1": [],
+      "AuthorManyWithLimit2Offset1": [],
+      "AuthorManyWithLimit2Offset2": []
+    }
+  },
+  {
+    "data": {
+      "AuthorManyWithLimit0Offset0": [],
+      "AuthorManyWithLimit1Offset0": [
+        {
+          "author_id": 2,
+          "first_name": "John"
+        }
+      ],
+      "AuthorManyWithLimit1Offset1": [],
+      "AuthorManyWithLimit2Offset1": [],
+      "AuthorManyWithLimit2Offset2": []
+    }
+  }
+]
