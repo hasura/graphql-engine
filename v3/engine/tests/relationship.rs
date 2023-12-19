@@ -1,0 +1,184 @@
+// We are going to test the relationships. For each test, we are going to test against 3 roles:
+// 1. admin
+//    - has permission to select all fields
+//    - has permission to select from all models and commands
+// 2. user1
+//    - has permission to select subset of fields
+//    - has permission to select rows based on the following predicate:
+//      - <some-id> == x-hasura-user-id
+// 3. user2
+//    - has permission to select subset of fields
+//    - has permission to select rows based on the following predicate:
+//      - and/or
+//        - <some-id> == x-hasura-user-id
+//        - <some-field> <<Some-operator>> <some-literal-value>
+//
+
+mod common;
+
+// Non-remote relationships (relationship within the same connector)
+
+#[test]
+fn test_local_relationships_model_to_model_object() {
+    let test_path_string = "execute/relationships/object";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_local_relationships_model_to_model_multi_mapping() {
+    let test_path_string = "execute/relationships/multi_mapping";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_local_relationships_model_to_model_array() {
+    let test_path_string = "execute/relationships/array";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_local_relationships_model_to_model_array_with_arguments() {
+    let test_path_string = "execute/relationships/array/arguments";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_local_relationships_command_to_model() {
+    let test_path_string = "execute/relationships/command_to_model";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_local_relationships_permissions_target_model_filter_predicate() {
+    let test_path_string = "execute/relationships/permissions/target_model_filter_predicate";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+// Remote Relationships tests
+
+#[test]
+fn test_relationships_model_to_model_across_namespace() {
+    let test_path_string = "execute/relationships/across_namespace";
+    let common_metadata_path_string =
+        "execute/relationships/across_namespace/namespaced_connectors.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_relationships_command_to_model_across_namespace() {
+    let test_path_string = "execute/relationships/command_to_model/across_namespace";
+    let common_metadata_path_string =
+        "execute/relationships/command_to_model/across_namespace/namespaced_connectors.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_model_to_model_array() {
+    let test_path_string = "execute/remote_relationships/array";
+    let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_model_to_model_array_with_arguments() {
+    let test_path_string = "execute/remote_relationships/array/arguments";
+    let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_remote_in_local() {
+    let test_path_string = "execute/remote_relationships/remote_in_local";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_mutually_recursive() {
+    let test_path_string = "execute/remote_relationships/mutually_recursive";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_mutually_recursive_with_where() {
+    let test_path_string = "execute/remote_relationships/mutually_recursive_with_where";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_multi_field_mapping() {
+    let test_path_string = "execute/remote_relationships/multi_field_mapping";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_relationships_permissions_target_model_type_permission() {
+    let test_path_string = "execute/relationships/permissions/target_model_type_permission";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_relationships_permissions_source_type_permission() {
+    let test_path_string = "execute/relationships/permissions/source_type_permission";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+// Miscellaneous tests
+
+// What is being tested?
+// object relationship with type permissions
+// 1.ArticleByID is accessible (root level Model Select Permission), if this is not the case, error message would be different
+// 2.author_id is not part of schema for role user -> we check the snapshot with the right error message
+// TODO: This should ideally be a schema test
+#[test]
+fn test_relationships_permissions_target_model_type_field_not_selectable() {
+    let test_path_string =
+        "execute/relationships/permissions/target_model_type_field_not_selectable";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+// TODO: This should ideally be a schema test
+#[test]
+fn test_relationships_permissions_target_model_not_selectable() {
+    let test_path_string = "execute/relationships/permissions/target_model_not_selectable";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+// What is being tested? - We are testing if unique names are being generated
+// for the relationships A query whose fields have same relationship names work
+// as expected.
+// 1. There are two models `Articles` backed by `article` type and
+//    `NewspaperArticle` backed by `newspaper_article` type. These types have a
+//    object relationship with author, and both of them have the same
+//    relationship name `Author`
+// 2. There is a `Author` model backed by `author` type and has relationships
+//    with `Articles` and `NewspaperArticle` model
+//
+// We test that, when the same relationship name is used by two different
+// relationships for a model, everything works as expected.
+// Ref Bug report: https://github.com/hasura/v3-engine/issues/168
+#[test]
+fn test_relationships_with_same_name() {
+    let test_path_string = "execute/relationships/same_relationship_name";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_relationship_with_no_relationship_capability() {
+    let test_path_string: &str = "execute/relationships/no_relationship_capability";
+    common::test_execution_expectation_legacy(test_path_string, &[]);
+}

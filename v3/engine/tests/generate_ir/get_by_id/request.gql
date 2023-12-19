@@ -1,0 +1,5 @@
+query {
+    ArticleByID(article_id: 1) {
+        article_id title
+    }
+}

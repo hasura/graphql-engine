@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "author_id": 2,
+          "last_name": "Hughes"
+        },
+        {
+          "author_id": 1,
+          "last_name": "Landin"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: the first_name on type Author_Order_By is not accessible for user"
+      }
+    ]
+  }
+]

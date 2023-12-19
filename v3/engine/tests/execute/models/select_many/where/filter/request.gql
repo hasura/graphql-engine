@@ -1,0 +1,5 @@
+query {
+    AuthorMany(where: {_or: [{first_name: {_like: "%Pet%"}}]}) {
+      author_id first_name
+    }
+}

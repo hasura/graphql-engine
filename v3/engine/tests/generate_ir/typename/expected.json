@@ -1,0 +1,9 @@
+{
+  "__typename": {
+    "QueryRootField": {
+      "TypeName": {
+        "type_name": "Query"
+      }
+    }
+  }
+}

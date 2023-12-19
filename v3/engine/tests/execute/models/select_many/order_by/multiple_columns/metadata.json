@@ -1,0 +1,235 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "Int_comparison"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Track",
+            "fields": [
+              {
+                "name": "TrackId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              },
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Track"
+            }
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "definition": {
+            "name": "Tracks",
+            "objectType": "Track",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Track",
+              "typeMapping": {
+                "Track": {
+                  "fieldMapping": {
+                    "TrackId": {
+                      "column": "TrackId"
+                    },
+                    "Name": {
+                      "column": "Name"
+                    },
+                    "AlbumId": {
+                      "column": "AlbumId"
+                    }
+                  }
+                }
+              }
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "TrackByID",
+                  "uniqueIdentifier": [
+                    "TrackId"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Track"
+              },
+              "filterExpressionType": "Track_Where_Exp",
+              "orderByExpressionType": "Track_Order_By"
+            },
+            "filterableFields": [
+              {
+                "fieldName": "TrackId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "Track",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "TrackId",
+                    "Name",
+                    "AlbumId"
+                  ]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": [
+                    "TrackId",
+                    "Name",
+                    "AlbumId"
+                  ]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": [
+                    "TrackId",
+                    "Name",
+                    "AlbumId"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "AlbumId",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "user_2",
+                "select": {
+                  "filter": {
+                    "and": [
+                      {
+                        "fieldComparison": {
+                          "field": "Name",
+                          "operator": "_like",
+                          "value": {
+                            "literal": "%Overdose%"
+                          }
+                        }
+                      },
+                      {
+                        "fieldComparison": {
+                          "field": "AlbumId",
+                          "operator": "_eq",
+                          "value": {
+                            "sessionVariable": "x-hasura-user-id"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

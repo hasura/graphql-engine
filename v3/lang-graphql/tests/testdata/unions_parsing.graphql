@@ -1,0 +1,18 @@
+# Disabled as currently, we don't parse directives successfully
+
+"Empty union"
+union Foo
+
+"One member union"
+union Foo = Bar
+
+"One member union with leading |"
+union Foo = | Bar
+
+"Multi member union"
+union Foo = Bar | Baz
+
+"Union with directives"
+union Foo
+    @foo(bar: 1)
+    = Bar | Baz
