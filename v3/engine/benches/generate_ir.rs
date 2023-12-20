@@ -13,9 +13,9 @@ use engine::execute;
 
 pub fn bench_generate_ir(c: &mut Criterion) {
     let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
-    let schema = fs::read_to_string(test_dir.join("schema.json")).unwrap();
-
-    let gds = GDS::new(&schema).unwrap();
+    let metadata_json_str = fs::read_to_string(test_dir.join("schema.json")).unwrap();
+    let metadata = serde_json::from_str(&metadata_json_str).unwrap();
+    let gds = GDS::new(metadata).unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
 
     let mut group = c.benchmark_group("generate_ir");
