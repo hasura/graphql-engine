@@ -1,6 +1,7 @@
 use open_dds::types::FieldName;
 use std::collections::HashMap;
 
+use crate::metadata::resolved::model::FilterPermission;
 use crate::metadata::resolved::{self, types::ObjectTypeRepresentation};
 use crate::schema::types;
 use crate::schema::Role;
@@ -129,4 +130,40 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
                 None
             }
         })
+}
+
+/// Builds namespace annotations for the `node` field.
+pub(crate) fn get_node_field_namespace_permissions(
+    object_type_representation: &ObjectTypeRepresentation,
+    model: &resolved::model::Model,
+) -> HashMap<Role, FilterPermission> {
+    let mut permissions = HashMap::new();
+
+    match &model.select_permissions {
+        // Model doesn't have any select permissions, so no `FilterPermission` can be obtained
+        None => {}
+        Some(select_permissions) => {
+            for (role, type_output_permission) in &object_type_representation.type_permissions {
+                let is_global_id_field_accessible = object_type_representation
+                    .global_id_fields
+                    .iter()
+                    .all(|field_name| type_output_permission.allowed_fields.contains(field_name));
+
+                if is_global_id_field_accessible {
+                    let select_permission = select_permissions.get(role).map(|s| s.filter.clone());
+
+                    match select_permission {
+                        // Select permission doesn't exist for the role, so no `FilterPermission` can
+                        // be obtained.
+                        None => {}
+                        Some(select_permission) => {
+                            permissions.insert(role.clone(), select_permission);
+                        }
+                    }
+                };
+            }
+        }
+    }
+
+    permissions
 }

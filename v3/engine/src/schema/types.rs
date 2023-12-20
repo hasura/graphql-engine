@@ -1,4 +1,3 @@
-use hasura_authn_core::Role;
 use lang_graphql::{
     ast::common::{self as ast, TypeName},
     mk_name,
@@ -12,12 +11,9 @@ use std::{
 
 use open_dds::{commands, models, types};
 
-use crate::metadata::{
-    resolved,
-    resolved::{
-        model::SelectPermission,
-        subgraph::{Qualified, QualifiedTypeReference},
-    },
+use crate::metadata::resolved::{
+    self,
+    subgraph::{Qualified, QualifiedTypeReference},
 };
 use strum_macros::Display;
 
@@ -45,10 +41,6 @@ pub struct GlobalID {
 pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     pub model_source: Option<resolved::model::ModelSource>,
-    /// Select permissions of the model that is tied to the
-    /// `type_name` and the model that has `globalIDSource`
-    /// set to `true`.
-    pub model_select_permissions: HashMap<Role, SelectPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -182,9 +174,16 @@ pub enum Annotation {
     Input(InputAnnotation),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum NamespaceAnnotation {
     Filter(resolved::model::FilterPermission),
+    /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
+    /// While executing the `node` field, the `id` field is supposed to be decoded and after
+    /// decoding, a typename will be obtained. We need to use that typename to look up the
+    /// Hashmap to get the appropriate `resolved::model::FilterPermission`.
+    NodeFieldTypeMappings(
+        HashMap<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
+    ),
 }
 
 #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]

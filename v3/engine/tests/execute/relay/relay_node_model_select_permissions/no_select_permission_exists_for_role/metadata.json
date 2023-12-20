@@ -301,6 +301,14 @@
                     "title"
                   ]
                 }
+              },
+              {
+                "role": "guest",
+                "output": {
+                  "allowedFields": [
+                    "article_id"
+                  ]
+                }
               }
             ]
           }
@@ -309,12 +317,40 @@
           "kind": "ModelPermissions",
           "version": "v1",
           "definition": {
-            "modelName": "Authors",
+            "modelName": "Articles",
             "permissions": [
               {
                 "role": "admin",
                 "select": {
                   "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "sessionVariable": "x-hasura-user-id"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "role": "guest",
+                "select": {
+                  "filter": {
+                    "fieldComparison": {
+                      "field": "author_id",
+                      "operator": "_eq",
+                      "value": {
+                        "literal": "-1"
+                      }
+                    }
+                  }
                 }
               }
             ]

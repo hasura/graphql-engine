@@ -87,8 +87,10 @@ pub enum InternalEngineError {
     #[error("remote relationships should have been handled separately")]
     RemoteRelationshipsAreNotSupported,
 
-    #[error("expected filter predicate but filter predicate namespaced annotation not found")]
-    FilterPermissionAnnotationNotFound,
+    #[error("expected namespace annotation type {namespace_annotation_type} but not found")]
+    // Running into this error means that the GDS field was not annotated with the correct
+    // namespace annotation while building the metadata.
+    ExpectedNamespaceAnnotationNotFound { namespace_annotation_type: String },
 
     #[error("internal error: {description}")]
     InternalGeneric { description: String },

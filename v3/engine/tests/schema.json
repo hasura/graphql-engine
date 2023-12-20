@@ -742,7 +742,10 @@
             ],
             "graphql": {
               "typeName": "Album"
-            }
+            },
+            "globalIdFields": [
+              "AlbumId"
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -1998,6 +2001,7 @@
           "definition": {
             "name": "Albums",
             "objectType": "Album",
+            "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
               "collection": "Album",
