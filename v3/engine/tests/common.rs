@@ -62,7 +62,7 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(&metadata.to_string()).unwrap();
+        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         let query = fs::read_to_string(request_path).unwrap();
@@ -126,7 +126,7 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(&metadata.to_string()).unwrap();
+        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         let query = fs::read_to_string(request_path).unwrap();

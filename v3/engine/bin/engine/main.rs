@@ -262,8 +262,9 @@ async fn handle_request(
 }
 
 fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, String> {
-    let metadata = std::fs::read_to_string(metadata_path).map_err(|e| e.to_string())?;
-    engine::build::build_schema(&metadata).map_err(|e| e.to_string())
+    let raw_metadata = std::fs::read_to_string(metadata_path).map_err(|e| e.to_string())?;
+    let metadata = serde_json::from_str(&raw_metadata).map_err(|e| e.to_string())?;
+    engine::build::build_schema(metadata).map_err(|e| e.to_string())
 }
 
 fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, String> {

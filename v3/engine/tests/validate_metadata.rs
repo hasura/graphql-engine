@@ -10,7 +10,7 @@ fn test_select_many_model_arguments_without_arguments_input_type() {
     )
         .unwrap();
 
-    let gds = GDS::new(&schema).unwrap();
+    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
     assert_eq!(
         GDS::build_schema(&gds).unwrap_err().to_string(),
         "Cannot generate arguments for model Actors (in subgraph default) since argumentsInputType isn't defined"
@@ -27,7 +27,7 @@ fn test_duplicate_field_path_relationship_mappings() {
     .unwrap();
 
     assert_eq!(
-        GDS::new(&schema).unwrap_err().to_string(),
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: Mapping for source field movie_id already exists in the relationship Movies on type actor (in subgraph default)"
     );
 }
@@ -42,7 +42,7 @@ fn test_field_path_to_argument_relationship_mapping() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(&schema).unwrap_err().to_string(),
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: Relationship mappings to model arguments expressions are not supported yet."
     );
 }
@@ -55,7 +55,7 @@ fn test_relationship_mapping_unknown_source_field() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(&schema).unwrap_err().to_string(),
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: source field author_id_unknown_field in field mapping for relationship author on type Article (in subgraph default) is unknown."
     );
 }
@@ -68,7 +68,7 @@ fn test_relationship_mapping_unknown_target_field() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(&schema).unwrap_err().to_string(),
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: target field author_id in field mapping for relationship author on type Article (in subgraph default) to model Authors (in subgraph default) is unknown."
     );
 }
@@ -80,7 +80,7 @@ fn test_pre_namespace_aware_metadata() {
             .join("tests/validate_metadata_artifacts/metadata_before_namespace_aware_open_dd.json"),
     )
     .unwrap();
-    let gds = GDS::new(&schema);
+    let gds = GDS::new(serde_json::from_str(&schema).unwrap());
     assert!(gds.is_ok())
 }
 
@@ -90,7 +90,7 @@ fn test_pre_subgraph_terminology_metadata() {
         "tests/validate_metadata_artifacts/metadata_before_subgraph_terminology_open_dd.json",
     ))
     .unwrap();
-    let gds = GDS::new(&schema);
+    let gds = GDS::new(serde_json::from_str(&schema).unwrap());
     assert!(gds.is_ok())
 }
 
@@ -100,7 +100,7 @@ fn test_scalar_comparison_type_reuse() {
         "tests/validate_metadata_artifacts/metadata_with_scalar_comparison_type_reused.json",
     ))
     .unwrap();
-    let gds = GDS::new(&schema).unwrap();
+    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
     let built_schema = gds.build_schema();
     assert!(built_schema.is_ok());
 
@@ -108,7 +108,7 @@ fn test_scalar_comparison_type_reuse() {
         "tests/validate_metadata_artifacts/metadata_with_scalar_comparison_type_reused_for_different_scalars.json",
     ))
     .unwrap();
-    let gds = GDS::new(&schema).unwrap();
+    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
     let built_schema = gds.build_schema();
     assert_eq!(built_schema.unwrap_err().to_string(),
         "internal error while building schema: multiple definitions of graphql type: Int_Comparison_Exp"
@@ -126,7 +126,7 @@ fn test_global_if_fields_present_in_object_type_but_no_model_has_global_id_sourc
         .unwrap();
 
     assert_eq!(
-        GDS::new(&schema).unwrap_err().to_string(),
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: 'globalIdFields' for type actor (in subgraph default) found, but no model found with 'globalIdSource: true' for type actor (in subgraph default)"
     );
 }

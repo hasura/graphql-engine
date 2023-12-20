@@ -45,7 +45,7 @@ pub fn bench_execute(
     let metadata_path = test_path.join("metadata.json");
     let metadata = merge_with_common_metadata(&metadata_path, &common_metadata_path);
 
-    let gds = GDS::new(&metadata.to_string()).unwrap();
+    let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
 
     let http_client = reqwest::Client::new();
