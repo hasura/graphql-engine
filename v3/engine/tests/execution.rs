@@ -229,7 +229,14 @@ fn test_relay_global_id_permission() {
 fn test_relay_node_field() {
     let test_path_string = "execute/relay/relay_node_field";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    let common_articles_metadata_path_string = "execute/relay/article_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_articles_metadata_path_string,
+        ],
+    );
 }
 
 #[test]

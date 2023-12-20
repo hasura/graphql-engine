@@ -311,13 +311,14 @@ pub fn output_type_schema(
                         type_name: type_name.clone(),
                     });
                 }
-                interfaces.insert(
-                    node_interface_type(builder),
-                    builder.conditional_namespaced(
-                        (),
-                        permissions::get_node_interface_annotations(object_type_representation),
-                    ),
-                );
+                let node_interface_annotations =
+                    permissions::get_node_interface_annotations(object_type_representation);
+                if !node_interface_annotations.is_empty() {
+                    interfaces.insert(
+                        node_interface_type(builder),
+                        builder.conditional_namespaced((), node_interface_annotations),
+                    );
+                }
                 Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
                     builder,
                     graphql_type_name,

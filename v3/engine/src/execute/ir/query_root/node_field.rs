@@ -4,7 +4,8 @@ use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
 use ndc_client as ndc;
-use open_dds::permissions::Role;
+
+use open_dds::types::CustomTypeName;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
@@ -12,7 +13,8 @@ use crate::execute::error;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
-use crate::schema::types::{GlobalID, NodeFieldTypeNameMapping};
+use crate::metadata::resolved::subgraph::Qualified;
+use crate::schema::types::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use crate::schema::GDS;
 
 /// IR for the 'select_one' operation on a model
@@ -35,6 +37,25 @@ pub struct NodeSelect<'n, 's> {
     pub(crate) usage_counts: UsagesCounts,
 }
 
+fn get_relay_node_namespace_typename_mappings<'s>(
+    field_call: &normalized_ast::FieldCall<'s, GDS>,
+) -> Result<&'s HashMap<Qualified<CustomTypeName>, resolved::model::FilterPermission>, error::Error>
+{
+    field_call
+        .info
+        .namespaced
+        .as_ref()
+        .and_then(|annotation| match annotation {
+            NamespaceAnnotation::NodeFieldTypeMappings(type_mappings) => Some(type_mappings),
+            _ => None,
+        })
+        .ok_or(error::Error::InternalError(error::InternalError::Engine(
+            error::InternalEngineError::ExpectedNamespaceAnnotationNotFound {
+                namespace_annotation_type: "Node type mappings".to_string(),
+            },
+        )))
+}
+
 /// Generate the NDC IR for the node root field.
 
 /// This function, decodes the value of the `id`
@@ -51,7 +72,6 @@ pub(crate) fn relay_node_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     typename_mappings: &'s HashMap<ast::TypeName, NodeFieldTypeNameMapping>,
-    role: &Role,
     session_variables: &SessionVariables,
 ) -> Result<Option<NodeSelect<'n, 's>>, error::Error> {
     let id_arg_value = field_call
@@ -65,12 +85,16 @@ pub(crate) fn relay_node_ir<'n, 's>(
             decoding_error: e.to_string(),
         })?;
     let global_id: GlobalID = serde_json::from_slice(decoded_id_value.as_slice())?;
+    let typename_permissions: &'s HashMap<
+        Qualified<CustomTypeName>,
+        resolved::model::FilterPermission,
+    > = get_relay_node_namespace_typename_mappings(field_call)?;
     let typename_mapping = typename_mappings.get(&global_id.typename).ok_or(
         error::InternalDeveloperError::GlobalIDTypenameMappingNotFound {
             type_name: global_id.typename.clone(),
         },
     )?;
-    let role_model_select_permission = typename_mapping.model_select_permissions.get(role);
+    let role_model_select_permission = typename_permissions.get(&typename_mapping.type_name);
     match role_model_select_permission {
         // When a role doesn't have any model select permissions on the model
         // that is the Global ID source for the object type, we just return `null`.
@@ -120,13 +144,14 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 .filter_field_calls_by_typename(global_id.typename);
 
             let mut usage_counts = UsagesCounts::new();
+
             let model_selection = model_selection::model_selection_ir(
                 &new_selection_set,
                 &typename_mapping.type_name,
                 model_source,
                 BTreeMap::new(),
                 filter_clauses,
-                &role_model_select_permission.filter,
+                role_model_select_permission,
                 None, // limit
                 None, // offset
                 None, // order_by

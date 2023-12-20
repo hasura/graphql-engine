@@ -1,10 +1,12 @@
 use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use ndc_client as gdc;
+
 use open_dds::{permissions::ValueExpression, types::InbuiltType};
 
 use crate::execute::error::{Error, InternalDeveloperError, InternalEngineError, InternalError};
 use crate::metadata::resolved;
+
 use crate::metadata::resolved::subgraph::{
     QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
@@ -21,14 +23,17 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .info
         .namespaced
         .as_ref()
-        .map(|annotation| match annotation {
-            types::NamespaceAnnotation::Filter(predicate) => predicate,
+        .and_then(|annotation| match annotation {
+            types::NamespaceAnnotation::Filter(predicate) => Some(predicate),
+            types::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
         // when the V3 engine metadata was built
         .ok_or(Error::InternalError(InternalError::Engine(
-            InternalEngineError::FilterPermissionAnnotationNotFound,
+            InternalEngineError::ExpectedNamespaceAnnotationNotFound {
+                namespace_annotation_type: "Filter".to_string(),
+            },
         )))
 }
 

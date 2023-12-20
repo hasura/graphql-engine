@@ -221,7 +221,6 @@ fn generate_nodefield_ir<'n, 's>(
         field,
         field_call,
         typename_mappings,
-        &session.role,
         &session.variables,
     )?);
     Ok(ir)

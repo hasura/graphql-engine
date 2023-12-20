@@ -8,7 +8,7 @@
     "data": null,
     "errors": [
       {
-        "message": "validation failed: field article_id on type Article is not allowed for guest"
+        "message": "validation failed: field title on type Article is not allowed for guest"
       }
     ]
   }
