@@ -71,14 +71,14 @@ pub(crate) async fn fetch_from_data_connector<'s>(
 }
 
 /// Executes a NDC mutation
-pub(crate) async fn execute_ndc_mutation<'n, 's>(
+pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query: ndc::models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnector,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
     field_span_attribute: String,
-    process_response_as: ProcessResponseAs<'s>,
+    process_response_as: ProcessResponseAs<'ir>,
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer

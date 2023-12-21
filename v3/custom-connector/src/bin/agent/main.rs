@@ -13,7 +13,7 @@ use axum::{
 };
 
 use indexmap::IndexMap;
-use ndc_client::models;
+use ndc_client::models::{self, Query};
 use prometheus::{Encoder, IntCounter, IntGauge, Opts, Registry, TextEncoder};
 use regex::Regex;
 use tokio::sync::Mutex;
@@ -533,6 +533,25 @@ async fn get_schema() -> Json<models::SchemaResponse> {
     };
     // ANCHOR_END: schema_function_get_actor_by_id
 
+    // ANCHOR: schema_function_get_movie_by_id
+    let get_movie_by_id_function = models::FunctionInfo {
+        name: "get_movie_by_id".into(),
+        description: Some("Get movie by ID".into()),
+        arguments: BTreeMap::from_iter([(
+            "movie_id".into(),
+            models::ArgumentInfo {
+                description: Some("the id of the movie to fetch".into()),
+                argument_type: models::Type::Named { name: "Int".into() },
+            },
+        )]),
+        result_type: models::Type::Nullable {
+            underlying_type: Box::new(models::Type::Named {
+                name: "movie".into(),
+            }),
+        },
+    };
+    // ANCHOR_END: schema_function_get_movie_by_id
+
     // ANCHOR: schema_function_get_actors_by_name
     let get_actors_by_name_function = models::FunctionInfo {
         name: "get_actors_by_name".into(),
@@ -560,6 +579,7 @@ async fn get_schema() -> Json<models::SchemaResponse> {
         latest_actor_name_function,
         latest_actor_function,
         get_actor_by_id_function,
+        get_movie_by_id_function,
         get_actors_by_name_function,
     ];
     // ANCHOR_END: schema_functions
@@ -669,6 +689,9 @@ fn get_collection_by_name(
         "latest_actor" => latest_actor_rows(state, query, collection_relationships, variables),
         "get_actor_by_id" => {
             get_actor_by_id_rows(arguments, state, query, collection_relationships, variables)
+        }
+        "get_movie_by_id" => {
+            get_movie_by_id_rows(arguments, state, query, collection_relationships, variables)
         }
         "get_actors_by_name" => {
             get_actors_by_name_rows(arguments, state, query, collection_relationships, variables)
@@ -898,6 +921,55 @@ fn get_actor_by_id_rows(
     }
 }
 
+fn get_movie_by_id_rows(
+    arguments: &BTreeMap<String, serde_json::Value>,
+    state: &AppState,
+    query: &models::Query,
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, serde_json::Value>,
+) -> Result<Vec<Row>> {
+    let id_value = arguments.get("movie_id").ok_or((
+        StatusCode::BAD_REQUEST,
+        Json(models::ErrorResponse {
+            message: "missing argument id".into(),
+            details: serde_json::Value::Null,
+        }),
+    ))?;
+    if let Some(id) = id_value.as_i64() {
+        let movie = state.movies.get(&id);
+
+        match movie {
+            None => Ok(vec![BTreeMap::from_iter([(
+                "__value".into(),
+                serde_json::Value::Null,
+            )])]),
+            Some(movie) => {
+                let rows = project_row(movie, state, query, collection_relationships, variables)?;
+
+                let movie_value = serde_json::to_value(rows).map_err(|_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(models::ErrorResponse {
+                            message: "unable to encode value".into(),
+                            details: serde_json::Value::Null,
+                        }),
+                    )
+                })?;
+
+                Ok(vec![BTreeMap::from_iter([("__value".into(), movie_value)])])
+            }
+        }
+    } else {
+        Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(models::ErrorResponse {
+                message: "incorrect type for id".into(),
+                details: serde_json::Value::Null,
+            }),
+        ))
+    }
+}
+
 fn project_row(
     row: &Row,
     state: &AppState,
@@ -905,7 +977,7 @@ fn project_row(
     collection_relationships: &BTreeMap<String, models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
 ) -> Result<Option<IndexMap<String, models::RowFieldValue>>> {
-    let row = query
+    query
         .fields
         .as_ref()
         .map(|fields| {
@@ -918,8 +990,7 @@ fn project_row(
                 })
                 .collect::<Result<IndexMap<String, models::RowFieldValue>>>()
         })
-        .transpose()?;
-    Ok(row)
+        .transpose()
 }
 
 fn get_actors_by_name_rows(
@@ -1337,6 +1408,7 @@ fn execute_query(
     // ANCHOR_END: execute_query_filter
     // ANCHOR: execute_query_paginate
     let paginated: Vec<Row> = paginate(filtered.into_iter(), query.limit, query.offset);
+
     // ANCHOR_END: execute_query_paginate
     // ANCHOR: execute_query_aggregates
     let aggregates = query
@@ -1395,6 +1467,7 @@ fn execute_query(
         .transpose()?;
     // ANCHOR_END: execute_query_fields
     // ANCHOR: execute_query_rowset
+
     Ok(models::RowSet { aggregates, rows })
     // ANCHOR_END: execute_query_rowset
 }
@@ -1729,6 +1802,7 @@ fn eval_path(
             relationship,
             &path_element.arguments,
             &result,
+            None,
             &path_element.predicate,
         )?;
     }
@@ -1744,6 +1818,7 @@ fn eval_path_element(
     relationship: &models::Relationship,
     arguments: &BTreeMap<String, models::RelationshipArgument>,
     source: &[Row],
+    query: Option<&Query>,
     predicate: &models::Expression,
 ) -> Result<Vec<Row>> {
     let mut matching_rows: Vec<Row> = vec![];
@@ -1804,13 +1879,16 @@ fn eval_path_element(
             }
         }
 
-        let query = models::Query {
-            aggregates: None,
-            fields: Some(IndexMap::new()),
-            limit: None,
-            offset: None,
-            order_by: None,
-            predicate: None,
+        let query = match query {
+            None => models::Query {
+                aggregates: None,
+                fields: Some(IndexMap::new()),
+                limit: None,
+                offset: None,
+                order_by: None,
+                predicate: None,
+            },
+            Some(query) => query.clone(),
         };
 
         let target = get_collection_by_name(
@@ -2145,6 +2223,7 @@ fn eval_in_collection(
                 relationship,
                 arguments,
                 &source,
+                None,
                 &models::Expression::And {
                     expressions: vec![],
                 },
@@ -2284,6 +2363,7 @@ fn eval_field(
                 relationship,
                 arguments,
                 &source,
+                Some(query),
                 &models::Expression::And {
                     expressions: vec![],
                 },

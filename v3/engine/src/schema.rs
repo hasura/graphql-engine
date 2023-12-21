@@ -193,7 +193,9 @@ pub enum Error {
         type_name: ast::TypeName,
     },
     #[error("internal error while building schema, command not found: {command_name}")]
-    InternalCommandNotFound { command_name: CommandName },
+    InternalCommandNotFound {
+        command_name: Qualified<CommandName>,
+    },
     #[error("Cannot generate select_many API for model {model_name} since order_by_expression isn't defined")]
     NoOrderByExpression { model_name: Qualified<ModelName> },
     #[error("No graphql type name has been defined for scalar type: {type_name}")]

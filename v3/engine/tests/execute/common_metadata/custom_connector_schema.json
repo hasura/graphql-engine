@@ -254,6 +254,26 @@
                   }
                 },
                 {
+                  "name": "get_movie_by_id",
+                  "description": "Get movie by ID",
+                  "arguments": {
+                    "id": {
+                      "description": "the id of the movie to fetch",
+                      "type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "movie"
+                    }
+                  }
+                },
+                {
                   "name": "get_actors_by_name",
                   "description": "Get actors by name",
                   "arguments": {

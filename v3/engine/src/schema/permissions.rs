@@ -50,7 +50,7 @@ pub(crate) fn get_select_one_namespace_annotations(
         .collect()
 }
 
-/// Build namespace annotation for relationship permissions.
+/// Build namespace annotation for model relationship permissions.
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
@@ -93,6 +93,30 @@ pub(crate) fn get_command_namespace_annotations(
         None => {}
     }
     permissions
+}
+
+/// Build namespace annotation for command relationship permissions.
+/// We need to check the permissions of the source fields
+/// in the relationship mappings.
+pub(crate) fn get_command_relationship_namespace_annotations(
+    command: &resolved::command::Command,
+    source_object_type_representation: &ObjectTypeRepresentation,
+    mappings: &[resolved::relationship::RelationshipCommandMapping],
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let select_permissions = get_command_namespace_annotations(command);
+
+    select_permissions
+        .into_iter()
+        .filter(|(role, _)| {
+            mappings.iter().all(|mapping| {
+                get_allowed_roles_for_field(
+                    source_object_type_representation,
+                    &mapping.source_field.field_name,
+                )
+                .any(|allowed_role| role == allowed_role)
+            })
+        })
+        .collect()
 }
 
 /// Build namespace annotations for the node interface..

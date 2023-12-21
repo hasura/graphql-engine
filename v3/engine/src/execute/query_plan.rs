@@ -19,11 +19,11 @@ use super::remote_joins::types::{JoinId, JoinLocations, Location, MonotonicCount
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
-pub type QueryPlan<'n, 's> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's>>;
+pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 
 /// Query plan of individual root field or node
 #[derive(Debug)]
-pub enum NodeQueryPlan<'n, 's> {
+pub enum NodeQueryPlan<'n, 's, 'ir> {
     /// __typename field on query root
     TypeName { type_name: ast::TypeName },
     /// __schema field
@@ -40,30 +40,33 @@ pub enum NodeQueryPlan<'n, 's> {
         role: Role,
     },
     /// NDC query to be executed
-    NDCQueryExecution(NDCQueryExecution<'n, 's>),
+    NDCQueryExecution(NDCQueryExecution<'s, 'ir>),
     /// NDC query for Relay 'node' to be executed
-    RelayNodeSelect(Option<NDCQueryExecution<'n, 's>>),
+    RelayNodeSelect(Option<NDCQueryExecution<'s, 'ir>>),
     /// NDC mutation to be executed
-    NDCMutationExecution(NDCMutationExecution<'n, 's>),
+    NDCMutationExecution(NDCMutationExecution<'n, 's, 'ir>),
 }
 
 #[derive(Debug)]
-pub struct NDCQueryExecution<'n, 's> {
+pub struct NDCQueryExecution<'s, 'ir> {
     pub execution_tree: ExecutionTree<'s>,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'s>,
-    pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
+    pub process_response_as: ProcessResponseAs<'ir>,
+    // This selection set can either be owned by the IR structures or by the normalized query request itself.
+    // We use the more restrictive lifetime `'ir` here which allows us to construct this struct using the selection
+    // set either from the IR or from the normalized query request.
+    pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
 }
 
 #[derive(Debug)]
-pub struct NDCMutationExecution<'n, 's> {
+pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub query: ndc_client::models::MutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s>, JoinId)>,
     pub data_connector: &'s resolved::data_connector::DataConnector,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
-    pub process_response_as: ProcessResponseAs<'s>,
+    pub process_response_as: ProcessResponseAs<'ir>,
     pub selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
 }
 
@@ -80,7 +83,7 @@ pub struct ExecutionNode<'s> {
 }
 
 #[derive(Debug)]
-pub enum ProcessResponseAs<'s> {
+pub enum ProcessResponseAs<'ir> {
     Object {
         is_nullable: bool,
     },
@@ -88,12 +91,12 @@ pub enum ProcessResponseAs<'s> {
         is_nullable: bool,
     },
     CommandResponse {
-        command_name: &'s subgraph::Qualified<open_dds::commands::CommandName>,
-        type_container: &'s ast::TypeContainer<ast::TypeName>,
+        command_name: &'ir subgraph::Qualified<open_dds::commands::CommandName>,
+        type_container: &'ir ast::TypeContainer<ast::TypeName>,
     },
 }
 
-impl ProcessResponseAs<'_> {
+impl<'ir> ProcessResponseAs<'ir> {
     pub fn is_nullable(&self) -> bool {
         match self {
             ProcessResponseAs::Object { is_nullable } => *is_nullable,
@@ -103,9 +106,9 @@ impl ProcessResponseAs<'_> {
     }
 }
 
-pub fn generate_query_plan<'n, 's>(
-    ir: &'s IndexMap<ast::Alias, root_field::RootField<'n, 's>>,
-) -> Result<QueryPlan<'n, 's>, error::Error> {
+pub fn generate_query_plan<'n, 's, 'ir>(
+    ir: &'ir IndexMap<ast::Alias, root_field::RootField<'n, 's>>,
+) -> Result<QueryPlan<'n, 's, 'ir>, error::Error> {
     let mut query_plan = IndexMap::new();
     for (alias, field) in ir.into_iter() {
         let field_plan = match field {
@@ -117,9 +120,9 @@ pub fn generate_query_plan<'n, 's>(
     Ok(query_plan)
 }
 
-fn plan_mutation<'n, 's>(
-    ir: &'s root_field::MutationRootField<'n, 's>,
-) -> Result<NodeQueryPlan<'n, 's>, error::Error> {
+fn plan_mutation<'n, 's, 'ir>(
+    ir: &'ir root_field::MutationRootField<'n, 's>,
+) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
     let plan = match ir {
         root_field::MutationRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
             type_name: type_name.clone(),
@@ -141,13 +144,13 @@ fn plan_mutation<'n, 's>(
             NodeQueryPlan::NDCMutationExecution(NDCMutationExecution {
                 query: ndc_ir,
                 join_locations: join_locations_ids,
-                data_connector: &ir.data_connector,
+                data_connector: ir.data_connector,
                 selection_set,
                 execution_span_attribute: "execute_command".into(),
                 field_span_attribute: ir.field_name.to_string(),
                 process_response_as: ProcessResponseAs::CommandResponse {
                     command_name: &ir.command_name,
-                    type_container: ir.type_container,
+                    type_container: &ir.type_container,
                 },
             })
         }
@@ -155,9 +158,9 @@ fn plan_mutation<'n, 's>(
     Ok(plan)
 }
 
-fn plan_query<'n, 's>(
-    ir: &'s root_field::QueryRootField<'n, 's>,
-) -> Result<NodeQueryPlan<'n, 's>, error::Error> {
+fn plan_query<'n, 's, 'ir>(
+    ir: &'ir root_field::QueryRootField<'n, 's>,
+) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
     let mut counter = MonotonicCounter::new();
     let query_plan = match ir {
         root_field::QueryRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
@@ -238,7 +241,7 @@ fn plan_query<'n, 's>(
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {
                     query: ndc_ir,
-                    data_connector: &ir.data_connector,
+                    data_connector: ir.data_connector,
                 },
                 remote_executions: join_locations_ids,
             };
@@ -249,7 +252,7 @@ fn plan_query<'n, 's>(
                 field_span_attribute: ir.field_name.to_string(),
                 process_response_as: ProcessResponseAs::CommandResponse {
                     command_name: &ir.command_name,
-                    type_container: ir.type_container,
+                    type_container: &ir.type_container,
                 },
             })
         }
@@ -257,7 +260,7 @@ fn plan_query<'n, 's>(
     Ok(query_plan)
 }
 
-fn generate_execution_tree<'s>(ir: &'s ModelSelection) -> Result<ExecutionTree<'s>, error::Error> {
+fn generate_execution_tree<'s>(ir: &ModelSelection<'s>) -> Result<ExecutionTree<'s>, error::Error> {
     let mut counter = MonotonicCounter::new();
     let (ndc_ir, join_locations) = model_selection::ir_to_ndc_ir(ir, &mut counter)?;
     let join_locations_with_ids = assign_with_join_ids(join_locations)?;
@@ -413,9 +416,9 @@ impl ExecuteQueryResult {
     }
 }
 
-pub async fn execute_query_plan<'n, 's>(
+pub async fn execute_query_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
-    query_plan: QueryPlan<'n, 's>,
+    query_plan: QueryPlan<'n, 's, 'ir>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
     for (alias, field_plan) in query_plan.into_iter() {
@@ -540,7 +543,7 @@ async fn resolve_ndc_query_execution(
 
 async fn resolve_ndc_mutation_execution(
     http_client: &reqwest::Client,
-    ndc_query: NDCMutationExecution<'_, '_>,
+    ndc_query: NDCMutationExecution<'_, '_, '_>,
 ) -> Result<json::Value, error::Error> {
     let NDCMutationExecution {
         query,

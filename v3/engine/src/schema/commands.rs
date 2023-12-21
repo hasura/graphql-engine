@@ -7,6 +7,7 @@ use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
 use ndc_client as gdc;
+use open_dds::arguments::ArgumentName;
 use std::collections::HashMap;
 
 use crate::metadata::resolved;
@@ -21,6 +22,40 @@ pub enum Response {
     MutationResponse {
         response: gdc::models::MutationResponse,
     },
+}
+
+pub(crate) fn generate_command_argument(
+    gds: &GDS,
+    builder: &mut gql_schema::Builder<GDS>,
+    command: &resolved::command::Command,
+    argument_name: &ArgumentName,
+    argument_type: &crate::schema::commands::resolved::subgraph::QualifiedTypeReference,
+) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
+    let field_name = ast::Name::new(argument_name.0.as_str())?;
+    let input_type = types::input_type::get_input_type(gds, builder, argument_type)?;
+    Ok((
+        field_name.clone(),
+        builder.allow_all_namespaced(
+            gql_schema::InputField::new(
+                field_name,
+                None,
+                Annotation::Input(types::InputAnnotation::CommandArgument {
+                    argument_type: argument_type.clone(),
+                    ndc_func_proc_argument: command
+                        .source
+                        .as_ref()
+                        .and_then(|command_source| {
+                            command_source.argument_mappings.get(argument_name)
+                        })
+                        .cloned(),
+                }),
+                input_type,
+                None,
+                gql_schema::DeprecationStatus::NotDeprecated,
+            ),
+            None,
+        ),
+    ))
 }
 
 pub(crate) fn command_field(
@@ -39,28 +74,8 @@ pub(crate) fn command_field(
 
     let mut arguments = HashMap::new();
     for (argument_name, argument_type) in &command.arguments {
-        let field_name = ast::Name::new(argument_name.0.as_str())?;
-        let input_type = types::input_type::get_input_type(gds, builder, argument_type)?;
-        let input_field: Namespaced<GDS, InputField<GDS>> = builder.allow_all_namespaced(
-            gql_schema::InputField::new(
-                field_name.clone(),
-                None,
-                Annotation::Input(types::InputAnnotation::CommandArgument {
-                    argument_type: argument_type.clone(),
-                    ndc_func_proc_argument: command
-                        .source
-                        .as_ref()
-                        .and_then(|command_source| {
-                            command_source.argument_mappings.get(argument_name)
-                        })
-                        .cloned(),
-                }),
-                input_type,
-                None,
-                gql_schema::DeprecationStatus::NotDeprecated,
-            ),
-            None,
-        );
+        let (field_name, input_field) =
+            generate_command_argument(gds, builder, command, argument_name, argument_type)?;
         arguments.insert(field_name, input_field);
     }
 

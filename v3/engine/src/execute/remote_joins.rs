@@ -74,7 +74,7 @@ pub async fn execute_join_locations(
     execution_span_attribute: String,
     field_span_attribute: String,
     lhs_response: &mut Vec<ndc::models::RowSet>,
-    lhs_response_type: &ProcessResponseAs<'_>,
+    lhs_response_type: &ProcessResponseAs,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion>, JoinId)>,
 ) -> Result<(), error::Error> {
     let tracer = tracing_util::global_tracer();
@@ -177,7 +177,7 @@ struct CollectArgumentResult<'s> {
 /// a structure of `ReplacementToken`s.
 fn collect_arguments<'s>(
     lhs_response: &Vec<ndc::models::RowSet>,
-    lhs_response_type: &ProcessResponseAs<'s>,
+    lhs_response_type: &ProcessResponseAs,
     key: &str,
     location: &Location<(RemoteJoin<'s>, JoinId)>,
     arguments: &mut Arguments,

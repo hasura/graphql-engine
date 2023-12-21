@@ -630,7 +630,7 @@
                 },
                 {
                   "name": "get_article_by_id",
-                  "description": "Insert or update an article",
+                  "description": "Get article based on ID",
                   "arguments": {
                     "id": {
                       "description": "the id of the article to fetch",
@@ -645,6 +645,26 @@
                     "underlying_type": {
                       "type": "named",
                       "name": "article"
+                    }
+                  }
+                },
+                {
+                  "name": "get_author_by_id",
+                  "description": "Get artist based on id",
+                  "arguments": {
+                    "id": {
+                      "description": "the id of the artist to fetch",
+                      "type": {
+                        "type": "named",
+                        "name": "int4"
+                      }
+                    }
+                  },
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "author"
                     }
                   }
                 }
@@ -887,6 +907,59 @@
           }
         },
         {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "commandAuthor",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "CommandAuthor"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandAuthor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "first_name",
+                    "last_name"
+                  ]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "first_name",
+                    "last_name"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
           "kind": "CommandPermissions",
           "version": "v1",
           "definition": {
@@ -941,6 +1014,66 @@
             },
             "graphql": {
               "rootFieldName": "getArticleById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_author_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_author_by_id",
+            "arguments": [
+              {
+                "name": "author_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandAuthor",
+            "source": {
+              "dataConnectorName": "db",
+              "dataConnectorCommand": {
+                "function": "get_author_by_id"
+              },
+              "typeMapping": {
+                "commandArticle": {
+                  "fieldMapping": {
+                    "author_id": {
+                      "column": "id"
+                    },
+                    "first_name": {
+                      "column": "first_name"
+                    },
+                    "last_name": {
+                      "column": "last_name"
+                    }
+                  }
+                }
+              },
+              "argumentMapping": {
+                "author_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getAuthorById",
               "rootFieldKind": "Query"
             }
           }
@@ -2437,6 +2570,35 @@
                       "fieldName": "ArtistId"
                     }
                   ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "source": "article",
+            "name": "AuthorFromCommand",
+            "target": {
+              "command": {
+                "name": "get_author_by_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "author_id"
+                  }
                 }
               }
             ]
