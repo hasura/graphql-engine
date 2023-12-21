@@ -435,7 +435,7 @@
           "selection": {
             "fields": {
               "article": {
-                "LocalRelationship": {
+                "ModelRelationshipLocal": {
                   "query": {
                     "data_connector": {
                       "name": {
@@ -458,7 +458,7 @@
                     "selection": {
                       "fields": {
                         "Author": {
-                          "LocalRelationship": {
+                          "ModelRelationshipLocal": {
                             "query": {
                               "data_connector": {
                                 "name": {
@@ -481,7 +481,7 @@
                               "selection": {
                                 "fields": {
                                   "Articles": {
-                                    "LocalRelationship": {
+                                    "ModelRelationshipLocal": {
                                       "query": {
                                         "data_connector": {
                                           "name": {

@@ -46,7 +46,6 @@ pub enum InternalDeveloperError {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
     },
-
     #[error("Field mapping not found for the field {field_name:} of type {type_name:} while executing the relationship {relationship_name:}")]
     FieldMappingNotFoundForRelationship {
         type_name: Qualified<CustomTypeName>,
@@ -86,6 +85,15 @@ pub enum InternalEngineError {
 
     #[error("remote relationships should have been handled separately")]
     RemoteRelationshipsAreNotSupported,
+
+    #[error("relationships to procedure based commands are not supported")]
+    RelationshipsToProcedureBasedCommandsAreNotSupported,
+
+    #[error("remote relationships to command are not supported")]
+    RemoteCommandRelationshipsAreNotSupported,
+
+    #[error("expected filter predicate but filter predicate namespaced annotation not found")]
+    FilterPermissionAnnotationNotFound,
 
     #[error("expected namespace annotation type {namespace_annotation_type} but not found")]
     // Running into this error means that the GDS field was not annotated with the correct

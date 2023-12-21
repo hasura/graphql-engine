@@ -10,16 +10,21 @@ use open_dds::{
 use ndc_client as ndc;
 use serde::Serialize;
 
-use super::filter::resolve_filter_expression;
 use super::model_selection::model_selection_ir;
 use super::order_by::build_ndc_order_by;
 use super::permissions;
 use super::selection_set::FieldSelection;
-use crate::execute::error;
+use super::{commands::command_generate_ir, filter::resolve_filter_expression};
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved::subgraph::serialize_qualified_btreemap;
 use crate::schema::types::output_type::relationship::{
     ModelRelationshipAnnotation, ModelTargetSource,
+};
+use crate::{
+    execute::{error, model_tracking::count_command},
+    schema::types::output_type::relationship::{
+        CommandRelationshipAnnotation, CommandTargetSource,
+    },
 };
 use crate::{
     metadata::resolved::{self, subgraph::Qualified},
@@ -30,7 +35,7 @@ use crate::{
 };
 
 #[derive(Debug, Serialize)]
-pub(crate) struct RelationshipInfo<'s> {
+pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub annotation: &'s ModelRelationshipAnnotation,
     pub source_data_connector: &'s resolved::data_connector::DataConnector,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
@@ -38,8 +43,17 @@ pub(crate) struct RelationshipInfo<'s> {
     pub target_source: &'s ModelTargetSource,
 }
 
+#[derive(Debug, Serialize)]
+pub(crate) struct LocalCommandRelationshipInfo<'s> {
+    pub annotation: &'s CommandRelationshipAnnotation,
+    pub source_data_connector: &'s resolved::data_connector::DataConnector,
+    #[serde(serialize_with = "serialize_qualified_btreemap")]
+    pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    pub target_source: &'s CommandTargetSource,
+}
+
 #[derive(Debug, Clone, Serialize)]
-pub struct RemoteRelationshipInfo<'s> {
+pub struct RemoteModelRelationshipInfo<'s> {
     pub annotation: &'s ModelRelationshipAnnotation,
     /// This contains processed information about the mappings.
     /// `RelationshipMapping` only contains mapping of field names. This
@@ -51,10 +65,10 @@ pub struct RemoteRelationshipInfo<'s> {
 pub type SourceField = (FieldName, resolved::types::FieldMapping);
 pub type TargetField = (FieldName, resolved::types::FieldMapping);
 
-pub(crate) fn process_relationship_definition(
-    relationship_info: &RelationshipInfo,
+pub(crate) fn process_model_relationship_definition(
+    relationship_info: &LocalModelRelationshipInfo,
 ) -> Result<ndc::models::Relationship, error::Error> {
-    let &RelationshipInfo {
+    let &LocalModelRelationshipInfo {
         annotation,
         source_data_connector,
         source_type_mappings,
@@ -68,7 +82,11 @@ pub(crate) fn process_relationship_definition(
     } in annotation.mappings.iter()
     {
         if !matches!(
-            relationship_execution_category(target_source, source_data_connector),
+            relationship_execution_category(
+                source_data_connector,
+                &target_source.model.data_connector,
+                &target_source.capabilities
+            ),
             RelationshipExecutionCategory::Local
         ) {
             Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
@@ -111,6 +129,71 @@ pub(crate) fn process_relationship_definition(
     Ok(ndc_relationship)
 }
 
+pub(crate) fn process_command_relationship_definition(
+    relationship_info: &LocalCommandRelationshipInfo,
+) -> Result<ndc::models::Relationship, error::Error> {
+    let &LocalCommandRelationshipInfo {
+        annotation,
+        source_data_connector,
+        source_type_mappings,
+        target_source,
+    } = relationship_info;
+
+    let mut arguments = BTreeMap::new();
+    for resolved::relationship::RelationshipCommandMapping {
+        source_field: source_field_path,
+        argument_name: target_argument,
+    } in annotation.mappings.iter()
+    {
+        if !matches!(
+            relationship_execution_category(
+                source_data_connector,
+                &target_source.command.data_connector,
+                &target_source.capabilities
+            ),
+            RelationshipExecutionCategory::Local
+        ) {
+            Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
+        } else {
+            let source_column = get_field_mapping_of_field_name(
+                source_type_mappings,
+                &annotation.source_type,
+                &annotation.relationship_name,
+                &source_field_path.field_name,
+            )?;
+
+            let relationship_argument = ndc::models::RelationshipArgument::Column {
+                name: source_column.column,
+            };
+
+            if arguments
+                .insert(target_argument.to_string(), relationship_argument)
+                .is_some()
+            {
+                Err(error::InternalEngineError::MappingExistsInRelationship {
+                    source_column: source_field_path.field_name.clone(),
+                    relationship_name: annotation.relationship_name.clone(),
+                })?
+            }
+        }
+    }
+
+    let target_collection = match &target_source.command.source {
+        open_dds::commands::DataConnectorCommand::Function(function_name) => function_name,
+        open_dds::commands::DataConnectorCommand::Procedure(..) => {
+            Err(error::InternalEngineError::RelationshipsToProcedureBasedCommandsAreNotSupported)?
+        }
+    };
+
+    let ndc_relationship = ndc_client::models::Relationship {
+        column_mapping: BTreeMap::new(),
+        relationship_type: ndc_client::models::RelationshipType::Object,
+        target_collection: target_collection.to_string(),
+        arguments,
+    };
+    Ok(ndc_relationship)
+}
+
 enum RelationshipExecutionCategory {
     // Push down relationship definition to the data connector
     Local,
@@ -120,17 +203,16 @@ enum RelationshipExecutionCategory {
 
 #[allow(clippy::match_single_binding)]
 fn relationship_execution_category(
-    target_source: &ModelTargetSource,
     source_connector: &resolved::data_connector::DataConnector,
+    target_connector: &resolved::data_connector::DataConnector,
+    relationship_capabilities: &resolved::relationship::RelationshipCapabilities,
 ) -> RelationshipExecutionCategory {
     // It's a local relationship if the source and target connectors are the same and
     // the connector supports relationships.
-    if target_source.model.data_connector.name == source_connector.name
-        && target_source.capabilities.relationships
-    {
+    if target_connector.name == source_connector.name && relationship_capabilities.relationships {
         RelationshipExecutionCategory::Local
     } else {
-        match target_source.capabilities.foreach {
+        match relationship_capabilities.foreach {
             // TODO: When we support naive relationships for connectors not implementing foreach,
             // add another match arm / return enum variant
             () => RelationshipExecutionCategory::RemoteForEach,
@@ -138,10 +220,10 @@ fn relationship_execution_category(
     }
 }
 
-pub(crate) fn generate_relationship_ir<'s>(
+pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    data_connector: &'s resolved::data_connector::DataConnector,
+    source_data_connector: &'s resolved::data_connector::DataConnector,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -207,12 +289,16 @@ pub(crate) fn generate_relationship_ir<'s>(
                 }
                 None => error::Error::from(normalized_ast::Error::NoTypenameFound),
             })?;
-    match relationship_execution_category(target_source, data_connector) {
-        RelationshipExecutionCategory::Local => build_local_relationship(
+    match relationship_execution_category(
+        source_data_connector,
+        &target_source.model.data_connector,
+        &target_source.capabilities,
+    ) {
+        RelationshipExecutionCategory::Local => build_local_model_relationship(
             field,
             field_call,
             annotation,
-            data_connector,
+            source_data_connector,
             type_mappings,
             target_source,
             filter_clause,
@@ -238,8 +324,53 @@ pub(crate) fn generate_relationship_ir<'s>(
     }
 }
 
+pub(crate) fn generate_command_relationship_ir<'s>(
+    field: &Field<'s, GDS>,
+    annotation: &'s CommandRelationshipAnnotation,
+    source_data_connector: &'s resolved::data_connector::DataConnector,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<FieldSelection<'s>, error::Error> {
+    count_command(annotation.command_name.clone(), usage_counts);
+    let field_call = field.field_call()?;
+
+    let target_source =
+        annotation
+            .target_source
+            .as_ref()
+            .ok_or_else(|| match &field.selection_set.type_name {
+                Some(type_name) => {
+                    error::Error::from(error::InternalDeveloperError::NoSourceDataConnector {
+                        type_name: type_name.clone(),
+                        field_name: field_call.name.clone(),
+                    })
+                }
+                None => error::Error::from(normalized_ast::Error::NoTypenameFound),
+            })?;
+
+    match relationship_execution_category(
+        source_data_connector,
+        &target_source.command.data_connector,
+        &target_source.capabilities,
+    ) {
+        RelationshipExecutionCategory::Local => build_local_command_relationship(
+            field,
+            field_call,
+            annotation,
+            source_data_connector,
+            type_mappings,
+            target_source,
+            session_variables,
+        ),
+        RelationshipExecutionCategory::RemoteForEach => {
+            Err(error::InternalEngineError::RemoteCommandRelationshipsAreNotSupported)?
+        }
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn build_local_relationship<'s>(
+pub(crate) fn build_local_model_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
@@ -266,7 +397,7 @@ pub(crate) fn build_local_relationship<'s>(
         session_variables,
         usage_counts,
     )?;
-    let rel_info = RelationshipInfo {
+    let rel_info = LocalModelRelationshipInfo {
         annotation,
         source_data_connector: data_connector,
         source_type_mappings: type_mappings,
@@ -282,8 +413,50 @@ pub(crate) fn build_local_relationship<'s>(
     let relationship_name =
         serde_json::to_string(&(&annotation.source_type, &annotation.relationship_name))?;
 
-    Ok(FieldSelection::LocalRelationship {
+    Ok(FieldSelection::ModelRelationshipLocal {
         query: relationships_ir,
+        name: relationship_name,
+        relationship_info: rel_info,
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn build_local_command_relationship<'s>(
+    field: &normalized_ast::Field<'s, GDS>,
+    field_call: &normalized_ast::FieldCall<'s, GDS>,
+    annotation: &'s CommandRelationshipAnnotation,
+    data_connector: &'s resolved::data_connector::DataConnector,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    target_source: &'s CommandTargetSource,
+    session_variables: &SessionVariables,
+) -> Result<FieldSelection<'s>, error::Error> {
+    let relationships_ir = command_generate_ir(
+        &annotation.command_name,
+        field,
+        field_call,
+        &annotation.underlying_object_typename,
+        &target_source.command,
+        session_variables,
+    )?;
+
+    let rel_info = LocalCommandRelationshipInfo {
+        annotation,
+        source_data_connector: data_connector,
+        source_type_mappings: type_mappings,
+        target_source,
+    };
+
+    // Relationship names needs to be unique across the IR. This is so that, the
+    // NDC can use these names to figure out what joins to use.
+    // A single "source type" can have only one relationship with a given name,
+    // hence the relationship name in the IR is a tuple between the source type
+    // and the relationship name.
+    // Relationship name = (source_type, relationship_name)
+    let relationship_name =
+        serde_json::to_string(&(&annotation.source_type, &annotation.relationship_name))?;
+
+    Ok(FieldSelection::CommandRelationshipLocal {
+        ir: relationships_ir,
         name: relationship_name,
         relationship_info: rel_info,
     })
@@ -355,11 +528,11 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         };
         remote_relationships_ir.filter_clause.push(comparison_exp);
     }
-    let rel_info = RemoteRelationshipInfo {
+    let rel_info = RemoteModelRelationshipInfo {
         annotation,
         join_mapping,
     };
-    Ok(FieldSelection::RemoteRelationship {
+    Ok(FieldSelection::ModelRelationshipRemote {
         ir: remote_relationships_ir,
         relationship_info: rel_info,
     })

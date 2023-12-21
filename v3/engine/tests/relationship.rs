@@ -54,6 +54,20 @@ fn test_local_relationships_command_to_model() {
 }
 
 #[test]
+fn test_local_relationships_model_to_command() {
+    let test_path_string = "execute/relationships/model_to_command";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
 fn test_local_relationships_permissions_target_model_filter_predicate() {
     let test_path_string = "execute/relationships/permissions/target_model_filter_predicate";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";

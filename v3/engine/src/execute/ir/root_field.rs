@@ -52,7 +52,7 @@ pub enum QueryRootField<'n, 's> {
     NodeSelect(Option<node_field::NodeSelect<'n, 's>>),
     CommandRepresentation {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: commands::CommandRepresentation<'n, 's>,
+        ir: commands::CommandRepresentation<'s>,
     },
 }
 
@@ -65,6 +65,6 @@ pub enum MutationRootField<'n, 's> {
     },
     CommandRepresentation {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: commands::CommandRepresentation<'n, 's>,
+        ir: commands::CommandRepresentation<'s>,
     },
 }

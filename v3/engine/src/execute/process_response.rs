@@ -24,16 +24,23 @@ use crate::schema::{
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;
+    fn contains_key(&self, key: &str) -> bool;
 }
 impl KeyValueResponse for IndexMap<String, json::Value> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         self.remove(key)
+    }
+    fn contains_key(&self, key: &str) -> bool {
+        self.contains_key(key)
     }
 }
 impl KeyValueResponse for IndexMap<String, RowFieldValue> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         // Convert a RowFieldValue to json::Value if exits
         self.remove(key).map(|row_field| row_field.0)
+    }
+    fn contains_key(&self, key: &str) -> bool {
+        self.contains_key(key)
     }
 }
 
@@ -115,6 +122,7 @@ where
                                             ),
                                         }
                                     })?;
+
                                 Ok(field_json_value_result)
                             }
                             OutputAnnotation::RelationshipToModel { .. } => {
@@ -149,6 +157,42 @@ where
                                             )
                                             .and_then(|v| Ok(json::to_value(v)?))
                                         }
+                                    }
+                                }
+                            }
+                            OutputAnnotation::RelationshipToCommand(
+                                command_relationship_annotation,
+                            ) => {
+                                let field_json_value_result =
+                                    row.remove(field.alias.0.as_str()).ok_or_else(|| {
+                                        error::InternalDeveloperError::BadGDCResponse {
+                                            summary: format!(
+                                                "missing field: {}",
+                                                field.alias.clone()
+                                            ),
+                                        }
+                                    })?;
+                                let relationship_json_value_result: Option<RowSet> =
+                                    serde_json::from_value(field_json_value_result).ok();
+
+                                match relationship_json_value_result {
+                                    None => Err(error::InternalDeveloperError::BadGDCResponse {
+                                        summary: "Unable to parse RowSet".into(),
+                                    })?,
+                                    Some(rows_set) => {
+                                        // the output of a command is optional and can be None
+                                        // so we match on the result and return null if the
+                                        // command returned None
+                                        process_command_rows(
+                                            &command_relationship_annotation.command_name,
+                                            rows_set.rows,
+                                            &field.selection_set,
+                                            &field.type_container,
+                                        )
+                                        .map(|v| match v {
+                                            None => json::Value::Null,
+                                            Some(v) => v,
+                                        })
                                     }
                                 }
                             }
@@ -295,10 +339,10 @@ fn process_command_response_row(
     }
 }
 
-pub fn process_response<'s>(
-    selection_set: &normalized_ast::SelectionSet<'s, GDS>,
+pub fn process_response(
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     rows_sets: Vec<ndc::models::RowSet>,
-    process_response_as: ProcessResponseAs<'s>,
+    process_response_as: ProcessResponseAs,
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     // Post process the response to add the `__typename` fields

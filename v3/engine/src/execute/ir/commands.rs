@@ -24,7 +24,7 @@ use crate::schema::GDS;
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]
-pub struct CommandRepresentation<'n, 's> {
+pub struct CommandRepresentation<'s> {
     /// The name of the command
     pub command_name: subgraph::Qualified<commands::CommandName>,
 
@@ -32,10 +32,10 @@ pub struct CommandRepresentation<'n, 's> {
     pub field_name: ast::Name,
 
     /// The data connector backing this model.
-    pub data_connector: resolved::data_connector::DataConnector,
+    pub data_connector: &'s resolved::data_connector::DataConnector,
 
     /// Source function/procedure in the data connector for this model
-    pub ndc_source: DataConnectorCommand,
+    pub ndc_source: &'s DataConnectorCommand,
 
     /// Arguments for the NDC table
     pub(crate) arguments: BTreeMap<String, json::Value>,
@@ -45,7 +45,7 @@ pub struct CommandRepresentation<'n, 's> {
 
     /// The Graphql base type for the output_type of command. Helps in deciding how
     /// the response from the NDC needs to be processed.
-    pub type_container: &'n TypeContainer<TypeName>,
+    pub type_container: TypeContainer<TypeName>,
 
     // All the models/commands used in the 'command' operation.
     pub(crate) usage_counts: UsagesCounts,
@@ -56,11 +56,11 @@ pub struct CommandRepresentation<'n, 's> {
 pub(crate) fn command_generate_ir<'n, 's>(
     command_name: &subgraph::Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
-    field_call: &'s normalized_ast::FieldCall<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
     command_source: &'s resolved::command::CommandSource,
     session_variables: &SessionVariables,
-) -> Result<CommandRepresentation<'n, 's>, error::Error> {
+) -> Result<CommandRepresentation<'s>, error::Error> {
     let empty_field_mappings = BTreeMap::new();
     // No field mappings should exists if the resolved output type of command is
     // not a custom object type
@@ -112,21 +112,20 @@ pub(crate) fn command_generate_ir<'n, 's>(
     Ok(CommandRepresentation {
         command_name: command_name.clone(),
         field_name: field_call.name.clone(),
-        data_connector: command_source.data_connector.clone(),
-        ndc_source: command_source.source.clone(),
+        data_connector: &command_source.data_connector,
+        ndc_source: &command_source.source,
         arguments: command_arguments,
         selection,
-        type_container: &field.type_container,
+        type_container: field.type_container.clone(),
         // selection_set: &field.selection_set,
         usage_counts,
     })
 }
 
-pub fn ir_to_ndc_query_ir<'s>(
-    function_name: &String,
-    ir: &CommandRepresentation<'_, 's>,
+pub fn ir_to_ndc_query<'s>(
+    ir: &CommandRepresentation<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(gdc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<(gdc::models::Query, JoinLocations<RemoteJoin<'s>>), error::Error> {
     let (ndc_fields, jl) = selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
     let query = gdc::models::Query {
         aggregates: None,
@@ -136,6 +135,15 @@ pub fn ir_to_ndc_query_ir<'s>(
         order_by: None,
         predicate: None,
     };
+    Ok((query, jl))
+}
+
+pub fn ir_to_ndc_query_ir<'s>(
+    function_name: &String,
+    ir: &CommandRepresentation<'s>,
+    join_id_counter: &mut MonotonicCounter,
+) -> Result<(gdc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+    let (query, jl) = ir_to_ndc_query(ir, join_id_counter)?;
     let mut collection_relationships = BTreeMap::new();
     selection_set::collect_relationships(&ir.selection, &mut collection_relationships)?;
     let arguments: BTreeMap<String, gdc::models::Argument> = ir
@@ -160,7 +168,7 @@ pub fn ir_to_ndc_query_ir<'s>(
 
 pub fn ir_to_ndc_mutation_ir<'s>(
     procedure_name: &String,
-    ir: &CommandRepresentation<'_, 's>,
+    ir: &CommandRepresentation<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(gdc::models::MutationRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
     let arguments = ir
