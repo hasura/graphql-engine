@@ -16,6 +16,7 @@ use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::schema::types::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use crate::schema::GDS;
+use crate::utils::HashMapWithJsonKey;
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]
@@ -39,8 +40,10 @@ pub struct NodeSelect<'n, 's> {
 
 fn get_relay_node_namespace_typename_mappings<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
-) -> Result<&'s HashMap<Qualified<CustomTypeName>, resolved::model::FilterPermission>, error::Error>
-{
+) -> Result<
+    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
+    error::Error,
+> {
     field_call
         .info
         .namespaced
@@ -88,7 +91,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
     let typename_permissions: &'s HashMap<
         Qualified<CustomTypeName>,
         resolved::model::FilterPermission,
-    > = get_relay_node_namespace_typename_mappings(field_call)?;
+    > = &get_relay_node_namespace_typename_mappings(field_call)?.0;
     let typename_mapping = typename_mappings.get(&global_id.typename).ok_or(
         error::InternalDeveloperError::GlobalIDTypenameMappingNotFound {
             type_name: global_id.typename.clone(),
