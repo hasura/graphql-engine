@@ -1,17 +1,21 @@
 ---
-name: 🐜 Bug report (V2)
-about: If something isn't working for Hasura, for version 2.x only 🔧
-labels: "k/bug"
+name: 🐜 Bug report (V3)
+about: If something isn't working for Hasura DDN or V3 engine 🔧
+labels: "k/v3-bug"
 ---
 
-### Version Information
+### Component
 
-Server Version:
-CLI Version (for CLI related issue):
+<!-- Mention which component the issue pertains to. Kindly also add corresponding label to the issue.
 
-### Environment
+Console -> c/v3-console
+VSCode Extension -> c/v3-lsp
+CLI -> c/v3-cli 
+Graphql Engine (for issues with graphql runtime; Metadata specifications) -> c/v3-engine
+Postgres (for issues that clearly relates to Postgres SQL execution) -> c/v3-ndc-postgres
+Other connectors -> c/v3-ndc-hub or c/v3-ndc-xxxx where xxxx is name of connector
 
-<!--Cloud/ OSS / EE -->
+-->
 
 ### What is the current behaviour?
 
