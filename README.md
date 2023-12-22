@@ -33,12 +33,14 @@ available completely open source. Check out the [Connector Hub](https://hasura.i
 available connectors.
 
 ## Cloning repository
-This repository has a very large git history, that can make the first time cloning of the repository too slow and disk space consuming. We recommend following if you are facing cloning issues.
+
+This repository is a large and active mono-repo containing many parts of the Hasura ecosystem and a long git 
+history, that can make the first time cloning of the repository slow and consume a lot of disk space. We recommend 
+following if you are facing cloning issues.
 
 ### Shallow clone
 
-Due to this repository being a large and active mono-repo and containing many parts of the Hasura ecosystem, it is recommended to 
-do a shallow clone of the repository. This will only clone the latest commit and ignore all historical commits. 
+This will only clone the latest commit and ignore all historical commits. 
 
 ```
 git clone https://github.com/hasura/graphql-engine.git --depth 1
@@ -77,7 +79,6 @@ If you want to report a security issue, please [read this](SECURITY.md).
 
 ## Stay up to date
 
-[//]: # (TODO this just goes to community page)
 Join our communities to stay up to date on announcements, events, product updates, and technical blogs.
 [https://hasura.io/community/](https://hasura.io/community/)
 
