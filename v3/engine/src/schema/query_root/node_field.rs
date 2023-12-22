@@ -17,6 +17,7 @@ use crate::schema::types::{
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
 use crate::schema::{Role, GDS};
+use crate::utils::HashMapWithJsonKey;
 
 pub(crate) struct RelayNodeFieldOutput {
     pub relay_node_gql_field: gql_schema::Field<GDS>,
@@ -111,7 +112,7 @@ pub(crate) fn relay_node_field(
         relay_node_field_permissions.insert(
             role.clone(),
             Some(types::NamespaceAnnotation::NodeFieldTypeMappings(
-                role_type_permission,
+                HashMapWithJsonKey(role_type_permission),
             )),
         );
     }

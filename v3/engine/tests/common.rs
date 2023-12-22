@@ -65,6 +65,9 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
         let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
+        // Ensure schema is serialized successfully.
+        serde_json::to_string(&schema).unwrap();
+
         let query = fs::read_to_string(request_path).unwrap();
 
         let session = {
@@ -128,6 +131,9 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
 
         let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
+
+        // Ensure schema is serialized successfully.
+        serde_json::to_string(&schema).unwrap();
 
         let query = fs::read_to_string(request_path).unwrap();
 

@@ -11,9 +11,12 @@ use std::{
 
 use open_dds::{commands, models, types};
 
-use crate::metadata::resolved::{
-    self,
-    subgraph::{Qualified, QualifiedTypeReference},
+use crate::{
+    metadata::resolved::{
+        self,
+        subgraph::{Qualified, QualifiedTypeReference},
+    },
+    utils::HashMapWithJsonKey,
 };
 use strum_macros::Display;
 
@@ -183,7 +186,7 @@ pub enum NamespaceAnnotation {
     /// decoding, a typename will be obtained. We need to use that typename to look up the
     /// Hashmap to get the appropriate `resolved::model::FilterPermission`.
     NodeFieldTypeMappings(
-        HashMap<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
     ),
 }
 
