@@ -52,12 +52,14 @@ export const FilterRows = ({
     onRemove?.();
   };
 
-  const columnOptions: SelectItem[] = columns.map(column => {
-    return {
-      label: column.name,
-      value: column.name,
-    };
-  });
+  const columnOptions: SelectItem[] = columns
+    .sort((a, b) => (a.name > b.name ? 1 : -1))
+    .map(column => {
+      return {
+        label: column.name,
+        value: column.name,
+      };
+    });
 
   const operatorOptions: SelectItem[] = operators.map(operator => ({
     label: `[${operator.value}] ${operator.name}`,
