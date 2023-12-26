@@ -12,7 +12,7 @@ use crate::metadata::resolved::types::TypeMapping;
 use crate::schema::types::{Annotation, InputAnnotation, ModelInputAnnotation};
 use crate::schema::GDS;
 
-pub fn build_ndc_command_arguments(
+pub fn build_ndc_command_arguments_as_value(
     command_field: &Name,
     argument: &InputField<GDS>,
     command_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,

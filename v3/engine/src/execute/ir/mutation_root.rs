@@ -31,10 +31,11 @@ pub fn generate_ir<'n, 's>(
                 }),
                 _ => match field_call.info.generic {
                     Annotation::Output(OutputAnnotation::RootField(
-                        RootFieldAnnotation::Command {
+                        RootFieldAnnotation::ProcedureCommand {
                             name,
                             underlying_object_typename,
                             source,
+                            procedure_name,
                         },
                     )) => {
                         let source = source.as_ref().ok_or_else(|| {
@@ -43,10 +44,19 @@ pub fn generate_ir<'n, 's>(
                                 field_name: field_call.name.clone(),
                             }
                         })?;
-                        Ok(root_field::MutationRootField::CommandRepresentation {
+
+                        let procedure_name = procedure_name.as_ref().ok_or_else(|| {
+                            error::InternalDeveloperError::NoFunctionOrProcedure {
+                                type_name: type_name.clone(),
+                                field_name: field_call.name.clone(),
+                            }
+                        })?;
+
+                        Ok(root_field::MutationRootField::ProcedureBasedCommand {
                             selection_set: &field.selection_set,
-                            ir: commands::command_generate_ir(
+                            ir: commands::generate_procedure_based_command(
                                 name,
+                                procedure_name,
                                 field,
                                 field_call,
                                 underlying_object_typename,

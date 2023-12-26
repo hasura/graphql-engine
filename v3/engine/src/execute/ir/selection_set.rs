@@ -7,7 +7,7 @@ use open_dds::types::{CustomTypeName, FieldName};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
-use super::commands::{self, CommandRepresentation};
+use super::commands::{self, FunctionBasedCommand};
 use super::model_selection::{self, ModelSelection};
 use super::relationship::{
     self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteModelRelationshipInfo,
@@ -38,7 +38,7 @@ pub(crate) enum FieldSelection<'s> {
         relationship_info: LocalModelRelationshipInfo<'s>,
     },
     CommandRelationshipLocal {
-        ir: CommandRepresentation<'s>,
+        ir: FunctionBasedCommand<'s>,
         name: String,
         relationship_info: LocalCommandRelationshipInfo<'s>,
     },
@@ -192,6 +192,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
 }
 
 /// Convert selection set IR (`ResultSelectionSet`) into NDC fields
+#[allow(irrefutable_let_patterns)]
 pub(crate) fn process_selection_set_ir<'s>(
     model_selection: &ResultSelectionSet<'s>,
     join_id_counter: &mut MonotonicCounter,
@@ -242,15 +243,19 @@ pub(crate) fn process_selection_set_ir<'s>(
                 name,
                 relationship_info: _,
             } => {
-                let (relationship_query, jl) = commands::ir_to_ndc_query(ir, join_id_counter)?;
+                let (relationship_query, jl) =
+                    commands::ir_to_ndc_query(&ir.command_info, join_id_counter)?;
 
                 let relationship_arguments: BTreeMap<_, _> = ir
+                    .command_info
                     .arguments
                     .iter()
-                    .map(|(k, v)| {
+                    .map(|(argument_name, argument_value)| {
                         (
-                            k.clone(),
-                            ndc::models::RelationshipArgument::Literal { value: v.clone() },
+                            argument_name.clone(),
+                            ndc::models::RelationshipArgument::Literal {
+                                value: argument_value.clone(),
+                            },
                         )
                     })
                     .collect();
@@ -347,7 +352,7 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_command_relationship_definition(relationship_info)?,
                 );
-                collect_relationships(&ir.selection, relationships)?;
+                collect_relationships(&ir.command_info.selection, relationships)?;
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector

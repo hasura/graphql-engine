@@ -17,8 +17,14 @@ use super::types::Annotation;
 
 #[derive(Error, Debug)]
 pub enum InternalDeveloperError {
-    #[error("no source data connector specified for field {field_name} of type {type_name}")]
+    #[error("No source data connector specified for field {field_name} of type {type_name}")]
     NoSourceDataConnector {
+        type_name: ast::TypeName,
+        field_name: ast::Name,
+    },
+
+    #[error("No function/procedure specified for command field {field_name} of type {type_name}")]
+    NoFunctionOrProcedure {
         type_name: ast::TypeName,
         field_name: ast::Name,
     },
@@ -85,9 +91,6 @@ pub enum InternalEngineError {
 
     #[error("remote relationships should have been handled separately")]
     RemoteRelationshipsAreNotSupported,
-
-    #[error("relationships to procedure based commands are not supported")]
-    RelationshipsToProcedureBasedCommandsAreNotSupported,
 
     #[error("remote relationships to command are not supported")]
     RemoteCommandRelationshipsAreNotSupported,

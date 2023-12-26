@@ -1,6 +1,6 @@
 use ndc_client::models::SchemaResponse;
 use open_dds::{
-    commands::{CommandName, DataConnectorCommand},
+    commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
     data_connector::DataConnectorName,
     models::ModelName,
     types::{CustomTypeName, FieldName},
@@ -55,13 +55,13 @@ pub enum NDCValidationError {
     NoSuchProcedure {
         db_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
-        procedure_name: String,
+        procedure_name: ProcedureName,
     },
     #[error("function {function_name} is not defined in data connector {db_name}")]
     NoSuchFunction {
         db_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
-        function_name: String,
+        function_name: FunctionName,
     },
     #[error("column {column_name} is not defined in function/procedure {func_proc_name} in data connector {db_name}")]
     NoSuchColumnForCommand {
@@ -264,7 +264,7 @@ pub fn validate_ndc_command(
             let command_source_ndc = schema
                 .procedures
                 .iter()
-                .find(|proc| proc.name == *procedure)
+                .find(|proc| proc.name == *procedure.0)
                 .ok_or_else(|| NDCValidationError::NoSuchProcedure {
                     db_name: db.name.clone(),
                     command_name: command_name.clone(),
@@ -272,7 +272,7 @@ pub fn validate_ndc_command(
                 })?;
 
             (
-                procedure,
+                &procedure.0,
                 command_source_ndc.arguments.clone(),
                 &command_source_ndc.result_type,
             )
@@ -282,7 +282,7 @@ pub fn validate_ndc_command(
             let command_source_ndc = schema
                 .functions
                 .iter()
-                .find(|func| func.name == *function)
+                .find(|func| func.name == *function.0)
                 .ok_or_else(|| NDCValidationError::NoSuchFunction {
                     db_name: db.name.clone(),
                     command_name: command_name.clone(),
@@ -290,7 +290,7 @@ pub fn validate_ndc_command(
                 })?;
 
             (
-                function,
+                &function.0,
                 command_source_ndc.arguments.clone(),
                 &command_source_ndc.result_type,
             )

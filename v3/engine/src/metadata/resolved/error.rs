@@ -7,7 +7,7 @@ use crate::metadata::resolved::types::TypeRepresentation;
 use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
-    commands::CommandName,
+    commands::{CommandName, FunctionName, ProcedureName},
     data_connector::DataConnectorName,
     models::{ModelName, OperatorName},
     relationships::RelationshipName,
@@ -110,13 +110,13 @@ pub enum Error {
     UnknownCommandProcedure {
         command_name: Qualified<CommandName>,
         data_connector: Qualified<DataConnectorName>,
-        procedure: String,
+        procedure: ProcedureName,
     },
     #[error("the function {function:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
     UnknownCommandFunction {
         command_name: Qualified<CommandName>,
         data_connector: Qualified<DataConnectorName>,
-        function: String,
+        function: FunctionName,
     },
     #[error("{error:} in command {command_name:}")]
     CommandTypeMappingValidationError {
@@ -402,14 +402,14 @@ pub enum Error {
     CommandFunctionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
-        function_name: String,
+        function_name: FunctionName,
         error: ArgumentMappingError,
     },
     #[error("An error occurred while mapping arguments in the command {command_name:} to the procedure {procedure_name:} in the data connector {data_connector_name:}: {error:}")]
     CommandProcedureArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
         command_name: Qualified<CommandName>,
-        procedure_name: String,
+        procedure_name: ProcedureName,
         error: ArgumentMappingError,
     },
     #[error("The url for the data connector {data_connector_name:} is invalid: {error:}")]

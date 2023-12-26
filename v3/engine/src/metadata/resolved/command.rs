@@ -160,7 +160,7 @@ pub fn resolve_command_source(
                 .schema
                 .procedures
                 .iter()
-                .find(|proc| proc.name == *procedure)
+                .find(|proc| proc.name == *procedure.0)
                 .ok_or_else(|| Error::UnknownCommandProcedure {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),
@@ -174,7 +174,7 @@ pub fn resolve_command_source(
                 .schema
                 .functions
                 .iter()
-                .find(|func| func.name == *function)
+                .find(|func| func.name == *function.0)
                 .ok_or_else(|| Error::UnknownCommandFunction {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),

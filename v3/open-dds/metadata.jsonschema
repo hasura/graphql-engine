@@ -1679,7 +1679,7 @@
           ],
           "properties": {
             "function": {
-              "type": "string"
+              "$ref": "#/definitions/FunctionName"
             }
           },
           "additionalProperties": false
@@ -1692,12 +1692,20 @@
           ],
           "properties": {
             "procedure": {
-              "type": "string"
+              "$ref": "#/definitions/ProcedureName"
             }
           },
           "additionalProperties": false
         }
       ]
+    },
+    "FunctionName": {
+      "description": "The name of a function backing the command.",
+      "type": "string"
+    },
+    "ProcedureName": {
+      "description": "The name of a procedure backing the command.",
+      "type": "string"
     },
     "CommandGraphQlDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandGraphQlDefinition",

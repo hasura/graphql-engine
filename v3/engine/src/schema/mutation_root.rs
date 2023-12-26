@@ -24,7 +24,7 @@ pub fn mutation_root_schema(
             ) {
                 let command_field_name: ast::Name = command_graphql_api.root_field_name.clone();
                 let (field_name, field) =
-                    commands::command_field(gds, builder, command, command_field_name)?;
+                    commands::procedure_command_field(gds, builder, command, command_field_name)?;
                 fields.insert(field_name, field);
             }
         }
