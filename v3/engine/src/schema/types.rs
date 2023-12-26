@@ -9,12 +9,17 @@ use std::{
     fmt::Display,
 };
 
-use open_dds::{commands, models, types};
+use open_dds::{arguments::ArgumentName, commands, models, types};
 
 use crate::{
     metadata::resolved::{
         self,
+        data_connector::DataConnector,
         subgraph::{Qualified, QualifiedTypeReference},
+    },
+    schema::types::resolved::{
+        subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap},
+        types::TypeMapping,
     },
     utils::HashMapWithJsonKey,
 };
@@ -66,6 +71,18 @@ pub enum ModelOrderByDirection {
     Desc,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+/// Common details to generate a command annotation.
+pub struct CommandSourceDetail {
+    pub data_connector: DataConnector,
+    #[serde(
+        serialize_with = "serialize_qualified_btreemap",
+        deserialize_with = "deserialize_qualified_btreemap"
+    )]
+    pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
+    pub argument_mappings: HashMap<ArgumentName, String>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations of the GraphQL root field.
 pub enum RootFieldAnnotation {
@@ -87,11 +104,19 @@ pub enum RootFieldAnnotation {
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
     },
-    Command {
+    FunctionCommand {
         name: Qualified<commands::CommandName>,
         underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
         // A command may/may not have a source
-        source: Option<resolved::command::CommandSource>,
+        source: Option<CommandSourceDetail>,
+        function_name: Option<commands::FunctionName>,
+    },
+    ProcedureCommand {
+        name: Qualified<commands::CommandName>,
+        underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
+        // A command may/may not have a source
+        source: Option<CommandSourceDetail>,
+        procedure_name: Option<commands::ProcedureName>,
     },
 }
 

@@ -50,9 +50,9 @@ pub enum QueryRootField<'n, 's> {
     // Operation that selects a single row from the model corresponding
     // to the Global Id input.
     NodeSelect(Option<node_field::NodeSelect<'n, 's>>),
-    CommandRepresentation {
+    FunctionBasedCommand {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: commands::CommandRepresentation<'s>,
+        ir: commands::FunctionBasedCommand<'s>,
     },
 }
 
@@ -63,8 +63,8 @@ pub enum MutationRootField<'n, 's> {
     TypeName {
         type_name: ast::TypeName,
     },
-    CommandRepresentation {
+    ProcedureBasedCommand {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
-        ir: commands::CommandRepresentation<'s>,
+        ir: commands::ProcedureBasedCommand<'s>,
     },
 }

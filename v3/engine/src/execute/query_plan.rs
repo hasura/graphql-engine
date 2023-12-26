@@ -127,30 +127,21 @@ fn plan_mutation<'n, 's, 'ir>(
         root_field::MutationRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
             type_name: type_name.clone(),
         },
-        root_field::MutationRootField::CommandRepresentation { ir, selection_set } => {
-            let proc_name = match ir.ndc_source {
-                open_dds::commands::DataConnectorCommand::Procedure(ref proc_name) => Ok(proc_name),
-                open_dds::commands::DataConnectorCommand::Function(_) => {
-                    Err(error::InternalEngineError::InternalGeneric {
-                        description: "unexpected function for command in Mutation root field"
-                            .into(),
-                    })
-                }
-            }?;
+        root_field::MutationRootField::ProcedureBasedCommand { ir, selection_set } => {
             let mut join_id_counter = MonotonicCounter::new();
             let (ndc_ir, join_locations) =
-                commands::ir_to_ndc_mutation_ir(proc_name, ir, &mut join_id_counter)?;
+                commands::ir_to_ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             NodeQueryPlan::NDCMutationExecution(NDCMutationExecution {
                 query: ndc_ir,
                 join_locations: join_locations_ids,
-                data_connector: ir.data_connector,
+                data_connector: ir.command_info.data_connector,
                 selection_set,
                 execution_span_attribute: "execute_command".into(),
-                field_span_attribute: ir.field_name.to_string(),
+                field_span_attribute: ir.command_info.field_name.to_string(),
                 process_response_as: ProcessResponseAs::CommandResponse {
-                    command_name: &ir.command_name,
-                    type_container: &ir.type_container,
+                    command_name: &ir.command_info.command_name,
+                    type_container: &ir.command_info.type_container,
                 },
             })
         }
@@ -224,24 +215,15 @@ fn plan_query<'n, 's, 'ir>(
             }
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
-        root_field::QueryRootField::CommandRepresentation { ir, selection_set } => {
-            let function_name = match ir.ndc_source {
-                open_dds::commands::DataConnectorCommand::Function(ref function_name) => {
-                    Ok(function_name)
-                }
-                open_dds::commands::DataConnectorCommand::Procedure(_) => {
-                    Err(error::InternalEngineError::InternalGeneric {
-                        description: "unexpected procedure for command in Query root field".into(),
-                    })
-                }
-            }?;
+        root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
+            let function_name = ir.function_name;
             let (ndc_ir, join_locations) =
                 commands::ir_to_ndc_query_ir(function_name, ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {
                     query: ndc_ir,
-                    data_connector: ir.data_connector,
+                    data_connector: ir.command_info.data_connector,
                 },
                 remote_executions: join_locations_ids,
             };
@@ -249,10 +231,10 @@ fn plan_query<'n, 's, 'ir>(
                 execution_tree,
                 selection_set,
                 execution_span_attribute: "execute_command".into(),
-                field_span_attribute: ir.field_name.to_string(),
+                field_span_attribute: ir.command_info.field_name.to_string(),
                 process_response_as: ProcessResponseAs::CommandResponse {
-                    command_name: &ir.command_name,
-                    type_container: &ir.type_container,
+                    command_name: &ir.command_info.command_name,
+                    type_container: &ir.command_info.type_container,
                 },
             })
         }

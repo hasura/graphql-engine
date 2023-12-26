@@ -70,15 +70,15 @@ pub fn get_all_usage_counts_in_query(ir: &IndexMap<Alias, RootField<'_, '_>>) ->
                         extend_usage_count(usage_counts, &mut all_usage_counts);
                     }
                 },
-                root_field::QueryRootField::CommandRepresentation { ir, .. } => {
-                    let usage_counts = ir.usage_counts.clone();
+                root_field::QueryRootField::FunctionBasedCommand { ir, .. } => {
+                    let usage_counts = ir.command_info.usage_counts.clone();
                     extend_usage_count(usage_counts, &mut all_usage_counts);
                 }
             },
             root_field::RootField::MutationRootField(rf) => match rf {
                 root_field::MutationRootField::TypeName { .. } => {}
-                root_field::MutationRootField::CommandRepresentation { ir, .. } => {
-                    let usage_counts = ir.usage_counts.clone();
+                root_field::MutationRootField::ProcedureBasedCommand { ir, .. } => {
+                    let usage_counts = ir.command_info.usage_counts.clone();
                     extend_usage_count(usage_counts, &mut all_usage_counts);
                 }
             },

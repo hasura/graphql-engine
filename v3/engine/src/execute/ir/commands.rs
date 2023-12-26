@@ -7,8 +7,10 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::normalized_ast;
-use ndc_client as gdc;
-use open_dds::commands::{self, DataConnectorCommand};
+use ndc_client as ndc;
+use open_dds::commands;
+use open_dds::commands::FunctionName;
+use open_dds::commands::ProcedureName;
 use serde::Serialize;
 use serde_json as json;
 use std::collections::BTreeMap;
@@ -20,11 +22,12 @@ use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::execute::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph;
+use crate::schema::types::CommandSourceDetail;
 use crate::schema::GDS;
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]
-pub struct CommandRepresentation<'s> {
+pub struct CommandInfo<'s> {
     /// The name of the command
     pub command_name: subgraph::Qualified<commands::CommandName>,
 
@@ -33,9 +36,6 @@ pub struct CommandRepresentation<'s> {
 
     /// The data connector backing this model.
     pub data_connector: &'s resolved::data_connector::DataConnector,
-
-    /// Source function/procedure in the data connector for this model
-    pub ndc_source: &'s DataConnectorCommand,
 
     /// Arguments for the NDC table
     pub(crate) arguments: BTreeMap<String, json::Value>,
@@ -51,16 +51,36 @@ pub struct CommandRepresentation<'s> {
     pub(crate) usage_counts: UsagesCounts,
 }
 
+/// IR for the 'function based command' operations
+#[derive(Serialize, Debug)]
+pub struct FunctionBasedCommand<'s> {
+    /// Info to generate command IR
+    pub command_info: CommandInfo<'s>,
+
+    /// Source function in the data connector for this model
+    pub function_name: &'s FunctionName,
+}
+
+/// IR for the 'procedure based command' operations
+#[derive(Serialize, Debug)]
+pub struct ProcedureBasedCommand<'s> {
+    /// Info to generate command IR
+    pub command_info: CommandInfo<'s>,
+
+    /// Source procedure in the data connector for this model
+    pub procedure_name: &'s ProcedureName,
+}
+
 /// Generates the IR for a 'command' operation
 #[allow(irrefutable_let_patterns)]
-pub(crate) fn command_generate_ir<'n, 's>(
+pub(crate) fn generate_command_info<'n, 's>(
     command_name: &subgraph::Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
-    command_source: &'s resolved::command::CommandSource,
+    command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
-) -> Result<CommandRepresentation<'s>, error::Error> {
+) -> Result<CommandInfo<'s>, error::Error> {
     let empty_field_mappings = BTreeMap::new();
     // No field mappings should exists if the resolved output type of command is
     // not a custom object type
@@ -87,7 +107,7 @@ pub(crate) fn command_generate_ir<'n, 's>(
     let mut command_arguments = BTreeMap::new();
     for argument in field_call.arguments.values() {
         command_arguments.extend(
-            arguments::build_ndc_command_arguments(
+            arguments::build_ndc_command_arguments_as_value(
                 &field_call.name,
                 argument,
                 &command_source.type_mappings,
@@ -109,25 +129,73 @@ pub(crate) fn command_generate_ir<'n, 's>(
         &mut usage_counts,
     )?;
 
-    Ok(CommandRepresentation {
+    Ok(CommandInfo {
         command_name: command_name.clone(),
         field_name: field_call.name.clone(),
         data_connector: &command_source.data_connector,
-        ndc_source: &command_source.source,
         arguments: command_arguments,
         selection,
         type_container: field.type_container.clone(),
-        // selection_set: &field.selection_set,
         usage_counts,
     })
 }
 
+/// Generates the IR for a 'function based command' operation
+pub(crate) fn generate_function_based_command<'n, 's>(
+    command_name: &subgraph::Qualified<commands::CommandName>,
+    function_name: &'s open_dds::commands::FunctionName,
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
+    command_source: &'s CommandSourceDetail,
+    session_variables: &SessionVariables,
+) -> Result<FunctionBasedCommand<'s>, error::Error> {
+    let command_info = generate_command_info(
+        command_name,
+        field,
+        field_call,
+        underlying_object_typename,
+        command_source,
+        session_variables,
+    )?;
+
+    Ok(FunctionBasedCommand {
+        command_info,
+        function_name,
+    })
+}
+
+/// Generates the IR for a 'procedure based command' operation
+pub(crate) fn generate_procedure_based_command<'n, 's>(
+    command_name: &subgraph::Qualified<commands::CommandName>,
+    procedure_name: &'s open_dds::commands::ProcedureName,
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
+    command_source: &'s CommandSourceDetail,
+    session_variables: &SessionVariables,
+) -> Result<ProcedureBasedCommand<'s>, error::Error> {
+    let command_info = generate_command_info(
+        command_name,
+        field,
+        field_call,
+        underlying_object_typename,
+        command_source,
+        session_variables,
+    )?;
+
+    Ok(ProcedureBasedCommand {
+        command_info,
+        procedure_name,
+    })
+}
+
 pub fn ir_to_ndc_query<'s>(
-    ir: &CommandRepresentation<'s>,
+    ir: &CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(gdc::models::Query, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s>>), error::Error> {
     let (ndc_fields, jl) = selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
-    let query = gdc::models::Query {
+    let query = ndc::models::Query {
         aggregates: None,
         fields: Some(ndc_fields),
         limit: None,
@@ -139,24 +207,30 @@ pub fn ir_to_ndc_query<'s>(
 }
 
 pub fn ir_to_ndc_query_ir<'s>(
-    function_name: &String,
-    ir: &CommandRepresentation<'s>,
+    function_name: &FunctionName,
+    ir: &FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(gdc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
-    let (query, jl) = ir_to_ndc_query(ir, join_id_counter)?;
-    let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(&ir.selection, &mut collection_relationships)?;
-    let arguments: BTreeMap<String, gdc::models::Argument> = ir
+) -> Result<(ndc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+    let arguments = ir
+        .command_info
         .arguments
         .iter()
-        .map(|(k, v)| {
+        .map(|(argument_name, argument_value)| {
             (
-                k.clone(),
-                gdc::models::Argument::Literal { value: v.clone() },
+                argument_name.clone(),
+                ndc_client::models::Argument::Literal {
+                    value: argument_value.clone(),
+                },
             )
         })
         .collect();
-    let query_request = gdc::models::QueryRequest {
+    let (query, jl) = ir_to_ndc_query(&ir.command_info, join_id_counter)?;
+    let mut collection_relationships = BTreeMap::new();
+    selection_set::collect_relationships(
+        &ir.command_info.selection,
+        &mut collection_relationships,
+    )?;
+    let query_request = ndc::models::QueryRequest {
         query,
         collection: function_name.to_string(),
         arguments,
@@ -167,25 +241,23 @@ pub fn ir_to_ndc_query_ir<'s>(
 }
 
 pub fn ir_to_ndc_mutation_ir<'s>(
-    procedure_name: &String,
-    ir: &CommandRepresentation<'s>,
+    procedure_name: &ProcedureName,
+    ir: &ProcedureBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(gdc::models::MutationRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
-    let arguments = ir
-        .arguments
-        .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect::<BTreeMap<String, serde_json::Value>>();
-
-    let (ndc_fields, jl) = selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
-    let mutation_operation = gdc::models::MutationOperation::Procedure {
+) -> Result<(ndc::models::MutationRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+    let (ndc_fields, jl) =
+        selection_set::process_selection_set_ir(&ir.command_info.selection, join_id_counter)?;
+    let mutation_operation = ndc::models::MutationOperation::Procedure {
         name: procedure_name.to_string(),
-        arguments,
+        arguments: ir.command_info.arguments.clone(),
         fields: Some(ndc_fields),
     };
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(&ir.selection, &mut collection_relationships)?;
-    let mutation_request = gdc::models::MutationRequest {
+    selection_set::collect_relationships(
+        &ir.command_info.selection,
+        &mut collection_relationships,
+    )?;
+    let mutation_request = ndc::models::MutationRequest {
         operations: vec![mutation_operation],
         collection_relationships,
     };

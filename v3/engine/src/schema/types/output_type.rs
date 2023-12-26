@@ -1,5 +1,6 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema};
+use open_dds::commands::DataConnectorCommand;
 use open_dds::{
     relationships,
     types::{CustomTypeName, InbuiltType},

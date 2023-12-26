@@ -10,11 +10,14 @@ use open_dds::{
 use ndc_client as ndc;
 use serde::Serialize;
 
-use super::model_selection::model_selection_ir;
 use super::order_by::build_ndc_order_by;
 use super::permissions;
 use super::selection_set::FieldSelection;
-use super::{commands::command_generate_ir, filter::resolve_filter_expression};
+use super::{
+    commands::generate_function_based_command, filter::resolve_filter_expression,
+    model_selection::model_selection_ir,
+};
+
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved::subgraph::serialize_qualified_btreemap;
 use crate::schema::types::output_type::relationship::{
@@ -148,7 +151,7 @@ pub(crate) fn process_command_relationship_definition(
         if !matches!(
             relationship_execution_category(
                 source_data_connector,
-                &target_source.command.data_connector,
+                &target_source.details.data_connector,
                 &target_source.capabilities
             ),
             RelationshipExecutionCategory::Local
@@ -178,17 +181,10 @@ pub(crate) fn process_command_relationship_definition(
         }
     }
 
-    let target_collection = match &target_source.command.source {
-        open_dds::commands::DataConnectorCommand::Function(function_name) => function_name,
-        open_dds::commands::DataConnectorCommand::Procedure(..) => {
-            Err(error::InternalEngineError::RelationshipsToProcedureBasedCommandsAreNotSupported)?
-        }
-    };
-
     let ndc_relationship = ndc_client::models::Relationship {
         column_mapping: BTreeMap::new(),
         relationship_type: ndc_client::models::RelationshipType::Object,
-        target_collection: target_collection.to_string(),
+        target_collection: target_source.function_name.to_string(),
         arguments,
     };
     Ok(ndc_relationship)
@@ -351,7 +347,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
 
     match relationship_execution_category(
         source_data_connector,
-        &target_source.command.data_connector,
+        &target_source.details.data_connector,
         &target_source.capabilities,
     ) {
         RelationshipExecutionCategory::Local => build_local_command_relationship(
@@ -430,12 +426,13 @@ pub(crate) fn build_local_command_relationship<'s>(
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
 ) -> Result<FieldSelection<'s>, error::Error> {
-    let relationships_ir = command_generate_ir(
+    let relationships_ir = generate_function_based_command(
         &annotation.command_name,
+        &target_source.function_name,
         field,
         field_call,
         &annotation.underlying_object_typename,
-        &target_source.command,
+        &target_source.details,
         session_variables,
     )?;
 

@@ -12,6 +12,7 @@ use super::commands;
 use super::root_field;
 use crate::execute::error;
 use crate::metadata::resolved::{self, subgraph};
+use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::RootFieldKind;
 use crate::schema::types::{
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
@@ -63,14 +64,16 @@ pub fn generate_ir<'n, 's>(
                             )?;
                             Ok(ir)
                         }
-                        RootFieldAnnotation::Command {
+                        RootFieldAnnotation::FunctionCommand {
                             name,
                             underlying_object_typename,
                             source,
+                            function_name,
                         } => {
                             let ir = generate_command_rootfield_ir(
                                 name,
                                 &type_name,
+                                function_name,
                                 source,
                                 underlying_object_typename,
                                 field,
@@ -184,7 +187,8 @@ fn generate_model_rootfield_ir<'n, 's>(
 fn generate_command_rootfield_ir<'n, 's>(
     name: &'s subgraph::Qualified<CommandName>,
     type_name: &ast::TypeName,
-    source: &'s Option<resolved::command::CommandSource>,
+    function_name: &'s Option<open_dds::commands::FunctionName>,
+    source: &'s Option<CommandSourceDetail>,
     underlying_object_typename: &'s Option<subgraph::Qualified<CustomTypeName>>,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
@@ -197,10 +201,19 @@ fn generate_command_rootfield_ir<'n, 's>(
                 type_name: type_name.clone(),
                 field_name: field_call.name.clone(),
             })?;
-    let ir = root_field::QueryRootField::CommandRepresentation {
+
+    let function_name = function_name.as_ref().ok_or_else(|| {
+        error::InternalDeveloperError::NoFunctionOrProcedure {
+            type_name: type_name.clone(),
+            field_name: field_call.name.clone(),
+        }
+    })?;
+
+    let ir = root_field::QueryRootField::FunctionBasedCommand {
         selection_set: &field.selection_set,
-        ir: commands::command_generate_ir(
+        ir: commands::generate_function_based_command(
             name,
+            function_name,
             field,
             field_call,
             underlying_object_typename,

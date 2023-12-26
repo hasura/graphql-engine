@@ -16,14 +16,26 @@ use crate::{
 )]
 pub struct CommandName(pub String);
 
+/// The name of a function backing the command.
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, JsonSchema,
+)]
+pub struct FunctionName(pub String);
+
+/// The name of a procedure backing the command.
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, JsonSchema,
+)]
+pub struct ProcedureName(pub String);
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "DataConnectorCommand")]
 pub enum DataConnectorCommand {
     #[schemars(title = "Function")]
-    Function(String),
+    Function(FunctionName),
     #[schemars(title = "Procedure")]
-    Procedure(String),
+    Procedure(ProcedureName),
 }
 
 /// The definition of a command.

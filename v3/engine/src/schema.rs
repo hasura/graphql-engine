@@ -225,6 +225,12 @@ pub enum Error {
     ExpectedTypeToBeObject {
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("Cannot have a function based command backed by a procedure or vice versa. Found for command {command_name:}")]
+    IncorrectCommandBacking {
+        command_name: Qualified<CommandName>,
+    },
+    #[error("relationships to procedure based commands are not supported")]
+    RelationshipsToProcedureBasedCommandsAreNotSupported,
 }
 
 impl From<ast::InvalidGraphQlName> for Error {
