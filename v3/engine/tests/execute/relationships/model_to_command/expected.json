@@ -41,6 +41,22 @@
             "title": "Godfather"
           },
           "name": "Robert De Niro"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 4,
+            "rating": 5,
+            "title": "Shawshank Redemption"
+          },
+          "name": "Morgan Freeman"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 5,
+            "rating": 4,
+            "title": "Schindler's List"
+          },
+          "name": "Ben Kingsley"
         }
       ]
     }
