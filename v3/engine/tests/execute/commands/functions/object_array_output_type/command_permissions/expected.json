@@ -26,6 +26,16 @@
           "actor_id": 5,
           "name": "Robert De Niro",
           "movie_id": 3
+        },
+        {
+          "actor_id": 6,
+          "name": "Morgan Freeman",
+          "movie_id": 4
+        },
+        {
+          "actor_id": 7,
+          "name": "Ben Kingsley",
+          "movie_id": 5
         }
       ]
     }
@@ -57,6 +67,16 @@
           "actor_id": 5,
           "name": "Robert De Niro",
           "movie_id": 3
+        },
+        {
+          "actor_id": 6,
+          "name": "Morgan Freeman",
+          "movie_id": 4
+        },
+        {
+          "actor_id": 7,
+          "name": "Ben Kingsley",
+          "movie_id": 5
         }
       ]
     }

@@ -193,9 +193,6 @@ fn collect_arguments<'s>(
 
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
-            if rows.is_empty() {
-                return Ok(None);
-            }
             let mut row_set_replacement_tokens: Vec<ReplacementToken> = vec![];
             for row in rows.iter() {
                 let mut replacement_token = (0, 0);

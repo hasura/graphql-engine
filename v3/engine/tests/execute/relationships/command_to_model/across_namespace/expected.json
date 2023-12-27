@@ -46,6 +46,24 @@
           },
           "actor_id": 5,
           "name": "Robert De Niro"
+        },
+        {
+          "Movies": {
+            "movie_id": 4,
+            "rating": 5,
+            "title": "Shawshank Redemption"
+          },
+          "actor_id": 6,
+          "name": "Morgan Freeman"
+        },
+        {
+          "Movies": {
+            "movie_id": 5,
+            "rating": 4,
+            "title": "Schindler's List"
+          },
+          "actor_id": 7,
+          "name": "Ben Kingsley"
         }
       ]
     }
@@ -85,6 +103,16 @@
           "Movies": null,
           "actor_id": 5,
           "name": "Robert De Niro"
+        },
+        {
+          "Movies": null,
+          "actor_id": 6,
+          "name": "Morgan Freeman"
+        },
+        {
+          "Movies": null,
+          "actor_id": 7,
+          "name": "Ben Kingsley"
         }
       ]
     }
@@ -116,6 +144,16 @@
           "Movies": null,
           "actor_id": 5,
           "name": "Robert De Niro"
+        },
+        {
+          "Movies": null,
+          "actor_id": 6,
+          "name": "Morgan Freeman"
+        },
+        {
+          "Movies": null,
+          "actor_id": 7,
+          "name": "Ben Kingsley"
         }
       ]
     }
@@ -155,6 +193,16 @@
           },
           "actor_id": 5,
           "name": "Robert De Niro"
+        },
+        {
+          "Movies": null,
+          "actor_id": 6,
+          "name": "Morgan Freeman"
+        },
+        {
+          "Movies": null,
+          "actor_id": 7,
+          "name": "Ben Kingsley"
         }
       ]
     }

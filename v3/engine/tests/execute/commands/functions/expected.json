@@ -1,6 +1,6 @@
 {
   "data": {
-    "getLatestActorId": 5,
+    "getLatestActorId": 7,
     "getLatestActorName": "Robert De Niro",
     "getActorById": {
       "movie_id": 1,
