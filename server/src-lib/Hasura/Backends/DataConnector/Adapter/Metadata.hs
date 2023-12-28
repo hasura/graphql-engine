@@ -238,8 +238,9 @@ resolveBackendInfo' ::
     ProvidesNetwork m
   ) =>
   Logger Hasura ->
+  Environment ->
   (Inc.Dependency (Maybe (HashMap DC.DataConnectorName Inc.InvalidationKey)), Map.Map DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
-resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
+resolveBackendInfo' logger env = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
       Inc.keyed
@@ -263,13 +264,15 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       DC.DataConnectorOptions ->
       HTTP.Manager ->
       ExceptT QErr m (Maybe DC.DataConnectorInfo)
-    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager =
+    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = do
+      resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
       ( ignoreTraceT
-          . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
+          . flip runAgentClientT (AgentClientContext logger resolvedUri manager Nothing Nothing)
           $ (Just . mkDataConnectorInfo options)
           <$> Client.capabilities
-      )
-        `catchError` ignoreConnectionErrors
+        )
+      `catchError` ignoreConnectionErrors
+            
 
     -- If we can't connect to a data connector agent to get its capabilities
     -- we don't throw an error, we just return Nothing, which means the agent is in a broken state
@@ -305,12 +308,13 @@ resolveSourceConfig'
   env
   manager = runExceptT do
     DC.DataConnectorInfo {_dciOptions = DC.DataConnectorOptions {_dcoUri}, ..} <- getDataConnectorInfo dataConnectorName backendInfo
+    resolvedUri <- DC.resolveDataConnectorUri env _dcoUri
 
     validateConnSourceConfig dataConnectorName sourceName _dciConfigSchemaResponse csc Nothing env
 
     pure
       DC.SourceConfig
-        { _scEndpoint = _dcoUri,
+        { _scEndpoint = resolvedUri,
           _scConfig = originalConfig,
           _scTemplate = _cscTemplate,
           _scTemplateVariables = fromMaybe mempty _cscTemplateVariables,

@@ -610,7 +610,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let backendInvalidationKeys =
             Inc.selectMaybeD #unBackendInvalidationKeysWrapper
               $ BackendMap.lookupD @b backendInvalidationMap
-      backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
+      backendInfo <- resolveBackendInfo @b logger env -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
     resolveBackendCache ::

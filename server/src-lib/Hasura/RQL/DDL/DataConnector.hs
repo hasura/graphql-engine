@@ -90,7 +90,7 @@ runAddDataConnectorAgent ::
   m EncJSON
 runAddDataConnectorAgent DCAddAgent {..} = do
   let agent :: DC.Types.DataConnectorOptions
-      agent = DC.Types.DataConnectorOptions _gdcaUrl _gdcaDisplayName
+      agent = DC.Types.DataConnectorOptions (DC.Types.RawUri _gdcaUrl) _gdcaDisplayName
   sourceKinds <- (:) "postgres" . fmap _skiSourceKind . unSourceKinds <$> agentSourceKinds
   if
     | toTxt _gdcaName `elem` sourceKinds -> Error.throw400 Error.AlreadyExists $ "SourceKind '" <> toTxt _gdcaName <> "' already exists."
