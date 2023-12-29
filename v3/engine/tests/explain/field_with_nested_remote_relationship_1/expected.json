@@ -1,0 +1,152 @@
+{
+  "explain": {
+    "type": "sequence",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "cities",
+          "queryRequest": {
+            "collection": "city",
+            "query": {
+              "fields": {
+                "code": {
+                  "type": "column",
+                  "column": "code"
+                },
+                "name": {
+                  "type": "column",
+                  "column": "name"
+                },
+                "__hasura_phantom_field__code": {
+                  "type": "column",
+                  "column": "code"
+                },
+                "state": {
+                  "type": "relationship",
+                  "query": {
+                    "fields": {
+                      "name": {
+                        "type": "column",
+                        "column": "name"
+                      },
+                      "__hasura_phantom_field__code": {
+                        "type": "column",
+                        "column": "code"
+                      }
+                    }
+                  },
+                  "relationship": "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]",
+                  "arguments": {}
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {
+              "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]": {
+                "column_mapping": {
+                  "state_code": "code"
+                },
+                "relationship_type": "object",
+                "target_collection": "states",
+                "arguments": {}
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "parallel",
+        "value": [
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "weather",
+                "queryRequest": {
+                  "collection": "weather",
+                  "query": {
+                    "fields": {
+                      "forecast": {
+                        "type": "column",
+                        "column": "forecast"
+                      }
+                    },
+                    "where": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "code",
+                        "path": []
+                      },
+                      "operator": {
+                        "type": "equal"
+                      },
+                      "value": {
+                        "type": "variable",
+                        "name": "$code"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {},
+                  "variables": []
+                }
+              }
+            }
+          },
+          {
+            "type": "sequence",
+            "value": [
+              {
+                "type": "forEach",
+                "value": {
+                  "type": "modelSelect",
+                  "value": {
+                    "modelName": "weather",
+                    "queryRequest": {
+                      "collection": "weather",
+                      "query": {
+                        "fields": {
+                          "forecast": {
+                            "type": "column",
+                            "column": "forecast"
+                          }
+                        },
+                        "where": {
+                          "type": "binary_comparison_operator",
+                          "column": {
+                            "type": "column",
+                            "name": "code",
+                            "path": []
+                          },
+                          "operator": {
+                            "type": "equal"
+                          },
+                          "value": {
+                            "type": "variable",
+                            "name": "$code"
+                          }
+                        }
+                      },
+                      "arguments": {},
+                      "collection_relationships": {},
+                      "variables": []
+                    }
+                  }
+                }
+              },
+              {
+                "type": "hashJoin"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "hashJoin"
+      }
+    ]
+  }
+}

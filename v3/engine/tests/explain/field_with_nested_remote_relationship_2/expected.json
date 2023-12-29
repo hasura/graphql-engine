@@ -1,0 +1,168 @@
+{
+  "explain": {
+    "type": "sequence",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "cities",
+          "queryRequest": {
+            "collection": "city",
+            "query": {
+              "fields": {
+                "code": {
+                  "type": "column",
+                  "column": "code"
+                },
+                "name": {
+                  "type": "column",
+                  "column": "name"
+                },
+                "__hasura_phantom_field__code": {
+                  "type": "column",
+                  "column": "code"
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {}
+          }
+        }
+      },
+      {
+        "type": "parallel",
+        "value": [
+          {
+            "type": "sequence",
+            "value": [
+              {
+                "type": "forEach",
+                "value": {
+                  "type": "modelSelect",
+                  "value": {
+                    "modelName": "departments",
+                    "queryRequest": {
+                      "collection": "departments",
+                      "query": {
+                        "fields": {
+                          "name": {
+                            "type": "column",
+                            "column": "name"
+                          },
+                          "__hasura_phantom_field__id": {
+                            "type": "column",
+                            "column": "id"
+                          }
+                        },
+                        "where": {
+                          "type": "binary_comparison_operator",
+                          "column": {
+                            "type": "column",
+                            "name": "city_code",
+                            "path": []
+                          },
+                          "operator": {
+                            "type": "equal"
+                          },
+                          "value": {
+                            "type": "variable",
+                            "name": "$city_code"
+                          }
+                        }
+                      },
+                      "arguments": {},
+                      "collection_relationships": {},
+                      "variables": []
+                    }
+                  }
+                }
+              },
+              {
+                "type": "forEach",
+                "value": {
+                  "type": "modelSelect",
+                  "value": {
+                    "modelName": "ministers",
+                    "queryRequest": {
+                      "collection": "ministers",
+                      "query": {
+                        "fields": {
+                          "name": {
+                            "type": "column",
+                            "column": "name"
+                          }
+                        },
+                        "where": {
+                          "type": "binary_comparison_operator",
+                          "column": {
+                            "type": "column",
+                            "name": "department_id",
+                            "path": []
+                          },
+                          "operator": {
+                            "type": "equal"
+                          },
+                          "value": {
+                            "type": "variable",
+                            "name": "$department_id"
+                          }
+                        }
+                      },
+                      "arguments": {},
+                      "collection_relationships": {},
+                      "variables": []
+                    }
+                  }
+                }
+              },
+              {
+                "type": "hashJoin"
+              }
+            ]
+          },
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "census",
+                "queryRequest": {
+                  "collection": "census",
+                  "query": {
+                    "fields": {
+                      "data": {
+                        "type": "column",
+                        "column": "data"
+                      }
+                    },
+                    "where": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "city_code",
+                        "path": []
+                      },
+                      "operator": {
+                        "type": "equal"
+                      },
+                      "value": {
+                        "type": "variable",
+                        "name": "$city_code"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {},
+                  "variables": []
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "hashJoin"
+      }
+    ]
+  }
+}

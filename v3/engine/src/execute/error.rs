@@ -64,6 +64,14 @@ pub enum InternalDeveloperError {
 
     #[error("unexpected response from data connector: {summary}")]
     BadGDCResponse { summary: String },
+
+    // Since explain and execute follow the same code-path. The types allow the following illegal responses. However,
+    // these should never happen.
+    #[error("illegal response: execute query returned explain response")]
+    ExecuteReturnedExplainResponse,
+
+    #[error("illegal response: explain query returned execute response")]
+    ExplainReturnedExecuteResponse,
 }
 
 #[derive(Error, Debug)]
@@ -156,6 +164,8 @@ pub enum Error {
     },
     #[error("{0}")]
     InternalError(#[from] InternalError),
+    #[error("explain error: {0}")]
+    ExplainError(String),
 }
 
 impl Error {

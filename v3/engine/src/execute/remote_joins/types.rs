@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use ndc_client as ndc;
 use open_dds;
 use open_dds::types::FieldName;
@@ -12,7 +13,7 @@ use crate::utils::json_ext::ValueExt;
 /// the join
 #[derive(Debug, Clone)]
 pub struct JoinLocations<T> {
-    pub locations: HashMap<String, Location<T>>,
+    pub locations: IndexMap<String, Location<T>>,
 }
 
 impl<T> JoinLocations<T> {
@@ -24,7 +25,7 @@ impl<T> JoinLocations<T> {
 impl<T> Default for JoinLocations<T> {
     fn default() -> Self {
         JoinLocations {
-            locations: HashMap::new(),
+            locations: IndexMap::new(),
         }
     }
 }

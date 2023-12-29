@@ -1,0 +1,47 @@
+{
+  "explain": {
+    "type": "modelSelect",
+    "value": {
+      "modelName": "cities",
+      "queryRequest": {
+        "collection": "city",
+        "query": {
+          "fields": {
+            "code": {
+              "type": "column",
+              "column": "code"
+            },
+            "name": {
+              "type": "column",
+              "column": "name"
+            },
+            "state": {
+              "type": "relationship",
+              "query": {
+                "fields": {
+                  "name": {
+                    "type": "column",
+                    "column": "name"
+                  }
+                }
+              },
+              "relationship": "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]",
+              "arguments": {}
+            }
+          }
+        },
+        "arguments": {},
+        "collection_relationships": {
+          "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]": {
+            "column_mapping": {
+              "state_code": "code"
+            },
+            "relationship_type": "object",
+            "target_collection": "states",
+            "arguments": {}
+          }
+        }
+      }
+    }
+  }
+}
