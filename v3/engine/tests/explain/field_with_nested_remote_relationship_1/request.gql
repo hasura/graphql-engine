@@ -1,0 +1,15 @@
+{
+  cities {
+    code
+    name
+    weather {
+      forecast
+    }
+    state {
+      name
+      weather {
+        forecast
+      }
+    }
+  }
+}

@@ -16,7 +16,10 @@ use tracing_util::{
     TraceableError,
 };
 
+use self::explain::types::RequestMode;
+
 pub mod error;
+pub mod explain;
 pub mod global_id;
 pub mod ir;
 pub mod model_tracking;
@@ -60,6 +63,22 @@ impl Traceable for GraphQLResponse {
     }
 }
 
+pub enum ExecuteOrExplainResponse {
+    Execute(GraphQLResponse),
+    Explain(explain::types::ExplainResponse),
+}
+
+impl Traceable for ExecuteOrExplainResponse {
+    type ErrorType<'a> = GraphQLErrors<'a>;
+
+    fn get_error(&self) -> Option<GraphQLErrors<'_>> {
+        match self {
+            ExecuteOrExplainResponse::Execute(response) => response.get_error(),
+            ExecuteOrExplainResponse::Explain(response) => response.get_error(),
+        }
+    }
+}
+
 pub async fn execute_query(
     http_client: &reqwest::Client,
     schema: &Schema<GDS>,
@@ -97,9 +116,39 @@ pub async fn execute_query_internal(
     session: &Session,
     raw_request: gql::http::RawRequest,
 ) -> Result<GraphQLResponse, error::Error> {
+    let query_response = execute_request_internal(
+        http_client,
+        schema,
+        session,
+        raw_request,
+        explain::types::RequestMode::Execute,
+    )
+    .await?;
+    match query_response {
+        ExecuteOrExplainResponse::Execute(response) => Ok(response),
+        ExecuteOrExplainResponse::Explain(_response) => Err(error::Error::InternalError(
+            error::InternalError::Developer(
+                error::InternalDeveloperError::ExecuteReturnedExplainResponse,
+            ),
+        )),
+    }
+}
+
+/// Executes or explains (query plan) a GraphQL query
+pub async fn execute_request_internal(
+    http_client: &reqwest::Client,
+    schema: &gql::schema::Schema<GDS>,
+    session: &Session,
+    raw_request: gql::http::RawRequest,
+    request_mode: explain::types::RequestMode,
+) -> Result<ExecuteOrExplainResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
+    let mode_query_span_name = match request_mode {
+        RequestMode::Execute => "execute_query",
+        RequestMode::Explain => "explain_query",
+    };
     tracer
-        .in_span_async("execute_query", SpanVisibility::User, || {
+        .in_span_async(mode_query_span_name, SpanVisibility::User, || {
             tracing_util::set_attribute_on_active_span(
                 AttributeVisibility::Default,
                 "session.role",
@@ -152,25 +201,48 @@ pub async fn execute_query_internal(
                     query_plan::generate_query_plan(&ir)
                 })?;
 
-                // execute the query plan
-                let graphql_response = tracer
-                    .in_span_async("execute", SpanVisibility::User, || {
-                        let all_usage_counts = model_tracking::get_all_usage_counts_in_query(&ir);
-                        let serialized_data = serde_json::to_string(&all_usage_counts).unwrap();
-                        set_attribute_on_active_span(
-                            AttributeVisibility::Default,
-                            "usage_counts",
-                            serialized_data,
-                        );
+                // execute/explain the query plan
+                let response = match request_mode {
+                    RequestMode::Execute => {
+                        tracer
+                            .in_span_async("execute", SpanVisibility::User, || {
+                                let all_usage_counts =
+                                    model_tracking::get_all_usage_counts_in_query(&ir);
+                                let serialized_data =
+                                    serde_json::to_string(&all_usage_counts).unwrap();
+                                set_attribute_on_active_span(
+                                    AttributeVisibility::Default,
+                                    "usage_counts",
+                                    serialized_data,
+                                );
 
-                        Box::pin(async {
-                            let execute_query_result =
-                                query_plan::execute_query_plan(http_client, query_plan).await;
-                            GraphQLResponse(execute_query_result.to_graphql_response())
+                                Box::pin(async {
+                                    let execute_query_result =
+                                        query_plan::execute_query_plan(http_client, query_plan)
+                                            .await;
+                                    ExecuteOrExplainResponse::Execute(GraphQLResponse(
+                                        execute_query_result.to_graphql_response(),
+                                    ))
+                                })
+                            })
+                            .await
+                    }
+                    RequestMode::Explain => {
+                        tracer.in_span("explain", SpanVisibility::Internal, || {
+                            // convert the query plan to explain step
+                            let explain_response =
+                                match crate::execute::explain::explain_query_plan(query_plan) {
+                                    Ok(step) => step.to_explain_response(),
+                                    Err(e) => explain::types::ExplainResponse::error(
+                                        e.to_graphql_error(None),
+                                    ),
+                                };
+
+                            ExecuteOrExplainResponse::Explain(explain_response)
                         })
-                    })
-                    .await;
-                Ok(graphql_response)
+                    }
+                };
+                Ok(response)
             })
         })
         .await

@@ -5,7 +5,6 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use ndc_client;
 use serde_json as json;
-use std::collections::HashMap;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
 
 use super::error;
@@ -267,7 +266,7 @@ fn zip_with_join_ids(
     join_locations: JoinLocations<RemoteJoin<'_>>,
     mut join_ids: JoinLocations<JoinId>,
 ) -> Result<JoinLocations<(RemoteJoin<'_>, JoinId)>, error::Error> {
-    let mut new_locations = HashMap::new();
+    let mut new_locations = IndexMap::new();
     for (key, location) in join_locations.locations {
         let join_id_location =
             join_ids
@@ -315,7 +314,7 @@ fn assign_join_ids<'s>(
             };
             (key.to_string(), new_location)
         })
-        .collect::<HashMap<_, _>>();
+        .collect::<IndexMap<_, _>>();
     JoinLocations {
         locations: new_locations,
     }

@@ -198,3 +198,60 @@ pub fn merge_with_common_metadata<T: Iterator<Item = PathBuf>>(
     common_metadata_paths.for_each(|path| metadata.merge(&read_json(&path)));
     metadata
 }
+
+#[allow(dead_code)]
+pub fn test_execute_explain(metadata_file_path: &str, test_dir_path: &str) {
+    tokio_test::block_on(async {
+        let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+        let mut test_ctx = setup(&root_test_dir);
+
+        let metadata = read_json(&root_test_dir.join(metadata_file_path));
+        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let schema = GDS::build_schema(&gds).unwrap();
+        let session = {
+            let session_variables_raw = r#"{
+                "x-hasura-role": "admin"
+            }"#;
+            let session_variables: HashMap<SessionVariable, SessionVariableValue> =
+                serde_json::from_str(session_variables_raw).unwrap();
+            resolve_session(session_variables)
+        };
+        let gql_request_file_path = test_dir_path.to_string() + "/request.gql";
+        let expected_response_file = test_dir_path.to_string() + "/expected.json";
+        let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path)).unwrap();
+        let raw_request = lang_graphql::http::RawRequest {
+            operation_name: None,
+            query,
+            variables: None,
+        };
+        let response = engine::execute::explain::execute_explain(
+            &test_ctx.http_client,
+            &schema,
+            &session,
+            raw_request,
+        )
+        .await;
+
+        let mut expected = test_ctx
+            .mint
+            .new_goldenfile_with_differ(
+                expected_response_file,
+                Box::new(|file1, file2| {
+                    let json1: serde_json::Value =
+                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                    let json2: serde_json::Value =
+                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                    if json1 != json2 {
+                        text_diff(file1, file2)
+                    }
+                }),
+            )
+            .unwrap();
+        write!(
+            expected,
+            "{}",
+            serde_json::to_string_pretty(&response).unwrap()
+        )
+        .unwrap();
+    })
+}

@@ -1,0 +1,10 @@
+{
+  cities {
+    code
+    name
+  }
+  countries {
+    code
+    name
+  }
+}

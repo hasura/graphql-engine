@@ -1,0 +1,53 @@
+{
+  "explain": {
+    "type": "parallel",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "cities",
+          "queryRequest": {
+            "collection": "city",
+            "query": {
+              "fields": {
+                "code": {
+                  "type": "column",
+                  "column": "code"
+                },
+                "name": {
+                  "type": "column",
+                  "column": "name"
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {}
+          }
+        }
+      },
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "countries",
+          "queryRequest": {
+            "collection": "country",
+            "query": {
+              "fields": {
+                "code": {
+                  "type": "column",
+                  "column": "code"
+                },
+                "name": {
+                  "type": "column",
+                  "column": "name"
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {}
+          }
+        }
+      }
+    ]
+  }
+}

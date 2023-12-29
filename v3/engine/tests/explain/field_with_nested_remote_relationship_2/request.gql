@@ -1,0 +1,15 @@
+{
+  cities {
+    code
+    name
+    departments {
+      name
+      ministers {
+        name
+      }
+    }
+    census {
+      data
+    }
+  }
+}
