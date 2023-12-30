@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = [
+  "tracing-util",
+  "lang-graphql",
+  "open-dds",
+  "engine",
+  "hasura-authn-core",
+  "hasura-authn-webhook",
+  "hasura-authn-jwt",
+  "custom-connector"
+]
+
+[profile.release]
+debug = true
+
+[profile.bench]
+debug = true

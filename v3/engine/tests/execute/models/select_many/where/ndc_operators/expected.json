@@ -1,0 +1,83 @@
+[
+  {
+    "data": {
+      "TrackNameEq": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        }
+      ],
+      "TrackGtAndLt": [
+        {
+          "AlbumId": 2,
+          "Name": "Balls to the Wall",
+          "TrackId": 2
+        }
+      ],
+      "TrackGteAndLte": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        },
+        {
+          "AlbumId": 2,
+          "Name": "Balls to the Wall",
+          "TrackId": 2
+        },
+        {
+          "AlbumId": 3,
+          "Name": "Fast As a Shark",
+          "TrackId": 3
+        }
+      ],
+      "TrackGteAndLteAndNeq": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        },
+        {
+          "AlbumId": 3,
+          "Name": "Fast As a Shark",
+          "TrackId": 3
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "TrackNameEq": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        }
+      ],
+      "TrackGtAndLt": [],
+      "TrackGteAndLte": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        }
+      ],
+      "TrackGteAndLteAndNeq": [
+        {
+          "AlbumId": 1,
+          "Name": "For Those About To Rock (We Salute You)",
+          "TrackId": 1
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "TrackNameEq": [],
+      "TrackGtAndLt": [],
+      "TrackGteAndLte": [],
+      "TrackGteAndLteAndNeq": []
+    }
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field node on type Query is not allowed for user"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field first_name on type Author is not allowed for article_type_only"
+      }
+    ]
+  }
+]

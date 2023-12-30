@@ -76,6 +76,10 @@
     color: #333;
 }
 
+.messages-container pre {
+    background-color: #8f8f8f;
+}
+
 .formatted-text a {
     color: blue;
     text-decoration: underline;
@@ -86,7 +90,7 @@
     flex: 1;
 }
 
-.message {
+.chat-popup .message {
     border-radius: 8px;
     padding: 10px 15px;
     margin: 5px 0;
@@ -131,7 +135,7 @@
 .responding-message {
 }
 
-input {
+.chat-popup input {
     width: 80%;
     padding: 10px;
     border-radius: 5px 0 0 5px;
@@ -142,7 +146,7 @@ input {
     flex: 1;
 }
 
-.input-container {
+.chat-popup .input-container {
     display: flex;
     margin-top: auto;
     width: 100%;
@@ -150,17 +154,17 @@ input {
     background-color: #fff;
 }
 
-.input-text {
+.chat-popup .input-text {
     font-size: 16px;
     color: #333;
     background-color: white;
 }
 
-.input-text:disabled {
+.chat-popup .input-text:disabled {
     background-color: #eeeeee !important;
 }
 
-.input-button {
+.chat-popup .input-button {
     background-color: #1699e2;
     color: white;
     padding-left: 15px;
@@ -171,11 +175,11 @@ input {
     cursor: pointer;
 }
 
-.input-button:disabled {
+.chat-popup .input-button:disabled {
     background-color: #ababab;
 }
 
-.info-bar {
+.chat-popup .info-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -208,6 +212,6 @@ input {
     font-size: 0.9rem;
 }
 
-html[data-theme=dark] code {
+html[data-theme=dark] .messages-container code {
     background-color: #e0e0e0;
 }

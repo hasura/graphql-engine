@@ -1,0 +1,11 @@
+query MyQuery {
+  getAllActors {
+    Movies {
+      movie_id
+      rating
+      title
+    }
+    actor_id
+    name
+  }
+}

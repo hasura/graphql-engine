@@ -1,0 +1,16 @@
+query MyQuery {
+  AuthorByID(author_id: 1) {
+    Articles {
+      Author {
+        first_name
+      }
+      article_id
+    }
+    NewspaperArticles {
+      Author {
+        first_name
+      }
+      article_id
+    }
+  }
+}

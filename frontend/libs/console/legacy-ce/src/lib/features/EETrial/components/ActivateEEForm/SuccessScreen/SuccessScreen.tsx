@@ -27,7 +27,7 @@ export const SuccessScreen = (props: Props) => {
           <FaCheck />
         </div>
         <h1 className="text-xl text-slate-900 font-semibold mb-sm">
-          Your 30-day trial of Hasura Enterprise has been activated
+          Your trial of Hasura Enterprise has been activated
         </h1>
         <p className="text-muted mt-0 mb-sm">
           <strong>What&apos;s next?</strong>

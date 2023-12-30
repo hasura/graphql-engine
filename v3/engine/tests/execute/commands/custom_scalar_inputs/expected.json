@@ -1,0 +1,16 @@
+{
+  "data": {
+    "getActorsByNameOpaqueSurname": [
+      {
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    ],
+    "getActorsByOpaqueName": [
+      {
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    ]
+  }
+}

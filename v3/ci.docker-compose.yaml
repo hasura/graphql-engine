@@ -1,0 +1,89 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    platform: linux/amd64
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+    environment:
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./engine/tests/db_definition.sql
+        target: /docker-entrypoint-initdb.d/db_definition.sql
+        read_only: true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+  postgres_connector:
+    image: ghcr.io/hasura/ndc-postgres:dev-main-5aec135c1
+    volumes:
+      - ./engine/tests/pg_ndc_config.json:/config.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:8100/schema || exit 1
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    command: ["serve", "--configuration", "/config.json"]
+  custom_connector:
+    build:
+      context: .
+      target: builder
+    healthcheck:
+      test: curl --fail http://localhost:8101/schema || exit 1
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    command: ["sh", "-c", "cargo run --bin agent"]
+  source_only:
+    build:
+      context: .
+      target: builder
+      ssh:
+        - default
+    volumes:
+      # So that updated files make their way back to the host machine
+      - ./tracing-util:/app/tracing-util
+      - ./lang-graphql:/app/lang-graphql
+      - ./open-dds:/app/open-dds
+      - ./engine:/app/engine
+      - ./hasura-authn-core:/app/hasura-authn-core
+      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./coverage:/app/coverage
+  test_setup:
+    build:
+      context: .
+      target: builder
+      ssh:
+        - default
+    depends_on:
+      - postgres
+      - postgres_connector
+      - custom_connector
+    volumes:
+      # So that updated files make their way back to the host machine
+      - ./tracing-util:/app/tracing-util
+      - ./lang-graphql:/app/lang-graphql
+      - ./open-dds:/app/open-dds
+      - ./engine:/app/engine
+      - ./hasura-authn-core:/app/hasura-authn-core
+      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./benchmark.sh:/app/benchmark.sh
+      - ./coverage:/app/coverage
+
+volumes:
+  postgres:

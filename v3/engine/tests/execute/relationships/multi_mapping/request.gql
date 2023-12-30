@@ -1,0 +1,11 @@
+query MyQuery {
+  Article {
+    title
+    article_id
+    MultiMappingCheckAuthor {
+      first_name
+      last_name
+      author_id
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "data": {
+    "AuthorMany": [
+      {
+        "author_id": 2,
+        "first_name": "John"
+      },
+      {
+        "author_id": 1,
+        "first_name": "Peter"
+      }
+    ],
+    "ArticlesByAuthorMany": [
+      {
+        "article_id": 5
+      },
+      {
+        "article_id": 3
+      },
+      {
+        "article_id": 2
+      }
+    ],
+    "a1": [
+      {
+        "author_id": 2,
+        "first_name": "John"
+      }
+    ]
+  }
+}

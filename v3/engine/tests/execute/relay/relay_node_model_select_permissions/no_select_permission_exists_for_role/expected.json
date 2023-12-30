@@ -1,0 +1,15 @@
+[
+  {
+    "data": {
+      "node": null
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field article_id on type Article is not allowed for guest"
+      }
+    ]
+  }
+]

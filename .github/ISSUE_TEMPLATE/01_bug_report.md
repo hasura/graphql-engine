@@ -1,6 +1,6 @@
 ---
-name: 🐜 Bug report
-about: If something isn't working 🔧
+name: 🐜 Bug report (V2)
+about: If something isn't working for Hasura, for version 2.x only 🔧
 labels: "k/bug"
 ---
 

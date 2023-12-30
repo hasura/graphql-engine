@@ -1,0 +1,14 @@
+query {
+  AuthorManyWithOffsetZero: AuthorMany(offset: 0) {
+    author_id
+    first_name
+  }
+  AuthorManyWithOffsetOne: AuthorMany(offset: 1) {
+    author_id
+    first_name
+  }
+  AuthorManyWithOffsetTwo: AuthorMany(offset: 2) {
+    author_id
+    first_name
+  }
+}

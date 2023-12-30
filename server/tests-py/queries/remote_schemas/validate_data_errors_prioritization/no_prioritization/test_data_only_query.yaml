@@ -1,0 +1,22 @@
+- description: Query from the remote schema returning data only
+  url: /v1/graphql
+  status: 200
+  headers:
+    x-fake-operation-name: DataOnly
+  response:
+    data:
+      test:
+      - id: 1
+        created_at: '2023-12-04T08:14:52.1851+00:00'
+      - id: 2
+        created_at: '2023-12-04T08:14:52.680052+00:00'
+      - id: 3
+        created_at: '2023-12-04T08:14:53.335059+00:00'
+  query:
+    query: |
+      query DataOnly {
+        test {
+          id
+          created_at
+        }
+      }

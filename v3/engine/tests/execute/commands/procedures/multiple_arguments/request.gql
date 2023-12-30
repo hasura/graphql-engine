@@ -1,0 +1,7 @@
+mutation MyMutation {
+  updateActorNameById(id: 1, name: "Chris Hemsworth") {
+    actor_id
+    movie_id
+    name
+  }
+}

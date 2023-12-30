@@ -1,0 +1,5 @@
+query {
+    ArticleMany{
+      article_id title
+    }
+}

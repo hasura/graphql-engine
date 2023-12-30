@@ -1,6 +1,6 @@
 ---
-name: 🚀 Feature request
-about: Suggest an idea for improving Hasura
+name: 🚀 Feature request (V2)
+about: Suggest an idea for improving Hasura, for version 2.x only
 labels: "k/enhancement"
 ---
 

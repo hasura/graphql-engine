@@ -387,3 +387,6 @@ instance FromEnv Server.Types.TriggersErrorLogLevelStatus where
 
 instance FromEnv Server.Types.PersistedQueriesState where
   fromEnv = fmap (bool Server.Types.PersistedQueriesDisabled Server.Types.PersistedQueriesEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.RemoteSchemaResponsePriority where
+  fromEnv = fmap (bool Server.Types.RemoteSchemaResponseErrors Server.Types.RemoteSchemaResponseData) . fromEnv @Bool

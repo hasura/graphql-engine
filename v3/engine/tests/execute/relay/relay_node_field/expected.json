@@ -1,0 +1,17 @@
+[
+  {
+    "data": {
+      "node": {
+        "__typename": "Author",
+        "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6MX19",
+        "first_name": "Peter",
+        "author_id": 1
+      }
+    }
+  },
+  {
+    "data": {
+      "node": null
+    }
+  }
+]
