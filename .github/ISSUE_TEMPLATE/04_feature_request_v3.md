@@ -1,7 +1,7 @@
 ---
 name: 🚀 Feature request (V3)
 about: Suggest an idea for improving Hasura V3, request for new connectors, plugins
-labels: "k/v3-enhancement"
+labels: "k/enhancement"
 ---
 
 ### Component
