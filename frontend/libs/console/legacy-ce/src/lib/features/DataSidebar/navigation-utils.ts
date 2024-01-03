@@ -19,6 +19,11 @@ export const manageTableUrl = ({
 export const manageDatabaseUrl = (dataSourceName: string) =>
   `/data/v2/manage/database?database=${encodeURIComponent(dataSourceName)}`;
 
+export const managePermissionSummaryUrl = (dataSourceName: string) =>
+  `/data/v2/manage/database/permission-summary?database=${encodeURIComponent(
+    dataSourceName
+  )}`;
+
 export const manageFunctionUrl = ({
   fn,
   dataSourceName,
