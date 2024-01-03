@@ -202,7 +202,11 @@ impl From<ndc_client::apis::Error> for Error {
         if let ndc_client::apis::Error::ConnectorError(err) = &ndc_error {
             if matches!(
                 err.status,
-                StatusCode::OK | StatusCode::FORBIDDEN | StatusCode::CONFLICT
+                // We forward the errors with status code 200 (OK), 403(FORBIDDEN), 409(CONFLICT) and 422(UNPROCESSABLE_ENTITY)
+                StatusCode::OK
+                    | StatusCode::FORBIDDEN
+                    | StatusCode::CONFLICT
+                    | StatusCode::UNPROCESSABLE_ENTITY
             ) {
                 return Error::NDCExpected {
                     connector_error: err.clone(),
