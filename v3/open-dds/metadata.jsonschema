@@ -443,7 +443,7 @@
           },
           "allOf": [
             {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.11/ndc-client/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
             }
           ]
         },
@@ -545,7 +545,7 @@
       ]
     },
     "CapabilitiesResponse": {
-      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.11/ndc-client/tests/json_schema/capabilities_response.jsonschema"
+      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
     },
     "DataConnectorV2": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorV2",
@@ -618,7 +618,7 @@
           },
           "allOf": [
             {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.11/ndc-client/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
             }
           ]
         },
