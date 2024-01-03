@@ -229,9 +229,7 @@ fn render_ndc_error(error: &ndc_client::apis::Error) -> String {
             "connector returned status code {0} with message: {1}",
             err.status, err.error_response.message,
         ),
-        ndc_client::apis::Error::InvalidConnectorUrl(err) => {
-            format!("invalid connector url: {err}")
-        }
+        ndc_client::apis::Error::InvalidBaseURL => "invalid connector base URL".to_string(),
     }
 }
 

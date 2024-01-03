@@ -28,7 +28,7 @@ services:
       timeout: 10s
       retries: 20
   reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.11
+    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.13
     ports:
       - 8102:8100
   auth_hook:
