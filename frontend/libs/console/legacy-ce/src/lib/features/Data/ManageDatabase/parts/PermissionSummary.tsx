@@ -1,6 +1,6 @@
 import Helmet from 'react-helmet';
 import { useURLParameters } from '../../ManageFunction/hooks/useUrlParameters';
-import { useMetadata } from '../../../hasura-metadata-api';
+import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
 import Select from 'react-select';
 import { useEffect, useState } from 'react';
 import { MetadataTable } from '../../../hasura-metadata-types';
@@ -9,6 +9,7 @@ import { useDispatch } from 'react-redux';
 import { getRoute } from '../../../../utils/getDataRoute';
 import _push from '../../../../components/Services/Data/push';
 import { BreadCrumbs } from './BreadCrumbs';
+import { getTableDisplayName } from '../../TrackResources/TrackRelationships/utils';
 
 type PermissionType =
   | 'select_permissions'
@@ -47,48 +48,27 @@ export const PermissionSummary = () => {
   if (urlData.querystringParseResult === 'error')
     return <>Something went wrong while parsing the URL parameters</>;
   const { database } = urlData.data;
-  const metadataObjectOfCurrentDatasource = metadata?.metadata.sources.filter(
+  const metadataObjectOfCurrentDatasource = metadata?.metadata.sources.find(
     i => i.name === database
   );
 
-  const dataSourceTables = metadataObjectOfCurrentDatasource?.map(
-    i => i.tables
-  );
-
-  const getTableNames = (): string[] => {
-    const tableNames: string[] = [];
-    dataSourceTables?.forEach(tables => {
-      tables.forEach(table => {
-        if (
-          table.table &&
-          Array.isArray(table.table) &&
-          table.table.length > 0
-        ) {
-          tableNames.push(table.table[0]);
-        }
-      });
-    });
-
-    return tableNames;
-  };
+  const dataSourceTables = metadataObjectOfCurrentDatasource?.tables;
 
   const getRoles = (): string[] => {
     const roles = new Set<string>();
 
-    dataSourceTables?.forEach(tables => {
-      tables.forEach(table => {
-        const permissionTypes: PermissionType[] = [
-          'select_permissions',
-          'insert_permissions',
-          'update_permissions',
-          'delete_permissions',
-        ];
+    dataSourceTables?.forEach(table => {
+      const permissionTypes: PermissionType[] = [
+        'select_permissions',
+        'insert_permissions',
+        'update_permissions',
+        'delete_permissions',
+      ];
 
-        permissionTypes.forEach(permissionType => {
-          const permissions = table[permissionType];
-          permissions?.forEach(permission => {
-            roles.add(permission.role);
-          });
+      permissionTypes.forEach(permissionType => {
+        const permissions = table[permissionType];
+        permissions?.forEach(permission => {
+          roles.add(permission.role);
         });
       });
     });
@@ -159,48 +139,38 @@ export const PermissionSummary = () => {
                 className="border py-2 px-4 font-bold min-w-24"
                 style={{ minWidth: '100px' }}
               >
-                No Roles found
+                No Role found
               </th>
             )}
           </tr>
         </thead>
         <tbody>
-          {getTableNames().length ? (
-            getTableNames().map((tableName, rowIndex) => (
-              <tr key={tableName}>
+          {dataSourceTables?.length ? (
+            dataSourceTables.map(({ table }, rowIndex) => (
+              <tr key={getTableDisplayName(table)}>
                 <th
                   className={`border py-2 px-4 min-w-24 ${
                     rowIndex === 0 ? 'border-t' : ''
                   }`}
                 >
-                  <span className="font-bold">{tableName}</span>
+                  <span className="font-bold">
+                    {getTableDisplayName(table)}
+                  </span>
                 </th>
                 {getRoles().map((role, colIndex) => {
-                  const permission = dataSourceTables
-                    ?.map((tables): MetadataTable[] => tables.filter(Boolean))
-                    .flatMap(table =>
-                      getTablePermissions(
-                        table.find(t => {
-                          if (
-                            t.table &&
-                            Array.isArray(t.table) &&
-                            t.table.length > 0
-                          ) {
-                            return t.table[0] === tableName;
-                          }
-                          return null;
-                        }),
-                        selectedPermissionType ?? 'select_permissions'
-                      )
-                    )
-                    .filter(p => p !== null && typeof p === 'object');
+                  const permission = getTablePermissions(
+                    dataSourceTables?.find(t => areTablesEqual(t.table, table)),
+                    selectedPermissionType ?? 'select_permissions'
+                  );
 
                   const isChecked =
-                    permission?.some(p => p.role === role) ?? false;
+                    permission?.some(
+                      (p: { role: string }) => p.role === role
+                    ) ?? false;
 
                   return (
                     <td
-                      key={`${tableName}-${role}`}
+                      key={`${getTableDisplayName(table)}-${role}`}
                       className={`border p-2 min-w-24 ${
                         rowIndex === 0 ? 'border-t' : ''
                       } ${colIndex === 0 ? 'border-l' : ''}`}
@@ -210,11 +180,7 @@ export const PermissionSummary = () => {
                           onClick={() =>
                             dispatch(
                               _push(
-                                getRoute().table(
-                                  database,
-                                  [tableName],
-                                  'permissions'
-                                )
+                                getRoute().table(database, table, 'permissions')
                               )
                             )
                           }
@@ -241,7 +207,7 @@ export const PermissionSummary = () => {
             ))
           ) : (
             <th className="border py-2 px-4 min-w-24">
-              <span className="font-bold">No tables found</span>
+              <span className="font-bold">No table found</span>
             </th>
           )}
         </tbody>
