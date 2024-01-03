@@ -43,6 +43,7 @@ import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNat
 import { NativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/NativeQueryLandingPage';
 import { LogicalModelRoute } from '../../../features/Data/LogicalModels/LogicalModel/LogicalModelLandingPage';
 import { ModelSummaryContainer } from './ModelSummary/ModelSummaryContainer';
+import { PermissionSummary } from '../../../features/Data/ManageDatabase/parts/PermissionSummary';
 
 const makeDataRouter = (
   connect,
@@ -66,6 +67,10 @@ const makeDataRouter = (
           <Route path="connect" component={ConnectDatabaseRouteWrapper} />
           <Route path="database/add" component={ConnectUIContainer} />
           <Route path="database/edit" component={ConnectUIContainer} />
+          <Route
+            path="database/permission-summary"
+            component={PermissionSummary}
+          />
           <Route path="table" component={ManageTable}>
             <IndexRedirect to="modify" />
             <Route path=":operation" component={ManageTable} />
