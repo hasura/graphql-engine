@@ -1,0 +1,54 @@
+[
+  {
+    "data": {
+      "getMovieById": {
+        "getActorsFromMovie": [
+          {
+            "getMovieFromActor": {
+              "getActorsFromMovie": [
+                {
+                  "getMovieFromActor": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                },
+                {
+                  "getMovieFromActor": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "getMovieFromActor": {
+              "getActorsFromMovie": [
+                {
+                  "getMovieFromActor": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                },
+                {
+                  "getMovieFromActor": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+      }
+    ]
+  }
+]

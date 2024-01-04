@@ -1,10 +1,14 @@
 use indexmap::IndexMap;
+use lang_graphql::ast::common::{TypeContainer, TypeName};
 use ndc_client as ndc;
 use open_dds;
+use open_dds::arguments::ArgumentName;
+use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::metadata::resolved;
+use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::FieldMapping;
 use crate::utils::json_ext::ValueExt;
 
@@ -44,24 +48,17 @@ pub struct Location<T> {
     pub rest: JoinLocations<T>,
 }
 
-/*
-impl<T> JoinLocations<T> {
-    pub fn map<U, F>(self, mut f: F) -> JoinLocations<U>
-    where
-        F: FnMut(T) -> U,
-    {
-        let mut new_join_locations = JoinLocations::new();
-        for (key, location) in self.locations {
-            let new_node = location.join_node.map(&mut f);
-            let new_location = Location {
-                join_node: new_node,
-                rest: location.rest.map(&mut f),
-            };
-            new_join_locations.locations.insert(key, new_location);
-        }
-        new_join_locations
-    }
-}*/
+/// Represents how to process the remote join response.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResponseType {
+    Array {
+        is_nullable: bool,
+    },
+    Command {
+        command_name: Qualified<CommandName>,
+        type_container: TypeContainer<TypeName>,
+    },
+}
 
 /// Contains information to be captured for a join node
 #[derive(Debug, Clone, PartialEq)]
@@ -72,13 +69,29 @@ pub struct RemoteJoin<'s> {
     pub target_ndc_ir: ndc::models::QueryRequest,
     /// Mapping of the fields in source (LHS) to fields in target (RHS). TODO:
     /// add more details about the type contents
-    pub join_columns: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
+    pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
+    /// Represents how to process the join response.
+    pub process_response_as: ResponseType,
+    /// Represents the type of the remote join
+    pub remote_join_type: RemoteJoinType,
 }
 
 pub type SourceFieldName = FieldName;
 pub type SourceFieldAlias = String;
 pub type SourceField = (FieldName, FieldMapping);
-pub type TargetField = (FieldName, FieldMapping);
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TargetField {
+    ModelField((FieldName, FieldMapping)),
+    CommandField(ArgumentName),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RemoteJoinType {
+    ToModel,
+    ToCommand,
+}
+
 pub type JoinId = i16;
 
 pub type Arguments = HashMap<Argument, ArgumentId>;

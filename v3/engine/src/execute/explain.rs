@@ -8,6 +8,7 @@ use nonempty::NonEmpty;
 
 use crate::execute::{error, query_plan};
 
+use super::remote_joins::types::RemoteJoinType;
 use super::ExecuteOrExplainResponse;
 pub mod types;
 
@@ -151,15 +152,23 @@ fn get_join_steps(
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
         if let Some((remote_join, _join_id)) = location.join_node {
-            // We only support remote joins to Model for now
-            // TODO (paritosh): Fix this when we support model to command relationships
             let mut query_request = remote_join.target_ndc_ir;
             query_request.variables = Some(vec![]);
             sequence_steps.push(Box::new(types::Step::ForEach(
-                types::ForEachStep::ModelSelect(types::ModelSelectIR {
-                    model_name: alias.clone(),
-                    query_request,
-                }),
+                match remote_join.remote_join_type {
+                    RemoteJoinType::ToModel => {
+                        types::ForEachStep::ModelSelect(types::ModelSelectIR {
+                            model_name: alias.clone(),
+                            query_request,
+                        })
+                    }
+                    RemoteJoinType::ToCommand => {
+                        types::ForEachStep::CommandSelect(types::CommandSelectIR {
+                            command_name: alias.clone(),
+                            query_request,
+                        })
+                    }
+                },
             )))
         };
         if let Some(rest_join_steps) = get_join_steps(alias, location.rest) {

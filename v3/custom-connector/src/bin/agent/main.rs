@@ -573,6 +573,51 @@ async fn get_schema() -> Json<models::SchemaResponse> {
     };
     // ANCHOR_END: schema_function_get_actors_by_name
 
+    // ANCHOR: schema_function_get_actors_by_movie_id
+    let get_actors_by_movie_id_function = models::FunctionInfo {
+        name: "get_actors_by_movie_id".into(),
+        description: Some("Get all actors from a movie by movie ID".into()),
+        arguments: BTreeMap::from_iter([(
+            "movie_id".into(),
+            models::ArgumentInfo {
+                description: Some("the id of the movie to fetch the actors from".into()),
+                argument_type: models::Type::Named { name: "Int".into() },
+            },
+        )]),
+        result_type: models::Type::Array {
+            element_type: Box::new(models::Type::Named {
+                name: "actor".into(),
+            }),
+        },
+    };
+    // ANCHOR_END: schema_function_get_actors_by_movie_id
+
+    // ANCHOR: schema_function_get_all_actors
+    let get_all_actors_function = models::FunctionInfo {
+        name: "get_all_actors".into(),
+        description: Some("Get all the actors".into()),
+        result_type: models::Type::Array {
+            element_type: Box::new(models::Type::Named {
+                name: "actor".into(),
+            }),
+        },
+        arguments: BTreeMap::new(),
+    };
+    // ANCHOR_END: schema_function_get_all_actors
+
+    // ANCHOR: schema_function_get_all_movies
+    let get_all_movies_function = models::FunctionInfo {
+        name: "get_all_movies".into(),
+        description: Some("Get all the movies".into()),
+        result_type: models::Type::Array {
+            element_type: Box::new(models::Type::Named {
+                name: "movie".into(),
+            }),
+        },
+        arguments: BTreeMap::new(),
+    };
+    // ANCHOR_END: schema_function_get_all_movies
+
     // ANCHOR: schema_functions
     let functions: Vec<models::FunctionInfo> = vec![
         latest_actor_id_function,
@@ -581,6 +626,9 @@ async fn get_schema() -> Json<models::SchemaResponse> {
         get_actor_by_id_function,
         get_movie_by_id_function,
         get_actors_by_name_function,
+        get_actors_by_movie_id_function,
+        get_all_actors_function,
+        get_all_movies_function,
     ];
     // ANCHOR_END: schema_functions
     // ANCHOR: schema2
@@ -698,6 +746,7 @@ fn get_collection_by_name(
         }
         "actor_names_by_movie" => actor_names_by_movie_rows(arguments, state),
         "get_all_actors" => get_all_actors_rows(state, query, collection_relationships, variables),
+        "get_all_movies" => get_all_movies_rows(state, query, collection_relationships, variables),
         "get_actors_by_movie_id_bounds" => get_actors_by_movie_id_bounds_rows(
             arguments,
             state,
@@ -705,6 +754,9 @@ fn get_collection_by_name(
             collection_relationships,
             variables,
         ),
+        "get_actors_by_movie_id" => {
+            get_actors_by_movie_rows(arguments, state, query, collection_relationships, variables)
+        }
         _ => Err((
             StatusCode::BAD_REQUEST,
             Json(models::ErrorResponse {
@@ -931,7 +983,7 @@ fn get_movie_by_id_rows(
     let id_value = arguments.get("movie_id").ok_or((
         StatusCode::BAD_REQUEST,
         Json(models::ErrorResponse {
-            message: "missing argument id".into(),
+            message: "missing argument movie_id".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
@@ -968,6 +1020,55 @@ fn get_movie_by_id_rows(
             }),
         ))
     }
+}
+
+fn get_actors_by_movie_rows(
+    arguments: &BTreeMap<String, serde_json::Value>,
+    state: &AppState,
+    query: &models::Query,
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, serde_json::Value>,
+) -> Result<Vec<Row>> {
+    let movie_id = arguments.get("movie_id").ok_or((
+        StatusCode::BAD_REQUEST,
+        Json(models::ErrorResponse {
+            message: "missing argument movie_id".into(),
+            details: serde_json::Value::Null,
+        }),
+    ))?;
+    let movie_id_int = movie_id.as_i64().ok_or((
+        StatusCode::BAD_REQUEST,
+        Json(models::ErrorResponse {
+            message: "movie_id must be a integer".into(),
+            details: serde_json::Value::Null,
+        }),
+    ))?;
+
+    let mut actors_by_movie = vec![];
+
+    for (_id, actor) in state.actors.iter() {
+        let actor_movie_id_int = get_actor_movie_id(actor)?;
+
+        if actor_movie_id_int == movie_id_int {
+            let row = project_row(actor, state, query, collection_relationships, variables)?;
+            actors_by_movie.push(row)
+        }
+    }
+
+    let actors_by_movie_value = serde_json::to_value(actors_by_movie).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(models::ErrorResponse {
+                message: " ".into(),
+                details: serde_json::Value::Null,
+            }),
+        )
+    })?;
+
+    Ok(vec![BTreeMap::from_iter([(
+        "__value".into(),
+        actors_by_movie_value,
+    )])])
 }
 
 fn project_row(
@@ -1261,6 +1362,41 @@ fn get_all_actors_rows(
     Ok(vec![BTreeMap::from_iter([(
         "__value".into(),
         actors_value,
+    )])])
+}
+
+fn get_all_movies_rows(
+    state: &AppState,
+    query: &models::Query,
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, serde_json::Value>,
+) -> Result<Vec<Row>> {
+    let mut movies = vec![];
+    for (_id, movie) in state.movies.iter() {
+        let rows = project_row(movie, state, query, collection_relationships, variables)?;
+        let movie_value = serde_json::to_value(rows).map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(models::ErrorResponse {
+                    message: "unable to encode value".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
+        movies.push(movie_value);
+    }
+    let movies_value = serde_json::to_value(movies).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(models::ErrorResponse {
+                message: "unable to encode value".into(),
+                details: serde_json::Value::Null,
+            }),
+        )
+    })?;
+    Ok(vec![BTreeMap::from_iter([(
+        "__value".into(),
+        movies_value,
     )])])
 }
 

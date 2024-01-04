@@ -59,6 +59,9 @@ pub struct FunctionBasedCommand<'s> {
 
     /// Source function in the data connector for this model
     pub function_name: &'s FunctionName,
+
+    /// Variable arguments to be used for remote joins
+    pub variable_arguments: BTreeMap<String, String>,
 }
 
 /// IR for the 'procedure based command' operations
@@ -162,6 +165,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
     Ok(FunctionBasedCommand {
         command_info,
         function_name,
+        variable_arguments: BTreeMap::new(),
     })
 }
 
@@ -207,11 +211,10 @@ pub fn ir_to_ndc_query<'s>(
 }
 
 pub fn ir_to_ndc_query_ir<'s>(
-    function_name: &FunctionName,
     ir: &FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(ndc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
-    let arguments = ir
+    let mut arguments: BTreeMap<String, ndc_client::models::Argument> = ir
         .command_info
         .arguments
         .iter()
@@ -224,6 +227,17 @@ pub fn ir_to_ndc_query_ir<'s>(
             )
         })
         .collect();
+
+    // Add the variable arguments which are used for remote joins
+    for (variable_name, variable_argument) in ir.variable_arguments.iter() {
+        arguments.insert(
+            variable_name.clone(),
+            ndc_client::models::Argument::Variable {
+                name: variable_argument.clone(),
+            },
+        );
+    }
+
     let (query, jl) = ir_to_ndc_query(&ir.command_info, join_id_counter)?;
     let mut collection_relationships = BTreeMap::new();
     selection_set::collect_relationships(
@@ -232,7 +246,7 @@ pub fn ir_to_ndc_query_ir<'s>(
     )?;
     let query_request = ndc::models::QueryRequest {
         query,
-        collection: function_name.to_string(),
+        collection: ir.function_name.to_string(),
         arguments,
         collection_relationships,
         variables: None,

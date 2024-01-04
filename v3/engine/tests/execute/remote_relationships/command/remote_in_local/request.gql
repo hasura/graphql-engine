@@ -1,0 +1,12 @@
+query MyQuery {
+  MovieMany {
+    title
+    Actors {
+      name
+      MovieFromCommand {
+        title
+        rating
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+[
+  {
+    "data": {
+      "getAllActors": [
+        {
+          "MovieFromActor": {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          },
+          "actor_id": 1,
+          "name": "Leonardo DiCaprio"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          },
+          "actor_id": 2,
+          "name": "Kate Winslet"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 2,
+            "rating": 5,
+            "title": "Slumdog Millionaire"
+          },
+          "actor_id": 3,
+          "name": "Irfan Khan"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 3,
+            "rating": 4,
+            "title": "Godfather"
+          },
+          "actor_id": 4,
+          "name": "Al Pacino"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 3,
+            "rating": 4,
+            "title": "Godfather"
+          },
+          "actor_id": 5,
+          "name": "Robert De Niro"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 4,
+            "rating": 5,
+            "title": "Shawshank Redemption"
+          },
+          "actor_id": 6,
+          "name": "Morgan Freeman"
+        },
+        {
+          "MovieFromActor": {
+            "movie_id": 5,
+            "rating": 4,
+            "title": "Schindler's List"
+          },
+          "actor_id": 7,
+          "name": "Ben Kingsley"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+      }
+    ]
+  }
+]

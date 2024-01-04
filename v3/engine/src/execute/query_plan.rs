@@ -81,7 +81,7 @@ pub struct ExecutionNode<'s> {
     pub data_connector: &'s resolved::data_connector::DataConnector,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ProcessResponseAs<'ir> {
     Object {
         is_nullable: bool,
@@ -215,9 +215,7 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let function_name = ir.function_name;
-            let (ndc_ir, join_locations) =
-                commands::ir_to_ndc_query_ir(function_name, ir, &mut counter)?;
+            let (ndc_ir, join_locations) = commands::ir_to_ndc_query_ir(ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {

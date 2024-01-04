@@ -271,12 +271,6 @@
                         "type": "named",
                         "name": "int8"
                       }
-                    },
-                    "_neq": {
-                      "argument_type": {
-                        "type": "named",
-                        "name": "String"
-                      }
                     }
                   },
                   "update_operators": {}

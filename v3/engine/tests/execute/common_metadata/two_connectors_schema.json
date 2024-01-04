@@ -249,6 +249,56 @@
             }
           },
           {
+            "name": "get_movie_by_id",
+            "description": "Get movie by ID",
+            "arguments": {
+              "movie_id": {
+                "description": "the id of the movie to fetch",
+                "type": {
+                  "type": "named",
+                  "name": "Int"
+                }
+              }
+            },
+            "result_type": {
+              "type": "nullable",
+              "underlying_type": {
+                "type": "named",
+                "name": "movie"
+              }
+            }
+          },
+          {
+            "name": "get_all_actors",
+            "description": "Get list of all actors",
+            "arguments": {},
+            "result_type": {
+              "type": "nullable",
+              "underlying_type": {
+                "type": "array",
+                "element_type": {
+                  "type": "named",
+                  "name": "actor"
+                }
+              }
+            }
+          },
+          {
+            "name": "get_all_movies",
+            "description": "Get list of all movies",
+            "arguments": {},
+            "result_type": {
+              "type": "nullable",
+              "underlying_type": {
+                "type": "array",
+                "element_type": {
+                  "type": "named",
+                  "name": "movie"
+                }
+              }
+            }
+          },
+          {
             "name": "get_actors_by_name",
             "description": "Get actors by name",
             "arguments": {
@@ -265,6 +315,29 @@
               "element_type": {
                 "type": "named",
                 "name": "actor"
+              }
+            }
+          },
+          {
+            "name": "actor_names_by_movie",
+            "description": "Get actor names by movie ID",
+            "arguments": {
+              "movie_id": {
+                "description": "the id of the movie to fetch",
+                "type": {
+                  "type": "named",
+                  "name": "Int"
+                }
+              }
+            },
+            "result_type": {
+              "type": "nullable",
+              "underlying_type": {
+                "type": "array",
+                "element_type": {
+                  "type": "named",
+                  "name": "String"
+                }
               }
             }
           }

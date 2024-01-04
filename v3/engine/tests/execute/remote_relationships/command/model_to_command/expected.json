@@ -1,0 +1,54 @@
+[
+  {
+    "data": {
+      "Analytics": [
+        {
+          "MovieFromCommand": {
+            "movie_id": 1,
+            "title": "Titanic",
+            "rating": 4
+          },
+          "analytics_id": 1,
+          "movie_id": 1,
+          "total_votes": 578
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 2,
+            "title": "Slumdog Millionaire",
+            "rating": 5
+          },
+          "analytics_id": 2,
+          "movie_id": 2,
+          "total_votes": 432
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 3,
+            "title": "Godfather",
+            "rating": 4
+          },
+          "analytics_id": 3,
+          "movie_id": 3,
+          "total_votes": 849
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Analytics": [
+        {
+          "MovieFromCommand": {
+            "movie_id": 1,
+            "title": "Titanic",
+            "rating": 4
+          },
+          "analytics_id": 1,
+          "movie_id": 1,
+          "total_votes": 578
+        }
+      ]
+    }
+  }
+]
