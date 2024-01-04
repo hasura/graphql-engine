@@ -68,6 +68,34 @@ fn test_local_relationships_model_to_command() {
 }
 
 #[test]
+fn test_local_relationships_command_to_command() {
+    let test_path_string = "execute/relationships/command_to_command";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
+fn test_local_mutually_recursive_relationships_to_command() {
+    let test_path_string = "execute/relationships/command_to_command/mutually_recursive";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
 fn test_local_relationships_permissions_target_model_filter_predicate() {
     let test_path_string = "execute/relationships/permissions/target_model_filter_predicate";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
@@ -93,9 +121,41 @@ fn test_relationships_command_to_model_across_namespace() {
 }
 
 #[test]
+fn test_relationships_command_to_command_across_namespace() {
+    let test_path_string = "execute/relationships/command_to_command/across_namespace";
+    let common_metadata_path_string =
+        "execute/relationships/command_to_command/across_namespace/namespaced_connectors.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_mutually_recursive_relationships_to_command_across_namespace() {
+    let test_path_string =
+        "execute/relationships/command_to_command/mutually_recursive_across_namespace";
+    let common_metadata_path_string =
+        "execute/relationships/command_to_command/mutually_recursive_across_namespace/namespaced_connectors.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
 fn test_remote_relationships_model_to_model_array() {
     let test_path_string = "execute/remote_relationships/array";
     let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_model_to_command_array() {
+    let test_path_string = "execute/remote_relationships/command/model_to_command";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_mutually_recursive_relationships_model_to_command() {
+    let test_path_string =
+        "execute/remote_relationships/command/model_to_command/mutually_recursive";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }
 
@@ -109,6 +169,13 @@ fn test_remote_relationships_model_to_model_array_with_arguments() {
 #[test]
 fn test_remote_relationships_remote_in_local() {
     let test_path_string = "execute/remote_relationships/remote_in_local";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_model_to_command_remote_in_local() {
+    let test_path_string = "execute/remote_relationships/command/remote_in_local";
     let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }

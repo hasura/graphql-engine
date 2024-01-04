@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use hasura_authn_core::SessionVariables;
 use lang_graphql::normalized_ast::{self, Field};
 use open_dds::{
+    arguments::ArgumentName,
     relationships::{RelationshipName, RelationshipType},
     types::{CustomTypeName, FieldName},
 };
@@ -63,6 +64,12 @@ pub struct RemoteModelRelationshipInfo<'s> {
     /// contains mapping of field names and `resolved::types::FieldMapping`.
     /// Also see `build_remote_relationship`.
     pub join_mapping: Vec<(SourceField, TargetField)>,
+}
+
+#[derive(Debug, Serialize)]
+pub(crate) struct RemoteCommandRelationshipInfo<'s> {
+    pub annotation: &'s CommandRelationshipAnnotation,
+    pub join_mapping: Vec<(SourceField, ArgumentName)>,
 }
 
 pub type SourceField = (FieldName, resolved::types::FieldMapping);
@@ -359,9 +366,14 @@ pub(crate) fn generate_command_relationship_ir<'s>(
             target_source,
             session_variables,
         ),
-        RelationshipExecutionCategory::RemoteForEach => {
-            Err(error::InternalEngineError::RemoteCommandRelationshipsAreNotSupported)?
-        }
+        RelationshipExecutionCategory::RemoteForEach => build_remote_command_relationship(
+            field,
+            field_call,
+            annotation,
+            type_mappings,
+            target_source,
+            session_variables,
+        ),
     }
 }
 
@@ -530,6 +542,59 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         join_mapping,
     };
     Ok(FieldSelection::ModelRelationshipRemote {
+        ir: remote_relationships_ir,
+        relationship_info: rel_info,
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn build_remote_command_relationship<'n, 's>(
+    field: &'n normalized_ast::Field<'s, GDS>,
+    field_call: &'n normalized_ast::FieldCall<'s, GDS>,
+    annotation: &'s CommandRelationshipAnnotation,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    target_source: &'s CommandTargetSource,
+    session_variables: &SessionVariables,
+) -> Result<FieldSelection<'s>, error::Error> {
+    let mut join_mapping: Vec<(SourceField, ArgumentName)> = vec![];
+    for resolved::relationship::RelationshipCommandMapping {
+        source_field: source_field_path,
+        argument_name: target_argument_name,
+    } in annotation.mappings.iter()
+    {
+        let source_column = get_field_mapping_of_field_name(
+            type_mappings,
+            &annotation.source_type,
+            &annotation.relationship_name,
+            &source_field_path.field_name,
+        )?;
+
+        let source_field = (source_field_path.field_name.clone(), source_column);
+        join_mapping.push((source_field, target_argument_name.clone()));
+    }
+    let mut remote_relationships_ir = generate_function_based_command(
+        &annotation.command_name,
+        &target_source.function_name,
+        field,
+        field_call,
+        &annotation.underlying_object_typename,
+        &target_source.details,
+        session_variables,
+    )?;
+
+    // Add the arguments on which the join is done to the command arguments
+    let mut variable_arguments = BTreeMap::new();
+    for (_source, target_argument_name) in &join_mapping {
+        let target_value_variable = format!("${}", target_argument_name);
+        variable_arguments.insert(target_argument_name.to_string(), target_value_variable);
+    }
+    remote_relationships_ir.variable_arguments = variable_arguments;
+
+    let rel_info = RemoteCommandRelationshipInfo {
+        annotation,
+        join_mapping,
+    };
+    Ok(FieldSelection::CommandRelationshipRemote {
         ir: remote_relationships_ir,
         relationship_info: rel_info,
     })

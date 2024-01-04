@@ -1,0 +1,21 @@
+[
+  {
+    "data": {
+      "getActorById": {
+        "getMovieFromActor": {
+          "rating": 4,
+          "title": "Titanic"
+        },
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+      }
+    ]
+  }
+]

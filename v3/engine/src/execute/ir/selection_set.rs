@@ -7,15 +7,18 @@ use open_dds::types::{CustomTypeName, FieldName};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
-use super::commands::{self, FunctionBasedCommand};
+use super::commands::{self, ir_to_ndc_query_ir, FunctionBasedCommand};
 use super::model_selection::{self, ModelSelection};
 use super::relationship::{
-    self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteModelRelationshipInfo,
+    self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteCommandRelationshipInfo,
+    RemoteModelRelationshipInfo,
 };
 use crate::execute::error;
 use crate::execute::global_id;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::execute::remote_joins::types::{JoinLocations, MonotonicCounter};
+use crate::execute::remote_joins::types::{
+    JoinLocations, MonotonicCounter, RemoteJoinType, ResponseType, TargetField,
+};
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
@@ -45,6 +48,10 @@ pub(crate) enum FieldSelection<'s> {
     ModelRelationshipRemote {
         ir: ModelSelection<'s>,
         relationship_info: RemoteModelRelationshipInfo<'s>,
+    },
+    CommandRelationshipRemote {
+        ir: FunctionBasedCommand<'s>,
+        relationship_info: RemoteCommandRelationshipInfo<'s>,
     },
 }
 
@@ -283,19 +290,23 @@ pub(crate) fn process_selection_set_ir<'s>(
             } => {
                 // For all the left join fields, create an alias and inject
                 // them into the NDC IR
-                let mut join_columns = HashMap::new();
+                let mut join_mapping = HashMap::new();
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {
                     let lhs_alias = make_hasura_phantom_field(&src_field.column);
+
                     ndc_fields.insert(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
                             column: src_field.column.clone(),
                         },
                     );
-                    join_columns.insert(
+                    join_mapping.insert(
                         src_field_alias.clone(),
-                        (lhs_alias.clone(), target_field.clone()),
+                        (
+                            lhs_alias.clone(),
+                            TargetField::ModelField(target_field.clone()),
+                        ),
                     );
                 }
                 // Construct the `JoinLocations` tree
@@ -304,7 +315,55 @@ pub(crate) fn process_selection_set_ir<'s>(
                 let rj_info = RemoteJoin {
                     target_ndc_ir: ndc_ir,
                     target_data_connector: ir.data_connector,
-                    join_columns,
+                    join_mapping,
+                    process_response_as: ResponseType::Array { is_nullable: true },
+                    remote_join_type: RemoteJoinType::ToModel,
+                };
+                join_locations.locations.insert(
+                    alias.clone(),
+                    Location {
+                        join_node: Some(rj_info),
+                        rest: sub_join_locations,
+                    },
+                );
+            }
+            FieldSelection::CommandRelationshipRemote {
+                ir,
+                relationship_info,
+            } => {
+                // For all the left join fields, create an alias and inject
+                // them into the NDC IR
+                let mut join_mapping = HashMap::new();
+                for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
+                {
+                    let lhs_alias = make_hasura_phantom_field(&src_field.column);
+
+                    ndc_fields.insert(
+                        lhs_alias.clone(),
+                        ndc::models::Field::Column {
+                            column: src_field.column.clone(),
+                        },
+                    );
+                    join_mapping.insert(
+                        src_field_alias.clone(),
+                        (
+                            lhs_alias.clone(),
+                            TargetField::CommandField(target_field.clone()),
+                        ),
+                    );
+                }
+                // Construct the `JoinLocations` tree
+                let (ndc_ir, sub_join_locations) = ir_to_ndc_query_ir(ir, join_id_counter)?;
+                let rj_info = RemoteJoin {
+                    target_ndc_ir: ndc_ir,
+                    target_data_connector: ir.command_info.data_connector,
+                    join_mapping,
+                    process_response_as: ResponseType::Command {
+                        // TODO: fix and remove clone()
+                        command_name: ir.command_info.command_name.clone(),
+                        type_container: ir.command_info.type_container.clone(),
+                    },
+                    remote_join_type: RemoteJoinType::ToCommand,
                 };
                 join_locations.locations.insert(
                     alias.clone(),
@@ -357,6 +416,7 @@ pub(crate) fn collect_relationships(
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector
             FieldSelection::ModelRelationshipRemote { .. } => (),
+            FieldSelection::CommandRelationshipRemote { .. } => (),
         };
     }
     Ok(())

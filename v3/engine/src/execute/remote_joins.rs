@@ -8,6 +8,8 @@ use tracing_util::SpanVisibility;
 
 use ndc_client as ndc;
 
+use self::types::TargetField;
+
 use super::error;
 use super::ndc::execute_ndc_query;
 use super::query_plan::ProcessResponseAs;
@@ -124,6 +126,19 @@ pub async fn execute_join_locations(
                 )
                 .await?;
 
+            let process_response_as = match &join_node.process_response_as {
+                types::ResponseType::Array { is_nullable } => ProcessResponseAs::Array {
+                    is_nullable: *is_nullable,
+                },
+                types::ResponseType::Command {
+                    command_name,
+                    type_container,
+                } => ProcessResponseAs::CommandResponse {
+                    command_name,
+                    type_container,
+                },
+            };
+
             // if there is a `location.rest`, recursively process the tree; which
             // will modify the `target_response` with all joins down the tree
             if !location.rest.locations.is_empty() {
@@ -133,10 +148,7 @@ pub async fn execute_join_locations(
                     // TODO: is this field span correct?
                     field_span_attribute.clone(),
                     &mut target_response,
-                    // TODO: RHS CANNOT be command for now as we don't support
-                    // it yet. Once we support it, we'll have to handle that
-                    // case as well.
-                    &ProcessResponseAs::Array { is_nullable: true },
+                    &process_response_as,
                     sub_tree,
                 )
                 .await?;
@@ -197,9 +209,6 @@ fn collect_arguments<'s>(
             for row in rows.iter() {
                 let mut replacement_token = (0, 0);
 
-                // TODO: RHS CANNOT be command for now as we don't support it
-                // yet. Once we support it, we'll have to handle that case as
-                // well.
                 match lhs_response_type {
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
                         collect_argument_from_row(
@@ -242,13 +251,14 @@ fn collect_arguments<'s>(
             replacement_tokens.push(None);
         }
     }
-    match remote_join {
-        None => Err(error::Error::from(
+    match (remote_join, arguments.is_empty()) {
+        (None, true) => Ok(None),
+        (None, false) => Err(error::Error::from(
             error::InternalEngineError::InternalGeneric {
                 description: "unexpected: remote join empty".to_string(),
             },
         )),
-        Some(remote_join) => Ok(Some(CollectArgumentResult {
+        (Some(remote_join), _) => Ok(Some(CollectArgumentResult {
             join_node: remote_join,
             sub_tree,
             remote_alias,
@@ -279,12 +289,23 @@ fn collect_argument_from_row<'s>(
 
     if let Some((join_node, join_id)) = &location.join_node {
         let mut argument = BTreeMap::new();
-        for (src_alias, target_field) in join_node.join_columns.values() {
-            let val = get_value(src_alias, row);
-            // use the target field name here to create the variable
-            // name to be used in RHS
-            let variable_name = format!("${}", &target_field.1.column);
-            argument.insert(variable_name, ValueExt::from(val.clone()));
+        for (src_alias, target_field) in join_node.join_mapping.values() {
+            match target_field {
+                TargetField::ModelField((_, field_mapping)) => {
+                    let val = get_value(src_alias, row);
+                    // use the target field name here to create the variable
+                    // name to be used in RHS
+                    let variable_name = format!("${}", &field_mapping.column);
+                    argument.insert(variable_name, ValueExt::from(val.clone()));
+                }
+                TargetField::CommandField(argument_name) => {
+                    let val = get_value(src_alias, row);
+                    // use the target field name here to create the variable
+                    // name to be used in RHS
+                    let variable_name = format!("${}", &argument_name);
+                    argument.insert(variable_name, ValueExt::from(val.clone()));
+                }
+            }
         }
         // de-duplicate arguments
         let argument_id: i16;
@@ -390,14 +411,23 @@ fn resolve_command_response_row(
             }
         }
         json::Value::Array(values) => {
-            if type_container.is_list() {
-                let array_values: Vec<IndexMap<String, ndc::models::RowFieldValue>> =
+            // There can be cases when the command returns an array of objects,
+            // but the type container is not a list. This can happen when the
+            // command is used in a relationship whose RHS returns a list of objects
+            // which can have the same value for the field on which the relationship
+            // is defined.
+            // In case the container is not a list, we take the first object from
+            // the array and use that as the value for the relationship otherwise
+            // we return the array of objects.
+            let array_values: Vec<IndexMap<String, ndc::models::RowFieldValue>> =
                     json::from_value(json::Value::Array(values.to_vec()))?;
+
+            if type_container.is_list(){
                 Ok(array_values)
             } else {
-                Err(error::InternalDeveloperError::BadGDCResponse {
-                    summary: "Unable to parse response from NDC, array value expected".into(),
-                })?
+                Ok(vec![array_values.into_iter().next().ok_or(error::InternalDeveloperError::BadGDCResponse {
+                    summary: "Unable to parse response from NDC, rowset is empty".into(),
+                })?])
             }
         }
     }
@@ -519,28 +549,3 @@ fn traverse_path_and_insert_value(
     }
     Ok(())
 }
-
-/*
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-
-    use super::remote_joins::types::{JoinLocations, Location, RemoteJoin};
-
-    use super::foo;
-
-    #[test]
-    fn test_collect_arguments() {
-        let location = Location {
-            join_node: Some(RemoteJoin {
-
-            })
-        };
-        let join_locations = JoinLocations {
-            locations: HashMap::from_iter([("weather", location)])
-        };
-        let lhs_response = todo!();
-        let x = foo(lhs_response, join_locations,);
-    }
-}
-*/

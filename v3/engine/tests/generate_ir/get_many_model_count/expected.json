@@ -1078,7 +1078,8 @@
               ]
             }
           },
-          "function_name": "latest_article"
+          "function_name": "latest_article",
+          "variable_arguments": {}
         }
       }
     }

@@ -100,9 +100,6 @@ pub enum InternalEngineError {
     #[error("remote relationships should have been handled separately")]
     RemoteRelationshipsAreNotSupported,
 
-    #[error("remote relationships to command are not supported")]
-    RemoteCommandRelationshipsAreNotSupported,
-
     #[error("expected filter predicate but filter predicate namespaced annotation not found")]
     FilterPermissionAnnotationNotFound,
 
