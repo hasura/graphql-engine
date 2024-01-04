@@ -47,13 +47,13 @@ const HeadersEditor = (props: HeaderEditorProps) => {
                 .filter(h => !!h.name)
                 .map(header => (
                   <tr className="">
-                    <td className="px-3 py-3 whitespace-nowrap font-medium">
+                    <td className="px-md py-sm whitespace-nowrap font-medium">
                       {header.name}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-gray-600">
+                    <td className="px-md py-sm whitespace-nowrap text-gray-600">
                       {header.type}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-gray-600">
+                    <td className="px-md py-sm whitespace-nowrap text-gray-600">
                       {header.value}
                     </td>
                   </tr>
