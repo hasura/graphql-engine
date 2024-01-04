@@ -74,7 +74,7 @@ const HeadersEditor = (props: HeaderEditorProps) => {
   );
 
   return (
-    <div className="mb-lg w-6/12">
+    <div className="mb-lg w-9/12">
       <h2 className="text-lg font-semibold mb-xs flex items-center">Headers</h2>
       <p className="text-sm mb-sm text-gray-600">
         Headers Hasura will send to the webhook with the POST request.
