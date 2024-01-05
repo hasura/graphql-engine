@@ -5,7 +5,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use ndc_client;
 use serde_json as json;
-use tracing_util::{set_attribute_on_active_span, AttributeVisibility};
+use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
 use super::error;
 use super::ir::commands;
@@ -354,6 +354,14 @@ pub struct RootFieldResult {
     pub result: Result<json::Value, error::Error>,
 }
 
+impl Traceable for RootFieldResult {
+    type ErrorType<'a> = <Result<json::Value, error::Error> as Traceable>::ErrorType<'a>;
+
+    fn get_error(&self) -> Option<Self::ErrorType<'_>> {
+        Traceable::get_error(&self.result)
+    }
+}
+
 impl RootFieldResult {
     pub fn new(is_nullable: &bool, result: Result<json::Value, error::Error>) -> Self {
         Self {
@@ -395,59 +403,102 @@ impl ExecuteQueryResult {
     }
 }
 
+async fn execute_field_plan<'n, 's, 'ir>(
+    http_client: &reqwest::Client,
+    field_plan: NodeQueryPlan<'n, 's, 'ir>,
+) -> RootFieldResult {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "execute_field_plan",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    match field_plan {
+                        NodeQueryPlan::TypeName { type_name } => {
+                            set_attribute_on_active_span(
+                                AttributeVisibility::Default,
+                                "field",
+                                "__typename",
+                            );
+                            RootFieldResult::new(
+                                &false, // __typename: String! ; the __typename field is not nullable
+                                resolve_type_name(type_name),
+                            )
+                        }
+                        NodeQueryPlan::TypeField {
+                            selection_set,
+                            schema,
+                            type_name,
+                            role: namespace,
+                        } => {
+                            set_attribute_on_active_span(
+                                AttributeVisibility::Default,
+                                "field",
+                                "__type",
+                            );
+                            RootFieldResult::new(
+                                &true, // __type(name: String!): __Type ; the type field is nullable
+                                resolve_type_field(selection_set, schema, &type_name, &namespace),
+                            )
+                        }
+                        NodeQueryPlan::SchemaField {
+                            role: namespace,
+                            selection_set,
+                            schema,
+                        } => {
+                            set_attribute_on_active_span(
+                                AttributeVisibility::Default,
+                                "field",
+                                "__schema",
+                            );
+                            RootFieldResult::new(
+                                &false, // __schema: __Schema! ; the schema field is not nullable
+                                resolve_schema_field(selection_set, schema, &namespace),
+                            )
+                        }
+                        NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
+                            &ndc_query.process_response_as.is_nullable(),
+                            resolve_ndc_query_execution(http_client, ndc_query).await,
+                        ),
+                        NodeQueryPlan::NDCMutationExecution(ndc_query) => RootFieldResult::new(
+                            &ndc_query.process_response_as.is_nullable(),
+                            resolve_ndc_mutation_execution(http_client, ndc_query).await,
+                        ),
+                        NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
+                            &optional_query.as_ref().map_or(true, |ndc_query| {
+                                ndc_query.process_response_as.is_nullable()
+                            }),
+                            resolve_relay_node_select(http_client, optional_query).await,
+                        ),
+                    }
+                })
+            },
+        )
+        .await
+}
+
 pub async fn execute_query_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query_plan: QueryPlan<'n, 's, 'ir>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
+
+    let mut tasks: Vec<_> = Vec::with_capacity(query_plan.capacity());
+
     for (alias, field_plan) in query_plan.into_iter() {
-        let field_result: RootFieldResult = match field_plan {
-            NodeQueryPlan::TypeName { type_name } => {
-                set_attribute_on_active_span(AttributeVisibility::Default, "field", "__typename");
-                RootFieldResult::new(
-                    &false, // __typename: String! ; the __typename field is not nullable
-                    resolve_type_name(type_name),
-                )
-            }
-            NodeQueryPlan::TypeField {
-                selection_set,
-                schema,
-                type_name,
-                role: namespace,
-            } => {
-                set_attribute_on_active_span(AttributeVisibility::Default, "field", "__type");
-                RootFieldResult::new(
-                    &true, // __type(name: String!): __Type ; the type field is nullable
-                    resolve_type_field(selection_set, schema, &type_name, &namespace),
-                )
-            }
-            NodeQueryPlan::SchemaField {
-                role: namespace,
-                selection_set,
-                schema,
-            } => {
-                set_attribute_on_active_span(AttributeVisibility::Default, "field", "__schema");
-                RootFieldResult::new(
-                    &false, // __schema: __Schema! ; the schema field is not nullable
-                    resolve_schema_field(selection_set, schema, &namespace),
-                )
-            }
-            NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
-                &ndc_query.process_response_as.is_nullable(),
-                resolve_ndc_query_execution(http_client, ndc_query).await,
-            ),
-            NodeQueryPlan::NDCMutationExecution(ndc_query) => RootFieldResult::new(
-                &ndc_query.process_response_as.is_nullable(),
-                resolve_ndc_mutation_execution(http_client, ndc_query).await,
-            ),
-            NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
-                &optional_query.as_ref().map_or(true, |ndc_query| {
-                    ndc_query.process_response_as.is_nullable()
-                }),
-                resolve_relay_node_select(http_client, optional_query).await,
-            ),
-        };
-        root_fields.insert(alias.clone(), field_result);
+        // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
+        // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
+        let task = async { (alias, execute_field_plan(http_client, field_plan).await) };
+
+        tasks.push(task);
+    }
+
+    let executed_root_fields = futures::future::join_all(tasks).await;
+
+    for executed_root_field in executed_root_fields.into_iter() {
+        let (alias, root_field) = executed_root_field;
+        root_fields.insert(alias, root_field);
     }
 
     ExecuteQueryResult { root_fields }

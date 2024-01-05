@@ -33,7 +33,7 @@ strum = { version = "^0.25.0" }
 strum_macros = { version = "^0.25.2" }
 itertools = "0.10.5"
 url = "2.4.1"
-
+futures = "0.3.29"
 # dependencies for authentication and execute
 hasura-authn-webhook = { path = "../hasura-authn-webhook" }
 hasura-authn-jwt = { path = "../hasura-authn-jwt" }

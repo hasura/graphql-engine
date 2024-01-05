@@ -942,6 +942,7 @@ dependencies = [
  "clap 4.4.10",
  "criterion",
  "derive_more",
+ "futures",
  "goldenfile",
  "hasura-authn-core",
  "hasura-authn-jwt",
