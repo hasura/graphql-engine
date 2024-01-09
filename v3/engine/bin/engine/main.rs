@@ -20,8 +20,8 @@ use std::path::PathBuf;
 use std::{fmt::Display, sync::Arc};
 use tower_http::trace::TraceLayer;
 use tracing_util::{
-    add_event_on_active_span, set_status_on_current_span, ErrorVisibility, SpanVisibility,
-    TraceableError, TraceableHttpResponse,
+    add_event_on_active_span, set_status_on_current_span, AttributeVisibility, ErrorVisibility,
+    SpanVisibility, TraceableError, TraceableHttpResponse,
 };
 
 #[derive(Parser)]
@@ -41,6 +41,11 @@ struct EngineState {
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
 }
+
+const GIT_HASH_VERSION: &str = env!(
+    "GIT_HASH",
+    "Unable to start engine: unable to fetch the current git hash to use as trace version"
+);
 
 #[tokio::main]
 async fn main() {
@@ -159,6 +164,11 @@ async fn graphql_request_tracing_middleware<B: Send>(
 
     Ok(tracer
         .in_span_async(path, SpanVisibility::User, || {
+            tracing_util::set_attribute_on_active_span(
+                AttributeVisibility::Internal,
+                "version",
+                GIT_HASH_VERSION,
+            );
             Box::pin(async move {
                 let response = next.run(request).await;
                 TraceableHttpResponse::new(response, path)
