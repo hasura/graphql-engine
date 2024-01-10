@@ -91,7 +91,8 @@ library
                     errors,
                     network-uri,
                     unliftio-core,
-                    random
+                    random,
+                    uri-encode
   if !impl(ghc >= 8.0)
     build-depends:
       semigroups >= 0.11 && < 0.19
