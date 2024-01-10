@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosResponseHeaders } from 'axios';
+import { AxiosInstance } from 'axios';
 import {
   NativeDrivers,
   Source,
@@ -61,7 +61,7 @@ export const runGraphQL = async ({
 }: {
   operationName: string;
   query: string;
-  headers?: AxiosResponseHeaders;
+  headers?: Record<string, string>;
 } & NetworkArgs) => {
   try {
     const result = await httpClient.post('v1/graphql', {
