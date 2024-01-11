@@ -119,6 +119,7 @@ runCustomEndpoint ::
   Init.AllowListStatus ->
   ReadOnlyMode ->
   RemoteSchemaResponsePriority ->
+  HeaderPrecedence ->
   PrometheusMetrics ->
   L.Logger L.Hasura ->
   Maybe (CredentialCache AgentLicenseKey) ->
@@ -130,7 +131,7 @@ runCustomEndpoint ::
   EndpointTrie GQLQueryWithText ->
   Init.ResponseInternalErrorsConfig ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runCustomEndpoint env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority prometheusMetrics logger agentLicenseKey requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints responseErrorsConfig = do
+runCustomEndpoint env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence prometheusMetrics logger agentLicenseKey requestId userInfo reqHeaders ipAddress RestRequest {..} endpoints responseErrorsConfig = do
   -- First match the path to an endpoint.
   case matchPath reqMethod (T.split (== '/') reqPath) endpoints of
     MatchFound (queryx :: EndpointMetadata GQLQueryWithText) matches ->
@@ -160,7 +161,7 @@ runCustomEndpoint env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePri
               -- with the query string from the schema cache, and pass it
               -- through to the /v1/graphql endpoint.
               (httpLoggingMetadata, handlerResp) <- do
-                (gqlOperationLog, resp) <- GH.runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority prometheusMetrics logger agentLicenseKey requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables) responseErrorsConfig
+                (gqlOperationLog, resp) <- GH.runGQ env sqlGenCtx sc enableAL readOnlyMode remoteSchemaResponsePriority headerPrecedence prometheusMetrics logger agentLicenseKey requestId userInfo ipAddress reqHeaders E.QueryHasura (mkPassthroughRequest queryx resolvedVariables) responseErrorsConfig
                 let httpLoggingGQInfo = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, (PQHSetSingleton (gqolParameterizedQueryHash gqlOperationLog)))
                 return (httpLoggingGQInfo, fst <$> resp)
               case sequence handlerResp of

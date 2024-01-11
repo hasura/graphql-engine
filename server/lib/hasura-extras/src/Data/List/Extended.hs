@@ -1,6 +1,7 @@
 module Data.List.Extended
   ( duplicates,
     uniques,
+    uniquesOn,
     getDifference,
     getDifferenceOn,
     getOverlapWith,
@@ -10,7 +11,7 @@ module Data.List.Extended
   )
 where
 
-import Data.Containers.ListUtils (nubOrd)
+import Data.Containers.ListUtils (nubOrd, nubOrdOn)
 import Data.Function (on)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
@@ -29,6 +30,13 @@ duplicates =
 -- [0,1,2,3,4,5,7,9]
 uniques :: (Ord a) => [a] -> [a]
 uniques = nubOrd
+
+--- | Remove duplicates from a list not based on the original datatype, but
+---   on a user-specified projection from that datatype.
+-- >>> uniquesOn fst [("foo", 1), ("bar", 1), ("bar", 2), ("foo", 2), ("auth", 1), ("auth", 2)]
+-- [("foo",1),("bar",1),("auth",1)]
+uniquesOn :: (Ord b) => (a -> b) -> [a] -> [a]
+uniquesOn = nubOrdOn
 
 getDifference :: (Hashable a) => [a] -> [a] -> Set.HashSet a
 getDifference = Set.difference `on` Set.fromList

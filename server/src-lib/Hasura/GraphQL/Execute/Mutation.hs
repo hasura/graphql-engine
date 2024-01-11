@@ -58,12 +58,13 @@ convertMutationAction ::
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
   ActionMutation Void ->
+  HeaderPrecedence ->
   m ActionExecutionPlan
-convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action = do
+convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action headerPrecedence = do
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText
+      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText headerPrecedence
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
@@ -96,6 +97,7 @@ convertMutationSelectionSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
+  HeaderPrecedence ->
   m (ExecutionPlan, ParameterizedQueryHash, [ModelInfoPart])
 convertMutationSelectionSet
   env
@@ -112,7 +114,8 @@ convertMutationSelectionSet
   gqlUnparsed
   introspectionDisabledRoles
   reqId
-  maybeOperationName = do
+  maybeOperationName
+  headerPrecedence = do
     mutationParser <-
       onNothing (gqlMutationParser gqlContext)
         $ throw400 ValidationFailed "no mutations exist"
@@ -143,7 +146,7 @@ convertMutationSelectionSet
 
                   httpManager <- askHTTPManager
                   let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
-                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments headerPrecedence
                   pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
             RFRemote (RemoteSchemaName rName) remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
@@ -156,7 +159,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
+              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST headerPrecedence
               let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeMutation)
               pure $ (ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins, [actionsModel]) -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations

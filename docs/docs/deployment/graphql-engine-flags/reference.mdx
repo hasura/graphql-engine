@@ -235,6 +235,21 @@ that all clients reconnect to the latest metadata.
 | **Default**         | `true`                                               |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
+### Configured Header Precedence
+
+Whether the metadata configured headers are given higher precedence than client headers for
+[Actions](actions/action-handlers.mdx/#add-a-header-to-your-action) and
+[postgres input validations](schema/postgres/input-validations.mdx/#request).
+
+|                     |                                               |
+| ------------------- | --------------------------------------------- |
+| **Flag**            | `--configured-header-precedence`              |
+| **Env var**         | `HASURA_GRAPHQL_CONFIGURED_HEADER_PRECEDENCE` |
+| **Accepted values** | Boolean                                       |
+| **Options**         | `true` or `false`                             |
+| **Default**         | `false`                                       |
+| **Supported in**    | CE, Enterprise Edition, Cloud                 |
+
 ### Connections per Read-Replica
 
 The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be
