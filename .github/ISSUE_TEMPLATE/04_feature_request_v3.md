@@ -1,7 +1,10 @@
 ---
-name: 🚀 Feature request (V3)
+name: "\U0001F680 Feature request (V3)"
 about: Suggest an idea for improving Hasura V3, request for new connectors, plugins
-labels: "k/enhancement"
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 ### Component
