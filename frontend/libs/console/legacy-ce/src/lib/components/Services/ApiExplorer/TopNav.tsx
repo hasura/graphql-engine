@@ -7,7 +7,7 @@ import { IconTooltip } from '../../../new-components/Tooltip';
 import { FaExclamationCircle, FaRegMap } from 'react-icons/fa';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { useGetSchemaRegistryNotificationColor } from '../../../features/SchemaRegistry/hooks/useGetSchemaRegistryNotificationColor';
-import { getLSItem, LS_KEYS, setLSItem } from '../../../utils';
+import { getLSItem, isCloudConsole, LS_KEYS, setLSItem } from '../../../utils';
 import {
   BreakingChangesColor,
   BreakingChangesTooltipMessage,
@@ -39,12 +39,6 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
         dataTestVal: 'rest-explorer-link',
         title: 'REST',
       },
-      {
-        key: 'schema-registry',
-        link: '/api/schema-registry',
-        dataTestVal: 'schema-registry-link',
-        title: 'Schema Registry',
-      },
     ],
     [
       {
@@ -63,6 +57,18 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
       dataTestVal: 'security-explorer-link',
       title: 'Security',
     });
+
+    if (
+      isCloudConsole(globals) &&
+      (globals.userRole === 'admin' || globals.userRole === 'owner')
+    ) {
+      sectionsData[0].push({
+        key: 'schema-registry',
+        link: '/api/schema-registry',
+        dataTestVal: 'schema-registry-link',
+        title: 'Schema Registry',
+      });
+    }
   }
 
   const isActive = (link: string) => {
