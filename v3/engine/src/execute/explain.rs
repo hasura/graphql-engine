@@ -116,7 +116,7 @@ pub fn explain_query_plan(
 fn get_execution_steps<'s>(
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
-    join_locations: JoinLocations<(RemoteJoin<'s>, JoinId)>,
+    join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_query_request: ndc_client::models::QueryRequest,
 ) -> NonEmpty<Box<types::Step>> {
     let mut sequence_steps = match process_response_as {
@@ -146,7 +146,7 @@ fn get_execution_steps<'s>(
 
 fn get_join_steps(
     _root_field_name: String,
-    join_locations: JoinLocations<(RemoteJoin<'_>, JoinId)>,
+    join_locations: JoinLocations<(RemoteJoin<'_, '_>, JoinId)>,
 ) -> Option<NonEmpty<Box<types::Step>>> {
     let mut parallel_join_steps = vec![];
     for (alias, location) in join_locations.locations {

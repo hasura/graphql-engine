@@ -99,10 +99,10 @@ pub(crate) fn model_selection_ir<'s>(
     })
 }
 
-pub(crate) fn ir_to_ndc_query<'s>(
-    ir: &ModelSelection<'s>,
+pub(crate) fn ir_to_ndc_query<'s, 'ir>(
+    ir: &'ir ModelSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     let (ndc_fields, join_locations) =
         selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
     let ndc_query = ndc::models::Query {
@@ -123,10 +123,16 @@ pub(crate) fn ir_to_ndc_query<'s>(
 }
 
 /// Convert the internal IR (`ModelSelection`) into NDC IR (`ndc::models::QueryRequest`)
-pub fn ir_to_ndc_ir<'s>(
-    ir: &ModelSelection<'s>,
+pub fn ir_to_ndc_ir<'s, 'ir>(
+    ir: &'ir ModelSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<
+    (
+        ndc::models::QueryRequest,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let mut collection_relationships = BTreeMap::new();
     selection_set::collect_relationships(&ir.selection, &mut collection_relationships)?;
     let (query, join_locations) = ir_to_ndc_query(ir, join_id_counter)?;

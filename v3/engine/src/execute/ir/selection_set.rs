@@ -16,8 +16,9 @@ use super::relationship::{
 use crate::execute::error;
 use crate::execute::global_id;
 use crate::execute::model_tracking::UsagesCounts;
+use crate::execute::query_plan::ProcessResponseAs;
 use crate::execute::remote_joins::types::{
-    JoinLocations, MonotonicCounter, RemoteJoinType, ResponseType, TargetField,
+    JoinLocations, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
 use crate::metadata::resolved;
@@ -200,13 +201,13 @@ pub(crate) fn generate_selection_set_ir<'s>(
 
 /// Convert selection set IR (`ResultSelectionSet`) into NDC fields
 #[allow(irrefutable_let_patterns)]
-pub(crate) fn process_selection_set_ir<'s>(
-    model_selection: &ResultSelectionSet<'s>,
+pub(crate) fn process_selection_set_ir<'s, 'ir>(
+    model_selection: &'ir ResultSelectionSet<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
         IndexMap<String, ndc::models::Field>,
-        JoinLocations<RemoteJoin<'s>>,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
 > {
@@ -316,7 +317,7 @@ pub(crate) fn process_selection_set_ir<'s>(
                     target_ndc_ir: ndc_ir,
                     target_data_connector: ir.data_connector,
                     join_mapping,
-                    process_response_as: ResponseType::Array { is_nullable: true },
+                    process_response_as: ProcessResponseAs::Array { is_nullable: true },
                     remote_join_type: RemoteJoinType::ToModel,
                 };
                 join_locations.locations.insert(
@@ -358,10 +359,9 @@ pub(crate) fn process_selection_set_ir<'s>(
                     target_ndc_ir: ndc_ir,
                     target_data_connector: ir.command_info.data_connector,
                     join_mapping,
-                    process_response_as: ResponseType::Command {
-                        // TODO: fix and remove clone()
-                        command_name: ir.command_info.command_name.clone(),
-                        type_container: ir.command_info.type_container.clone(),
+                    process_response_as: ProcessResponseAs::CommandResponse {
+                        command_name: &ir.command_info.command_name,
+                        type_container: &ir.command_info.type_container,
                     },
                     remote_join_type: RemoteJoinType::ToCommand,
                 };

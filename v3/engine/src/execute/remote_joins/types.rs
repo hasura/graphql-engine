@@ -1,14 +1,12 @@
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{TypeContainer, TypeName};
 use ndc_client as ndc;
 use open_dds;
 use open_dds::arguments::ArgumentName;
-use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 use std::collections::{BTreeMap, HashMap};
 
+use crate::execute::query_plan::ProcessResponseAs;
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::FieldMapping;
 use crate::utils::json_ext::ValueExt;
 
@@ -48,21 +46,9 @@ pub struct Location<T> {
     pub rest: JoinLocations<T>,
 }
 
-/// Represents how to process the remote join response.
-#[derive(Debug, Clone, PartialEq)]
-pub enum ResponseType {
-    Array {
-        is_nullable: bool,
-    },
-    Command {
-        command_name: Qualified<CommandName>,
-        type_container: TypeContainer<TypeName>,
-    },
-}
-
 /// Contains information to be captured for a join node
 #[derive(Debug, Clone, PartialEq)]
-pub struct RemoteJoin<'s> {
+pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s resolved::data_connector::DataConnector,
     /// NDC IR to execute on a data connector
@@ -71,7 +57,7 @@ pub struct RemoteJoin<'s> {
     /// add more details about the type contents
     pub join_mapping: HashMap<SourceFieldName, (SourceFieldAlias, TargetField)>,
     /// Represents how to process the join response.
-    pub process_response_as: ResponseType,
+    pub process_response_as: ProcessResponseAs<'ir>,
     /// Represents the type of the remote join
     pub remote_join_type: RemoteJoinType,
 }

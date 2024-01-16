@@ -194,10 +194,10 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
     })
 }
 
-pub fn ir_to_ndc_query<'s>(
-    ir: &CommandInfo<'s>,
+pub fn ir_to_ndc_query<'s, 'ir>(
+    ir: &'ir CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     let (ndc_fields, jl) = selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
     let query = ndc::models::Query {
         aggregates: None,
@@ -210,10 +210,16 @@ pub fn ir_to_ndc_query<'s>(
     Ok((query, jl))
 }
 
-pub fn ir_to_ndc_query_ir<'s>(
-    ir: &FunctionBasedCommand<'s>,
+pub fn ir_to_ndc_query_ir<'s, 'ir>(
+    ir: &'ir FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::QueryRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<
+    (
+        ndc::models::QueryRequest,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let mut arguments: BTreeMap<String, ndc_client::models::Argument> = ir
         .command_info
         .arguments
@@ -254,11 +260,17 @@ pub fn ir_to_ndc_query_ir<'s>(
     Ok((query_request, jl))
 }
 
-pub fn ir_to_ndc_mutation_ir<'s>(
+pub fn ir_to_ndc_mutation_ir<'s, 'ir>(
     procedure_name: &ProcedureName,
-    ir: &ProcedureBasedCommand<'s>,
+    ir: &'ir ProcedureBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::MutationRequest, JoinLocations<RemoteJoin<'s>>), error::Error> {
+) -> Result<
+    (
+        ndc::models::MutationRequest,
+        JoinLocations<RemoteJoin<'s, 'ir>>,
+    ),
+    error::Error,
+> {
     let (ndc_fields, jl) =
         selection_set::process_selection_set_ir(&ir.command_info.selection, join_id_counter)?;
     let mutation_operation = ndc::models::MutationOperation::Procedure {

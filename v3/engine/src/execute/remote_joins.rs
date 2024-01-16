@@ -71,14 +71,17 @@ join_column: state_id; join_field_alias: __state_id
 */
 
 #[async_recursion]
-pub async fn execute_join_locations(
+pub async fn execute_join_locations<'ir>(
     http_client: &reqwest::Client,
     execution_span_attribute: String,
     field_span_attribute: String,
     lhs_response: &mut Vec<ndc::models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: JoinLocations<(RemoteJoin<'async_recursion>, JoinId)>,
-) -> Result<(), error::Error> {
+    join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
+) -> Result<(), error::Error>
+where
+    'ir: 'async_recursion,
+{
     let tracer = tracing_util::global_tracer();
     for (key, location) in join_locations.locations {
         // collect the join column arguments from the LHS response, also get
@@ -126,19 +129,6 @@ pub async fn execute_join_locations(
                 )
                 .await?;
 
-            let process_response_as = match &join_node.process_response_as {
-                types::ResponseType::Array { is_nullable } => ProcessResponseAs::Array {
-                    is_nullable: *is_nullable,
-                },
-                types::ResponseType::Command {
-                    command_name,
-                    type_container,
-                } => ProcessResponseAs::CommandResponse {
-                    command_name,
-                    type_container,
-                },
-            };
-
             // if there is a `location.rest`, recursively process the tree; which
             // will modify the `target_response` with all joins down the tree
             if !location.rest.locations.is_empty() {
@@ -148,7 +138,7 @@ pub async fn execute_join_locations(
                     // TODO: is this field span correct?
                     field_span_attribute.clone(),
                     &mut target_response,
-                    &process_response_as,
+                    &join_node.process_response_as,
                     sub_tree,
                 )
                 .await?;
@@ -177,9 +167,9 @@ pub async fn execute_join_locations(
     Ok(())
 }
 
-struct CollectArgumentResult<'s> {
-    join_node: RemoteJoin<'s>,
-    sub_tree: JoinLocations<(RemoteJoin<'s>, JoinId)>,
+struct CollectArgumentResult<'s, 'ir> {
+    join_node: RemoteJoin<'s, 'ir>,
+    sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     remote_alias: String,
     replacement_tokens: ReplacementTokenRows,
 }
@@ -187,13 +177,13 @@ struct CollectArgumentResult<'s> {
 /// Given a LHS response and `Location`, extract the join values from the
 /// response and return it as the `Arguments` data structure. This also returns
 /// a structure of `ReplacementToken`s.
-fn collect_arguments<'s>(
+fn collect_arguments<'s, 'ir>(
     lhs_response: &Vec<ndc::models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     key: &str,
-    location: &Location<(RemoteJoin<'s>, JoinId)>,
+    location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
     arguments: &mut Arguments,
-) -> Result<Option<CollectArgumentResult<'s>>, error::Error> {
+) -> Result<Option<CollectArgumentResult<'s, 'ir>>, error::Error> {
     if lhs_response.is_empty() {
         return Ok(None);
     }
@@ -268,14 +258,14 @@ fn collect_arguments<'s>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn collect_argument_from_row<'s>(
+fn collect_argument_from_row<'s, 'ir>(
     row: &IndexMap<String, ndc::models::RowFieldValue>,
     key: &str,
-    location: &Location<(RemoteJoin<'s>, JoinId)>,
+    location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
     arguments: &mut Arguments,
     argument_id_counter: &mut MonotonicCounter,
-    remote_join: &mut Option<RemoteJoin<'s>>,
-    sub_tree: &mut JoinLocations<(RemoteJoin<'s>, JoinId)>,
+    remote_join: &mut Option<RemoteJoin<'s, 'ir>>,
+    sub_tree: &mut JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     replacement_token: &mut ReplacementToken,
     remote_alias: &mut String,
 ) -> Result<(), error::Error> {
@@ -436,7 +426,7 @@ fn resolve_command_response_row(
 pub fn replace_replacement_tokens(
     alias: &str,
     remote_alias: &str,
-    location: &Location<(RemoteJoin<'_>, JoinId)>,
+    location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     lhs_response: &mut [ndc::models::RowSet],
     replacement_tokens: Vec<Option<Vec<ReplacementToken>>>,
     rhs_resp: HashMap<ArgumentId, ndc::models::RowSet>,
@@ -513,7 +503,7 @@ pub fn replace_replacement_tokens(
 }
 
 fn traverse_path_and_insert_value(
-    location: &Location<(RemoteJoin<'_>, JoinId)>,
+    location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     row: &mut IndexMap<String, ndc::models::RowFieldValue>,
     remote_alias: String,
     key: String,
