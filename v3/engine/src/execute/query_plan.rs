@@ -1,3 +1,7 @@
+mod commands;
+mod model_selection;
+mod selection_set;
+
 use gql::normalized_ast;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -8,8 +12,7 @@ use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
 use super::error;
-use super::ir::commands;
-use super::ir::model_selection::{self, ModelSelection};
+use super::ir::model_selection::ModelSelection;
 use super::ir::root_field;
 use super::ndc;
 use super::process_response::process_response;
@@ -129,7 +132,7 @@ fn plan_mutation<'n, 's, 'ir>(
         root_field::MutationRootField::ProcedureBasedCommand { ir, selection_set } => {
             let mut join_id_counter = MonotonicCounter::new();
             let (ndc_ir, join_locations) =
-                commands::ir_to_ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
+                commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             NodeQueryPlan::NDCMutationExecution(NDCMutationExecution {
                 query: ndc_ir,
@@ -215,7 +218,7 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let (ndc_ir, join_locations) = commands::ir_to_ndc_query_ir(ir, &mut counter)?;
+            let (ndc_ir, join_locations) = commands::ndc_query_ir(ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {
@@ -243,7 +246,7 @@ fn generate_execution_tree<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
 ) -> Result<ExecutionTree<'s, 'ir>, error::Error> {
     let mut counter = MonotonicCounter::new();
-    let (ndc_ir, join_locations) = model_selection::ir_to_ndc_ir(ir, &mut counter)?;
+    let (ndc_ir, join_locations) = model_selection::ndc_ir(ir, &mut counter)?;
     let join_locations_with_ids = assign_with_join_ids(join_locations)?;
     Ok(ExecutionTree {
         root_node: ExecutionNode {
