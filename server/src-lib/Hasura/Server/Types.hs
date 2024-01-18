@@ -32,6 +32,7 @@ module Hasura.Server.Types
     ExtQueryReqs (..),
     MonadGetPolicies (..),
     RemoteSchemaResponsePriority (..),
+    HeaderPrecedence (..),
   )
 where
 
@@ -375,3 +376,24 @@ data RemoteSchemaResponsePriority
     RemoteSchemaResponseData
   | -- | Errors from the remote schema is sent
     RemoteSchemaResponseErrors
+
+-- | The precedence of the headers when delivering payload to the webhook for actions.
+-- Default is `ClientHeadersFirst` to preserve the old behaviour where client headers are
+-- given higher precedence than configured metadata headers.
+data HeaderPrecedence
+  = ConfiguredHeadersFirst
+  | ClientHeadersFirst
+  deriving (Eq, Show, Generic)
+
+instance FromJSON HeaderPrecedence where
+  parseJSON =
+    withBool "HeaderPrecedence"
+      $ pure
+      . \case
+        True -> ConfiguredHeadersFirst
+        False -> ClientHeadersFirst
+
+instance ToJSON HeaderPrecedence where
+  toJSON = \case
+    ConfiguredHeadersFirst -> Bool True
+    ClientHeadersFirst -> Bool False

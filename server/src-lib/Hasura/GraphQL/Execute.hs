@@ -63,7 +63,7 @@ import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
-import Hasura.Server.Types (MonadGetPolicies, ReadOnlyMode (..), RequestId (..))
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
@@ -363,6 +363,7 @@ getResolvedExecPlan ::
   Maybe G.Name ->
   RequestId ->
   Init.ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
   m (ParameterizedQueryHash, ResolvedExecutionPlan, [ModelInfoPart])
 getResolvedExecPlan
   env
@@ -378,7 +379,8 @@ getResolvedExecPlan
   queryParts -- the first step of the execution plan
   maybeOperationName
   reqId
-  responseErrorsConfig = do
+  responseErrorsConfig
+  headerPrecedence = do
     let gCtx = makeGQLContext userInfo sc queryType
         tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
 
@@ -404,6 +406,7 @@ getResolvedExecPlan
               reqId
               maybeOperationName
               responseErrorsConfig
+              headerPrecedence
           Tracing.attachMetadata [("graphql.operation.type", "query"), ("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap, modelInfoList)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" $ do
@@ -426,6 +429,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+              headerPrecedence
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan, modelInfoList)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" $ do
