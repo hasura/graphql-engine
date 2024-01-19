@@ -298,6 +298,7 @@ async fn handle_request(
                 &state.schema,
                 &session,
                 request,
+                None,
             ))
         })
         .await;

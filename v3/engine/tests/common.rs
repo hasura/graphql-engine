@@ -85,7 +85,8 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
 
         // Execute the test
 
-        let response = execute_query(&test_ctx.http_client, &schema, &session, raw_request).await;
+        let response =
+            execute_query(&test_ctx.http_client, &schema, &session, raw_request, None).await;
 
         let mut expected = test_ctx
             .mint
@@ -156,8 +157,14 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
         // Execute the test
         let mut responses = Vec::new();
         for session in sessions.iter() {
-            let response =
-                execute_query(&test_ctx.http_client, &schema, session, raw_request.clone()).await;
+            let response = execute_query(
+                &test_ctx.http_client,
+                &schema,
+                session,
+                raw_request.clone(),
+                None,
+            )
+            .await;
             responses.push(response.0);
         }
 

@@ -36,6 +36,7 @@ pub async fn execute_explain_internal(
         session,
         raw_request,
         types::RequestMode::Explain,
+        None,
     )
     .await?;
     match query_response {
