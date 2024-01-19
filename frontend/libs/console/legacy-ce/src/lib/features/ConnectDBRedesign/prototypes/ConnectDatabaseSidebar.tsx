@@ -7,11 +7,11 @@ import { Collapsible } from '../../../new-components/Collapsible';
 import { InputField, useConsoleForm } from '../../../new-components/Form';
 import { DriverInfo } from '../../DataSource';
 import { useAddAgent } from '../../ManageAgents/hooks';
-import { agentPaths } from '../components/SetupConnector/hooks/useSuperConnectorAgents';
-import { ConnectDatabaseProps } from '../ConnectDatabase';
-import dbLogos from '../graphics/db-logos';
-import { useDatabaseConnectDrivers } from '../hooks';
 import { SuperConnectorDrivers } from '../../hasura-metadata-types';
+import { ConnectDatabaseProps } from '../ConnectDatabase';
+import { agentPaths } from '../components/SetupConnector/hooks/useSuperConnectorAgents';
+import { resolveDbLogo } from '../graphics/db-logos/';
+import { useDatabaseConnectDrivers } from '../hooks';
 
 export const ConnectDatabaseSidebar = (props: ConnectDatabaseProps) => {
   const { consoleType } = props;
@@ -137,7 +137,7 @@ const ListContent = ({
             <img
               className="h-12 w-12 object-contain"
               alt={`${d.displayName} logo`}
-              src={dbLogos[d.name] ?? dbLogos.default}
+              src={resolveDbLogo(d.name)}
             />
             <div className="font-bold text-muted transition-all duration-200 group-hover:text-slate-900 flex-grow items-center flex flex-row justify-between">
               {d.displayName}
