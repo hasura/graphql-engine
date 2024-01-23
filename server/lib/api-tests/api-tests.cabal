@@ -137,6 +137,7 @@ library
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
+    Test.Databases.BigQuery.Queries.TextFunctionsSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
     Test.Databases.Postgres.ArraySpec
