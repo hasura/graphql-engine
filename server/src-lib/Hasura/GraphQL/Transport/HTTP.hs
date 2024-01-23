@@ -23,6 +23,7 @@ module Hasura.GraphQL.Transport.HTTP
     CacheStoreResponse (..),
     SessVarPred,
     filterVariablesFromQuery,
+    filterSessionVariableByName,
     runSessVarPred,
   )
 where
@@ -233,6 +234,9 @@ newtype SessVarPred = SessVarPred {unSessVarPred :: Maybe (SessionVariable -> Se
 
 keepAllSessionVariables :: SessVarPred
 keepAllSessionVariables = SessVarPred $ Just $ \_ _ -> True
+
+filterSessionVariableByName :: (SessionVariable -> Bool) -> SessVarPred
+filterSessionVariableByName f = SessVarPred $ Just $ \sv _ -> f sv
 
 runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
 runSessVarPred = filterSessionVariables . fromMaybe (\_ _ -> False) . unSessVarPred

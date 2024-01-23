@@ -96,6 +96,8 @@ library
     , x509-store
     , x509-system
     , x509-validation
+    , vector
+    , extra
 
 
   default-extensions:
@@ -151,3 +153,5 @@ library
     Net.IPv6
 
     System.Monitor.Heartbeat
+
+    Kriti.Extended
