@@ -36,6 +36,7 @@ import Data.Char
 import Data.IORef
 import Data.Time
 import Data.Typeable
+import GHC.Conc
 import GHC.Generics
 import Options.Generic
 import System.Environment
@@ -66,22 +67,24 @@ monitorHeartbeat :: HeartbeatOptions Unwrapped -> IO ()
 monitorHeartbeat HeartbeatOptions {..} = do
   mainThread <- myThreadId
   check <- heartbeatChecker hoSource
-  void $ forkIO $ while $ do
-    threadDelay (hoFrequencySeconds * 10 ^ (6 :: Int))
+  void $ forkIO $ do
+    labelMe "monitorHeartbeat"
+    while $ do
+      threadDelay (hoFrequencySeconds * 10 ^ (6 :: Int))
 
-    latestBeat <- check
-    now <- getCurrentTime
+      latestBeat <- check
+      now <- getCurrentTime
 
-    let missedBeats =
-          (now `diffUTCTime` latestBeat)
-            / secondsToNominalDiffTime (fromIntegral hoFrequencySeconds)
+      let missedBeats =
+            (now `diffUTCTime` latestBeat)
+              / secondsToNominalDiffTime (fromIntegral hoFrequencySeconds)
 
-    if (missedBeats > 2)
-      then do
-        putStrLn "Heartbeats have stopped - Exiting"
-        throwTo mainThread ExitSuccess
-        return False
-      else return True
+      if (missedBeats > 2)
+        then do
+          putStrLn "Heartbeats have stopped - Exiting"
+          throwTo mainThread ExitSuccess
+          return False
+        else return True
   where
     while body = do
       cond <- body
@@ -91,13 +94,15 @@ heartbeatChecker :: HeartbeatSource -> IO (IO UTCTime)
 heartbeatChecker StdInSource = do
   start <- getCurrentTime
   lastHeartbeat <- newIORef start
-  void $ forkIO $ forever $ do
-    hb <- getLine
-    case hb of
-      "HB" -> do
-        now <- getCurrentTime
-        writeIORef lastHeartbeat now
-      _ -> return ()
+  void $ forkIO $ do
+    labelMe "heartbeatChecker"
+    forever $ do
+      hb <- getLine
+      case hb of
+        "HB" -> do
+          now <- getCurrentTime
+          writeIORef lastHeartbeat now
+        _ -> return ()
 
   return $ readIORef lastHeartbeat
 
@@ -159,7 +164,12 @@ emitHeartbeatHandle h = do
 -- thread.
 heartbeatThread :: IO () -> Int -> IO (IO ())
 heartbeatThread emitHeartbeat frequencySeconds = do
-  threadHandle <- Async.async $ forever $ do
-    emitHeartbeat
-    threadDelay (frequencySeconds * 10 ^ (6 :: Int))
+  threadHandle <- Async.async $ do
+    labelMe "heartbeatThread"
+    forever $ do
+      emitHeartbeat
+      threadDelay (frequencySeconds * 10 ^ (6 :: Int))
   return (Async.cancel threadHandle)
+
+labelMe :: String -> IO ()
+labelMe l = myThreadId >>= flip labelThread l

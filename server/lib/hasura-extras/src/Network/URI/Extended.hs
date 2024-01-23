@@ -5,6 +5,7 @@ module Network.URI.Extended
   )
 where
 
+import Control.Monad
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Hashable

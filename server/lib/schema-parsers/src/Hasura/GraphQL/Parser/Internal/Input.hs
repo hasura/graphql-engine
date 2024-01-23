@@ -17,7 +17,7 @@ module Hasura.GraphQL.Parser.Internal.Input
   )
 where
 
-import Control.Applicative (Alternative ((<|>)), liftA2)
+import Control.Applicative (Alternative ((<|>)))
 import Control.Arrow ((>>>))
 import Control.Lens hiding (enum, index)
 import Control.Monad (join, unless, (<=<), (>=>))

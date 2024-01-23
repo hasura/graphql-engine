@@ -68,6 +68,7 @@ module Hasura.Prelude
     findWithIndex,
     alphabet,
     alphaNumerics,
+    labelMe,
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
@@ -80,8 +81,11 @@ import Control.Applicative as M (Alternative (..), liftA2)
 import Control.Arrow as M (first, second, (&&&), (***), (<<<), (>>>))
 import Control.DeepSeq as M (NFData, deepseq, force)
 import Control.Lens as M (ix, (%~))
+import Control.Monad as M
 import Control.Monad.Base as M
 import Control.Monad.Except as M
+import Control.Monad.Fix as M
+import Control.Monad.IO.Class as M
 import Control.Monad.Identity as M
 import Control.Monad.Reader as M
 import Control.Monad.State.Strict as M
@@ -163,6 +167,7 @@ import Data.Void as M (Void, absurd)
 import Data.Word as M (Word64)
 import Debug.Trace qualified as Debug (trace, traceM)
 import GHC.Clock qualified as Clock
+import GHC.Conc
 import GHC.Generics as M (Generic)
 import System.IO.Unsafe (unsafePerformIO) -- for custom trace functions
 import Text.Pretty.Simple qualified as PS
@@ -430,3 +435,7 @@ alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
 {-# NOINLINE alphaNumerics #-}
 alphaNumerics :: String
 alphaNumerics = alphabet ++ "0123456789"
+
+-- | 'labelThread' on this thread
+labelMe :: (MonadIO m) => String -> m ()
+labelMe l = liftIO (myThreadId >>= flip labelThread l)
