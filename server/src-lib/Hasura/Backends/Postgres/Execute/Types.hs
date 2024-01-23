@@ -27,7 +27,7 @@ module Hasura.Backends.Postgres.Execute.Types
     pgResolveConnectionTemplate,
     resolvePostgresConnectionTemplate,
     sourceConfigNumReadReplicas,
-    sourceConfigConnectonTemplateEnabled,
+    sourceConfigConnectonTemplate,
     getPGColValues,
   )
 where
@@ -59,6 +59,7 @@ import Hasura.RQL.Types.Session (SessionVariables (..))
 import Hasura.SQL.Types (ExtensionsSchema, toSQL)
 import Hasura.Session (UserInfo (_uiRole, _uiSession), getSessionVariableValue, maybeRoleFromSessionVariables)
 import Kriti.Error qualified as Kriti
+import Kriti.Parser qualified as Kriti
 import Network.HTTP.Types qualified as HTTP
 
 -- See Note [Existentially Quantified Types]
@@ -200,13 +201,13 @@ data ConnectionTemplateConfig
   = -- | Connection templates are disabled for Hasura CE
     ConnTemplate_NotApplicable
   | ConnTemplate_NotConfigured
-  | ConnTemplate_Resolver ConnectionTemplateResolver
+  | ConnTemplate_Resolver Kriti.ValueExt ConnectionTemplateResolver
 
 connectionTemplateConfigResolver :: ConnectionTemplateConfig -> Maybe ConnectionTemplateResolver
 connectionTemplateConfigResolver = \case
   ConnTemplate_NotApplicable -> Nothing
   ConnTemplate_NotConfigured -> Nothing
-  ConnTemplate_Resolver resolver -> Just resolver
+  ConnTemplate_Resolver _template resolver -> Just resolver
 
 -- | A hook to resolve connection template
 newtype ConnectionTemplateResolver = ConnectionTemplateResolver
@@ -298,7 +299,7 @@ pgResolveConnectionTemplate sourceConfig (RequestContext (RequestContextHeaders 
           ConnTemplate_NotApplicable -> connectionTemplateNotApplicableError
           ConnTemplate_NotConfigured ->
             throw400 TemplateResolutionFailed "Connection template not defined for the source"
-          ConnTemplate_Resolver resolver ->
+          ConnTemplate_Resolver _template resolver ->
             pure resolver
       Just connectionTemplate ->
         case _pscConnectionTemplateConfig sourceConfig of
@@ -339,12 +340,12 @@ sourceConfigNumReadReplicas :: PGSourceConfig -> Int
 sourceConfigNumReadReplicas =
   maybe 0 List.NonEmpty.length . _pscReadReplicaConnInfos
 
-sourceConfigConnectonTemplateEnabled :: PGSourceConfig -> Bool
-sourceConfigConnectonTemplateEnabled pgSourceConfig =
+sourceConfigConnectonTemplate :: PGSourceConfig -> Maybe Kriti.ValueExt
+sourceConfigConnectonTemplate pgSourceConfig =
   case _pscConnectionTemplateConfig pgSourceConfig of
-    ConnTemplate_NotApplicable -> False
-    ConnTemplate_NotConfigured -> False
-    ConnTemplate_Resolver _ -> True
+    ConnTemplate_NotApplicable -> Nothing
+    ConnTemplate_NotConfigured -> Nothing
+    ConnTemplate_Resolver template _ -> Just template
 
 getPGColValues ::
   (MonadIO m, MonadError QErr m) =>
