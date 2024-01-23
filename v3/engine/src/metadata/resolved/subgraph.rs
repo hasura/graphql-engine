@@ -37,6 +37,21 @@ pub enum QualifiedTypeName {
     Custom(Qualified<CustomTypeName>),
 }
 
+pub fn serialize_optional_qualified_btreemap<T, V, S>(
+    optional_map: &Option<BTreeMap<Qualified<T>, V>>,
+    s: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+    V: Serialize,
+    T: Display + Serialize,
+{
+    match optional_map {
+        Some(map) => serialize_qualified_btreemap(map, s),
+        None => s.serialize_none(),
+    }
+}
+
 pub fn serialize_qualified_btreemap<T, V, S>(
     map: &BTreeMap<Qualified<T>, V>,
     s: S,

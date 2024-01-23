@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use ndc_client as gdc;
@@ -5,6 +7,7 @@ use ndc_client as gdc;
 use open_dds::{permissions::ValueExpression, types::InbuiltType};
 
 use crate::execute::error::{Error, InternalDeveloperError, InternalEngineError, InternalError};
+use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
 
 use crate::metadata::resolved::subgraph::{
@@ -12,6 +15,9 @@ use crate::metadata::resolved::subgraph::{
 };
 use crate::schema::types;
 use crate::schema::GDS;
+
+use super::relationship::LocalModelRelationshipInfo;
+use super::selection_set::NDCRelationshipName;
 
 /// Fetch filter expression from the namespace annotation
 /// of the field call. If the filter predicate namespace annotation
@@ -37,9 +43,12 @@ pub(crate) fn get_select_filter_predicate<'s>(
         )))
 }
 
-pub(crate) fn process_model_predicate(
-    model_predicate: &resolved::model::ModelPredicate,
+pub(crate) fn process_model_predicate<'s>(
+    model_predicate: &'s resolved::model::ModelPredicate,
     session_variables: &SessionVariables,
+    mut relationship_paths: Vec<NDCRelationshipName>,
+    relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<gdc::models::Expression, Error> {
     match model_predicate {
         resolved::model::ModelPredicate::UnaryFieldComparison {
@@ -49,6 +58,7 @@ pub(crate) fn process_model_predicate(
         } => Ok(make_permission_unary_boolean_expression(
             ndc_column.clone(),
             operator,
+            &relationship_paths,
         )?),
         resolved::model::ModelPredicate::BinaryFieldComparison {
             field: _,
@@ -62,9 +72,16 @@ pub(crate) fn process_model_predicate(
             operator,
             value,
             session_variables,
+            &relationship_paths,
         )?),
         resolved::model::ModelPredicate::Not(predicate) => {
-            let expr = process_model_predicate(predicate, session_variables)?;
+            let expr = process_model_predicate(
+                predicate,
+                session_variables,
+                relationship_paths,
+                relationships,
+                usage_counts,
+            )?;
             Ok(gdc::models::Expression::Not {
                 expression: Box::new(expr),
             })
@@ -72,27 +89,68 @@ pub(crate) fn process_model_predicate(
         resolved::model::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables))
+                .map(|p| {
+                    process_model_predicate(
+                        p,
+                        session_variables,
+                        relationship_paths.clone(),
+                        relationships,
+                        usage_counts,
+                    )
+                })
                 .collect::<Result<Vec<_>, Error>>()?;
             Ok(gdc::models::Expression::And { expressions: exprs })
         }
         resolved::model::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| process_model_predicate(p, session_variables))
+                .map(|p| {
+                    process_model_predicate(
+                        p,
+                        session_variables,
+                        relationship_paths.clone(),
+                        relationships,
+                        usage_counts,
+                    )
+                })
                 .collect::<Result<Vec<_>, Error>>()?;
             Ok(gdc::models::Expression::Or { expressions: exprs })
         }
-        // TODO: implement this
-        // TODO: naveen: When we can use models in predicates, make sure to
-        // include those models in the 'models_used' field of the IR's. This is
-        // for tracking the models used in query.
         resolved::model::ModelPredicate::Relationship {
-            name: _,
-            predicate: _,
-        } => Err(InternalEngineError::InternalGeneric {
-            description: "'relationship' model predicate is not supported yet.".to_string(),
-        })?,
+            relationship_info,
+            predicate,
+        } => {
+            let relationship_name = (NDCRelationshipName::new(
+                &relationship_info.source_type,
+                &relationship_info.relationship_name,
+            ))?;
+
+            relationship_paths.push(relationship_name.clone());
+            relationships.insert(
+                relationship_name.clone(),
+                LocalModelRelationshipInfo {
+                    relationship_name: &relationship_info.relationship_name,
+                    relationship_type: &relationship_info.relationship_type,
+                    source_type: &relationship_info.source_type,
+                    source_data_connector: &relationship_info.source_data_connector,
+                    source_type_mappings: &relationship_info.source_type_mappings,
+                    target_source: &relationship_info.target_source,
+                    target_type: &relationship_info.target_type,
+                    mappings: &relationship_info.mappings,
+                },
+            );
+
+            // Add the target model being used in the usage counts
+            count_model(relationship_info.target_model_name.clone(), usage_counts);
+
+            process_model_predicate(
+                predicate,
+                session_variables,
+                relationship_paths,
+                relationships,
+                usage_counts,
+            )
+        }
     }
 }
 
@@ -102,13 +160,15 @@ fn make_permission_binary_boolean_expression(
     operator: &ndc_client::models::BinaryComparisonOperator,
     value_expression: &ValueExpression,
     session_variables: &SessionVariables,
+    relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<gdc::models::Expression, Error> {
+    let path_elements = super::filter::build_path_elements(relationship_paths);
     let ndc_expression_value =
         make_value_from_value_expression(value_expression, argument_type, session_variables)?;
     Ok(gdc::models::Expression::BinaryComparisonOperator {
         column: gdc::models::ComparisonTarget::Column {
             name: ndc_column,
-            path: vec![],
+            path: path_elements,
         },
         operator: operator.clone(),
         value: ndc_expression_value,
@@ -118,11 +178,13 @@ fn make_permission_binary_boolean_expression(
 fn make_permission_unary_boolean_expression(
     ndc_column: String,
     operator: &ndc_client::models::UnaryComparisonOperator,
+    relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<gdc::models::Expression, Error> {
+    let path_elements = super::filter::build_path_elements(relationship_paths);
     Ok(gdc::models::Expression::UnaryComparisonOperator {
         column: gdc::models::ComparisonTarget::Column {
             name: ndc_column,
-            path: vec![],
+            path: path_elements,
         },
         operator: *operator,
     })

@@ -11,16 +11,22 @@ use open_dds::{
 use ndc_client as ndc;
 use serde::Serialize;
 
-use super::order_by::build_ndc_order_by;
 use super::permissions;
 use super::selection_set::FieldSelection;
 use super::{
     commands::generate_function_based_command, filter::resolve_filter_expression,
-    model_selection::model_selection_ir,
+    filter::ResolvedFilterExpression, model_selection::model_selection_ir,
+};
+use super::{
+    order_by::{build_ndc_order_by, ResolvedOrderBy},
+    selection_set::NDCRelationshipName,
 };
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved::subgraph::serialize_qualified_btreemap;
+use crate::metadata::resolved::{
+    relationship::{relationship_execution_category, RelationshipExecutionCategory},
+    subgraph::serialize_qualified_btreemap,
+};
 use crate::schema::types::output_type::relationship::{
     ModelRelationshipAnnotation, ModelTargetSource,
 };
@@ -40,11 +46,15 @@ use crate::{
 
 #[derive(Debug, Serialize)]
 pub(crate) struct LocalModelRelationshipInfo<'s> {
-    pub annotation: &'s ModelRelationshipAnnotation,
+    pub relationship_name: &'s RelationshipName,
+    pub relationship_type: &'s RelationshipType,
+    pub source_type: &'s Qualified<CustomTypeName>,
     pub source_data_connector: &'s resolved::data_connector::DataConnector,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     pub target_source: &'s ModelTargetSource,
+    pub target_type: &'s Qualified<CustomTypeName>,
+    pub mappings: &'s Vec<resolved::relationship::RelationshipModelMapping>,
 }
 
 #[derive(Debug, Serialize)]
@@ -79,17 +89,22 @@ pub(crate) fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
 ) -> Result<ndc::models::Relationship, error::Error> {
     let &LocalModelRelationshipInfo {
-        annotation,
+        relationship_name,
+        relationship_type,
+        source_type,
         source_data_connector,
         source_type_mappings,
         target_source,
+
+        target_type,
+        mappings,
     } = relationship_info;
 
     let mut column_mapping = BTreeMap::new();
     for resolved::relationship::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: target_field_path,
-    } in annotation.mappings.iter()
+    } in mappings.iter()
     {
         if !matches!(
             relationship_execution_category(
@@ -103,14 +118,14 @@ pub(crate) fn process_model_relationship_definition(
         } else {
             let source_column = get_field_mapping_of_field_name(
                 source_type_mappings,
-                &annotation.source_type,
-                &annotation.relationship_name,
+                source_type,
+                relationship_name,
                 &source_field_path.field_name,
             )?;
             let target_column = get_field_mapping_of_field_name(
                 &target_source.model.type_mappings,
-                &annotation.target_type,
-                &annotation.relationship_name,
+                target_type,
+                relationship_name,
                 &target_field_path.field_name,
             )?;
 
@@ -120,7 +135,7 @@ pub(crate) fn process_model_relationship_definition(
             {
                 Err(error::InternalEngineError::MappingExistsInRelationship {
                     source_column: source_field_path.field_name.clone(),
-                    relationship_name: annotation.relationship_name.clone(),
+                    relationship_name: relationship_name.clone(),
                 })?
             }
         }
@@ -128,7 +143,7 @@ pub(crate) fn process_model_relationship_definition(
     let ndc_relationship = ndc_client::models::Relationship {
         column_mapping,
         relationship_type: {
-            match annotation.relationship_type {
+            match relationship_type {
                 RelationshipType::Object => ndc_client::models::RelationshipType::Object,
                 RelationshipType::Array => ndc_client::models::RelationshipType::Array,
             }
@@ -197,32 +212,6 @@ pub(crate) fn process_command_relationship_definition(
     Ok(ndc_relationship)
 }
 
-enum RelationshipExecutionCategory {
-    // Push down relationship definition to the data connector
-    Local,
-    // Use foreach in the data connector to fetch related rows for multiple objects in a single request
-    RemoteForEach,
-}
-
-#[allow(clippy::match_single_binding)]
-fn relationship_execution_category(
-    source_connector: &resolved::data_connector::DataConnector,
-    target_connector: &resolved::data_connector::DataConnector,
-    relationship_capabilities: &resolved::relationship::RelationshipCapabilities,
-) -> RelationshipExecutionCategory {
-    // It's a local relationship if the source and target connectors are the same and
-    // the connector supports relationships.
-    if target_connector.name == source_connector.name && relationship_capabilities.relationships {
-        RelationshipExecutionCategory::Local
-    } else {
-        match relationship_capabilities.foreach {
-            // TODO: When we support naive relationships for connectors not implementing foreach,
-            // add another match arm / return enum variant
-            () => RelationshipExecutionCategory::RemoteForEach,
-        }
-    }
-}
-
 pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
@@ -237,7 +226,10 @@ pub(crate) fn generate_model_relationship_ir<'s>(
 
     let mut limit = None;
     let mut offset = None;
-    let mut filter_clause = Vec::new();
+    let mut filter_clause = ResolvedFilterExpression {
+        expressions: Vec::new(),
+        relationships: BTreeMap::new(),
+    };
     let mut order_by = None;
 
     for argument in field_call.arguments.values() {
@@ -252,10 +244,13 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                             offset = Some(argument.value.as_int_u32()?)
                         }
                         ModelInputAnnotation::ModelFilterExpression => {
-                            filter_clause = resolve_filter_expression(argument.value.as_object()?)?
+                            filter_clause = resolve_filter_expression(
+                                argument.value.as_object()?,
+                                usage_counts,
+                            )?
                         }
                         ModelInputAnnotation::ModelOrderByExpression => {
-                            order_by = Some(build_ndc_order_by(argument)?)
+                            order_by = Some(build_ndc_order_by(argument, usage_counts)?)
                         }
                         _ => {
                             return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -278,7 +273,6 @@ pub(crate) fn generate_model_relationship_ir<'s>(
             }
         }
     }
-
     let target_source =
         annotation
             .target_source
@@ -385,10 +379,10 @@ pub(crate) fn build_local_model_relationship<'s>(
     data_connector: &'s resolved::data_connector::DataConnector,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     target_source: &'s ModelTargetSource,
-    filter_clause: Vec<ndc::models::Expression>,
+    filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
     offset: Option<u32>,
-    order_by: Option<ndc::models::OrderBy>,
+    order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -406,24 +400,19 @@ pub(crate) fn build_local_model_relationship<'s>(
         usage_counts,
     )?;
     let rel_info = LocalModelRelationshipInfo {
-        annotation,
+        relationship_name: &annotation.relationship_name,
+        relationship_type: &annotation.relationship_type,
+        source_type: &annotation.source_type,
         source_data_connector: data_connector,
         source_type_mappings: type_mappings,
         target_source,
+        target_type: &annotation.target_type,
+        mappings: &annotation.mappings,
     };
-
-    // Relationship names needs to be unique across the IR. This is so that, the
-    // NDC can use these names to figure out what joins to use.
-    // A single "source type" can have only one relationship with a given name,
-    // hence the relationship name in the IR is a tuple between the source type
-    // and the relationship name.
-    // Relationship name = (source_type, relationship_name)
-    let relationship_name =
-        serde_json::to_string(&(&annotation.source_type, &annotation.relationship_name))?;
 
     Ok(FieldSelection::ModelRelationshipLocal {
         query: relationships_ir,
-        name: relationship_name,
+        name: NDCRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
         relationship_info: rel_info,
     })
 }
@@ -461,12 +450,10 @@ pub(crate) fn build_local_command_relationship<'s>(
     // hence the relationship name in the IR is a tuple between the source type
     // and the relationship name.
     // Relationship name = (source_type, relationship_name)
-    let relationship_name =
-        serde_json::to_string(&(&annotation.source_type, &annotation.relationship_name))?;
 
     Ok(FieldSelection::CommandRelationshipLocal {
         ir: relationships_ir,
-        name: relationship_name,
+        name: NDCRelationshipName::new(&annotation.source_type, &annotation.relationship_name)?,
         relationship_info: rel_info,
     })
 }
@@ -478,10 +465,10 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     annotation: &'s ModelRelationshipAnnotation,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     target_source: &'s ModelTargetSource,
-    filter_clause: Vec<ndc::models::Expression>,
+    filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
     offset: Option<u32>,
-    order_by: Option<ndc::models::OrderBy>,
+    order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -535,7 +522,10 @@ pub(crate) fn build_remote_relationship<'n, 's>(
                 name: target_value_variable,
             },
         };
-        remote_relationships_ir.filter_clause.push(comparison_exp);
+        remote_relationships_ir
+            .filter_clause
+            .expressions
+            .push(comparison_exp);
     }
     let rel_info = RemoteModelRelationshipInfo {
         annotation,

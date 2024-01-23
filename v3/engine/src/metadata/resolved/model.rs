@@ -13,10 +13,13 @@ use crate::metadata::resolved::types::{mk_name, FieldDefinition, TypeMapping};
 use crate::metadata::resolved::types::{
     resolve_type_mappings, ScalarTypeInfo, TypeMappingToResolve, TypeRepresentation,
 };
+use crate::schema::types::output_type::relationship::{
+    ModelTargetSource, PredicateRelationshipAnnotation,
+};
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
+use lang_graphql::ast::common::{self as ast};
 use ndc_client as ndc;
-use open_dds::permissions::NullableModelPredicate;
+use open_dds::permissions::{NullableModelPredicate, RelationshipPredicate};
 use open_dds::{
     arguments::ArgumentName,
     data_connector::DataConnectorName,
@@ -25,12 +28,14 @@ use open_dds::{
         OperatorName, OrderableField,
     },
     permissions::{self, ModelPermissionsV1, Role, ValueExpression},
-    relationships::RelationshipName,
     types::{CustomTypeName, FieldName, InbuiltType},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::iter;
+
+use super::relationship::RelationshipTarget;
+use super::types::ObjectTypeRepresentation;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct SelectUniqueGraphQlDefinition {
@@ -118,10 +123,9 @@ pub enum ModelPredicate {
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
     },
-    // TODO: Remote relationships are disallowed for now
     Relationship {
-        name: RelationshipName,
-        predicate: Option<Box<ModelPredicate>>,
+        relationship_info: PredicateRelationshipAnnotation,
+        predicate: Box<ModelPredicate>,
     },
 
     And(Vec<ModelPredicate>),
@@ -215,19 +219,11 @@ pub fn resolve_model(
     let qualified_object_type_name =
         Qualified::new(subgraph.to_string(), model.object_type.to_owned());
     let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
-    let object_type_representation = match types.get(&qualified_object_type_name) {
-        Some(TypeRepresentation::Object(object_type_representation)) => {
-            Ok(object_type_representation)
-        }
-        Some(type_rep) => Err(Error::InvalidTypeRepresentation {
-            model_name: qualified_model_name.clone(),
-            type_representation: type_rep.clone(),
-        }),
-        None => Err(Error::UnknownModelDataType {
-            model_name: qualified_model_name.clone(),
-            data_type: model.object_type.clone(),
-        }),
-    }?;
+    let object_type_representation = get_model_object_type_representation(
+        types,
+        &qualified_object_type_name,
+        &qualified_model_name,
+    )?;
     if model.global_id_source {
         // Check if there are any global fields present in the related
         // object type, if the model is marked as a global source.
@@ -406,6 +402,8 @@ fn resolve_model_predicate(
     subgraph: &str,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
     fields: &IndexMap<FieldName, FieldDefinition>,
+    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    models: &IndexMap<Qualified<ModelName>, Model>,
     // type_representation: &TypeRepresentation,
 ) -> Result<ModelPredicate, Error> {
     match model_predicate {
@@ -491,29 +489,120 @@ fn resolve_model_predicate(
                 })
             }
         }
-        permissions::ModelPredicate::Relationship(_) => {
-            Err(Error::UnsupportedFeature {
-                message: "'relationship' model predicate is not supported yet.".into(),
-            })
-            /* TODO: uncomment when we support this
+        permissions::ModelPredicate::Relationship(RelationshipPredicate { name, predicate }) => {
             if let Some(nested_predicate) = predicate {
-                let resolved_predicate =
-                    resolve_model_predicate(nested_predicate, model_name, type_representation)?;
-                Ok(ModelPredicate::Relationship {
-                    name: name.clone(),
-                    predicate: Some(Box::new(resolved_predicate)),
-                })
+                let object_type_representation =
+                    get_model_object_type_representation(types, &model.data_type, &model.name)?;
+                let relationship_field_name = mk_name(&name.0)?;
+                let relationship = &object_type_representation
+                    .relationships
+                    .get(&relationship_field_name)
+                    .ok_or_else(|| Error::UnknownRelationshipInSelectPermissionsPredicate {
+                        relationship_name: name.clone(),
+                        model_name: model.name.clone(),
+                        type_name: model.data_type.clone(),
+                    })?;
+
+                match &relationship.target {
+                    RelationshipTarget::Command { .. } => Err(Error::UnsupportedFeature {
+                        message: "Predicate cannot be built using command relationships"
+                            .to_string(),
+                    }),
+                    RelationshipTarget::Model {
+                        model_name,
+                        relationship_type,
+                        target_typename,
+                        mappings,
+                    } => {
+                        let target_model = models.get(model_name).ok_or_else(|| {
+                            Error::UnknownModelUsedInRelationshipSelectPermissionsPredicate {
+                                model_name: model.name.clone(),
+                                target_model_name: model_name.clone(),
+                                relationship_name: name.clone(),
+                            }
+                        })?;
+
+                        // predicates with relationships is currently only supported for local relationships
+                        if let (Some(target_model_source), Some(model_source)) =
+                            (&target_model.source, &model.source)
+                        {
+                            if target_model_source.data_connector.name
+                                == model_source.data_connector.name
+                            {
+                                let target_source = ModelTargetSource::from_model_source(
+                                    target_model_source,
+                                    relationship,
+                                )
+                                .map_err(|_| Error::NoRelationshipCapabilitiesDefined {
+                                    relationship_name: relationship.name.clone(),
+                                    type_name: model.data_type.clone(),
+                                    data_connector_name: target_model_source
+                                        .data_connector
+                                        .name
+                                        .clone(),
+                                })?;
+
+                                let annotation = PredicateRelationshipAnnotation {
+                                    source_type: relationship.source.clone(),
+                                    relationship_name: relationship.name.clone(),
+                                    target_model_name: model_name.clone(),
+                                    target_source: target_source.clone(),
+                                    target_type: target_typename.clone(),
+                                    relationship_type: relationship_type.clone(),
+                                    mappings: mappings.clone(),
+                                    source_data_connector: model_source.data_connector.clone(),
+
+                                    source_type_mappings: model_source.type_mappings.clone(),
+                                };
+
+                                let target_model_predicate = resolve_model_predicate(
+                                    nested_predicate,
+                                    target_model,
+                                    // local relationships exists in the same subgraph as the source model
+                                    subgraph,
+                                    data_connectors,
+                                    &target_model.type_fields,
+                                    types,
+                                    models,
+                                )?;
+
+                                Ok(ModelPredicate::Relationship {
+                                    relationship_info: annotation,
+                                    predicate: Box::new(target_model_predicate),
+                                })
+                            } else {
+                                Err(Error::UnsupportedFeature {
+                                    message: "Predicate cannot be built using remote relationships"
+                                        .to_string(),
+                                })
+                            }
+                        } else {
+                            Err(
+                                Error::ModelAndTargetSourceRequiredForRelationshipPredicate {
+                                    source_model_name: model.name.clone(),
+                                    target_model_name: target_model.name.clone(),
+                                },
+                            )
+                        }
+                    }
+                }
             } else {
-                Ok(ModelPredicate::Relationship {
-                    name: name.clone(),
-                    predicate: None,
+                Err(Error::NoPredicateDefinedForRelationshipPredicate {
+                    model_name: model.name.clone(),
+                    relationship_name: name.clone(),
                 })
             }
-            */
         }
         permissions::ModelPredicate::Not(predicate) => {
-            let resolved_predicate =
-                resolve_model_predicate(predicate, model, subgraph, data_connectors, fields)?;
+            let resolved_predicate = resolve_model_predicate(
+                predicate,
+                model,
+                subgraph,
+                data_connectors,
+                fields,
+                types,
+                models,
+            )?;
             Ok(ModelPredicate::Not(Box::new(resolved_predicate)))
         }
         permissions::ModelPredicate::And(predicates) => {
@@ -525,6 +614,8 @@ fn resolve_model_predicate(
                     subgraph,
                     data_connectors,
                     fields,
+                    types,
+                    models,
                 )?);
             }
             Ok(ModelPredicate::And(resolved_predicates))
@@ -538,6 +629,8 @@ fn resolve_model_predicate(
                     subgraph,
                     data_connectors,
                     fields,
+                    types,
+                    models,
                 )?);
             }
             Ok(ModelPredicate::Or(resolved_predicates))
@@ -550,6 +643,8 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    models: &IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for model_permission in &model_permissions.permissions {
@@ -561,6 +656,8 @@ pub fn resolve_model_select_permissions(
                     subgraph,
                     data_connectors,
                     &model.type_fields,
+                    types,
+                    models,
                 )
                 .map(FilterPermission::Filter)?,
                 NullableModelPredicate::Null(()) => FilterPermission::AllowAll,
@@ -928,4 +1025,28 @@ pub fn resolve_model_source(
 
     ndc_validation::validate_ndc(&model.name, model, data_connector_context.schema)?;
     Ok(())
+}
+
+/// Gets the `ObjectTypeRepresentation` of the type identified with the
+/// `data_type`, it will throw an error if the type is not found to be an object
+/// or if the model has an unknown data type.
+pub(crate) fn get_model_object_type_representation<'s>(
+    types: &'s HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    data_type: &Qualified<CustomTypeName>,
+    model_name: &Qualified<ModelName>,
+) -> Result<&'s ObjectTypeRepresentation, crate::metadata::resolved::error::Error> {
+    let object_type_representation = match types.get(data_type) {
+        Some(TypeRepresentation::Object(object_type_representation)) => {
+            Ok(object_type_representation)
+        }
+        Some(type_rep) => Err(Error::InvalidTypeRepresentation {
+            model_name: model_name.clone(),
+            type_representation: type_rep.clone(),
+        }),
+        None => Err(Error::UnknownModelDataType {
+            model_name: model_name.clone(),
+            data_type: data_type.clone(),
+        }),
+    }?;
+    Ok(object_type_representation)
 }

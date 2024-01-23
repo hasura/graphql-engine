@@ -1,0 +1,130 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "Tracks",
+                      "predicate": {
+                        "and": [
+                          {
+                            "relationship": {
+                              "name": "Album",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "AlbumId",
+                                  "operator": "_eq",
+                                  "value": {
+                                    "sessionVariable": "x-hasura-user-id"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "relationship": {
+                              "name": "Genre",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "GenreId",
+                                  "operator": "_eq",
+                                  "value": {
+                                    "sessionVariable": "x-hasura-user-id"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Artists",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Genres",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        }
+      ]
+    }
+  ]
+}

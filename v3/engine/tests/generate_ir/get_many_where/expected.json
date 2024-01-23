@@ -92,24 +92,27 @@
             },
             "collection": "articles",
             "arguments": {},
-            "filter_clause": [
-              {
-                "type": "binary_comparison_operator",
-                "column": {
-                  "type": "column",
-                  "name": "title",
-                  "path": []
-                },
-                "operator": {
-                  "type": "other",
-                  "name": "_like"
-                },
-                "value": {
-                  "type": "scalar",
-                  "value": "random"
+            "filter_clause": {
+              "expressions": [
+                {
+                  "type": "binary_comparison_operator",
+                  "column": {
+                    "type": "column",
+                    "name": "title",
+                    "path": []
+                  },
+                  "operator": {
+                    "type": "other",
+                    "name": "_like"
+                  },
+                  "value": {
+                    "type": "scalar",
+                    "value": "random"
+                  }
                 }
-              }
-            ],
+              ],
+              "relationships": {}
+            },
             "limit": 1,
             "offset": null,
             "order_by": null,
@@ -246,20 +249,23 @@
             },
             "collection": "authors",
             "arguments": {},
-            "filter_clause": [
-              {
-                "type": "not",
-                "expression": {
-                  "type": "unary_comparison_operator",
-                  "column": {
-                    "type": "column",
-                    "name": "first_name",
-                    "path": []
-                  },
-                  "operator": "is_null"
+            "filter_clause": {
+              "expressions": [
+                {
+                  "type": "not",
+                  "expression": {
+                    "type": "unary_comparison_operator",
+                    "column": {
+                      "type": "column",
+                      "name": "first_name",
+                      "path": []
+                    },
+                    "operator": "is_null"
+                  }
                 }
-              }
-            ],
+              ],
+              "relationships": {}
+            },
             "limit": null,
             "offset": null,
             "order_by": null,

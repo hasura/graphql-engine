@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 use super::error;
 use crate::execute::ir::arguments;
 use crate::execute::ir::filter;
+use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::ir::order_by::build_ndc_order_by;
 use crate::execute::ir::permissions;
@@ -49,9 +50,16 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
 ) -> Result<ModelSelectMany<'n, 's>, error::Error> {
     let mut limit = None;
     let mut offset = None;
-    let mut filter_clause = Vec::new();
+    let mut filter_clause = ResolvedFilterExpression {
+        expressions: Vec::new(),
+        relationships: BTreeMap::new(),
+    };
     let mut order_by = None;
     let mut model_arguments = BTreeMap::new();
+
+    // Add the name of the root model
+    let mut usage_counts = UsagesCounts::new();
+    count_model(model_name.clone(), &mut usage_counts);
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
@@ -65,7 +73,10 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                     offset = Some(argument.value.as_int_u32()?)
                 }
                 ModelInputAnnotation::ModelFilterExpression => {
-                    filter_clause = filter::resolve_filter_expression(argument.value.as_object()?)?
+                    filter_clause = filter::resolve_filter_expression(
+                        argument.value.as_object()?,
+                        &mut usage_counts,
+                    )?;
                 }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
@@ -83,7 +94,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                     })?,
                 },
                 ModelInputAnnotation::ModelOrderByExpression => {
-                    order_by = Some(build_ndc_order_by(argument)?)
+                    order_by = Some(build_ndc_order_by(argument, &mut usage_counts)?)
                 }
                 _ => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -99,10 +110,6 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
             }
         }
     }
-
-    // Add the name of the root model
-    let mut usage_counts = UsagesCounts::new();
-    count_model(model_name.clone(), &mut usage_counts);
 
     let model_selection = model_selection::model_selection_ir(
         &field.selection_set,
