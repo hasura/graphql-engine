@@ -1,6 +1,6 @@
 use goldenfile::{differs::text_diff, Mint};
 use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
-use lang_graphql::http::RawRequest;
+use lang_graphql::{http::RawRequest, schema::Schema};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
 use std::{
@@ -133,8 +133,20 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
         let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
-        // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema).unwrap();
+        // Verify successful serialization and deserialization of the schema.
+        // Hasura V3 relies on the serialized schema for handling requests.
+        // Therefore, it is crucial to ensure the functionality of both
+        // deserialization and serialization.
+        // Testing this within this function allows us to detect errors for any
+        // future metadata tests that may be added.
+        let serialized_metadata =
+            serde_json::to_string(&schema).expect("Failed to serialize schema");
+        let deserialized_metadata: Schema<GDS> =
+            serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
+        assert_eq!(
+            schema, deserialized_metadata,
+            "initial built metadata does not match deserialized metadata"
+        );
 
         let query = fs::read_to_string(request_path).unwrap();
 
