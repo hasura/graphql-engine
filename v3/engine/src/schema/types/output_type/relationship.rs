@@ -12,7 +12,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     metadata::resolved::{
         self,
-        subgraph::{serialize_qualified_btreemap, Qualified, QualifiedTypeReference},
+        subgraph::{
+            deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
+            QualifiedTypeReference,
+        },
     },
     schema::{self, types::CommandSourceDetail},
 };
@@ -34,7 +37,10 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
     pub source_data_connector: resolved::data_connector::DataConnector,
-    #[serde(serialize_with = "serialize_qualified_btreemap")]
+    #[serde(
+        serialize_with = "serialize_qualified_btreemap",
+        deserialize_with = "deserialize_qualified_btreemap"
+    )]
     pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
@@ -48,7 +54,10 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
     pub source_data_connector: resolved::data_connector::DataConnector,
-    #[serde(serialize_with = "serialize_qualified_btreemap")]
+    #[serde(
+        serialize_with = "serialize_qualified_btreemap",
+        deserialize_with = "deserialize_qualified_btreemap"
+    )]
     pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
@@ -62,7 +71,10 @@ pub struct PredicateRelationshipAnnotation {
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
     pub source_data_connector: resolved::data_connector::DataConnector,
-    #[serde(serialize_with = "serialize_qualified_btreemap")]
+    #[serde(
+        serialize_with = "serialize_qualified_btreemap",
+        deserialize_with = "deserialize_qualified_btreemap"
+    )]
     pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
