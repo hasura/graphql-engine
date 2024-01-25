@@ -226,7 +226,6 @@ add the input as:
 ```json
 {
     "query": {
-        "table": "product",
         "tables": [
             "product",
             "product_analytics"
@@ -266,7 +265,6 @@ If you change the ordering of the roles:
 ```json
 {
     "query": {
-        "table": "product",
         "tables": [
             "product",
             "product_analytics"
