@@ -10,7 +10,7 @@ use axum::{
 use clap::Parser;
 
 use ::engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
-use engine::schema::GDS;
+use engine::{schema::GDS, VERSION};
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
@@ -41,11 +41,6 @@ struct EngineState {
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
 }
-
-const GIT_HASH_VERSION: &str = env!(
-    "GIT_HASH",
-    "Unable to start engine: unable to fetch the current git hash to use as trace version"
-);
 
 #[tokio::main]
 async fn main() {
@@ -167,7 +162,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
             tracing_util::set_attribute_on_active_span(
                 AttributeVisibility::Internal,
                 "version",
-                GIT_HASH_VERSION,
+                VERSION,
             );
             Box::pin(async move {
                 let response = next.run(request).await;
