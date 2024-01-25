@@ -301,3 +301,32 @@ the resolved permissions would be
 ```
 
 i.e, `analyst`'s permissions are picked over `public`'s permissions
+
+While the above demonstrates a simple example, a language such as Rego can be quite expressive. For example,
+you may not even have a notion of roles and may want to define permissions in ABAC style. One such example:
+
+```rego
+package authz.admin
+
+import future.keywords.if
+import future.keywords.in
+
+# The permissions that are decided on
+resolved_permissions[query_table_name] := resolved_permission if {
+	# For each table referenced in the query
+	some query_table_name in input.query.tables
+
+	# if the user is admin
+	input.user.is_admin = true
+
+	# assign permission to be returned
+	resolved_permission := {
+		"columns": ["*"],
+		"filter": {},
+	}
+}
+```
+
+You can experiment with the policy
+[here](https://play.openpolicyagent.org/p/DrTGxLJuFM). Try changing the
+`is_admin` attribute to `false` and check the returned permissions.
