@@ -220,7 +220,7 @@ resolved_permissions[query_table_name] := resolved_permission if {
 }
 ```
 
-You can try this policy out [here](https://play.openpolicyagent.org/p/M5kpAZsCMbl). If you
+You can try this policy out [here](https://play.openpolicyagent.org/p/BuMPLAbuL0). If you
 add the input as:
 
 ```json
