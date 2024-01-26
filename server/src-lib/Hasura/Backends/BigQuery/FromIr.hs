@@ -1810,6 +1810,10 @@ fromBackendSpecificOpExpG expression op =
         BigQuery.ASTIntersects v -> func "ST_INTERSECTS" v
         BigQuery.ASTDWithin (Ir.DWithinGeogOp r v sph) ->
           FunctionExpression (FunctionName "ST_DWITHIN" Nothing) [expression, v, r, sph]
+        BigQuery.ASTILike v ->
+          OpExpression ILikeOp (FunctionExpression (FunctionName "LOWER" Nothing) [expression]) v
+        BigQuery.ASTNILike v ->
+          OpExpression NotILikeOp (FunctionExpression (FunctionName "LOWER" Nothing) [expression]) v
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =

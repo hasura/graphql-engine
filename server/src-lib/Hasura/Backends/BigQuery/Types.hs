@@ -501,9 +501,9 @@ data Op
   | NotInOp
   | LikeOp
   | NotLikeOp
-  --  | SNE
-  --  | SILIKE
-  --  | SNILIKE
+  | --  | SNE
+    ILikeOp
+  | NotILikeOp
   --  | SSIMILAR
   --  | SNSIMILAR
   --  | SGTE
@@ -790,6 +790,8 @@ data BooleanOperators a
   | ASTWithin a
   | ASTIntersects a
   | ASTDWithin (DWithinGeogOp a)
+  | ASTILike a
+  | ASTNILike a
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
 instance (NFData a) => NFData (BooleanOperators a)
@@ -804,6 +806,8 @@ instance (ToJSON a) => J.ToJSONKeyValue (BooleanOperators a) where
     ASTTouches a -> ("_st_touches", J.toJSON a)
     ASTWithin a -> ("_st_within", J.toJSON a)
     ASTDWithin a -> ("_st_dwithin", J.toJSON a)
+    ASTILike a -> ("_st_ilike", J.toJSON a)
+    ASTNILike a -> ("_st_nilike", J.toJSON a)
 
 data FunctionName = FunctionName
   { functionName :: Text,
