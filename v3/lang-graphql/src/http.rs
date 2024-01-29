@@ -27,11 +27,11 @@ pub type VariableValues = HashMap<ast::Name, serde_json::Value>;
 
 /// A list of path segments starting at the root of the response and
 /// ending with the field associated with the error.
-/// https://spec.graphql.org/October2021/#sel-HAPHRPHABABC3vT
+/// <https://spec.graphql.org/October2021/#sel-HAPHRPHABABC3vT>
 pub type Path = Vec<PathSegment>;
 
 /// A path segment is either a field name or an index into a list.
-/// https://spec.graphql.org/October2021/#sel-HAPHRPJABABEyoB
+/// <https://spec.graphql.org/October2021/#sel-HAPHRPJABABEyoB>
 #[derive(Serialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum PathSegment {
@@ -60,7 +60,7 @@ pub struct Extensions {
 }
 
 /// A GraphQL error as defined by the spec.
-/// https://spec.graphql.org/October2021/#sec-Errors.Error-result-format
+/// <https://spec.graphql.org/October2021/#sec-Errors.Error-result-format>
 #[derive(Serialize, Debug, PartialEq)]
 pub struct GraphQLError {
     /// A string describing the error
@@ -79,7 +79,7 @@ pub struct Response {
     pub status_code: http::status::StatusCode,
     pub data: Option<IndexMap<ast::Alias, serde_json::Value>>,
     /// Errors entry shouldn't be present if no errors raised
-    /// https://spec.graphql.org/October2021/#sel-FAPHFCBUBpEm7G
+    /// <https://spec.graphql.org/October2021/#sel-FAPHFCBUBpEm7G>
     #[serde(skip_serializing_if = "Option::is_none")]
     pub errors: Option<NonEmpty<GraphQLError>>,
 }

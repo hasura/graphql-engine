@@ -55,8 +55,8 @@ impl<'de> Deserialize<'de> for CustomTypeName {
 
 #[derive(Hash, Clone, Debug, PartialEq, Eq)]
 /// Reference to an Open DD type including nullable values and arrays.
-/// Suffix '!' to indicate a non-nullable reference, and wrap in '[]' to indicate an array.
-/// Eg: '[String!]!' is a non-nullable array of non-nullable strings.
+/// Suffix `!` to indicate a non-nullable reference, and wrap in `[]` to indicate an array.
+/// Eg: `[String!]!` is a non-nullable array of non-nullable strings.
 pub struct TypeReference {
     pub underlying_type: BaseType,
     pub nullable: bool,

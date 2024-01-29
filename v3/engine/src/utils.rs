@@ -2,7 +2,7 @@ pub mod json_ext;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 
-/// HashMapWithJsonKey serializes the key<K> as a String
+/// HashMapWithJsonKey serializes the `key<K>` as a String
 /// during serialization and similarly while deserialization, the keys
 /// are expected to be Stringified and it is then deserialized into K.
 /// This type can be helpful when a HashMap<K,V> needs to be serialized,

@@ -1,4 +1,4 @@
-//! IR of the relay according to https://relay.dev/graphql/objectidentification.htm
+//! IR of the relay according to <https://relay.dev/graphql/objectidentification.htm>
 
 use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
