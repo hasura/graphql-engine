@@ -238,18 +238,27 @@ pub async fn execute_request_internal(
                             .await
                     }
                     RequestMode::Explain => {
-                        tracer.in_span("explain", SpanVisibility::Internal, || {
-                            // convert the query plan to explain step
-                            let explain_response =
-                                match crate::execute::explain::explain_query_plan(query_plan) {
-                                    Ok(step) => step.to_explain_response(),
-                                    Err(e) => explain::types::ExplainResponse::error(
-                                        e.to_graphql_error(None),
-                                    ),
-                                };
+                        tracer
+                            .in_span_async("explain", SpanVisibility::Internal, || {
+                                Box::pin(async {
+                                    // convert the query plan to explain step
+                                    let explain_response =
+                                        match crate::execute::explain::explain_query_plan(
+                                            http_client,
+                                            query_plan,
+                                        )
+                                        .await
+                                        {
+                                            Ok(step) => step.make_explain_response(),
+                                            Err(e) => explain::types::ExplainResponse::error(
+                                                e.to_graphql_error(None),
+                                            ),
+                                        };
 
-                            ExecuteOrExplainResponse::Explain(explain_response)
-                        })
+                                    ExecuteOrExplainResponse::Explain(explain_response)
+                                })
+                            })
+                            .await
                     }
                 };
                 Ok(response)

@@ -1,3 +1,4 @@
+use crate::execute::error;
 use crate::execute::GraphQLErrors;
 use lang_graphql::http::GraphQLError;
 use nonempty::NonEmpty;
@@ -15,9 +16,9 @@ pub enum RequestMode {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExplainResponse {
-    pub explain: Option<Step>,
+    explain: Option<Step>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub errors: Option<nonempty::NonEmpty<GraphQLError>>,
+    errors: Option<nonempty::NonEmpty<GraphQLError>>,
 }
 
 impl Traceable for ExplainResponse {
@@ -35,6 +36,10 @@ impl ExplainResponse {
             errors: Some(nonempty::nonempty![error]),
         }
     }
+
+    pub fn does_contain_error(&self) -> bool {
+        self.errors.is_some()
+    }
 }
 
 impl axum::response::IntoResponse for ExplainResponse {
@@ -51,10 +56,10 @@ impl axum::response::IntoResponse for ExplainResponse {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
-pub enum Step {
+pub(crate) enum Step {
     ModelSelect(ModelSelectIR),
     CommandSelect(CommandSelectIR),
     ForEach(ForEachStep),
@@ -64,7 +69,7 @@ pub enum Step {
 }
 
 impl Step {
-    pub fn to_explain_response(self) -> ExplainResponse {
+    pub(crate) fn make_explain_response(self) -> ExplainResponse {
         ExplainResponse {
             explain: Some(self),
             errors: None,
@@ -72,24 +77,47 @@ impl Step {
     }
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct ModelSelectIR {
-    pub model_name: String,
-    pub query_request: ndc_client::models::QueryRequest,
+pub(crate) struct ModelSelectIR {
+    pub(crate) model_name: String,
+    pub(crate) query_request: ndc_client::models::QueryRequest,
+    pub(crate) ndc_explain: NDCExplainResponse,
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct CommandSelectIR {
-    pub command_name: String,
-    pub query_request: ndc_client::models::QueryRequest,
+pub(crate) struct CommandSelectIR {
+    pub(crate) command_name: String,
+    pub(crate) query_request: ndc_client::models::QueryRequest,
+    pub(crate) ndc_explain: NDCExplainResponse,
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
-pub enum ForEachStep {
+pub(crate) enum ForEachStep {
     ModelSelect(ModelSelectIR),
     CommandSelect(CommandSelectIR),
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
+pub(crate) enum NDCExplainResponse {
+    NotSupported,
+    Response(ndc_client::models::ExplainResponse),
+    Error(GraphQLError),
+}
+
+impl NDCExplainResponse {
+    pub(crate) fn error(error: error::Error) -> Self {
+        Self::Error(error.to_graphql_error(None))
+    }
+    pub(crate) fn success(response: ndc_client::models::ExplainResponse) -> Self {
+        Self::Response(response)
+    }
+    pub(crate) fn not_supported() -> Self {
+        Self::NotSupported
+    }
 }

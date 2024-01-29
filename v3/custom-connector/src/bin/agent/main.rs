@@ -164,7 +164,7 @@ async fn get_capabilities() -> Json<models::CapabilitiesResponse> {
     Json(models::CapabilitiesResponse {
         versions: "^0.1.0".into(),
         capabilities: models::Capabilities {
-            explain: Some(models::LeafCapability {}),
+            explain: None,
             query: models::QueryCapabilities {
                 aggregates: Some(models::LeafCapability {}),
                 variables: Some(models::LeafCapability {}),

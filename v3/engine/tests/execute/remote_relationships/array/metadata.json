@@ -298,7 +298,10 @@
                       "author_id"
                     ]
                   }
-                ]
+                ],
+                "selectMany": {
+                  "queryRootField": "AuthorMany"
+                }
               },
               "filterableFields": [
                 {
