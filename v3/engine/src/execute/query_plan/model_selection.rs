@@ -19,8 +19,8 @@ pub(crate) fn ndc_query<'s, 'ir>(
         fields: Some(ndc_fields),
         limit: ir.limit,
         offset: ir.offset,
-        order_by: ir.order_by.clone(),
-        predicate: match ir.filter_clause.as_slice() {
+        order_by: ir.order_by.as_ref().map(|x| x.order_by.clone()),
+        predicate: match ir.filter_clause.expressions.as_slice() {
             [] => None,
             [expression] => Some(expression.clone()),
             expressions => Some(ndc::models::Expression::And {

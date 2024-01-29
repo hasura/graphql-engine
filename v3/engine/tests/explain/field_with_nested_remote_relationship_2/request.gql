@@ -1,15 +1,15 @@
 {
-  cities {
-    code
-    name
-    departments {
-      name
-      ministers {
-        name
+  Album {
+    AlbumId
+    ArtistId
+    Tracks {
+      TrackId
+      Album {
+        AlbumId
       }
     }
-    census {
-      data
+    Artist {
+      ArtistId
     }
   }
 }

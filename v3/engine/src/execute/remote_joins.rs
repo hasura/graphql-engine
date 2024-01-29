@@ -10,9 +10,9 @@ use ndc_client as ndc;
 
 use self::types::TargetField;
 
-use super::error;
 use super::ndc::execute_ndc_query;
 use super::query_plan::ProcessResponseAs;
+use super::{error, ProjectId};
 
 use types::{
     ArgumentId, Arguments, JoinId, JoinLocations, Location, MonotonicCounter, RemoteJoin,
@@ -78,6 +78,7 @@ pub async fn execute_join_locations<'ir>(
     lhs_response: &mut Vec<ndc::models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
+    project_id: Option<ProjectId>,
 ) -> Result<(), error::Error>
 where
     'ir: 'async_recursion,
@@ -124,6 +125,7 @@ where
                             join_node.target_data_connector,
                             execution_span_attribute.clone(),
                             remote_alias.clone(),
+                            project_id.clone(),
                         ))
                     },
                 )
@@ -140,6 +142,7 @@ where
                     &mut target_response,
                     &join_node.process_response_as,
                     sub_tree,
+                    project_id.clone(),
                 )
                 .await?;
             }

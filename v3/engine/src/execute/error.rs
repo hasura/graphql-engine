@@ -1,11 +1,12 @@
 use gql::{ast::common as ast, http::GraphQLError};
 use lang_graphql as gql;
 use open_dds::{
+    models::ModelName,
     relationships::RelationshipName,
     session_variables::SessionVariable,
     types::{CustomTypeName, FieldName},
 };
-use reqwest::StatusCode;
+use reqwest::{header::InvalidHeaderValue, StatusCode};
 use serde_json as json;
 use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
@@ -21,6 +22,32 @@ pub enum InternalDeveloperError {
     NoSourceDataConnector {
         type_name: ast::TypeName,
         field_name: ast::Name,
+    },
+
+    #[error("No source data connector specified for relationship argument field {argument_name} of type {type_name}")]
+    NoTargetSourceDataConnectorForRelationshipArgument {
+        argument_name: ast::Name,
+        type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("No source model specified for relationship argument field {argument_name} of type {type_name}")]
+    NoSourceModelForRelationshipArgument {
+        argument_name: ast::Name,
+        type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("No data connector specified for source model {source_model_name} which has a relationship argument field {argument_name} of type {type_name}")]
+    NoModelSourceDataConnectorForRelationshipArgument {
+        argument_name: ast::Name,
+        type_name: Qualified<CustomTypeName>,
+        source_model_name: Qualified<ModelName>,
+    },
+
+    #[error("No type mappings specified for source model {source_model_name} which has a relationship argument field {argument_name} of type {type_name}")]
+    NoModelSourceTypeMappingsForRelationshipArgument {
+        argument_name: ast::Name,
+        type_name: Qualified<CustomTypeName>,
+        source_model_name: Qualified<ModelName>,
     },
 
     #[error("No function/procedure specified for command field {field_name} of type {type_name}")]
@@ -163,6 +190,8 @@ pub enum Error {
     InternalError(#[from] InternalError),
     #[error("explain error: {0}")]
     ExplainError(String),
+    #[error("invalid header value characters in project_id: {0}")]
+    ProjectIdConversionError(InvalidHeaderValue),
 }
 
 impl Error {

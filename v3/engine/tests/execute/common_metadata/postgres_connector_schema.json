@@ -464,6 +464,14 @@
                         "type": "named",
                         "name": "Int"
                       }
+                    },
+                    "GenreId": {
+                      "description": "The track's genre ID",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
                     }
                   }
                 },
@@ -488,6 +496,27 @@
                     },
                     "Name": {
                       "description": "The artist's name",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  }
+                },
+                "Genre": {
+                  "description": "A Genre",
+                  "fields": {
+                    "GenreId": {
+                      "description": "The genre's primary key",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    },
+                    "Name": {
+                      "description": "The genre's name",
                       "arguments": {},
                       "type": {
                         "type": "named",
@@ -650,6 +679,19 @@
                   "type": "Artist",
                   "deletable": false,
                   "uniqueness_constraints": {},
+                  "foreign_keys": {}
+                },
+                {
+                  "name": "Genre",
+                  "arguments": {},
+                  "type": "Genre",
+                  "uniqueness_constraints": {
+                    "PK_Genre": {
+                      "unique_columns": [
+                        "GenreId"
+                      ]
+                    }
+                  },
                   "foreign_keys": {}
                 }
               ],

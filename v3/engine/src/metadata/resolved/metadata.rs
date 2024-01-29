@@ -376,24 +376,37 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         }
     }
 
+    // Note: Model permissions's predicate can include the relationship field,
+    // hence Model permissions should be resolved after the relationships of a
+    // model is resolved.
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: permissions,
     } in &metadata_accessor.model_permissions
     {
         let model_name = Qualified::new(subgraph.to_string(), permissions.model_name.clone());
-        let model = models.get_mut(&model_name).ok_or_else(|| {
-            Error::UnknownModelInModelSelectPermissions {
-                model_name: model_name.clone(),
-            }
-        })?;
+        let model =
+            models
+                .get(&model_name)
+                .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {
+                    model_name: model_name.clone(),
+                })?;
         if model.select_permissions.is_none() {
-            model.select_permissions = Some(resolve_model_select_permissions(
+            let select_permissions = Some(resolve_model_select_permissions(
                 model,
                 subgraph,
                 permissions,
                 &data_connectors,
+                &types,
+                &models, // This is required to get the model for the relationship target
             )?);
+
+            let model = models.get_mut(&model_name).ok_or_else(|| {
+                Error::UnknownModelInModelSelectPermissions {
+                    model_name: model_name.clone(),
+                }
+            })?;
+            model.select_permissions = select_permissions;
         } else {
             return Err(Error::DuplicateModelSelectPermission {
                 model_name: model_name.clone(),

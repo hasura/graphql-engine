@@ -4,9 +4,14 @@ use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use std::collections::HashMap;
 
+use super::types::output_type::get_object_type_representation;
+use super::types::output_type::relationship::{FilterRelationshipAnnotation, ModelTargetSource};
 use super::types::{input_type, output_type, InputAnnotation, ModelInputAnnotation, TypeId};
 use crate::metadata::resolved;
 use crate::metadata::resolved::model::ComparisonExpressionInfo;
+use crate::metadata::resolved::relationship::{
+    relationship_execution_category, RelationshipExecutionCategory, RelationshipTarget,
+};
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
 use crate::metadata::resolved::types::mk_name;
 use crate::schema::permissions;
@@ -148,6 +153,97 @@ pub fn build_model_filter_expression_input_schema(
                 field_permissions,
             );
             input_fields.insert(field_graphql_name, input_field);
+        }
+
+        // relationship fields
+        // TODO(naveen): Add support for command relationships
+        for (rel_name, relationship) in object_type_representation.relationships.iter() {
+            if let RelationshipTarget::Model {
+                model_name,
+                relationship_type,
+                target_typename,
+                mappings,
+            } = &relationship.target
+            {
+                let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
+                    crate::schema::Error::InternalModelNotFound {
+                        model_name: model_name.clone(),
+                    }
+                })?;
+
+                let target_object_type_representation =
+                    get_object_type_representation(gds, &target_model.data_type)?;
+
+                // Build relationship field in filter expression only when both
+                // the target_model and source model are backed by a source
+                if let (Some(target_source), Some(model_source)) =
+                    (&target_model.source, &model.source)
+                {
+                    let target_model_source =
+                        ModelTargetSource::from_model_source(target_source, relationship)?;
+
+                    // filter expression with relationships is currently only supported for local relationships
+                    if let RelationshipExecutionCategory::Local = relationship_execution_category(
+                        &model_source.data_connector,
+                        &target_source.data_connector,
+                        &target_model_source.capabilities,
+                    ) {
+                        if target_source.data_connector.name == model_source.data_connector.name {
+                            // If the relationship target model does not have filterExpressionType do not include
+                            // it in the source model filter expression input type.
+                            if let Some(target_model_filter_expression) =
+                                target_model.graphql_api.filter_expression.as_ref()
+                            {
+                                let target_model_filter_expression_type_name =
+                                    &target_model_filter_expression.where_type_name;
+
+                                let annotation = FilterRelationshipAnnotation {
+                                    source_type: relationship.source.clone(),
+                                    relationship_name: relationship.name.clone(),
+                                    target_source: target_model_source.clone(),
+                                    target_type: target_typename.clone(),
+                                    target_model_name: target_model.name.clone(),
+                                    relationship_type: relationship_type.clone(),
+                                    mappings: mappings.clone(),
+                                    source_data_connector: model_source.data_connector.clone(),
+                                    source_type_mappings: model_source.type_mappings.clone(),
+                                };
+
+                                input_fields.insert(
+                                    rel_name.clone(),
+                                    builder.conditional_namespaced(
+                                        gql_schema::InputField::<GDS>::new(
+                                            rel_name.clone(),
+                                            None,
+                                            types::Annotation::Input(InputAnnotation::Model(
+                                                ModelInputAnnotation::ModelFilterArgument {
+                                                    field:
+                                                        types::ModelFilterArgument::RelationshipField(
+                                                            annotation,
+                                                        ),
+                                                },
+                                            )),
+                                            ast::TypeContainer::named_null(
+                                                gql_schema::RegisteredTypeName::new(
+                                                    target_model_filter_expression_type_name.0.clone(),
+                                                ),
+                                            ),
+                                            None,
+                                            gql_schema::DeprecationStatus::NotDeprecated,
+                                        ),
+                                        permissions::get_model_relationship_namespace_annotations(
+                                            target_model,
+                                            object_type_representation,
+                                            target_object_type_representation,
+                                            mappings,
+                                        ),
+                                    ),
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

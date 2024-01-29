@@ -1,6 +1,6 @@
 use goldenfile::{differs::text_diff, Mint};
 use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
-use lang_graphql::http::RawRequest;
+use lang_graphql::{http::RawRequest, schema::Schema};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
 use std::{
@@ -85,7 +85,8 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
 
         // Execute the test
 
-        let response = execute_query(&test_ctx.http_client, &schema, &session, raw_request).await;
+        let response =
+            execute_query(&test_ctx.http_client, &schema, &session, raw_request, None).await;
 
         let mut expected = test_ctx
             .mint
@@ -132,8 +133,20 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
         let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
-        // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema).unwrap();
+        // Verify successful serialization and deserialization of the schema.
+        // Hasura V3 relies on the serialized schema for handling requests.
+        // Therefore, it is crucial to ensure the functionality of both
+        // deserialization and serialization.
+        // Testing this within this function allows us to detect errors for any
+        // future metadata tests that may be added.
+        let serialized_metadata =
+            serde_json::to_string(&schema).expect("Failed to serialize schema");
+        let deserialized_metadata: Schema<GDS> =
+            serde_json::from_str(&serialized_metadata).expect("Failed to deserialize metadata");
+        assert_eq!(
+            schema, deserialized_metadata,
+            "initial built metadata does not match deserialized metadata"
+        );
 
         let query = fs::read_to_string(request_path).unwrap();
 
@@ -156,8 +169,14 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
         // Execute the test
         let mut responses = Vec::new();
         for session in sessions.iter() {
-            let response =
-                execute_query(&test_ctx.http_client, &schema, session, raw_request.clone()).await;
+            let response = execute_query(
+                &test_ctx.http_client,
+                &schema,
+                session,
+                raw_request.clone(),
+                None,
+            )
+            .await;
             responses.push(response.0);
         }
 
@@ -200,12 +219,25 @@ pub fn merge_with_common_metadata<T: Iterator<Item = PathBuf>>(
 }
 
 #[allow(dead_code)]
-pub fn test_execute_explain(metadata_file_path: &str, test_dir_path: &str) {
+pub fn test_execute_explain(
+    test_path_string: &str,
+    test_metadata_path: &str,
+    common_metadata_paths: &[&str],
+) {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
         let mut test_ctx = setup(&root_test_dir);
+        let test_path = root_test_dir.join(test_path_string);
+        let gql_request_file_path = test_path.join("request.gql");
+        let expected_response_file = test_path_string.to_string() + "/expected.json";
 
-        let metadata = read_json(&root_test_dir.join(metadata_file_path));
+        let test_metadata_path = root_test_dir.join(test_metadata_path);
+        let metadata = merge_with_common_metadata(
+            &test_metadata_path,
+            common_metadata_paths
+                .iter()
+                .map(|path| root_test_dir.join(path)),
+        );
         let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
         let session = {
@@ -216,8 +248,6 @@ pub fn test_execute_explain(metadata_file_path: &str, test_dir_path: &str) {
                 serde_json::from_str(session_variables_raw).unwrap();
             resolve_session(session_variables)
         };
-        let gql_request_file_path = test_dir_path.to_string() + "/request.gql";
-        let expected_response_file = test_dir_path.to_string() + "/expected.json";
         let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path)).unwrap();
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,

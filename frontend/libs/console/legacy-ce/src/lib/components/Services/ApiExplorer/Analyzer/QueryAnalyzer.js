@@ -95,7 +95,7 @@ export default class QueryAnalyser extends React.Component {
             <div className="w-full">
               <div className="p-md pt-0">
                 <div className="text-[#767e93] font-bold py-sm">
-                  Generated SQL
+                  Generated Query
                 </div>
                 <div className="w-full overflow-y-scroll h-[calc(30vh)] mb-sm">
                   <Button

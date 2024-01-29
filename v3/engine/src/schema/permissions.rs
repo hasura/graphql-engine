@@ -54,13 +54,12 @@ pub(crate) fn get_select_one_namespace_annotations(
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
-    model: &resolved::model::Model,
+    target_model: &resolved::model::Model,
     source_object_type_representation: &ObjectTypeRepresentation,
     target_object_type_representation: &ObjectTypeRepresentation,
     mappings: &[resolved::relationship::RelationshipModelMapping],
 ) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
-    let select_permissions = get_select_permissions_namespace_annotations(model);
-
+    let select_permissions = get_select_permissions_namespace_annotations(target_model);
     select_permissions
         .into_iter()
         .filter(|(role, _)| {

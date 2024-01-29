@@ -1,12 +1,12 @@
 {
-  cities {
-    code
-    name
-    weather {
-      forecast
+  Album {
+    ArtistId
+    Artist {
+      ArtistId
+      Name
     }
-    census {
-      data
+    Tracks {
+      TrackId
     }
   }
 }

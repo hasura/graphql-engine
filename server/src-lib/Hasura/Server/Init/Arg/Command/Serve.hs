@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | The Arg Opt.Parser for the 'serve' subcommand.
 module Hasura.Server.Init.Arg.Command.Serve

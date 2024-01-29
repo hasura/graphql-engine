@@ -17,6 +17,9 @@ RUN rustup component add rustfmt
 # needed for coverage reporting
 RUN rustup component add llvm-tools-preview
 
+# Building with build.rs require git context to be available across directories
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
 RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 ###

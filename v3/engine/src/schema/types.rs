@@ -25,6 +25,10 @@ use crate::{
 };
 use strum_macros::Display;
 
+use self::output_type::relationship::{
+    FilterRelationshipAnnotation, OrderByRelationshipAnnotation,
+};
+
 pub mod inbuilt_type;
 pub mod input_type;
 pub mod output_type;
@@ -63,6 +67,7 @@ pub enum ModelFilterArgument {
     OrOp,
     NotOp,
     Field { ndc_column: String },
+    RelationshipField(FilterRelationshipAnnotation),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -162,6 +167,8 @@ pub enum ModelInputAnnotation {
     ModelOrderByArgument {
         ndc_column: String,
     },
+    ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
+
     ModelOrderByDirection {
         direction: ModelOrderByDirection,
     },

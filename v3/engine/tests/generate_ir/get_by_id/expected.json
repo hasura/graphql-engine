@@ -90,23 +90,26 @@
             },
             "collection": "articles",
             "arguments": {},
-            "filter_clause": [
-              {
-                "type": "binary_comparison_operator",
-                "column": {
-                  "type": "column",
-                  "name": "id",
-                  "path": []
-                },
-                "operator": {
-                  "type": "equal"
-                },
-                "value": {
-                  "type": "scalar",
-                  "value": 1
+            "filter_clause": {
+              "expressions": [
+                {
+                  "type": "binary_comparison_operator",
+                  "column": {
+                    "type": "column",
+                    "name": "id",
+                    "path": []
+                  },
+                  "operator": {
+                    "type": "equal"
+                  },
+                  "value": {
+                    "type": "scalar",
+                    "value": 1
+                  }
                 }
-              }
-            ],
+              ],
+              "relationships": {}
+            },
             "limit": null,
             "offset": null,
             "order_by": null,

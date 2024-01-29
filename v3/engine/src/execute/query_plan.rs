@@ -18,6 +18,7 @@ use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
 use super::remote_joins::types::{JoinId, JoinLocations, Location, MonotonicCounter, RemoteJoin};
+use super::ProjectId;
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
@@ -414,6 +415,7 @@ impl ExecuteQueryResult {
 async fn execute_field_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     field_plan: NodeQueryPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -467,17 +469,19 @@ async fn execute_field_plan<'n, 's, 'ir>(
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_query_execution(http_client, ndc_query).await,
+                            resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
                         ),
                         NodeQueryPlan::NDCMutationExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_mutation_execution(http_client, ndc_query).await,
+                            resolve_ndc_mutation_execution(http_client, ndc_query, project_id)
+                                .await,
                         ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_relay_node_select(http_client, optional_query).await,
+                            resolve_relay_node_select(http_client, optional_query, project_id)
+                                .await,
                         ),
                     }
                 })
@@ -489,6 +493,7 @@ async fn execute_field_plan<'n, 's, 'ir>(
 pub async fn execute_query_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query_plan: QueryPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
 
@@ -497,7 +502,12 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
     for (alias, field_plan) in query_plan.into_iter() {
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
-        let task = async { (alias, execute_field_plan(http_client, field_plan).await) };
+        let task = async {
+            (
+                alias,
+                execute_field_plan(http_client, field_plan, project_id.clone()).await,
+            )
+        };
 
         tasks.push(task);
     }
@@ -548,6 +558,7 @@ fn resolve_schema_field(
 async fn resolve_ndc_query_execution(
     http_client: &reqwest::Client,
     ndc_query: NDCQueryExecution<'_, '_>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCQueryExecution {
         execution_tree,
@@ -562,6 +573,7 @@ async fn resolve_ndc_query_execution(
         execution_tree.root_node.data_connector,
         execution_span_attribute.clone(),
         field_span_attribute.clone(),
+        project_id.clone(),
     )
     .await?;
     // TODO: Failures in remote joins should result in partial response
@@ -573,6 +585,7 @@ async fn resolve_ndc_query_execution(
         &mut response,
         &process_response_as,
         execution_tree.remote_executions,
+        project_id,
     )
     .await?;
     let result = process_response(selection_set, response, process_response_as)?;
@@ -582,6 +595,7 @@ async fn resolve_ndc_query_execution(
 async fn resolve_ndc_mutation_execution(
     http_client: &reqwest::Client,
     ndc_query: NDCMutationExecution<'_, '_, '_>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCMutationExecution {
         query,
@@ -601,6 +615,7 @@ async fn resolve_ndc_mutation_execution(
         execution_span_attribute,
         field_span_attribute,
         process_response_as,
+        project_id,
     )
     .await?;
     Ok(json::to_value(response)?)
@@ -609,9 +624,10 @@ async fn resolve_ndc_mutation_execution(
 async fn resolve_relay_node_select(
     http_client: &reqwest::Client,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     match optional_query {
         None => Ok(json::Value::Null),
-        Some(ndc_query) => resolve_ndc_query_execution(http_client, ndc_query).await,
+        Some(ndc_query) => resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
     }
 }

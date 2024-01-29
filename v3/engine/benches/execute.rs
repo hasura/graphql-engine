@@ -130,7 +130,7 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
-                execute_query_plan(&http_client, generate_query_plan(&ir).unwrap()).await
+                execute_query_plan(&http_client, generate_query_plan(&ir).unwrap(), None).await
             })
         },
     );
@@ -141,7 +141,7 @@ pub fn bench_execute(
         &(&runtime, &schema, raw_request),
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
-                execute_query_internal(&http_client, schema, &session, request.clone())
+                execute_query_internal(&http_client, schema, &session, request.clone(), None)
                     .await
                     .unwrap()
             })

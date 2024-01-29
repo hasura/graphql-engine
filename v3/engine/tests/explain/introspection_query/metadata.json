@@ -1,0 +1,15 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": []
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": []
+    }
+  ],
+  "flags": {
+    "require_ndc_capabilities": false
+  }
+}

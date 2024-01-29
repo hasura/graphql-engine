@@ -2,6 +2,8 @@
 //!
 //! A 'select_one' operation fetches zero or one row from a model
 
+use std::collections::BTreeMap;
+
 /// Generates the IR for a 'select_one' operation
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
@@ -12,6 +14,7 @@ use serde::Serialize;
 
 use super::error;
 use crate::execute::ir::arguments;
+use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
@@ -59,7 +62,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
             description: format!("type '{:}' not found in source type_mappings", data_type),
         })?;
 
-    let mut filter_clause = vec![];
+    let mut filter_clause_expressions = vec![];
     let mut model_argument_fields = Vec::new();
     for argument in field_call.arguments.values() {
         match argument.info.generic {
@@ -87,7 +90,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                             value: argument.value.as_json(),
                         },
                     };
-                    filter_clause.push(ndc_expression);
+                    filter_clause_expressions.push(ndc_expression);
                 }
                 _ => Err(error::InternalEngineError::UnexpectedAnnotation {
                     annotation: annotation.clone(),
@@ -107,6 +110,11 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     // Add the name of the root model
     let mut usage_counts = UsagesCounts::new();
     count_model(model_name.clone(), &mut usage_counts);
+
+    let filter_clause = ResolvedFilterExpression {
+        expressions: filter_clause_expressions,
+        relationships: BTreeMap::new(),
+    };
 
     let model_selection = model_selection::model_selection_ir(
         &field.selection_set,

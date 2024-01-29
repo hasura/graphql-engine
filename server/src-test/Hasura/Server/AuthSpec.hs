@@ -1,4 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
+-- TODO:
+-- In the use of ‘unregisteredClaims’ (imported from Crypto.JWT):
+--     Deprecated: "use a sub-type"
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module Hasura.Server.AuthSpec (spec) where
 

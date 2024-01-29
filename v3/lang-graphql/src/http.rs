@@ -32,7 +32,7 @@ pub type Path = Vec<PathSegment>;
 
 /// A path segment is either a field name or an index into a list.
 /// https://spec.graphql.org/October2021/#sel-HAPHRPJABABEyoB
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum PathSegment {
     /// Path segment that represent a field.
@@ -53,7 +53,7 @@ impl PathSegment {
     }
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct Extensions {
     /// Details of any error
     pub details: serde_json::Value,
@@ -61,7 +61,7 @@ pub struct Extensions {
 
 /// A GraphQL error as defined by the spec.
 /// https://spec.graphql.org/October2021/#sec-Errors.Error-result-format
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub struct GraphQLError {
     /// A string describing the error
     pub message: String,

@@ -13,9 +13,9 @@
               }
             },
             "headers": {
-                "hasura-m-auth-token": {
-                    "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                }
+              "hasura-m-auth-token": {
+                "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              }
             },
             "schema": {
               "scalar_types": {
@@ -414,6 +414,14 @@
                         "type": "named",
                         "name": "int4"
                       }
+                    },
+                    "GenreId": {
+                      "description": "The track's genre ID",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "int4"
+                      }
                     }
                   }
                 },
@@ -438,6 +446,27 @@
                     },
                     "Name": {
                       "description": "The artist's name",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "varchar"
+                      }
+                    }
+                  }
+                },
+                "Genre": {
+                  "description": "A Genre",
+                  "fields": {
+                    "GenreId": {
+                      "description": "The genre's primary key",
+                      "arguments": {},
+                      "type": {
+                        "type": "named",
+                        "name": "int4"
+                      }
+                    },
+                    "Name": {
+                      "description": "The genre's name",
                       "arguments": {},
                       "type": {
                         "type": "named",
@@ -600,6 +629,19 @@
                   "type": "Artist",
                   "deletable": false,
                   "uniqueness_constraints": {},
+                  "foreign_keys": {}
+                },
+                {
+                  "name": "Genre",
+                  "arguments": {},
+                  "type": "Genre",
+                  "uniqueness_constraints": {
+                    "PK_Genre": {
+                      "unique_columns": [
+                        "GenreId"
+                      ]
+                    }
+                  },
                   "foreign_keys": {}
                 }
               ],
@@ -785,6 +827,10 @@
               {
                 "name": "AlbumId",
                 "type": "Int"
+              },
+              {
+                "name": "GenreId",
+                "type": "Int"
               }
             ],
             "graphql": {
@@ -809,6 +855,26 @@
             ],
             "graphql": {
               "typeName": "ArtistBelowId"
+            }
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "definition": {
+            "name": "Genre",
+            "fields": [
+              {
+                "name": "GenreId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Genre"
             }
           },
           "version": "v1",
@@ -1018,7 +1084,6 @@
             }
           }
         },
-
         {
           "kind": "CommandPermissions",
           "version": "v1",
@@ -2231,6 +2296,9 @@
                     },
                     "AlbumId": {
                       "column": "AlbumId"
+                    },
+                    "GenreId": {
+                      "column": "GenreId"
                     }
                   }
                 }
@@ -2269,6 +2337,12 @@
                 "operators": {
                   "enableAll": true
                 }
+              },
+              {
+                "fieldName": "GenreId",
+                "operators": {
+                  "enableAll": true
+                }
               }
             ],
             "orderableFields": [
@@ -2286,6 +2360,12 @@
               },
               {
                 "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
                 "orderByDirections": {
                   "enableAll": true
                 }
@@ -2349,6 +2429,73 @@
         },
         {
           "definition": {
+            "name": "Genres",
+            "objectType": "Genre",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Genre",
+              "typeMapping": {
+                "Genre": {
+                  "fieldMapping": {
+                    "GenreId": {
+                      "column": "GenreId"
+                    },
+                    "Name": {
+                      "column": "Name"
+                    }
+                  }
+                }
+              }
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "GenreByID",
+                  "uniqueIdentifier": [
+                    "GenreId"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Genre"
+              },
+              "filterExpressionType": "Genre_Where_Exp",
+              "orderByExpressionType": "Genre_Order_By"
+            },
+            "filterableFields": [
+              {
+                "fieldName": "GenreId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "definition": {
             "typeName": "Artist",
             "permissions": [
               {
@@ -2378,6 +2525,16 @@
                     "ArtistId"
                   ]
                 }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": [
+                    "AlbumId",
+                    "Title",
+                    "ArtistId"
+                  ]
+                }
               }
             ]
           },
@@ -2394,7 +2551,19 @@
                   "allowedFields": [
                     "TrackId",
                     "Name",
-                    "AlbumId"
+                    "AlbumId",
+                    "GenreId"
+                  ]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": [
+                    "TrackId",
+                    "Name",
+                    "AlbumId",
+                    "GenreId"
                   ]
                 }
               }
@@ -2412,6 +2581,33 @@
                 "output": {
                   "allowedFields": [
                     "ArtistId",
+                    "Name"
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "TypePermissions"
+        },
+        {
+          "definition": {
+            "typeName": "Genre",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "GenreId",
+                    "Name"
+                  ]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": [
+                    "GenreId",
                     "Name"
                   ]
                 }
@@ -2445,6 +2641,48 @@
                 "select": {
                   "filter": null
                 }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "Tracks",
+                      "predicate": {
+                        "and": [
+                          {
+                            "relationship": {
+                              "name": "Album",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "AlbumId",
+                                  "operator": "_eq",
+                                  "value": {
+                                    "sessionVariable": "x-hasura-user-id"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "relationship": {
+                              "name": "Genre",
+                              "predicate": {
+                                "fieldComparison": {
+                                  "field": "GenreId",
+                                  "operator": "_eq",
+                                  "value": {
+                                    "sessionVariable": "x-hasura-user-id"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
               }
             ]
           },
@@ -2460,6 +2698,12 @@
                 "select": {
                   "filter": null
                 }
+              },
+              {
+                "role": "user_1",
+                "select": {
+                  "filter": null
+                }
               }
             ]
           },
@@ -2472,6 +2716,27 @@
             "permissions": [
               {
                 "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Genres",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_1",
                 "select": {
                   "filter": null
                 }
@@ -2629,6 +2894,38 @@
                   "modelField": [
                     {
                       "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "source": "Track",
+            "name": "Genre",
+            "target": {
+              "model": {
+                "name": "Genres",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "GenreId"
                     }
                   ]
                 }

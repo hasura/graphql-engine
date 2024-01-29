@@ -2,8 +2,10 @@ use hasura_authn_core::SessionVariables;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use lang_graphql::normalized_ast;
+use open_dds::relationships::RelationshipName;
 use open_dds::types::{CustomTypeName, FieldName};
-use serde::Serialize;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use super::commands::FunctionBasedCommand;
@@ -29,15 +31,15 @@ pub(crate) enum FieldSelection<'s> {
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
-        /// Relationship names needs to be unique across the IR. This field contains
-        /// the uniquely generated relationship name. `ModelRelationshipAnnotation`
-        /// contains a relationship name but that is the name from the metadata.
-        name: String,
+        // Relationship names needs to be unique across the IR. This field contains
+        // the uniquely generated relationship name. `ModelRelationshipAnnotation`
+        // contains a relationship name but that is the name from the metadata.
+        name: NDCRelationshipName,
         relationship_info: LocalModelRelationshipInfo<'s>,
     },
     CommandRelationshipLocal {
         ir: FunctionBasedCommand<'s>,
-        name: String,
+        name: NDCRelationshipName,
         relationship_info: LocalCommandRelationshipInfo<'s>,
     },
     ModelRelationshipRemote {
@@ -48,6 +50,38 @@ pub(crate) enum FieldSelection<'s> {
         ir: FunctionBasedCommand<'s>,
         relationship_info: RemoteCommandRelationshipInfo<'s>,
     },
+}
+
+/// The unique relationship name that is passed to NDC
+// Relationship names needs to be unique across the IR. This is so that, the
+// NDC can use these names to figure out what joins to use.
+// A single "source type" can have only one relationship with a given name,
+// hence the relationship name in the IR is a tuple between the source type
+// and the relationship name.
+// Relationship name = (source_type, relationship_name)
+#[derive(
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    derive_more::Display,
+    JsonSchema,
+    PartialOrd,
+    Ord,
+)]
+pub struct NDCRelationshipName(pub(crate) String);
+
+impl NDCRelationshipName {
+    pub fn new(
+        source_type: &Qualified<CustomTypeName>,
+        relationship_name: &RelationshipName,
+    ) -> Result<Self, error::Error> {
+        let name = serde_json::to_string(&(source_type, relationship_name))?;
+        Ok(NDCRelationshipName(name))
+    }
 }
 
 /// IR that represents the selected fields of an output type.

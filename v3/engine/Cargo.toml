@@ -53,6 +53,10 @@ json_value_merge = "2.0"
 async-recursion= "1.0.5"
 nonempty = "0.8"
 
+# Dependencies to build and run build.rs file
+[build-dependencies]
+build-data = "0.1.5" # To set short commit-sha at build time
+
 [dev-dependencies]
 goldenfile = "1.4.5"
 tokio-test = "0.4.2"

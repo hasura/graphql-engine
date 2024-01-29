@@ -7,6 +7,8 @@ use open_dds::types::CustomTypeName;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
+use super::filter::ResolvedFilterExpression;
+use super::order_by::ResolvedOrderBy;
 use super::permissions;
 use super::selection_set;
 use crate::execute::error;
@@ -28,7 +30,7 @@ pub struct ModelSelection<'s> {
     pub(crate) arguments: BTreeMap<String, ndc::models::Argument>,
 
     // The boolean expression that would fetch a single row from this model
-    pub(crate) filter_clause: Vec<ndc::models::Expression>,
+    pub(crate) filter_clause: ResolvedFilterExpression<'s>,
 
     // Limit
     pub(crate) limit: Option<u32>,
@@ -37,7 +39,7 @@ pub struct ModelSelection<'s> {
     pub(crate) offset: Option<u32>,
 
     // Order by
-    pub(crate) order_by: Option<ndc::models::OrderBy>,
+    pub(crate) order_by: Option<ResolvedOrderBy<'s>>,
 
     // Fields requested from the model
     pub(crate) selection: selection_set::ResultSelectionSet<'s>,
@@ -50,21 +52,30 @@ pub(crate) fn model_selection_ir<'s>(
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s resolved::model::ModelSource,
     arguments: BTreeMap<String, ndc::models::Argument>,
-    mut filter_clauses: Vec<ndc::models::Expression>,
-    permissions_predicate: &resolved::model::FilterPermission,
+    mut filter_clauses: ResolvedFilterExpression<'s>,
+    permissions_predicate: &'s resolved::model::FilterPermission,
     limit: Option<u32>,
     offset: Option<u32>,
-    order_by: Option<ndc::models::OrderBy>,
+    order_by: Option<ResolvedOrderBy<'s>>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     match permissions_predicate {
         resolved::model::FilterPermission::AllowAll => {}
         resolved::model::FilterPermission::Filter(predicate) => {
-            filter_clauses.push(permissions::process_model_predicate(
+            let permissions_predicate_relationship_paths = Vec::new();
+            let mut permissions_predicate_relationships = BTreeMap::new();
+            let processed_model_perdicate = permissions::process_model_predicate(
                 predicate,
                 session_variables,
-            )?);
+                permissions_predicate_relationship_paths,
+                &mut permissions_predicate_relationships,
+                usage_counts,
+            )?;
+            filter_clauses.expressions.push(processed_model_perdicate);
+            for (rel_name, rel_info) in permissions_predicate_relationships {
+                filter_clauses.relationships.insert(rel_name, rel_info);
+            }
         }
     };
     let field_mappings = model_source

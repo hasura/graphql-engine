@@ -102,6 +102,40 @@ fn test_model_select_many_type_permission_order_by() {
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }
 
+// Relationships in order_by expressions
+// What is being tested:
+// 1. Object relationships in order_by expressions (Simple, Nested Object relationships). We also test multi column boolean expressions
+
+#[test]
+fn test_model_select_many_order_by_object_relationship_simple() {
+    let test_path_string = "execute/models/select_many/order_by/relationships/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/order_by/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
+fn test_model_select_many_order_by_object_relationship_nested() {
+    let test_path_string = "execute/models/select_many/order_by/relationships/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/order_by/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
 #[test]
 fn test_model_select_many_type_permission_where() {
     let test_path_string = "execute/models/select_many/type_permission/where";
@@ -150,6 +184,71 @@ fn test_model_select_many_where_ndc_operators() {
     let test_path_string = "execute/models/select_many/where/ndc_operators";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+// Relationships in boolean expressions
+// What is being tested:
+// 1. Array relationships in boolean expressions (Simple, Nested array relationships). We also test multi column boolean expressions
+
+#[test]
+fn test_model_select_many_where_array_relationship_simple() {
+    let test_path_string = "execute/models/select_many/where/relationships/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
+fn test_model_select_many_where_array_relationship_nested() {
+    let test_path_string = "execute/models/select_many/where/relationships/array/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Object relationships in boolean expressions (Simple, Nested object relationships). We also test multi column boolean expressions
+#[test]
+fn test_model_select_many_where_object_relationship_simple() {
+    let test_path_string = "execute/models/select_many/where/relationships/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+#[test]
+fn test_model_select_many_where_object_relationship_nested() {
+    let test_path_string = "execute/models/select_many/where/relationships/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/where/relationships/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
 }
 
 #[test]
@@ -553,6 +652,142 @@ fn test_command_procedures_multiple_arguments() {
         &[
             common_metadata_path_string,
             common_command_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+// Array relationship
+#[test]
+fn test_model_select_many_relationship_predicate_array_simple() {
+    let test_path_string = "execute/models/select_many/relationship_predicates/array/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+
+// Nested Array relationship
+#[test]
+fn test_model_select_many_relationship_predicate_array_nested() {
+    let test_path_string = "execute/models/select_many/relationship_predicates/array/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+// Object relationship
+#[test]
+fn test_model_select_many_relationship_predicate_object_simple() {
+    let test_path_string = "execute/models/select_many/relationship_predicates/object/simple";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+// Nested bject relationship
+#[test]
+fn test_model_select_many_relationship_predicate_object_nested() {
+    let test_path_string = "execute/models/select_many/relationship_predicates/object/nested";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+// We have the following relationships:
+//  1.  'Tracks' array relationship to 'Album' model
+//  2.  'Album' object relationship to 'Track' model
+//
+// Predicates using the relationship are defined on both the models as follows:
+// 1. The select permission for 'user' role on 'Album' model is defined as:
+//      Select only those Album whose `TrackId` from the relationship `Track` is equal to "x-hasura-user-id"
+// 2. The select permission for 'user' role on 'Track' model is defined as:
+//      Select only those Track whose `Title` from the relationship `Album` is equal to "x-hasura-album-title"
+//
+// In this test, we test what happens when we query both the `Tracks` and `Album` relationship in the same query.
+// The query we make is:
+//   query MyQuery {
+//      Album(limit: 1) {
+//          Tracks {
+//              TrackId
+//              Name
+//              Album {
+//                  Title
+//              }
+//          }
+//      }
+//  }
+// We expect the following results:
+//      Fetch all the tracks of the Albums whose `TrackId` is equal to "x-hasura-user-id" and then
+//      filter those tracks based on the "x-hasura-album-title" value.
+#[test]
+fn test_model_select_many_relationship_predicate_on_two_fields() {
+    let test_path_string = "execute/models/select_many/relationship_predicates/on_two_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    );
+}
+
+// Tests using relationships in predicates
+// We have the following relationships:
+//  1.  'Tracks' object relationship to 'Album' model
+//  2.  'Album' object relationship to 'Track' model
+//  3.  'Genre' object relationship to 'Track' model
+//
+// We have the following select permission defined for "user" role
+//    It filters only those Albums whose Tracks's Album's AlbumnId is equal to "x-hasura-user-id" and
+//    whose Tracks's Genre's GenreId is equal to "x-hasura-genre-name"
+#[test]
+fn test_model_select_many_relationship_predicate_object_two_relationship_fields() {
+    let test_path_string =
+        "execute/models/select_many/relationship_predicates/object/two_relationship_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
         ],
     );
 }

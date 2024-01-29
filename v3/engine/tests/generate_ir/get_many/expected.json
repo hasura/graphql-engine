@@ -92,7 +92,10 @@
             },
             "collection": "articles",
             "arguments": {},
-            "filter_clause": [],
+            "filter_clause": {
+              "expressions": [],
+              "relationships": {}
+            },
             "limit": 1,
             "offset": 1,
             "order_by": null,

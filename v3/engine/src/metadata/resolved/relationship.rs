@@ -58,6 +58,9 @@ pub struct RelationshipCommandMapping {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Relationship {
     pub name: RelationshipName,
+    // `ast::Name` representation of `RelationshipName`. This is used to avoid
+    // the recurring conversion between `RelationshipName` to `ast::Name` during
+    // relationship IR generation
     pub field_name: ast::Name,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
@@ -70,6 +73,34 @@ pub struct RelationshipCapabilities {
     // Change this to a bool, when we support that
     pub foreach: (),
     pub relationships: bool,
+}
+
+pub enum RelationshipExecutionCategory {
+    // Push down relationship definition to the data connector
+    Local,
+    // Use foreach in the data connector to fetch related rows for multiple objects in a single request
+    RemoteForEach,
+}
+
+#[allow(clippy::match_single_binding)]
+pub fn relationship_execution_category(
+    source_connector: &DataConnector,
+    target_connector: &DataConnector,
+    target_source_relationship_capabilities: &RelationshipCapabilities,
+) -> RelationshipExecutionCategory {
+    // It's a local relationship if the source and target connectors are the same and
+    // the connector supports relationships.
+    if target_connector.name == source_connector.name
+        && target_source_relationship_capabilities.relationships
+    {
+        RelationshipExecutionCategory::Local
+    } else {
+        match target_source_relationship_capabilities.foreach {
+            // TODO: When we support naive relationships for connectors not implementing foreach,
+            // add another match arm / return enum variant
+            () => RelationshipExecutionCategory::RemoteForEach,
+        }
+    }
 }
 
 fn resolve_relationship_source_mapping<'a>(
