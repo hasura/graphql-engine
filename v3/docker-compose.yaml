@@ -80,8 +80,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     depends_on:
       - reference_agent
       - jaeger
@@ -96,8 +94,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     depends_on:
       - jaeger
       - auth_hook

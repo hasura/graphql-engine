@@ -53,8 +53,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     volumes:
       # So that updated files make their way back to the host machine
       - ./tracing-util:/app/tracing-util
@@ -68,8 +66,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     depends_on:
       - postgres
       - postgres_connector
