@@ -791,3 +791,20 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
         ],
     );
 }
+
+#[test]
+fn test_graphql_descriptions() {
+    let test_path_string = "execute/description";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_custom_connector_path_string =
+        "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_custom_connector_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}

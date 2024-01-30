@@ -32,6 +32,7 @@ use self::output_type::relationship::{
 pub mod inbuilt_type;
 pub mod input_type;
 pub mod output_type;
+pub mod scalar_type;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct GlobalID {

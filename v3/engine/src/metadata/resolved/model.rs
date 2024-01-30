@@ -5,7 +5,7 @@ use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_name, mk_qualified_type_reference,
-    serialize_qualified_btreemap, Qualified, QualifiedBaseType, QualifiedTypeName,
+    serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::check_conflicting_graphql_types;
@@ -41,11 +41,13 @@ use super::types::ObjectTypeRepresentation;
 pub struct SelectUniqueGraphQlDefinition {
     pub query_root_field: ast::Name,
     pub unique_identifier: IndexMap<FieldName, QualifiedTypeReference>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct SelectManyGraphQlDefinition {
     pub query_root_field: ast::Name,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -139,7 +141,7 @@ pub struct Model {
     pub data_type: Qualified<CustomTypeName>,
     pub type_fields: IndexMap<FieldName, FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
-    pub arguments: IndexMap<ArgumentName, QualifiedTypeReference>,
+    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: ModelGraphQlApi,
     pub source: Option<ModelSource>,
     pub select_permissions: Option<HashMap<Role, SelectPermission>>,
@@ -259,7 +261,10 @@ pub fn resolve_model(
         if arguments
             .insert(
                 argument.name.clone(),
-                mk_qualified_type_reference(&argument.argument_type, subgraph),
+                ArgumentInfo {
+                    argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
+                    description: argument.description.clone(),
+                },
             )
             .is_some()
         {
@@ -677,6 +682,7 @@ pub fn resolve_model_graphql_api(
     subgraph: &str,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    model_description: &Option<String>,
 ) -> Result<(), Error> {
     let model_name = &model.name;
     for select_unique in &model_graphql_definition.select_uniques {
@@ -701,12 +707,23 @@ pub fn resolve_model_graphql_api(
             }
         }
         let select_unique_field_name = mk_name(&select_unique.query_root_field.0)?;
+        let select_unique_description = if select_unique.description.is_some() {
+            select_unique.description.clone()
+        } else {
+            model_description.as_ref().map(|description| {
+                format!(
+                    "Selects a single object from the model. Model description: {}",
+                    description
+                )
+            })
+        };
         model
             .graphql_api
             .select_uniques
             .push(SelectUniqueGraphQlDefinition {
                 query_root_field: select_unique_field_name,
                 unique_identifier: unique_identifier_fields,
+                description: select_unique_description,
             });
     }
 
@@ -892,9 +909,20 @@ pub fn resolve_model_graphql_api(
     // record select_many root field
     model.graphql_api.select_many = match &model_graphql_definition.select_many {
         None => Ok(None),
-        Some(gql_definition) => mk_name(&gql_definition.query_root_field.0).map(|f| {
+        Some(gql_definition) => mk_name(&gql_definition.query_root_field.0).map(|f: ast::Name| {
+            let select_many_description = if gql_definition.description.is_some() {
+                gql_definition.description.clone()
+            } else {
+                model_description.as_ref().map(|description| {
+                    format!(
+                        "Selects multiple objects from the model. Model description: {}",
+                        description
+                    )
+                })
+            };
             Some(SelectManyGraphQlDefinition {
                 query_root_field: f,
+                description: select_many_description,
             })
         }),
     }?;

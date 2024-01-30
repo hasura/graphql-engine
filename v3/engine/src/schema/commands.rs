@@ -30,18 +30,18 @@ pub(crate) fn generate_command_argument(
     builder: &mut gql_schema::Builder<GDS>,
     command: &resolved::command::Command,
     argument_name: &ArgumentName,
-    argument_type: &crate::schema::commands::resolved::subgraph::QualifiedTypeReference,
+    argument_type: &crate::schema::commands::resolved::subgraph::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
     let field_name = ast::Name::new(argument_name.0.as_str())?;
-    let input_type = types::input_type::get_input_type(gds, builder, argument_type)?;
+    let input_type = types::input_type::get_input_type(gds, builder, &argument_type.argument_type)?;
     Ok((
         field_name.clone(),
         builder.allow_all_namespaced(
             gql_schema::InputField::new(
                 field_name,
-                None,
+                argument_type.description.clone(),
                 Annotation::Input(types::InputAnnotation::CommandArgument {
-                    argument_type: argument_type.clone(),
+                    argument_type: argument_type.argument_type.clone(),
                     ndc_func_proc_argument: command
                         .source
                         .as_ref()
@@ -84,7 +84,7 @@ pub(crate) fn command_field(
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             command_field_name.clone(),
-            None,
+            command.description.clone(),
             command_annotation,
             output_typename,
             arguments,

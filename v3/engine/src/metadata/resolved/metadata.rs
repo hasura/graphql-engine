@@ -27,6 +27,8 @@ use crate::metadata::resolved::types::{
     TypeRepresentation,
 };
 
+use super::types::ScalarTypeRepresentation;
+
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
@@ -115,9 +117,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         if types
             .insert(
                 qualified_scalar_type_name.clone(),
-                TypeRepresentation::ScalarType {
+                TypeRepresentation::ScalarType(ScalarTypeRepresentation {
                     graphql_type_name: graphql_type_name.clone(),
-                },
+                    description: scalar_type.description.clone(),
+                }),
             )
             .is_some()
         {
@@ -260,6 +263,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 subgraph,
                 &mut existing_graphql_types,
                 &data_connectors,
+                &model.description,
             )?;
         }
         let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());

@@ -65,6 +65,7 @@ pub struct Relationship {
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
     pub target_capabilities: Option<RelationshipCapabilities>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -435,5 +436,6 @@ pub fn resolve_relationship(
         source: source_type_name,
         target: relationship_target,
         target_capabilities,
+        description: relationship.description.clone(),
     })
 }

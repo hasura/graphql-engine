@@ -694,15 +694,18 @@
           "fields": [
             {
               "name": "author_id",
-              "type": "Int!"
+              "type": "Int!",
+              "description": "The id of the author"
             },
             {
               "name": "first_name",
-              "type": "String"
+              "type": "String",
+              "description": "The first name of the author"
             },
             {
               "name": "last_name",
-              "type": "String"
+              "type": "String",
+              "description": "The last name of the author"
             }
           ],
           "globalIdFields": [
@@ -711,7 +714,8 @@
           "graphql": {
             "typeName": "Author",
             "inputTypeName": null
-          }
+          },
+          "description": "An author of a book"
         }
       ],
       "type": "object",
@@ -755,6 +759,13 @@
               "type": "null"
             }
           ]
+        },
+        "description": {
+          "description": "The description of the object. Gets added to the description of the object's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -787,6 +798,13 @@
             {
               "$ref": "#/definitions/TypeReference"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of this field. Gets added to the description of the field's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -845,7 +863,8 @@
           "name": "CustomString",
           "graphql": {
             "typeName": "CustomString"
-          }
+          },
+          "description": "A custom string type"
         }
       ],
       "type": "object",
@@ -870,6 +889,13 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of this scalar. Gets added to the description of the scalar's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1068,16 +1094,19 @@
                 "queryRootField": "ArticleByID",
                 "uniqueIdentifier": [
                   "article_id"
-                ]
+                ],
+                "description": "Description for the select unique ArticleByID"
               }
             ],
             "selectMany": {
-              "queryRootField": "ArticleMany"
+              "queryRootField": "ArticleMany",
+              "description": "Description for the select many ArticleMany"
             },
             "argumentsInputType": null,
             "filterExpressionType": "Article_Where_Exp",
             "orderByExpressionType": "Article_Order_By"
-          }
+          },
+          "description": "Description for the model Articles"
         }
       ],
       "type": "object",
@@ -1152,6 +1181,13 @@
               "type": "null"
             }
           ]
+        },
+        "description": {
+          "description": "The description of the model. Gets added to the description of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1175,6 +1211,12 @@
         },
         "type": {
           "$ref": "#/definitions/TypeReference"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1400,11 +1442,13 @@
               "queryRootField": "ArticleByID",
               "uniqueIdentifier": [
                 "article_id"
-              ]
+              ],
+              "description": "Description for the select unique ArticleByID"
             }
           ],
           "selectMany": {
-            "queryRootField": "ArticleMany"
+            "queryRootField": "ArticleMany",
+            "description": "Description for the select many ArticleMany"
           },
           "argumentsInputType": null,
           "filterExpressionType": "Article_Where_Exp",
@@ -1494,6 +1538,13 @@
           "items": {
             "$ref": "#/definitions/FieldName"
           }
+        },
+        "description": {
+          "description": "The description of the select unique graphql definition of the model. Gets added to the description of the select unique root field of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1517,6 +1568,13 @@
             {
               "$ref": "#/definitions/GraphQlFieldName"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of the select many graphql definition of the model. Gets added to the description of the select many root field of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1550,7 +1608,8 @@
           "graphql": {
             "rootFieldName": "getLatestArticle",
             "rootFieldKind": "Query"
-          }
+          },
+          "description": "Get the latest article"
         }
       ],
       "type": "object",
@@ -1603,6 +1662,13 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of the command. Gets added to the description of the command's root field in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1784,7 +1850,8 @@
                 ]
               }
             }
-          ]
+          ],
+          "description": "Articles written by an author"
         }
       ],
       "type": "object",
@@ -1825,6 +1892,13 @@
           "items": {
             "$ref": "#/definitions/RelationshipMapping"
           }
+        },
+        "description": {
+          "description": "The description of the relationship. Gets added to the description of the relationship in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false

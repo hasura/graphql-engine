@@ -125,7 +125,7 @@ pub(crate) fn select_many_field(
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             query_root_field.clone(),
-            None,
+            select_many.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
                     data_type: model.data_type.clone(),

@@ -885,10 +885,12 @@
           "version": "v1",
           "definition": {
             "name": "author",
+            "description": "author description",
             "fields": [
               {
                 "name": "author_id",
-                "type": "CustomInt!"
+                "type": "CustomInt!",
+                "description": "author_id description"
               },
               {
                 "name": "first_name",
@@ -924,6 +926,7 @@
           "version": "v1",
           "definition": {
             "name": "commandArticle",
+            "description": "commandArticle description",
             "fields": [
               {
                 "name": "article_id",
@@ -1047,10 +1050,12 @@
           "version": "v1",
           "definition": {
             "name": "get_article_by_id",
+            "description": "get_article_by_id description",
             "arguments": [
               {
                 "name": "article_id",
-                "type": "Int!"
+                "type": "Int!",
+                "description": "command argument description"
               }
             ],
             "outputType": "commandArticle",
@@ -1288,6 +1293,7 @@
           "definition": {
             "source": "commandArticle",
             "name": "article",
+            "description": "commandArticle - article relationship description",
             "target": {
               "model": {
                 "name": "Articles",
@@ -1319,6 +1325,7 @@
           "version": "v1",
           "definition": {
             "name": "CustomInt",
+            "description": "customInt description",
             "graphql": {
               "typeName": "CustomInt"
             }
@@ -1393,6 +1400,7 @@
           "definition": {
             "name": "Authors",
             "objectType": "author",
+            "description": "top level Authors model description",
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
@@ -1414,6 +1422,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
+                  "description": "AuthorByID description",
                   "uniqueIdentifier": [
                     "author_id"
                   ]
@@ -1559,7 +1568,8 @@
             "arguments": [
               {
                 "name": "author_id",
-                "type": "Int!"
+                "type": "Int!",
+                "description": "ArticlesByAuthor argument description"
               }
             ],
             "source": {
@@ -1587,11 +1597,13 @@
                   "queryRootField": "ArticlesByAuthorByID",
                   "uniqueIdentifier": [
                     "article_id"
-                  ]
+                  ],
+                  "description": "ArticlesByAuthorByID description"
                 }
               ],
               "selectMany": {
-                "queryRootField": "ArticlesByAuthorMany"
+                "queryRootField": "ArticlesByAuthorMany",
+                "description": "ArticlesByAuthorMany description"
               },
               "orderByExpressionType": "ArticlesByAuthorOrderBy",
               "filterExpressionType": "ArticlesByAuthorWhereExp",
@@ -2750,6 +2762,7 @@
           "definition": {
             "source": "Artist",
             "name": "Albums",
+            "description": "Artist - Albums relationship description",
             "target": {
               "model": {
                 "name": "Albums",
@@ -2846,6 +2859,7 @@
           "definition": {
             "source": "article",
             "name": "AuthorFromCommand",
+            "description": "AuthorFromCommand description",
             "target": {
               "command": {
                 "name": "get_author_by_id"

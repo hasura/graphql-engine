@@ -25,6 +25,12 @@ pub struct QualifiedTypeReference {
     pub nullable: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ArgumentInfo {
+    pub argument_type: QualifiedTypeReference,
+    pub description: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
 pub enum QualifiedBaseType {
     Named(QualifiedTypeName),

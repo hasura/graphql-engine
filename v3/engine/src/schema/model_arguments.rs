@@ -56,14 +56,14 @@ pub fn build_model_argument_fields(
         .iter()
         .map(|(argument_name, argument_type)| {
             let field_name = ast::Name::new(argument_name.0.as_str())?;
-            let input_type = get_input_type(gds, builder, argument_type)?;
+            let input_type = get_input_type(gds, builder, &argument_type.argument_type)?;
             let input_field = builder.allow_all_namespaced(
                 gql_schema::InputField::new(
                     field_name.clone(),
-                    None,
+                    argument_type.description.clone(),
                     Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::ModelArgument {
-                            argument_type: argument_type.clone(),
+                            argument_type: argument_type.argument_type.clone(),
                             ndc_table_argument: model
                                 .source
                                 .as_ref()

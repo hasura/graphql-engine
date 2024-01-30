@@ -89,11 +89,10 @@ impl gql_schema::SchemaContext for GDS {
                 graphql_type_name,
             ),
             types::TypeId::ScalarType {
-                graphql_type_name, ..
-            } => Ok(gql_schema::TypeInfo::Scalar(gql_schema::Scalar {
-                name: graphql_type_name.clone(),
-                description: None,
-            })),
+                gds_type_name,
+                graphql_type_name,
+                ..
+            } => types::scalar_type::scalar_type_schema(self, gds_type_name, graphql_type_name),
             types::TypeId::InputObjectType {
                 gds_type_name,
                 graphql_type_name,

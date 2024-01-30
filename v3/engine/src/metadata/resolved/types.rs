@@ -20,9 +20,14 @@ use std::str::FromStr;
 pub enum TypeRepresentation {
     Object(ObjectTypeRepresentation),
     #[display(fmt = "ScalarType")]
-    ScalarType {
-        graphql_type_name: Option<ast::TypeName>,
-    },
+    ScalarType(ScalarTypeRepresentation),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ScalarTypeRepresentation {
+    pub graphql_type_name: Option<ast::TypeName>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
@@ -34,6 +39,7 @@ pub struct ObjectTypeRepresentation {
     pub global_id_fields: Vec<FieldName>,
     pub graphql_output_type_name: Option<ast::TypeName>,
     pub graphql_input_type_name: Option<ast::TypeName>,
+    pub description: Option<String>,
     // TODO: add graphql_output_type_kind if we support creating interfaces.
 }
 
@@ -56,6 +62,7 @@ impl<'a> ScalarTypeInfo<'a> {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -92,6 +99,7 @@ pub fn resolve_field(
 ) -> Result<FieldDefinition, Error> {
     Ok(FieldDefinition {
         field_type: mk_qualified_type_reference(&field.field_type, subgraph),
+        description: field.description.clone(),
     })
 }
 
@@ -174,6 +182,7 @@ pub fn resolve_object_type(
         type_permissions: HashMap::new(),
         graphql_output_type_name: graphql_type_name,
         graphql_input_type_name,
+        description: object_type_definition.description.clone(),
     }))
 }
 

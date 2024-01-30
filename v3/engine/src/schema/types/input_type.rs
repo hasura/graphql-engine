@@ -89,10 +89,11 @@ fn get_custom_input_type(
                 })?
                 .clone(),
         })),
-        TypeRepresentation::ScalarType { graphql_type_name } => {
+        TypeRepresentation::ScalarType(graphql_type_name) => {
             Ok(builder.register_type(super::TypeId::ScalarType {
                 gds_type_name: gds_type_name.clone(),
                 graphql_type_name: graphql_type_name
+                    .graphql_type_name
                     .as_ref()
                     .ok_or_else(|| Error::NoGraphQlTypeNameForScalar {
                         type_name: gds_type_name.clone(),

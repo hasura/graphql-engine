@@ -77,6 +77,9 @@ pub struct CommandV1 {
     pub source: Option<CommandSource>,
     /// Configuration for how this command should appear in the GraphQL schema.
     pub graphql: Option<CommandGraphQlDefinition>,
+    /// The description of the command.  
+    /// Gets added to the description of the command's root field in the graphql schema.  
+    pub description: Option<String>,
 }
 
 impl CommandV1 {
@@ -85,6 +88,7 @@ impl CommandV1 {
             r#"
             {
                 "name": "get_latest_article",
+                "description": "Get the latest article",
                 "arguments": [],
                 "outputType": "commandArticle",
                 "source": {
