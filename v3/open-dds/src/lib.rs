@@ -12,6 +12,7 @@ pub mod arguments;
 pub mod commands;
 pub mod data_connector;
 pub mod flags;
+pub mod graphql_config;
 pub mod models;
 pub mod permissions;
 pub mod relationships;
@@ -167,8 +168,24 @@ pub struct MetadataV2 {
     pub flags: flags::Flags,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub enum OpenDdSupergraphObject {}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames)]
+#[serde(tag = "kind")]
+pub enum OpenDdSupergraphObject {
+    // GraphQL schema configuration
+    GraphqlConfig(graphql_config::GraphqlConfig),
+}
+
+impl JsonSchema for OpenDdSupergraphObject {
+    fn schema_name() -> String {
+        "OpenDdSupergraphObject".into()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        json_schema_for_object_enum::<OpenDdSupergraphObject>(vec![json_schema_with_kind::<
+            graphql_config::GraphqlConfig,
+        >(gen)])
+    }
+}
 
 #[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq, JsonSchema)]
 #[schemars(rename = "OpenDdSupergraph")]

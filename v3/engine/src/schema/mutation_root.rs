@@ -1,17 +1,17 @@
 //! Schema for the mutation root type
 
-use lang_graphql::ast::common as ast;
+use lang_graphql::ast::common::{self as ast, TypeName};
 use lang_graphql::schema as gql_schema;
 use std::collections::HashMap;
 
-use crate::schema::{commands, mk_typename, GDS};
+use crate::schema::{commands, GDS};
 
 /// Generates schema for the query root type
 pub fn mutation_root_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
+    mutation_root_type_name: &TypeName,
 ) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
-    let type_name = mk_typename("Mutation")?;
     let mut fields = HashMap::new();
 
     // Add node field for only the commands which have a mutation root field
@@ -32,7 +32,7 @@ pub fn mutation_root_schema(
 
     Ok(gql_schema::Object::new(
         builder,
-        type_name,
+        mutation_root_type_name.clone(),
         None,
         fields,
         HashMap::new(),

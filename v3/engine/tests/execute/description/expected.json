@@ -54,16 +54,7 @@
               {
                 "name": "Articles_relationship",
                 "description": "Gets the corresponding articles of the author.",
-                "args": [
-                  {
-                    "name": "limit",
-                    "description": null
-                  },
-                  {
-                    "name": "offset",
-                    "description": null
-                  }
-                ]
+                "args": []
               },
               {
                 "name": "author_id",
@@ -517,16 +508,7 @@
               {
                 "name": "Articles_relationship",
                 "description": "Gets the corresponding articles of the author.",
-                "args": [
-                  {
-                    "name": "limit",
-                    "description": null
-                  },
-                  {
-                    "name": "offset",
-                    "description": null
-                  }
-                ]
+                "args": []
               },
               {
                 "name": "author_id",

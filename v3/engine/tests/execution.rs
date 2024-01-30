@@ -59,6 +59,18 @@ fn test_model_select_many_simple_select_introspection_user_1() {
 }
 
 #[test]
+fn test_model_select_many_simple_select_introspection_with_graphql_config() {
+    let test_path_string =
+        "execute/models/select_many/simple_select/introspection/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, metadata_graphql_json],
+    );
+}
+
+#[test]
 fn test_model_select_many_filter() {
     let test_path_string = "execute/models/select_many/simple_select/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
@@ -78,6 +90,17 @@ fn test_model_select_many_order_by_filter() {
     let test_path_string = "execute/models/select_many/order_by/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_model_select_many_order_by_with_graphql_config() {
+    let test_path_string = "execute/models/select_many/order_by/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, metadata_graphql_json],
+    );
 }
 
 // What is being tested? - We are testing the order_by sorts correctly when
@@ -166,6 +189,17 @@ fn test_model_select_many_where_filter() {
 }
 
 #[test]
+fn test_model_select_many_where_with_grapqhl_config() {
+    let test_path_string = "execute/models/select_many/where/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, metadata_graphql_json],
+    );
+}
+
+#[test]
 fn test_model_select_many_select_with_args() {
     let test_path_string = "execute/models/select_many/select_with_args";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
@@ -177,6 +211,17 @@ fn test_model_select_many_select_with_args_filter() {
     let test_path_string = "execute/models/select_many/select_with_args/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_model_select_many_select_with_args_with_graphql_config() {
+    let test_path_string = "execute/models/select_many/select_with_args/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, metadata_graphql_json],
+    );
 }
 
 #[test]
@@ -270,6 +315,15 @@ fn test_model_select_many_limit() {
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
     );
+}
+
+// Test is_null in model select permissions
+#[test]
+fn test_model_select_many_predicate_is_null() {
+    let test_path_string = "execute/models/select_many/predicate/is_null";
+    let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+
+    common::test_execution_expectation(test_path_string, &[ndc_metadata_path_string]);
 }
 
 // ---------- Offset Tests

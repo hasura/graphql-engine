@@ -151,7 +151,7 @@ pub enum Error {
     OperationNotFound { operation_name: ast::Name },
     #[error("no anonymous operation found in the document")]
     AnonymousOperationNotFound,
-    #[error("expected arguments {} on field {field_name} of type {type_name} are not found", argument_names.iter().fold(String::new(), |acc, name| acc + &name.to_string()))]
+    #[error("expected arguments '{}' on field {field_name} of type {type_name} are not found", argument_names.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(", "))]
     ArgumentsNotFound {
         type_name: ast::TypeName,
         field_name: ast::Name,

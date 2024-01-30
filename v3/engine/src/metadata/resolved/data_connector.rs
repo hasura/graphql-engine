@@ -325,6 +325,7 @@ mod tests {
 
         let flags_requiring_ndc_capabilities = Flags {
             require_ndc_capabilities: true,
+            ..Default::default()
         };
 
         // With explicit capabilities required, we should error on missing capabilities

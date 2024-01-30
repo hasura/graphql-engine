@@ -125,32 +125,46 @@ pub(crate) fn build_filter_expression<'s>(
             },
         )) => {
             let mut expressions = Vec::new();
-            for (op_name, op_value) in field.value.as_object()? {
-                let expression = match op_name.as_str() {
-                    "_eq" => build_binary_comparison_expression(
-                        gdc::models::BinaryComparisonOperator::Equal,
-                        column.clone(),
-                        &op_value.value,
-                        &relationship_paths,
-                    ),
-                    "_is_null" => build_is_null_expression(
-                        column.clone(),
-                        &op_value.value,
-                        &relationship_paths,
-                    )?,
-                    other => {
-                        let operator = gdc::models::BinaryComparisonOperator::Other {
-                            name: other.to_string(),
-                        };
-                        build_binary_comparison_expression(
-                            operator,
+            for (_op_name, op_value) in field.value.as_object()? {
+                match op_value.info.generic {
+                    types::Annotation::Input(InputAnnotation::Model(
+                        ModelInputAnnotation::IsNullOperation,
+                    )) => {
+                        let expression = build_is_null_expression(
                             column.clone(),
                             &op_value.value,
                             &relationship_paths,
-                        )
+                        )?;
+                        expressions.push(expression);
                     }
-                };
-                expressions.push(expression)
+                    types::Annotation::Input(InputAnnotation::Model(
+                        ModelInputAnnotation::ComparisonOperation { operator },
+                    )) => {
+                        let expression = match operator.as_str() {
+                            "_eq" => build_binary_comparison_expression(
+                                gdc::models::BinaryComparisonOperator::Equal,
+                                column.clone(),
+                                &op_value.value,
+                                &relationship_paths,
+                            ),
+                            other => {
+                                let operator = gdc::models::BinaryComparisonOperator::Other {
+                                    name: other.to_string(),
+                                };
+                                build_binary_comparison_expression(
+                                    operator,
+                                    column.clone(),
+                                    &op_value.value,
+                                    &relationship_paths,
+                                )
+                            }
+                        };
+                        expressions.push(expression)
+                    }
+                    annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+                        annotation: annotation.clone(),
+                    })?,
+                }
             }
             Ok(expressions)
         }

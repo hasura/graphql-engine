@@ -28,6 +28,7 @@ use crate::metadata::resolved::types::{
 };
 
 use super::types::ScalarTypeRepresentation;
+use crate::metadata::resolved::graphql_config::{GlobalGraphqlConfig, GraphqlConfig};
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -35,6 +36,7 @@ pub struct Metadata {
     pub types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, Command>,
+    pub graphql_config: GlobalGraphqlConfig,
 }
 
 /*******************
@@ -224,6 +226,8 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
 
     let mut models = IndexMap::new();
     let mut global_id_models = HashMap::new();
+    let graphql_config =
+        GraphqlConfig::new(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -247,6 +251,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 }
             }
         }
+
         if let Some(model_source) = &model.source {
             resolve_model_source(
                 model_source,
@@ -264,6 +269,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 &mut existing_graphql_types,
                 &data_connectors,
                 &model.description,
+                &graphql_config,
             )?;
         }
         let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
@@ -422,5 +428,6 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         types,
         models,
         commands,
+        graphql_config: graphql_config.global.clone(),
     })
 }

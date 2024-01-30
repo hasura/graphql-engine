@@ -449,6 +449,29 @@ pub enum Error {
         data_connector_name: Qualified<DataConnectorName>,
         error: url::ParseError,
     },
+    // ---------------- Graphql Configuration Errors ----------------
+    #[error("graphql configuration is not defined in supergraph")]
+    MissingGraphqlConfig,
+    #[error("graphql configuration should be defined only once in supergraph")]
+    MultipleGraphqlConfigDefinition,
+    #[error("the fieldName for limitInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    MissingLimitFieldInGraphqlConfig,
+    #[error("the fieldName for offsetInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    MissingOffsetFieldInGraphqlConfig,
+    #[error("the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType")]
+    MissingFilterInputFieldInGraphqlConfig,
+    #[error("the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    MissingOrderByInputFieldInGraphqlConfig,
+    #[error("the orderByInput.enumTypeNames need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    MissingOrderByEnumTypeNamesInGraphqlConfig,
+    #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
+    MultipleOrderByEnumTypeNamesInGraphqlConfig,
+    #[error(
+            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
+        )]
+    InvalidOrderByDirection { directions: String },
+    #[error("the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType")]
+    MissingArgumentsInputFieldInGraphqlConfig,
 }
 
 #[derive(Error, Debug)]

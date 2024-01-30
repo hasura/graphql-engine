@@ -1,0 +1,230 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": [
+      {
+        "kind": "GraphqlConfig",
+        "version": "v1",
+        "definition": {
+          "query": {
+            "rootOperationTypeName": "Query"
+          },
+          "mutation": {
+            "rootOperationTypeName": "Mutation"
+          }
+        }
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnector",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": "http://custom_connector:8101"
+            },
+            "headers": {},
+            "schema": {
+              "scalar_types": {
+                "Int": {
+                  "aggregate_functions": {
+                    "max": {
+                      "result_type": {
+                        "type": "nullable",
+                        "underlying_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "min": {
+                      "result_type": {
+                        "type": "nullable",
+                        "underlying_type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "comparison_operators": {},
+                  "update_operators": {}
+                },
+                "String": {
+                  "aggregate_functions": {},
+                  "comparison_operators": {
+                    "like": {
+                      "argument_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  },
+                  "update_operators": {}
+                }
+              },
+              "object_types": {
+                "actor": {
+                  "description": "An actor",
+                  "fields": {
+                    "id": {
+                      "description": "The actor's primary key",
+                      "type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    },
+                    "movie_id": {
+                      "description": "The actor's movie ID",
+                      "type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    },
+                    "name": {
+                      "description": "The actor's name",
+                      "type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  }
+                }
+              },
+              "collections": [
+                {
+                  "name": "actors",
+                  "description": "A collection of actors",
+                  "arguments": {},
+                  "type": "actor",
+                  "deletable": false,
+                  "uniqueness_constraints": {
+                    "ActorByID": {
+                      "unique_columns": [
+                        "id"
+                      ]
+                    }
+                  },
+                  "foreign_keys": {}
+                }
+              ],
+              "functions": [],
+              "procedures": []
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "actor",
+            "fields": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "movie_id",
+                "type": "String!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "globalIdFields": [
+              "actor_id"
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Actors",
+            "objectType": "actor",
+            "globalIdSource": false,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "actors",
+              "typeMapping": {
+                "actor": {
+                  "fieldMapping": {
+                    "actor_id": {
+                      "column": "id"
+                    },
+                    "name": {
+                      "column": "name"
+                    },
+                    "movie_id": {
+                      "column": "movie_id"
+                    }
+                  }
+                }
+              }
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ActorByMovieId",
+                  "uniqueIdentifier": [
+                    "actor_id"
+                  ]
+                }
+              ],
+              "orderByExpressionType": "Actor_Order_By"
+            },
+            "filterableFields": [
+              {
+                "fieldName": "actor_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "actor_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

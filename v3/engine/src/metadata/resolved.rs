@@ -2,6 +2,7 @@ mod argument;
 pub mod command;
 pub mod data_connector;
 pub mod error;
+pub mod graphql_config;
 pub mod metadata;
 pub mod model;
 pub mod ndc_validation;

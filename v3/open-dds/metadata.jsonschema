@@ -2501,6 +2501,27 @@
           "additionalProperties": false
         },
         {
+          "type": "object",
+          "required": [
+            "fieldIsNull"
+          ],
+          "properties": {
+            "fieldIsNull": {
+              "type": "object",
+              "required": [
+                "field"
+              ],
+              "properties": {
+                "field": {
+                  "$ref": "#/definitions/FieldName"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
           "description": "Filters objects based on the relationship of a model.",
           "type": "object",
           "required": [
@@ -2570,7 +2591,8 @@
       "type": "object",
       "required": [
         "field",
-        "operator"
+        "operator",
+        "value"
       ],
       "properties": {
         "field": {
@@ -2591,12 +2613,9 @@
         },
         "value": {
           "description": "The value expression to compare against.",
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/ValueExpression"
-            },
-            {
-              "type": "null"
             }
           ]
         }
@@ -2731,7 +2750,8 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false
+                "require_ndc_capabilities": false,
+                "require_graphql_config": false
               },
               "allOf": [
                 {
@@ -2772,7 +2792,8 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false
+                "require_ndc_capabilities": false,
+                "require_graphql_config": false
               },
               "allOf": [
                 {
@@ -2808,6 +2829,10 @@
         "require_ndc_capabilities": {
           "default": false,
           "type": "boolean"
+        },
+        "require_graphql_config": {
+          "default": false,
+          "type": "boolean"
         }
       }
     },
@@ -2824,8 +2849,295 @@
       }
     },
     "OpenDdSupergraphObject": {
+      "oneOf": [
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
+          "title": "GraphqlConfig",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "GraphqlConfig"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/GraphqlConfigV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    },
+    "GraphqlConfigV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfigV1",
+      "title": "GraphqlConfigV1",
+      "type": "object",
+      "required": [
+        "mutation",
+        "query"
+      ],
+      "properties": {
+        "query": {
+          "$ref": "#/definitions/QueryGraphqlConfig"
+        },
+        "mutation": {
+          "$ref": "#/definitions/MutationGraphqlConfig"
+        }
+      },
+      "additionalProperties": false
+    },
+    "QueryGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/QueryGraphqlConfig",
+      "title": "QueryGraphqlConfig",
+      "type": "object",
+      "required": [
+        "rootOperationTypeName"
+      ],
+      "properties": {
+        "rootOperationTypeName": {
+          "type": "string"
+        },
+        "argumentsInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ArgumentsInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LimitInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offsetInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OffsetInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FilterInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "orderByInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderByInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ArgumentsInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentsInputGraphqlConfig",
+      "title": "ArgumentsInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LimitInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LimitInputGraphqlConfig",
+      "title": "LimitInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OffsetInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OffsetInputGraphqlConfig",
+      "title": "OffsetInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FilterInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FilterInputGraphqlConfig",
+      "title": "FilterInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "operatorNames"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        },
+        "operatorNames": {
+          "$ref": "#/definitions/FilterInputOperatorNames"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FilterInputOperatorNames": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FilterInputOperatorNames",
+      "title": "FilterInputOperatorNames",
+      "type": "object",
+      "required": [
+        "and",
+        "isNull",
+        "not",
+        "or"
+      ],
+      "properties": {
+        "and": {
+          "type": "string"
+        },
+        "or": {
+          "type": "string"
+        },
+        "not": {
+          "type": "string"
+        },
+        "isNull": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByInputGraphqlConfig",
+      "title": "OrderByInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "enumDirectionValues",
+        "enumTypeNames",
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        },
+        "enumDirectionValues": {
+          "$ref": "#/definitions/OrderByDirectionValues"
+        },
+        "enumTypeNames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByEnumTypeName"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByDirectionValues": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirectionValues",
+      "title": "OrderByDirectionValues",
+      "type": "object",
+      "required": [
+        "asc",
+        "desc"
+      ],
+      "properties": {
+        "asc": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByEnumTypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByEnumTypeName",
+      "title": "OrderByEnumTypeName",
+      "type": "object",
+      "required": [
+        "directions",
+        "typeName"
+      ],
+      "properties": {
+        "directions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByDirection2"
+          }
+        },
+        "typeName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByDirection2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirection2",
+      "title": "OrderByDirection",
       "type": "string",
-      "enum": []
+      "enum": [
+        "asc",
+        "desc"
+      ]
+    },
+    "MutationGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/MutationGraphqlConfig",
+      "title": "MutationGraphqlConfig",
+      "type": "object",
+      "required": [
+        "rootOperationTypeName"
+      ],
+      "properties": {
+        "rootOperationTypeName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     "OpenDdSubgraph": {
       "type": "object",

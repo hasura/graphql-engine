@@ -27,28 +27,35 @@ pub(crate) fn generate_select_many_arguments(
     crate::schema::Error,
 > {
     let mut arguments = HashMap::new();
+
     // insert limit argument
-    let limit_argument = generate_int_input_argument(
-        "limit".to_string(),
-        Annotation::Input(types::InputAnnotation::Model(
-            ModelInputAnnotation::ModelLimitArgument,
-        )),
-    )?;
-    arguments.insert(
-        limit_argument.name.clone(),
-        builder.allow_all_namespaced(limit_argument, None),
-    );
+    if let Some(limit_field) = &model.graphql_api.limit_field {
+        let limit_argument = generate_int_input_argument(
+            limit_field.field_name.to_string(),
+            Annotation::Input(types::InputAnnotation::Model(
+                ModelInputAnnotation::ModelLimitArgument,
+            )),
+        )?;
+        arguments.insert(
+            limit_argument.name.clone(),
+            builder.allow_all_namespaced(limit_argument, None),
+        );
+    }
+
     // insert offset argument
-    let offset_argument = generate_int_input_argument(
-        "offset".to_string(),
-        Annotation::Input(types::InputAnnotation::Model(
-            ModelInputAnnotation::ModelOffsetArgument,
-        )),
-    )?;
-    arguments.insert(
-        offset_argument.name.clone(),
-        builder.allow_all_namespaced(offset_argument, None),
-    );
+    if let Some(offset_field) = &model.graphql_api.offset_field {
+        let offset_argument = generate_int_input_argument(
+            offset_field.field_name.to_string(),
+            Annotation::Input(types::InputAnnotation::Model(
+                ModelInputAnnotation::ModelOffsetArgument,
+            )),
+        )?;
+
+        arguments.insert(
+            offset_argument.name.clone(),
+            builder.allow_all_namespaced(offset_argument, None),
+        );
+    }
 
     // generate and insert order_by argument
     if let Some(order_by_expression_info) = &model.graphql_api.order_by_expression {

@@ -360,9 +360,9 @@ pub struct FieldComparisonPredicate {
     pub field: FieldName,
     /// The name of the operator to use for comparison.
     pub operator: OperatorName,
-    // Optional to support unary operators
     /// The value expression to compare against.
-    pub value: Option<ValueExpression>,
+    // When we support custom operators, we can make this optional
+    pub value: ValueExpression,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
@@ -384,10 +384,14 @@ pub struct RelationshipPredicate {
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "ModelPredicate")]
 #[schemars(example = "ModelPredicate::example")]
+#[serde(deny_unknown_fields)]
 /// A predicate that can be used to restrict the objects returned when querying a model.
 pub enum ModelPredicate {
     /// Filters objects based on a field value.
     FieldComparison(FieldComparisonPredicate),
+    FieldIsNull {
+        field: FieldName,
+    },
     // TODO: Remote relationships are disallowed for now
     /// Filters objects based on the relationship of a model.
     Relationship(RelationshipPredicate),

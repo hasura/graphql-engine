@@ -2,10 +2,11 @@ use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
 use crate::metadata::resolved::data_connector::{DataConnector, DataConnectorContext};
 use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_name, mk_qualified_type_reference,
-    serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType, QualifiedTypeName,
+    serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
     QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::check_conflicting_graphql_types;
@@ -17,7 +18,7 @@ use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast};
+use lang_graphql::ast::common::{self as ast, Name};
 use ndc_client as ndc;
 use open_dds::permissions::{NullableModelPredicate, RelationshipPredicate};
 use open_dds::{
@@ -28,7 +29,7 @@ use open_dds::{
         OperatorName, OrderableField,
     },
     permissions::{self, ModelPermissionsV1, Role, ValueExpression},
-    types::{CustomTypeName, FieldName, InbuiltType},
+    types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -57,12 +58,22 @@ pub struct ComparisonExpressionInfo {
     pub type_name: ast::TypeName,
     pub ndc_column: String,
     pub operators: BTreeMap<String, QualifiedTypeReference>,
+    pub is_null_operator_name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ModelFilterExpressionGraphqlConfig {
+    pub where_field_name: ast::Name,
+    pub and_operator_name: ast::Name,
+    pub or_operator_name: ast::Name,
+    pub not_operator_name: ast::Name,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelFilterExpression {
     pub where_type_name: ast::TypeName,
     pub scalar_fields: HashMap<FieldName, ComparisonExpressionInfo>,
+    pub filter_graphql_config: ModelFilterExpressionGraphqlConfig,
 }
 
 // TODO: add support for aggregates
@@ -76,15 +87,32 @@ pub struct ModelOrderByExpression {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub order_by_type_name: ast::TypeName,
     pub order_by_fields: HashMap<FieldName, OrderByExpressionInfo>,
+    pub order_by_field_name: ast::Name,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ModelGraphqlApiArgumentsConfig {
+    pub field_name: Name,
+    pub type_name: ast::TypeName,
+}
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct LimitFieldGraphqlConfig {
+    pub field_name: Name,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct OffsetFieldGraphqlConfig {
+    pub field_name: Name,
+}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct ModelGraphQlApi {
-    pub arguments_input_type: Option<ast::TypeName>,
+    pub arguments_input_config: Option<ModelGraphqlApiArgumentsConfig>,
     pub select_uniques: Vec<SelectUniqueGraphQlDefinition>,
     pub select_many: Option<SelectManyGraphQlDefinition>,
     pub filter_expression: Option<ModelFilterExpression>,
     pub order_by_expression: Option<ModelOrderByExpression>,
+    pub limit_field: Option<LimitFieldGraphqlConfig>,
+    pub offset_field: Option<OffsetFieldGraphqlConfig>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -339,19 +367,6 @@ fn resolve_ndc_type(
     }
 }
 
-fn resolve_unary_operator(
-    model_name: &Qualified<ModelName>,
-    operator: &OperatorName,
-) -> Result<ndc_client::models::UnaryComparisonOperator, Error> {
-    match operator.0.as_str() {
-        "_is_null" => Ok(ndc_client::models::UnaryComparisonOperator::IsNull),
-        _ => Err(Error::InvalidOperator {
-            model_name: model_name.clone(),
-            operator_name: operator.clone(),
-        }),
-    }
-}
-
 #[allow(clippy::too_many_arguments)]
 fn resolve_binary_operator(
     operator: &OperatorName,
@@ -463,31 +478,53 @@ fn resolve_model_predicate(
                         }
                     })?;
 
-                if let Some(value_expression) = value {
-                    let (resolved_operator, argument_type) = resolve_binary_operator(
-                        operator,
-                        &model.name,
-                        &model_source.data_connector.name,
-                        field,
-                        fields,
-                        scalars,
-                        scalar_type_info.scalar_type,
-                        subgraph,
-                    )?;
-                    Ok(ModelPredicate::BinaryFieldComparison {
-                        field: field.clone(),
-                        ndc_column: field_mapping.column.clone(),
-                        operator: resolved_operator,
-                        argument_type,
-                        value: value_expression.clone(),
-                    })
-                } else {
-                    Ok(ModelPredicate::UnaryFieldComparison {
-                        field: field.clone(),
-                        ndc_column: field_mapping.column.clone(),
-                        operator: resolve_unary_operator(&model.name, operator)?,
-                    })
-                }
+                let (resolved_operator, argument_type) = resolve_binary_operator(
+                    operator,
+                    &model.name,
+                    &model_source.data_connector.name,
+                    field,
+                    fields,
+                    scalars,
+                    scalar_type_info.scalar_type,
+                    subgraph,
+                )?;
+                Ok(ModelPredicate::BinaryFieldComparison {
+                    field: field.clone(),
+                    ndc_column: field_mapping.column.clone(),
+                    operator: resolved_operator,
+                    argument_type,
+                    value: value.clone(),
+                })
+            } else {
+                Err(Error::ModelSourceRequiredForPredicate {
+                    model_name: model.name.clone(),
+                })
+            }
+        }
+        permissions::ModelPredicate::FieldIsNull { field } => {
+            if let Some(model_source) = &model.source {
+                // Get field mappings of model data type
+                let TypeMapping::Object { field_mappings } = model_source
+                    .type_mappings
+                    .get(&model.data_type)
+                    .ok_or(Error::TypeMappingRequired {
+                        model_name: model.name.clone(),
+                        type_name: model.data_type.clone(),
+                        data_connector: model_source.data_connector.name.clone(),
+                    })?;
+                // Determine field_mapping for the predicate field
+                let field_mapping = field_mappings.get(field).ok_or_else(|| {
+                    Error::UnknownFieldInSelectPermissionsDefinition {
+                        field_name: field.clone(),
+                        model_name: model.name.clone(),
+                    }
+                })?;
+
+                Ok(ModelPredicate::UnaryFieldComparison {
+                    field: field.clone(),
+                    ndc_column: field_mapping.column.clone(),
+                    operator: ndc_client::models::UnaryComparisonOperator::IsNull,
+                })
             } else {
                 Err(Error::ModelSourceRequiredForPredicate {
                     model_name: model.name.clone(),
@@ -683,6 +720,7 @@ pub fn resolve_model_graphql_api(
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
     model_description: &Option<String>,
+    graphql_config: &GraphqlConfig,
 ) -> Result<(), Error> {
     let model_name = &model.name;
     for select_unique in &model_graphql_definition.select_uniques {
@@ -764,11 +802,15 @@ pub fn resolve_model_graphql_api(
                             );
                         }
 
-                        Ok(ModelOrderByExpression {
-                            data_connector_name: model_source.data_connector.name.clone(),
-                            order_by_type_name,
-                            order_by_fields,
-                        })
+                        match &graphql_config.query.order_by_field_name {
+                            None => Err(Error::MissingOrderByInputFieldInGraphqlConfig),
+                            Some(order_by_field_name) => Ok(ModelOrderByExpression {
+                                data_connector_name: model_source.data_connector.name.clone(),
+                                order_by_type_name,
+                                order_by_fields,
+                                order_by_field_name: order_by_field_name.clone(),
+                            }),
+                        }
                     })
                     .transpose()
             },
@@ -811,6 +853,12 @@ pub fn resolve_model_graphql_api(
                                 type_name: model.data_type.clone(),
                                 data_connector: model_source.data_connector.name.clone(),
                             })?;
+
+                        let filter_graphql_config = graphql_config
+                            .query
+                            .filter_input_config
+                            .as_ref()
+                            .ok_or_else(|| Error::MissingFilterInputFieldInGraphqlConfig)?;
 
                         for (field_name, field_mapping) in field_mappings.iter() {
                             // Generate comparison expression for fields mapped to simple scalar type
@@ -865,17 +913,6 @@ pub fn resolve_model_graphql_api(
                                             nullable: false,
                                         },
                                     );
-                                    // is_null operator
-                                    operators.insert(
-                                        "_is_null".to_string(),
-                                        QualifiedTypeReference {
-                                            underlying_type: QualifiedBaseType::Named(
-                                                QualifiedTypeName::Inbuilt(InbuiltType::Boolean),
-                                            ),
-                                            nullable: false,
-                                        },
-                                    );
-
                                     // Register scalar comparison field only if it contains non-zero operators.
                                     if !operators.is_empty() {
                                         scalar_fields.insert(
@@ -889,15 +926,26 @@ pub fn resolve_model_graphql_api(
                                                 type_name: graphql_type_name.clone(),
                                                 ndc_column: field_mapping.column.clone(),
                                                 operators,
+                                                is_null_operator_name: filter_graphql_config
+                                                    .operator_names
+                                                    .is_null
+                                                    .to_string(),
                                             },
                                         );
                                     };
                                 }
                             }
                         }
+
                         Ok(ModelFilterExpression {
                             where_type_name,
                             scalar_fields,
+                            filter_graphql_config: (ModelFilterExpressionGraphqlConfig {
+                                where_field_name: filter_graphql_config.where_field_name.clone(),
+                                and_operator_name: filter_graphql_config.operator_names.and.clone(),
+                                or_operator_name: filter_graphql_config.operator_names.or.clone(),
+                                not_operator_name: filter_graphql_config.operator_names.not.clone(),
+                            }),
                         })
                     })
                     .transpose()
@@ -926,6 +974,26 @@ pub fn resolve_model_graphql_api(
             })
         }),
     }?;
+
+    // record limit and offset field names
+    model.graphql_api.limit_field =
+        graphql_config
+            .query
+            .limit_field_name
+            .as_ref()
+            .map(|limit_field| LimitFieldGraphqlConfig {
+                field_name: limit_field.clone(),
+            });
+
+    model.graphql_api.offset_field =
+        graphql_config
+            .query
+            .offset_field_name
+            .as_ref()
+            .map(|offset_field| OffsetFieldGraphqlConfig {
+                field_name: offset_field.clone(),
+            });
+
     if model.arguments.is_empty() {
         if model_graphql_definition.arguments_input_type.is_some() {
             return Err(Error::UnnecessaryModelArgumentsGraphQlInputConfiguration {
@@ -941,8 +1009,17 @@ pub fn resolve_model_graphql_api(
             existing_graphql_types,
             arguments_input_type_name.as_ref(),
         )?;
+
         if let Some(type_name) = arguments_input_type_name {
-            model.graphql_api.arguments_input_type = Some(type_name);
+            let argument_input_field_name = graphql_config
+                .query
+                .arguments_field_name
+                .as_ref()
+                .ok_or_else(|| Error::MissingArgumentsInputFieldInGraphqlConfig)?;
+            model.graphql_api.arguments_input_config = Some(ModelGraphqlApiArgumentsConfig {
+                field_name: argument_input_field_name.clone(),
+                type_name,
+            });
         }
     }
 

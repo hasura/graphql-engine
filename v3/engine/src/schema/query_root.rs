@@ -1,13 +1,13 @@
 //! Schema of the query root type
 
+use lang_graphql::ast::common::TypeName;
 use lang_graphql::schema as gql_schema;
-use open_dds::{commands::GraphQlRootFieldKind, types::CustomTypeName};
+use open_dds::commands::GraphQlRootFieldKind;
 use std::collections::HashMap;
 
-use crate::metadata::resolved::subgraph;
 use crate::schema::commands;
 use crate::schema::query_root::node_field::relay_node_field;
-use crate::schema::{mk_typename, GDS};
+use crate::schema::GDS;
 
 use self::node_field::RelayNodeFieldOutput;
 
@@ -19,18 +19,28 @@ pub mod select_one;
 pub fn query_root_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
+    query_root_type_name: &TypeName,
 ) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
-    let type_name = mk_typename("Query")?;
     let mut fields = HashMap::new();
     for model in gds.metadata.models.values() {
         for select_unique in model.graphql_api.select_uniques.iter() {
-            let (field_name, field) =
-                select_one::select_one_field(gds, builder, model, select_unique, &type_name)?;
+            let (field_name, field) = select_one::select_one_field(
+                gds,
+                builder,
+                model,
+                select_unique,
+                query_root_type_name,
+            )?;
             fields.insert(field_name, field);
         }
         for select_many in model.graphql_api.select_many.iter() {
-            let (field_name, field) =
-                select_many::select_many_field(gds, builder, model, select_many, &type_name)?;
+            let (field_name, field) = select_many::select_many_field(
+                gds,
+                builder,
+                model,
+                select_many,
+                query_root_type_name,
+            )?;
             fields.insert(field_name, field);
         }
     }
@@ -64,20 +74,14 @@ pub fn query_root_schema(
         )
         .is_some()
     {
-        return Err(
-            crate::schema::Error::DuplicateFieldNameGeneratedInObjectType {
-                field_name: relay_node_gql_field.name,
-                type_name: subgraph::Qualified::new(
-                    "-".to_string(),
-                    CustomTypeName("Query".to_string()),
-                ),
-            },
-        );
+        return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+            field_name: relay_node_gql_field.name,
+        });
     };
 
     Ok(gql_schema::Object::new(
         builder,
-        type_name,
+        query_root_type_name.clone(),
         None,
         fields,
         HashMap::new(),

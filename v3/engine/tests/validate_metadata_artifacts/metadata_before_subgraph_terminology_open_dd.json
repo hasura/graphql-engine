@@ -1746,9 +1746,8 @@
                       },
                       {
                         "not": {
-                          "fieldComparison": {
-                            "field": "author_id",
-                            "operator": "_is_null"
+                          "fieldIsNull": {
+                            "field": "author_id"
                           }
                         }
                       }

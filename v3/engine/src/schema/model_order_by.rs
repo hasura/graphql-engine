@@ -21,17 +21,26 @@ type Error = crate::schema::Error;
 
 // Generates the schema for 'order_by' arguments: Asc/Desc
 pub fn build_order_by_enum_type_schema(
+    gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
+    order_by_type_name: &ast::TypeName,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
     let mut order_by_values = HashMap::new();
+    let order_by_input_config = gds
+        .metadata
+        .graphql_config
+        .order_by_input
+        .as_ref()
+        .ok_or_else(|| Error::InternalNoOrderByGraphqlConfigOrderByEnumType {
+            type_name: order_by_type_name.clone(),
+        })?;
 
-    let asc_ast_name = lang_graphql::mk_name!("Asc");
-    let desc_ast_name = lang_graphql::mk_name!("Desc");
+    let asc_ast_name = &order_by_input_config.asc_direction_field_value;
     order_by_values.insert(
         asc_ast_name.clone(),
         builder.allow_all_namespaced(
             gql_schema::EnumValue {
-                value: asc_ast_name,
+                value: asc_ast_name.clone(),
                 description: Some("Sorts the data in ascending order".to_string()),
                 deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
                 info: types::Annotation::Input(types::InputAnnotation::Model(
@@ -44,11 +53,12 @@ pub fn build_order_by_enum_type_schema(
         ),
     );
 
+    let desc_ast_name = &order_by_input_config.desc_direction_field_value;
     order_by_values.insert(
         desc_ast_name.clone(),
         builder.allow_all_namespaced(
             gql_schema::EnumValue {
-                value: desc_ast_name,
+                value: desc_ast_name.clone(),
                 description: Some("Sorts the data in descending order".to_string()),
                 deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
                 info: types::Annotation::Input(types::InputAnnotation::Model(
@@ -62,7 +72,7 @@ pub fn build_order_by_enum_type_schema(
     );
 
     Ok(gql_schema::TypeInfo::Enum(gql_schema::Enum {
-        name: ast::TypeName(lang_graphql::mk_name!("order_by")),
+        name: order_by_type_name.clone(),
         description: None,
         values: order_by_values,
     }))
@@ -74,7 +84,7 @@ pub fn get_order_by_expression_input_field(
     order_by_expression_info: &resolved::model::ModelOrderByExpression,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
-        lang_graphql::mk_name!("order_by"),
+        order_by_expression_info.order_by_field_name.clone(),
         None,
         types::Annotation::Input(types::InputAnnotation::Model(
             types::ModelInputAnnotation::ModelOrderByExpression,
@@ -107,11 +117,23 @@ pub fn build_model_order_by_input_schema(
     let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
 
     let mut fields = HashMap::new();
+
+    let order_by_input_config = gds
+        .metadata
+        .graphql_config
+        .order_by_input
+        .as_ref()
+        .ok_or_else(|| Error::InternalNoOrderByGraphqlConfig {
+            model_name: model_name.clone(),
+        })?;
+
     if let Some(model_order_by_expression) = model.graphql_api.order_by_expression.as_ref() {
         for (field_name, order_by_expression) in &model_order_by_expression.order_by_fields {
             let graphql_field_name = mk_name(field_name.clone().0.as_str())?;
             let input_type =
-                ast::TypeContainer::named_null(builder.register_type(TypeId::OrderByEnumType));
+                ast::TypeContainer::named_null(builder.register_type(TypeId::OrderByEnumType {
+                    graphql_type_name: order_by_input_config.enum_type_name.clone(),
+                }));
             let field_permissions: HashMap<Role, Option<types::NamespaceAnnotation>> =
                 permissions::get_allowed_roles_for_field(object_type_representation, field_name)
                     .map(|role| (role.clone(), None))

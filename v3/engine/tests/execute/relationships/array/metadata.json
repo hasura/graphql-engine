@@ -248,6 +248,20 @@
                 }
               }
             },
+            "graphql" :{
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": [
+                    "article_id"
+                  ]
+                }
+              ],
+              "selectMany" :{
+                "queryRootField": "Articles"              
+              },
+              "filterExpressionType": "Article_Where_Exp"
+            },
             "filterableFields": [
               {
                 "fieldName": "article_id",

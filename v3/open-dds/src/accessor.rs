@@ -1,4 +1,4 @@
-use crate::MetadataWithVersion;
+use crate::{graphql_config, MetadataWithVersion, OpenDdSupergraphObject};
 
 use super::{
     commands, data_connector, flags, models, permissions, relationships, types, Metadata,
@@ -36,6 +36,8 @@ pub struct MetadataAccessor {
     pub commands: Vec<QualifiedObject<commands::CommandV1>>,
     pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV1>>,
     pub flags: flags::Flags,
+    // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
+    pub graphql_config: Vec<graphql_config::GraphqlConfig>,
 }
 
 fn load_metadata_objects(
@@ -101,6 +103,18 @@ fn load_metadata_objects(
         }
     }
 }
+
+fn load_metadata_supergraph_object(
+    supergraph_object: OpenDdSupergraphObject,
+    accessor: &mut MetadataAccessor,
+) {
+    match supergraph_object {
+        OpenDdSupergraphObject::GraphqlConfig(graphql_config) => {
+            accessor.graphql_config.push(graphql_config);
+        }
+    }
+}
+
 impl MetadataAccessor {
     pub fn new(metadata: Metadata) -> MetadataAccessor {
         match metadata {
@@ -121,6 +135,9 @@ impl MetadataAccessor {
             Metadata::Versioned(MetadataWithVersion::V2(metadata)) => {
                 let mut accessor: MetadataAccessor =
                     MetadataAccessor::new_empty(Some(metadata.flags));
+                for supergraph_object in metadata.supergraph.objects.into_iter() {
+                    load_metadata_supergraph_object(supergraph_object, &mut accessor);
+                }
                 for subgraph in metadata.subgraphs {
                     load_metadata_objects(subgraph.objects, &subgraph.name, &mut accessor);
                 }
@@ -142,6 +159,7 @@ impl MetadataAccessor {
             commands: vec![],
             command_permissions: vec![],
             flags: flags.unwrap_or_else(|| DEFAULT_FLAGS.clone()),
+            graphql_config: vec![],
         }
     }
 }

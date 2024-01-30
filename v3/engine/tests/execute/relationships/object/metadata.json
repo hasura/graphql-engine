@@ -76,9 +76,7 @@
               ],
               "selectMany": {
                 "queryRootField": "Artist"
-              },
-              "filterExpressionType": "Artist_Where_Exp",
-              "orderByExpressionType": "Artist_Order_By"
+              }
             },
             "filterableFields": [
               {
@@ -233,9 +231,7 @@
               ],
               "selectMany": {
                 "queryRootField": "Album"
-              },
-              "filterExpressionType": "Album_Where_Exp",
-              "orderByExpressionType": "Album_Order_By"
+              }
             },
             "filterableFields": [
               {

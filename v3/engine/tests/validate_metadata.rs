@@ -13,7 +13,7 @@ fn test_select_many_model_arguments_without_arguments_input_type() {
     let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
     assert_eq!(
         GDS::build_schema(&gds).unwrap_err().to_string(),
-        "Cannot generate arguments for model Actors (in subgraph default) since argumentsInputType isn't defined"
+        "Cannot generate arguments for model Actors (in subgraph default) since argumentsInputType and it's corresponding graphql config argumentsInput isn't defined"
     );
 }
 
@@ -112,6 +112,102 @@ fn test_scalar_comparison_type_reuse() {
     let built_schema = gds.build_schema();
     assert_eq!(built_schema.unwrap_err().to_string(),
         "internal error while building schema: multiple definitions of graphql type: Int_Comparison_Exp"
+    );
+}
+
+// Test Global GraphQL Config
+
+// Filter Expression (Where clause) Tests
+
+// `filterExpressionType` is present in the `graphql` field of the model
+// but `filterInput` is not present in the `GraphqlConfig` kind
+#[test]
+fn test_filter_error_filter_expression_type_present_filter_input_not_present() {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+
+    let schema = fs::read_to_string(
+        test_dir.join("validate_metadata_artifacts/global_graphql_config/metadata_with_filter_expression_type_present_filter_input_not_present.json"),
+    )
+        .unwrap();
+
+    assert_eq!(
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        "metadata is not consistent: the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType"
+    );
+}
+
+// Order By Tests
+
+// `orderByExpressionType` is present in the `graphql` field of the model
+// but `orderByInput` is not present in the `GraphqlConfig` kind
+#[test]
+fn test_order_by_error_order_by_expression_type_present_order_by_input_not_present() {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+
+    let schema = fs::read_to_string(
+        test_dir.join("validate_metadata_artifacts/global_graphql_config/metadata_with_order_by_expression_type_present_order_by_input_not_present.json"),
+    )
+        .unwrap();
+
+    assert_eq!(
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        "metadata is not consistent: the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType"
+    );
+}
+
+// `orderByExpressionType` is present in the `graphql` field of the model
+// but `enumTypeNames` directions is other than `["asc", "desc"]` in the`orderByInput` in the `GraphqlConfig` kind
+#[test]
+fn test_order_by_error_order_by_expression_type_present_and_only_asc_in_enum_type_directions_in_order_by_input_present(
+) {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+
+    let schema = fs::read_to_string(
+        test_dir.join("validate_metadata_artifacts/global_graphql_config/metadata_with_order_by_expression_type_present_and_only_asc_in_enum_type_directions_in_order_by_input_present.json"),
+    )
+        .unwrap();
+
+    assert_eq!(
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        "metadata is not consistent: invalid directions: Asc defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
+    );
+}
+
+// Argument Tests
+
+// `argumentsInputType` is present in the `graphql` field of the model
+// but `argumentsInput` is not present in the `GraphqlConfig` kind
+#[test]
+fn test_arguments_error_arguments_input_type_present_arguments_input_not_present() {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+
+    let schema = fs::read_to_string(
+        test_dir.join("validate_metadata_artifacts/global_graphql_config/metadata_with_arguments_input_type_present_arguments_input_not_present.json"),
+    )
+        .unwrap();
+
+    assert_eq!(
+        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        "metadata is not consistent: the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType"
+    );
+}
+
+// "require_graphql_config" flag test
+// The `require_graphql_flag` is set to true but there is no `GraphqlConfig` object in metadata
+#[test]
+fn test_require_graphql_config_flag_no_graphql_config_present() {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+
+    let schema = fs::read_to_string(
+        test_dir.join("validate_metadata_artifacts/global_graphql_config/metadata_with_require_grapqhl_config_flag_graphql_config_not_present.json"),
+    )
+        .unwrap();
+
+    assert_eq!(
+        GDS::new(serde_json::from_str(&schema).unwrap())
+            .unwrap_err()
+            .to_string(),
+        "metadata is not consistent: graphql configuration is not defined in supergraph"
     );
 }
 

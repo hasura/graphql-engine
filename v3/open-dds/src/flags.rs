@@ -6,4 +6,6 @@ use serde::{Deserialize, Serialize};
 pub struct Flags {
     #[serde(default)]
     pub require_ndc_capabilities: bool,
+    #[serde(default)]
+    pub require_graphql_config: bool,
 }

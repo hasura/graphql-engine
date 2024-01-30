@@ -1,13 +1,14 @@
 use lang_graphql::ast::common as ast;
-use lang_graphql::{mk_name, schema as gql_schema};
+
+use crate::metadata::resolved;
+use crate::schema::GDS;
+use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use std::collections::HashMap;
 
 use super::types::input_type::get_input_type;
 use super::types::{Annotation, InputAnnotation, ModelInputAnnotation, TypeId};
-use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
-use crate::schema::GDS;
 
 /// Creates the `args` input object within which the model
 /// arguments fields will live.
@@ -17,26 +18,28 @@ pub fn get_model_arguments_input_field(
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
     model
         .graphql_api
-        .arguments_input_type
+        .arguments_input_config
         .as_ref()
-        .ok_or(crate::schema::Error::NoArgumentsInputTypeForSelectMany {
+        .ok_or(crate::schema::Error::NoArgumentsInputConfigForSelectMany {
             model_name: model.name.clone(),
         })
-        .map(|arguments_input_type| {
+        .map(|arguments_input_config| {
             // This function call adds the model arguments to the
             // `args` input object
             builder.register_type(TypeId::ModelArgumentsInput {
                 model_name: model.name.clone(),
-                type_name: arguments_input_type.clone(),
+                type_name: arguments_input_config.type_name.clone(),
             });
 
             gql_schema::InputField {
-                name: mk_name!("args"),
+                name: arguments_input_config.field_name.clone(),
                 description: None,
                 info: Annotation::Input(InputAnnotation::Model(
                     ModelInputAnnotation::ModelArgumentsExpression,
                 )),
-                field_type: ast::TypeContainer::named_non_null(arguments_input_type.clone()),
+                field_type: ast::TypeContainer::named_non_null(
+                    arguments_input_config.type_name.clone(),
+                ),
                 default_value: None,
                 deprecation_status: gql_schema::DeprecationStatus::NotDeprecated,
             }
