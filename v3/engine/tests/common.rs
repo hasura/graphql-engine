@@ -254,13 +254,15 @@ pub fn test_execute_explain(
             query,
             variables: None,
         };
-        let response = engine::execute::explain::execute_explain(
+        let raw_response = engine::execute::explain::execute_explain(
             &test_ctx.http_client,
             &schema,
             &session,
             raw_request,
         )
         .await;
+
+        let response = engine::execute::explain::types::redact_ndc_explain(raw_response);
 
         let mut expected = test_ctx
             .mint

@@ -31,8 +31,7 @@
             "type": "response",
             "value": {
               "details": {
-                "Execution Plan": "Aggregate  (cost=13.17..13.18 rows=1 width=32)\n  ->  Aggregate  (cost=13.15..13.16 rows=1 width=32)\n        ->  Seq Scan on \"Album\" \"%0_Album\"  (cost=0.00..12.10 rows=210 width=8)",
-                "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(row_to_json(\"%1_universe\")), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      *\n    FROM\n      (\n        SELECT\n          coalesce(json_agg(row_to_json(\"%2_rows\")), '[]') AS \"rows\"\n        FROM\n          (\n            SELECT\n              \"%0_Album\".\"ArtistId\" AS \"ArtistId\",\n              \"%0_Album\".\"ArtistId\" AS \"__hasura_phantom_field__ArtistId\",\n              \"%0_Album\".\"AlbumId\" AS \"__hasura_phantom_field__AlbumId\"\n            FROM\n              \"public\".\"Album\" AS \"%0_Album\"\n          ) AS \"%2_rows\"\n      ) AS \"%2_rows\"\n  ) AS \"%1_universe\""
+                "explain": "<redacted>"
               }
             }
           }
@@ -84,8 +83,7 @@
                   "type": "response",
                   "value": {
                     "details": {
-                      "Execution Plan": "",
-                      "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(\"%5_universe_agg\".\"universe\"), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      row_to_json(\"%2_universe\") AS \"universe\"\n    FROM\n      json_to_recordset(cast($1 as json)) AS \"%0_%variables_table\"(\"%variable_order\" int)\n      CROSS JOIN LATERAL (\n        SELECT\n          *\n        FROM\n          (\n            SELECT\n              coalesce(json_agg(row_to_json(\"%3_rows\")), '[]') AS \"rows\"\n            FROM\n              (\n                SELECT\n                  \"%1_Artist\".\"ArtistId\" AS \"ArtistId\",\n                  \"%1_Artist\".\"Name\" AS \"Name\"\n                FROM\n                  \"public\".\"Artist\" AS \"%1_Artist\"\n                WHERE\n                  (\n                    \"%1_Artist\".\"ArtistId\" = cast(\"%0_%variables_table\".\"$ArtistId\" as int4)\n                  )\n              ) AS \"%3_rows\"\n          ) AS \"%3_rows\"\n      ) AS \"%2_universe\"\n    ORDER BY\n      \"%0_%variables_table\".\"%variable_order\" ASC\n  ) AS \"%5_universe_agg\""
+                      "explain": "<redacted>"
                     }
                   }
                 }
@@ -131,8 +129,7 @@
                   "type": "response",
                   "value": {
                     "details": {
-                      "Execution Plan": "",
-                      "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(\"%5_universe_agg\".\"universe\"), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      row_to_json(\"%2_universe\") AS \"universe\"\n    FROM\n      json_to_recordset(cast($1 as json)) AS \"%0_%variables_table\"(\"%variable_order\" int)\n      CROSS JOIN LATERAL (\n        SELECT\n          *\n        FROM\n          (\n            SELECT\n              coalesce(json_agg(row_to_json(\"%3_rows\")), '[]') AS \"rows\"\n            FROM\n              (\n                SELECT\n                  \"%1_Track\".\"TrackId\" AS \"TrackId\"\n                FROM\n                  \"public\".\"Track\" AS \"%1_Track\"\n                WHERE\n                  (\n                    \"%1_Track\".\"AlbumId\" = cast(\"%0_%variables_table\".\"$AlbumId\" as int4)\n                  )\n              ) AS \"%3_rows\"\n          ) AS \"%3_rows\"\n      ) AS \"%2_universe\"\n    ORDER BY\n      \"%0_%variables_table\".\"%variable_order\" ASC\n  ) AS \"%5_universe_agg\""
+                      "explain": "<redacted>"
                     }
                   }
                 }

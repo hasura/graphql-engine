@@ -66,8 +66,7 @@
             "type": "response",
             "value": {
               "details": {
-                "Execution Plan": "Aggregate  (cost=73.67..73.68 rows=1 width=32)\n  ->  Aggregate  (cost=73.65..73.66 rows=1 width=32)\n        ->  Subquery Scan on \"%2_rows\"  (cost=0.15..69.40 rows=850 width=60)\n              ->  Index Scan Backward using author_pkey on author \"%0_authors\"  (cost=0.15..60.90 rows=850 width=36)",
-                "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(row_to_json(\"%1_universe\")), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      *\n    FROM\n      (\n        SELECT\n          coalesce(json_agg(row_to_json(\"%2_rows\")), '[]') AS \"rows\"\n        FROM\n          (\n            SELECT\n              \"%0_authors\".\"id\" AS \"author_id\",\n              \"%0_authors\".\"first_name\" AS \"first_name\"\n            FROM\n              \"public\".\"author\" AS \"%0_authors\"\n            ORDER BY\n              \"%0_authors\".\"id\" DESC\n          ) AS \"%2_rows\"\n      ) AS \"%2_rows\"\n  ) AS \"%1_universe\""
+                "explain": "<redacted>"
               }
             }
           }

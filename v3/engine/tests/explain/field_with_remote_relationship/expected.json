@@ -31,8 +31,7 @@
             "type": "response",
             "value": {
               "details": {
-                "Execution Plan": "Aggregate  (cost=22.77..22.78 rows=1 width=32)\n  ->  Aggregate  (cost=22.75..22.76 rows=1 width=32)\n        ->  Seq Scan on author \"%0_authors\"  (cost=0.00..18.50 rows=850 width=36)",
-                "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(row_to_json(\"%1_universe\")), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      *\n    FROM\n      (\n        SELECT\n          coalesce(json_agg(row_to_json(\"%2_rows\")), '[]') AS \"rows\"\n        FROM\n          (\n            SELECT\n              \"%0_authors\".\"id\" AS \"author_id\",\n              \"%0_authors\".\"first_name\" AS \"first_name\",\n              \"%0_authors\".\"id\" AS \"__hasura_phantom_field__id\"\n            FROM\n              \"public\".\"author\" AS \"%0_authors\"\n          ) AS \"%2_rows\"\n      ) AS \"%2_rows\"\n  ) AS \"%1_universe\""
+                "explain": "<redacted>"
               }
             }
           }
@@ -77,8 +76,7 @@
               "type": "response",
               "value": {
                 "details": {
-                  "Execution Plan": "",
-                  "SQL Query": "EXPLAIN\nSELECT\n  coalesce(json_agg(\"%5_universe_agg\".\"universe\"), '[]') AS \"universe\"\nFROM\n  (\n    SELECT\n      row_to_json(\"%2_universe\") AS \"universe\"\n    FROM\n      json_to_recordset(cast($1 as json)) AS \"%0_%variables_table\"(\"%variable_order\" int)\n      CROSS JOIN LATERAL (\n        SELECT\n          *\n        FROM\n          (\n            SELECT\n              coalesce(json_agg(row_to_json(\"%3_rows\")), '[]') AS \"rows\"\n            FROM\n              (\n                SELECT\n                  \"%1_articles\".\"title\" AS \"title\"\n                FROM\n                  \"public\".\"article\" AS \"%1_articles\"\n                WHERE\n                  (\n                    \"%1_articles\".\"author_id\" = cast(\"%0_%variables_table\".\"$author_id\" as integer)\n                  )\n              ) AS \"%3_rows\"\n          ) AS \"%3_rows\"\n      ) AS \"%2_universe\"\n    ORDER BY\n      \"%0_%variables_table\".\"%variable_order\" ASC\n  ) AS \"%5_universe_agg\""
+                  "explain": "<redacted>"
                 }
               }
             }
