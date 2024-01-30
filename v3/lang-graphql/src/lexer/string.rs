@@ -29,6 +29,13 @@ pub enum Error {
     /// when e.g. `"\l"` is parsed.
     #[error("unknown escape sequence in string: {0:?}")]
     UnknownEscapeSequence(String),
+
+    /// An invalid unicode escape sequence in a string literal was found, and
+    /// an error message is provided.
+    ///
+    /// This began with `"\u"` being parsed and then something going wrong.
+    #[error("invalid unicode escape sequence in string. {0:?}")]
+    InvalidUnicodeEscapeSequence(String),
 }
 
 pub struct Consumed {
@@ -232,10 +239,44 @@ fn parse_single_line_string(bytes: &[u8]) -> Result<(String, Consumed, usize), (
                         b'n' => ('\u{000A}', 1),
                         b'r' => ('\u{000D}', 1),
                         b't' => ('\u{0009}', 1),
-                        // TODO, parse unicode escape sequences
-                        // b'u' => {
-                        //     todo!()
-                        // }
+                        // unicode escape sequence:
+                        b'u' => {
+                            if i + 5 >= bytes.len() {
+                                return Err((Error::Unterminated, Consumed::no_line_break(chars)));
+                            }
+
+                            // Collect the next 4 characters as hex digits
+                            let hex_str = &bytes[i + 2..i + 6];
+                            let hex = std::str::from_utf8(hex_str).map_err(|_| {
+                                (
+                                    Error::InvalidUnicodeEscapeSequence(
+                                        "invalid format".to_string(),
+                                    ),
+                                    Consumed::no_line_break(chars),
+                                )
+                            })?;
+
+                            let code_point = u32::from_str_radix(hex, 16).map_err(|_| {
+                                (
+                                    Error::InvalidUnicodeEscapeSequence(
+                                        "invalid hex digits".to_string(),
+                                    ),
+                                    Consumed::no_line_break(chars),
+                                )
+                            })?;
+
+                            let c = std::char::from_u32(code_point).ok_or_else(|| {
+                                (
+                                    Error::InvalidUnicodeEscapeSequence(format!(
+                                        "0x{:X} is not a valid code point",
+                                        code_point
+                                    )),
+                                    Consumed::no_line_break(chars),
+                                )
+                            })?;
+
+                            (c, 5) // 5 bytes consumed: u, and the 4 hex digits
+                        }
                         b => {
                             return Err((
                                 Error::UnknownEscapeSequence(format!("\\{b}")),

@@ -1,0 +1,5 @@
+extend type Person implements Human @deprecated {
+    name: String
+    age: Int
+    picture: Url
+}

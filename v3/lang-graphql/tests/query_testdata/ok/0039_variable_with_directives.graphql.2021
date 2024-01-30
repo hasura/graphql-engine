@@ -1,0 +1,4 @@
+# Note @deprecated is only allowed in SDL AFAIU, but we'll allow it here
+query getOutput($input: Int @deprecated $config: String = "Config" @tag(name: "team-customers")) {
+    animal
+}

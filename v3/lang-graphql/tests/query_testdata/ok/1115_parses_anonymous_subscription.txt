@@ -1,0 +1,69 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Operation(
+                    OperationDefinition {
+                        ty: Subscription,
+                        name: None,
+                        variable_definitions: None,
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "subscriptionField",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 9,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 25,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 9,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 25,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 20,
+                            },
+                            end: SourcePosition {
+                                line: 3,
+                                col: 7,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 7,
+                },
+                end: SourcePosition {
+                    line: 3,
+                    col: 7,
+                },
+            },
+        ],
+    },
+)

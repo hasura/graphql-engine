@@ -104,7 +104,7 @@ impl<'a> Parser<'a> {
         ];
         match self.peek_fail(EXPECTED_TOKENS)?.item {
             lexer::Token::Punctuation(lexer::Punctuation::BracketL) => {
-                let list = self.parse_delimited_list(
+                let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BracketL,
                     lexer::Punctuation::BracketR,
                     |s| s.parse_const_value(),
@@ -112,7 +112,7 @@ impl<'a> Parser<'a> {
                 Ok(list.map(ConstValue::List))
             }
             lexer::Token::Punctuation(lexer::Punctuation::BraceL) => {
-                let list = self.parse_delimited_list(
+                let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BraceL,
                     lexer::Punctuation::BraceR,
                     |s| s.parse_key_value(|r| r.parse_const_value()),
@@ -149,7 +149,7 @@ impl<'a> Parser<'a> {
             }
             // [ (<value>,)* ]
             lexer::Token::Punctuation(lexer::Punctuation::BracketL) => {
-                let list = self.parse_delimited_list(
+                let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BracketL,
                     lexer::Punctuation::BracketR,
                     |s| s.parse_value(),
@@ -158,7 +158,7 @@ impl<'a> Parser<'a> {
             }
             // { (<key>: <value>,)* }
             lexer::Token::Punctuation(lexer::Punctuation::BraceL) => {
-                let list = self.parse_delimited_list(
+                let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BraceL,
                     lexer::Punctuation::BraceR,
                     |s| s.parse_key_value(|r| r.parse_value()),

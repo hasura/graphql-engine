@@ -1,0 +1,28 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Keyword(
+                    Query,
+                ),
+                Keyword(
+                    Mutation,
+                ),
+                Keyword(
+                    Subscription,
+                ),
+            ],
+            found: Token(
+                Name(
+                    Name(
+                        "awsas8d2934213hkj0987",
+                    ),
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 1,
+        },
+    },
+)

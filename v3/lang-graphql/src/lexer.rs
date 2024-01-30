@@ -1,3 +1,5 @@
+/// Lexer for both executable documents (i.e. graphql queries) and schema documents (SDL), which
+/// share a common syntax
 use std::fmt::Display;
 use std::str::{from_utf8_unchecked, FromStr};
 use std::{char, iter::Iterator};

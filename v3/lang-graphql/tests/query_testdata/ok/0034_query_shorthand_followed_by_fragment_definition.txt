@@ -1,0 +1,197 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Operation(
+                    OperationDefinition {
+                        ty: Query,
+                        name: None,
+                        variable_definitions: None,
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: FragmentSpread(
+                                            FragmentSpread {
+                                                fragment_name: Spanning {
+                                                    item: Name(
+                                                        "friendFields",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 6,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 17,
+                                                    },
+                                                },
+                                                directives: [],
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 3,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 17,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 1,
+                            },
+                            end: SourcePosition {
+                                line: 3,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 3,
+                    col: 1,
+                },
+            },
+            Spanning {
+                item: Fragment(
+                    FragmentDefinition {
+                        name: Spanning {
+                            item: Name(
+                                "friendFields",
+                            ),
+                            start: SourcePosition {
+                                line: 5,
+                                col: 10,
+                            },
+                            end: SourcePosition {
+                                line: 5,
+                                col: 21,
+                            },
+                        },
+                        type_condition: Spanning {
+                            item: TypeCondition {
+                                on: Spanning {
+                                    item: TypeName(
+                                        Name(
+                                            "User",
+                                        ),
+                                    ),
+                                    start: SourcePosition {
+                                        line: 5,
+                                        col: 26,
+                                    },
+                                    end: SourcePosition {
+                                        line: 5,
+                                        col: 29,
+                                    },
+                                },
+                            },
+                            start: SourcePosition {
+                                line: 5,
+                                col: 23,
+                            },
+                            end: SourcePosition {
+                                line: 5,
+                                col: 29,
+                            },
+                        },
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "id",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 6,
+                                                        col: 3,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 6,
+                                                        col: 4,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 6,
+                                            col: 3,
+                                        },
+                                        end: SourcePosition {
+                                            line: 6,
+                                            col: 4,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "name",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 7,
+                                                        col: 3,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 7,
+                                                        col: 6,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 7,
+                                            col: 3,
+                                        },
+                                        end: SourcePosition {
+                                            line: 7,
+                                            col: 6,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 5,
+                                col: 31,
+                            },
+                            end: SourcePosition {
+                                line: 8,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 5,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 8,
+                    col: 1,
+                },
+            },
+        ],
+    },
+)

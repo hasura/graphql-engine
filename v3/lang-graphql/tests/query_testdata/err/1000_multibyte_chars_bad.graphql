@@ -1,0 +1,2 @@
+# escape sequence not long enough (also make sure we don't read past end)
+{ field(arg: "Has a \uA"

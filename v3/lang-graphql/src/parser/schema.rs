@@ -54,7 +54,7 @@ impl<'a> Parser<'a> {
         let start_position =
             get_start_position(&description, &self.parse_keyword(&super::Keyword::Schema)?);
         let directives = self.parse_const_directives()?;
-        let operation_types = self.parse_delimited_list(
+        let operation_types = self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
             |s| {
@@ -103,7 +103,7 @@ impl<'a> Parser<'a> {
     fn parse_const_arguments(
         &mut self,
     ) -> super::Result<Option<Spanning<Vec<Spanning<InputValueDefinition>>>>> {
-        self.parse_optional_delimited_list(
+        self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
             |s| s.parse_input_value_definition(),
@@ -163,7 +163,7 @@ impl<'a> Parser<'a> {
     fn parse_fields_definition(
         &mut self,
     ) -> super::Result<Spanning<Vec<Spanning<FieldDefinition>>>> {
-        self.parse_delimited_list(
+        self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
             |s| s.parse_field_definition(),
@@ -205,10 +205,10 @@ impl<'a> Parser<'a> {
                     }
                     _ => Err(Positioned::new(
                         &token.start,
-                        super::Error::new(
-                            EXPECTED_TOKENS,
-                            super::TokenFound::Token(token.item.clone()),
-                        ),
+                        super::Error::TokenError{
+                            expected_tokens: EXPECTED_TOKENS,
+                            found: super::TokenFound::Token(token.item.clone()),
+                        },
                     )),
                 },
             }
@@ -302,10 +302,10 @@ impl<'a> Parser<'a> {
                     }
                     _ => Err(Positioned::new(
                         &token.start,
-                        super::Error::new(
-                            EXPECTED_TOKENS,
-                            super::TokenFound::Token(token.item.clone()),
-                        ),
+                        super::Error::TokenError {
+                            expected_tokens: EXPECTED_TOKENS,
+                            found: super::TokenFound::Token(token.item.clone()),
+                        },
                     )),
                 },
             }
@@ -347,7 +347,7 @@ impl<'a> Parser<'a> {
             get_start_position(&description, &self.parse_keyword(&super::Keyword::Enum)?);
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
-        let values = self.parse_delimited_list(
+        let values = self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
             |s| {
@@ -386,7 +386,7 @@ impl<'a> Parser<'a> {
             get_start_position(&description, &self.parse_keyword(&super::Keyword::Input)?);
         let name = self.parse_name()?;
         let directives = self.parse_const_directives()?;
-        let fields = self.parse_delimited_list(
+        let fields = self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
             |s| s.parse_input_value_definition(),
@@ -447,18 +447,18 @@ impl<'a> Parser<'a> {
                     }
                     _ => Err(Positioned::new(
                         &token.start,
-                        super::Error::new(
-                            EXPECTED_TOKENS,
-                            super::TokenFound::Token(token.item.clone()),
-                        ),
+                        super::Error::TokenError {
+                            expected_tokens: EXPECTED_TOKENS,
+                            found: super::TokenFound::Token(token.item.clone()),
+                        },
                     )),
                 },
                 _ => Err(Positioned::new(
                     &token.start,
-                    super::Error::new(
-                        EXPECTED_TOKENS,
-                        super::TokenFound::Token(token.item.clone()),
-                    ),
+                    super::Error::TokenError {
+                        expected_tokens: EXPECTED_TOKENS,
+                        found: super::TokenFound::Token(token.item.clone()),
+                    },
                 )),
             },
         }

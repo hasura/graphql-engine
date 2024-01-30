@@ -1,0 +1,11 @@
+{
+    user(
+        id: 4,
+        size: $size
+        value: "string",
+        input: [ "one", 1.34 ],
+        otherInput: { key: false, output: null }
+        emptyList: []
+        emptyObject: {}
+    )
+}

@@ -1,0 +1,6 @@
+query MyQuery {
+  Album(limit: 10, where: {Title: {_eq: "\""}}) {
+    Title
+  }
+}
+

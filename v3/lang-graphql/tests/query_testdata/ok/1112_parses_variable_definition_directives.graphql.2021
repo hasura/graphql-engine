@@ -1,0 +1,1 @@
+query Foo($x: Boolean = false @bar) { field }

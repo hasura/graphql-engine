@@ -38,7 +38,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_selection_set(&mut self) -> super::Result<Spanning<SelectionSet>> {
-        self.parse_delimited_list(
+        self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
             |s| s.parse_selection(),
@@ -122,7 +122,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_arguments(&mut self) -> super::Result<Option<Spanning<Vec<Argument>>>> {
-        self.parse_optional_delimited_list(
+        self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
             |s| s.parse_key_value(|r| r.parse_value()),

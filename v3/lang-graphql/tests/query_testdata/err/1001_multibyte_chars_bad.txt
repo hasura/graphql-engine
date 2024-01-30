@@ -1,0 +1,39 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Number,
+                String,
+                Keyword(
+                    True,
+                ),
+                Keyword(
+                    False,
+                ),
+                Keyword(
+                    Null,
+                ),
+                Punctuation(
+                    Dollar,
+                ),
+                Punctuation(
+                    BracketL,
+                ),
+                Punctuation(
+                    BraceL,
+                ),
+            ],
+            found: LexerError(
+                InvalidString(
+                    InvalidUnicodeEscapeSequence(
+                        "invalid hex digits",
+                    ),
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 2,
+            col: 21,
+        },
+    },
+)

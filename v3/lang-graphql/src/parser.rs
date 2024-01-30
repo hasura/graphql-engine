@@ -17,32 +17,35 @@ pub struct Parser<'a> {
 }
 
 #[derive(Error, Debug, PartialEq, Clone)]
-pub struct Error {
-    expected_tokens: &'static [ExpectedToken],
-    found: TokenFound,
+pub enum Error {
+    TokenError {
+        expected_tokens: &'static [ExpectedToken],
+        found: TokenFound,
+    },
+    /// For other parse errors, just supply an error message.
+    OtherError(&'static str),
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let expected_tokens = self
-            .expected_tokens
-            .iter()
-            .fold(String::new(), |acc, expected_token| {
-                acc + &expected_token.to_string() + ", "
-            });
-        let found = &self.found;
-        write!(
-            f,
-            "expected one of {expected_tokens}, but encountered: {found}"
-        )
-    }
-}
-
-impl Error {
-    pub fn new(expected_tokens: &'static [ExpectedToken], found: TokenFound) -> Self {
-        Error {
-            expected_tokens,
-            found,
+        match self {
+            Error::TokenError {
+                expected_tokens,
+                found,
+            } => {
+                let expected_tokens_str = expected_tokens
+                    .iter()
+                    .fold(String::new(), |acc, expected_token| {
+                        acc + &expected_token.to_string() + ", "
+                    });
+                write!(
+                    f,
+                    "expected one of {expected_tokens_str}, but encountered: {found}"
+                )
+            }
+            Error::OtherError(msg) => {
+                write!(f, "{}", msg)
+            }
         }
     }
 }
@@ -256,7 +259,10 @@ impl<'a> Parser<'a> {
     fn eof<T>(&self, expected_tokens: &'static [ExpectedToken]) -> Result<T> {
         Err(Positioned::new(
             &self.lexer.get_position(),
-            Error::new(expected_tokens, TokenFound::EndOfFile),
+            Error::TokenError {
+                expected_tokens,
+                found: TokenFound::EndOfFile,
+            },
         ))
     }
 
@@ -266,18 +272,27 @@ impl<'a> Parser<'a> {
     ) -> Result<T> {
         Err(Positioned::new(
             &error.position,
-            Error::new(expected_tokens, TokenFound::LexerError(error.item.clone())),
+            Error::TokenError {
+                expected_tokens,
+                found: TokenFound::LexerError(error.item.clone()),
+            },
         ))
+    }
+    fn other_error<T>(error_msg: &'static str, start: SourcePosition) -> Result<T> {
+        Err(Positioned::new(&start, Error::OtherError(error_msg)))
     }
 
     fn unexpected_token<T>(
-        expected: &'static [ExpectedToken],
+        expected_tokens: &'static [ExpectedToken],
         found: lexer::Token,
         location: &SourcePosition,
     ) -> Result<T> {
         Err(Positioned::new(
             location,
-            Error::new(expected, TokenFound::Token(found)),
+            Error::TokenError {
+                expected_tokens,
+                found: TokenFound::Token(found),
+            },
         ))
     }
 
@@ -352,13 +367,47 @@ impl<'a> Parser<'a> {
         Ok(items)
     }
 
-    /// Parse delimited items into a `List`
-    /// <start> <item>* <end>
-    fn parse_delimited_list<T, F>(
+    /// Parse one or more delimited items into a `List`
+    /// <start> <item>+ <end>
+    ///
+    /// This corresponds to occurrences of symbol plus the "LIST" subscript in the grammar given in
+    /// the spec. See:
+    /// https://spec.graphql.org/October2021/#sec-Grammar-Notation.Optionality-and-Lists
+    ///
+    /// TODO Ideally return NonEmpty here
+    fn parse_nonempty_delimited_list<T, F>(
         &mut self,
         start_token: lexer::Punctuation,
         end_token: lexer::Punctuation,
         parse: F,
+    ) -> Result<Spanning<Vec<T>>>
+    where
+        F: Fn(&mut Self) -> Result<T>,
+    {
+        self.parse_delimited_list_helper(start_token, end_token, parse, true)
+    }
+
+    /// Parse zero or more delimited items into a `List`
+    /// <start> <item>* <end>
+    fn parse_possibly_empty_delimited_list<T, F>(
+        &mut self,
+        start_token: lexer::Punctuation,
+        end_token: lexer::Punctuation,
+        parse: F,
+    ) -> Result<Spanning<Vec<T>>>
+    where
+        F: Fn(&mut Self) -> Result<T>,
+    {
+        self.parse_delimited_list_helper(start_token, end_token, parse, false)
+    }
+    // NOTE: we'd like this to be private to this scope, but functionality is used in child
+    // modules.
+    fn parse_delimited_list_helper<T, F>(
+        &mut self,
+        start_token: lexer::Punctuation,
+        end_token: lexer::Punctuation,
+        parse: F,
+        must_be_nonempty: bool,
     ) -> Result<Spanning<Vec<T>>>
     where
         F: Fn(&mut Self) -> Result<T>,
@@ -370,12 +419,17 @@ impl<'a> Parser<'a> {
             items.push(parse(self)?);
         }
         let end = self.parse_punctuation(end_token)?;
+        if must_be_nonempty && items.is_empty() {
+            return Self::other_error("At least one item must be specified", end.start);
+        }
         Ok(Spanning::start_end(start.start, end.end, items))
     }
 
-    /// Parse optional delimited items into a `List`
-    /// (<start> <item>* <end>)?
-    fn parse_optional_delimited_list<T, F>(
+    /// Parse an optional delimited list of one or more items into a `List`
+    /// (<start> <item>+ <end>)?
+    ///
+    /// TODO Ideally return NonEmpty here
+    fn parse_optional_nonempty_delimited_list<T, F>(
         &mut self,
         start_token: lexer::Punctuation,
         end_token: lexer::Punctuation,
@@ -385,10 +439,11 @@ impl<'a> Parser<'a> {
         F: Fn(&mut Self) -> Result<T>,
     {
         if self.is_next_token(&lexer::Token::Punctuation(start_token.clone())) {
-            Ok(Some(self.parse_delimited_list(
+            Ok(Some(self.parse_delimited_list_helper(
                 start_token,
                 end_token,
                 parse,
+                true,
             )?))
         } else {
             Ok(None)

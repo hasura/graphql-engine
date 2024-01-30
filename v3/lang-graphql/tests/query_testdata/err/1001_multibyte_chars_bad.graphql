@@ -1,0 +1,2 @@
+# Non-hex unicode escape
+{ field(arg: "Has a \u0A0Z multi-byte character.") }

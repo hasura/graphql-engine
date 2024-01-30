@@ -1,0 +1,8 @@
+type Object {
+  #(apparently you can stick a comma in there?? please dont do it!)
+  field : [Int ,!] # comment
+  _other:
+String,,,   ,
+#garbage
+  realField: ID!
+}

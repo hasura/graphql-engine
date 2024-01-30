@@ -1,0 +1,165 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Fragment(
+                    FragmentDefinition {
+                        name: Spanning {
+                            item: Name(
+                                "friendFields",
+                            ),
+                            start: SourcePosition {
+                                line: 1,
+                                col: 10,
+                            },
+                            end: SourcePosition {
+                                line: 1,
+                                col: 21,
+                            },
+                        },
+                        type_condition: Spanning {
+                            item: TypeCondition {
+                                on: Spanning {
+                                    item: TypeName(
+                                        Name(
+                                            "User",
+                                        ),
+                                    ),
+                                    start: SourcePosition {
+                                        line: 1,
+                                        col: 26,
+                                    },
+                                    end: SourcePosition {
+                                        line: 1,
+                                        col: 29,
+                                    },
+                                },
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 23,
+                            },
+                            end: SourcePosition {
+                                line: 1,
+                                col: 29,
+                            },
+                        },
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "id",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 6,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 6,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "name",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 3,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 3,
+                                                        col: 8,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 3,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 3,
+                                            col: 8,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: FragmentSpread(
+                                            FragmentSpread {
+                                                fragment_name: Spanning {
+                                                    item: Name(
+                                                        "standardProfilePic",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 4,
+                                                        col: 8,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 4,
+                                                        col: 25,
+                                                    },
+                                                },
+                                                directives: [],
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 4,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 4,
+                                            col: 25,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 31,
+                            },
+                            end: SourcePosition {
+                                line: 5,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 5,
+                    col: 1,
+                },
+            },
+        ],
+    },
+)

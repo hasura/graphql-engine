@@ -1,0 +1,4 @@
+type Person {
+  name: String
+  picture(url: String = "https://spec.graphql.org/October2021/#DefaultValue): Url
+}
