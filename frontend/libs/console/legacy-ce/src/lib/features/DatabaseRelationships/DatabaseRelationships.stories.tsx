@@ -58,8 +58,8 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
     const arrayRelationships = await canvas.findAllByText('Array');
     expect(arrayRelationships).toHaveLength(2);
 
-    expect(await canvas.findByText('AlbumCovers')).toBeVisible();
-    expect(await canvas.findByText('Track')).toBeVisible();
+    expect(await canvas.findByText('public.AlbumCovers')).toBeVisible();
+    expect(await canvas.findByText('public.Track')).toBeVisible();
 
     expect(await canvas.findAllByText('Rename')).toHaveLength(2);
 
@@ -71,8 +71,8 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
       expect(await canvas.findByText('SUGGESTED RELATIONSHIPS')).toBeVisible();
       expect(await canvas.findByText('artist')).toBeVisible();
       expect(await canvas.findAllByText('Object')).toHaveLength(2);
-      expect(await canvas.findAllByText('Artist')).toHaveLength(2);
-
+      expect(await canvas.findAllByText('public.Artist')).toHaveLength(1);
+      expect(await canvas.findAllByText('dbo.Artist')).toHaveLength(1);
       expect(await canvas.findByText('Add')).toBeVisible();
     });
 
