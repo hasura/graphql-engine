@@ -117,6 +117,13 @@ fn test_model_select_many_order_by_multiple_columns() {
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }
 
+#[test]
+fn test_model_select_many_order_by_multiple_columns_validation_check() {
+    let test_path_string = "execute/models/select_many/order_by/order_by_validation_check";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
 // Type Permissions
 #[test]
 fn test_model_select_many_type_permission_order_by() {

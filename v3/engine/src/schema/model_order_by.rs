@@ -89,12 +89,12 @@ pub fn get_order_by_expression_input_field(
         types::Annotation::Input(types::InputAnnotation::Model(
             types::ModelInputAnnotation::ModelOrderByExpression,
         )),
-        ast::TypeContainer::named_null(builder.register_type(
+        ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(builder.register_type(
             types::TypeId::ModelOrderByExpression {
                 model_name,
                 graphql_type_name: order_by_expression_info.order_by_type_name.clone(),
             },
-        )),
+        ))),
         None,
         gql_schema::DeprecationStatus::NotDeprecated,
     )

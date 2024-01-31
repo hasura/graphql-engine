@@ -3,7 +3,7 @@
     name
   }
 
-  AuthorMany(order_by: {author_id: Desc}){
+  AuthorMany(order_by: [{author_id: Desc}]){
     author_id
     first_name
   }

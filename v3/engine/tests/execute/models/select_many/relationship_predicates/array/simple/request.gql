@@ -9,7 +9,7 @@ query MyQuery {
       TrackId
     }
   }
-  AlbumPredicateOrderBy: Album(limit: 2, order_by: {AlbumId: Desc}) {
+  AlbumPredicateOrderBy: Album(limit: 2, order_by: [{AlbumId: Desc}]) {
     AlbumId
     Title
     ArtistId

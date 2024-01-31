@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 
 use gdc::models::PathElement;
+
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
+
 use ndc_client as gdc;
 use serde::Serialize;
 
@@ -29,19 +31,43 @@ pub(crate) fn build_ndc_order_by<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResolvedOrderBy<'s>, error::Error> {
     match &args_field.value {
-        normalized_ast::Value::Object(arguments) => {
+        normalized_ast::Value::List(arguments) => {
             let mut ndc_order_elements = Vec::new();
             let mut relationships = BTreeMap::new();
-            // TODO: use argument.values?
-            for argument in arguments.values() {
-                let relationship_paths = Vec::new();
-                let order_by_element = build_ndc_order_by_element(
-                    argument,
-                    relationship_paths,
-                    &mut relationships,
-                    usage_counts,
-                )?;
-                ndc_order_elements.extend(order_by_element);
+
+            for v in arguments.iter() {
+                match v {
+                    normalized_ast::Value::Object(arguments) => {
+                        // Check if the input object contains exactly one key-value pair.
+                        // This is done because the users might provide multiple key-value pairs
+                        // in a single input object and the server might interpret it arbitrarily
+                        // since input objects values are unordered key-value pair lists.
+                        if arguments.len() != 1 {
+                            Err(error::Error::ValidationFailed(
+                                    lang_graphql::validation::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair,
+                                ))?
+                        } else {
+                            let argument = arguments
+                                    .first()
+                                    .ok_or(error::InternalEngineError::InternalGeneric {
+                                        description: "unexpected: could not find the first key-value pair of arguments"
+                                            .into(),
+                                    })?
+                                    .1;
+                            let relationship_paths = Vec::new();
+                            let order_by_element = build_ndc_order_by_element(
+                                argument,
+                                relationship_paths,
+                                &mut relationships,
+                                usage_counts,
+                            )?;
+                            ndc_order_elements.extend(order_by_element);
+                        }
+                    }
+                    _ => Err(error::InternalEngineError::InternalGeneric {
+                        description: "Expected list of input objects value for order_by".into(),
+                    })?,
+                }
             }
             Ok(ResolvedOrderBy {
                 order_by: gdc::models::OrderBy {
@@ -51,7 +77,7 @@ pub(crate) fn build_ndc_order_by<'s>(
             })
         }
         _ => Err(error::InternalEngineError::InternalGeneric {
-            description: "Expected object value for model arguments".into(),
+            description: "Expected list of input objects value for order_by".into(),
         })?,
     }
 }
