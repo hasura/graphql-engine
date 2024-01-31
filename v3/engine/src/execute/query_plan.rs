@@ -66,7 +66,7 @@ pub struct NDCQueryExecution<'s, 'ir> {
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub query: ndc_client::models::MutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
-    pub data_connector: &'s resolved::data_connector::DataConnector,
+    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -82,7 +82,7 @@ pub struct ExecutionTree<'s, 'ir> {
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
     pub query: ndc_client::models::QueryRequest,
-    pub data_connector: &'s resolved::data_connector::DataConnector,
+    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
 }
 
 #[derive(Clone, Debug, PartialEq)]

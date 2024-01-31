@@ -57,11 +57,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         if data_connectors
             .insert(
                 qualified_data_connector_name.clone(),
-                DataConnectorContext::new(
-                    &qualified_data_connector_name,
-                    data_connector,
-                    &metadata_accessor.flags,
-                )?,
+                DataConnectorContext::new(data_connector)?,
             )
             .is_some()
         {

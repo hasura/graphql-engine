@@ -388,7 +388,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse zero or more delimited items into a `List`
-    /// <start> <item>* <end>
+    /// `<start> <item>* <end>`
     fn parse_possibly_empty_delimited_list<T, F>(
         &mut self,
         start_token: lexer::Punctuation,

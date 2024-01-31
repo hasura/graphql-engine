@@ -17,8 +17,8 @@
     "OpenDdSubgraphObject": {
       "oneOf": [
         {
-          "$id": "https://hasura.io/jsonschemas/metadata/DataConnector",
-          "title": "DataConnector",
+          "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorLink",
+          "title": "DataConnectorLink",
           "description": "Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.",
           "oneOf": [
             {
@@ -32,7 +32,7 @@
                 "kind": {
                   "type": "string",
                   "enum": [
-                    "DataConnector"
+                    "DataConnectorLink"
                   ]
                 },
                 "version": {
@@ -42,33 +42,7 @@
                   ]
                 },
                 "definition": {
-                  "$ref": "#/definitions/DataConnectorV1"
-                }
-              },
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "required": [
-                "definition",
-                "kind",
-                "version"
-              ],
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "DataConnector"
-                  ]
-                },
-                "version": {
-                  "type": "string",
-                  "enum": [
-                    "v2"
-                  ]
-                },
-                "definition": {
-                  "$ref": "#/definitions/DataConnectorV2"
+                  "$ref": "#/definitions/DataConnectorLinkV1"
                 }
               },
               "additionalProperties": false
@@ -374,23 +348,28 @@
         }
       ]
     },
-    "DataConnectorV1": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorV1",
-      "title": "DataConnectorV1",
+    "DataConnectorLinkV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorLinkV1",
+      "title": "DataConnectorLinkV1",
       "description": "Definition of a data connector - version 1.",
       "examples": [
         {
           "name": "data_connector",
           "url": {
-            "singleUrl": "http://data_connector:8100"
+            "singleUrl": {
+              "value": "http://data_connector:8100"
+            }
           },
           "headers": {},
           "schema": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
+            "version": "v0.1",
+            "definition": {
+              "scalar_types": {},
+              "object_types": {},
+              "collections": [],
+              "functions": [],
+              "procedures": []
+            }
           },
           "capabilities": {
             "versions": "*",
@@ -404,6 +383,7 @@
       ],
       "type": "object",
       "required": [
+        "capabilities",
         "name",
         "url"
       ],
@@ -429,17 +409,20 @@
           "default": {},
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/SecretValue"
+            "$ref": "#/definitions/EnvironmentValue"
           }
         },
         "schema": {
           "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
           "default": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
+            "version": "v0.1",
+            "definition": {
+              "scalar_types": {},
+              "object_types": {},
+              "collections": [],
+              "functions": [],
+              "procedures": []
+            }
           },
           "allOf": [
             {
@@ -448,13 +431,10 @@
           ]
         },
         "capabilities": {
-          "description": "The capabilities of the data connector. This field is required, and is marked optional only for temporary backwards compatibility.",
-          "anyOf": [
+          "description": "The capabilities of the data connector.",
+          "allOf": [
             {
               "$ref": "#/definitions/CapabilitiesResponse"
-            },
-            {
-              "type": "null"
             }
           ]
         }
@@ -476,7 +456,7 @@
           ],
           "properties": {
             "singleUrl": {
-              "type": "string"
+              "$ref": "#/definitions/EnvironmentValue"
             }
           },
           "additionalProperties": false
@@ -488,34 +468,16 @@
           ],
           "properties": {
             "readWriteUrls": {
-              "$ref": "#/definitions/ReadWriteUrlsV1"
+              "$ref": "#/definitions/ReadWriteUrls"
             }
           },
           "additionalProperties": false
         }
       ]
     },
-    "ReadWriteUrlsV1": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrlsV1",
-      "title": "ReadWriteUrlsV1",
-      "type": "object",
-      "required": [
-        "read",
-        "write"
-      ],
-      "properties": {
-        "read": {
-          "type": "string"
-        },
-        "write": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "SecretValue": {
-      "$id": "https://hasura.io/jsonschemas/SecretValue",
-      "title": "SecretValue",
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
       "description": "Either a literal string or a reference to a Hasura secret",
       "oneOf": [
         {
@@ -533,10 +495,10 @@
         {
           "type": "object",
           "required": [
-            "stringValueFromSecret"
+            "valueFromEnv"
           ],
           "properties": {
-            "stringValueFromSecret": {
+            "valueFromEnv": {
               "type": "string"
             }
           },
@@ -544,131 +506,9 @@
         }
       ]
     },
-    "CapabilitiesResponse": {
-      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
-    },
-    "DataConnectorV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorV2",
-      "title": "DataConnectorV2",
-      "description": "Definition of a data connector - version 2.",
-      "examples": [
-        {
-          "name": "data_connector",
-          "url": {
-            "singleUrl": {
-              "value": "http://data_connector:8100"
-            }
-          },
-          "headers": {},
-          "schema": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
-          "capabilities": {
-            "versions": "*",
-            "capabilities": {
-              "query": {
-                "variables": {}
-              }
-            }
-          }
-        }
-      ],
-      "type": "object",
-      "required": [
-        "name",
-        "url"
-      ],
-      "properties": {
-        "name": {
-          "description": "The name of the data connector.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DataConnectorName"
-            }
-          ]
-        },
-        "url": {
-          "description": "The url(s) to access the data connector.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DataConnectorUrlV2"
-            }
-          ]
-        },
-        "headers": {
-          "description": "Key value map of HTTP headers to be sent with each request to the data connector.",
-          "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/SecretValue"
-          }
-        },
-        "schema": {
-          "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
-          "default": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
-          "allOf": [
-            {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
-            }
-          ]
-        },
-        "capabilities": {
-          "description": "The capabilities of the data connector. This field is required, and is marked optional only for temporary backwards compatibility.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CapabilitiesResponse"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "DataConnectorUrlV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorUrlV2",
-      "title": "DataConnectorUrlV2",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "singleUrl"
-          ],
-          "properties": {
-            "singleUrl": {
-              "$ref": "#/definitions/SecretValue"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "readWriteUrls"
-          ],
-          "properties": {
-            "readWriteUrls": {
-              "$ref": "#/definitions/ReadWriteUrlsV2"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "ReadWriteUrlsV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrlsV2",
-      "title": "ReadWriteUrlsV2",
+    "ReadWriteUrls": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrls",
+      "title": "ReadWriteUrls",
       "type": "object",
       "required": [
         "read",
@@ -676,13 +516,16 @@
       ],
       "properties": {
         "read": {
-          "$ref": "#/definitions/SecretValue"
+          "$ref": "#/definitions/EnvironmentValue"
         },
         "write": {
-          "$ref": "#/definitions/SecretValue"
+          "$ref": "#/definitions/EnvironmentValue"
         }
       },
       "additionalProperties": false
+    },
+    "CapabilitiesResponse": {
+      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
     },
     "ObjectTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeV1",
@@ -2750,7 +2593,6 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false,
                 "require_graphql_config": false
               },
               "allOf": [
@@ -2792,7 +2634,6 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false,
                 "require_graphql_config": false
               },
               "allOf": [
@@ -2826,10 +2667,6 @@
     "OpenDdFlags": {
       "type": "object",
       "properties": {
-        "require_ndc_capabilities": {
-          "default": false,
-          "type": "boolean"
-        },
         "require_graphql_config": {
           "default": false,
           "type": "boolean"

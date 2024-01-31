@@ -1,6 +1,6 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
-use crate::metadata::resolved::data_connector::{DataConnector, DataConnectorContext};
+use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::ndc_validation;
@@ -117,7 +117,7 @@ pub struct ModelGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
-    pub data_connector: DataConnector,
+    pub data_connector: DataConnectorLink,
     pub collection: String,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
@@ -1118,7 +1118,7 @@ pub fn resolve_model_source(
     )?;
 
     model.source = Some(ModelSource {
-        data_connector: DataConnector::new(
+        data_connector: DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context.url.clone(),
             data_connector_context.headers,

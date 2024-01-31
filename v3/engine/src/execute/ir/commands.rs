@@ -33,7 +33,7 @@ pub struct CommandInfo<'s> {
     pub field_name: ast::Name,
 
     /// The data connector backing this model.
-    pub data_connector: &'s resolved::data_connector::DataConnector,
+    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
 
     /// Arguments for the NDC table
     pub(crate) arguments: BTreeMap<String, json::Value>,

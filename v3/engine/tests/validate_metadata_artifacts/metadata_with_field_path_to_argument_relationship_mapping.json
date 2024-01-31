@@ -1,7 +1,7 @@
 [
   {
-    "kind": "DataConnector",
-    "version": "v2",
+    "kind": "DataConnectorLink",
+    "version": "v1",
     "definition": {
       "name": "db",
       "url": {
@@ -10,133 +10,150 @@
         }
       },
       "headers": {},
+      "capabilities": {
+        "versions": "*",
+        "capabilities": {
+          "query": {
+            "aggregates": {},
+            "variables": {}
+          },
+          "explain": {},
+          "relationships": {
+            "relation_comparisons": {},
+            "order_by_aggregate": {}
+          }
+        }
+      },
       "schema": {
-        "scalar_types": {
-          "Int": {
-            "aggregate_functions": {
-              "max": {
-                "result_type": {
-                  "type": "nullable",
-                  "underlying_type": {
-                    "type": "named",
-                    "name": "Int"
+        "version": "v0.1",
+        "definition": {
+          "scalar_types": {
+            "Int": {
+              "aggregate_functions": {
+                "max": {
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "Int"
+                    }
+                  }
+                },
+                "min": {
+                  "result_type": {
+                    "type": "nullable",
+                    "underlying_type": {
+                      "type": "named",
+                      "name": "Int"
+                    }
                   }
                 }
               },
-              "min": {
-                "result_type": {
-                  "type": "nullable",
-                  "underlying_type": {
+              "comparison_operators": {},
+              "update_operators": {}
+            },
+            "String": {
+              "aggregate_functions": {},
+              "comparison_operators": {
+                "like": {
+                  "argument_type": {
                     "type": "named",
-                    "name": "Int"
+                    "name": "String"
                   }
                 }
-              }
-            },
-            "comparison_operators": {},
-            "update_operators": {}
+              },
+              "update_operators": {}
+            }
           },
-          "String": {
-            "aggregate_functions": {},
-            "comparison_operators": {
-              "like": {
-                "argument_type": {
-                  "type": "named",
-                  "name": "String"
+          "object_types": {
+            "actor": {
+              "description": "An actor",
+              "fields": {
+                "id": {
+                  "description": "The actor's primary key",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "movie_id": {
+                  "description": "The actor's movie ID",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "name": {
+                  "description": "The actor's name",
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
                 }
               }
             },
-            "update_operators": {}
-          }
-        },
-        "object_types": {
-          "actor": {
-            "description": "An actor",
-            "fields": {
-              "id": {
-                "description": "The actor's primary key",
-                "type": {
-                  "type": "named",
-                  "name": "Int"
-                }
-              },
-              "movie_id": {
-                "description": "The actor's movie ID",
-                "type": {
-                  "type": "named",
-                  "name": "Int"
-                }
-              },
-              "name": {
-                "description": "The actor's name",
-                "type": {
-                  "type": "named",
-                  "name": "String"
+            "movie": {
+              "description": "A movie",
+              "fields": {
+                "id": {
+                  "description": "The movie's primary key",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
+                "rating": {
+                  "description": "The movie's rating",
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
+                },
+                "title": {
+                  "description": "The movie's title",
+                  "type": {
+                    "type": "named",
+                    "name": "String"
+                  }
                 }
               }
             }
           },
-          "movie": {
-            "description": "A movie",
-            "fields": {
-              "id": {
-                "description": "The movie's primary key",
-                "type": {
-                  "type": "named",
-                  "name": "Int"
+          "collections": [
+            {
+              "name": "actors",
+              "description": "A collection of actors",
+              "arguments": {},
+              "type": "actor",
+              "deletable": false,
+              "uniqueness_constraints": {
+                "ActorByID": {
+                  "unique_columns": [
+                    "id"
+                  ]
                 }
               },
-              "rating": {
-                "description": "The movie's rating",
-                "type": {
-                  "type": "named",
-                  "name": "String"
+              "foreign_keys": {}
+            },
+            {
+              "name": "movies",
+              "description": "A collection of movies",
+              "arguments": {},
+              "type": "movie",
+              "deletable": false,
+              "uniqueness_constraints": {
+                "MovieByID": {
+                  "unique_columns": [
+                    "id"
+                  ]
                 }
               },
-              "title": {
-                "description": "The movie's title",
-                "type": {
-                  "type": "named",
-                  "name": "String"
-                }
-              }
+              "foreign_keys": {}
             }
-          }
-        },
-        "collections": [
-          {
-            "name": "actors",
-            "description": "A collection of actors",
-            "arguments": {},
-            "type": "actor",
-            "deletable": false,
-            "uniqueness_constraints": {
-              "ActorByID": {
-                "unique_columns": [
-                  "id"
-                ]
-              }
-            },
-            "foreign_keys": {}
-          },
-          {
-            "name": "movies",
-            "description": "A collection of movies",
-            "arguments": {},
-            "type": "movie",
-            "deletable": false,
-            "uniqueness_constraints": {
-              "MovieByID": {
-                "unique_columns": [
-                  "id"
-                ]
-              }
-            },
-            "foreign_keys": {}
-          }
-        ],
-        "functions": [],
-        "procedures": []
+          ],
+          "functions": [],
+          "procedures": []
+        }
       }
     }
   },

@@ -24,7 +24,7 @@ lazy_static::lazy_static! {
 }
 
 pub struct MetadataAccessor {
-    pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorV2>>,
+    pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
     pub object_types: Vec<QualifiedObject<types::ObjectTypeV1>>,
     pub scalar_types: Vec<QualifiedObject<types::ScalarTypeV1>>,
     pub data_connector_scalar_representations:
@@ -47,7 +47,7 @@ fn load_metadata_objects(
 ) {
     for object in metadata_objects {
         match object {
-            OpenDdSubgraphObject::DataConnector(data_connector) => {
+            OpenDdSubgraphObject::DataConnectorLink(data_connector) => {
                 accessor
                     .data_connectors
                     .push(QualifiedObject::new(subgraph, data_connector.upgrade()));

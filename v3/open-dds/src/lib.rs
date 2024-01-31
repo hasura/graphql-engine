@@ -24,22 +24,22 @@ pub mod types;
 // we expect the metadata build service to have resolved the secret reference so we deserialize
 // only to a literal value.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-pub struct SecretValue {
+pub struct EnvironmentValue {
     pub value: String,
 }
 
-impl JsonSchema for SecretValue {
+impl JsonSchema for EnvironmentValue {
     fn schema_name() -> String {
-        "SecretValue".into()
+        "EnvironmentValue".into()
     }
 
     fn schema_id() -> std::borrow::Cow<'static, str> {
-        "https://hasura.io/jsonschemas/SecretValue".into()
+        "https://hasura.io/jsonschemas/EnvironmentValue".into()
     }
 
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         // This is copied from ndc-sdk to avoid establishing a dependency.
-        let mut s = SecretValueImpl::json_schema(gen);
+        let mut s = EnvironmentValueImpl::json_schema(gen);
         if let SchemaObjectVariant(o) = &mut s {
             if let Some(m) = &mut o.metadata {
                 m.id = Some(Self::schema_id().into());
@@ -52,18 +52,18 @@ impl JsonSchema for SecretValue {
 // This is copied from ndc-sdk to avoid establishing a dependency.
 #[derive(Serialize, Deserialize, Debug, Clone, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-#[schemars(title = "SecretValue")]
+#[schemars(title = "EnvironmentValue")]
 /// Either a literal string or a reference to a Hasura secret
-enum SecretValueImpl {
+enum EnvironmentValueImpl {
     Value(String),
-    StringValueFromSecret(String),
+    ValueFromEnv(String),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames)]
 #[serde(tag = "kind")]
 pub enum OpenDdSubgraphObject {
     // Data connector
-    DataConnector(data_connector::DataConnector),
+    DataConnectorLink(data_connector::DataConnectorLink),
 
     // Types
     ObjectType(types::ObjectType),
@@ -94,7 +94,7 @@ impl JsonSchema for OpenDdSubgraphObject {
 
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
         json_schema_for_object_enum::<OpenDdSubgraphObject>(vec![
-            json_schema_with_kind::<data_connector::DataConnector>(gen),
+            json_schema_with_kind::<data_connector::DataConnectorLink>(gen),
             json_schema_with_kind::<types::ObjectType>(gen),
             json_schema_with_kind::<types::ScalarType>(gen),
             json_schema_with_kind::<types::DataConnectorScalarRepresentation>(gen),

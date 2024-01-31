@@ -58,14 +58,15 @@ impl<T> Default for JoinLocations<T> {
 /// }
 /// ```
 ///
-/// ```
-/// field mapping: state_id; join_field_alias: __state_id
 ///
-/// [("state", Location { join_node: None, rest: ... })]
-///                                             [("census", Location { join_node: Some(..), rest: ... })]
+/// `field mapping: state_id; join_field_alias: __state_id`
+///
+/// ```json
+/// [("state", Location { join_node: None, rest: ... })],
+/// [("census", Location { join_node: Some(..), rest: ... })]
 /// ```
 /// ---
-/// ```
+/// ```json
 /// [
 ///   {
 ///     "name": "Bangalore",
@@ -83,6 +84,7 @@ impl<T> Default for JoinLocations<T> {
 ///   }
 /// ]
 /// ```
+///
 /// Note: `join_node` and `rest` both cannot be empty; it is an invalid/illegal
 /// state.
 #[derive(Debug, Clone)]
@@ -95,7 +97,7 @@ pub struct Location<T> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
-    pub target_data_connector: &'s resolved::data_connector::DataConnector,
+    pub target_data_connector: &'s resolved::data_connector::DataConnectorLink,
     /// NDC IR to execute on a data connector
     pub target_ndc_ir: ndc::models::QueryRequest,
     /// Mapping of the fields in source to fields in target.

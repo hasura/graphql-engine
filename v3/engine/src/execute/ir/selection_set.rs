@@ -127,7 +127,7 @@ fn build_global_id_fields(
 /// sources depending on the model being queried.
 pub(crate) fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_connector: &'s resolved::data_connector::DataConnector,
+    data_connector: &'s resolved::data_connector::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
     field_mappings: &BTreeMap<FieldName, resolved::types::FieldMapping>,
     session_variables: &SessionVariables,

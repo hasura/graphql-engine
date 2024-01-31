@@ -1,14 +1,10 @@
-use ndc_client::models::CapabilitiesResponse;
+use ndc_client::models::{CapabilitiesResponse, SchemaResponse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 mod v1;
-mod v2;
 
-use v1::DataConnectorV1;
-pub use v2::{
-    DataConnectorUrlV2 as DataConnectorUrl, DataConnectorV2, ReadWriteUrlsV2 as ReadWriteUrls,
-};
+pub use v1::{DataConnectorLinkV1, DataConnectorUrlV1 as DataConnectorUrl, ReadWriteUrls};
 
 /// The name of a data connector.
 #[derive(
@@ -20,18 +16,16 @@ pub struct DataConnectorName(pub String);
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "DataConnector")]
+#[schemars(title = "DataConnectorLink")]
 /// Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.
-pub enum DataConnector {
-    V1(DataConnectorV1),
-    V2(DataConnectorV2),
+pub enum DataConnectorLink {
+    V1(DataConnectorLinkV1),
 }
 
-impl DataConnector {
-    pub fn upgrade(self) -> DataConnectorV2 {
+impl DataConnectorLink {
+    pub fn upgrade(self) -> DataConnectorLinkV1 {
         match self {
-            DataConnector::V1(v1) => v1.upgrade(),
-            DataConnector::V2(v2) => v2,
+            DataConnectorLink::V1(v1) => v1,
         }
     }
 }
@@ -55,36 +49,33 @@ fn ndc_schema_response_schema_reference(
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema".into())
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "VersionedSchemaResponse")]
+pub enum VersionedSchemaResponse {
+    #[serde(rename = "v0.1")]
+    V01(SchemaResponse),
+}
+
+impl Default for VersionedSchemaResponse {
+    fn default() -> Self {
+        VersionedSchemaResponse::V01(SchemaResponse::default())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{DataConnector, DataConnectorV2};
+    use super::DataConnectorLinkV1;
+    use crate::data_connector::DataConnectorLink;
 
     #[test]
-    fn test_v1_to_v2_upgrade() {
-        let v1: DataConnector = serde_json::from_str(
+    fn test_upgrade() {
+        let v1: DataConnectorLink = serde_json::from_str(
             r#"
             {
                 "version": "v1",
-                "definition": {
-                    "name": "foo",
-                    "url": {
-                        "singleUrl": "http://foo"
-                    },
-                    "headers": {
-                        "Authorization": {
-                            "value": "Bearer: abc"
-                        }
-                    }
-                }
-            }
-        "#,
-        )
-        .unwrap();
-
-        let v2: DataConnector = serde_json::from_str(
-            r#"
-            {
-                "version": "v2",
                 "definition": {
                     "name": "foo",
                     "url": {
@@ -96,6 +87,12 @@ mod tests {
                         "Authorization": {
                             "value": "Bearer: abc"
                         }
+                    },
+                    "capabilities": {
+                        "versions": "1",
+                        "capabilities": {
+                            "query": {}
+                        }
                     }
                 }
             }
@@ -103,7 +100,7 @@ mod tests {
         )
         .unwrap();
 
-        let upgraded: DataConnectorV2 = serde_json::from_str(
+        let upgraded: DataConnectorLinkV1 = serde_json::from_str(
             r#"
             {
                 "name": "foo",
@@ -116,6 +113,12 @@ mod tests {
                     "Authorization": {
                         "value": "Bearer: abc"
                     }
+                },
+                "capabilities": {
+                    "versions": "1",
+                    "capabilities": {
+                        "query": {}
+                    }
                 }
             }
         "#,
@@ -123,6 +126,5 @@ mod tests {
         .unwrap();
 
         assert_eq!(v1.upgrade(), upgraded);
-        assert_eq!(v2.upgrade(), upgraded);
     }
 }

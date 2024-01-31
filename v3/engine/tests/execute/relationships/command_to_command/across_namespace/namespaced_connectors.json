@@ -5,8 +5,8 @@
       "name": "movie_namespace",
       "objects": [
         {
-          "kind": "DataConnector",
-          "version": "v2",
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "custom",
             "url": {
@@ -15,7 +15,23 @@
               }
             },
             "headers": {},
+            "capabilities": {
+              "versions": "*",
+              "capabilities": {
+                "query": {
+                  "aggregates": {},
+                  "variables": {}
+                },
+                "explain": {},
+                "relationships": {
+                  "relation_comparisons": {},
+                  "order_by_aggregate": {}
+                }
+              }
+            },
             "schema": {
+              "version": "v0.1",
+              "definition": {
               "scalar_types": {
                 "Actor_Name": {
                   "aggregate_functions": {},
@@ -473,7 +489,7 @@
                   }
                 }
               ]
-            }
+            }}
           }
         }
       ]
@@ -482,8 +498,8 @@
       "name": "actor_namespace",
       "objects": [
         {
-          "kind": "DataConnector",
-          "version": "v2",
+          "kind": "DataConnectorLink",
+          "version": "v1",
           "definition": {
             "name": "custom",
             "url": {
@@ -492,7 +508,23 @@
               }
             },
             "headers": {},
+            "capabilities": {
+              "versions": "*",
+              "capabilities": {
+                "query": {
+                  "aggregates": {},
+                  "variables": {}
+                },
+                "explain": {},
+                "relationships": {
+                  "relation_comparisons": {},
+                  "order_by_aggregate": {}
+                }
+              }
+            },
             "schema": {
+              "version": "v0.1",
+              "definition": {
               "scalar_types": {
                 "Actor_Name": {
                   "aggregate_functions": {},
@@ -950,7 +982,7 @@
                   }
                 }
               ]
-            }
+            }}
           }
         }
       ]

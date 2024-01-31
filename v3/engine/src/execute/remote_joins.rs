@@ -9,13 +9,13 @@
 //! Let's consider the following simple example. Consider there are two data
 //! connectors -
 //!   1. Geographical information about cities in `connector A`
-//! ```
-//! cities (name text, code text)
-//! ```
+//!
+//! `cities (name text, code text)`
+//!
 //!   2. Weather data about cities in `connector B`
-//! ```
-//! weather (city_code text, temperature float, wind_speed float, humidity float)
-//! ```
+//!
+//! `weather (city_code text, temperature float, wind_speed float, humidity float)`
+//!
 //!
 //! Given the above, and assuming there are corresponding models defined for
 //! these two tables in the metadata, one can define a [remote

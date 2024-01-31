@@ -17,7 +17,7 @@ use crate::schema::GDS;
 pub async fn execute_ndc_query<'n, 's>(
     http_client: &reqwest::Client,
     query: ndc::models::QueryRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
     execution_span_attribute: String,
     field_span_attribute: String,
     project_id: Option<ProjectId>,
@@ -48,7 +48,7 @@ pub async fn execute_ndc_query<'n, 's>(
 pub(crate) async fn fetch_from_data_connector<'s>(
     http_client: &reqwest::Client,
     query_request: ndc::models::QueryRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
 ) -> Result<ndc::models::QueryResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
@@ -98,7 +98,7 @@ pub fn append_project_id_to_headers(
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query: ndc::models::MutationRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
     field_span_attribute: String,
@@ -167,7 +167,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_client: &reqwest::Client,
     query_request: ndc::models::MutationRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
 ) -> Result<ndc::models::MutationResponse, error::Error> {
     let tracer = tracing_util::global_tracer();

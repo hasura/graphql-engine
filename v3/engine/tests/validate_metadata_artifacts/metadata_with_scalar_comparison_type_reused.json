@@ -1,7 +1,7 @@
 [
     {
-        "kind": "DataConnector",
-        "version": "v2",
+        "kind": "DataConnectorLink",
+        "version": "v1",
         "definition": {
             "name": "db",
             "url": {
@@ -9,202 +9,219 @@
                     "value": "http://reference_agent:8102"
                 }
             },
+            "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                    "query": {
+                        "aggregates": {},
+                        "variables": {}
+                    },
+                    "explain": {},
+                    "relationships": {
+                        "relation_comparisons": {},
+                        "order_by_aggregate": {}
+                    }
+                }
+            },
             "schema": {
-                "scalar_types": {
-                    "Int": {
-                        "aggregate_functions": {
-                            "max": {
-                                "result_type": {
-                                    "type": "nullable",
-                                    "underlying_type": {
+                "version": "v0.1",
+                "definition": {
+                    "scalar_types": {
+                        "Int": {
+                            "aggregate_functions": {
+                                "max": {
+                                    "result_type": {
+                                        "type": "nullable",
+                                        "underlying_type": {
+                                            "type": "named",
+                                            "name": "Int"
+                                        }
+                                    }
+                                },
+                                "min": {
+                                    "result_type": {
+                                        "type": "nullable",
+                                        "underlying_type": {
+                                            "type": "named",
+                                            "name": "Int"
+                                        }
+                                    }
+                                }
+                            },
+                            "comparison_operators": {
+                                "eq_within_ten_percent": {
+                                    "argument_type": {
                                         "type": "named",
                                         "name": "Int"
                                     }
                                 }
                             },
-                            "min": {
-                                "result_type": {
-                                    "type": "nullable",
-                                    "underlying_type": {
+                            "update_operators": {}
+                        },
+                        "String": {
+                            "aggregate_functions": {},
+                            "comparison_operators": {
+                                "like": {
+                                    "argument_type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
+                                }
+                            },
+                            "update_operators": {}
+                        }
+                    },
+                    "object_types": {
+                        "article": {
+                            "description": "An article",
+                            "fields": {
+                                "author_id": {
+                                    "description": "The article's author ID",
+                                    "arguments": {},
+                                    "type": {
                                         "type": "named",
                                         "name": "Int"
+                                    }
+                                },
+                                "id": {
+                                    "description": "The article's primary key",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
+                                },
+                                "title": {
+                                    "description": "The article's title",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
                                     }
                                 }
                             }
                         },
-                        "comparison_operators": {
-                            "eq_within_ten_percent" : {
-                                "argument_type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            }
-                        },
-                        "update_operators": {}
-                    },
-                    "String": {
-                        "aggregate_functions": {},
-                        "comparison_operators": {
-                            "like": {
-                                "argument_type": {
-                                    "type": "named",
-                                    "name": "String"
-                                }
-                            }
-                        },
-                        "update_operators": {}
-                    }
-                },
-                "object_types": {
-                    "article": {
-                        "description": "An article",
-                        "fields": {
-                            "author_id": {
-                                "description": "The article's author ID",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            },
-                            "id": {
-                                "description": "The article's primary key",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            },
-                            "title": {
-                                "description": "The article's title",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                        "author": {
+                            "description": "An author",
+                            "fields": {
+                                "first_name": {
+                                    "description": "The author's first name",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
+                                },
+                                "id": {
+                                    "description": "The author's primary key",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
+                                },
+                                "last_name": {
+                                    "description": "The author's last name",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
                                 }
                             }
                         }
                     },
-                    "author": {
-                        "description": "An author",
-                        "fields": {
-                            "first_name": {
-                                "description": "The author's first name",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                    "collections": [
+                        {
+                            "name": "articles",
+                            "description": "A collection of articles",
+                            "arguments": {},
+                            "type": "article",
+                            "deletable": false,
+                            "uniqueness_constraints": {
+                                "ArticleByID": {
+                                    "unique_columns": [
+                                        "id"
+                                    ]
                                 }
                             },
-                            "id": {
-                                "description": "The author's primary key",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
+                            "foreign_keys": {}
+                        },
+                        {
+                            "name": "authors",
+                            "description": "A collection of authors",
+                            "arguments": {},
+                            "type": "author",
+                            "deletable": false,
+                            "uniqueness_constraints": {
+                                "AuthorByID": {
+                                    "unique_columns": [
+                                        "id"
+                                    ]
                                 }
                             },
-                            "last_name": {
-                                "description": "The author's last name",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                            "foreign_keys": {}
+                        },
+                        {
+                            "name": "articles_by_author",
+                            "description": "Articles parameterized by author",
+                            "arguments": {
+                                "author_id": {
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
                                 }
-                            }
+                            },
+                            "type": "article",
+                            "deletable": false,
+                            "uniqueness_constraints": {},
+                            "foreign_keys": {}
                         }
-                    }
-                },
-                "collections": [
-                    {
-                        "name": "articles",
-                        "description": "A collection of articles",
-                        "arguments": {},
-                        "type": "article",
-                        "deletable": false,
-                        "uniqueness_constraints": {
-                            "ArticleByID": {
-                                "unique_columns": [
-                                    "id"
-                                ]
-                            }
-                        },
-                        "foreign_keys": {}
-                    },
-                    {
-                        "name": "authors",
-                        "description": "A collection of authors",
-                        "arguments": {},
-                        "type": "author",
-                        "deletable": false,
-                        "uniqueness_constraints": {
-                            "AuthorByID": {
-                                "unique_columns": [
-                                    "id"
-                                ]
-                            }
-                        },
-                        "foreign_keys": {}
-                    },
-                    {
-                        "name": "articles_by_author",
-                        "description": "Articles parameterized by author",
-                        "arguments": {
-                            "author_id": {
-                                "type": {
+                    ],
+                    "functions": [
+                        {
+                            "name": "latest_article_id",
+                            "description": "Get the ID of the most recent article",
+                            "arguments": {},
+                            "result_type": {
+                                "type": "nullable",
+                                "underlying_type": {
                                     "type": "named",
                                     "name": "Int"
                                 }
                             }
-                        },
-                        "type": "article",
-                        "deletable": false,
-                        "uniqueness_constraints": {},
-                        "foreign_keys": {}
-                    }
-                ],
-                "functions": [
-                    {
-                        "name": "latest_article_id",
-                        "description": "Get the ID of the most recent article",
-                        "arguments": {},
-                        "result_type": {
-                            "type": "nullable",
-                            "underlying_type": {
-                                "type": "named",
-                                "name": "Int"
-                            }
                         }
-                    }
-                ],
-                "procedures": [
-                    {
-                        "name": "upsert_article",
-                        "description": "Insert or update an article",
-                        "arguments": {
-                            "article": {
-                                "description": "The article to insert or update",
-                                "type": {
+                    ],
+                    "procedures": [
+                        {
+                            "name": "upsert_article",
+                            "description": "Insert or update an article",
+                            "arguments": {
+                                "article": {
+                                    "description": "The article to insert or update",
+                                    "type": {
+                                        "type": "named",
+                                        "name": "article"
+                                    }
+                                }
+                            },
+                            "result_type": {
+                                "type": "nullable",
+                                "underlying_type": {
                                     "type": "named",
                                     "name": "article"
                                 }
                             }
-                        },
-                        "result_type": {
-                            "type": "nullable",
-                            "underlying_type": {
-                                "type": "named",
-                                "name": "article"
-                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         }
     },
     {
-        "kind": "DataConnector",
-        "version": "v2",
+        "kind": "DataConnectorLink",
+        "version": "v1",
         "definition": {
             "name": "db2",
             "url": {
@@ -212,196 +229,213 @@
                     "value": "http://reference_agent:8102"
                 }
             },
+            "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                    "query": {
+                        "aggregates": {},
+                        "variables": {}
+                    },
+                    "explain": {},
+                    "relationships": {
+                        "relation_comparisons": {},
+                        "order_by_aggregate": {}
+                    }
+                }
+            },
             "schema": {
-                "scalar_types": {
-                    "Int": {
-                        "aggregate_functions": {
-                            "max": {
-                                "result_type": {
-                                    "type": "nullable",
-                                    "underlying_type": {
+                "version": "v0.1",
+                "definition": {
+                    "scalar_types": {
+                        "Int": {
+                            "aggregate_functions": {
+                                "max": {
+                                    "result_type": {
+                                        "type": "nullable",
+                                        "underlying_type": {
+                                            "type": "named",
+                                            "name": "Int"
+                                        }
+                                    }
+                                },
+                                "min": {
+                                    "result_type": {
+                                        "type": "nullable",
+                                        "underlying_type": {
+                                            "type": "named",
+                                            "name": "Int"
+                                        }
+                                    }
+                                }
+                            },
+                            "comparison_operators": {
+                                "eq_within_ten_percent": {
+                                    "argument_type": {
                                         "type": "named",
                                         "name": "Int"
                                     }
                                 }
                             },
-                            "min": {
-                                "result_type": {
-                                    "type": "nullable",
-                                    "underlying_type": {
+                            "update_operators": {}
+                        },
+                        "String": {
+                            "aggregate_functions": {},
+                            "comparison_operators": {
+                                "like": {
+                                    "argument_type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
+                                }
+                            },
+                            "update_operators": {}
+                        }
+                    },
+                    "object_types": {
+                        "article": {
+                            "description": "An article",
+                            "fields": {
+                                "author_id": {
+                                    "description": "The article's author ID",
+                                    "arguments": {},
+                                    "type": {
                                         "type": "named",
                                         "name": "Int"
+                                    }
+                                },
+                                "id": {
+                                    "description": "The article's primary key",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
+                                },
+                                "title": {
+                                    "description": "The article's title",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
                                     }
                                 }
                             }
                         },
-                        "comparison_operators": {
-                            "eq_within_ten_percent" : {
-                                "argument_type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            }
-                        },
-                        "update_operators": {}
-                    },
-                    "String": {
-                        "aggregate_functions": {},
-                        "comparison_operators": {
-                            "like": {
-                                "argument_type": {
-                                    "type": "named",
-                                    "name": "String"
-                                }
-                            }
-                        },
-                        "update_operators": {}
-                    }
-                },
-                "object_types": {
-                    "article": {
-                        "description": "An article",
-                        "fields": {
-                            "author_id": {
-                                "description": "The article's author ID",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            },
-                            "id": {
-                                "description": "The article's primary key",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
-                                }
-                            },
-                            "title": {
-                                "description": "The article's title",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                        "author": {
+                            "description": "An author",
+                            "fields": {
+                                "first_name": {
+                                    "description": "The author's first name",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
+                                },
+                                "id": {
+                                    "description": "The author's primary key",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
+                                },
+                                "last_name": {
+                                    "description": "The author's last name",
+                                    "arguments": {},
+                                    "type": {
+                                        "type": "named",
+                                        "name": "String"
+                                    }
                                 }
                             }
                         }
                     },
-                    "author": {
-                        "description": "An author",
-                        "fields": {
-                            "first_name": {
-                                "description": "The author's first name",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                    "collections": [
+                        {
+                            "name": "articles",
+                            "description": "A collection of articles",
+                            "arguments": {},
+                            "type": "article",
+                            "deletable": false,
+                            "uniqueness_constraints": {
+                                "ArticleByID": {
+                                    "unique_columns": [
+                                        "id"
+                                    ]
                                 }
                             },
-                            "id": {
-                                "description": "The author's primary key",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "Int"
+                            "foreign_keys": {}
+                        },
+                        {
+                            "name": "authors",
+                            "description": "A collection of authors",
+                            "arguments": {},
+                            "type": "author",
+                            "deletable": false,
+                            "uniqueness_constraints": {
+                                "AuthorByID": {
+                                    "unique_columns": [
+                                        "id"
+                                    ]
                                 }
                             },
-                            "last_name": {
-                                "description": "The author's last name",
-                                "arguments": {},
-                                "type": {
-                                    "type": "named",
-                                    "name": "String"
+                            "foreign_keys": {}
+                        },
+                        {
+                            "name": "articles_by_author",
+                            "description": "Articles parameterized by author",
+                            "arguments": {
+                                "author_id": {
+                                    "type": {
+                                        "type": "named",
+                                        "name": "Int"
+                                    }
                                 }
-                            }
+                            },
+                            "type": "article",
+                            "deletable": false,
+                            "uniqueness_constraints": {},
+                            "foreign_keys": {}
                         }
-                    }
-                },
-                "collections": [
-                    {
-                        "name": "articles",
-                        "description": "A collection of articles",
-                        "arguments": {},
-                        "type": "article",
-                        "deletable": false,
-                        "uniqueness_constraints": {
-                            "ArticleByID": {
-                                "unique_columns": [
-                                    "id"
-                                ]
-                            }
-                        },
-                        "foreign_keys": {}
-                    },
-                    {
-                        "name": "authors",
-                        "description": "A collection of authors",
-                        "arguments": {},
-                        "type": "author",
-                        "deletable": false,
-                        "uniqueness_constraints": {
-                            "AuthorByID": {
-                                "unique_columns": [
-                                    "id"
-                                ]
-                            }
-                        },
-                        "foreign_keys": {}
-                    },
-                    {
-                        "name": "articles_by_author",
-                        "description": "Articles parameterized by author",
-                        "arguments": {
-                            "author_id": {
-                                "type": {
+                    ],
+                    "functions": [
+                        {
+                            "name": "latest_article_id",
+                            "description": "Get the ID of the most recent article",
+                            "arguments": {},
+                            "result_type": {
+                                "type": "nullable",
+                                "underlying_type": {
                                     "type": "named",
                                     "name": "Int"
                                 }
                             }
-                        },
-                        "type": "article",
-                        "deletable": false,
-                        "uniqueness_constraints": {},
-                        "foreign_keys": {}
-                    }
-                ],
-                "functions": [
-                    {
-                        "name": "latest_article_id",
-                        "description": "Get the ID of the most recent article",
-                        "arguments": {},
-                        "result_type": {
-                            "type": "nullable",
-                            "underlying_type": {
-                                "type": "named",
-                                "name": "Int"
-                            }
                         }
-                    }
-                ],
-                "procedures": [
-                    {
-                        "name": "upsert_article",
-                        "description": "Insert or update an article",
-                        "arguments": {
-                            "article": {
-                                "description": "The article to insert or update",
-                                "type": {
+                    ],
+                    "procedures": [
+                        {
+                            "name": "upsert_article",
+                            "description": "Insert or update an article",
+                            "arguments": {
+                                "article": {
+                                    "description": "The article to insert or update",
+                                    "type": {
+                                        "type": "named",
+                                        "name": "article"
+                                    }
+                                }
+                            },
+                            "result_type": {
+                                "type": "nullable",
+                                "underlying_type": {
                                     "type": "named",
                                     "name": "article"
                                 }
                             }
-                        },
-                        "result_type": {
-                            "type": "nullable",
-                            "underlying_type": {
-                                "type": "named",
-                                "name": "article"
-                            }
                         }
-                    }
-                ]
+                    ]
+                }
             }
         }
     },

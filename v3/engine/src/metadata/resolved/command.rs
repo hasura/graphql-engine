@@ -1,5 +1,5 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::data_connector::{DataConnector, DataConnectorContext};
+use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -30,7 +30,7 @@ pub struct CommandGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandSource {
-    pub data_connector: DataConnector,
+    pub data_connector: DataConnectorLink,
     pub source: DataConnectorCommand,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
@@ -283,7 +283,7 @@ pub fn resolve_command_source(
         command_source.data_connector_name.clone(),
     );
     command.source = Some(CommandSource {
-        data_connector: DataConnector::new(
+        data_connector: DataConnectorLink::new(
             data_connector_name,
             data_connector_context.url.clone(),
             data_connector_context.headers,

@@ -14,7 +14,7 @@ use open_dds::{arguments::ArgumentName, commands, models, types};
 use crate::{
     metadata::resolved::{
         self,
-        data_connector::DataConnector,
+        data_connector::DataConnectorLink,
         subgraph::{Qualified, QualifiedTypeReference},
     },
     schema::types::resolved::{
@@ -80,7 +80,7 @@ pub enum ModelOrderByDirection {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 /// Common details to generate a command annotation.
 pub struct CommandSourceDetail {
-    pub data_connector: DataConnector,
+    pub data_connector: DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"

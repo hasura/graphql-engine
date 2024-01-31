@@ -130,7 +130,7 @@ async fn get_execution_steps<'s>(
     process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_query_request: ndc_client::models::QueryRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
 ) -> NonEmpty<Box<types::Step>> {
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
@@ -252,7 +252,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 async fn fetch_explain_from_data_connector(
     http_client: &reqwest::Client,
     query_request: ndc_client::models::QueryRequest,
-    data_connector: &resolved::data_connector::DataConnector,
+    data_connector: &resolved::data_connector::DataConnectorLink,
 ) -> types::NDCExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer

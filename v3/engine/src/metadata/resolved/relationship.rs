@@ -1,6 +1,6 @@
 use super::command::Command;
-use super::data_connector::DataConnector;
 use super::data_connector::DataConnectorContext;
+use super::data_connector::DataConnectorLink;
 use super::error::Error;
 use super::model::Model;
 use super::subgraph::Qualified;
@@ -85,8 +85,8 @@ pub enum RelationshipExecutionCategory {
 
 #[allow(clippy::match_single_binding)]
 pub fn relationship_execution_category(
-    source_connector: &DataConnector,
-    target_connector: &DataConnector,
+    source_connector: &DataConnectorLink,
+    target_connector: &DataConnectorLink,
     target_source_relationship_capabilities: &RelationshipCapabilities,
 ) -> RelationshipExecutionCategory {
     // It's a local relationship if the source and target connectors are the same and
@@ -292,7 +292,7 @@ fn resolve_relationship_mappings_command(
 fn get_relationship_capabilities(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    source_data_connector: &Option<DataConnector>,
+    source_data_connector: &Option<DataConnectorLink>,
     target_name: &RelationshipTargetName,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext<'_>>,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
