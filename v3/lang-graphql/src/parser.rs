@@ -368,11 +368,11 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse one or more delimited items into a `List`
-    /// <start> <item>+ <end>
+    /// `<start> <item>+ <end>`
     ///
     /// This corresponds to occurrences of symbol plus the "LIST" subscript in the grammar given in
     /// the spec. See:
-    /// https://spec.graphql.org/October2021/#sec-Grammar-Notation.Optionality-and-Lists
+    /// <https://spec.graphql.org/October2021/#sec-Grammar-Notation.Optionality-and-Lists>
     ///
     /// TODO Ideally return NonEmpty here
     fn parse_nonempty_delimited_list<T, F>(
@@ -426,7 +426,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse an optional delimited list of one or more items into a `List`
-    /// (<start> <item>+ <end>)?
+    /// `(<start> <item>+ <end>)?`
     ///
     /// TODO Ideally return NonEmpty here
     fn parse_optional_nonempty_delimited_list<T, F>(

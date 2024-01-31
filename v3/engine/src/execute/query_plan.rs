@@ -1,6 +1,6 @@
 mod commands;
 mod model_selection;
-mod selection_set;
+pub(crate) mod selection_set;
 
 use gql::normalized_ast;
 use hasura_authn_core::Role;

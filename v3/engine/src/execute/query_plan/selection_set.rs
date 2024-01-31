@@ -13,7 +13,10 @@ use crate::execute::remote_joins::types::{
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
 
-/// Convert selection set IR (`ResultSelectionSet`) into NDC fields
+/// Convert selection set IR ([ResultSelectionSet]) into NDC fields.
+///
+/// Also produce a [JoinLocations] tree along with NDC fields for all remote
+/// relationship fields in this IR.
 #[allow(irrefutable_let_patterns)]
 pub(crate) fn process_selection_set_ir<'s, 'ir>(
     model_selection: &'ir ResultSelectionSet<'s>,

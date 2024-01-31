@@ -1,3 +1,81 @@
+//! Implements execution of Remote Joins
+//!
+//! # Introduction
+//! "Remote Join" is a feature where engine can fetch data from different data
+//! connectors, and based on some field mapping, can
+//! [join](https://cghlewis.com/blog/joins/) the dataset from the two different
+//! data sources.
+//!
+//! Let's consider the following simple example. Consider there are two data
+//! connectors -
+//!   1. Geographical information about cities in `connector A`
+//! ```
+//! cities (name text, code text)
+//! ```
+//!   2. Weather data about cities in `connector B`
+//! ```
+//! weather (city_code text, temperature float, wind_speed float, humidity float)
+//! ```
+//!
+//! Given the above, and assuming there are corresponding models defined for
+//! these two tables in the metadata, one can define a [remote
+//! relationship](https://hasura.io/docs/3.0/supergraph-modeling/relationships/).
+//! In the above two tables, the "city code" is guaranteed to be a unique field.
+//! So one can use that as the mapping field and define a relationship.
+//!
+//! Once a relationship is defined, one can make a GraphQL query like -
+//!
+//! ```graphql
+//! city {
+//!   name
+//!   weather {
+//!     temperature
+//!     humidity
+//!   }
+//! }
+//! ```
+//! #### Note
+//! There has to be one or more fields across the two datasets which are unique.
+//! The remote relationship mapping should be defined using those fields. If
+//! there are no collection of unique fields, then a remote relationship cannot
+//! be defined.
+//!
+//! # How it works
+//!
+//! ## IR generation
+//! - Selection set IR generation function - [generate_selection_set_ir]
+//! - Model Remote relationship - [build_remote_relationship]
+//! - Command Remote relationship - [build_remote_command_relationship]
+//!
+//! ## Join Tree generation
+//! - The join tree is generated as part of query plan. See [process_selection_set_ir] function.
+//! - To know about the types for remote joins, see the [types] module.
+//!
+//! ## Execution
+//! Following is the high-level algorithm how remote joins execution is performed.
+//!
+//! 1. Make the first top-level NDC query, and call the response as LHS response.
+//!
+//! 2. Traverse the join tree to get to the next remote join. Iterate through
+//! all the rows in the LHS response, use the field mapping in the remote join node
+//! to collect the values of those fields. In the above example, these would be
+//! collecting the city codes from the LHS city query.
+//!
+//! 3. Get the NDC query from the remote join node, and attach the values in the
+//! above step as variables in the NDC query. This NDC query already has a
+//! "where" filter clause with a variable on the join mapping field. Make the
+//! NDC query, and call the response as RHS response.
+//!
+//! 4. If there is a sub-tree from this remote join node, recursively perform
+//! this algorithm.
+//!
+//! 5. Perform join on LHS response and RHS response
+//!
+//! [process_selection_set_ir]: crate::execute::query_plan::selection_set::process_selection_set_ir
+//! [generate_selection_set_ir]: crate::execute::ir::selection_set::generate_selection_set_ir
+//! [build_remote_relationship]: crate::execute::ir::relationship::build_remote_relationship
+//! [build_remote_command_relationship]: crate::execute::ir::relationship::build_remote_command_relationship
+
 use crate::utils::json_ext::ValueExt;
 use async_recursion::async_recursion;
 use indexmap::IndexMap;
@@ -19,57 +97,10 @@ use types::{
     ReplacementToken, ReplacementTokenRows,
 };
 
-pub mod types;
+pub(crate) mod types;
 
-/*
- *
-
-```graphql
-city {
-  name
-  state {  # -> local relationship
-    name
-    census {  # -> remote relationship
-      data
-    }
-  }
-}
-
-join_column: state_id; join_field_alias: __state_id
-
-[("state", Location { join_node: None, rest: ... })]
-                                            [("census", Location { join_node: Some(..), rest: ... })]
-```
----
-[
-  {
-    "name": "Bangalore",
-    "state": {
-      "name": "KA",
-      "__state_id": 1
-    }
-  },
-  {
-    "name": "Mumbai",
-    "state": {
-      "name": "MH",
-      "__state_id": 2
-    }
-  }
-]
----
-[
-  {
-    "name": "KA",
-    "__state_id": 1
-  },
-  {
-    "name": "MH",
-    "__state_id": 2
-  }
-]
-*/
-
+/// Execute remote joins. As an entry-point it assumes the response is available
+/// for the top-level query, and executes further remote joins recursively.
 #[async_recursion]
 pub async fn execute_join_locations<'ir>(
     http_client: &reqwest::Client,
@@ -170,7 +201,7 @@ where
     Ok(())
 }
 
-struct CollectArgumentResult<'s, 'ir> {
+pub struct CollectArgumentResult<'s, 'ir> {
     join_node: RemoteJoin<'s, 'ir>,
     sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     remote_alias: String,
@@ -180,7 +211,7 @@ struct CollectArgumentResult<'s, 'ir> {
 /// Given a LHS response and `Location`, extract the join values from the
 /// response and return it as the `Arguments` data structure. This also returns
 /// a structure of `ReplacementToken`s.
-fn collect_arguments<'s, 'ir>(
+pub fn collect_arguments<'s, 'ir>(
     lhs_response: &Vec<ndc::models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     key: &str,
@@ -426,6 +457,11 @@ fn resolve_command_response_row(
     }
 }
 
+/// Given a LHS response, RHS response and replacement tokens, replace values in
+/// the LHS response from values in RHS response.
+///
+/// Uses the replacement tokens to lookup the argument id RHS response and
+/// substitute that value in LHS response.
 pub fn replace_replacement_tokens(
     alias: &str,
     remote_alias: &str,
