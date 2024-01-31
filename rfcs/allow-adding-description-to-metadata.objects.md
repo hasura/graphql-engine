@@ -216,7 +216,6 @@ Models have select unique as well as select many types. Users should be able to 
           "args": [
             {
               "name": "author_id",
-              "description": "AuthorByID author_id desc",
               "type": {"..."},
               "defaultValue": null
             }
@@ -355,6 +354,101 @@ Models have select unique as well as select many types. Users should be able to 
               "description": null,
               "..."
             }
+            "..."
+          ],
+          "type": {"..."},
+          "isDeprecated": false,
+          "deprecationReason": null
+        }
+      ]
+    }
+  }
+}
+```
+
+### Example 3
+
+#### Metadata object with top level model description
+
+If the description for select uniques/many configuration of the model is not present and model description is present,
+then the model description will be used for the respective configuration.
+
+```json
+{
+  "kind": "Model",
+  "version": "v1",
+  "definition": {
+    "name": "Authors",
+    "description": "top level model description",
+    "objectType": "author",
+    "globalIdSource": true,
+    "source": {"..."},
+    "graphql": {
+      "selectUniques": [
+        {
+          "queryRootField": "AuthorByID",
+          "description": "AuthorByID description",
+          "uniqueIdentifier": [
+            "author_id"
+          ]
+        }
+      ],
+      "selectMany": {
+        "queryRootField": "AuthorMany",
+      },
+      "filterExpressionType": "Author_Where_Exp",
+      "orderByExpressionType": "Author_Order_By"
+    },
+    "filterableFields": ["..."],
+    "orderableFields": ["..."]
+  }
+}
+```
+
+#### Generated schema type
+
+##### select_unique
+
+```json
+{
+  "data": {
+    "__schema": {
+      "types": [
+        {
+          "name": "AuthorByID",
+          "description": "AuthorByID description",
+          "args": [
+            {
+              "name": "author_id",
+              "type": {"..."},
+              "defaultValue": null
+            }
+          ],
+          "type": {"..."},
+          "isDeprecated": false,
+          "deprecationReason": null
+        }
+      ]
+    }
+  }
+}
+```
+##### select_many schema object:
+
+```json
+{
+  "data": {
+    "__schema": {
+      "types": [
+        {
+          "name": "AuthorMany",
+          "description": "Selects multiple objects from the model. Model description: top level model description",
+          "args": [
+            {
+              "name": "limit",
+              "description": null,
+              "..."
+            },
             "..."
           ],
           "type": {"..."},
