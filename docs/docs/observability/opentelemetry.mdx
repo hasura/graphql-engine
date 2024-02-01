@@ -38,6 +38,11 @@ subscriptions with the [OpenTelemetry](https://opentelemetry.io/docs/concepts/si
 be exported directly from your Hasura instances to your observability tool that supports OpenTelemetry traces. This can
 be configured in the `Settings` section of the Hasura Console.
 
+## Available Metrics
+
+The available OpenTelemetry metrics are the same as those available via
+[Prometheus](/observability/enterprise-edition/prometheus/metrics.mdx).
+
 ## Configure the OpenTelemetry receiver
 
 :::info Supported from
@@ -56,8 +61,8 @@ All users are encouraged to migrate to this new integration.
 
 :::info Traces on Hasura Cloud
 
-Hasura Cloud implements sampling on traces. That means only one in every `n` traces will be sampled and exported
-(`n` will be automatically configured based on various parameters during runtime. This can't be manually adjusted).
+Hasura Cloud implements sampling on traces. That means only one in every `n` traces will be sampled and exported (`n`
+will be automatically configured based on various parameters during runtime. This can't be manually adjusted).
 
 :::
 
@@ -99,7 +104,7 @@ exporter_otlp:
   otlp_metrics_endpoint: http://host.docker.internal:4318/v1/metrics
   otlp_logs_endpoint: http://host.docker.internal:4318/v1/logs
   protocol: http/protobuf
-  traces_propagators: 
+  traces_propagators:
     - tracecontext
 batch_span_processor:
   max_export_batch_size: 512
@@ -304,8 +309,8 @@ be found in the [OpenTelemetry Collector repository](https://github.com/open-tel
 
 Trace and Span ID are included in the root of the log body. GraphQL Engine follows
 [OpenTelemetry's data model](https://opentelemetry.io/docs/specs/otel/logs/data-model/#log-and-event-record-definition)
-so that OpenTelemetry-compliant services can automatically correlate logs with Traces. However, some services need
-extra configurations.
+so that OpenTelemetry-compliant services can automatically correlate logs with Traces. However, some services need extra
+configurations.
 
 ### Jaeger
 
@@ -334,7 +339,7 @@ datasources:
         filterByTraceID: false
         filterBySpanID: false
         customQuery: true
-        query: "{exporter=\"OTLP\"} | json | traceid=`$${__span.traceId}`"
+        query: '{exporter="OTLP"} | json | traceid=`$${__span.traceId}`'
       traceQuery:
         timeShiftEnabled: true
         spanStartTimeShift: '1h'
@@ -351,8 +356,9 @@ You will see the `Logs for this span` button enabled when exploring the trace de
 
 ### Datadog
 
-If Datadog can't correlate between traces and logs, you should verify the Trace ID attributes mapping. 
-Read more at [the troubleshooting section](https://docs.datadoghq.com/tracing/troubleshooting/correlated-logs-not-showing-up-in-the-trace-id-panel/?tab=jsonlogs#trace-id-option) on Datadog. 
+If Datadog can't correlate between traces and logs, you should verify the Trace ID attributes mapping. Read more at
+[the troubleshooting section](https://docs.datadoghq.com/tracing/troubleshooting/correlated-logs-not-showing-up-in-the-trace-id-panel/?tab=jsonlogs#trace-id-option)
+on Datadog.
 
 <Thumbnail
   src="/img/enterprise/open-telemetry-datadog-trace-log.png"
@@ -362,9 +368,9 @@ Read more at [the troubleshooting section](https://docs.datadoghq.com/tracing/tr
 
 ### Honeycomb
 
-Traces and logs can't correlate together if they are exported to different datasets.
-Note that Honeycomb will use the `service.name` attribute as the dataset where logs are exported. 
-Therefore the `x-honeycomb-dataset` header must be matched with that attribute. 
+Traces and logs can't correlate together if they are exported to different datasets. Note that Honeycomb will use the
+`service.name` attribute as the dataset where logs are exported. Therefore the `x-honeycomb-dataset` header must be
+matched with that attribute.
 
 <Thumbnail
   src="/img/enterprise/open-telemetry-honeycomb-trace-log.png"
