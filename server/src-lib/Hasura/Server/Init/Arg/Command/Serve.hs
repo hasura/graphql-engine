@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | The Arg Opt.Parser for the 'serve' subcommand.
 module Hasura.Server.Init.Arg.Command.Serve
@@ -68,6 +69,8 @@ module Hasura.Server.Init.Arg.Command.Serve
     asyncActionsFetchBatchSizeOption,
     persistedQueriesOption,
     persistedQueriesTtlOption,
+    remoteSchemaResponsePriorityOption,
+    configuredHeaderPrecedenceOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -162,6 +165,8 @@ serveCommandParser =
     <*> parseAsyncActionsFetchBatchSize
     <*> parsePersistedQueries
     <*> parsePersistedQueriesTtl
+    <*> parseRemoteSchemaResponsePriority
+    <*> parseConfiguredHeaderPrecedence
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1311,6 +1316,41 @@ parsePersistedQueriesTtl =
           <> Opt.help (Config._helpMessage persistedQueriesTtlOption)
       )
 
+remoteSchemaResponsePriorityOption :: Config.Option (Types.RemoteSchemaResponsePriority)
+remoteSchemaResponsePriorityOption =
+  Config.Option
+    { Config._default = Types.RemoteSchemaResponseErrors,
+      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_PRIORITIZE_DATA",
+      Config._helpMessage = "Prioritize data over errors for remote schema responses (default: false)."
+    }
+
+parseRemoteSchemaResponsePriority :: Opt.Parser (Maybe Types.RemoteSchemaResponsePriority)
+parseRemoteSchemaResponsePriority =
+  (bool Nothing (Just Types.RemoteSchemaResponseData))
+    <$> Opt.switch
+      ( Opt.long "remote-schema-prioritize-data"
+          <> Opt.help (Config._helpMessage remoteSchemaResponsePriorityOption)
+      )
+
+parseConfiguredHeaderPrecedence :: Opt.Parser (Maybe Types.HeaderPrecedence)
+parseConfiguredHeaderPrecedence =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "configured-header-precedence"
+          <> Opt.help (Config._helpMessage configuredHeaderPrecedenceOption)
+      )
+
+configuredHeaderPrecedenceOption :: Config.Option Types.HeaderPrecedence
+configuredHeaderPrecedenceOption =
+  Config.Option
+    { Config._default = Types.ClientHeadersFirst,
+      Config._envVar = "HASURA_GRAPHQL_CONFIGURED_HEADER_PRECEDENCE",
+      Config._helpMessage =
+        "Forward configured metadata headers with higher precedence than client headers"
+          <> "when delivering payload to webhook for actions and input validations. (default: false)"
+    }
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1416,6 +1456,7 @@ serveCmdFooter =
         Config.optionPP triggersErrorLogLevelStatusOption,
         Config.optionPP asyncActionsFetchBatchSizeOption,
         Config.optionPP persistedQueriesOption,
-        Config.optionPP persistedQueriesTtlOption
+        Config.optionPP persistedQueriesTtlOption,
+        Config.optionPP configuredHeaderPrecedenceOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

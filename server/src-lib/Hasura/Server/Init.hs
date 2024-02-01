@@ -223,6 +223,8 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
   soAsyncActionsFetchBatchSize <- withOptionDefault rsoAsyncActionsFetchBatchSize asyncActionsFetchBatchSizeOption
   soPersistedQueries <- withOptionDefault rsoPersistedQueries persistedQueriesOption
   soPersistedQueriesTtl <- withOptionDefault rsoPersistedQueriesTtl persistedQueriesTtlOption
+  soRemoteSchemaResponsePriority <- withOptionDefault rsoRemoteSchemaResponsePriority remoteSchemaResponsePriorityOption
+  soHeaderPrecedence <- withOptionDefault rsoHeaderPrecedence configuredHeaderPrecedenceOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment

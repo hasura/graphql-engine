@@ -8,7 +8,7 @@ import Data.Aeson.Types (parseEither)
 import Data.Either.Combinators (fromRight')
 import Data.Map.Strict qualified as Map
 import Data.Maybe (fromJust)
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorOptions (..), mkDataConnectorName)
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorOptions (..), DataConnectorUri (..), mkDataConnectorName)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Metadata.Common (BackendConfigWrapper (BackendConfigWrapper))
@@ -29,7 +29,7 @@ spec = describe "BackendMap" do
                 $ Map.singleton
                   (fromRight' $ mkDataConnectorName $ fromJust $ GQL.mkName "MyConnector")
                   ( DataConnectorOptions
-                      { _dcoUri = fromRight' $ S.parseBaseUrl "https://somehost.org/",
+                      { _dcoUri = fromRight' $ RawUri <$> S.parseBaseUrl "https://somehost.org/",
                         _dcoDisplayName = Just "My Connector"
                       }
                   )

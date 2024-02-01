@@ -37,8 +37,9 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Schema.Options as Options
 import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (MonadGetPolicies, RequestId (..))
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RequestId (..))
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
@@ -91,6 +92,8 @@ convertQuerySelSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
+  ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
   m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash, [ModelInfoPart])
 convertQuerySelSet
   env
@@ -107,7 +110,9 @@ convertQuerySelSet
   gqlUnparsed
   introspectionDisabledRoles
   reqId
-  maybeOperationName = do
+  maybeOperationName
+  responseErrorsConfig
+  headerPrecedence = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
       Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
@@ -158,11 +163,12 @@ convertQuerySelSet
                         prometheusMetrics
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))
-                        (Just (GH._grQuery gqlUnparsed)),
+                        (Just (GH._grQuery gqlUnparsed))
+                        headerPrecedence,
                     _aaeName s,
                     _aaeForwardClientHeaders s
                   )
-                AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+                AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s responseErrorsConfig, _aaaqName s, _aaaqForwardClientHeaders s)
               let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeQuery)
               pure $ (ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins, [actionsModel])
             RFRaw r -> fmap (,[]) $ flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles

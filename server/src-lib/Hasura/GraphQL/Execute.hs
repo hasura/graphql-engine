@@ -63,7 +63,7 @@ import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
-import Hasura.Server.Types (MonadGetPolicies, ReadOnlyMode (..), RequestId (..))
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
@@ -131,8 +131,9 @@ buildSubscriptionPlan ::
   ParameterizedQueryHash ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Init.ResponseInternalErrorsConfig ->
   m ((SubscriptionExecution, Maybe (Endo JO.Value)), [ModelInfoPart])
-buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName = do
+buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName responseErrorsConfig = do
   (((liveQueryOnSourceFields, noRelationActionFields), streamingFields), modifier) <- foldlM go (((mempty, mempty), mempty), mempty) (InsOrdHashMap.toList rootFields)
 
   if
@@ -267,7 +268,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
         case noRelsDBAST of
           IR.AQAsync q -> do
             let actionId = IR._aaaqActionId q
-            case EA.resolveAsyncActionQuery userInfo q of
+            case EA.resolveAsyncActionQuery userInfo q responseErrorsConfig of
               EA.AAQENoRelationships respMaker ->
                 pure $ ((second (InsOrdHashMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields), modifier)
               EA.AAQEOnSourceDB srcConfig dbExecution ->
@@ -361,6 +362,8 @@ getResolvedExecPlan ::
   SingleOperation -> -- the first step of the execution plan
   Maybe G.Name ->
   RequestId ->
+  Init.ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
   m (ParameterizedQueryHash, ResolvedExecutionPlan, [ModelInfoPart])
 getResolvedExecPlan
   env
@@ -375,7 +378,9 @@ getResolvedExecPlan
   reqUnparsed
   queryParts -- the first step of the execution plan
   maybeOperationName
-  reqId = do
+  reqId
+  responseErrorsConfig
+  headerPrecedence = do
     let gCtx = makeGQLContext userInfo sc queryType
         tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
 
@@ -400,6 +405,8 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+              responseErrorsConfig
+              headerPrecedence
           Tracing.attachMetadata [("graphql.operation.type", "query"), ("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap, modelInfoList)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve mutation execution plan" $ do
@@ -422,6 +429,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+              headerPrecedence
           Tracing.attachMetadata [("graphql.operation.type", "mutation")]
           pure (parameterizedQueryHash, MutationExecutionPlan executionPlan, modelInfoList)
         G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> Tracing.newSpan "Resolve subscription execution plan" $ do
@@ -450,7 +458,7 @@ getResolvedExecPlan
             _ ->
               unless (allowMultipleRootFields && isSingleNamespace unpreparedAST)
                 $ throw400 ValidationFailed "subscriptions must select one top level field"
-          (subscriptionPlan, modelInfoList) <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName
+          (subscriptionPlan, modelInfoList) <- buildSubscriptionPlan userInfo unpreparedAST parameterizedQueryHash reqHeaders maybeOperationName responseErrorsConfig
           Tracing.attachMetadata [("graphql.operation.type", "subscription")]
           pure (parameterizedQueryHash, SubscriptionExecutionPlan subscriptionPlan, modelInfoList)
     -- the parameterized query hash is calculated here because it is used in multiple

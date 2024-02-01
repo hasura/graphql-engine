@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Markdown from 'markdown-to-jsx';
+import Markdown from 'markdown-to-jsx'
 import './styles.css';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { CloseIcon, RespondingIconGray, SparklesIcon } from '@site/src/components/AiChatBot/icons';
-import useLocalStorage from "@site/src/components/AiChatBot/useLocalStorage";
+import { useLocalStorage } from 'usehooks-ts'
+import profilePic from '@site/static/img/hasura-ai-profile-pic.png';
+
 
 interface Message {
   userMessage: string;
@@ -37,7 +39,7 @@ const initialMessages: Message[] = [
 ];
 
 
-function AiChatBot() {
+export function AiChatBot() {
   // Get the docsBotEndpointURL and hasuraVersion from the siteConfig
   const {
     siteConfig: { customFields },
@@ -65,7 +67,7 @@ function AiChatBot() {
   // Enables scrolling to the end
   const scrollDiv = useRef<HTMLDivElement>(null);
 
-  const { docsBotEndpointURL, hasuraVersion } = customFields as { docsBotEndpointURL: string; hasuraVersion: number };
+  const { docsBotEndpointURL, hasuraVersion, DEV_TOKEN } = customFields as { docsBotEndpointURL: string; hasuraVersion: number; DEV_TOKEN: string };
 
   const storedUserID = localStorage.getItem('hasuraDocsUserID') as string | "null";
 
@@ -85,7 +87,6 @@ function AiChatBot() {
     setIsAutoScroll(atBottom);
   };
 
-
   // Update the ref when the currentMessage changes ie: when the endpoint is responding
   useEffect(() => {
     currentMessageRef.current = currentMessage;
@@ -96,8 +97,13 @@ function AiChatBot() {
     let websocket;
     let reconnectInterval;
 
+    const queryDevToken = process.env.NODE_ENV === "development" && DEV_TOKEN ? `&devToken=${DEV_TOKEN}` : "";
+
+
+    console.log("process.env.NODE_ENV", process.env.NODE_ENV);
+
     const connectWebSocket = () => {
-      websocket = new WebSocket(encodeURI(`${docsBotEndpointURL}?version=${hasuraVersion}&userId=${storedUserID}`));
+      websocket = new WebSocket(encodeURI(`${docsBotEndpointURL}?version=${hasuraVersion}&userId=${storedUserID}${queryDevToken}`));
 
       websocket.onopen = () => {
         console.log('Connected to the websocket');
@@ -204,9 +210,12 @@ function AiChatBot() {
           <div className="info-bar">
             <div className={"bot-name-pic-container"}>
               <div className="bot-name">HasuraAI</div>
-              <img src={"/docs/img/hasura-ai-profile-pic.png"} height={30} width={30} className="bot-pic"/>
+              <img src={profilePic} height={30} width={30} className="bot-pic"/>
             </div>
-            <button className="clear-button" onClick={() => setMessages(initialMessages)}>Clear</button>
+            <button className="clear-button" onClick={() => {
+              setMessages(initialMessages)
+              setCurrentMessage({ userMessage: '', botResponse: '' });
+            }}>Clear</button>
           </div>
           <div className="messages-container" onScroll={handleScroll} ref={scrollDiv}>
             {messages.map((msg, index) => (
@@ -267,5 +276,3 @@ function AiChatBot() {
     </div>
   );
 }
-
-export default AiChatBot;

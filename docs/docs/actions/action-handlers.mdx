@@ -250,6 +250,17 @@ X-Hasura-Role: admin
 
 :::info Note
 
+In case there are multiple headers with the same name, the order of precedence is: client headers \> resolved user
+(`x-hasura-*`) variables \> configuration headers.
+
+If you want to change the order of precedence to: configuration headers \> resolved user (`x-hasura-*`) variables
+\> client headers, use the [configured header
+precedence](deployment/graphql-engine-flags/reference.mdx/#configured-header-precedence) flag or environment variable.
+
+:::
+
+:::info Note
+
 Before creating an action via the
 [create_action Metadata API](/api-reference/metadata-api/actions.mdx#metadata-create-action), all custom types need to
 be defined via the [set_custom_types](/api-reference/metadata-api/custom-types.mdx#metadata-set-custom-types) Metadata

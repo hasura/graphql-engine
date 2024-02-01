@@ -29,7 +29,9 @@ Hasura GraphQL Engine `v2.27.0` onwards
 
 Hasura currently supports queries, table relationships, remote relationships and permissions on MongoDB databases.
 
-A [logical model](/schema/mongodb/logical-models.mdx) or database [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) is required for generating your GraphQL schema.
+A [logical model](/schema/mongodb/logical-models.mdx) or database
+[validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+is required for generating your GraphQL schema.
 
 :::
 
@@ -43,6 +45,167 @@ To get started with MongoDB:
 - In Hasura Cloud, check out our [Getting Started with MongoDB in Hasura Cloud](/databases/mongodb/cloud.mdx) guide
 - In a Docker environment, check out our [Getting Started with Docker](/databases/mongodb/docker.mdx) guide
 
+## Feature Support
+
+<div className="feature-matrix-tables">
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>MongoDB</td>
+  </tr>
+  <tr>
+    <td>Remote Relationships</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Views</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Custom Functions</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Logical Models</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Native Queries</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+### Queries
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>MongoDB</td>
+  </tr>
+  <tr>
+    <td>Simple</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Nested Object</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Aggregation</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Filter / Search</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Sort</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Distinct</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Paginate</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Multiple Arguments</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Multiple Queries</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Variables / Aliases / Fragments</td>
+    <td>✅</td>
+  </tr>
+</table>
+
+### Mutations
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>MongoDB</td>
+  </tr>
+  <tr>
+    <td>Insert</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Upsert</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Update</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Delete</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Multiple per Request</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+### Subscriptions
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>MongoDB</td>
+  </tr>
+  <tr>
+    <td>Value of Field</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Updates to Rows</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Value of Derived Field</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Streaming Subscriptions</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+### Event Triggers
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>MongoDB</td>
+  </tr>
+  <tr>
+    <td>INSERT</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>UPDATE</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>DELETE</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>MANUAL</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+</div>
+
 ## Managing data with the Hasura Console
 
 The Hasura Console is a web UI that allows you to manage your data and metadata. It is available at
@@ -54,8 +217,8 @@ in the `API` tab and interact with it using the GraphiQL interface.
 
 :::info Console support
 
-We recommend using your preferred MongoDB client instead. The Hasura Console is designed to be a tool for managing
-your GraphQL API, and not a full-fledged database management tool.
+We recommend using your preferred MongoDB client instead. The Hasura Console is designed to be a tool for managing your
+GraphQL API, and not a full-fledged database management tool.
 
 :::
 

@@ -38,6 +38,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types (HeaderPrecedence)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -145,8 +146,9 @@ bqDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m (DBStepInfo 'BigQuery, [ModelInfoPart])
-bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs _ =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain

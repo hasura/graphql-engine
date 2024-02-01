@@ -126,6 +126,6 @@ instance HasSourceConfiguration 'BigQuery where
   type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   sourceConfigNumReadReplicas = const 0 -- not supported
-  sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigConnectonTemplate = const Nothing -- not supported
   sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = BigQueryKind

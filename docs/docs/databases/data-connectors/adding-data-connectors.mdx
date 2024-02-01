@@ -58,7 +58,7 @@ Click on the `Add Agent` button.
 </li>
 <li>
 
-Enter the values for name and Agent endpoint. Click `Connect` and you're done!
+Enter the values for agent name and agent URL. You can also choose to put the agent URL in an environment variable instead and use that variable name here. Click `Connect` and you're done!
 
 <Thumbnail
   src="/img/databases/data-connector/connect-final.png"
@@ -88,6 +88,15 @@ dataconnector:
     uri: <data-connector-agent-url>
 ```
 
+Alternatively, you can provide the Data Connector Agent URL via an environment variable:
+
+```yaml
+dataconnector:
+  sqlite:
+    uri:
+      from_env: <data-connector-agent-url-environment-variable-name>
+```
+
 Apply the Metadata by running:
 
 ```yaml
@@ -110,6 +119,24 @@ X-Hasura-Role: admin
   "args": {
       "name": "sqlite",
       "url": "<url-where-data-connector-agent-is-deployed>"
+  }
+}
+```
+
+Alternatively, you can provide the Data Connector Agent URL via an environment variable:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "dc_add_agent",
+  "args": {
+      "name": "sqlite",
+      "url": {
+        "from_env": "<data-connector-agent-url-environment-variable-name>"
+      }
   }
 }
 ```

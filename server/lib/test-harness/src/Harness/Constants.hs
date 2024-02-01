@@ -316,7 +316,9 @@ serveOptions =
       soTriggersErrorLogLevelStatus = Init._default Init.triggersErrorLogLevelStatusOption,
       soAsyncActionsFetchBatchSize = Init._default Init.asyncActionsFetchBatchSizeOption,
       soPersistedQueries = Init._default Init.persistedQueriesOption,
-      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption
+      soPersistedQueriesTtl = Init._default Init.persistedQueriesTtlOption,
+      soRemoteSchemaResponsePriority = Init._default Init.remoteSchemaResponsePriorityOption,
+      soHeaderPrecedence = Init._default Init.configuredHeaderPrecedenceOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

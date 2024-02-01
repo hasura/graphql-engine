@@ -132,31 +132,26 @@ runQuery appContext schemaCache rqlQuery = do
   if queryModifiesSchema rqlQuery
     then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
-        -- set modified metadata in storage
+        -- set modified metadata in storage and notify schema sync
         newResourceVersion <-
-          Tracing.newSpan "setMetadata"
+          Tracing.newSpan "updateMetadataAndNotifySchemaSync"
             $ liftEitherM
-            $ setMetadata currentResourceVersion updatedMetadata
+            $ updateMetadataAndNotifySchemaSync appEnvInstanceId currentResourceVersion updatedMetadata invalidations
+
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
 
         (_, modSchemaCache', _, _, _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
 
-        -- save sources introspection to stored-introspection DB
-        Tracing.newSpan "storeSourcesIntrospection"
-          $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
-
         -- run schema registry action
         Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
             liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata
-
-        -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync"
-          $ liftEitherM
-          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
 
         pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->

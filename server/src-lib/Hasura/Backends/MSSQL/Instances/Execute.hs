@@ -55,6 +55,7 @@ import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types (HeaderPrecedence)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -317,8 +318,9 @@ msDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m (DBStepInfo 'MSSQL, [ModelInfoPart])
-msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs = do
+msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs _ = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceName ModelSourceTypeMSSQL sourceConfig annDelete

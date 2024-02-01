@@ -1,7 +1,7 @@
-# DATE VERSION: 2023-10-21
+# DATE VERSION: 2024-01-23
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
 
-FROM ubuntu:jammy-20231004
+FROM ubuntu:jammy-20240111
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 

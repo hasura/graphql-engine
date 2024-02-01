@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module Hasura.Server.Init.Arg
   ( -- * Main Opt.Parser

@@ -18,6 +18,8 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scTemplateVariables,
     scTimeoutMicroseconds,
     scEnvironment,
+    resolveDataConnectorUri,
+    DataConnectorUri (..),
     DataConnectorOptions (..),
     DataConnectorInfo (..),
     TableName (..),
@@ -41,9 +43,9 @@ where
 
 import Autodocodec (HasCodec (codec), optionalField', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (baseUrlCodec)
+import Autodocodec.Extended (baseUrlCodec, fromEnvCodec)
 import Control.Lens (makeLenses)
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON, parseJSON, toJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (parseEither, toJSONKeyText)
@@ -56,16 +58,18 @@ import Data.OpenApi (ToSchema)
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendType (BackendType (..))
+import Hasura.RQL.Types.Common (getEnv)
 import Hasura.RQL.Types.DataConnector
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
-import Servant.Client (BaseUrl)
+import Servant.Client (BaseUrl, parseBaseUrl)
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -304,17 +308,50 @@ instance AC.HasCodec FunctionReturnType where
 
 ------------
 
+data DataConnectorUri
+  = RawUri BaseUrl
+  | FromEnvironment Text
+  deriving stock (Show, Eq, Generic)
+  deriving (ToJSON, FromJSON) via AC.Autodocodec DataConnectorUri
+
+instance NFData DataConnectorUri
+
+instance HasCodec DataConnectorUri where
+  codec =
+    AC.dimapCodec
+      (either RawUri FromEnvironment)
+      (\case RawUri m -> Left m; FromEnvironment wEnv -> Right wEnv)
+      $ AC.disjointEitherCodec baseUrlCodec fromEnvCodec
+
+resolveDataConnectorUri ::
+  (MonadError QErr m) =>
+  Environment ->
+  DataConnectorUri ->
+  m BaseUrl
+resolveDataConnectorUri env =
+  \case
+    (RawUri uri) -> pure uri
+    (FromEnvironment envVar) -> do
+      envValue <- getEnv env envVar
+      case Text.unpack envValue of
+        uriStr ->
+          onNothing
+            (parseBaseUrl uriStr)
+            (throw400 InvalidParams $ "Invalid URL for " <> envVar)
+
+------------
+
 data DataConnectorOptions = DataConnectorOptions
-  { _dcoUri :: BaseUrl,
+  { _dcoUri :: DataConnectorUri,
     _dcoDisplayName :: Maybe Text
   }
-  deriving stock (Eq, Ord, Show, Generic)
+  deriving stock (Show, Eq, Generic)
 
 instance HasCodec DataConnectorOptions where
   codec =
     AC.object "DataConnectorOptions"
       $ DataConnectorOptions
-      <$> requiredFieldWith' "uri" baseUrlCodec
+      <$> requiredField' "uri"
       AC..= _dcoUri
         <*> optionalField' "display_name"
       AC..= _dcoDisplayName

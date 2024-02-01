@@ -102,6 +102,7 @@ class
     [HTTP.Header] ->
     Maybe G.Name ->
     Maybe (HashMap G.Name (G.Value G.Variable)) ->
+    HeaderPrecedence ->
     m (DBStepInfo b, [ModelInfoPart])
   mkLiveQuerySubscriptionPlan ::
     forall m.

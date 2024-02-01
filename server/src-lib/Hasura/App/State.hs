@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Hasura.App.State
   ( -- * application state
@@ -171,7 +172,9 @@ data AppContext = AppContext
     acAsyncActionsFetchInterval :: OptionalInterval,
     acApolloFederationStatus :: ApolloFederationStatus,
     acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus,
-    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags
+    acSchemaSampledFeatureFlags :: SchemaSampledFeatureFlags,
+    acRemoteSchemaResponsePriority :: RemoteSchemaResponsePriority,
+    acHeaderPrecedence :: HeaderPrecedence
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -292,7 +295,9 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys, checkFeatureFlag) -> 
           acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
           acApolloFederationStatus = soApolloFederationStatus,
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus,
-          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags
+          acSchemaSampledFeatureFlags = schemaSampledFeatureFlags,
+          acRemoteSchemaResponsePriority = soRemoteSchemaResponsePriority,
+          acHeaderPrecedence = soHeaderPrecedence
         }
   where
     buildEventEngineCtx = Inc.cache proc (httpPoolSize, fetchInterval, fetchBatchSize) -> do

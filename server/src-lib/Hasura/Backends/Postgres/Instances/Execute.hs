@@ -93,6 +93,7 @@ import Hasura.RQL.Types.Common (FieldName (..), JsonAggSelect (..), SourceName (
 import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinition (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Types (HeaderPrecedence)
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -258,10 +259,11 @@ convertDelete ::
   Options.StringifyNumbers ->
   [HTTP.Header] ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON, [ModelNameInfo])
-convertDelete sourceName modelSourceType env manager logger userInfo deleteOperation stringifyNum reqHeaders selSetArguments = do
+convertDelete sourceName modelSourceType env manager logger userInfo deleteOperation stringifyNum reqHeaders selSetArguments headerPrecedence = do
   for_ (_adValidateInput deleteOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
-    PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments
+    PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments headerPrecedence
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   let (modelName, modelType) = (qualifiedObjectToText (_adTable deleteOperation), ModelTypeTable)
@@ -298,10 +300,11 @@ convertUpdate ::
   Options.StringifyNumbers ->
   [HTTP.Header] ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON, [ModelNameInfo])
-convertUpdate sourceName modelSourceType env manager logger userInfo updateOperation stringifyNum reqHeaders selSetArguments = do
+convertUpdate sourceName modelSourceType env manager logger userInfo updateOperation stringifyNum reqHeaders selSetArguments headerPrecedence = do
   for_ (_auValidateInput updateOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
-    PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments
+    PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments headerPrecedence
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   let (modelName, modelType) = (qualifiedObjectToText (_auTable updateOperation), ModelTypeTable)
@@ -353,12 +356,13 @@ convertInsert ::
   IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
   [HTTP.Header] ->
+  HeaderPrecedence ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON, [ModelNameInfo])
-convertInsert sourceName modelSourceType env manager logger userInfo insertOperation stringifyNum reqHeaders = do
+convertInsert sourceName modelSourceType env manager logger userInfo insertOperation stringifyNum reqHeaders headerPrecedence = do
   -- Validate insert data
   (_, res) <- flip runStateT InsOrdHashMap.empty $ validateInsertInput env manager logger userInfo (IR._aiData insertOperation) reqHeaders
   for_ res $ \(rows, VIHttp ValidateInputHttpDefinition {..}) -> do
-    validateInsertRows env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders rows
+    validateInsertRows env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders rows headerPrecedence
   queryTags <- ask
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
   argModels <- do
@@ -439,8 +443,9 @@ pgDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
   m (DBStepInfo ('Postgres pgKind), [ModelInfoPart])
-pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments = do
+pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments headerPrecedence = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -450,9 +455,9 @@ pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfi
             $ QueryOperationType G.OperationTypeMutation
      in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   go resolvedConnectionTemplate <$> case mrf of
-    MDBInsert s -> convertInsert sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders
-    MDBUpdate s -> convertUpdate sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments
-    MDBDelete s -> convertDelete sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments
+    MDBInsert s -> convertInsert sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders headerPrecedence
+    MDBUpdate s -> convertUpdate sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments headerPrecedence
+    MDBDelete s -> convertDelete sourceName ModelSourceTypePostgres env manager logger userInfo s stringifyNum reqHeaders selSetArguments headerPrecedence
     MDBFunction returnsSet s -> convertFunction sourceName ModelSourceTypePostgres userInfo returnsSet s
   where
     modelInfoList v = getModelInfoPartfromModelNames (snd v) (ModelOperationType G.OperationTypeMutation)

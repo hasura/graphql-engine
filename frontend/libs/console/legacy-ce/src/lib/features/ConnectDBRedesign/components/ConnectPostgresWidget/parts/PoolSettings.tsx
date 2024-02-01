@@ -33,7 +33,7 @@ export const PoolSettings = ({ name }: { name: string }) => {
         type="number"
         name={`${name}.idleTimeout`}
         label="Idle Timeout"
-        placeholder="180"
+        placeholder={isCloudConsole(globals) ? '30' : '180'}
         tooltip="The idle timeout (in seconds) per connection"
         fieldProps={commonFieldProps}
       />

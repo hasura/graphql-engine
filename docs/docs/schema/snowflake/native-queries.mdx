@@ -247,7 +247,7 @@ generated in the previous API call. All we need to provide is the date range weâ
 
 ```graphql
 query {
-  article_with_excerpt(args: { max_length: 20 }, where: { date: { _gte: "2023-03-01" } }) {
+  article_with_excerpt(args: { max_length: 20 }) {
     id
     title
     date
@@ -496,34 +496,6 @@ This does mean that arguments cannot be used for elements of the SQL that deal w
 use an argument to specify the name of the table in a `FROM` clause.
 
 When making a query, the arguments are specified using the `args` parameter of the query root field.
-
-##### Example: `LIKE` operator
-
-A commonly used operator is the `LIKE`. When used in a `WHERE` condition, it's usually written with this syntax
-`WHERE Title LIKE '%word%'`.
-
-In order to use it with Native Query arguments, you need to use this syntax `LIKE ('%' || {{searchTitle}} || '%')`,
-where `searchTitle` is the Native Query parameter.
-
-## Using the Native Query
-
-You can make a GraphQL request using the specified root field name just as you would any other GraphQL query. When
-making a query, the arguments are specified using the `args` parameter of the query root field.
-
-```graphql
-query {
-  <root field name>(
-    [args: {"<argument name>": <argument value>, ...},]
-    [where: ...,]
-    [order_by: ..., distinct_on: ...,]
-    [limit: ..., offset: ...]
-  ) {
-    <field 1>
-    <field 2>
-    ...
-  }
-}
-```
 
 ## Query functionality
 

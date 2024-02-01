@@ -126,6 +126,19 @@ b0b1aac0508d postgres                           ... 1m ago  Up 1m  5432/tcp ...
 7b5b2ee70ece hasura/graphql-data-connector      ... 1m ago  Up 1m  5005/tcp ..
 ```
 
+You can check the health of the connector using the `/health` endpoint. The connector is available at the following
+endpoint:
+
+```bash
+http://localhost:8081/api/v1/mysql/health
+```
+
+:::info Data connector
+
+This data source utilizes the `hasura/graphql-data-connector` to connect your data source to the GraphQL engine.
+
+:::
+
 ### Step 4: Load the Hasura Console
 
 Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key

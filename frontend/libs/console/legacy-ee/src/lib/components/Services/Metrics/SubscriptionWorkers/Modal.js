@@ -63,7 +63,7 @@ const Modal = props => {
   const renderGeneratedSql = () => {
     if (generatedSql) {
       try {
-        return <CustomCopy label={'GENERATED SQL'} copy={generatedSql} />;
+        return <CustomCopy label={'GENERATED QUERY'} copy={generatedSql} />;
       } catch (e) {
         console.error(e);
       }

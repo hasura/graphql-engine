@@ -11,6 +11,9 @@ import { ManageSuggestedRelationships } from '../TrackResources/TrackRelationshi
 import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
 import { TAB_COLORS } from './constants';
 import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
+import { Link } from 'react-router';
+import { Button } from '../../../new-components/Button';
+import { managePermissionSummaryUrl } from '../../DataSidebar/navigation-utils';
 
 export interface ManageDatabaseProps {
   dataSourceName: string;
@@ -48,7 +51,15 @@ export const ManageDatabase = ({
       <div className="w-full overflow-y-auto bg-gray-50">
         <div className="px-md pt-md mb-xs">
           <BreadCrumbs dataSourceName={dataSourceName} />
-          <SourceName dataSourceName={dataSourceName} schema={schema} />
+          <div className="flex items-center">
+            <SourceName dataSourceName={dataSourceName} schema={schema} />
+            <Link
+              to={managePermissionSummaryUrl(dataSourceName)}
+              style={{ marginLeft: '20px' }}
+            >
+              <Button size="sm">Show Permissions Summary</Button>
+            </Link>
+          </div>
         </div>
         <div className="px-md group relative gap-2 flex-col flex">
           {USE_TABS ? (

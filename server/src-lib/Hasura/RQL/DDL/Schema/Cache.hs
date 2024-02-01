@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Top-level functions concerned specifically with operations on the schema cache, such as
 -- rebuilding it from the catalog and incorporating schema changes. See the module documentation for
@@ -610,7 +612,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let backendInvalidationKeys =
             Inc.selectMaybeD #unBackendInvalidationKeysWrapper
               $ BackendMap.lookupD @b backendInvalidationMap
-      backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
+      backendInfo <- resolveBackendInfo @b logger env -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
     resolveBackendCache ::

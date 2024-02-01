@@ -84,14 +84,16 @@ class
       ProvidesNetwork m
     ) =>
     Logger Hasura ->
+    Env.Environment ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
   default resolveBackendInfo ::
     ( Arrow arr,
       BackendInfo b ~ ()
     ) =>
     Logger Hasura ->
+    Env.Environment ->
     (Inc.Dependency (Maybe (BackendInvalidationKeys b)), BackendConfig b) `arr` BackendInfo b
-  resolveBackendInfo = const $ arr $ const ()
+  resolveBackendInfo _env = const $ arr $ const ()
 
   -- | Function that resolves the connection related source configuration, and
   -- creates a connection pool (and other related parameters) in the process

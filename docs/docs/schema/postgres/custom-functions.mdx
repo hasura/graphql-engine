@@ -16,32 +16,41 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Extend Schema with SQL Functions
+# Postgres: Extend Schema with Custom SQL Functions
 
-## What are custom SQL functions?
+## What are Custom functions?
 
-Custom SQL functions are [user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html)
-that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
-SQL functions are also referred to as **stored procedures**.
+Postgres [user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) can be used to
+either encapsulate some custom business logic or extend the built-in SQL functions and operators. SQL functions are also
+referred to as **stored procedures**.
 
-Hasura GraphQL Engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
-querying them with either `queries` or `subscriptions`, or for `VOLATILE` functions as `mutations`.
+Hasura GraphQL Engine lets you expose certain types of user-defined functions as top level fields in the GraphQL API to
+allow querying them with either `queries` or `subscriptions`, or for `VOLATILE` functions as `mutations`. These are
+called Custom functions.
 
-:::info Note
+:::info Functions as computed fields
 
-Custom SQL functions can also be queried as [computed fields](/schema/postgres/computed-fields.mdx) of tables.
+User-defined SQL functions can also be added as [computed fields](/schema/postgres/computed-fields.mdx) of tables.
 
 :::
 
 ### Supported SQL functions {#pg-supported-sql-functions}
 
-Currently, only functions which satisfy the following constraints can be exposed as top level fields in the GraphQL API
-(_terminology from_ [Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
+Currently, only functions which satisfy the following constraints can be [tracked](#pg-track-custom-sql-functions) as
+Custom functions to be exposed as top level fields in the GraphQL API (_terminology from_
+[Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction.html)):
 
-- **Function behavior**: `STABLE` or `IMMUTABLE` functions may _only_ be exposed as queries. `VOLATILE` functions may
-  be exposed as mutations or queries.
-- **Return type**: MUST be `SETOF <table-name>` OR `<table-name>` where `<table-name>` is already tracked
+- **Function behavior**: `STABLE` or `IMMUTABLE` functions may _only_ be exposed as queries. `VOLATILE` functions may be
+  exposed as mutations or queries.
+- **Return type**: **MUST** be `SETOF <table-name>` OR `<table-name>` where `<table-name>` is already tracked
 - **Argument modes**: ONLY `IN`
+
+:::tip Return type workaround
+
+If the required `SETOF` table doesn't already exist or your function needs to return a custom type i.e. row set, you can
+[create and track](/schema/postgres/tables.mdx) an empty table with the required schema to support the function.
+
+:::
 
 ## Creating SQL functions {#pg-create-sql-functions}
 
@@ -94,7 +103,7 @@ X-Hasura-Role: admin
 ## Track SQL functions {#pg-track-custom-sql-functions}
 
 Functions can be present in the underlying Postgres database without being exposed over the GraphQL API. In order to
-expose a function over the GraphQL API, it needs to be **tracked**.
+expose a function as a top level field in the GraphQL API, it needs to be **tracked** as custom functions.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -147,13 +156,6 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
-
-:::info Note
-
-If the `SETOF` table doesn't already exist or your function needs to return a custom type i.e. row set, create and track
-an empty table with the required schema to support the function before executing the above steps.
-
-:::
 
 ## Use cases
 
@@ -563,8 +565,8 @@ A custom function `f` is only accessible to a role `r` if there is a function pe
 defined on the function `f` for the role `r`. Additionally, role `r` must have SELECT permissions on the returning table
 of the function `f`.
 
-[Access control permissions](/auth/authorization/permissions/index.mdx) configured for the `SETOF` table of a
-function are also applicable to the function itself.
+[Access control permissions](/auth/authorization/permissions/index.mdx) configured for the `SETOF` table of a function
+are also applicable to the function itself.
 
 **For example**, in our text-search example above, if the role `user` has access only to certain columns of the table
 `article`, a validation error will be thrown if the `search_articles` query is run selecting a column to which the
