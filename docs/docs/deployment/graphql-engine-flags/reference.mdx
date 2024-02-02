@@ -44,15 +44,16 @@ the list of connected data sources.
 
 :::info Note
 
-This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. In versions `v2.0` and
-above, databases can be connected using any custom environment variables of your choice.
+This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. **In versions `v2.0`
+and above, databases can be connected using any custom environment variables of your choice. Our `docker-compose.yaml`
+files in the install manifests reference `PG_DATABASE_URL` as the environment variable to use for connecting to a
+database, but this can be any plaintext value which does not start with `HASURA_`.**
 
 :::
 
 ### Metadata Database URL
 
-This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata. This can also be a URI of the form
+This Postgres database URL is used to store Hasura's Metadata. This can also be a URI of the form
 `dynamic-from-file:///path/to/file`, where the referenced file contains a postgres connection string, which will be read
 dynamically every time a new connection is established. This allows the server to be used in an environment where
 secrets are rotated frequently.
@@ -68,7 +69,7 @@ secrets are rotated frequently.
 
 :::info Note
 
-Either one of the Metadata Database URL or the Database URL needs to be provided for Hasura to start.
+THe metadata database URL needs to be set for Hasura to start.
 
 :::
 

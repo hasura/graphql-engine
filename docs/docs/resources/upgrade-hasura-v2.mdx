@@ -173,25 +173,19 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   with Hasura v2 instances. Hasura v2 will assume the `v2` Metadata and Migrations belong to a database connected with
   the name `default`.
 
-- A new optional env var `HASURA_GRAPHQL_METADATA_DATABASE_URL` is now introduced. When set, this Postgres database is
-  used to store the Hasura Metadata. If not set, the database set using `HASURA_GRAPHQL_DATABASE_URL` is used to store
-  the Hasura Metadata.
-
-  Either one of `HASURA_GRAPHQL_METADATA_DATABASE_URL` or `HASURA_GRAPHQL_DATABASE_URL` needs to be set with a Postgres
-  database to start a Hasura v2 instance as Hasura always needs a Postgres database to store its metadata.
-
-- The database set using the `HASURA_GRAPHQL_DATABASE_URL` env var is connected automatically with the name `default` in
-  Hasura v2 while updating an existing instance or while starting a fresh instance.
-
-  Setting this env var post initial setup/update will have no effect as the Hasura Metadata for data sources would
-  already have been initialized and the env var will be treated as any other custom env var.
-
-  It is now not mandatory to set this env var if a dedicated `HASURA_GRAPHQL_METADATA_DATABASE_URL` is set.
+- A new mandatory env var `HASURA_GRAPHQL_METADATA_DATABASE_URL` is now introduced and is mandatory for storing Hasura
+  Metadata.
 
 - Custom env vars can now be used to connect databases dynamically at runtime.
 
 - With support for multiple databases, older database specific env vars have been deprecated.
   [See details](#hasura-v2-env-changes)
+
+:::info Existing Metadata
+
+`HASURA_GRAPHQL_METADATA_DATABASE_URL` must be the connection string for where your metadata existed previously.
+
+:::
 
 ## Moving from Hasura v1 to Hasura v2 {#moving-from-hasura-v1-to-v2}
 
@@ -206,14 +200,12 @@ instance**.
 Post adding a database named `default`, the Hasura v2 instance should behave equivalently to the Hasura v1 instance and
 all previous workflows will continue working as they were.
 
-Refer to [connecting databases](/databases/overview.mdx) to add a database to Hasura v2.
+Refer to [connecting databases](/databases/quickstart.mdx) to add a database to Hasura v2.
 
 ### Migrate Hasura v1 instance to Hasura v2
 
 Hasura v2 is backwards compatible with Hasura v1. Hence simply updating the Hasura docker image version number and
-restarting your Hasura instance should work seamlessly. The database connected using the `HASURA_GRAPHQL_DATABASE_URL`
-env var will be added as a database with the name `default` automatically and all existing Metadata and Migrations will
-be assumed to belong to it.
+restarting your Hasura instance should work seamlessly.
 
 :::info Note
 
@@ -282,7 +274,7 @@ by reverting the Hasura docker image version and using the [downgrade command](/
 the Hasura Metadata catalogue changes:
 
 ```bash
-docker run -e HASURA_GRAPHQL_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
+docker run -e HASURA_METADATA_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
 ```
 
 :::info Note
