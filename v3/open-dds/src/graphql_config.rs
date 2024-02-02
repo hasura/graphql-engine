@@ -103,7 +103,6 @@ pub struct OrderByDirectionValues {
 #[derive(
     Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, Eq, Hash, derive_more::Display,
 )]
-#[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "OrderByDirection")]
 pub enum OrderByDirection {

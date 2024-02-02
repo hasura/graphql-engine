@@ -2958,8 +2958,8 @@
       "title": "OrderByDirection",
       "type": "string",
       "enum": [
-        "asc",
-        "desc"
+        "Asc",
+        "Desc"
       ]
     },
     "MutationGraphqlConfig": {
