@@ -4,10 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::EnvironmentValue;
 
-use super::{
-    ndc_schema_response_schema_reference, CapabilitiesResponseWithSchema, DataConnectorName,
-    VersionedSchemaResponse,
-};
+use super::{DataConnectorName, VersionedSchemaAndCapabilities};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -40,13 +37,9 @@ pub struct DataConnectorLinkV1 {
     #[serde(default)]
     /// Key value map of HTTP headers to be sent with each request to the data connector.
     pub headers: IndexMap<String, EnvironmentValue>,
-    #[serde(default)]
-    #[schemars(schema_with = "ndc_schema_response_schema_reference")]
     /// The schema of the data connector. This schema is used as the source of truth when
     /// serving requests and the live schema of the data connector is not looked up.
-    pub schema: VersionedSchemaResponse,
-    /// The capabilities of the data connector.
-    pub capabilities: CapabilitiesResponseWithSchema,
+    pub schema: VersionedSchemaAndCapabilities,
 }
 
 impl DataConnectorLinkV1 {
@@ -60,11 +53,14 @@ impl DataConnectorLinkV1 {
                   "value": "http://data_connector:8100"
                 }
               },
-              "capabilities": {
-                "versions": "*",
+              "schema": {
+                "version": "v0.1",
                 "capabilities": {
-                  "query": {
-                    "variables": {}
+                  "versions": "*",
+                  "capabilities": {
+                    "query": {
+                      "variables": {}
+                    }
                   }
                 }
               }

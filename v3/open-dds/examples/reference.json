@@ -14,23 +14,9 @@
                                 "value": "http://reference_agent:8102"
                             }
                         },
-                        "capabilities": {
-                            "versions": "*",
-                            "capabilities": {
-                                "query": {
-                                    "aggregates": {},
-                                    "variables": {}
-                                },
-                                "explain": {},
-                                "relationships": {
-                                    "relation_comparisons": {},
-                                    "order_by_aggregate": {}
-                                }
-                            }
-                        },
                         "schema": {
                             "version": "v0.1",
-                            "definition": {
+                            "schema": {
                                 "scalar_types": {
                                     "Int": {
                                         "aggregate_functions": {
@@ -213,6 +199,20 @@
                                         }
                                     }
                                 ]
+                            },
+                            "capabilities": {
+                                "versions": "*",
+                                "capabilities": {
+                                    "query": {
+                                        "aggregates": {},
+                                        "variables": {}
+                                    },
+                                    "explain": {},
+                                    "relationships": {
+                                        "relation_comparisons": {},
+                                        "order_by_aggregate": {}
+                                    }
+                                }
                             }
                         }
                     }

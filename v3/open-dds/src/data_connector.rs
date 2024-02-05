@@ -30,39 +30,38 @@ impl DataConnectorLink {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct CapabilitiesResponseWithSchema(pub CapabilitiesResponse);
-
-impl JsonSchema for CapabilitiesResponseWithSchema {
-    fn schema_name() -> String {
-        "CapabilitiesResponse".into()
-    }
-
-    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema".into())
-    }
+fn ndc_capabilities_response_v01_schema_reference(
+    _gen: &mut schemars::gen::SchemaGenerator,
+) -> schemars::schema::Schema {
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
-fn ndc_schema_response_schema_reference(
+fn ndc_schema_response_v01_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema".into())
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(tag = "version", content = "definition")]
+#[serde(tag = "version")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "VersionedSchemaResponse")]
-pub enum VersionedSchemaResponse {
+#[schemars(title = "VersionedSchemaAndCapabilities")]
+pub enum VersionedSchemaAndCapabilities {
     #[serde(rename = "v0.1")]
-    V01(SchemaResponse),
+    V01(SchemaAndCapabilitiesV01),
 }
 
-impl Default for VersionedSchemaResponse {
-    fn default() -> Self {
-        VersionedSchemaResponse::V01(SchemaResponse::default())
-    }
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "SchemaAndCapabilitiesV01")]
+pub struct SchemaAndCapabilitiesV01 {
+    #[schemars(schema_with = "ndc_schema_response_v01_schema_reference")]
+    #[serde(default)]
+    pub schema: SchemaResponse,
+    #[schemars(schema_with = "ndc_capabilities_response_v01_schema_reference")]
+    pub capabilities: CapabilitiesResponse,
 }
 
 #[cfg(test)]
@@ -88,10 +87,13 @@ mod tests {
                             "value": "Bearer: abc"
                         }
                     },
-                    "capabilities": {
-                        "versions": "1",
+                    "schema": {
+                        "version": "v0.1",
                         "capabilities": {
-                            "query": {}
+                            "versions": "1",
+                            "capabilities": {
+                                "query": {}
+                            }
                         }
                     }
                 }
@@ -114,10 +116,13 @@ mod tests {
                         "value": "Bearer: abc"
                     }
                 },
-                "capabilities": {
-                    "versions": "1",
+                "schema": {
+                    "version": "v0.1",
                     "capabilities": {
-                        "query": {}
+                        "versions": "1",
+                        "capabilities": {
+                            "query": {}
+                        }
                     }
                 }
             }

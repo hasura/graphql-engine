@@ -363,19 +363,19 @@
           "headers": {},
           "schema": {
             "version": "v0.1",
-            "definition": {
+            "schema": {
               "scalar_types": {},
               "object_types": {},
               "collections": [],
               "functions": [],
               "procedures": []
-            }
-          },
-          "capabilities": {
-            "versions": "*",
+            },
             "capabilities": {
-              "query": {
-                "variables": {}
+              "versions": "*",
+              "capabilities": {
+                "query": {
+                  "variables": {}
+                }
               }
             }
           }
@@ -383,8 +383,8 @@
       ],
       "type": "object",
       "required": [
-        "capabilities",
         "name",
+        "schema",
         "url"
       ],
       "properties": {
@@ -414,27 +414,9 @@
         },
         "schema": {
           "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
-          "default": {
-            "version": "v0.1",
-            "definition": {
-              "scalar_types": {},
-              "object_types": {},
-              "collections": [],
-              "functions": [],
-              "procedures": []
-            }
-          },
           "allOf": [
             {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
-            }
-          ]
-        },
-        "capabilities": {
-          "description": "The capabilities of the data connector.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/CapabilitiesResponse"
+              "$ref": "#/definitions/VersionedSchemaAndCapabilities"
             }
           ]
         }
@@ -524,8 +506,45 @@
       },
       "additionalProperties": false
     },
-    "CapabilitiesResponse": {
-      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
+    "VersionedSchemaAndCapabilities": {
+      "$id": "https://hasura.io/jsonschemas/metadata/VersionedSchemaAndCapabilities",
+      "title": "VersionedSchemaAndCapabilities",
+      "oneOf": [
+        {
+          "title": "SchemaAndCapabilitiesV01",
+          "type": "object",
+          "required": [
+            "capabilities",
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v0.1"
+              ]
+            },
+            "schema": {
+              "default": {
+                "scalar_types": {},
+                "object_types": {},
+                "collections": [],
+                "functions": [],
+                "procedures": []
+              },
+              "allOf": [
+                {
+                  "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
+                }
+              ]
+            },
+            "capabilities": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "ObjectTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeV1",

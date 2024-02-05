@@ -1,5 +1,5 @@
 # See https://github.com/LukeMathWalker/cargo-chef
-FROM rust:1.72.0 as chef
+FROM rust:1.75.0 as chef
 
 WORKDIR app
 

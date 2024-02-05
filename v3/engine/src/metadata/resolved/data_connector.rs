@@ -7,7 +7,7 @@ use lang_graphql::ast::common::OperationType;
 use ndc_client as ndc;
 use open_dds::{
     data_connector::{
-        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaResponse,
+        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
     },
     EnvironmentValue,
 };
@@ -201,15 +201,14 @@ pub struct DataConnectorContext<'a> {
 
 impl<'a> DataConnectorContext<'a> {
     pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
-        let capabilities = &data_connector.capabilities.0;
-
-        let VersionedSchemaResponse::V01(schema) = &data_connector.schema;
+        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
         Ok(DataConnectorContext {
             url: &data_connector.url,
             headers: &data_connector.headers,
-            schema,
-            capabilities,
-            scalars: schema
+            schema: &schema_and_capabilities.schema,
+            capabilities: &schema_and_capabilities.capabilities,
+            scalars: schema_and_capabilities
+                .schema
                 .scalar_types
                 .iter()
                 .map(|(k, v)| (k.as_str(), ScalarTypeInfo::new(v)))
@@ -266,7 +265,10 @@ mod tests {
             {
                 "name": "foo",
                 "url": { "singleUrl": { "value": "http://test.com" } },
-                "capabilities": { "versions": "1", "capabilities": { "query": {} }}
+                "schema": {
+                    "version": "v0.1",
+                    "capabilities": { "versions": "1", "capabilities": { "query": {} }}
+                }
             }
         "#,
         )

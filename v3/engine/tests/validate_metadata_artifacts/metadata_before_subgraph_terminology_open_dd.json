@@ -17,23 +17,9 @@
                 "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
               }
             },
-            "capabilities": {
-              "versions": "*",
-              "capabilities": {
-                "query": {
-                  "aggregates": {},
-                  "variables": {}
-                },
-                "explain": {},
-                "relationships": {
-                  "relation_comparisons": {},
-                  "order_by_aggregate": {}
-                }
-              }
-            },
             "schema": {
               "version": "v0.1",
-              "definition": {
+              "schema": {
                 "scalar_types": {
                   "varchar": {
                     "aggregate_functions": {},
@@ -714,6 +700,20 @@
                     }
                   }
                 ]
+              },
+              "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {}
+                  },
+                  "explain": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
               }
             }
           },

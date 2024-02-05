@@ -12,23 +12,9 @@
                 "value": "http://postgres_connector:8100"
               }
             },
-            "capabilities": {
-              "versions": "*",
-              "capabilities": {
-                "query": {
-                  "aggregates": {},
-                  "variables": {}
-                },
-                "explain": {},
-                "relationships": {
-                  "relation_comparisons": {},
-                  "order_by_aggregate": {}
-                }
-              }
-            },
             "schema": {
               "version": "v0.1",
-              "definition": {
+              "schema": {
                 "scalar_types": {
                   "String": {
                     "aggregate_functions": {},
@@ -286,12 +272,6 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
-                      },
-                      "_neq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "String"
                         }
                       }
                     },
@@ -770,6 +750,20 @@
                     }
                   }
                 ]
+              },
+              "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {}
+                  },
+                  "explain": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
               }
             }
           },
@@ -789,23 +783,9 @@
                 "value": "http://postgres_connector:8100"
               }
             },
-            "capabilities": {
-              "versions": "*",
-              "capabilities": {
-                "query": {
-                  "aggregates": {},
-                  "variables": {}
-                },
-                "explain": {},
-                "relationships": {
-                  "relation_comparisons": {},
-                  "order_by_aggregate": {}
-                }
-              }
-            },
             "schema": {
               "version": "v0.1",
-              "definition": {
+              "schema": {
                 "scalar_types": {
                   "String": {
                     "aggregate_functions": {},
@@ -1063,12 +1043,6 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
-                      },
-                      "_neq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "String"
                         }
                       }
                     },
@@ -1547,6 +1521,20 @@
                     }
                   }
                 ]
+              },
+              "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {}
+                  },
+                  "explain": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
               }
             }
           },
