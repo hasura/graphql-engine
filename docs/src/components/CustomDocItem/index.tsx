@@ -76,7 +76,7 @@ const CustomDocItem = props => {
         }
       >
         {/*<PageHelpful />*/}
-        <HasuraConBanner {...props} />
+        {/*<HasuraConBanner {...props} />*/}
         <GraphQLWithHasuraBanner />
         <BrowserOnly fallback={<div>Loading...</div>}>
           {() => <AiChatBot/>}
