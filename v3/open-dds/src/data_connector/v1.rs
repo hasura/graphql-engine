@@ -62,7 +62,14 @@ impl DataConnectorLinkV1 {
                       "variables": {}
                     }
                   }
-                }
+                },
+                "schema": {
+                  "scalar_types": {},
+                  "object_types": {},
+                  "collections": [],
+                  "functions": [],
+                  "procedures": []
+              }
               }
             }
         "#,

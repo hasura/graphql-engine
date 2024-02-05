@@ -515,6 +515,7 @@
           "type": "object",
           "required": [
             "capabilities",
+            "schema",
             "version"
           ],
           "properties": {
@@ -525,18 +526,7 @@
               ]
             },
             "schema": {
-              "default": {
-                "scalar_types": {},
-                "object_types": {},
-                "collections": [],
-                "functions": [],
-                "procedures": []
-              },
-              "allOf": [
-                {
-                  "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
-                }
-              ]
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
               "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"

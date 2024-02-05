@@ -267,7 +267,14 @@ mod tests {
                 "url": { "singleUrl": { "value": "http://test.com" } },
                 "schema": {
                     "version": "v0.1",
-                    "capabilities": { "versions": "1", "capabilities": { "query": {} }}
+                    "capabilities": { "versions": "1", "capabilities": { "query": {} }},
+                    "schema": {
+                        "scalar_types": {},
+                        "object_types": {},
+                        "collections": [],
+                        "functions": [],
+                        "procedures": []
+                    }
                 }
             }
         "#,

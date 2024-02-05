@@ -58,7 +58,6 @@ pub enum VersionedSchemaAndCapabilities {
 #[schemars(title = "SchemaAndCapabilitiesV01")]
 pub struct SchemaAndCapabilitiesV01 {
     #[schemars(schema_with = "ndc_schema_response_v01_schema_reference")]
-    #[serde(default)]
     pub schema: SchemaResponse,
     #[schemars(schema_with = "ndc_capabilities_response_v01_schema_reference")]
     pub capabilities: CapabilitiesResponse,
@@ -94,6 +93,13 @@ mod tests {
                             "capabilities": {
                                 "query": {}
                             }
+                        },
+                        "schema": {
+                            "scalar_types": {},
+                            "object_types": {},
+                            "collections": [],
+                            "functions": [],
+                            "procedures": []
                         }
                     }
                 }
@@ -123,6 +129,13 @@ mod tests {
                         "capabilities": {
                             "query": {}
                         }
+                    },
+                    "schema": {
+                        "scalar_types": {},
+                        "object_types": {},
+                        "collections": [],
+                        "functions": [],
+                        "procedures": []
                     }
                 }
             }
