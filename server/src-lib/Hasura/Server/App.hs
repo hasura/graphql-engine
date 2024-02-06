@@ -102,7 +102,7 @@ import Hasura.Server.Compression
 import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
-import Hasura.Server.Middleware (corsMiddleware)
+import Hasura.Server.Middleware
 import Hasura.Server.OpenAPI (buildOpenAPI)
 import Hasura.Server.Rest
 import Hasura.Server.Types
@@ -879,6 +879,9 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
   -- cors middleware
   Spock.middleware
     $ corsMiddleware (acCorsPolicy <$> getAppContext appStateRef)
+
+  -- bypass warp's use of 'auto-update'. See #10662
+  Spock.middleware dateHeaderMiddleware
 
   -- API Console and Root Dir
   serveApiConsole
