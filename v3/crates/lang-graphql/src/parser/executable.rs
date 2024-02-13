@@ -9,6 +9,7 @@ use crate::{
     },
     lexer,
 };
+use recursion_limit_macro::limit_recursion;
 
 impl<'a> Parser<'a> {
     fn parse_base_type(&mut self) -> super::Result<Spanning<BaseType>> {
@@ -44,6 +45,7 @@ impl<'a> Parser<'a> {
             },
         }
     }
+    #[limit_recursion]
     pub fn parse_type(&mut self) -> super::Result<Spanning<Type>> {
         let base = self.parse_base_type()?;
         let bang = if self.is_next_token(&lexer::Token::Punctuation(lexer::Punctuation::Bang)) {

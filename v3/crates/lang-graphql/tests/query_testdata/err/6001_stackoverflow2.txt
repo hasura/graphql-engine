@@ -4,8 +4,8 @@ Err(
             "Recursion limit exceeded",
         ),
         position: SourcePosition {
-            line: 1,
-            col: 120,
+            line: 2,
+            col: 190,
         },
     },
 )

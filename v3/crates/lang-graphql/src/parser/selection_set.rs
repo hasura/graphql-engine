@@ -10,6 +10,7 @@ use crate::{
     },
     lexer,
 };
+use recursion_limit_macro::limit_recursion;
 
 impl<'a> Parser<'a> {
     pub fn parse_type_condition(&mut self) -> super::Result<Spanning<TypeCondition>> {
@@ -37,6 +38,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    #[limit_recursion]
     pub fn parse_selection_set(&mut self) -> super::Result<Spanning<SelectionSet>> {
         self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,

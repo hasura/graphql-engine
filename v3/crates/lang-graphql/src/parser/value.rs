@@ -7,6 +7,7 @@ use crate::{
     },
     lexer,
 };
+use recursion_limit_macro::limit_recursion;
 
 use super::Parser;
 
@@ -92,6 +93,7 @@ impl<'a> Parser<'a> {
         ))
     }
 
+    #[limit_recursion]
     pub fn parse_const_value(&mut self) -> super::Result<Spanning<ConstValue>> {
         static EXPECTED_TOKENS: &[super::ExpectedToken] = &[
             super::ExpectedToken::Number,
@@ -125,6 +127,7 @@ impl<'a> Parser<'a> {
         }
     }
 
+    #[limit_recursion]
     pub fn parse_value(&mut self) -> super::Result<Spanning<Value>> {
         static EXPECTED_TOKENS: &[super::ExpectedToken] = &[
             super::ExpectedToken::Number,

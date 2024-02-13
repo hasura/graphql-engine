@@ -21,6 +21,7 @@ schemars = { version = "0.8.12", features = ["smol_str"] }
 axum-core = "0.3.4"
 axum = "0.6.20"
 http = "0.2.9"
+recursion_limit_macro = { path = "../recursion_limit_macro" }
 
 [dev-dependencies]
 apollo-parser = "0.4"

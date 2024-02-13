@@ -5,6 +5,7 @@ use crate::{ast::spanning::*, lexer};
 
 use super::ast::common::Name;
 
+use crate::parser::Error::OtherError;
 mod executable;
 mod fragment;
 mod schema;
@@ -14,6 +15,7 @@ mod value;
 pub struct Parser<'a> {
     lexer: lexer::Lexer<'a>,
     next_token: Option<lexer::Result>,
+    recursion_limit: i8,
 }
 
 #[derive(Error, Debug, PartialEq, Clone)]
@@ -222,6 +224,8 @@ impl<'a> Parser<'a> {
         let mut parser = Parser {
             lexer,
             next_token: None,
+            // pretty arbitrary:
+            recursion_limit: 100,
         };
         parser.next_token();
         parser
@@ -280,6 +284,15 @@ impl<'a> Parser<'a> {
     }
     fn other_error<T>(error_msg: &'static str, start: SourcePosition) -> Result<T> {
         Err(Positioned::new(&start, Error::OtherError(error_msg)))
+    }
+
+    /// Build an error `Result` at the current position. Required implementation for the
+    /// `limit_recursion` macro attribute.
+    pub fn error_str<T>(&self, error_msg: &'static str) -> Result<T> {
+        Err(Positioned::new(
+            &self.lexer.get_position(),
+            OtherError(error_msg),
+        ))
     }
 
     fn unexpected_token<T>(
