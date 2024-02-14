@@ -9,7 +9,7 @@ export const DDNBanner = () => {
   return (
     <div className="banner">
       <div>
-      Hasura DDN is the future of data delivery.&nbsp;<a href="https://hasura.io/docs/3.0/index">Click here for the Hasura DDN docs</a>.
+        Hasura DDN is the future of data delivery.&nbsp;<a href="https://hasura.io/docs/3.0/index">Click here for the Hasura DDN docs</a>.
       </div>
       <button className="close-btn" onClick={() => setIsVisible(false)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
