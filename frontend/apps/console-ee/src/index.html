@@ -12,6 +12,10 @@
       // Needed since if the env var is not defined, it won't be replaced with undefined but keep as the string
       const getEnv = value => (value.startsWith('%NX') ? undefined : value);
       const getEnvAsBool = value => Boolean(getEnv(value));
+      const getEnvAsJson = value => {
+        const valueStr = getEnv(value);
+        return valueStr ? JSON.parse(valueStr) : undefined;
+      };
 
       const serverEnvVars = {
         dataApiUrl: getEnv('%NX_DATA_API_URL%'),
@@ -36,6 +40,8 @@
         hasuraOAuthUrl: getEnv('%NX_HASURA_OAUTH_URL%'),
         hasuraOAuthScopes: getEnv('%NX_HASURA_OAUTH_SCOPES%'),
         consoleSentryDsn: getEnv('%NX_HASURA_CONSOLE_SENTRY_DSN%'),
+        ssoEnabled: getEnv('%NX_SSO_ENABLED%'),
+        ssoIdentityProviders: getEnvAsJson('%NX_HASURA_SSO_PROVIDERS%'),
       };
 
       const cliEnvVars = {
@@ -547,7 +553,7 @@
       }
     </script>
     <script
-      src="https://graphql-engine-cdn.hasura.io/pro-console/wasm_exec.js"
+      src="https://graphql-engine-cdn.hasura.io/cloud-console/assets/common/wasm/go1.16/wasm_exec.js"
       charset="UTF-8"
     ></script>
   </body>

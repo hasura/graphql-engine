@@ -4,7 +4,7 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    body: "foo=bar&baz=world"
+    body: baz=world&foo=bar
     headers:
       - - content-type
         - application/x-www-form-urlencoded

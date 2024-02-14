@@ -28,10 +28,25 @@ export type SetFeatureFlagEvent = {
   };
 };
 
+export type HTMLUserEvent =
+  | {
+      type: 'CLICK_EVENT';
+      data: {
+        id: string;
+      };
+    }
+  | {
+      type: 'INPUT_CHANGE_EVENT';
+      data: {
+        id: string;
+      };
+    };
+
 export type TelemetryEvent =
   | RunTimeErrorEvent
   | ConnectDBEvent
-  | SetFeatureFlagEvent;
+  | SetFeatureFlagEvent
+  | HTMLUserEvent;
 
 export type TelemetryPayload = {
   server_version: string;
@@ -98,4 +113,35 @@ export const trackRuntimeError = (error: Error) => {
     type: 'RUN_TIME_ERROR',
     data: { message: error.message, stack: error.stack },
   });
+};
+
+// This function accepts the event identifier and kind, constructs the telemetry payload and sends it
+export const telemetryUserEventsTracker = (
+  id: string,
+  kind: 'click' | 'change'
+) => {
+  const isNotProduction = process.env.NODE_ENV !== 'production';
+  // Keeping this log in debug mode so that it's easier to see the tracking items
+  if (isNotProduction) {
+    console.log('Tracking: ', id, kind);
+  }
+  switch (kind) {
+    case 'change': {
+      sendTelemetryEvent({
+        type: 'INPUT_CHANGE_EVENT',
+        data: {
+          id,
+        },
+      });
+      break;
+    }
+    case 'click': {
+      sendTelemetryEvent({
+        type: 'CLICK_EVENT',
+        data: {
+          id,
+        },
+      });
+    }
+  }
 };

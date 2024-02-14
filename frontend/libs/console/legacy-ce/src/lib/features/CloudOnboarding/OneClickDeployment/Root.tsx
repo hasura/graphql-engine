@@ -3,7 +3,8 @@ import globals from '../../../Globals';
 import { FaGithub } from 'react-icons/fa';
 import { GraphiqlPopup, WorkflowProgress } from './components';
 import { stepperNavSteps } from './constants';
-import { DialogContainer } from '../OnboardingWizard';
+import { oneClickDeploymentOnboardingShown } from '../constants';
+import { DialogContainer } from '../components';
 import { useTriggerDeployment } from './hooks';
 import { GitRepoDetails, FallbackApp } from './types';
 import {
@@ -11,6 +12,7 @@ import {
   getGitRepoFullLinkFromDetails,
   getSampleQueriesUrl,
 } from './util';
+import { emitOnboardingEvent } from '../utils';
 
 /**
  * Parent container for the one click deployment wizard. Takes care of assembling and rendering all steps.
@@ -39,6 +41,7 @@ export function Root(props: {
   const transitionToQueryPopupSuccessState = () => {
     setGraphiQlPopupStatus('success');
     setState('graphiql-popup');
+    emitOnboardingEvent(oneClickDeploymentOnboardingShown);
   };
   const transitionToQueryPopupWithErrorState = () => {
     setGraphiQlPopupStatus('error');
@@ -66,17 +69,15 @@ export function Root(props: {
           header="Setting up your project"
           showSubHeaderAboveHeader
           subHeader={
-            <>
-              <a
-                href={gitRepoFullLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
-              >
-                <FaGithub className="mb-1" />
-                <span className="ml-xs">{gitRepoName}</span>
-              </a>
-            </>
+            <a
+              href={gitRepoFullLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-gray-800 hover:no-underline cursor-pointer"
+            >
+              <FaGithub className="mb-1" />
+              <span className="ml-xs">{gitRepoName}</span>
+            </a>
           }
         >
           <WorkflowProgress

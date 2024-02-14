@@ -1,5 +1,5 @@
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { z } from 'zod';
 import { SimpleForm } from '../../../../new-components/Form';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
@@ -12,7 +12,6 @@ import {
 const schema = z.object({ columns: z.record(z.optional(z.boolean())) });
 
 export default {
-  title: 'Features/Permissions/Form/Column Section',
   component: ColumnPermissionsSection,
   decorators: [
     ReactQueryDecorator(),
@@ -39,92 +38,88 @@ export default {
 
 const columns = ['id', 'name', 'description'];
 
-export const Insert: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-Insert.args = {
-  roleName: 'two',
-  queryType: 'insert',
-  columns,
+export const Insert: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    roleName: 'two',
+    queryType: 'insert',
+    columns,
+  },
 };
 
-export const Select: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-Select.args = {
-  ...Insert.args,
-  queryType: 'select',
+export const Select: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+    queryType: 'select',
+  },
 };
 
-export const Update: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-Update.args = {
-  ...Insert.args,
-  queryType: 'update',
+export const Update: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+    queryType: 'update',
+  },
 };
 
-export const Delete: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-Delete.args = {
-  ...Insert.args,
-  queryType: 'delete',
+export const Delete: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+    queryType: 'delete',
+  },
 };
 
-export const PartiallySelected: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-PartiallySelected.args = {
-  ...Insert.args,
-  queryType: 'insert',
-};
-PartiallySelected.decorators = [
-  (S: React.FC) => (
-    <SimpleForm
-      schema={schema}
-      onSubmit={() => {}}
-      options={{
-        defaultValues: {
-          columns: { id: true, name: false, description: true },
-        },
-      }}
-      className="p-4"
-    >
-      <S />
-    </SimpleForm>
-  ),
-];
+export const PartiallySelected: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+    queryType: 'insert',
+  },
 
-export const AllSelected: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-AllSelected.args = {
-  ...Insert.args,
+  decorators: [
+    (S: React.FC) => (
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {}}
+        options={{
+          defaultValues: {
+            columns: { id: true, name: false, description: true },
+          },
+        }}
+        className="p-4"
+      >
+        <S />
+      </SimpleForm>
+    ),
+  ],
 };
-AllSelected.decorators = [
-  (S: React.FC) => (
-    <SimpleForm
-      schema={schema}
-      onSubmit={() => {}}
-      options={{
-        defaultValues: {
-          columns: { id: true, name: true, description: true },
-        },
-      }}
-      className="p-4"
-    >
-      <S />
-    </SimpleForm>
-  ),
-];
 
-export const Showcase: Story<ColumnPermissionsSectionProps> = args => (
-  <ColumnPermissionsSection {...args} />
-);
-Showcase.args = {
-  ...Insert.args,
+export const AllSelected: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+  },
+
+  decorators: [
+    (S: React.FC) => (
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {}}
+        options={{
+          defaultValues: {
+            columns: { id: true, name: true, description: true },
+          },
+        }}
+        className="p-4"
+      >
+        <S />
+      </SimpleForm>
+    ),
+  ],
 };
-Showcase.parameters = {
-  chromatic: { disableSnapshot: false },
+
+export const Showcase: StoryObj<ColumnPermissionsSectionProps> = {
+  args: {
+    ...Insert.args,
+  },
+
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 };

@@ -75,16 +75,11 @@ class TestRemoteSchemaBasic:
     dir = 'queries/remote_schemas'
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        # This is needed for supporting server upgrade tests
-        # Some marked tests in this class will be run as server upgrade tests
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('simple 1', f'{gql_server.url}/hello-graphql')
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        q = mk_add_remote_q('simple 1', f'{gql_server.url}/hello-graphql')
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the metadata """
@@ -159,7 +154,6 @@ class TestRemoteSchemaBasic:
         q = mk_update_remote_q('simple 1', f'{gql_server.url}/hello-graphql', None, False, 60)
         hge_ctx.v1q(q)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
@@ -167,11 +161,9 @@ class TestRemoteSchemaBasic:
         resp, _ = check_query(hge_ctx, query)
         assert check_introspection_result(resp, ['String'], ['hello'])
 
-    @pytest.mark.allow_server_upgrade_test
     def test_introspection_as_user(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/graphql_introspection/introspection_user_role.yaml')
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
 
@@ -181,37 +173,33 @@ class TestRemoteSchemaBasic:
     def test_add_schema_conflicts(self, hge_ctx, gql_server):
         """add 2 remote schemas with same node or types"""
         q = mk_add_remote_q('simple 2', f'{gql_server.url}/hello-graphql')
+        # FYI: resp = ordereddict([('code', 'invalid-configuration'), ('error', "Inconsistent object: Duplicate remote field 'hello', Incons...on', "Inconsistent object: Duplicate remote field 'delayedHello'"), ('type', 'remote_schema')])]), ('path', '$.args')]) 
         resp = hge_ctx.v1q(q, expected_status_code = 400)
-        assert resp['code'] == 'unexpected'
+        assert resp['code'] == 'invalid-configuration', resp
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remove_schema_error(self, hge_ctx):
         """remove remote schema which is not added"""
         q = mk_delete_remote_q('random name')
         resp = hge_ctx.v1q(q, expected_status_code = 400)
         assert resp['code'] == 'not-exists'
 
-    @pytest.mark.allow_server_upgrade_test
     def test_reload_remote_schema(self, hge_ctx):
         """reload a remote schema"""
         q = mk_reload_remote_q('simple 1')
         hge_ctx.v1q(q)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_second_remote_schema(self, hge_ctx, gql_server):
         """add 2 remote schemas with different node and types"""
         q = mk_add_remote_q('my remote', f'{gql_server.url}/user-graphql')
         hge_ctx.v1q(q)
         hge_ctx.v1q(mk_delete_remote_q('my remote'))
 
-    @pytest.mark.allow_server_upgrade_test
     def test_json_scalar_dict(self, hge_ctx, gql_server):
         q = mk_add_remote_q('my remote', f'{gql_server.url}/json-scalar-graphql')
         hge_ctx.v1q(q)
         check_query_f(hge_ctx, self.dir + '/json_scalar.yaml')
         hge_ctx.v1q(mk_delete_remote_q('my remote'))
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_remote_schema_with_interfaces(self, hge_ctx, gql_server):
         """add a remote schema with interfaces in it"""
         q = mk_add_remote_q('my remote interface one', f'{gql_server.url}/character-iface-graphql')
@@ -254,7 +242,6 @@ class TestRemoteSchemaBasic:
         having extra non_null argument"""
         check_query_f(hge_ctx, self.dir + '/add_remote_schema_with_iface_err_extra_non_null_arg.yaml')
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_remote_schema_with_union(self, hge_ctx, gql_server):
         """add a remote schema with union in it"""
         q = mk_add_remote_q('my remote union one', f'{gql_server.url}/union-graphql')
@@ -288,16 +275,11 @@ class TestRemoteSchemaBasicExtensions:
     dir = 'queries/remote_schemas'
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        # This is needed for supporting server upgrade tests
-        # Some marked tests in this class will be run as server upgrade tests
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('simple 1', f'{gql_server.url}/hello-graphql-extensions')
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        q = mk_add_remote_q('simple 1', f'{gql_server.url}/hello-graphql-extensions')
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     def test_remote_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/basic_query.yaml')
@@ -314,7 +296,6 @@ class TestAddRemoteSchemaTbls:
         yield
         hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the metadata """
         resp = hge_ctx.v1q(export_metadata_q)
@@ -326,7 +307,6 @@ class TestAddRemoteSchemaTbls:
         resp = hge_ctx.v1q(q, expected_status_code = 400)
         assert resp['code'] == 'invalid-configuration'
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_second_remote_schema(self, hge_ctx, gql_server):
         """add 2 remote schemas with different node and types"""
         q = mk_add_remote_q('my remote2', f'{gql_server.url}/country-graphql')
@@ -339,7 +319,6 @@ class TestAddRemoteSchemaTbls:
     def test_remote_mutation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir + '/simple2_mutation.yaml')
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_conflicting_table(self, hge_ctx):
         resp = hge_ctx.v1q_f(self.dir + '/create_conflicting_table.yaml', expected_status_code = 400)
         assert resp['code'] == 'remote-schema-conflicts'
@@ -357,7 +336,6 @@ class TestAddRemoteSchemaTbls:
         resp = hge_ctx.v1q(q, expected_status_code = 400)
         assert resp['code'] == 'already-exists'
 
-    @pytest.mark.allow_server_upgrade_test
     def test_add_schema_same_type_containing_same_scalar(self, hge_ctx, gql_server):
         """
         test types get merged when remote schema has type with same name and
@@ -370,7 +348,6 @@ class TestAddRemoteSchemaTbls:
         hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
         hge_ctx.v1q({"type": "remove_remote_schema", "args": {"name": "person-graphql"}})
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_schema_forward_headers(self, hge_ctx, gql_server):
         """
         test headers from client and conf and resolved info gets passed
@@ -418,7 +395,6 @@ class TestRemoteSchemaQueriesOverWebsocket:
         hge_ctx.v1q_f('queries/remote_schemas/tbls_teardown.yaml')
         hge_ctx.v1q(self.teardown)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_query(self, ws_client):
         query = """
         query {
@@ -438,7 +414,6 @@ class TestRemoteSchemaQueriesOverWebsocket:
         finally:
             ws_client.stop(query_id)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_query_error(self, ws_client):
         query = """
         query {
@@ -461,7 +436,6 @@ class TestRemoteSchemaQueriesOverWebsocket:
         finally:
             ws_client.stop(query_id)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_mutation(self, ws_client):
         query = """
         mutation {
@@ -496,7 +470,6 @@ class TestRemoteSchemaResponseHeaders():
         yield
         hge_ctx.v1q(self.teardown)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_response_headers_from_remote(self, hge_ctx):
         headers = {}
         if hge_ctx.hge_key:
@@ -520,7 +493,6 @@ class TestAddRemoteSchemaCompareRootQueryFields:
         yield
         hge_ctx.v1q(mk_delete_remote_q('default_value_test'))
 
-    @pytest.mark.allow_server_upgrade_test
     def test_schema_check_arg_default_values_and_field_and_arg_types(self, hge_ctx, gql_server):
         remote = f'{gql_server.url}/default-value-echo-graphql'
         with open('queries/graphql_introspection/introspection.yaml') as f:
@@ -551,7 +523,6 @@ class TestRemoteSchemaTimeout:
         yield
         hge_ctx.v1q(self.teardown)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_query_timeout(self, hge_ctx):
         with open(self.dir + '/basic_timeout_query.yaml') as f:
             query = yaml.load(f)
@@ -708,16 +679,11 @@ class TestRemoteSchemaTypePrefix:
     dir = 'queries/remote_schemas'
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        # This is needed for supporting server upgrade tests
-        # Some marked tests in this class will be run as server upgrade tests
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('simple 2', f'{gql_server.url}/user-graphql', customization=type_prefix_customization("Foo"))
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        q = mk_add_remote_q('simple 2', f'{gql_server.url}/user-graphql', customization=type_prefix_customization("Foo"))
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the metadata """
@@ -725,7 +691,6 @@ class TestRemoteSchemaTypePrefix:
         found = [schema for schema in resp['remote_schemas'] if schema['name'] == 'simple 2']
         assert len(found) == 1, resp
 
-    @pytest.mark.allow_server_upgrade_test
     def test_introspection(self, hge_ctx):
         #check_query_f(hge_ctx, 'queries/graphql_introspection/introspection.yaml')
         with open('queries/graphql_introspection/introspection.yaml') as f:
@@ -738,14 +703,11 @@ class TestValidateRemoteSchemaTypePrefixQuery:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=type_prefix_customization("Foo"))
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=type_prefix_customization("Foo"))
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     @classmethod
     def dir(cls):
@@ -759,15 +721,12 @@ class TestValidateRemoteSchemaFieldPrefixQuery:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = { "field_names": [{"parent_type": "Character", "prefix": "foo_"},{"parent_type": "Human", "prefix": "foo_"},{"parent_type": "Droid", "prefix": "foo_"}] }
-            q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        customization = { "field_names": [{"parent_type": "Character", "prefix": "foo_"},{"parent_type": "Human", "prefix": "foo_"},{"parent_type": "Droid", "prefix": "foo_"}] }
+        q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     @classmethod
     def dir(cls):
@@ -789,15 +748,12 @@ class TestValidateRemoteSchemaNamespaceQuery:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = { "root_fields_namespace": "foo" }
-            q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        customization = { "root_fields_namespace": "foo" }
+        q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     @classmethod
     def dir(cls):
@@ -814,24 +770,21 @@ class TestValidateRemoteSchemaCustomizeAllTheThings:
     teardown = {"type": "clear_metadata", "args": {}}
 
     @pytest.fixture(autouse=True)
-    def transact(self, request, hge_ctx, gql_server):
-        config = request.config
-        if not config.getoption('--skip-schema-setup'):
-            customization = {
-                "root_fields_namespace": "star_wars",
-                "type_names": {"prefix": "Foo", "suffix": "_x", "mapping": { "Droid": "Android", "Int": "MyInt"}},
-                "field_names": [
-                        {"parent_type": "Character", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
-                        {"parent_type": "Human", "mapping": {"id": "ident", "name": "foo_name_f", "droid": "android"}},
-                        {"parent_type": "Droid", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
-                        {"parent_type": "CharacterIFaceQuery", "prefix": "super_" }
-                    ]
-                }
-            q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
-            hge_ctx.v1q(q)
+    def transact(self, hge_ctx, gql_server):
+        customization = {
+            "root_fields_namespace": "star_wars",
+            "type_names": {"prefix": "Foo", "suffix": "_x", "mapping": { "Droid": "Android", "Int": "MyInt"}},
+            "field_names": [
+                    {"parent_type": "Character", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
+                    {"parent_type": "Human", "mapping": {"id": "ident", "name": "foo_name_f", "droid": "android"}},
+                    {"parent_type": "Droid", "prefix": "foo_", "suffix": "_f", "mapping": {"id": "ident"}},
+                    {"parent_type": "CharacterIFaceQuery", "prefix": "super_" }
+                ]
+            }
+        q = mk_add_remote_q('character-foo', f'{gql_server.url}/character-iface-graphql', customization=customization)
+        hge_ctx.v1q(q)
         yield
-        if request.session.testsfailed > 0 or not config.getoption('--skip-schema-teardown'):
-            hge_ctx.v1q(self.teardown)
+        hge_ctx.v1q(self.teardown)
 
     @classmethod
     def dir(cls):
@@ -851,7 +804,6 @@ class TestRemoteSchemaRequestPayload:
         yield
         hge_ctx.v1q(self.teardown)
 
-    @pytest.mark.allow_server_upgrade_test
     def test_remote_schema_operation_name_in_response(self, hge_ctx):
 
         with open('queries/remote_schemas/basic_query_with_op_name.yaml') as f:

@@ -1,86 +1,126 @@
-import { DataSource, Feature } from '../../../DataSource';
-import { useHttpClient } from '../../../Network';
-import { OpenApi3Form } from '../../../OpenApi3Form';
-import { Button } from '../../../../new-components/Button';
-import { transformSchemaToZodObject } from '../../../OpenApi3Form/utils';
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Tabs } from '../../../../new-components/Tabs';
-import { get } from 'lodash';
+import { AxiosError } from 'axios';
+import get from 'lodash/get';
 import { useEffect, useState } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import { useQuery } from 'react-query';
-import { z, ZodSchema } from 'zod';
-import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
-import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
-import { generateGDCRequestPayload } from './utils/generateRequest';
+import Skeleton from 'react-loading-skeleton';
+import { ZodSchema, z } from 'zod';
+import { Button } from '../../../../new-components/Button';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { InputField, useConsoleForm } from '../../../../new-components/Form';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Tabs } from '../../../../new-components/Tabs';
 import { hasuraToast } from '../../../../new-components/Toasts';
+import { useAvailableDrivers } from '../../../ConnectDB/hooks';
+import { OpenApi3Form } from '../../../OpenApi3Form';
+import { useMetadata } from '../../../hasura-metadata-api';
+import { Source } from '../../../hasura-metadata-types';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
-import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { cleanEmpty } from '../ConnectPostgresWidget/utils/helpers';
+import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
+import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
+import { Template } from './components/Template';
+import { TemplateVariables } from './components/TemplateVariables';
+import { Timeout } from './components/Timeout';
+import {
+  TemplateVariableMap,
+  useFormValidationSchema,
+} from './useFormValidationSchema';
+import { generateGDCRequestPayload } from './utils/generateRequest';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
   dataSourceName?: string;
 }
 
-const useFormValidationSchema = (driver: string) => {
-  const httpClient = useHttpClient();
-  return useQuery({
-    queryKey: ['form-schema', driver],
-    queryFn: async () => {
-      const configSchemas = await DataSource(
-        httpClient
-      ).connectDB.getConfigSchema(driver);
+function getExistingConnectionDetailsFromMetadata(source: Source) {
+  const configuration = source.configuration ?? ({} as any);
+  const customization = source.customization ?? {};
 
-      if (!configSchemas || configSchemas === Feature.NotImplemented)
-        throw Error('Could not retrive config schema info for driver');
+  const templateVariableMap = (configuration.template_variables ||
+    {}) as TemplateVariableMap;
 
-      const validationSchema = z.object({
-        name: z.string().min(1, 'Name is a required field!'),
-        configuration: transformSchemaToZodObject(
-          configSchemas.configSchema,
-          configSchemas.otherSchemas
-        ),
-        customization: graphQLCustomizationSchema.optional(),
-      });
+  const templateVariableArray = Object.entries(templateVariableMap).map(
+    ([key, values]) => {
+      return { name: key, ...values };
+    }
+  );
+  return {
+    name: source.name,
+    // This is a particularly weird case with metadata only valid for GDC sources.
+    configuration: configuration.value,
+    timeout: configuration.timeout?.seconds as number | undefined,
+    template: (configuration.template ?? '') as string,
+    template_variables: templateVariableArray,
+    customization: adaptGraphQLCustomization(customization),
+  };
+}
 
-      return { validationSchema, configSchemas };
-    },
-    refetchOnWindowFocus: false,
-  });
-};
+function hasAdvancedSettings(source: Source | undefined) {
+  if (!source) return false;
+
+  const details = cleanEmpty(getExistingConnectionDetailsFromMetadata(source));
+
+  return (
+    !!details.timeout || !!details.template || !!details.template_variables
+  );
+}
 
 export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   const { driver, dataSourceName } = props;
   const [tab, setTab] = useState('connection_details');
 
-  const { data: metadataSource } = useMetadata(m =>
+  const {
+    data: drivers,
+    isLoading: isLoadingAvailableDrivers,
+    isError: isAvailableDriversError,
+    error: availableDriversError,
+  } = useAvailableDrivers();
+  const driverDisplayName =
+    drivers?.find(d => d.name === driver)?.displayName ?? driver;
+
+  const {
+    data: metadataSource,
+    isLoading: isLoadingMetadata,
+    isError: isMetadataError,
+    error: metadataError,
+  } = useMetadata(m =>
     m.metadata.sources.find(source => source.name === dataSourceName)
   );
-
-  const { createConnection, editConnection, isLoading } =
-    useManageDatabaseConnection({
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: isEditMode
-            ? 'Database updated successfully!'
-            : 'Database added successfully!',
-        });
-      },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
-          title: 'An error occurred while adding database',
-          children: JSON.stringify(err),
-        });
-      },
-    });
-
   const isEditMode = !!dataSourceName;
+  const {
+    createConnection,
+    editConnection,
+    isLoading: isLoadingCreateConnection,
+  } = useManageDatabaseConnection({
+    onSuccess: () => {
+      hasuraToast({
+        type: 'success',
+        title: isEditMode
+          ? 'Database updated successfully!'
+          : 'Database added successfully!',
+      });
+    },
+    onError: err => {
+      hasuraToast({
+        type: 'error',
+        title: err.name,
+        children: <DisplayToastErrorMessage message={err.message} />,
+      });
+    },
+  });
 
-  const { data } = useFormValidationSchema(driver);
+  const {
+    data,
+    isLoading: isLoadingValidationSchema,
+    isError: isValidationSchemaError,
+    error: validationSchemaError,
+  } = useFormValidationSchema(driver);
+
+  const isLoading =
+    (isLoadingMetadata && !isMetadataError) ||
+    (isLoadingValidationSchema && !isValidationSchemaError) ||
+    (isLoadingAvailableDrivers && !isAvailableDriversError);
 
   const [schema, setSchema] = useState<ZodSchema>(z.any());
 
@@ -89,6 +129,11 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     methods: { formState, reset },
   } = useConsoleForm({
     schema,
+    options: {
+      defaultValues: {
+        template_variables: [],
+      },
+    },
   });
 
   useEffect(() => {
@@ -96,18 +141,57 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
   }, [data?.validationSchema]);
 
   useEffect(() => {
-    if (metadataSource)
-      reset({
-        name: metadataSource?.name,
-        // This is a particularly weird case with metadata only valid for GDC sources.
-        configuration: (metadataSource?.configuration as any).value,
-        customization: adaptGraphQLCustomization(
-          metadataSource?.customization ?? {}
-        ),
-      });
+    if (metadataSource) {
+      reset(getExistingConnectionDetailsFromMetadata(metadataSource));
+    }
   }, [metadataSource, reset]);
 
-  if (!data?.configSchemas) return null;
+  if (isLoading) {
+    return (
+      <div>
+        <Skeleton count={10} height={30} />
+      </div>
+    );
+  }
+
+  if (validationSchemaError) {
+    const err = validationSchemaError as AxiosError<{ error?: string }>;
+    return (
+      <IndicatorCard status="negative">
+        {err?.response?.data?.error ||
+          err.toString() ||
+          'An error occurred loading the connection configuration.'}
+      </IndicatorCard>
+    );
+  }
+  if (metadataError) {
+    const err = metadataError as AxiosError<{ error?: string }>;
+    return (
+      <IndicatorCard status="negative">
+        {err?.response?.data?.error ||
+          err.toString() ||
+          'An error occurred loading metadata.'}
+      </IndicatorCard>
+    );
+  }
+  if (availableDriversError) {
+    const err = availableDriversError as AxiosError<{ error?: string }>;
+    return (
+      <IndicatorCard status="negative">
+        {err?.response?.data?.error ||
+          err.toString() ||
+          'An error occurred loading the available drivers.'}
+      </IndicatorCard>
+    );
+  }
+
+  if (!data?.configSchemas) {
+    return (
+      <IndicatorCard status="negative">
+        An error occurred loading the connection configuration.
+      </IndicatorCard>
+    );
+  }
 
   const handleSubmit = (formValues: any) => {
     const payload = generateGDCRequestPayload({
@@ -116,7 +200,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }
@@ -127,15 +211,16 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     get(formState.errors, 'configuration.connectionInfo'),
   ].filter(Boolean);
 
-  console.log(formState.errors);
+  const openAdvanced = isEditMode && hasAdvancedSettings(metadataSource);
 
   return (
     <div>
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode
-          ? `Edit ${capitaliseFirstLetter(driver)} Connection`
-          : `Connect New ${capitaliseFirstLetter(driver)} Database`}
+          ? `Edit ${driverDisplayName} Connection`
+          : `Connect ${driverDisplayName} Database`}
       </div>
+      <div className="my-3" />
       <Form onSubmit={handleSubmit}>
         <Tabs
           value={tab}
@@ -159,13 +244,35 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     schemaObject={data?.configSchemas.configSchema}
                     references={data?.configSchemas.otherSchemas}
                   />
+
+                  <div className="mt-sm">
+                    <Collapsible
+                      defaultOpen={openAdvanced}
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          Advanced Settings
+                        </div>
+                      }
+                    >
+                      <Timeout name="timeout" />
+                      <Template name="template" />
+                      <TemplateVariables />
+                    </Collapsible>
+                  </div>
+
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          GraphQL Customization
+                        </div>
+                      }
+                    >
+                      <GraphQLCustomization name="customization" />
+                    </Collapsible>
+                  </div>
                 </div>
               ),
-            },
-            {
-              value: 'customization',
-              label: 'GraphQL Customization',
-              content: <GraphQLCustomization name="customization" />,
             },
           ]}
         />
@@ -173,7 +280,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
           <Button
             type="submit"
             mode="primary"
-            isLoading={isLoading}
+            isLoading={isLoadingCreateConnection}
             loadingText="Saving"
           >
             {isEditMode ? 'Update Connection' : 'Connect Database'}

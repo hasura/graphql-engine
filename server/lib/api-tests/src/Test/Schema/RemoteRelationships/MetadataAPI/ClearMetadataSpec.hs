@@ -51,24 +51,21 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
-tests opts = describe "clear-metadata-metadata-tests" do
-  clearMetadataTests opts
+tests :: SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
+tests = describe "clear-metadata-metadata-tests" do
+  describe "clear_metadata" do
+    it "clears the metadata" \(testEnvironment, _) -> do
+      let query =
+            [yaml|
+              type: clear_metadata
+              args : {}
+            |]
 
-clearMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, Common.LocalTestTestEnvironment)
-clearMetadataTests opts = describe "clear_metadata" do
-  it "clears the metadata" \(testEnvironment, _) -> do
-    let query =
-          [yaml|
-            type: clear_metadata
-            args : {}
-          |]
-
-        expectedResponse =
-          [yaml|
-            message: success
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postMetadata testEnvironment query)
-      expectedResponse
+          expectedResponse =
+            [yaml|
+              message: success
+            |]
+      shouldReturnYaml
+        testEnvironment
+        (GraphqlEngine.postMetadata testEnvironment query)
+        expectedResponse

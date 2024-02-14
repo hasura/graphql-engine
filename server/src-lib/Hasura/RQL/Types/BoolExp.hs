@@ -5,9 +5,9 @@ module Hasura.RQL.Types.BoolExp
 where
 
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
+import Hasura.Table.Cache
 
 -- | Context to parse a RHS value in a boolean expression
 data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser

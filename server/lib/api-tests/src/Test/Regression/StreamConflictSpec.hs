@@ -3,9 +3,9 @@ module Test.Regression.StreamConflictSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -19,8 +19,8 @@ spec =
                 [ Postgres.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.skipTests =
                         Just "Disabled until we can dynamically change server settings per test. To test, add EFHideStreamFields to soSubscriptions in Harness.Constants -> serveOptions"
                     }
@@ -53,8 +53,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _ =
+tests :: SpecWith TestEnvironment
+tests =
   -- All of the testing is done during setup.
   -- If setup succeeds and we have no conflicts, and this test will pass.
   it "Creates a schema without conflicts" \_ -> pure @IO ()

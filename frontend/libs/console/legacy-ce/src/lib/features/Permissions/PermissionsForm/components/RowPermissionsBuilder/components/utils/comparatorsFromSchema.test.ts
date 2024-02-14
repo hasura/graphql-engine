@@ -1,57 +1,96 @@
-import { comparatorsFromSchema } from './comparatorsFromSchema';
+import {
+  comparatorsFromSchema,
+  getDataTypeOperators,
+  mapScalarDataType,
+} from './comparatorsFromSchema';
 import { NamedTypeNode, parseType, typeFromAST } from 'graphql';
 import { schema } from '../__tests__/fixtures/graphql';
+import { SourceDataTypes } from './sourceDataTypes';
+import { mssqlRealColumnTypeInput } from '../__tests__/fixtures/getDataTypeOperators';
 
 describe('comparatorsFromSchema', () => {
   it('should return comparators from schema', () => {
     const result = comparatorsFromSchema(schema);
-    const operator = result['number_SQLite_comparison_exp'];
+    const operator = result['number_SQLite'];
 
     expect(operator?.operators).toEqual([
       {
         name: '_eq',
         operator: '_eq',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_gt',
         operator: '_gt',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_gte',
         operator: '_gte',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_in',
         operator: '_in',
-        type: typeFromAST(schema, parseType('[number!]') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'array',
+        type: 'comparision',
+        graphqlType: typeFromAST(
+          schema,
+          parseType('[number!]') as NamedTypeNode
+        ),
       },
       {
         name: '_is_null',
         operator: '_is_null',
-        type: typeFromAST(schema, parseType('Boolean') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('Boolean') as NamedTypeNode),
+        inputType: 'boolean',
+        inputStructure: 'object',
+        type: 'is_null',
       },
       {
         name: '_lt',
         operator: '_lt',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_lte',
         operator: '_lte',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_neq',
         operator: '_neq',
-        type: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        graphqlType: typeFromAST(schema, parseType('number') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'object',
+        type: 'comparision',
       },
       {
         name: '_nin',
         operator: '_nin',
-        type: typeFromAST(schema, parseType('[number!]') as NamedTypeNode),
+        inputType: undefined,
+        inputStructure: 'array',
+        type: 'comparision',
+        graphqlType: typeFromAST(
+          schema,
+          parseType('[number!]') as NamedTypeNode
+        ),
       },
       {
         name: '_ceq',
@@ -78,5 +117,22 @@ describe('comparatorsFromSchema', () => {
         operator: '_clte',
       },
     ]);
+  });
+});
+
+describe('getDataTypeOperators', () => {
+  it('should fallback to use int for integer type fallback columns', () => {
+    const operators = getDataTypeOperators(mssqlRealColumnTypeInput);
+    expect(operators.length).toEqual(15);
+  });
+});
+
+describe('mapScalarDataType', () => {
+  describe('MSSQL', () => {
+    it('should return string for ntext type', () => {
+      const dataType = mapScalarDataType('mssql', 'ntext' as SourceDataTypes);
+
+      expect(dataType).toEqual('string');
+    });
   });
 });

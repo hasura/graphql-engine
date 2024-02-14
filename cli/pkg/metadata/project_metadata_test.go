@@ -32,9 +32,9 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 	v3Expected :=
 		`{"is_consistent":false,"inconsistent_objects":[
 			{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},
-			{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},
 			{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"},
-			{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"}
+			{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},
+			{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"}
 			]}`
 	tests := []struct {
 		name      string
@@ -474,4 +474,71 @@ func TestProjectMetadata_GetInconsistentMetadata(t *testing.T) {
 			require.JSONEq(t, string(wantb), string(gotb))
 		})
 	}
+}
+
+func TestProjectMetadata_Export(t *testing.T) {
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
+	hgeEndpoint := fmt.Sprintf("http://localhost:%s", port)
+	defer teardown()
+	type fields struct {
+		projectDirectory string
+	}
+
+	tests := []struct {
+		name      string
+		fields    fields
+		want      string
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
+	}{
+		{
+			"can export metadata from config",
+			fields{
+				projectDirectory: "testdata/projectv2",
+			},
+			"testdata/metadata_export_test/config-v2.json",
+			false,
+			require.NoError,
+		},
+		{
+			"can export json metadata from config in filemode (json)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-json",
+			},
+			"testdata/metadata_export_test/config-v2.json",
+			false,
+			require.NoError,
+		},
+		{
+			"can export yaml metadata from config in filemode (yaml)",
+			fields{
+				projectDirectory: "testdata/projectv2-file-mode-yaml",
+			},
+			"testdata/metadata_export_test/config-v2.yaml",
+			false,
+			require.NoError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p, err := NewProjectMetadata(tt.fields.projectDirectory, WithEndpoint(hgeEndpoint), WithAdminSecret(testutil.TestAdminSecret))
+			require.NoError(t, err)
+			got, err := p.Export()
+			tt.assertErr(t, err)
+			if tt.wantErr {
+				return
+			}
+			gotb, err := ioutil.ReadAll(got)
+			require.NoError(t, err)
+
+			// uncomment to update golden file
+			//require.NoError(t, ioutil.WriteFile(tt.wantGolden, gotb, os.ModePerm))
+
+			wantb, err := ioutil.ReadFile(tt.want)
+			require.NoError(t, err)
+			require.Equal(t, string(wantb), string(gotb))
+		})
+	}
+
 }

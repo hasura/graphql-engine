@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
 import { useThemeConfig } from '@docusaurus/theme-common';
-import { useTOCHighlight, useFilteredAndTreeifiedTOC } from '@docusaurus/theme-common/internal';
+import {
+  useTOCHighlight,
+  useFilteredAndTreeifiedTOC,
+} from '@docusaurus/theme-common/internal';
 import TOCItemTree from '@theme/TOCItems/Tree';
 
 export default function TOCItems({
@@ -13,8 +16,10 @@ export default function TOCItems({
   ...props
 }) {
   const themeConfig = useThemeConfig();
-  const minHeadingLevel = minHeadingLevelOption ?? themeConfig.tableOfContents.minHeadingLevel;
-  const maxHeadingLevel = maxHeadingLevelOption ?? themeConfig.tableOfContents.maxHeadingLevel;
+  const minHeadingLevel =
+    minHeadingLevelOption ?? themeConfig.tableOfContents.minHeadingLevel;
+  const maxHeadingLevel =
+    maxHeadingLevelOption ?? themeConfig.tableOfContents.maxHeadingLevel;
   let tocTree = useFilteredAndTreeifiedTOC({
     toc,
     minHeadingLevel,
@@ -40,7 +45,12 @@ export default function TOCItems({
                 __html: heading.value,
               }}
             />
-            <TOCItemList isChild toc={heading.children} className={className} linkClassName={linkClassName} />
+            <TOCItemList
+              isChild
+              toc={heading.children}
+              className={className}
+              linkClassName={linkClassName}
+            />
           </li>
         ))}
       </ul>
@@ -92,5 +102,12 @@ export default function TOCItems({
     return undefined;
   }, [linkClassName, linkActiveClassName, minHeadingLevel, maxHeadingLevel]);
   useTOCHighlight(tocHighlightConfig);
-  return <TOCItemTree toc={tocTree} className={className} linkClassName={linkClassName} {...props} />;
+  return (
+    <TOCItemTree
+      toc={tocTree}
+      className={className}
+      linkClassName={linkClassName}
+      {...props}
+    />
+  );
 }

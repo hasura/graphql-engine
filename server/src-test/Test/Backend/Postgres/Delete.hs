@@ -11,16 +11,18 @@ module Test.Backend.Postgres.Delete
   )
 where
 
+import Data.Aeson (toJSON)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Translate.Delete qualified as Delete
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo)
-import Hasura.SQL.Backend (PostgresKind (Vanilla))
 import Hasura.SQL.Types (toSQLTxt)
 import Test.Backend.Postgres.Misc
+import Test.HUnit.Base (assertFailure)
 import Test.Hspec
 import Test.Parser.Delete qualified as Expect
 import Test.SIString qualified as SI
@@ -54,5 +56,7 @@ runTest TestBuilder {..} =
                   Expect.adbColumns = columns,
                   Expect.adbWhere = where_
                 }
-    (SI.fromText . toSQLTxt . Delete.mkDelete @'Vanilla $ del)
-      `shouldBe` SI.fromText expectedSQL
+    deleteCTE <- runExceptT (Delete.mkDelete @'Vanilla dummyUserInfo del)
+    case deleteCTE of
+      Right (deleteCte) -> SI.fromText (toSQLTxt deleteCte) `shouldBe` SI.fromText expectedSQL
+      Left qErr -> assertFailure $ show $ toJSON qErr

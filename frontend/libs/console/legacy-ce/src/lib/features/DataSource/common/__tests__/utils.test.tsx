@@ -16,7 +16,7 @@ describe('generateForeignKeyLabel', () => {
         from: { column: ['ArtistId'], table: ['Album'] },
         to: { column: ['ArtistId'], table: 'Artist' },
       })
-    ).toBe('ArtistId → Artist.ArtistId');
+    ).toBe('ArtistId → public.Artist.ArtistId');
   });
 
   it('should separate nested tables with dots', () => {

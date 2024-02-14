@@ -14,6 +14,7 @@ import {
 } from '../components/Common/utils/v1QueryUtils';
 import { Driver } from '.';
 import { PostgresTrigger } from './services/postgresql/types';
+import { SourceCustomization } from '../features/hasura-metadata-types';
 
 export type TableORSchemaArg =
   | { schemas: string[] }
@@ -308,6 +309,7 @@ export type SupportedFeaturesType = {
       enabled: boolean;
       frequentlyUsedColumns?: boolean;
       columnTypeSelector?: boolean;
+      arrayTypes: boolean;
     };
     browse: {
       enabled: boolean;
@@ -444,6 +446,7 @@ export type generateTableRowRequestType = {
     tables: Tables;
     isExport?: boolean;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }) =>
     | {
         type: string;
@@ -464,6 +467,7 @@ export type generateTableRowRequestType = {
       originalTable: string;
       currentSchema: string;
       tableConfiguration: TableConfig;
+      dataSourceCustomization: SourceCustomization;
     }
   ) => { rows: T[]; estimatedCount: number };
 };
@@ -475,6 +479,7 @@ export type generateInsertRequestType = {
     source: string;
     insertObject: Record<string, any>;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
     returning: string[];
   }) =>
     | {
@@ -495,6 +500,7 @@ export type generateInsertRequestType = {
       | { affectedRows: number; returning: Array<Record<string, any>> }
       | Record<string, Record<string, any>>,
     tableConfiguration: TableConfig,
+    dataSourceCustomization: SourceCustomization,
     config: {
       currentTable: string;
       currentSchema: string;
@@ -513,6 +519,7 @@ export type GenerateRowsCountRequestType = {
     originalTable: string;
     currentSchema: string;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }) => number;
 };
 
@@ -521,12 +528,14 @@ export type GenerateEditRowRequest = {
   processEditData: (args: {
     tableDef: QualifiedTable;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
     data: any;
   }) => number;
   getEditRowRequestBody: (data: {
     source: string;
     tableDef: QualifiedTable;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
     set: Record<string, any>;
     where: Record<string, any>;
     defaultArray: any[];
@@ -567,6 +576,7 @@ export type GenerateDeleteRowRequest = {
     columnInfo: BaseTableColumn[];
     source: string;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }) =>
     | {
         type: string;
@@ -583,7 +593,12 @@ export type GenerateDeleteRowRequest = {
         query: string;
         variables: null;
       };
-  processDeleteRowData: (data: Record<string, any>) => number;
+  processDeleteRowData: (
+    data: Record<string, any>,
+    config: {
+      dataSourceCustomization: SourceCustomization;
+    }
+  ) => number;
 };
 
 export type GenerateBulkDeleteRowRequest = {
@@ -595,6 +610,7 @@ export type GenerateBulkDeleteRowRequest = {
     columnInfo: BaseTableColumn[];
     source: string;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }) =>
     | {
         type: string;
@@ -615,7 +631,10 @@ export type GenerateBulkDeleteRowRequest = {
         query: string;
         variables: null;
       };
-  processBulkDeleteRowData: (data: Record<string, any>) => number;
+  processBulkDeleteRowData: (
+    data: Record<string, any>,
+    config: { dataSourceCustomization: SourceCustomization }
+  ) => number;
 };
 export type ViolationActions =
   | 'restrict'

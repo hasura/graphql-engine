@@ -262,8 +262,9 @@ export function useNeonIntegration(
                   envVar: hasuraCloudDataSourceConnectionStatus.payload.envVar,
                 },
                 action: createNeonDatabase,
-                title: 'Error creating Hasura datasource',
-                description: 'Unexpected error creating Hasura datasource',
+                title: 'Error connecting database to Hasura',
+                description:
+                  'Unexpected error connecting the database to Hasura',
               };
           }
         }

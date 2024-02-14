@@ -1,0 +1,9 @@
+query myQuery {
+    animal: cat
+    dog {
+        panda {
+            anotherCat @deprecated
+        }
+    }
+    lion
+}

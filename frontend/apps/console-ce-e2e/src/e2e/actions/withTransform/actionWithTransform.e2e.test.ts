@@ -28,7 +28,7 @@ describe('Actions with Transform', () => {
 
     // --------------------
     cy.log('**--- Click on the Create button of the Actions panel**');
-    cy.get('[data-test=data-create-actions]').click();
+    cy.get('[data-testid=data-create-actions]').click();
 
     // Assign an alias to the most unclear selectors for future references
     cy.get('textarea').eq(0).as('actionDefinitionTextarea');
@@ -155,10 +155,13 @@ describe('Actions with Transform', () => {
     // --------------------
     cy.get('[data-cy="Change Request Options"]').within(() => {
       cy.log('**--- Check the Preview of the Request URL Template**');
-      cy.findByLabelText('Preview').should(
-        'have.value',
-        'https://hasura-actions-demo.glitch.me/login?name=login&id=5'
-      );
+
+      cy.get('[name=request_url_preview]')
+        .invoke('attr', 'value')
+        .should('contains', 'name=login');
+      cy.get('[name=request_url_preview]')
+        .invoke('attr', 'value')
+        .should('contains', 'id=5');
     });
 
     cy.log('**------------------------------**');

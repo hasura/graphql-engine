@@ -3,6 +3,7 @@ import { FaEdit } from 'react-icons/fa';
 import styles from '../Common.module.scss';
 import { PrimaryDBInfo } from './PrimaryDBInfo';
 import { TryOperation } from './TryOperation';
+import { CreateRestEndpoint } from './CreateRestEndpoints';
 
 class Heading extends React.Component {
   state = {
@@ -51,7 +52,14 @@ class Heading extends React.Component {
         <>
           <div className={`${styles.editable_heading_text} pb-2`}>
             <h2>{currentValue}</h2>
-            <TryOperation table={table} dispatch={dispatch} source={source} />
+            <div className="text-base font-normal flex gap-2">
+              <TryOperation table={table} dispatch={dispatch} source={source} />
+              <CreateRestEndpoint
+                tableName={table.table_name}
+                dataSourceName={source}
+                table={{ name: table.table_name, schema: table.table_schema }}
+              />
+            </div>
           </div>
           <div className="pb-5">
             <PrimaryDBInfo source={source} />
@@ -69,7 +77,14 @@ class Heading extends React.Component {
         <>
           <div className={styles.editable_heading_text}>
             <h2>{currentValue}</h2>
-            <TryOperation table={table} dispatch={dispatch} source={source} />
+            <div className="text-base font-normal flex gap-2">
+              <TryOperation table={table} dispatch={dispatch} source={source} />
+              <CreateRestEndpoint
+                tableName={table.table_name}
+                dataSourceName={source}
+                table={{ name: table.table_name, schema: table.table_schema }}
+              />
+            </div>
             <div
               onClick={this.toggleEditting}
               className={styles.editable_heading_action}

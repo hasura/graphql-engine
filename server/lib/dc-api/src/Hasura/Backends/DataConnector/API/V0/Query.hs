@@ -1,32 +1,52 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Query
   ( QueryRequest (..),
-    qrTable,
-    qrTableRelationships,
+    pattern TableQueryRequest,
+    pattern FunctionQueryRequest,
+    pattern NativeQueryRequest,
+    qrRelationships,
+    qrRedactionExpressions,
     qrQuery,
     qrForeach,
+    qrTarget,
     FieldName (..),
     Query (..),
     qFields,
     qAggregates,
+    qAggregatesLimit,
     qLimit,
     qOffset,
     qWhere,
     qOrderBy,
     Field (..),
+    _ColumnField,
+    _RelField,
+    _NestedObjField,
+    _NestedArrayField,
     RelationshipField (..),
+    ArrayField (..),
     QueryResponse (..),
     qrRows,
     qrAggregates,
+    qrInterpolatedQueries,
     FieldValue,
+    unFieldValue,
     mkColumnFieldValue,
     mkRelationshipFieldValue,
+    mkNestedObjFieldValue,
+    mkNestedArrayFieldValue,
+    nullFieldValue,
+    isNullFieldValue,
     deserializeAsColumnFieldValue,
     deserializeAsRelationshipFieldValue,
+    deserializeAsNestedObjFieldValue,
+    deserializeAsNestedArrayFieldValue,
     _ColumnFieldValue,
     _RelationshipFieldValue,
+    _NestedObjFieldValue,
   )
 where
 
@@ -44,25 +64,31 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Tuple.Extra (fst3, snd3, thd3, uncurry3)
 import GHC.Generics (Generic)
 import GHC.Show (appPrec, appPrec1)
 import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Function qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.InterpolatedQuery qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.OrderBy qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Target qualified as API.V0
 import Servant.API (HasStatus (..))
 import Prelude
 
--- | A serializable request to retrieve strutured data from some
--- source.
+-- | A serializable request to retrieve strutured data from tables.
 data QueryRequest = QueryRequest
-  { _qrTable :: API.V0.TableName,
-    _qrTableRelationships :: [API.V0.TableRelationships],
+  { _qrTarget :: API.V0.Target,
+    _qrRelationships :: Set API.V0.Relationships,
+    _qrRedactionExpressions :: Set API.V0.TargetRedactionExpressions,
+    _qrInterpolatedQueries :: API.V0.InterpolatedQueries,
     _qrQuery :: Query,
     _qrForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
   }
@@ -71,16 +97,33 @@ data QueryRequest = QueryRequest
 
 instance HasCodec QueryRequest where
   codec =
-    object "QueryRequest" $
-      QueryRequest
-        <$> requiredField "table" "The name of the table to query"
-          .= _qrTable
-        <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request"
-          .= _qrTableRelationships
-        <*> requiredField "query" "The details of the query against the table"
-          .= _qrQuery
-        <*> optionalFieldOrNull "foreach" "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query."
-          .= _qrForeach
+    named "QueryRequest" $
+      object "QueryRequest" objectCodec
+
+instance HasObjectCodec QueryRequest where
+  objectCodec =
+    QueryRequest
+      <$> requiredField "target" "The name of the table to query"
+        .= _qrTarget
+      <*> requiredField "relationships" "The relationships between tables involved in the entire query request"
+        .= _qrRelationships
+      <*> optionalFieldWithOmittedDefault "redaction_expressions" mempty "Expressions that can be referenced by the query to redact fields/columns"
+        .= _qrRedactionExpressions
+      <*> optionalFieldWithOmittedDefault "interpolated_queries" mempty "The details of the query against the table"
+        .= _qrInterpolatedQueries
+      <*> requiredField "query" "The details of the query against the table"
+        .= _qrQuery
+      <*> optionalFieldOrNull "foreach" "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query."
+        .= _qrForeach
+
+pattern FunctionQueryRequest :: API.V0.FunctionName -> [API.V0.FunctionArgument] -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern FunctionQueryRequest function args relationships redactionExps interpolated query foreach = QueryRequest (API.V0.TFunction (API.V0.TargetFunction function args)) relationships redactionExps interpolated query foreach
+
+pattern TableQueryRequest :: API.V0.TableName -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern TableQueryRequest table relationships redactionExps inpterpolated query foreach = QueryRequest (API.V0.TTable (API.V0.TargetTable table)) relationships redactionExps inpterpolated query foreach
+
+pattern NativeQueryRequest :: API.V0.InterpolatedQueryId -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> API.V0.InterpolatedQueries -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern NativeQueryRequest interpolatedId relationships redactionExps interpolatedQueries query foreach = QueryRequest (API.V0.TInterpolated (API.V0.TargetInterpolatedQuery interpolatedId)) relationships redactionExps interpolatedQueries query foreach
 
 newtype FieldName = FieldName {unFieldName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -92,9 +135,14 @@ data Query = Query
     _qFields :: Maybe (HashMap FieldName Field),
     -- | Map of aggregate field name to Aggregate definition
     _qAggregates :: Maybe (HashMap FieldName API.V0.Aggregate),
-    -- | Optionally limit to N results.
+    -- | Optionally limit the maximum number of rows considered while applying
+    -- aggregations. This limit does not apply to returned rows.
+    _qAggregatesLimit :: Maybe Int,
+    -- | Optionally limit the maximum number of returned rows. This limit does not
+    -- apply to records considered while apply aggregations.
     _qLimit :: Maybe Int,
-    -- | Optionally offset from the Nth result.
+    -- | Optionally offset from the Nth result. This applies to both row
+    -- and aggregation results.
     _qOffset :: Maybe Int,
     -- | Optionally constrain the results to satisfy some predicate.
     _qWhere :: Maybe API.V0.Expression,
@@ -112,9 +160,11 @@ instance HasCodec Query where
           .= _qFields
         <*> optionalFieldOrNull "aggregates" "Aggregate fields of the query"
           .= _qAggregates
-        <*> optionalFieldOrNull "limit" "Optionally limit to N results"
+        <*> optionalFieldOrNull "aggregates_limit" "Optionally limit the maximum number of rows considered while applying aggregations. This limit does not apply to returned rows."
+          .= _qAggregatesLimit
+        <*> optionalFieldOrNull "limit" "Optionally limit the maximum number of returned rows. This limit does not apply to records considered while apply aggregations."
           .= _qLimit
-        <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result"
+        <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result. This applies to both row and aggregation results."
           .= _qOffset
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate"
           .= _qWhere
@@ -141,15 +191,37 @@ relationshipFieldObjectCodec =
     <*> requiredField "query" "Relationship query"
       .= _rfQuery
 
+data ArrayField = ArrayField
+  { _afField :: Field,
+    _afLimit :: Maybe Int,
+    _afOffset :: Maybe Int,
+    _afWhere :: Maybe API.V0.Expression,
+    _afOrderBy :: Maybe API.V0.OrderBy
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+
+arrayFieldObjectCodec :: JSONObjectCodec ArrayField
+arrayFieldObjectCodec =
+  ArrayField
+    <$> requiredField "field" "The nested field for array elements" .= _afField
+    <*> optionalFieldOrNull "limit" "Optionally limit the maximum number of returned elements of the array" .= _afLimit
+    <*> optionalFieldOrNull "offset" "Optionally skip the first n elements of the array" .= _afOffset
+    <*> optionalFieldOrNull "where" "Optionally constrain the returned elements of the array to satisfy some predicate" .= _afWhere
+    <*> optionalFieldOrNull "order_by" "Optionally order the returned elements of the array" .= _afOrderBy
+
 -- | The specific fields that are targeted by a 'Query'.
 --
--- A field conceptually falls under one of the two following categories:
+-- A field conceptually falls under one of the following categories:
 --   1. a "column" within the data store that the query is being issued against
 --   2. a "relationship", which indicates that the field is the result of
 --      a subquery
+--   3. an "object", which indicates that the field contains a nested object
+--   4. an "array", which indicates that the field contains a nested array
 data Field
-  = ColumnField API.V0.ColumnName API.V0.ScalarType
+  = ColumnField API.V0.ColumnName API.V0.ScalarType (Maybe API.V0.RedactionExpressionName)
   | RelField RelationshipField
+  | NestedObjField API.V0.ColumnName Query
+  | NestedArrayField ArrayField
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
 
@@ -160,16 +232,29 @@ instance HasCodec Field where
         discriminatedUnionCodec "type" enc dec
     where
       columnCodec =
+        (,,)
+          <$> requiredField' "column"
+            .= fst3
+          <*> requiredField' "column_type"
+            .= snd3
+          <*> optionalFieldOrNull "redaction_expression" "If present, the name of the redaction expression to evaluate. If the expression is false, the column value must be nulled out." .= thd3
+      nestedObjCodec =
         (,)
-          <$> requiredField' "column" .= fst
-          <*> requiredField' "column_type" .= snd
+          <$> requiredField' "column"
+            .= fst
+          <*> requiredField' "query"
+            .= snd
       enc = \case
-        ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
+        ColumnField columnName scalarType redactionExpName -> ("column", mapToEncoder (columnName, scalarType, redactionExpName) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
+        NestedObjField columnName nestedObjQuery -> ("object", mapToEncoder (columnName, nestedObjQuery) nestedObjCodec)
+        NestedArrayField arrayField -> ("array", mapToEncoder arrayField arrayFieldObjectCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
-            ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec))
+          [ ("column", ("ColumnField", mapToDecoder (uncurry3 ColumnField) columnCodec)),
+            ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec)),
+            ("object", ("NestedObjField", mapToDecoder (uncurry NestedObjField) nestedObjCodec)),
+            ("array", ("NestedArrayField", mapToDecoder NestedArrayField arrayFieldObjectCodec))
           ]
 
 -- | The resolved query response provided by the 'POST /query'
@@ -215,7 +300,7 @@ instance HasStatus QueryResponse where
 -- field values (mainly for testing purposes), we must compare them using 'QueryResponse',
 -- since raw JSON comparisons will show up immaterial differences between null properties
 -- and missing properties (which we consider to be the same thing here).
-newtype FieldValue = FieldValue J.Value
+newtype FieldValue = FieldValue {unFieldValue :: J.Value}
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec FieldValue
 
 instance Eq FieldValue where
@@ -227,7 +312,8 @@ instance Ord FieldValue where
 instance Show FieldValue where
   showsPrec d fieldValue =
     case deserializeFieldValueByGuessing fieldValue of
-      Left columnFieldValue -> showParen (d > appPrec) $ showString "ColumnFieldValue " . showsPrec appPrec1 columnFieldValue
+      Left (Left columnFieldValue) -> showParen (d > appPrec) $ showString "ColumnFieldValue " . showsPrec appPrec1 columnFieldValue
+      Left (Right nestedObjFieldValue) -> showParen (d > appPrec) $ showString "NestedObjFieldValue " . showsPrec appPrec1 nestedObjFieldValue
       Right queryResponse -> showParen (d > appPrec) $ showString "RelationshipFieldValue " . showsPrec appPrec1 queryResponse
 
 mkColumnFieldValue :: J.Value -> FieldValue
@@ -235,6 +321,19 @@ mkColumnFieldValue = FieldValue
 
 mkRelationshipFieldValue :: QueryResponse -> FieldValue
 mkRelationshipFieldValue = FieldValue . J.toJSON
+
+mkNestedObjFieldValue :: HashMap FieldName FieldValue -> FieldValue
+mkNestedObjFieldValue = FieldValue . J.toJSON
+
+mkNestedArrayFieldValue :: [FieldValue] -> FieldValue
+mkNestedArrayFieldValue = FieldValue . J.toJSON
+
+nullFieldValue :: FieldValue
+nullFieldValue = mkColumnFieldValue J.Null
+
+isNullFieldValue :: FieldValue -> Bool
+isNullFieldValue (FieldValue J.Null) = True
+isNullFieldValue _ = False
 
 deserializeAsColumnFieldValue :: FieldValue -> J.Value
 deserializeAsColumnFieldValue (FieldValue value) = value
@@ -245,9 +344,26 @@ deserializeAsRelationshipFieldValue (FieldValue value) =
     J.Error s -> Left $ T.pack s
     J.Success queryResponse -> Right queryResponse
 
-deserializeFieldValueByGuessing :: FieldValue -> Either J.Value QueryResponse
+deserializeAsNestedObjFieldValue :: FieldValue -> Either Text (HashMap FieldName FieldValue)
+deserializeAsNestedObjFieldValue (FieldValue value) =
+  case J.fromJSON value of
+    J.Error s -> Left $ T.pack s
+    J.Success obj -> Right obj
+
+deserializeAsNestedArrayFieldValue :: FieldValue -> Either Text [FieldValue]
+deserializeAsNestedArrayFieldValue (FieldValue value) =
+  case J.fromJSON value of
+    J.Error s -> Left $ T.pack s
+    J.Success obj -> Right obj
+
+deserializeFieldValueByGuessing :: FieldValue -> (Either (Either (Either Value (HashMap FieldName FieldValue)) [FieldValue]) QueryResponse)
 deserializeFieldValueByGuessing fieldValue =
-  left (const $ deserializeAsColumnFieldValue fieldValue) $ deserializeAsRelationshipFieldValue fieldValue
+  left
+    ( const $
+        left (const $ left (const $ deserializeAsColumnFieldValue fieldValue) $ deserializeAsNestedObjFieldValue fieldValue) $
+          deserializeAsNestedArrayFieldValue fieldValue
+    )
+    $ deserializeAsRelationshipFieldValue fieldValue
 
 -- | Even though we could just describe a FieldValue as "any JSON value", we're explicitly
 -- describing it in terms of either a 'QueryResponse' or "any JSON value", in order to
@@ -280,7 +396,15 @@ _ColumnFieldValue = lens deserializeAsColumnFieldValue (const mkColumnFieldValue
 _RelationshipFieldValue :: Prism' FieldValue QueryResponse
 _RelationshipFieldValue = prism' mkRelationshipFieldValue (either (const Nothing) Just . deserializeAsRelationshipFieldValue)
 
+_NestedObjFieldValue :: Prism' FieldValue (HashMap FieldName FieldValue)
+_NestedObjFieldValue = prism' mkNestedObjFieldValue (either (const Nothing) Just . deserializeAsNestedObjFieldValue)
+
+_NestedArrayFieldValue :: Prism' FieldValue [FieldValue]
+_NestedArrayFieldValue = prism' mkNestedArrayFieldValue (either (const Nothing) Just . deserializeAsNestedArrayFieldValue)
+
+$(makePrisms ''QueryRequest)
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)
+$(makePrisms ''Field)
 $(makeLenses ''QueryResponse)
 $(makePrisms ''FieldValue)

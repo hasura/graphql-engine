@@ -1,7 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 
-import { InputField } from '../../../../../new-components/Form';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
   LinkBlockVertical,
@@ -12,7 +11,11 @@ import { useListRemoteSchemas, useRemoteSchema } from '../../../../MetadataAPI';
 
 import { RemoteSchemaWidget } from '../RemoteSchemaWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
-import { refRemoteSchemaSelectorKey, RefRsSelector } from '../RefRsSelector';
+import {
+  refRemoteOperationSelectorKey,
+  refRemoteSchemaSelectorKey,
+  RefRsSelector,
+} from '../RefRsSelector';
 import { getFieldTypesFromType, getTypesFromIntrospection } from '../../utils';
 import { RsToRsSchema } from '../../types';
 
@@ -38,6 +41,7 @@ const useLoadData = (sourceRemoteSchema: string) => {
   const { watch } = useFormContext<RsToRsSchema>();
   const refRemoteSchemaName = watch(refRemoteSchemaSelectorKey);
   const rsSourceType = watch(rsSourceTypeKey);
+  const selectedOperation = watch(refRemoteOperationSelectorKey);
 
   React.useEffect(() => {
     if (sourceRemoteSchema) {
@@ -70,6 +74,7 @@ const useLoadData = (sourceRemoteSchema: string) => {
       refRemoteSchemaName,
       remoteSchemaTypes,
       fieldsForSelectedRsType,
+      selectedOperation,
     },
     isLoading,
     isError,
@@ -86,10 +91,13 @@ export const FormElements = ({
       refRemoteSchemaName,
       fieldsForSelectedRsType,
       remoteSchemaTypes,
+      selectedOperation,
     },
     isLoading,
     isError,
   } = useLoadData(sourceRemoteSchema);
+
+  const ref = React.useRef<HTMLDivElement>(null);
 
   if (isLoading && !isError) {
     return (
@@ -111,21 +119,13 @@ export const FormElements = ({
 
   return (
     <>
-      <div className="w-full sm:w-6/12 my-md">
-        <InputField
-          name="name"
-          label="Name"
-          placeholder="Relationship name"
-          dataTest="rs-to-rs-rel-name"
-          disabled={!!existingRelationshipName}
-        />
-      </div>
-
-      <div className="grid grid-cols-12">
+      <div className="grid grid-cols-12 my-md">
         <div className="col-span-5">
           <RsSourceTypeSelector
             types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey={rsSourceTypeKey}
+            nameTypeKey="name"
+            isModify={!!existingRelationshipName}
           />
         </div>
 
@@ -137,15 +137,18 @@ export const FormElements = ({
         </div>
       </div>
 
-      <LinkBlockVertical title="Type Mapped To" />
+      <div className={selectedOperation ? '' : 'hidden mb-2'}>
+        <LinkBlockVertical title="Refine Relationship Mapping" />
 
-      {/* relationship details */}
-      <div className="grid w-full pb-md">
-        <RemoteSchemaWidget
-          schemaName={refRemoteSchemaName}
-          fields={fieldsForSelectedRsType}
-          rootFields={['query', 'mutation']}
-        />
+        {/* relationship details */}
+        <div ref={ref} className="grid w-full pb-md">
+          <RemoteSchemaWidget
+            showOnlySelectable={true}
+            schemaName={refRemoteSchemaName}
+            fields={fieldsForSelectedRsType}
+            rootFields={['query']}
+          />
+        </div>
       </div>
     </>
   );

@@ -38,15 +38,16 @@ import {
 import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
-import defaultState from '../state';
+import { useEELiteAccess } from '../../../../../features/EETrial';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
   getTransformState,
-} from '../../../../Common/ConfigureTransformation/utils';
-import { showErrorNotification } from '../../../Common/Notification';
+} from '../../../../../components/Common/ConfigureTransformation/utils';
+import { showErrorNotification } from '../../../../../components/Services/Common/Notification';
 import { Button } from '../../../../../new-components/Button';
 import { isProConsole } from '../../../../../utils/proConsole';
+import globals from '../../../../../Globals';
 import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
@@ -70,7 +71,7 @@ import {
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Modify: React.FC<Props> = props => {
   const { currentTrigger, readOnlyMode, dataSourcesList, dispatch } = props;
@@ -89,6 +90,12 @@ const Modify: React.FC<Props> = props => {
     requestTransformReducer,
     getEventRequestTransformDefaultState()
   );
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+  const autoCleanupSupport =
+    isProConsole(globals) || eeLiteAccess === 'active'
+      ? 'active'
+      : eeLiteAccess;
 
   useEffect(() => {
     if (currentTrigger) {
@@ -381,11 +388,13 @@ const Modify: React.FC<Props> = props => {
               readOnlyMode={readOnlyMode}
             />
             <br />
-            <h2 className="text-lg font-semibold mb-xs flex items-center">
-              Event Info
-            </h2>
-            <Info currentTrigger={currentTrigger} />
-            <div className="relative">
+            <div className="bootstrap-jail">
+              <h2 className="text-lg font-semibold mb-xs flex items-center">
+                Event Info
+              </h2>
+              <Info currentTrigger={currentTrigger} />
+            </div>
+            <div className="relative bootstrap-jail">
               <WebhookEditor
                 currentTrigger={currentTrigger}
                 webhook={state.webhook}
@@ -411,7 +420,7 @@ const Modify: React.FC<Props> = props => {
                 save={saveWrapper('retry_conf')}
               />
               <hr className="my-md" />
-              {isProConsole(window.__env) && (
+              {autoCleanupSupport !== 'forbidden' && (
                 <div className="mb-md">
                   <AutoCleanupForm
                     onChange={setState.cleanupConfig}

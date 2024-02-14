@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import YAML from 'js-yaml';
+import last from 'lodash/last';
 import { CardedTable } from '../../../../new-components/CardedTable';
 import { DropdownButton } from '../../../../new-components/DropdownButton';
 import { CodeEditorField, InputField } from '../../../../new-components/Form';
@@ -7,16 +8,24 @@ import { FaExclamationTriangle, FaFilter, FaSearch } from 'react-icons/fa';
 import { trackCustomEvent } from '../../../Analytics';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { Badge, BadgeColor } from '../../../../new-components/Badge';
-import { Oas3 } from 'openapi-to-graphql';
+import { Oas3 } from '@hasura/open-api-to-graphql';
 import { useIsUnmounted } from '../../../../components/Services/Data/Common/tsUtils';
 import { useFormContext } from 'react-hook-form';
 import { useMetadata } from '../../../MetadataAPI';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { OasGeneratorActions } from './OASGeneratorActions';
 import { GeneratedAction, Operation } from '../OASGenerator/types';
+import uniq from 'lodash/uniq';
 
-import { generateAction, getOperations } from '../OASGenerator/utils';
+import {
+  generateAction,
+  isOasError,
+  normalizeOperationId,
+  parseOas,
+} from '../OASGenerator/utils';
 import { UploadFile } from './UploadFile';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Button } from '../../../../new-components/Button';
 
 const fillToTenRows = (data: ReactNode[][]) => {
   const rowsToFill = 10 - data.length;
@@ -55,8 +64,11 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
   const [operations, setOperations] = React.useState<Operation[]>([]);
   const [parsedOas, setParsedOas] = React.useState<Oas3 | null>(null);
   const [isOasTooBig, setIsOasTooBig] = React.useState(false);
+  const [showEditor, setShowEditor] = React.useState(false);
 
   const [selectedMethods, setSelectedMethods] = React.useState<string[]>([]);
+
+  const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
 
   const { data: metadata } = useMetadata();
 
@@ -75,7 +87,8 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         !search ||
         op.operationId.toLowerCase().includes(search.toLowerCase()) ||
         op.path.toLowerCase().includes(search.toLowerCase()) ||
-        op.method.toLowerCase().includes(search.toLowerCase());
+        op.method.toLowerCase().includes(search.toLowerCase()) ||
+        op.description?.toLowerCase().includes(search.toLowerCase());
       const methodMatch =
         selectedMethods.length === 0 ||
         selectedMethods.includes(op.method.toUpperCase());
@@ -101,15 +114,19 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         try {
           localParsedOas = JSON.parse(oas) as Oas3;
           // if oas is smaller that 3mb
-          if (oas.length < 1024 * 1024 * 1) {
+          if (oas.length < 1024 * 1024 * 3) {
             setIsOasTooBig(false);
             if (props.saveOas) {
               props.saveOas(oas);
             }
           } else {
             setIsOasTooBig(true);
+            if (props.saveOas) {
+              props.saveOas('');
+            }
           }
         } catch (e) {
+          console.error('ImportOAS/OAS_PARSE_ERROR', e);
           try {
             localParsedOas = YAML.load(oas) as Oas3;
           } catch (e2) {
@@ -127,7 +144,15 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           } else {
             trigger('url');
           }
-          const ops = await getOperations(localParsedOas);
+          const parsedOas = await parseOas(localParsedOas);
+          const ops = Object.values(parsedOas.data.operations);
+
+          if (parsedOas.report.validationErrors?.length) {
+            setValidationErrors(uniq(parsedOas.report.validationErrors));
+          } else {
+            setValidationErrors([]);
+          }
+
           setOperations(ops);
 
           // send number of operations and file length
@@ -150,15 +175,29 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           );
         }
       } catch (e) {
-        setError('oas', {
-          message: `Invalid spec: ${(e as Error).message}`,
-        });
+        const error = e as Error;
+        console.error('ImportOAS/INVALID_SPEC_ERROR', e);
+        if (isOasError(error)) {
+          const paths =
+            error.options?.context
+              .slice()
+              .map((path: string) =>
+                path.replace(/~1/g, '/').replace(/\/\//g, '/')
+              ) ?? [];
+          setError('oas', {
+            message: `Invalid spec: ${error.message} at ${last(paths)}`,
+          });
+        } else {
+          setError('oas', {
+            message: `Invalid spec: ${error.message} `,
+          });
+        }
       }
 
       setParsedOas(localParsedOas ?? null);
     },
     400,
-    [oas, clearErrors, setError, setValue, url]
+    [oas, clearErrors, setError, setValue, url, setValidationErrors]
   );
 
   const createAction = async (operation: string) => {
@@ -205,7 +244,7 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           title: 'Failed to generate action',
           message: (e as Error).message,
         });
-        console.error(e);
+        console.error('ImportOAS/CREATE_ACTION_ERROR/', e);
       }
     }
   };
@@ -293,15 +332,29 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
       <div className="grid grid-cols-2 gap-6">
         <div>
           <div className="h-[400px] mb-4" data-testid="oas-editor">
-            <CodeEditorField
-              noErrorPlaceholder
-              name="oas"
-              placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
-              editorOptions={editorOptions}
-              editorProps={{
-                className: 'rounded`-r-none',
-              }}
-            />
+            {!isOasTooBig || showEditor ? (
+              <CodeEditorField
+                noErrorPlaceholder
+                name="oas"
+                placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
+                editorOptions={editorOptions}
+                editorProps={{
+                  className: 'rounded`-r-none',
+                }}
+              />
+            ) : (
+              <div className="flex flex-col h-full items-center justify-center gap-2">
+                <div>Editor is disabled because the spec is too large</div>
+
+                <Button
+                  onClick={() => {
+                    setShowEditor(true);
+                  }}
+                >
+                  Enable Editor
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         <div>
@@ -314,7 +367,8 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                 const isActionAlreadyCreated =
                   metadata?.metadata?.actions?.some(
                     action =>
-                      action.name.toLowerCase() === op.operationId.toLowerCase()
+                      action.name.toLowerCase() ===
+                      normalizeOperationId(op.operationId).toLowerCase()
                   );
                 return [
                   <Badge
@@ -328,7 +382,9 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                       existing={isActionAlreadyCreated}
                       operation={op}
                       onCreate={() => createAction(op.operationId)}
-                      onDelete={() => onDelete(op.operationId)}
+                      onDelete={() =>
+                        onDelete(normalizeOperationId(op.operationId))
+                      }
                       disabled={disabled}
                     />
                   </div>,
@@ -342,6 +398,20 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         <div>
           <FaExclamationTriangle className="text-yellow-500" /> The spec is
           larger than 3MB. It won't be saved for future use.
+        </div>
+      )}
+
+      {validationErrors.length > 0 && (
+        <div className="text-red-500">
+          {validationErrors.map(error => (
+            <IndicatorCard
+              className="mb-2"
+              status="negative"
+              headline="There is a validation error in your spec. Some operations cannot be imported."
+            >
+              {error}
+            </IndicatorCard>
+          ))}
         </div>
       )}
       <div>

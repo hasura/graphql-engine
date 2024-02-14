@@ -17,7 +17,7 @@ const operatorTypeTypesMap = {
   geometric_geographic: ['geometry', 'geography'],
 };
 
-const boolOperatorsInfo = {
+export const boolOperatorsInfo = {
   _and: {
     type: 'bool',
     inputStructure: 'array',
@@ -32,7 +32,7 @@ const boolOperatorsInfo = {
   },
 };
 
-const columnOperatorsInfo = {
+export const columnOperatorsInfo = {
   _eq: {
     type: 'comparision',
     inputStructure: 'object',

@@ -11,6 +11,7 @@ import Data.HashMap.Strict (HashMap)
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (catMaybes, mapMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
@@ -28,7 +29,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
   usesDataset chinookTemplate $ it "can set the value of a column on all rows" $ do
     let updateOperation =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Uniformity")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Uniformity")]
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
     response <- mutationGuarded mutationRequest
@@ -40,14 +41,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
           _tdArtistsRows
             & fmap (\artist -> artist & Data.field "Name" . Data._ColumnFieldString .~ "Uniformity")
 
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (And []))
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (And mempty))
     Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "can set the value of a column on a specific row" $ do
     let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 1) artistIdScalarType)
     let updateOperation =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
             & umoWhere ?~ whereExp
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
@@ -66,13 +67,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
 
   usesDataset chinookTemplate $ it "can set the value of a column on a range of rows" $ do
     let whereExp =
-          And
+          Data.mkAndExpr
             [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 10) artistIdScalarType),
               ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 20) artistIdScalarType)
             ]
     let updateOperation =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Nameless")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Nameless")]
             & umoWhere ?~ whereExp
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
@@ -96,13 +97,13 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
               ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (J.String "Master Of Puppets") albumTitleScalarType)
       let updateOperation =
             mkUpdateOperation _tdArtistsTableName
-              & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Metalika")]
+              & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Metalika")]
               & umoWhere ?~ whereExp
-      let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+      let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [UpdateOperation updateOperation]
-              & mrTableRelationships .~ tableRelationships
+              & mrRelationships .~ tableRelationships
 
       response <- mutationGuarded mutationRequest
 
@@ -123,19 +124,19 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 )
               & fmap (\artist -> artist & Data.field "Name" . Data._ColumnFieldString .~ "Metalika")
 
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrTableRelationships .~ tableRelationships)
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrRelationships .~ tableRelationships)
       Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "can set the value of a column differently using multiple operations" $ do
     let whereExp1 = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) [J.Number 50, J.Number 51] artistIdScalarType
     let updateOperation1 =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 1")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 1")]
             & umoWhere ?~ whereExp1
     let whereExp2 = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 6) artistIdScalarType)
     let updateOperation2 =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 2")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 2")]
             & umoWhere ?~ whereExp2
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation1, UpdateOperation updateOperation2]
 
@@ -158,7 +159,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
             & concat
             & sortOn (^? Data.field "ArtistId")
 
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (Or [whereExp1, whereExp2]))
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (Data.mkOrExpr [whereExp1, whereExp2]))
     Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "multiple update operations are run sequentially" $ do
@@ -167,12 +168,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     let whereExp1 = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "Name" artistNameScalarType) [J.String "AC/DC", J.String "Audioslave"] artistNameScalarType
     let updateOperation1 =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 1")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 1")]
             & umoWhere ?~ whereExp1
     let whereExp2 = ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 5) artistIdScalarType)
     let updateOperation2 =
           mkUpdateOperation _tdArtistsTableName
-            & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 2")]
+            & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Renamed 2")]
             & umoWhere ?~ whereExp2
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation1, UpdateOperation updateOperation2]
 
@@ -199,14 +200,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
 
     -- We can't use whereExp1 since we've renamed the artists!
     let alternateWhereExp1 = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) [J.Number 1, J.Number 8] artistIdScalarType
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (Or [alternateWhereExp1, whereExp2]))
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest (Data.mkOrExpr [alternateWhereExp1, whereExp2]))
     Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "can increment the value of a column" $ do
     let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (J.Number 2) invoiceIdScalarType)
     let updateOperation =
           mkUpdateOperation _tdInvoiceLinesTableName
-            & umoUpdates .~ [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "Quantity" (J.Number 3)]
+            & umoUpdates .~ Set.fromList [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "Quantity" (J.Number 3)]
             & umoWhere ?~ whereExp
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
@@ -228,9 +229,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     let updateOperation =
           mkUpdateOperation _tdInvoiceLinesTableName
             & umoUpdates
-              .~ [ CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 3),
-                   SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "Quantity" (J.Number 2)
-                 ]
+              .~ Set.fromList
+                [ CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 3),
+                  SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "Quantity" (J.Number 2)
+                ]
             & umoWhere ?~ whereExp
     let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
 
@@ -255,7 +257,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
   describe "post-update checks" $ do
     usesDataset chinookTemplate $ it "can update when the post-update check passes" $ do
       let whereExp =
-            Or
+            Data.mkOrExpr
               [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 1) artistIdScalarType),
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 2) artistIdScalarType)
               ]
@@ -263,7 +265,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
             ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "Some other name") artistNameScalarType)
       let updateOperation =
             mkUpdateOperation _tdArtistsTableName
-              & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Some other name")]
+              & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "Some other name")]
               & umoWhere ?~ whereExp
               & umoPostUpdateCheck ?~ postUpdateExp
       let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
@@ -286,7 +288,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
       let postUpdateExp = ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "UnitPrice" invoiceLineUnitPriceScalarType) (Data.scalarValueComparison (J.Number 1.99) invoiceLineUnitPriceScalarType)
       let updateOperation =
             mkUpdateOperation _tdInvoiceLinesTableName
-              & umoUpdates .~ [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
+              & umoUpdates .~ Set.fromList [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
               & umoWhere ?~ whereExp
               & umoPostUpdateCheck ?~ postUpdateExp
       let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
@@ -310,7 +312,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "CustomerId" customerIdScalarType) (Data.scalarValueComparison (J.Number 2) customerIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
-                & umoUpdates .~ [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
+                & umoUpdates .~ Set.fromList [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
         let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
@@ -335,7 +337,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "CustomerId" customerIdScalarType) (Data.scalarValueComparison (J.Number 666) customerIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
-                & umoUpdates .~ [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
+                & umoUpdates .~ Set.fromList [CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
         let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
@@ -359,14 +361,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "CustomerId" customerIdScalarType) (Data.scalarValueComparison (J.Number 17) customerIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
-                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
+                & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
-        let tableRelationships = [Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -383,7 +385,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let invoiceLineIds = expectedModifiedRows & mapMaybe (^? Data.field "InvoiceLineId" . Data._ColumnFieldNumber) & fmap J.Number
         let alternateWhereExp = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) invoiceLineIds invoiceLineIdScalarType
 
-        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrTableRelationships .~ tableRelationships)
+        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrRelationships .~ tableRelationships)
         Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedModifiedRows
 
       usesDataset chinookTemplate $ it "fails to update when post update check against related table fails" $ do
@@ -393,14 +395,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "CustomerId" customerIdScalarType) (Data.scalarValueComparison (J.Number 26) customerIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
-                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
+                & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298)]
                 & umoWhere ?~ whereExp
                 & umoPostUpdateCheck ?~ postUpdateExp
-        let tableRelationships = [Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationExpectError mutationRequest
 
@@ -419,9 +421,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
       let updateOperation =
             mkUpdateOperation _tdInvoiceLinesTableName
               & umoUpdates
-                .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
-                     CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
-                   ]
+                .~ Set.fromList
+                  [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
+                    CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
+                  ]
               & umoWhere ?~ whereExp
               & umoReturningFields .~ invoiceLinesFields
       let mutationRequest =
@@ -449,9 +452,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
                 & umoUpdates
-                  .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
-                       CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
-                     ]
+                  .~ Set.fromList
+                    [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
+                      CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
+                    ]
                 & umoWhere ?~ whereExp
                 & umoReturningFields
                   .~ invoiceLinesFields
@@ -469,11 +473,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -500,7 +504,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 1) artistIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdArtistsTableName
-                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
+                & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
                 & umoWhere ?~ whereExp
                 & umoReturningFields
                   .~ artistsFields
@@ -520,11 +524,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -550,7 +554,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number 1) artistIdScalarType)
         let updateOperation =
               mkUpdateOperation _tdArtistsTableName
-                & umoUpdates .~ [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
+                & umoUpdates .~ Set.fromList [SetColumn $ _tdRowColumnOperatorValue _tdArtistsTableName "Name" (J.String "AySeeDeeSee")]
                 & umoWhere ?~ whereExp
                 & umoReturningFields
                   .~ artistsFields
@@ -563,11 +567,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+        let tableRelationships = Set.singleton (RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships)
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -598,9 +602,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let updateOperation =
               mkUpdateOperation _tdInvoiceLinesTableName
                 & umoUpdates
-                  .~ [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
-                       CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
-                     ]
+                  .~ Set.fromList
+                    [ SetColumn $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "InvoiceId" (J.Number 298),
+                      CustomUpdateColumnOperator incOperator $ _tdRowColumnOperatorValue _tdInvoiceLinesTableName "UnitPrice" (J.Number 1)
+                    ]
                 & umoWhere ?~ whereExp
                 & umoReturningFields
                   .~ invoiceLinesFields
@@ -628,13 +633,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
-              ]
+              Set.fromList
+                [ RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [UpdateOperation updateOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -669,7 +675,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
         let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
         let whereExp =
-              And
+              Data.mkAndExpr
                 [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (Data.scalarValueComparison (J.String "Will") firstNameScalarType),
                   ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (Data.scalarValueComparison (J.String "Riker") lastNameScalarType)
                 ]
@@ -680,7 +686,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 ]
         let updateOperation =
               mkUpdateOperation _ectdNoPrimaryKeyTableName
-                & umoUpdates .~ [SetColumn $ _ectdRowColumnOperatorValue _ectdNoPrimaryKeyTableName "FirstName" (J.String "William")]
+                & umoUpdates .~ Set.fromList [SetColumn $ _ectdRowColumnOperatorValue _ectdNoPrimaryKeyTableName "FirstName" (J.String "William")]
                 & umoWhere ?~ whereExp
                 & umoReturningFields .~ returning
         let mutationRequest = Data.emptyMutationRequest & mrOperations .~ [UpdateOperation updateOperation]
@@ -700,7 +706,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
 
     mkUpdateOperation :: TableName -> UpdateMutationOperation
-    mkUpdateOperation tableName = UpdateMutationOperation tableName Nothing [] Nothing mempty
+    mkUpdateOperation tableName = UpdateMutationOperation tableName Nothing mempty Nothing mempty
 
     artistsFields :: HashMap FieldName Field
     artistsFields =
@@ -712,7 +718,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     artistsQueryRequest :: Expression -> QueryRequest
     artistsQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ artistsFields & qWhere ?~ whereExp
-       in QueryRequest _tdArtistsTableName [] query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     invoiceLinesFields :: HashMap FieldName Field
     invoiceLinesFields =
@@ -727,7 +733,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     invoiceLinesQueryRequest :: Expression -> QueryRequest
     invoiceLinesQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qWhere ?~ whereExp
-       in QueryRequest _tdInvoiceLinesTableName [] query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty mempty query Nothing
 
     incOperator :: UpdateColumnOperatorName
     incOperator = UpdateColumnOperatorName $ [G.name|inc|]

@@ -23,6 +23,8 @@ library
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
+    , hasura-base
+    , hasura-extras
     , hasura-prelude
     , hedgehog
     , hspec
@@ -37,8 +39,8 @@ library
     , lifted-base
     , managed
     , morpheus-graphql
+    , morpheus-graphql-server
     , mtl
-    , mysql-simple
     , network
     , odbc
     , openapi3
@@ -50,6 +52,7 @@ library
     , pretty-simple
     , process
     , refined
+    , resource-pool
     , resourcet
     , safe
     , safe-exceptions
@@ -62,6 +65,7 @@ library
     , text
     , th-lift
     , th-lift-instances
+    , these
     , time
     , typed-process
     , unordered-containers
@@ -70,6 +74,7 @@ library
     , warp
     , websockets
     , yaml
+    , regex-tdfa
 
   hs-source-dirs: src
   default-language: Haskell2010
@@ -132,31 +137,49 @@ library
     Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
+    Harness.GlobalTestEnvironment
     Harness.GraphqlEngine
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
+    Harness.Schema
+    Harness.Schema.LogicalModel
+    Harness.Schema.Name
+    Harness.Schema.NativeQuery
+    Harness.Schema.StoredProcedure
+    Harness.Schema.Table
     Harness.Services.Composed
+    Harness.Services.Database.Postgres
+    Harness.Services.ExternalProcess.GraphqlEngine
     Harness.Services.GraphqlEngine
-    Harness.Services.Postgres
+    Harness.Services.GraphqlEngine.API
+    Harness.Services.Permissions.Table.Metadata
+    Harness.Services.Permissions.Table.Types
+    Harness.Services.Permissions.Table.Postgres
+    Harness.Services.Schema
+    Harness.Services.Source.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType
     Harness.Test.CustomOptions
     Harness.Test.Fixture
     Harness.Test.FixtureName
     Harness.Test.Introspection
-    Harness.Test.Permissions
     Harness.Test.Protocol
-    Harness.Test.Schema
-    Harness.Test.SchemaName
+    Harness.Test.ScalarType
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
-    Harness.Webhook
+    Harness.UniqueTestId
     Harness.WebSockets
+    Harness.Webhook
     Harness.Yaml
+
+  other-modules:
+    Harness.Permissions.Metadata
+    Harness.Permissions.Types

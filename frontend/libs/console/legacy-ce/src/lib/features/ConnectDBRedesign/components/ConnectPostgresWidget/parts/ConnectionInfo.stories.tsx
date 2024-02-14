@@ -1,15 +1,17 @@
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 
 import { ConnectionInfo } from './ConnectionInfo';
 
 export default {
   component: ConnectionInfo,
-} as ComponentMeta<typeof ConnectionInfo>;
+  decorators: [ReactQueryDecorator()],
+} as Meta<typeof ConnectionInfo>;
 
-export const Primary: ComponentStory<typeof ConnectionInfo> = () => (
+export const Primary: StoryFn<typeof ConnectionInfo> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
     schema={z.any()}

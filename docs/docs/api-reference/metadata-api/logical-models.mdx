@@ -1,0 +1,411 @@
+---
+sidebar_label: Logical models
+sidebar_position: 3
+description: Manage Logical Models with the Hasura Metadata API
+keywords:
+  - hasura
+  - docs
+  - Metadata API
+  - API reference
+  - logical models
+  - native queries
+---
+
+# Metadata API Reference: Logical models
+
+## Introduction
+
+Track/untrack Logical Models in the Hasura GraphQL Engine.
+
+:::tip Supported from
+
+Logical models are supported from v2.26.0.
+
+:::
+
+## pg_track_logical_model {#metadata-pg-track-logical-model}
+
+`pg_track_logical_model` is used to add a Logical Model to the GraphQL schema.
+
+Track a Logical Model as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<PostgreSQL field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
+
+### Args syntax {#metadata-pg-track-logical-model-syntax}
+
+| Key    | Required | Schema                                                                         | Description                                                            |
+| ------ | -------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                        | Name of the source database (default: `default`)                       |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)            | Name of the Logical Model                                              |
+| fields | false    | Array of [LogicalModelField](/api-reference/syntax-defs.mdx#logicalmodelfield) | Configuration for each field exposed by the Logical Model GraphQL type |
+
+## pg_untrack_logical_model {#metadata-pg-untrack-logical-model}
+
+`pg_untrack_logical_model` is used to remove a Logical Model from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_untrack_logical_model",
+    "args": {
+      "source": "default",
+      "name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-untrack-logical-model-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+
+## pg_create_logical_model_select_permission {#metadata-pg-create-logical-model-select-permission}
+
+`pg_create_logical_model_select_permission` is used to add a permission to an existing Logical Model.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-pg-create-logical-model-select-permission-syntax}
+
+| Key        | Required | Schema                                                                                      | Description                                      |
+| ---------- | -------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| source     | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                     | Name of the source database (default: `default`) |
+| name       | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                         | Name of the Logical Model                        |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                                         | Name of the role                                 |
+| permission | true     | [LogicalModelSelectPermission](/api-reference/syntax-defs.mdx#logicalmodelselectpermission) | Permission configuration                         |
+
+## pg_drop_logical_model_select_permission {#metadata-pg-drop-logical-model-select-permission}
+
+`pg_drop_logical_model_select_permission` is used to drop an existing Logical Model permission.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_drop_logical_model_select_permission",
+    "args": {
+       "source": "default",
+       "function": "get_articles",
+       "role": "user"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-drop-logical-model-select-permission-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+| role   | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Name of the role                                 |
+
+## mssql_track_logical_model {#metadata-mssql-track-logical-model}
+
+`mssql_track_logical_model` is used to add a Logical Model to the GraphQL schema.
+
+Track a Logical Model as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<SQL Server field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+The type of each field can be either a SQL Server data type
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
+
+### Args syntax {#metadata-mssql-track-logical-model-syntax}
+
+| Key    | Required | Schema                                                                         | Description                                                            |
+| ------ | -------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                        | Name of the source database (default: `default`)                       |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)            | Name of the Logical Model                                              |
+| fields | false    | Array of [LogicalModelField](/api-reference/syntax-defs.mdx#logicalmodelfield) | Configuration for each field exposed by the Logical Model GraphQL type |
+
+## mssql_untrack_logical_model {#metadata-mssql-untrack-logical-model}
+
+`mssql_untrack_logical_model` is used to remove a Logical Model from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_untrack_logical_model",
+    "args": {
+      "source": "default",
+      "name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-mssql-untrack-logical-model-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+
+## mssql_create_logical_model_select_permission {#metadata-mssql-create-logical-model-select-permission}
+
+`mssql_create_logical_model_select_permission` is used to add a permission to an existing Logical Model.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-create-logical-model-select-permission-syntax}
+
+| Key        | Required | Schema                                                                                      | Description                                      |
+| ---------- | -------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| source     | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                     | Name of the source database (default: `default`) |
+| name       | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                         | Name of the Logical Model                        |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                                         | Name of the role                                 |
+| permission | true     | [LogicalModelSelectPermission](/api-reference/syntax-defs.mdx#logicalmodelselectpermission) | Permission configuration                         |
+
+## mssql_drop_logical_model_select_permission {#metadata-mssql-drop-logical-model-select-permission}
+
+`mssql_drop_logical_model_select_permission` is used to drop an existing Logical Model permission.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_drop_logical_model_select_permission",
+    "args": {
+       "source": "default",
+       "function": "get_articles",
+       "role": "user"
+    }
+}
+```
+
+### Args syntax {#metadata-mssql-drop-logical-model-select-permission-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+| role   | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Name of the role                                 |
+
+## bigquery_track_logical_model {#metadata-bigquery-track-logical-model}
+
+`bigquery_track_logical_model` is used to add a Logical Model to the GraphQL schema.
+
+Track a Logical Model as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<BigQuery field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+The type of each field can be either a [BigQuery data type](/schema/bigquery/bigquery-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
+
+### Args syntax {#metadata-bigquery-track-logical-model-syntax}
+
+| Key    | Required | Schema                                                                         | Description                                                            |
+| ------ | -------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                        | Name of the source database (default: `default`)                       |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)            | Name of the Logical Model                                              |
+| fields | false    | Array of [LogicalModelField](/api-reference/syntax-defs.mdx#logicalmodelfield) | Configuration for each field exposed by the Logical Model GraphQL type |
+
+## bigquery_untrack_logical_model {#metadata-bigquery-untrack-logical-model}
+
+`bigquery_untrack_logical_model` is used to remove a Logical Model from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "bigquery_untrack_logical_model",
+    "args": {
+      "source": "default",
+      "name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-bigquery-untrack-logical-model-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+
+## bigquery_create_logical_model_select_permission {#metadata-bigquery-create-logical-model-select-permission}
+
+`bigquery_create_logical_model_select_permission` is used to add a permission to an existing Logical Model.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+### Args syntax {#metadata-bigquery-create-logical-model-select-permission-syntax}
+
+| Key        | Required | Schema                                                                                      | Description                                      |
+| ---------- | -------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| source     | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                     | Name of the source database (default: `default`) |
+| name       | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                         | Name of the Logical Model                        |
+| role       | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                                         | Name of the role                                 |
+| permission | true     | [LogicalModelSelectPermission](/api-reference/syntax-defs.mdx#logicalmodelselectpermission) | Permission configuration                         |
+
+## bigquery_drop_logical_model_select_permission {#metadata-bigquery-drop-logical-model-select-permission}
+
+`bigquery_drop_logical_model_select_permission` is used to drop an existing Logical Model permission.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "bigquery_drop_logical_model_select_permission",
+    "args": {
+       "source": "default",
+       "function": "get_articles",
+       "role": "user"
+    }
+}
+```
+
+### Args syntax {#metadata-bigquery-drop-logical-model-select-permission-syntax}
+
+| Key    | Required | Schema                                                              | Description                                      |
+| ------ | -------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database (default: `default`) |
+| name   | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname) | Name of the Logical Model                        |
+| role   | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)                 | Name of the role                                 |

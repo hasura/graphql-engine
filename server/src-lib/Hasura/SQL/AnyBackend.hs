@@ -102,12 +102,14 @@ module Hasura.SQL.AnyBackend
     composeAnyBackend,
     runBackend,
     parseAnyBackendFromJSON,
+    anyBackendCodec,
     debugAnyBackendToJSON,
     backendSourceKindFromText,
     parseBackendSourceKindFromJSON,
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, dimapCodec)
 import Control.Applicative
 import Control.Arrow.Extended (ArrowChoice)
 import Control.Lens (preview, _Right)
@@ -116,10 +118,10 @@ import Data.Aeson.Extended
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
-import Hasura.Backends.DataConnector.Adapter.Types (mkDataConnectorName)
 import Hasura.Prelude
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.DataConnector (mkDataConnectorName)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------
@@ -143,7 +145,6 @@ data AnyBackend (i :: BackendType -> Type)
   | PostgresCockroachValue (i ('Postgres 'Cockroach))
   | MSSQLValue (i 'MSSQL)
   | BigQueryValue (i 'BigQuery)
-  | MySQLValue (i 'MySQL)
   | DataConnectorValue (i 'DataConnector)
   deriving (Generic)
 
@@ -154,7 +155,6 @@ type AllBackendsSatisfy (c :: BackendType -> Constraint) =
     c ('Postgres 'Cockroach),
     c 'MSSQL,
     c 'BigQuery,
-    c 'MySQL,
     c 'DataConnector
   )
 
@@ -167,7 +167,6 @@ type SatisfiesForAllBackends
     c (i ('Postgres 'Cockroach)),
     c (i 'MSSQL),
     c (i 'BigQuery),
-    c (i 'MySQL),
     c (i 'DataConnector)
   )
 
@@ -182,7 +181,6 @@ liftTag (Postgres Citus) = PostgresCitusValue PostgresCitusTag
 liftTag (Postgres Cockroach) = PostgresCockroachValue PostgresCockroachTag
 liftTag MSSQL = MSSQLValue MSSQLTag
 liftTag BigQuery = BigQueryValue BigQueryTag
-liftTag MySQL = MySQLValue MySQLTag
 liftTag DataConnector = DataConnectorValue DataConnectorTag
 
 -- | Obtain a @BackendType@ from a runtime value.
@@ -192,7 +190,6 @@ lowerTag (PostgresCitusValue _) = Postgres Citus
 lowerTag (PostgresCockroachValue _) = Postgres Cockroach
 lowerTag (MSSQLValue _) = MSSQL
 lowerTag (BigQueryValue _) = BigQuery
-lowerTag (MySQLValue _) = MySQL
 lowerTag (DataConnectorValue _) = DataConnector
 
 -- | Transforms an @AnyBackend i@ into an @AnyBackend j@.
@@ -209,7 +206,6 @@ mapBackend e f = case e of
   PostgresCockroachValue x -> PostgresCockroachValue (f x)
   MSSQLValue x -> MSSQLValue (f x)
   BigQueryValue x -> BigQueryValue (f x)
-  MySQLValue x -> MySQLValue (f x)
   DataConnectorValue x -> DataConnectorValue (f x)
 
 -- | Traverse an @AnyBackend i@ into an @f (AnyBackend j)@.
@@ -221,7 +217,7 @@ traverseBackend ::
     f.
   (AllBackendsSatisfy c, Functor f) =>
   AnyBackend i ->
-  (forall b. c b => i b -> f (j b)) ->
+  (forall b. (c b) => i b -> f (j b)) ->
   f (AnyBackend j)
 traverseBackend e f = case e of
   PostgresVanillaValue x -> PostgresVanillaValue <$> f x
@@ -229,7 +225,6 @@ traverseBackend e f = case e of
   PostgresCockroachValue x -> PostgresCockroachValue <$> f x
   MSSQLValue x -> MSSQLValue <$> f x
   BigQueryValue x -> BigQueryValue <$> f x
-  MySQLValue x -> MySQLValue <$> f x
   DataConnectorValue x -> DataConnectorValue <$> f x
 
 -- | Creates a new @AnyBackend i@ for a given backend @b@ by wrapping the given @i b@.
@@ -237,7 +232,7 @@ mkAnyBackend ::
   forall
     (b :: BackendType)
     (i :: BackendType -> Type).
-  HasTag b =>
+  (HasTag b) =>
   i b ->
   AnyBackend i
 mkAnyBackend x = case backendTag @b of
@@ -246,7 +241,6 @@ mkAnyBackend x = case backendTag @b of
   PostgresCockroachTag -> PostgresCockroachValue x
   MSSQLTag -> MSSQLValue x
   BigQueryTag -> BigQueryValue x
-  MySQLTag -> MySQLValue x
   DataConnectorTag -> DataConnectorValue x
 
 -- | Dispatch a function to the value inside the @AnyBackend@, that does not
@@ -264,7 +258,6 @@ runBackend b f = case b of
   PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
-  MySQLValue x -> f x
   DataConnectorValue x -> f x
 
 -- | Dispatch an existential using an universally quantified function while
@@ -276,9 +269,9 @@ dispatchAnyBackend ::
     (c :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c =>
+  (AllBackendsSatisfy c) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c b => i b -> r) ->
+  (forall (b :: BackendType). (c b) => i b -> r) ->
   r
 dispatchAnyBackend e f = case e of
   PostgresVanillaValue x -> f x
@@ -286,7 +279,6 @@ dispatchAnyBackend e f = case e of
   PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
-  MySQLValue x -> f x
   DataConnectorValue x -> f x
 
 dispatchAnyBackendWithTwoConstraints ::
@@ -295,10 +287,10 @@ dispatchAnyBackendWithTwoConstraints ::
     (c2 :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c1 =>
-  AllBackendsSatisfy c2 =>
+  (AllBackendsSatisfy c1) =>
+  (AllBackendsSatisfy c2) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c1 b => c2 b => i b -> r) ->
+  (forall (b :: BackendType). (c1 b) => (c2 b) => i b -> r) ->
   r
 dispatchAnyBackendWithTwoConstraints e f = case e of
   PostgresVanillaValue x -> f x
@@ -306,7 +298,6 @@ dispatchAnyBackendWithTwoConstraints e f = case e of
   PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
-  MySQLValue x -> f x
   DataConnectorValue x -> f x
 
 -- | Unlike 'dispatchAnyBackend', the expected constraint has a different kind.
@@ -316,9 +307,9 @@ dispatchAnyBackend' ::
     (c :: Type -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  i `SatisfiesForAllBackends` c =>
+  (i `SatisfiesForAllBackends` c) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c (i b) => i b -> r) ->
+  (forall (b :: BackendType). (c (i b)) => i b -> r) ->
   r
 dispatchAnyBackend' e f = case e of
   PostgresVanillaValue x -> f x
@@ -326,7 +317,6 @@ dispatchAnyBackend' e f = case e of
   PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
-  MySQLValue x -> f x
   DataConnectorValue x -> f x
 
 -- | This allows you to apply a constraint to the Backend instances (c2)
@@ -337,10 +327,10 @@ dispatchAnyBackend'' ::
     (c2 :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  i `SatisfiesForAllBackends` c1 =>
-  AllBackendsSatisfy c2 =>
+  (i `SatisfiesForAllBackends` c1) =>
+  (AllBackendsSatisfy c2) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c2 b => c1 (i b) => i b -> r) ->
+  (forall (b :: BackendType). (c2 b) => (c1 (i b)) => i b -> r) ->
   r
 dispatchAnyBackend'' e f = case e of
   PostgresVanillaValue x -> f x
@@ -348,7 +338,6 @@ dispatchAnyBackend'' e f = case e of
   PostgresCockroachValue x -> f x
   MSSQLValue x -> f x
   BigQueryValue x -> f x
-  MySQLValue x -> f x
   DataConnectorValue x -> f x
 
 -- | Sometimes we need to run operations on two backends of the same type.
@@ -359,8 +348,8 @@ composeAnyBackend ::
     (c :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c =>
-  (forall (b :: BackendType). c b => i b -> i b -> r) ->
+  (AllBackendsSatisfy c) =>
+  (forall (b :: BackendType). (c b) => i b -> i b -> r) ->
   AnyBackend i ->
   AnyBackend i ->
   r ->
@@ -371,7 +360,6 @@ composeAnyBackend f e1 e2 owise = case (e1, e2) of
   (PostgresCockroachValue x, PostgresCockroachValue y) -> f x y
   (MSSQLValue x, MSSQLValue y) -> f x y
   (BigQueryValue x, BigQueryValue y) -> f x y
-  (MySQLValue x, MySQLValue y) -> f x y
   (DataConnectorValue x, DataConnectorValue y) -> f x y
   (value1, value2) ->
     if mapBackend value1 (Const . const ()) == mapBackend value2 (Const . const ())
@@ -383,8 +371,8 @@ mergeAnyBackend ::
   forall
     (c :: Type -> Constraint)
     (i :: BackendType -> Type).
-  i `SatisfiesForAllBackends` c =>
-  (forall (b :: BackendType). c (i b) => i b -> i b -> i b) ->
+  (i `SatisfiesForAllBackends` c) =>
+  (forall (b :: BackendType). (c (i b)) => i b -> i b -> i b) ->
   AnyBackend i ->
   AnyBackend i ->
   AnyBackend i ->
@@ -395,7 +383,6 @@ mergeAnyBackend f e1 e2 owise = case (e1, e2) of
   (PostgresCockroachValue x, PostgresCockroachValue y) -> PostgresCockroachValue (f x y)
   (MSSQLValue x, MSSQLValue y) -> MSSQLValue (f x y)
   (BigQueryValue x, BigQueryValue y) -> BigQueryValue (f x y)
-  (MySQLValue x, MySQLValue y) -> MySQLValue (f x y)
   (DataConnectorValue x, DataConnectorValue y) -> DataConnectorValue (f x y)
   (value1, value2) ->
     if mapBackend value1 (Const . const ()) == mapBackend value2 (Const . const ())
@@ -408,7 +395,7 @@ unpackAnyBackend ::
   forall
     (b :: BackendType)
     (i :: BackendType -> Type).
-  HasTag b =>
+  (HasTag b) =>
   AnyBackend i ->
   Maybe (i b)
 unpackAnyBackend exists = case (backendTag @b, exists) of
@@ -417,7 +404,6 @@ unpackAnyBackend exists = case (backendTag @b, exists) of
   (PostgresCockroachTag, PostgresCockroachValue x) -> Just x
   (MSSQLTag, MSSQLValue x) -> Just x
   (BigQueryTag, BigQueryValue x) -> Just x
-  (MySQLTag, MySQLValue x) -> Just x
   (DataConnectorTag, DataConnectorValue x) -> Just x
   (tag, value) ->
     if mapBackend (mkAnyBackend tag) (Const . const ()) == mapBackend value (Const . const ())
@@ -445,7 +431,7 @@ dispatchAnyBackendArrow ::
     (arr :: Type -> Type -> Type)
     x.
   (ArrowChoice arr, AllBackendsSatisfy c1, AllBackendsSatisfy c2) =>
-  (forall b. c1 b => c2 b => arr (i b, x) r) ->
+  (forall b. (c1 b) => (c2 b) => arr (i b, x) r) ->
   arr (AnyBackend i, x) r
 dispatchAnyBackendArrow arrow = proc (ab, x) -> do
   case ab of
@@ -459,8 +445,6 @@ dispatchAnyBackendArrow arrow = proc (ab, x) -> do
       arrow @'MSSQL -< (val, x)
     BigQueryValue val ->
       arrow @'BigQuery -< (val, x)
-    MySQLValue val ->
-      arrow @'MySQL -< (val, x)
     DataConnectorValue val ->
       arrow @'DataConnector -< (val, x)
 
@@ -471,7 +455,7 @@ dispatchAnyBackendArrow arrow = proc (ab, x) -> do
 -- | Attempts to parse an 'AnyBackend' from a JSON value, using the provided
 -- backend information.
 parseAnyBackendFromJSON ::
-  i `SatisfiesForAllBackends` FromJSON =>
+  (i `SatisfiesForAllBackends` FromJSON) =>
   BackendType ->
   Value ->
   Parser (AnyBackend i)
@@ -481,14 +465,31 @@ parseAnyBackendFromJSON backendKind value = case backendKind of
   Postgres Cockroach -> PostgresCockroachValue <$> parseJSON value
   MSSQL -> MSSQLValue <$> parseJSON value
   BigQuery -> BigQueryValue <$> parseJSON value
-  MySQL -> MySQLValue <$> parseJSON value
   DataConnector -> DataConnectorValue <$> parseJSON value
+
+-- | Codec that can be used to decode and encode @AnyBackend i@ values. Throws
+-- an error when attempting to encode a value with a mismatched @backendKind@
+-- argument.
+anyBackendCodec ::
+  forall i.
+  (i `SatisfiesForAllBackends` HasCodec) =>
+  BackendType ->
+  JSONCodec (AnyBackend i)
+anyBackendCodec backendKind = case backendKind of
+  Postgres Vanilla -> dimapCodec PostgresVanillaValue (\case (PostgresVanillaValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Vanilla))
+  Postgres Citus -> dimapCodec PostgresCitusValue (\case (PostgresCitusValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Citus))
+  Postgres Cockroach -> dimapCodec PostgresCockroachValue (\case (PostgresCockroachValue v) -> v; _ -> error msg) $ codec @(i ('Postgres 'Cockroach))
+  MSSQL -> dimapCodec MSSQLValue (\case (MSSQLValue v) -> v; _ -> error msg) $ codec @(i 'MSSQL)
+  BigQuery -> dimapCodec BigQueryValue (\case (BigQueryValue v) -> v; _ -> error msg) $ codec @(i 'BigQuery)
+  DataConnector -> dimapCodec DataConnectorValue (\case (DataConnectorValue v) -> v; _ -> error msg) $ codec @(i 'DataConnector)
+  where
+    msg = "got unexpected backend type indicating anyBackendCodec was called with the wrong backendType value"
 
 -- | Outputs a debug JSON value from an 'AnyBackend'. This function must only be
 -- used for debug purposes, as it has no way of inserting the backend kind in
 -- the output, since there's no guarantee that the output will be an object.
 debugAnyBackendToJSON ::
-  i `SatisfiesForAllBackends` ToJSON =>
+  (i `SatisfiesForAllBackends` ToJSON) =>
   AnyBackend i ->
   Value
 debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
@@ -497,15 +498,15 @@ debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
 
 -- * Instances for 'AnyBackend'
 
-deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Show) => Show (AnyBackend i)
 
-deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Eq) => Eq (AnyBackend i)
 
-deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Ord) => Ord (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
+instance (i `SatisfiesForAllBackends` Hashable) => Hashable (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` FromJSON => FromJSONKeyValue (AnyBackend i) where
+instance (i `SatisfiesForAllBackends` FromJSON) => FromJSONKeyValue (AnyBackend i) where
   parseJSONKeyValue (backendTypeStr, value) = do
     backendType <- parseBackendTypeFromText $ Key.toText backendTypeStr
     parseAnyBackendFromJSON backendType value
@@ -517,7 +518,6 @@ backendSourceKindFromText text =
     <|> PostgresCockroachValue <$> staticKindFromText PostgresCockroachKind
     <|> MSSQLValue <$> staticKindFromText MSSQLKind
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
-    <|> MySQLValue <$> staticKindFromText MySQLKind
     -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
     <|> DataConnectorValue . DataConnectorKind <$> (preview _Right . mkDataConnectorName =<< GQL.mkName text)
   where
@@ -534,6 +534,5 @@ parseBackendSourceKindFromJSON value =
     <|> PostgresCockroachValue <$> parseJSON @(BackendSourceKind ('Postgres 'Cockroach)) value
     <|> MSSQLValue <$> parseJSON @(BackendSourceKind ('MSSQL)) value
     <|> BigQueryValue <$> parseJSON @(BackendSourceKind ('BigQuery)) value
-    <|> MySQLValue <$> parseJSON @(BackendSourceKind ('MySQL)) value
     -- IMPORTANT: This must the last thing here, since it will accept (almost) any string
     <|> DataConnectorValue <$> parseJSON @(BackendSourceKind ('DataConnector)) value

@@ -1,6 +1,6 @@
 ---
 sidebar_label: Computed fields
-sidebar_position: 8
+sidebar_position: 4.2
 description: Use computed fields over Postgres in Hasura
 keywords:
   - hasura
@@ -20,14 +20,16 @@ import TabItem from '@theme/TabItem';
 ## What are computed fields?
 
 Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table/view's
-columns. Computed fields are computed upon request. They are computed by executing
-[custom SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) (a.k.a. stored procedures) using
-other columns of the table/view and other custom inputs if needed.
+columns.
 
-:::info Note
+Computed fields are computed upon request. They are computed by executing
+[user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) (a.k.a. stored procedures)
+which take the columns of the table/view, and other custom values if needed, as inputs to compute the field.
+
+:::info Computed fields do not modify the database schema
 
 Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed
-field.
+field. i.e. a computed field cannot be fetched as a table column directly from the database.
 
 :::
 
@@ -38,14 +40,17 @@ from_ [Postgres docs](https://www.postgresql.org/docs/current/sql-createfunction
 
 - **Function behavior**: ONLY `STABLE` or `IMMUTABLE`
 - **Argument modes**: ONLY `IN`
-- **Table Argument**: One input argument with a table row type
+- **Table Argument**: ONE input argument as the table row type
 - **Return type**: Either `SETOF <table-name>` or `BASE` type
 
-:::info Note
+Functions used as computed fields can also accept other arguments other than the mandatory table row argument. Values
+for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
 
-- Functions used as computed fields can also accept other arguments other than the mandatory table row argument. Values
-  for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
-- Functions used as computed fields do not need to be tracked by the Hasura GraphQL Engine.
+:::info No need for tracking
+
+Functions used as computed fields do not need to be [tracked](./custom-functions.mdx#pg-track-custom-sql-functions) by
+the Hasura GraphQL Engine. As the requirements for tracking functions differ from those to add them as computed fields,
+not all functions that can be used as computed fields can be tracked and vice versa.
 
 :::
 
@@ -249,7 +254,7 @@ X-Hasura-Role: admin
 [Access control](/auth/authorization/index.mdx) to computed fields depends on the type of computed field.
 
 - For **scalar computed fields**, permissions are managed similar to the
-  [columns permissions](/auth/authorization/permission-rules.mdx#col-level-permissions) of the table.
+  [columns permissions](/auth/authorization/permissions/column-level-permissions.mdx) of the table.
 - For **table computed fields**, the permissions set on the return table are respected.
 
 ## Accessing Hasura session variables in computed fields

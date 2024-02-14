@@ -1,0 +1,18 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field node on type Query is not allowed for non-existent-role"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field node on type Query is not allowed for user"
+      }
+    ]
+  }
+]

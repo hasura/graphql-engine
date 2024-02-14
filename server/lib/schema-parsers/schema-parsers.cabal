@@ -118,7 +118,8 @@ library
     , dependent-sum
     , graphql-parser
     , hashable
-    , error-message
+    , hasura-error-message
+    , hasura-prelude
     , insert-ordered-containers
     , lens
     , mtl
@@ -200,7 +201,7 @@ test-suite schema-parsers-tests
       , base
       , dependent-map
       , dependent-sum
-      , error-message
+      , hasura-error-message
       , graphql-parser
       , hashable
       , insert-ordered-containers

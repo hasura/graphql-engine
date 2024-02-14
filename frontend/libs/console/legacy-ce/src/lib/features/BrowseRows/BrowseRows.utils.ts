@@ -1,3 +1,5 @@
+import { getNullableType, isListType, isObjectType } from 'graphql';
+import { TableColumn } from '../DataSource';
 import { DataGridOptions } from './components/DataGrid/DataGrid';
 import { applyWhereAndSortConditionsToQueryString } from './components/DataGrid/DataGrid.utils';
 
@@ -16,3 +18,13 @@ export const setWhereAndSortToUrl = (options: DataGridOptions) => {
     window.history.pushState({ path: newUrl }, '', newUrl);
   }
 };
+
+export function isScalarGraphQLType(column: TableColumn): boolean {
+  if (!column.graphQLProperties?.graphQLType) {
+    return false;
+  }
+  const nullableType = getNullableType(column.graphQLProperties?.graphQLType);
+  const isObjectOrArray =
+    isListType(nullableType) || isObjectType(nullableType);
+  return !isObjectOrArray;
+}

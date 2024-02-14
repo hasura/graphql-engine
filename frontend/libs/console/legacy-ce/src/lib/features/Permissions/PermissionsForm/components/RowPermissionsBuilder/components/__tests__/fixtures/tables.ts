@@ -1,56 +1,57 @@
 import { Tables } from '../../types';
-import { createType } from './graphql';
 
 export const tables: Tables = [
   {
     table: { schema: 'public', name: 'Label' },
+    dataSource: { name: 'default', kind: 'postgres' },
     columns: [
       {
         name: 'id',
-        type: 'Int_comparison_exp',
-        graphQLType: createType('Int_comparison_exp'),
+        dataType: 'Int',
       },
       {
         name: 'name',
-        type: 'String_comparison_exp',
-        graphQLType: createType('String_comparison_exp'),
+        dataType: 'String',
+      },
+      {
+        name: 'doc',
+        dataType: 'jsonb',
       },
     ],
     relationships: [],
+    computedFields: [],
   },
   {
     table: ['Artist'],
+    dataSource: { name: 'SQLite', kind: 'SQLite' },
     columns: [
       {
         name: 'id',
-        type: 'number_SQLite_comparison_exp',
-        graphQLType: createType('number_SQLite_comparison_exp'),
+        dataType: 'number_SQLite',
       },
       {
         name: 'name',
-        type: 'string_SQLite_comparison_exp',
-        graphQLType: createType('string_SQLite_comparison_exp'),
+        dataType: 'string_SQLite',
       },
       {
         name: 'surname',
-        type: 'string_SQLite_comparison_exp',
-        graphQLType: createType('string_SQLite_comparison_exp'),
+        dataType: 'string_SQLite',
       },
     ],
     relationships: [],
+    computedFields: [],
   },
   {
     table: ['Album'],
+    dataSource: { name: 'SQLite', kind: 'SQLite' },
     columns: [
       {
         name: 'id',
-        type: 'number_SQLite_comparison_exp',
-        graphQLType: createType('number_SQLite_comparison_exp'),
+        dataType: 'number_SQLite',
       },
       {
         name: 'title',
-        type: 'string_SQLite_comparison_exp',
-        graphQLType: createType('string_SQLite_comparison_exp'),
+        dataType: 'string_SQLite',
       },
     ],
     relationships: [
@@ -81,86 +82,166 @@ export const tables: Tables = [
         },
       },
     ],
+    computedFields: [],
   },
   {
     table: ['Customer'],
+    dataSource: { name: 'SQLite', kind: 'SQLite' },
     columns: [],
     relationships: [],
+    computedFields: [],
   },
   {
     table: { dataset: 'bigquery_sample', name: 'sample_table' },
+    dataSource: { name: 'BigQuery', kind: 'bigquery' },
     columns: [
       {
         name: 'Series_reference',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Period',
-        type: 'Float_BigQuery_comparison_exp',
-        graphQLType: createType('Float_BigQuery_comparison_exp'),
+        dataType: 'Float_BigQuery',
       },
       {
         name: 'Data_value',
-        type: 'Float_BigQuery_comparison_exp',
-        graphQLType: createType('Float_BigQuery_comparison_exp'),
+        dataType: 'Float_BigQuery',
       },
       {
         name: 'Suppressed',
-        type: 'Boolean_BigQuery_comparison_exp',
-        graphQLType: createType('Boolean_BigQuery_comparison_exp'),
+        dataType: 'Boolean_BigQuery',
       },
       {
         name: 'STATUS',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'UNITS',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Magnitude',
-        type: 'Int_comparison_exp',
-        graphQLType: createType('Int_BigQuery_comparison_exp'),
+        dataType: 'Int',
       },
       {
         name: 'Subject',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Group',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Series_title_1',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Series_title_2',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Series_title_3',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Series_title_4',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
       {
         name: 'Series_title_5',
-        type: 'String_BigQuery_comparison_exp',
-        graphQLType: createType('String_BigQuery_comparison_exp'),
+        dataType: 'String_BigQuery',
       },
     ],
     relationships: [],
+    computedFields: [],
+  },
+];
+
+export const tableWithGeolocationSupport = [
+  {
+    table: { name: 'user_location', schema: 'public' },
+    dataSource: {
+      name: 'postgis',
+      kind: 'postgres',
+      tables: [
+        {
+          table: { name: 'user_location', schema: 'public' },
+          select_permissions: [
+            {
+              role: 'new',
+              permission: {
+                columns: [],
+                filter: {
+                  location: {
+                    _st_d_within: {
+                      distance: 100000,
+                      from: { coordinates: [1.4, 2.5], type: 'Point' },
+                      use_spheroid: false,
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+      configuration: {
+        connection_info: {
+          database_url: { from_env: 'DB2' },
+          isolation_level: 'read-committed',
+          use_prepared_statements: false,
+        },
+      },
+    },
+    relationships: [],
+    computedFields: [],
+    columns: [
+      {
+        name: 'user_id',
+        dataType: 'integer',
+        consoleDataType: 'number',
+        nullable: false,
+        isPrimaryKey: true,
+        graphQLProperties: { name: 'user_id', scalarType: 'Int' },
+      },
+      {
+        name: 'location',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: { name: 'location', scalarType: 'geography' },
+      },
+      {
+        name: 'topoelement',
+        dataType: 'ARRAY',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: { name: 'topoelement', scalarType: '_int4' },
+      },
+      {
+        name: 'norm_addy',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: {
+          name: 'norm_addy',
+          scalarType: 'norm_addy_scalar',
+        },
+      },
+      {
+        name: 'valid_topo',
+        dataType: 'USER-DEFINED',
+        consoleDataType: 'string',
+        nullable: true,
+        isPrimaryKey: false,
+        graphQLProperties: {
+          name: 'valid_topo',
+          scalarType: 'validatetopology_returntype_scalar',
+        },
+      },
+    ],
   },
 ];

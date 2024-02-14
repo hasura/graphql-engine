@@ -15,16 +15,22 @@ module Main (main) where
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Class (MonadTrans (lift))
 import Control.Monad.Trans.Except (runExceptT)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BS
+import Data.String (fromString)
 import Database.PG.Query
 import Interrupt (specInterrupt)
 import Jsonb (specJsonb)
 import System.Environment qualified as Env
-import Test.Hspec (describe, hspec, it, shouldReturn)
+import Test.Hspec (describe, hspec, it, shouldBe, shouldReturn)
 import Timeout (specTimeout)
 import Prelude
 
 -------------------------------------------------------------------------------
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.forkIO" :: String) #-}
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
 
 {- Note [Running tests]
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +38,7 @@ The tests in this module expect a postgres instance running. No setup is
 required, these tests do not run any query on the database. The only requirement
 is that the environment variable DATABASE_URL is set such that it is a valid
 connection string to this instance (e.g.
-"postgres://user:pass@127.0.0.1:5432/instance?sslmode=disable").
+"postgresql://user:pass@127.0.0.1:5432/instance?sslmode=disable").
 
 TODO: run these tests as part of CI.
 -}
@@ -50,6 +56,29 @@ main = hspec $ do
       releaseAndAcquireWithTimeout `shouldReturn` Nothing
     it "time out works correctly" do
       releaseAndAcquireWithTimeoutNegative `shouldReturn` Nothing
+
+    let uriConnDetails :: ConnDetails
+        uriConnDetails =
+          CDDatabaseURI $
+            fromString
+              "postgresql://user:pass@127.0.0.1:5432/instance?sslmode=disable"
+
+    it "parses a host name correctly" do
+      h <- extractHost uriConnDetails
+      h `shouldBe` Just "127.0.0.1"
+
+    it "parses connection options correctly" do
+      extractConnOptions uriConnDetails
+        `shouldBe` Just
+          ConnOptions
+            { connHost = "127.0.0.1",
+              connPort = 5432,
+              connUser = "user",
+              connPassword = "pass",
+              connDatabase = "instance",
+              connOptions = Nothing
+            }
+
   specInterrupt
   specTimeout
   specJsonb
@@ -57,9 +86,13 @@ main = hspec $ do
 mkPool :: IO PGPool
 mkPool = do
   dbUri <- BS.pack <$> Env.getEnv "DATABASE_URL"
-  initPGPool (connInfo dbUri) connParams logger
+  initPGPool (connInfo dbUri) J.Null connParams logger
   where
-    connInfo uri = ConnInfo {ciRetries, ciDetails = mkDetails uri}
+    connInfo uri =
+      ConnInfo
+        { ciRetries,
+          ciDetails = mkDetails uri
+        }
     ciRetries = 0
     mkDetails = CDDatabaseURI
     logger = mempty
@@ -76,7 +109,7 @@ withFreshPool pool action =
     . const
     $ lift action
 
-err :: Show a => a -> IO (Maybe String)
+err :: (Show a) => a -> IO (Maybe String)
 err = pure . Just . show
 
 nada :: IO ()

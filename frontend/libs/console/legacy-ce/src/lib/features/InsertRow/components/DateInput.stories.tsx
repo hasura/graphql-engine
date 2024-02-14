@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { handlers } from '../../../mocks/metadata.mock';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -17,48 +17,54 @@ export default {
     onChange: { action: true },
     onInput: { action: true },
   },
-} as ComponentMeta<typeof DateInput>;
+} as Meta<typeof DateInput>;
 
-const Template: ComponentStory<typeof DateInput> = args => {
+const Template: StoryFn<typeof DateInput> = args => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   return <DateInput {...args} inputRef={inputRef} />;
 };
 
-export const Base = Template.bind({});
-Base.args = {
-  name: 'date',
-  placeholder: 'date...',
+export const Base = {
+  render: Template,
+
+  args: {
+    name: 'date',
+    placeholder: 'date...',
+  },
+
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    userEvent.type(await canvas.findByPlaceholderText('date...'), '2020-01-14');
+
+    expect(args.onChange).toHaveBeenCalled();
+    expect(args.onInput).toHaveBeenCalled();
+
+    const baseDate = new Date();
+
+    expect(await canvas.findByDisplayValue('2020-01-14')).toBeInTheDocument();
+
+    userEvent.click(await canvas.findByRole('button'));
+
+    const baseDateLabel = `Choose ${format(baseDate, 'EEEE, LLLL do, u')}`;
+
+    userEvent.click((await canvas.findAllByLabelText(baseDateLabel))[0]);
+
+    const baseDateValue = format(baseDate, 'yyyy-LL-dd');
+    expect(await canvas.findByLabelText('date')).toHaveDisplayValue(
+      baseDateValue
+    );
+
+    expect(args.onChange).toHaveBeenCalled();
+    expect(args.onInput).toHaveBeenCalled();
+  },
 };
 
-export const Disabled = Template.bind({});
-Disabled.args = {
-  ...Base.args,
-  disabled: true,
-};
+export const Disabled = {
+  render: Template,
 
-Base.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  userEvent.type(await canvas.findByPlaceholderText('date...'), '2020-01-14');
-
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
-
-  const baseDate = new Date();
-
-  expect(await canvas.findByDisplayValue('2020-01-14')).toBeInTheDocument();
-
-  userEvent.click(await canvas.findByRole('button'));
-
-  const baseDateLabel = `Choose ${format(baseDate, 'EEEE, LLLL do, u')}`;
-
-  userEvent.click((await canvas.findAllByLabelText(baseDateLabel))[0]);
-
-  const baseDateValue = format(baseDate, 'yyyy-LL-dd');
-  expect(await canvas.findByLabelText('date')).toHaveDisplayValue(
-    baseDateValue
-  );
-
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+  args: {
+    ...Base.args,
+    disabled: true,
+  },
 };

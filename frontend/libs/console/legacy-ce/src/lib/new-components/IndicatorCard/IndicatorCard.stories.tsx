@@ -1,11 +1,11 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { IndicatorCard } from './IndicatorCard';
 
 export default {
   title: 'components/IndicatorCard',
   component: IndicatorCard,
-} as ComponentMeta<typeof IndicatorCard>;
+} as Meta<typeof IndicatorCard>;
 
 export const showcase = () => (
   <div className="space-y-4">

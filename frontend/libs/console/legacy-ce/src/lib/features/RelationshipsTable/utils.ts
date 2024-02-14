@@ -1,8 +1,5 @@
 import { RemoteRelationshipFieldServer } from '../../components/Services/Data/TableRelationships/RemoteRelationships/utils';
-import isEqual from 'lodash.isequal';
-import { Table } from '../hasura-metadata-types';
 import { RelationshipSourceType, RelationshipType } from './types';
-import { isArray, isObject } from '../../components/Common/utils/jsUtils';
 
 export const getRemoteRelationType = (
   relation: RelationshipType

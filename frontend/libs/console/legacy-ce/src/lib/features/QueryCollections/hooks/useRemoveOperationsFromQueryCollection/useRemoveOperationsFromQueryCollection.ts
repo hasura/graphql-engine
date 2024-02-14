@@ -3,6 +3,19 @@ import { useCallback } from 'react';
 import { useMetadata, useMetadataMigration } from '../../../MetadataAPI';
 import { QueryCollection } from '../../../../metadata/types';
 
+export const removeOperationsFromQueryCollectionMetadataArgs = (
+  queryCollection: string,
+  queries: string[]
+) => [
+  ...queries.map(query => ({
+    type: 'drop_query_from_collection',
+    args: {
+      collection_name: queryCollection,
+      query_name: query,
+    },
+  })),
+];
+
 export const useRemoveOperationsFromQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();
 
@@ -27,13 +40,10 @@ export const useRemoveOperationsFromQueryCollection = () => {
             ...(metadata?.resource_version && {
               resource_version: metadata.resource_version,
             }),
-            args: queries.map(query => ({
-              type: 'drop_query_from_collection',
-              args: {
-                collection_name: queryCollection,
-                query_name: query.name,
-              },
-            })),
+            args: removeOperationsFromQueryCollectionMetadataArgs(
+              queryCollection,
+              queries.map(query => query.name)
+            ),
           },
         },
         {

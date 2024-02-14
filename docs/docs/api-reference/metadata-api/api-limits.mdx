@@ -1,6 +1,6 @@
 ---
 sidebar_label: API Limits
-sidebar_position: 20
+sidebar_position: 23
 description: Manage API limits configuration with the Hasura metadata API
 keywords:
   - hasura
@@ -15,11 +15,11 @@ keywords:
   - ee
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: API Limits
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge free pro ee self />
 
 ## Introduction
 
@@ -99,6 +99,13 @@ In the above metadata spec:
 5.  For `rate_limit` if no `unique_params` are provided then, the requests will be rate-limited on the `role_name` i.e
     the `X-HASURA-ROLE` that is used to issue the request
 
+:::info Note
+
+The API will throw a warning if the configured `time_limit` is greater than the Cloud time limit. The Cloud time limit
+will be used in such cases.
+
+:::
+
 ## remove_api_limits {#metadata-remove-api-limits}
 
 You can remove **all** the api limits that have been set using `remove_api_limit` API.
@@ -109,6 +116,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type": "remove_api_limit"
+    "type": "remove_api_limits"
+    "args": {}
 }
 ```

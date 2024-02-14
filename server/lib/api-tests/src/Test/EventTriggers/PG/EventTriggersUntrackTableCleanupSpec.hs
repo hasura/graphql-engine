@@ -10,9 +10,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -32,7 +32,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Postgres.setupTablesAction (schema "authors") testEnvironment),
                   Fixture.SetupAction
@@ -71,15 +71,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  cleanupEventTriggersWhenTableUntracked opts
-
-cleanupEventTriggersWhenTableUntracked :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenTableUntracked opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
@@ -106,7 +102,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -118,8 +114,8 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "untrack table, check the SQL triggers are deleted from the table" $
-      \(testEnvironment, _) -> do
+    it "untrack table, check the SQL triggers are deleted from the table"
+      $ \(testEnvironment, _) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let untrackTableQuery =
@@ -136,7 +132,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- Untracking the table should remove the SQL triggers on the table
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment untrackTableQuery)
           untrackTableQueryExpectedResponse
 
@@ -159,7 +155,7 @@ cleanupEventTriggersWhenTableUntracked opts =
 
         -- If the cleanup happened then the hasura SQL trigger should not exists in the table
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment checkIfTriggerExists)
           expectedResponse
 
@@ -172,8 +168,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger

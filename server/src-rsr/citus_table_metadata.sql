@@ -21,10 +21,12 @@ SELECT
         WHEN 'distributed'
           THEN jsonb_build_object(
                   'tag', extraMetadata.citus_table_type,
-                  'distribution_column', extraMetadata.distribution_column
+                  'distribution_column', extraMetadata.distribution_column,
+                  'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
                 )
         ELSE jsonb_build_object(
-                  'tag', coalesce(extraMetadata.citus_table_type, 'local')
+                  'tag', coalesce(extraMetadata.citus_table_type, 'local'),
+                  'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
                 )
       END
   )::json AS info
@@ -61,7 +63,10 @@ LEFT JOIN LATERAL
   ( SELECT jsonb_agg(jsonb_build_object(
       'name', "column".attname,
       'position', "column".attnum,
-      'type', json_build_object('name', coalesce(base_type.typname, "type".typname), 'type', "type".typtype),
+      'type', json_build_object('name', (CASE WHEN "array_type".typname IS NULL
+                                              THEN coalesce(base_type.typname, "type".typname)
+                                              ELSE "array_type".typname || '[]' END),
+                                'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
       'description', pg_catalog.col_description("table".oid, "column".attnum),
       'mutability', jsonb_build_object(
@@ -107,6 +112,8 @@ LEFT JOIN LATERAL
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type
       ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
+    LEFT JOIN pg_catalog.pg_type array_type
+      ON "type".typelem = array_type.oid AND "type".typcategory = 'A'
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0

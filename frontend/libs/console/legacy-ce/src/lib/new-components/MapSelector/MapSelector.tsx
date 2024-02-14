@@ -5,6 +5,7 @@ import { TiDelete } from 'react-icons/ti';
 // eslint-disable-next-line no-restricted-imports
 import { useFormContext } from 'react-hook-form';
 import { FaColumns, FaFont } from 'react-icons/fa';
+import { Select } from '../Form';
 
 export type TypeMap = { field: string; column: string };
 
@@ -84,6 +85,26 @@ export const MapSelector = ({
       id="reference"
       className="rounded bg-gray-50 border border-gray-300 p-md mb-md"
     >
+      <div className="w-full sm:w-5/12 mb-md pr-2">
+        <div className="mb-md">
+          <Select
+            name="relationshipType"
+            label="Type"
+            dataTest="select-rel-type"
+            placeholder="Select a relationship type..."
+            options={[
+              {
+                label: 'Array Relationship',
+                value: 'array',
+              },
+              {
+                label: 'Object Relationship',
+                value: 'object',
+              },
+            ]}
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-12 gap-3 mb-xs text-muted font-semibold">
         <div className="col-span-5">
           <GiPlainCircle className="mr-1.5 text-green-700" />

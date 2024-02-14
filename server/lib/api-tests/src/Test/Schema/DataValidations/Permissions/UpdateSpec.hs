@@ -6,21 +6,21 @@
 module Test.Schema.DataValidations.Permissions.UpdateSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Aeson.Key qualified as Key (toString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (HasCallStack, SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
@@ -42,6 +42,12 @@ spec = do
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupMetadata Cockroach.backendTypeMetadata testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment,
+                  setupMetadata Sqlite.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -69,11 +75,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: HasCallStack => IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Permissions on mutations" do
     it "Author can update their name" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -107,7 +110,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author can update_many their name" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -141,7 +144,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author cannot update their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -153,7 +156,7 @@ tests opts = do
             errors:
             - extensions:
                 code: validation-failed
-                path: "$.selectionSet.update_hasura_author.args._set.id"
+                path: "$.selectionSet.update_#{schemaName}_author.args._set.id"
               message: "field 'id' not found in type: '#{schemaName}_author_set_input'"
             |]
 
@@ -175,7 +178,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Author cannot update_many their id" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -187,7 +190,7 @@ tests opts = do
             errors:
             - extensions:
                 code: validation-failed
-                path: "$.selectionSet.update_hasura_author_many.args.updates[0]._set.id"
+                path: "$.selectionSet.update_#{schemaName}_author_many.args.updates[0]._set.id"
               message: "field 'id' not found in type: '#{schemaName}_author_set_input'"
             |]
 
@@ -209,7 +212,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata
@@ -219,14 +222,14 @@ setupMetadata backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
-      schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
-
       backendPrefix :: String
       backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
       source = Fixture.backendSourceName backendTypeMetadata
+
+      authorTable :: Value
+      authorTable = Schema.mkTableField backendTypeMetadata schemaName "author"
 
       setup :: IO ()
       setup =
@@ -238,9 +241,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
                 permission:
                   filter:
@@ -252,9 +253,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_update_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
                 permission:
                   filter:
@@ -274,16 +273,12 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_drop_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
             - type: #{backendPrefix}_drop_update_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
           |]
 

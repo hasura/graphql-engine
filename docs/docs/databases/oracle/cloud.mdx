@@ -1,0 +1,108 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Hasura Cloud for Oracle
+keywords:
+  - hasura
+  - docs
+  - databases
+  - Oracle
+  - hasura cloud
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Getting Started with Oracle in Hasura Cloud
+
+<div className="badge-container">
+  <ProductBadge free pro ee />
+</div>
+
+## Introduction
+
+This guide will help you get set up with [Hasura Cloud](/hasura-cloud/overview.mdx) and our Oracle integration.
+
+:::tip Supported versions
+
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **Oracle 18.0 and higher** including Amazon RDS.
+
+:::
+
+:::tip Supported features
+
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on Oracle.
+
+Note that Hasura doesn't yet support the ability to modify the database schema for Oracle, so the database you connect
+to should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
+
+:::
+
+## Try it out
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
+and create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail
+  src="/img/databases/data-connector/create-project.png"
+  alt="Connect new or existing database"
+  width="1000px"
+/>
+
+### Step 2: Connect to a Oracle database
+
+From the Console, click the `Data` tab:
+
+<Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
+
+Select the Oracle data source driver.
+
+:::info Already have a data source connected?
+
+You'll need to click `Manage` in the sidenav and then `Connect Database` to bring up the different available agents.
+
+:::
+
+Enter a database display name and the JDBC Connection URL for your Oracle instance. The JDBC connection URL should look
+like this:
+
+```yaml {4-6}
+jdbc:oracle:thin:<username>/<password>@<hostname>:<port>:<service-name>
+```
+
+For example:
+
+```yaml {4-6}
+jdbc:oracle:thin:myuser/mypassword@myhost.mycompany.com:oracletest  # assuming the default port 1521
+jdbc:oracle:thin:myuser/mypassword@myhost.mycompany.com:1234:oracletest  # assuming Oracle is running on port 1234
+```
+
+Click `Connect Database`.
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
+### Step 3: Track tables and run GraphQL API queries
+
+Now that you have successfully connected your Oracle database to Hasura, you can track tables and use Hasura to
+automatically build a GraphQL API on top of it.
+
+## Keep up to date
+
+If you'd like to stay informed about the status of Oracle support, subscribe to our newsletter and join our Discord!
+
+- [Join the newsletter list](https://hasura.io/newsletter/)
+- [Join the Hasura Discord](https://discord.com/invite/hasura)

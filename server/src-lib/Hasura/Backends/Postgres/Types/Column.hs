@@ -9,8 +9,8 @@ where
 
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 
 -- | Gets the representation type associated with a 'ColumnType'. Avoid using this if possible.
 -- Prefer 'parsePGScalarValue', 'parsePGScalarValues', or

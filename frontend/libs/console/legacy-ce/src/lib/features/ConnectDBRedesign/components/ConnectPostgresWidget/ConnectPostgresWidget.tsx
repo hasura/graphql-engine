@@ -1,21 +1,16 @@
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Button } from '../../../../new-components/Button';
-import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
+import { useConsoleForm } from '../../../../new-components/Form';
 import { getDefaultValues, PostgresConnectionSchema, schema } from './schema';
-import { ReadReplicas } from './parts/ReadReplicas';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { generatePostgresRequestPayload } from './utils/generateRequests';
-import { DatabaseUrl } from './parts/DatabaseUrl';
-import { PoolSettings } from './parts/PoolSettings';
-import { IsolationLevel } from './parts/IsolationLevel';
-import { UsePreparedStatements } from './parts/UsePreparedStatements';
-import { SslSettings } from './parts/SslSettings';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { ExtensionSchema } from './parts/ExtensionSchema';
-import { areReadReplicasEnabled, areSSLSettingsEnabled } from './utils/helpers';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { DynamicDBRouting } from './parts/DynamicDBRouting';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { ConnectPostgresForm } from './parts/ConnectPostgresForm';
+import { Button } from '../../../../new-components/Button';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -27,6 +22,7 @@ interface ConnectPostgresWidgetProps {
 
 export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
   const { dataSourceName, overrideDriver, overrideDisplayName } = props;
+  const [tab, setTab] = useState('connectionDetails');
 
   const isEditMode = !!dataSourceName;
 
@@ -47,8 +43,8 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: `Error while ${isEditMode ? 'updating' : 'adding'} database`,
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });
@@ -60,7 +56,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }
@@ -88,102 +84,63 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
   const hiddenOptions =
     overrideDriver === 'cockroach' ? ['connectionParams'] : [];
 
+  const dynamicDBRoutingTab =
+    dataSourceName && isEditMode && window.__env.consoleType !== 'oss'
+      ? [
+          {
+            value: 'dynamicDBRouting',
+            label: 'Dynamic Routing',
+            content: (
+              <div className="mt-sm">
+                <LimitedFeatureWrapper
+                  id="dynamic-db-routing"
+                  title="Dynamic Routing for Databases"
+                  description="Effortlessly scale your data architecture with Dynamic Routing for databases, allowing you to easily route GraphQL requests to different database connections and leverage different database topology patterns with Hasura."
+                >
+                  <DynamicDBRouting sourceName={dataSourceName} />
+                </LimitedFeatureWrapper>
+              </div>
+            ),
+          },
+        ]
+      : [];
+
   return (
-    <div>
+    <>
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode
           ? `Edit ${overrideDisplayName ?? 'Postgres'} Connection`
           : `Connect ${overrideDisplayName ?? 'Postgres'} Database`}
       </div>
-      <Form onSubmit={handleSubmit}>
-        <InputField
-          name="name"
-          label="Database name"
-          placeholder="Database name"
-        />
-
-        <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-          <DatabaseUrl
-            name="configuration.connectionInfo.databaseUrl"
-            hideOptions={hiddenOptions}
-          />
-        </div>
-
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">Advanced Settings</div>
-            }
-          >
-            <PoolSettings name={`configuration.connectionInfo.poolSettings`} />
-            <IsolationLevel
-              name={`configuration.connectionInfo.isolationLevel`}
-            />
-            <UsePreparedStatements
-              name={`configuration.connectionInfo.usePreparedStatements`}
-            />
-            <ExtensionSchema name="configuration.extensionSchema" />
-            {areSSLSettingsEnabled() && (
-              <Collapsible
-                triggerChildren={
-                  <div className="font-semibold text-muted">
-                    SSL Certificates Settings
-                    <span className="px-1.5 italic font-light">
-                      (Certificates will be loaded from{' '}
-                      <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
-                        environment variables
-                      </a>
-                      )
-                    </span>
+      <div className="my-3" />
+      <Tabs
+        value={tab}
+        onValueChange={value => setTab(value)}
+        items={[
+          {
+            value: 'connectionDetails',
+            label: 'Connection Details',
+            content: (
+              <div className="mt-sm">
+                <Form onSubmit={handleSubmit}>
+                  <ConnectPostgresForm hiddenOptions={hiddenOptions} />
+                  <div className="flex justify-end mt-sm">
+                    <Button
+                      type="submit"
+                      mode="primary"
+                      isLoading={isLoading}
+                      loadingText="Saving"
+                    >
+                      {isEditMode ? 'Update Connection' : 'Connect Database'}
+                    </Button>
                   </div>
-                }
-              >
-                <SslSettings
-                  name={`configuration.connectionInfo.sslSettings`}
-                />
-              </Collapsible>
-            )}
-          </Collapsible>
-        </div>
-
-        {areReadReplicasEnabled() && (
-          <div className="mt-sm">
-            <Collapsible
-              triggerChildren={
-                <div className="font-semibold text-muted">Read Replicas</div>
-              }
-            >
-              <ReadReplicas
-                name="configuration.readReplicas"
-                hideOptions={hiddenOptions}
-              />
-            </Collapsible>
-          </div>
-        )}
-
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">
-                GraphQL Customization
+                </Form>
               </div>
-            }
-          >
-            <GraphQLCustomization name="customization" />
-          </Collapsible>
-        </div>
-
-        <div className="flex justify-end mt-sm">
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={isLoading}
-            loadingText="Saving"
-          >
-            {isEditMode ? 'Update Connection' : 'Connect Database'}
-          </Button>
-        </div>
-      </Form>
-    </div>
+            ),
+          },
+          ...dynamicDBRoutingTab,
+        ]}
+      />
+    </>
   );
 };

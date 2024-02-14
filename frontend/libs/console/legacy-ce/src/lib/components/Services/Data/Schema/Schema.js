@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
@@ -56,6 +57,7 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import { EmptyState } from './components/EmptyState/EmptyState';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
+import { FeatureFlagContainer } from './TrackTablesContainer';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -737,14 +739,22 @@ class Schema extends Component {
           <hr className="my-md" />
           {getCurrentSchemaSection()}
           <hr className="my-md" />
-          {getUntrackedTablesSection()}
-          {isFeatureSupported('tables.relationships.track') &&
-            getUntrackedRelationsSection()}
-          {getUntrackedFunctionsSection(
-            isFeatureSupported('functions.track.enabled')
-          )}
-          {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
-            getNonTrackableFunctionsSection()}
+
+          <FeatureFlagContainer
+            dataSourceName={currentDataSource}
+            schema={currentSchema}
+            dispatch={dispatch}
+          >
+            {getUntrackedTablesSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              getUntrackedRelationsSection()}
+            {getUntrackedFunctionsSection(
+              isFeatureSupported('functions.track.enabled')
+            )}
+            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
+              getNonTrackableFunctionsSection()}
+          </FeatureFlagContainer>
+
           <hr className="my-md" />
         </>
       );
@@ -764,7 +774,9 @@ class Schema extends Component {
           />
         )}
         <Analytics name="Schema" {...REDACT_EVERYTHING}>
-          <div className={`container-fluid ${styles.padd_left_remove}`}>
+          <div
+            className={`container-fluid ${styles.padd_left_remove} bootstrap-jail`}
+          >
             <div className={styles.padd_left}>
               <Helmet title="Schema - Data | Hasura" />
               <BreadCrumb

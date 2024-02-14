@@ -8,7 +8,7 @@ import { HasuraMetadataV3 } from '../../../../../metadata/types';
 import { exportMetadata } from '../../../../../metadata/actions';
 import IntrospectionTable from './IntrospectionTable';
 
-interface IntrospectionOptionsComponentProps extends InjectedProps {}
+type IntrospectionOptionsComponentProps = InjectedProps;
 
 const IntrospectionOptionsComponent: React.FC<
   IntrospectionOptionsComponentProps

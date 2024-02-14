@@ -111,24 +111,30 @@ module Hasura.GraphQL.Execute.Subscription.Plan
     cvQueryVariables,
     cvSyntheticVariables,
     unValidatedVariables,
+    applyModifier,
   )
 where
 
 import Control.Lens (makeLenses)
 import Data.Aeson.Extended qualified as J
+import Data.Aeson.Ordered qualified as JO
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.ByteString qualified as BS
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
+import Data.Monoid (Endo (..))
 import Data.UUID (UUID)
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Backends.Postgres.SQL.Value
+import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
-import Hasura.Session
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.Session (SessionVariable, SessionVariables, filterSessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Encoding qualified as PE
 
@@ -159,11 +165,11 @@ deriving instance (Monoid (f TxtEncodedVal)) => Monoid (ValidatedVariables f)
 
 $(makeLenses 'ValidatedVariables)
 
-type ValidatedQueryVariables = ValidatedVariables (Map.HashMap G.Name)
+type ValidatedQueryVariables = ValidatedVariables (HashMap.HashMap G.Name)
 
 type ValidatedSyntheticVariables = ValidatedVariables []
 
-type ValidatedCursorVariables = ValidatedVariables (Map.HashMap G.Name)
+type ValidatedCursorVariables = ValidatedVariables (HashMap.HashMap G.Name)
 
 mkUnsafeValidateVariables :: f TxtEncodedVal -> ValidatedVariables f
 mkUnsafeValidateVariables = ValidatedVariables
@@ -234,8 +240,8 @@ mkCohortVariables ::
   ValidatedCursorVariables ->
   CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
-  CohortVariables $
-    filterSessionVariables
+  CohortVariables
+    $ filterSessionVariables
       (\k _ -> Set.member k requiredSessionVariables)
       sessionVariableValues
 
@@ -269,6 +275,12 @@ instance PG.ToPrepArg CohortVariablesArray where
     PG.toPrepValHelper PTI.jsonb_array encoder (map J.toJSON l)
     where
       encoder = PE.array (PTI.unOid PTI.jsonb) . PE.dimensionArray foldl' (PE.encodingArray . PE.jsonb_ast)
+
+applyModifier :: (Maybe (Endo JO.Value)) -> BS.ByteString -> BS.ByteString
+applyModifier Nothing = id
+applyModifier (Just modifier) = \bs -> case JO.decode bs of
+  Nothing -> bs
+  Just v -> encJToBS . encJFromOrderedValue $ appEndo modifier v
 
 ----------------------------------------------------------------------------------------------------
 -- Live query plans

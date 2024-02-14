@@ -1,10 +1,9 @@
 import { useContext, useEffect } from 'react';
 import { isComparator } from '../utils/helpers';
 import { tableContext } from '../TableProvider';
-import { typesContext } from '../TypesProvider';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { areTablesEqual } from '../../../../../../hasura-metadata-api';
-import { createWrapper } from './utils';
+import { ConditionalTableProvider } from './ConditionalTableProvider';
+import { rootTableContext } from '../RootTableProvider';
 
 export function ColumnComparatorEntry({
   k,
@@ -16,13 +15,6 @@ export function ColumnComparatorEntry({
   path: string[];
 }) {
   const { setValue } = useContext(rowPermissionsContext);
-  const { types } = useContext(typesContext);
-  const { relationships } = useContext(tableContext);
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   const showRootColumns = v.includes('$');
   const stringifiedValue = JSON.stringify(v);
   useEffect(() => {
@@ -31,7 +23,7 @@ export function ColumnComparatorEntry({
     }
   }, [stringifiedValue, setValue]);
   return (
-    <Wrapper>
+    <ConditionalTableProvider path={path}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
@@ -46,7 +38,7 @@ export function ColumnComparatorEntry({
           </div>
         </div>
       </div>
-    </Wrapper>
+    </ConditionalTableProvider>
   );
 }
 
@@ -107,9 +99,9 @@ function RootColumnsSelect({
   v: any;
   path: string[];
 }) {
-  const { table, tables, setValue } = useContext(rowPermissionsContext);
+  const { setValue } = useContext(rowPermissionsContext);
   const value = v.find((v: any) => v !== '$');
-  const rootTable = tables.find(t => areTablesEqual(t.table, table));
+  const { rootTable } = useContext(rootTableContext);
   const testId = `${path.join('.')}-root-column-comparator-entry`;
   return (
     <select

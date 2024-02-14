@@ -1,0 +1,11 @@
+Err(
+    Positioned {
+        item: OtherError(
+            "At least one item must be specified",
+        ),
+        position: SourcePosition {
+            line: 1,
+            col: 10,
+        },
+    },
+)

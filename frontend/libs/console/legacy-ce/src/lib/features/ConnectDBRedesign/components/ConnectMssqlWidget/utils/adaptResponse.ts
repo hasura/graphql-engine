@@ -17,8 +17,9 @@ export const adaptMssqlConnectionInfo = (
             envVar: connectionInfo.connection_string.from_env,
           },
     poolSettings: {
-      totalMaxConnections: connectionInfo.pool_settings?.total_max_connections,
-      idleTimeout: connectionInfo.pool_settings?.idle_timeout,
+      totalMaxConnections:
+        connectionInfo.pool_settings?.total_max_connections ?? undefined,
+      idleTimeout: connectionInfo.pool_settings?.idle_timeout ?? undefined,
     },
   };
 };

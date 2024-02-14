@@ -14,7 +14,7 @@ import Autodocodec.OpenAPI ()
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Data (Data)
-import Data.HashMap.Strict qualified as H
+import Data.HashMap.Strict qualified as HashMap
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
@@ -37,7 +37,7 @@ instance HasCodec RawRequest where
 -- | The resolved query response provided by the 'POST /raw'
 -- endpoint encoded as a list of JSON objects.
 data RawResponse = RawResponse
-  { _rrRows :: [H.HashMap Text Value]
+  { _rrRows :: [HashMap.HashMap Text Value]
   }
   deriving stock (Eq, Ord, Show)
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec RawResponse

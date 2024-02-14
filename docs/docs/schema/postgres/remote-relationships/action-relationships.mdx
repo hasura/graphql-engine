@@ -21,17 +21,17 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 Action relationships allow you to join data across tables and actions. Once you create relationships between types from
 your database and types created from actions, you can then "join" them by running GraphQL queries.
 
-[Actions](/actions/index.mdx) are a way to extend Hasura’s schema with custom business logic using custom queries and
+[Actions](/actions/overview.mdx) are a way to extend Hasura’s schema with custom business logic using custom queries and
 mutations. The resolvers for these custom fields are written in REST endpoints. They are especially useful for setting
 up serverless functions as resolvers.
 
 ## Create an action relationship
 
-### Step 0: Create an action
+### Step 1: Create an action
 
 Create an action either [from scratch](/actions/create.mdx) or [derived from an existing mutation](/actions/derive.mdx).
 
-### Step 1: Define and create the relationship
+### Step 2: Define and create the relationship
 
 The following values can be defined for an action relationship:
 
@@ -134,7 +134,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 2: Explore with GraphiQL
+### Step 3: Explore with GraphiQL
 
 In the `API` tab, test out your action relationship.
 

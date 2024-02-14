@@ -114,7 +114,7 @@ class Setup():
 
   def render_define(self, backend):
     return f"""-- original file: {self.original_file}
-{self.setup_name}_{backend} :: Yaml.Value
+{self.setup_name}_{backend} :: J.Value
 {self.setup_name}_{backend} =
   [interpolateYaml|
 {textwrap.indent(self.value, 4*' ')}
@@ -177,7 +177,7 @@ it "{self.desc}" \\testEnvironment -> do"""
     assertion = ""
     if self.expected_response is not None:
       expected = f"""
-  let expected :: Yaml.Value
+  let expected :: J.Value
       expected =
         [interpolateYaml|
 {textwrap.indent(dump_to_string(self.expected_response), '          ')}
@@ -189,7 +189,7 @@ it "{self.desc}" \\testEnvironment -> do"""
 
     return f"""{head}
 {expected}
-  let actual :: IO Yaml.Value
+  let actual :: IO J.Value
       actual =
 {textwrap.indent(actual, '        ')}
 
@@ -227,7 +227,7 @@ def write_tests_to_port():
 -- Please avoid editing this file manually.
 module Test.PortedFromPytest.{hspecified_name} (spec) where
 
-import Data.Aeson qualified as Yaml
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 """ + str.join('\n', [
         f"import Harness.Backend.{backend} qualified as {backend}"
@@ -275,7 +275,7 @@ spec = Fixture.runSingleSetup (NE.fromList [""" + str.join(', ', ["fixture_" + b
 
 tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
-  let shouldBe :: IO Yaml.Value -> Yaml.Value -> IO ()
+  let shouldBe :: IO J.Value -> J.Value -> IO ()
       shouldBe = shouldReturnYaml opts
 """)
 

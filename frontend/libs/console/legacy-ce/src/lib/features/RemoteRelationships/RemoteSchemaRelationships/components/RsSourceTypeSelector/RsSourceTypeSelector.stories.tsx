@@ -1,7 +1,7 @@
 import React from 'react';
 import * as z from 'zod';
 import { action } from '@storybook/addon-actions';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
 import {
@@ -35,14 +35,15 @@ export default {
   ],
 } as Meta;
 
-export const Primary: Story<RsSourceTypeSelectorProps> = args => (
-  <RsSourceTypeSelector {...args} />
-);
-Primary.args = {
-  types: ['country', 'continent', 'language', 'state'],
-  sourceTypeKey: 'type_name',
-};
-Primary.parameters = {
-  // Disable chromatic snapshot for playground stories
-  chromatic: { disableSnapshot: true },
+export const Primary: StoryObj<RsSourceTypeSelectorProps> = {
+  args: {
+    types: ['country', 'continent', 'language', 'state'],
+    sourceTypeKey: 'type_name',
+    nameTypeKey: 'name',
+  },
+
+  parameters: {
+    // Disable chromatic snapshot for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 };

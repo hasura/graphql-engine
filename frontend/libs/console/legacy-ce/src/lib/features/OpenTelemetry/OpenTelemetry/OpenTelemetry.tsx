@@ -5,12 +5,16 @@ import { defaultValues } from './components/Form/schema';
 
 import { Form } from './components/Form/Form';
 import { Header } from './components/Header/Header';
+import { EELiteAccessStatus, EETrialCard } from '../../EETrial';
 
 interface OpenTelemetryProps {
   skeletonMode: boolean;
   isFirstTimeSetup: boolean;
   metadataFormValues: FormValues;
+  withoutLicense?: boolean;
   setOpenTelemetry: (formValues: FormValues) => Promise<void>;
+  eeAccess?: EELiteAccessStatus;
+  loading?: boolean;
 }
 
 /**
@@ -21,7 +25,10 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
     skeletonMode,
     isFirstTimeSetup,
     metadataFormValues,
+    withoutLicense = false,
     setOpenTelemetry,
+    eeAccess,
+    loading,
   } = props;
 
   const formValues = metadataFormValues || defaultValues;
@@ -30,6 +37,8 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
 
   if (!metadataFormValues || !metadataFormValues.enabled)
     headerMode = 'disabled';
+
+  if (withoutLicense) headerMode = 'disabled';
 
   if (skeletonMode) headerMode = 'skeleton';
 
@@ -45,15 +54,33 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
         */}
       <Header mode={headerMode} />
 
-      <div>
-        {/* This div avoid space-y-md separating too much the toggle and the form */}
-        <Form
-          onSubmit={setOpenTelemetry}
-          defaultValues={formValues}
-          skeletonMode={skeletonMode}
-          firstTimeSetup={isFirstTimeSetup}
+      {withoutLicense ? (
+        <EETrialCard
+          cardTitle="Gain end-to-end visibility and performance insights with OpenTelemetry exports"
+          id="open-telemetry"
+          cardText={
+            <span>
+              Collect, aggregate and export metrics data from your API to your
+              APM provider to give you a view of your systems performance to
+              help troubleshoot issues.
+            </span>
+          }
+          buttonLabel="Enable Enterprise"
+          eeAccess={eeAccess}
+          horizontal
         />
-      </div>
+      ) : (
+        <div>
+          {/* This div avoid space-y-md separating too much the toggle and the form */}
+          <Form
+            onSubmit={setOpenTelemetry}
+            defaultValues={formValues}
+            skeletonMode={skeletonMode}
+            firstTimeSetup={isFirstTimeSetup}
+            loading={loading}
+          />
+        </div>
+      )}
     </div>
   );
 }

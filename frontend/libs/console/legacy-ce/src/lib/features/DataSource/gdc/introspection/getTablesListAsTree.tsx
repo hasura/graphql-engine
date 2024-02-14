@@ -5,6 +5,7 @@ import { GDCTable } from '..';
 import { exportMetadata } from '../../api';
 import { GetTablesListAsTreeProps } from '../../types';
 import { convertToTreeData } from './utils';
+// import { QualifiedFunction } from '../../../hasura-metadata-types';
 
 export const getTablesListAsTree = async ({
   dataSourceName,
@@ -24,6 +25,11 @@ export const getTablesListAsTree = async ({
     return table.table as GDCTable;
   });
 
+  const functions = (source?.functions ?? []).map(f => {
+    if (typeof f.function === 'string') return [f.function] as GDCTable;
+    return f.function as GDCTable;
+  });
+
   return {
     title: (
       <div className="inline-block">
@@ -36,7 +42,12 @@ export const getTablesListAsTree = async ({
       </div>
     ),
     key: JSON.stringify({ database: source.name }),
-    icon: <FaDatabase />,
-    children: tables.length ? convertToTreeData(tables, [], source.name) : [],
+    icon: <FaDatabase size="16px" />,
+    children: tables.length
+      ? [
+          ...convertToTreeData(tables, [], source.name),
+          ...convertToTreeData(functions, [], source.name, 'function'),
+        ]
+      : [],
   };
 };

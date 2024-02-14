@@ -3,7 +3,7 @@
 module Test.Specs.QuerySpec.AggregatesSpec (spec) where
 
 import Control.Arrow ((>>>))
-import Control.Lens (ix, (%~), (&), (.~), (?~), (^?), _Just)
+import Control.Lens (ix, (%~), (&), (.~), (?~), (^.), (^?), _Just)
 import Control.Monad (when)
 import Data.Aeson (Value (..))
 import Data.HashMap.Strict (HashMap)
@@ -14,7 +14,9 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import Data.Ord (Down (..))
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
@@ -52,12 +54,24 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
 
     it "counts all rows, after applying pagination" $ do
       let offset = 400
-      let limit = 20
+      let aggregatesLimit = 20
       let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qOffset ?~ offset)
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qAggregatesLimit ?~ aggregatesLimit >>> qOffset ?~ offset)
       response <- queryGuarded queryRequest
 
-      let invoiceCount = length . take limit $ drop offset _tdInvoicesRows
+      let invoiceCount = length . take aggregatesLimit $ drop offset _tdInvoicesRows
+      let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
+
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
+
+    it "limit does not limit the count aggregation" $ do
+      let limit = 20
+      let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery . qLimit ?~ limit
+      response <- queryGuarded queryRequest
+
+      let invoiceCount = length _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -65,7 +79,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
 
   describe "Column Count" $ do
     it "counts all rows with non-null columns" $ do
-      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") False)]
+      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing False)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- queryGuarded queryRequest
 
@@ -76,16 +90,16 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with non-null values in a column, after applying pagination and filtering" $ do
-      let limit = 50
+      let aggregatesLimit = 50
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (Number 380) invoiceIdScalarType)
-      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") False)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where')
+      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing False)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qAggregatesLimit ?~ aggregatesLimit >>> qWhere ?~ where')
       response <- queryGuarded queryRequest
 
       let invoiceCount =
             _tdInvoicesRows
               & filter ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>> (>= Just 380))
-              & take limit
+              & take aggregatesLimit
               & mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString))
               & length
 
@@ -95,7 +109,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with distinct non-null values in a column" $ do
-      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
+      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing True)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- queryGuarded queryRequest
 
@@ -106,23 +120,39 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       Data.responseRows response `rowsShouldBe` []
 
     it "can count all rows with distinct non-null values in a column, after applying pagination and filtering" $ do
-      let limit = 20
+      let aggregatesLimit = 20
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (Number 380) invoiceIdScalarType)
       -- It is important to add an explicit order by for this query as different database engines will order implicitly resulting in incorrect results
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "InvoiceId" Ascending :| []
-      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
+      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing True)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qAggregatesLimit ?~ aggregatesLimit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- queryGuarded queryRequest
 
       let billingStateCount =
             _tdInvoicesRows
               & filter ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>> (>= Just 380))
-              & take limit
+              & take aggregatesLimit
               & mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString))
               & HashSet.fromList
               & length
 
       let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral billingStateCount)]
+
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
+
+    it "limit does not limit the column count aggregation" $ do
+      let limit = 50
+      let aggregates = Data.mkFieldsMap [("count_cols", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing False)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery . qLimit ?~ limit
+      response <- queryGuarded queryRequest
+
+      let invoiceCount =
+            _tdInvoicesRows
+              & mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString))
+              & length
+
+      let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
       Data.responseRows response `rowsShouldBe` []
@@ -140,18 +170,18 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       Data.responseRows response `rowsShouldBe` []
 
     it "can get the max total from all rows, after applying pagination, filtering and ordering" $ do
-      let limit = 20
+      let aggregatesLimit = 20
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" billingCountryScalarType) (Data.scalarValueComparison (String "USA") billingCountryScalarType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingPostalCode" Descending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
       let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qAggregatesLimit ?~ aggregatesLimit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- queryGuarded queryRequest
 
       let maxTotal =
             _tdInvoicesRows
               & filter ((^? Data.field "BillingCountry" . Data._ColumnFieldString) >>> (== Just "USA"))
               & sortOn (Down . (^? Data.field "BillingPostalCode"))
-              & take limit
+              & take aggregatesLimit
               & mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber))
               & maximum
 
@@ -190,12 +220,28 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
       Data.responseRows response `rowsShouldBe` []
 
+    it "limit does not limit the single column function aggregation" $ do
+      let limit = 20
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery . qLimit ?~ limit
+      response <- queryGuarded queryRequest
+
+      let maxTotal =
+            _tdInvoicesRows
+              & mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber))
+              & maximum
+
+      let expectedAggregates = Data.mkFieldsMap [("max", Number maxTotal)]
+
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` []
+
   describe "Multiple Aggregates and Returning Rows" $ do
     it "can get the max total from all rows, the count and the distinct count, simultaneously" $ do
       let aggregates =
             Data.mkFieldsMap
               [ ("count", StarCount),
-                ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True),
+                ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") Nothing True),
                 ("maxTotal", singleColumnAggregateMax (_tdColumnName "Total") invoiceTotalScalarType)
               ]
       let queryRequest = invoicesQueryRequest aggregates
@@ -246,7 +292,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" billingCountryScalarType) (Data.scalarValueComparison (String "Canada") billingCountryScalarType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingAddress" Ascending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
       let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total") invoiceTotalScalarType)]
-      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ limit >>> qAggregatesLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- queryGuarded queryRequest
 
       let invoiceRows =
@@ -261,7 +307,57 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
               & aggregate (Number . minimum)
 
       let expectedAggregates = Data.mkFieldsMap [("min", maxTotal)]
-      let expectedRows = Data.filterColumnsByQueryFields (_qrQuery queryRequest) <$> invoiceRows
+      let expectedRows = Data.filterColumnsByQueryFields (queryRequest ^. qrQuery) <$> invoiceRows
+
+      Data.responseRows response `rowsShouldBe` expectedRows
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+
+    it "limit limits the number of returned rows but not the rows considered by the aggregate function" $ do
+      let limit = 20
+      let fields = Data.mkFieldsMap [("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId")]
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "InvoiceId" Ascending :| []
+      let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ limit >>> qOrderBy ?~ orderBy)
+      response <- queryGuarded queryRequest
+
+      let invoiceCount = length _tdInvoicesRows
+      let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
+      let expectedRows = take limit $ Data.filterColumnsByQueryFields (queryRequest ^. qrQuery) <$> _tdInvoicesRows
+
+      Data.responseAggregates response `jsonShouldBe` expectedAggregates
+      Data.responseRows response `rowsShouldBe` expectedRows
+
+    it "aggregates limit is applied separately to row limit" $ do
+      let aggregatesLimit = 30
+      let limit = 20
+      let fields =
+            Data.mkFieldsMap
+              [ ("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"),
+                ("BillingCountry", _tdColumnField _tdInvoicesTableName "BillingCountry")
+              ]
+      let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" billingCountryScalarType) (Data.scalarValueComparison (String "Canada") billingCountryScalarType)
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingAddress" Ascending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
+      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total") invoiceTotalScalarType)]
+      let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qAggregatesLimit ?~ aggregatesLimit >>> qLimit ?~ limit >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
+      response <- queryGuarded queryRequest
+
+      let aggregateLimitedInvoiceRows =
+            _tdInvoicesRows
+              & filter ((^? Data.field "BillingCountry" . Data._ColumnFieldString) >>> (== Just "Canada"))
+              & sortOn (^? Data.field "BillingAddress")
+              & take aggregatesLimit
+
+      -- Limit is smaller than aggregatesLimit, so we can just take from the aggregateLimitedInvoiceRows
+      let invoiceRows = take limit aggregateLimitedInvoiceRows
+
+      let maxTotal =
+            aggregateLimitedInvoiceRows
+              & take limit
+              & mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber))
+              & aggregate (Number . minimum)
+
+      let expectedAggregates = Data.mkFieldsMap [("min", maxTotal)]
+      let expectedRows = Data.filterColumnsByQueryFields (queryRequest ^. qrQuery) <$> invoiceRows
 
       Data.responseRows response `rowsShouldBe` expectedRows
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -387,8 +483,8 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
   describe "Aggregates over ordered and paginated tables" $ do
     it "orders by a column" $ do
       let offset = 2
-      let limit = 5
-      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Descending :| []
+      let aggregatesLimit = 5
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Ascending :| []
       let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
       let queryRequest =
             albumsQueryRequest
@@ -396,15 +492,15 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                 %~ ( qAggregates ?~ aggregates
                        >>> qOrderBy ?~ orderBy
                        >>> qOffset ?~ offset
-                       >>> qLimit ?~ limit
+                       >>> qAggregatesLimit ?~ aggregatesLimit
                    )
       response <- queryGuarded queryRequest
 
       let names =
             _tdAlbumsRows
-              & sortOn (Down . (^? Data.field "Title"))
+              & sortOn ((^? Data.field "Title"))
               & drop offset
-              & take limit
+              & take aggregatesLimit
               & mapMaybe (^? Data.field "Title" . Data._ColumnFieldString)
 
       let expectedAggregates = Data.mkFieldsMap [("max", aggregate (String . maximum) names)]
@@ -415,7 +511,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
     when (isJust relationshipCapabilities) . describe "involving related tables in the ordering" $ do
       it "orders by a column" $ do
         let offset = 10
-        let limit = 50
+        let aggregatesLimit = 50
         let orderByRelations = HashMap.fromList [(_tdArtistRelationshipName, OrderByRelation Nothing mempty)]
         let orderBy =
               OrderBy orderByRelations $
@@ -426,12 +522,12 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
         let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
         let queryRequest =
               albumsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery
                   %~ ( qAggregates ?~ aggregates
                          >>> qOrderBy ?~ orderBy
                          >>> qOffset ?~ offset
-                         >>> qLimit ?~ limit
+                         >>> qAggregatesLimit ?~ aggregatesLimit
                      )
         response <- queryGuarded queryRequest
 
@@ -442,7 +538,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
               _tdAlbumsRows
                 & sortOn (\album -> getRelatedArtist album ^? _Just . Data.field "Name")
                 & drop offset
-                & take limit
+                & take aggregatesLimit
                 & mapMaybe (^? Data.field "Title" . Data._ColumnFieldString)
 
         let expectedAggregates = Data.mkFieldsMap [("max", aggregate (String . maximum) names)]
@@ -452,7 +548,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
 
       it "orders by an aggregate" $ do
         let offset = 15
-        let limit = 10
+        let aggregatesLimit = 10
         let orderByRelations = HashMap.fromList [(_tdTracksRelationshipName, OrderByRelation Nothing mempty)]
         let orderBy =
               OrderBy orderByRelations $
@@ -463,12 +559,12 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
         let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Title") albumTitleScalarType)]
         let queryRequest =
               albumsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery
                   %~ ( qAggregates ?~ aggregates
                          >>> qOrderBy ?~ orderBy
                          >>> qOffset ?~ offset
-                         >>> qLimit ?~ limit
+                         >>> qAggregatesLimit ?~ aggregatesLimit
                      )
         response <- queryGuarded queryRequest
 
@@ -480,7 +576,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
               _tdAlbumsRows
                 & sortOn (\album -> (Down $ getRelatedTracksCount album, Down $ album ^? Data.field "Title" . Data._ColumnFieldString))
                 & drop offset
-                & take limit
+                & take aggregatesLimit
                 & mapMaybe (^? Data.field "Title" . Data._ColumnFieldString)
 
         let expectedAggregates = Data.mkFieldsMap [("max", aggregate (String . maximum) names)]
@@ -501,7 +597,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
           artistOrderBy = OrderBy mempty $ _tdOrderByColumn [] "ArtistId" Ascending :| []
           artistQuery = Data.emptyQuery & qFields ?~ artistFields & qOrderBy ?~ artistOrderBy
           artistsTableRelationships = Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
-       in QueryRequest _tdArtistsTableName [artistsTableRelationships] artistQuery Nothing
+       in TableQueryRequest _tdArtistsTableName (Set.fromList [API.RTable artistsTableRelationships]) mempty mempty artistQuery Nothing
 
     -- This query is basically what would be generated by this complex HGE GraphQL query
     -- @
@@ -549,7 +645,7 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
           tracksAggregates = Data.mkFieldsMap [("aggregate_count", StarCount)]
           tracksWhere = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "Milliseconds" millisecondsScalarType) (Data.scalarValueComparison (Number 300000) millisecondsScalarType)
           tracksOrderBy = OrderBy mempty $ _tdOrderByColumn [] "Name" Descending :| []
-          tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
+          tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
           albumsFields =
             Data.mkFieldsMap
               [ ("nodes_Title", _tdColumnField _tdAlbumsTableName "Title"),
@@ -563,47 +659,51 @@ spec TestData {..} relationshipCapabilities = describe "Aggregate Queries" $ do
                 ("Albums_aggregate", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           artistWhere =
-            And
+            Data.mkAndExpr
               [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "A") artistNameScalarType),
                 ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "B") artistNameScalarType)
               ]
           artistOrderBy = OrderBy mempty $ _tdOrderByColumn [] "Name" Descending :| []
-          artistQuery = Query (Just artistFields) Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
-       in QueryRequest
+          artistQuery = Query (Just artistFields) Nothing Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
+       in TableQueryRequest
             _tdArtistsTableName
-            [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
-              Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
-              Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName, _tdMediaTypeRelationshipName] _tdTracksTableRelationships
-            ]
+            ( Set.fromList
+                [ API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
+                  API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+                  API.RTable $ Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName, _tdMediaTypeRelationshipName] _tdTracksTableRelationships
+                ]
+            )
+            mempty
+            mempty
             artistQuery
             Nothing
 
     artistsQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
     artistsQueryRequest aggregates =
       let query = Data.emptyQuery & qAggregates ?~ aggregates
-       in QueryRequest _tdArtistsTableName [] query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     invoicesQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
     invoicesQueryRequest aggregates =
       let query = Data.emptyQuery & qAggregates ?~ aggregates
-       in QueryRequest _tdInvoicesTableName [] query Nothing
+       in TableQueryRequest _tdInvoicesTableName mempty mempty mempty query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      QueryRequest _tdAlbumsTableName [] Data.emptyQuery Nothing
+      TableQueryRequest _tdAlbumsTableName mempty mempty mempty Data.emptyQuery Nothing
 
     aggregate :: (NonEmpty a -> Value) -> [a] -> Value
     aggregate aggFn values =
       maybe Null aggFn $ NonEmpty.nonEmpty values
 
     singleColumnAggregateMax :: ColumnName -> ScalarType -> Aggregate
-    singleColumnAggregateMax columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType
+    singleColumnAggregateMax columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName Nothing resultType
 
     singleColumnAggregateMin :: ColumnName -> ScalarType -> Aggregate
-    singleColumnAggregateMin columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|]) columnName resultType
+    singleColumnAggregateMin columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|]) columnName Nothing resultType
 
     singleColumnAggregateSum :: ColumnName -> ScalarType -> Aggregate
-    singleColumnAggregateSum columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) columnName resultType
+    singleColumnAggregateSum columnName resultType = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) columnName Nothing resultType
 
     billingCityScalarType = _tdFindColumnScalarType _tdInvoicesTableName "BillingCity"
     billingCountryScalarType = _tdFindColumnScalarType _tdInvoicesTableName "BillingCountry"

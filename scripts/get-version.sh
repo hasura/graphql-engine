@@ -7,9 +7,11 @@ set -o pipefail
 # Outputs a version name for the hasura servers and their components, given the
 # checked out state of the repo:
 #  - if HEAD has a tag, return that
+#  - if VERSION_FALLBACK is set, return that
 #  - else return a combination of branch and SHA hash
 #
-# In both of above we strip any non alpha-numeric, excluding: ._-
+# In all of the above, we strip any characters invalid in a Docker image name
+# (everything except alphanumeric characters, '.', '_', and '-').
 #
 # This is called in a compile time macro to bake the version into the server
 # binaries, and also at various points during CI (and must agree every time).
@@ -21,11 +23,10 @@ set -o pipefail
 # returned by this script, to fail. SERVER_TEST_MODE env var is used to
 # force the version to be set to the value in /build/_server_output/version.txt.
 # This is done only for test_oss_server_pg_* CI jobs in server test mode.
-SERVER_TEST_MODE=${SERVER_TEST_MODE:-false}
-if [[ "$SERVER_TEST_MODE" == "true" ]]; then
-  VERSION="$(cat /build/_server_output/version.txt)"
-  echo "$VERSION"
-  exit 0
+#
+if [[ "${SERVER_TEST_MODE:-}" == 'true' ]]; then
+  cat /build/_server_output/version.txt
+  exit
 fi
 
 GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -34,6 +35,8 @@ GIT_SHA="$(git rev-parse --short=7 HEAD)"
 # result of `git tag` if any:
 if GIT_TAG_EXACT="$(git describe --tags --exact-match --dirty 2>/dev/null)"; then
   VERSION="${GIT_TAG_EXACT}"
+elif [[ "${VERSION_FALLBACK+is set}" ]]; then
+  VERSION="$VERSION_FALLBACK"
 else
   GIT_DIRTY=$(test -n "$(git status --porcelain)" && echo "-dirty" || echo '')
   # IMPORTANT: SHA hash needs to come first so we get a unique version string,
@@ -42,5 +45,5 @@ else
 fi
 
 VERSION="$(echo "$VERSION" | tr -cd '[[:alnum:]]._-')"
-# Truncate to 50 chars. See: https://github.com/hasura/graphql-engine-mono/pull/4183
+# Truncate to 50 chars, to ensure it fits in a Docker image name.
 echo "${VERSION:0:50}"

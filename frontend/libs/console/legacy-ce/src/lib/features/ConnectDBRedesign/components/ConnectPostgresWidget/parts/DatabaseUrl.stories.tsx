@@ -1,17 +1,18 @@
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
-import { DatabaseUrl } from './DatabaseUrl';
 import { databaseUrlSchema } from '../schema';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+
+import { DatabaseUrl } from './DatabaseUrl';
 
 export default {
   component: DatabaseUrl,
-} as ComponentMeta<typeof DatabaseUrl>;
+  decorators: [ReactQueryDecorator()],
+} as Meta<typeof DatabaseUrl>;
 
-export const DatabaseUrlDefaultView: ComponentStory<
-  typeof DatabaseUrl
-> = () => (
+export const DatabaseUrlDefaultView: StoryFn<typeof DatabaseUrl> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
     schema={z.object({

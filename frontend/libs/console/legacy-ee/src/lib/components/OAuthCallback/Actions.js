@@ -1,40 +1,42 @@
 import requestAction from '../../utils/requestAction';
 import { getKeyFromLS } from '../Login/localStorage';
 
-import { getOAuthRedirectUrl, getTokenUrl } from '../Login/utils';
+import { getOAuthRedirectUrl } from '../Login/utils';
 
-import globals from '../../Globals';
-
-const { hasuraClientID, hasuraOAuthScopes } = globals;
-
-export const retrieveIdToken = code => {
+export const retrieveIdToken = (provider, code) => {
   return dispatch => {
-    const formData = new FormData();
-    formData.append('code', code);
-    formData.append('client_id', hasuraClientID);
-    formData.append('grant_type', 'authorization_code');
-    formData.append('code_verifier', getKeyFromLS('code_verifier'));
-    formData.append('redirect_uri', getOAuthRedirectUrl());
     const options = {
       method: 'POST',
-      body: formData,
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: provider.client_id,
+        code_verifier: getKeyFromLS('code_verifier'),
+        code: code,
+        redirect_uri: getOAuthRedirectUrl(),
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     };
-    return dispatch(requestAction(getTokenUrl(), options));
+    return dispatch(requestAction(provider.request_token_url, options));
   };
 };
 
-export const retrieveByRefreshToken = refreshToken => {
+export const retrieveByRefreshToken = (provider, refreshToken) => {
   return dispatch => {
-    const formData = new FormData();
-    formData.append('refresh_token', refreshToken);
-    formData.append('client_id', hasuraClientID);
-    formData.append('grant_type', 'refresh_token');
-    formData.append('scopes', hasuraOAuthScopes);
-    formData.append('redirect_uri', getOAuthRedirectUrl());
     const options = {
       method: 'POST',
-      body: formData,
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: provider.client_id,
+        refresh_token: refreshToken,
+        redirect_uri: getOAuthRedirectUrl(),
+        scope: provider.scope,
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     };
-    return dispatch(requestAction(getTokenUrl(), options));
+    return dispatch(requestAction(provider.request_token_url, options));
   };
 };

@@ -43,7 +43,7 @@ selectD k (Dependency dk a) = Dependency (DependencyChild k dk) (select k a)
 selectKeyD :: (Select a, Selector a ~ ConstS k v) => k -> Dependency a -> Dependency v
 selectKeyD = selectD . ConstS
 
-selectMaybeD :: Select a => Selector a b -> Dependency (Maybe a) -> Dependency (Maybe b)
+selectMaybeD :: (Select a) => Selector a b -> Dependency (Maybe a) -> Dependency (Maybe b)
 selectMaybeD = selectD . FMapS
 
 -- | Tracks whether a 'Dependency' is a “root” dependency created by 'newDependency' or a “child”
@@ -92,7 +92,7 @@ recordAccess depKey !access (Accesses accesses) = case depKey of
   DependencyChild selector parentKey ->
     recordAccess parentKey (AccessedParts $ DM.singleton selector access) (Accesses accesses)
 
-unchanged :: (Given Accesses => Eq a) => Accesses -> a -> a -> Bool
+unchanged :: ((Given Accesses) => Eq a) => Accesses -> a -> a -> Bool
 unchanged accesses a b = give accesses (a == b)
 
 -- | Records the accesses made within a single 'Dependency' and its children. The 'Semigroup'
@@ -102,8 +102,8 @@ unchanged accesses a b = give accesses (a == b)
 --     accessed.
 --   * 'AccessedParts' records a set of accesses for individual parts of a dependency.
 data Access a where
-  AccessedAll :: Eq a => Access a
-  AccessedParts :: Select a => DM.DMap (Selector a) Access -> Access a
+  AccessedAll :: (Eq a) => Access a
+  AccessedParts :: (Select a) => DM.DMap (Selector a) Access -> Access a
 
 instance Semigroup (Access a) where
   AccessedAll <> _ = AccessedAll

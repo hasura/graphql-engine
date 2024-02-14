@@ -117,6 +117,7 @@ class Common extends React.Component {
               data-test="remote-schema-timeout-conf"
               pattern="^\d+$"
               title="Only non negative integers are allowed"
+              name="timeout_sec"
             />
           </label>
         </React.Fragment>
@@ -247,6 +248,7 @@ class Common extends React.Component {
             placeholder="Comment"
             value={comment}
             data-key="comment"
+            name="comment"
             onChange={this.handleInputChange.bind(this)}
             disabled={isDisabled}
             data-test="remote-schema-comment"

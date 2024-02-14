@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Expression
   ( Expression (..),
@@ -8,20 +9,29 @@ module Hasura.Backends.DataConnector.API.V0.Expression
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
     ComparisonColumn (..),
+    ccPath,
+    ccName,
+    ccColumnType,
+    ccRedactionExpression,
     ColumnPath (..),
     ComparisonValue (..),
+    TargetRedactionExpressions (..),
+    RedactionExpressionName (..),
+    RedactionExpression (..),
   )
 where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Control.Lens ((^.), _1, _2, _3, _4)
-import Data.Aeson (FromJSON, ToJSON, Value)
+import Control.Lens (makeLenses, (^.), _1, _2, _3, _4)
+import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, Value)
 import Data.Data (Data)
+import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Tuple.Extra
 import GHC.Generics (Generic)
@@ -29,6 +39,7 @@ import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Target qualified as API.V0
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -119,9 +130,9 @@ instance HasCodec UnaryComparisonOperator where
 -- | A serializable representation of query filter expressions.
 data Expression
   = -- | A logical AND fold
-    And [Expression]
+    And (Set Expression)
   | -- | A logical OR fold
-    Or [Expression]
+    Or (Set Expression)
   | -- | A logical NOT function
     Not Expression
   | -- | There must exist a row in the table specified by 'ExistsInTable' that
@@ -243,9 +254,12 @@ data ComparisonColumn = ComparisonColumn
   { -- | The path to the table that contains the specified column.
     _ccPath :: ColumnPath,
     -- | The name of the column
-    _ccName :: API.V0.ColumnName,
+    _ccName :: API.V0.ColumnSelector,
     -- | The scalar type of the column
-    _ccColumnType :: API.V0.ScalarType
+    _ccColumnType :: API.V0.ScalarType,
+    -- | If present, the name of the redaction expression to evaluate.
+    -- If the expression is false, the column value must be nulled out before being compared to.
+    _ccRedactionExpression :: Maybe RedactionExpressionName
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonColumn
@@ -258,6 +272,7 @@ instance HasCodec ComparisonColumn where
         <$> optionalFieldWithOmittedDefault "path" CurrentTable "The path to the table that contains the specified column. Missing or empty array means the current table. [\"$\"] means the query table. No other values are supported at this time." .= _ccPath
         <*> requiredField "name" "The name of the column" .= _ccName
         <*> requiredField "column_type" "The scalar type of the column" .= _ccColumnType
+        <*> optionalFieldOrNull "redaction_expression" "If present, the name of the redaction expression to evaluate. If the expression is false, the column value must be nulled out before being compared to." .= _ccRedactionExpression
 
 -- | Describes what table a column is located on. This may either be the "current" table
 -- (which would be query table, or the table specified by the closest ancestor 'Exists'
@@ -313,3 +328,37 @@ instance HasCodec ComparisonValue where
           [ ("column", ("AnotherColumnComparison", mapToDecoder AnotherColumnComparison columnCodec)),
             ("scalar", ("ScalarValueComparison", mapToDecoder ScalarValueComparison objectCodec))
           ]
+
+data TargetRedactionExpressions = TargetRedactionExpressions
+  { _treTarget :: API.V0.TargetName,
+    _treExpressions :: HashMap RedactionExpressionName RedactionExpression
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TargetRedactionExpressions
+
+instance HasCodec TargetRedactionExpressions where
+  codec =
+    object "TargetRedactionExpressions" $
+      TargetRedactionExpressions
+        <$> requiredField "target" "The target entity with whom the redaction expressions are to be used with" .= _treTarget
+        <*> requiredField "expressions" "The named redaction expressions associated with the target" .= _treExpressions
+
+newtype RedactionExpressionName = RedactionExpressionName {unRedactionExpressionName :: Text}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving newtype (ToJSONKey, FromJSONKey)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RedactionExpressionName
+
+instance HasCodec RedactionExpressionName where
+  codec = named "RedactionExpressionName" $ dimapCodec RedactionExpressionName unRedactionExpressionName textCodec
+
+newtype RedactionExpression = RedactionExpression {unRedactionExpression :: Expression}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RedactionExpression
+
+instance HasCodec RedactionExpression where
+  codec = dimapCodec RedactionExpression unRedactionExpression codec
+
+$(makeLenses 'ComparisonColumn)

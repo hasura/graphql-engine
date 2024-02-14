@@ -10,8 +10,8 @@ import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName, genColumnType, genColumnValueGenerationStrategy)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genTargetRedactionExpressions)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
@@ -28,32 +28,53 @@ spec :: Spec
 spec = do
   describe "MutationRequest" $ do
     testToFromJSONToSchema
-      (MutationRequest [] [] [])
+      (MutationRequest [] [] [] [])
       [aesonQQ|
-        { "table_relationships": [],
+        { "relationships": [],
           "insert_schema": [],
           "operations": [] }
       |]
     jsonOpenApiProperties genMutationRequest
 
   describe "TableInsertSchema" $ do
-    testToFromJSONToSchema
-      (TableInsertSchema (TableName ["my_table"]) [])
-      [aesonQQ|
-        { "table": ["my_table"],
-          "fields": {} }
-      |]
+    describe "minimal" $ do
+      testToFromJSONToSchema
+        (TableInsertSchema (TableName ["my_table"]) Nothing [])
+        [aesonQQ|
+          { "table": ["my_table"],
+            "fields": {} }
+        |]
+    describe "non-minimal" $ do
+      testToFromJSONToSchema
+        (TableInsertSchema (TableName ["my_table"]) (Just $ ColumnName "pk" :| []) [])
+        [aesonQQ|
+          { "table": ["my_table"],
+            "primary_key": ["pk"],
+            "fields": {} }
+        |]
     jsonOpenApiProperties genTableInsertSchema
 
   describe "InsertFieldSchema" $ do
     describe "ColumnInsert" $ do
-      testToFromJSONToSchema
-        (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number")))
-        [aesonQQ|
-          { "type": "column",
-            "column": "my_column",
-            "column_type": "number" }
-        |]
+      describe "minimal" $ do
+        testToFromJSONToSchema
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ColumnTypeScalar $ ScalarType "number") True Nothing))
+          [aesonQQ|
+            { "type": "column",
+              "column": "my_column",
+              "column_type": "number",
+              "nullable": true }
+          |]
+      describe "non-minimal" $ do
+        testToFromJSONToSchema
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ColumnTypeScalar $ ScalarType "number") True (Just UniqueIdentifier)))
+          [aesonQQ|
+            { "type": "column",
+              "column": "my_column",
+              "column_type": "number",
+              "nullable": true,
+              "value_generated": { "type": "unique_identifier" } }
+          |]
     describe "ObjectRelationInsert" $ do
       testToFromJSONToSchema
         (ObjectRelationInsert (ObjectRelationInsertSchema (RelationshipName "my_relation") BeforeParent))
@@ -72,7 +93,7 @@ spec = do
     jsonOpenApiProperties genInsertFieldSchema
 
   describe "MutationOperation" $ do
-    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string"))]
+    let returningFields = [(FieldName "field", ColumnField (ColumnName "my_column") (ScalarType "string") (Just $ RedactionExpressionName "RedactionExp1"))]
     describe "InsertOperation" $ do
       testToFromJSONToSchema
         (InsertOperation (InsertMutationOperation (TableName ["my_table"]) [] (Just $ And []) returningFields))
@@ -85,7 +106,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -103,7 +125,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -119,7 +142,8 @@ spec = do
               "field": {
                 "type": "column",
                 "column": "my_column",
-                "column_type": "string"
+                "column_type": "string",
+                "redaction_expression": "RedactionExp1"
               }
             }
           }
@@ -136,8 +160,8 @@ spec = do
 
   describe "InsertFieldValue" $ do
     describe "ColumnInsertFieldValue" $ do
-      describe "Object" $
-        testToFromJSONToSchema
+      describe "Object"
+        $ testToFromJSONToSchema
           (mkColumnInsertFieldValue $ Object [("property", "Wow")])
           [aesonQQ| { "property": "Wow" } |]
       describe "String" $ do
@@ -167,15 +191,15 @@ spec = do
     jsonOpenApiProperties genInsertFieldValue
 
   describe "ObjectRelationInsertionOrder" $ do
-    describe "BeforeParent" $
-      testToFromJSONToSchema BeforeParent [aesonQQ|"before_parent"|]
-    describe "AfterParent" $
-      testToFromJSONToSchema AfterParent [aesonQQ|"after_parent"|]
+    describe "BeforeParent"
+      $ testToFromJSONToSchema BeforeParent [aesonQQ|"before_parent"|]
+    describe "AfterParent"
+      $ testToFromJSONToSchema AfterParent [aesonQQ|"after_parent"|]
     jsonOpenApiProperties genObjectRelationInsertionOrder
 
   describe "RowUpdate" $ do
-    describe "SetColumnRowUpdate" $
-      testToFromJSONToSchema
+    describe "SetColumnRowUpdate"
+      $ testToFromJSONToSchema
         (SetColumn $ RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "set",
@@ -183,8 +207,8 @@ spec = do
               "value": 10,
               "value_type": "number" }
           |]
-    describe "CustomUpdateColumnOperator" $
-      testToFromJSONToSchema
+    describe "CustomUpdateColumnOperator"
+      $ testToFromJSONToSchema
         (CustomUpdateColumnOperator (UpdateColumnOperatorName [G.name|increment|]) (RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number")))
         [aesonQQ|
             { "type": "custom_operator",
@@ -228,17 +252,19 @@ spec = do
 genMutationRequest :: Gen MutationRequest
 genMutationRequest =
   MutationRequest
-    <$> Gen.list defaultRange genTableRelationships
-    <*> Gen.list defaultRange genTableInsertSchema
+    <$> Gen.set defaultRange (RTable <$> genTableRelationships)
+    <*> Gen.set defaultRange genTargetRedactionExpressions
+    <*> Gen.set defaultRange genTableInsertSchema
     <*> Gen.list defaultRange genMutationOperation
 
 genTableInsertSchema :: Gen TableInsertSchema
 genTableInsertSchema =
   TableInsertSchema
     <$> genTableName
+    <*> Gen.maybe (Gen.nonEmpty defaultRange genColumnName)
     <*> genFieldMap genInsertFieldSchema
 
-genInsertFieldSchema :: (MonadGen m, GenBase m ~ Identity) => m InsertFieldSchema
+genInsertFieldSchema :: Gen InsertFieldSchema
 genInsertFieldSchema =
   Gen.choice
     [ ColumnInsert <$> genColumnInsertSchema,
@@ -246,22 +272,24 @@ genInsertFieldSchema =
       ArrayRelationInsert <$> genArrayRelationInsertSchema
     ]
 
-genColumnInsertSchema :: (MonadGen m, GenBase m ~ Identity) => m ColumnInsertSchema
+genColumnInsertSchema :: Gen ColumnInsertSchema
 genColumnInsertSchema =
   ColumnInsertSchema
     <$> genColumnName
-    <*> genScalarType
+    <*> genColumnType
+    <*> Gen.bool
+    <*> Gen.maybe genColumnValueGenerationStrategy
 
-genObjectRelationInsertSchema :: MonadGen m => m ObjectRelationInsertSchema
+genObjectRelationInsertSchema :: (MonadGen m) => m ObjectRelationInsertSchema
 genObjectRelationInsertSchema =
   ObjectRelationInsertSchema
     <$> genRelationshipName
     <*> genObjectRelationInsertionOrder
 
-genObjectRelationInsertionOrder :: MonadGen m => m ObjectRelationInsertionOrder
+genObjectRelationInsertionOrder :: (MonadGen m) => m ObjectRelationInsertionOrder
 genObjectRelationInsertionOrder = Gen.enumBounded
 
-genArrayRelationInsertSchema :: MonadGen m => m ArrayRelationInsertSchema
+genArrayRelationInsertSchema :: (MonadGen m) => m ArrayRelationInsertSchema
 genArrayRelationInsertSchema = ArrayRelationInsertSchema <$> genRelationshipName
 
 genMutationOperation :: Gen MutationOperation
@@ -297,7 +325,7 @@ genUpdateMutationOperation =
   UpdateMutationOperation
     <$> genTableName
     <*> Gen.maybe genExpression
-    <*> Gen.list defaultRange genRowUpdate
+    <*> Gen.set defaultRange genRowUpdate
     <*> Gen.maybe genExpression
     <*> genFieldMap genField
 

@@ -18,10 +18,10 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture (Fixture (..), FixtureName (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), stopServer)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -37,15 +37,15 @@ spec = Fixture.runWithLocalTestEnvironmentSingleSetup (NE.fromList [context]) te
       (Fixture.fixture $ Fixture.RemoteGraphQLServer)
         { -- start only one remote server
           Fixture.mkLocalTestEnvironment = \_testEnvironment ->
-            RemoteServer.run $
-              RemoteServer.generateQueryInterpreter $
-                Query
-                  { object = objectResolver,
-                    writer = writerResolver,
-                    artist = artistResolver,
-                    objects = objectsResolver,
-                    articles = articlesResolver
-                  },
+            RemoteServer.run
+              $ RemoteServer.generateQueryInterpreter
+              $ Query
+                { object = objectResolver,
+                  writer = writerResolver,
+                  artist = artistResolver,
+                  objects = objectsResolver,
+                  articles = articlesResolver
+                },
           -- set that remote server as both source and target, for convenience
           -- start a RHS Postgres for Metadata tests only
           setupTeardown = \(testEnvironment, server) ->
@@ -181,7 +181,7 @@ type Article {
 
 |]
 
-knownObjects :: Monad m => [(Int, Object m)]
+knownObjects :: (Monad m) => [(Int, Object m)]
 knownObjects =
   [ (101, ObjectWriter writer1),
     (102, ObjectWriter writer2),
@@ -202,28 +202,29 @@ knownObjects =
     article3 = Article (pure 303) (pure "Article3") (pure 201) (pure 102)
     article4 = Article (pure 304) (pure "Article4") (pure 202) (pure 102)
 
-objectResolver :: Monad m => Arg "id" Int -> m (Maybe (Object m))
+objectResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Object m))
 objectResolver (Arg objectId) = pure $ lookup objectId knownObjects
 
-writerResolver :: Monad m => Arg "id" Int -> m (Maybe (Writer m))
+writerResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Writer m))
 writerResolver (Arg objectId) =
   pure $ case lookup objectId knownObjects of
     Just (ObjectWriter w) -> Just w
     _ -> Nothing
 
-artistResolver :: Monad m => Arg "id" Int -> m (Maybe (Artist m))
+artistResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Artist m))
 artistResolver (Arg objectId) =
   pure $ case lookup objectId knownObjects of
     Just (ObjectArtist a) -> Just a
     _ -> Nothing
 
-objectsResolver :: Monad m => Arg "ids" [Int] -> m [Maybe (Object m)]
+objectsResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Object m)]
 objectsResolver (Arg objectIds) = pure [lookup objectId knownObjects | objectId <- objectIds]
 
-articlesResolver :: Monad m => Arg "ids" [Int] -> m [Maybe (Article m)]
+articlesResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Article m)]
 articlesResolver (Arg objectIds) =
-  pure $
-    objectIds <&> \objectId ->
+  pure
+    $ objectIds
+    <&> \objectId ->
       case lookup objectId knownObjects of
         Just (ObjectArticle a) -> Just a
         _ -> Nothing
@@ -278,20 +279,20 @@ rhsPostgresTeardown testEnvironment = Postgres.dropDatabase testEnvironment
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-tests opts = do
+tests :: SpecWith (TestEnvironment, Server)
+tests = do
   -- tests metadata API
   metadataAPITests
   -- ensures setup is correct
-  noJoinsTests opts
-  simpleTests opts
+  noJoinsTests
+  simpleTests
   -- joins on neither part of the union
-  joinArticleTests opts
+  joinArticleTests
   -- joins on parts of the union
-  joinWriterTests opts
-  joinArtistTests opts
+  joinWriterTests
+  joinArtistTests
   -- joins on deeply nested joins
-  deeplyNestedJoinTests opts
+  deeplyNestedJoinTests
 
 metadataAPITests :: SpecWith (TestEnvironment, Server)
 metadataAPITests = describe "metadata API" do
@@ -388,8 +389,8 @@ args:
 
 -- | Ensure we don't insert `__hasura_internal_typename` when there are no
 -- joins.
-noJoinsTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-noJoinsTests opts = describe "simple joins" do
+noJoinsTests :: SpecWith (TestEnvironment, Server)
+noJoinsTests = describe "simple joins" do
   it "select objects without remote joins" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -417,12 +418,12 @@ noJoinsTests opts = describe "simple joins" do
 
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-simpleTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-simpleTests opts = describe "simple joins" do
+simpleTests :: SpecWith (TestEnvironment, Server)
+simpleTests = describe "simple joins" do
   it "joins writer against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -445,7 +446,7 @@ simpleTests opts = describe "simple joins" do
                - title: Article2
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no writer against articles" \(testEnvironment, _) -> do
@@ -466,7 +467,7 @@ simpleTests opts = describe "simple joins" do
             writer: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins artist against articles" \(testEnvironment, _) -> do
@@ -491,7 +492,7 @@ simpleTests opts = describe "simple joins" do
                - title: Article3
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins no artist against articles" \(testEnvironment, _) -> do
@@ -512,12 +513,12 @@ simpleTests opts = describe "simple joins" do
             artist: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArticleTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinArticleTests opts = describe "join from article object" do
+joinArticleTests :: SpecWith (TestEnvironment, Server)
+joinArticleTests = describe "join from article object" do
   it "does not join" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -545,17 +546,15 @@ joinArticleTests opts = describe "join from article object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Article
               title: "Article1"
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinWriterTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinWriterTests opts = describe "join from writer object" do
+joinWriterTests :: SpecWith (TestEnvironment, Server)
+joinWriterTests = describe "join from writer object" do
   it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -583,20 +582,18 @@ joinWriterTests opts = describe "join from writer object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
               name: "Writer1"
               articles:
                - title: Article1
                - title: Article2
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-joinArtistTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-joinArtistTests opts = describe "join from artist object" do
+joinArtistTests :: SpecWith (TestEnvironment, Server)
+joinArtistTests = describe "join from artist object" do
   it "joins against articles" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -624,20 +621,18 @@ joinArtistTests opts = describe "join from artist object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
               name: "Artist1"
               articles:
                - title: Article1
                - title: Article3
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-deeplyNestedJoinTests :: Fixture.Options -> SpecWith (TestEnvironment, Server)
-deeplyNestedJoinTests opts = describe "join from artist object" do
+deeplyNestedJoinTests :: SpecWith (TestEnvironment, Server)
+deeplyNestedJoinTests = describe "join from artist object" do
   it "joins ambiguously nested articles depending on the full path" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -689,8 +684,6 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
                   baz:
                   - title: Article2
                   - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
             - local_articles:
               - title: Article1
                 foo:
@@ -708,11 +701,9 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
                   baz:
                   - title: Article3
                   - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins nested articles at different depths" \(testEnvironment, _) -> do
@@ -742,16 +733,12 @@ deeplyNestedJoinTests opts = describe "join from artist object" do
             - bar:
               - title: Article3
               - title: Article4
-                # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
             - bar:
                 baz:
                 - title: Article2
                 - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

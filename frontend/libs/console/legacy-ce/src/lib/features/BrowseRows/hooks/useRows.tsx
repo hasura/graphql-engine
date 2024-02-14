@@ -4,6 +4,7 @@ import { Table } from '../../hasura-metadata-types';
 import { useHttpClient } from '../../Network';
 import { AxiosInstance } from 'axios';
 import { useQuery } from 'react-query';
+import { isScalarGraphQLType } from '../BrowseRows.utils';
 
 type FetchRowsArgs = {
   columns: UseRowsPropType['columns'];
@@ -14,7 +15,7 @@ type FetchRowsArgs = {
 };
 
 export const fetchRows = async ({
-  columns,
+  columns: columnsProp,
   dataSourceName,
   httpClient,
   options,
@@ -25,10 +26,24 @@ export const fetchRows = async ({
     table,
   });
 
+  const columns =
+    columnsProp ??
+    tableColumns
+      // Filter out columns that are objects or arrays
+      // We do this because generateGraphQLSelectQuery cannot handle those types
+      // TODO: Remove this filter once we improve generateGraphQLSelectQuery
+      .filter(column => {
+        if (typeof column.graphQLProperties?.graphQLType !== 'undefined') {
+          return isScalarGraphQLType(column);
+        }
+        return true;
+      })
+      .map(column => column.name);
+
   const result = await DataSource(httpClient).getTableRows({
     dataSourceName,
     table,
-    columns: columns ?? tableColumns.map(column => column.name),
+    columns,
     options,
   });
 

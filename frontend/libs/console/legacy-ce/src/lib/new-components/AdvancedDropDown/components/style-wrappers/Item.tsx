@@ -4,14 +4,18 @@ import * as styles from './item-styles';
 
 export const Item: React.FC<{
   dangerous?: boolean;
+  link?: boolean;
   selectable?: boolean;
-}> = ({ children, dangerous, selectable = false }) => (
+  disabled?: boolean;
+}> = ({ children, dangerous, link, selectable = false, disabled }) => (
   <div
     className={clsx(
       styles.twBaseStyle,
       selectable && styles.twSelectableItem,
       styles.twDefault,
-      dangerous && styles.twDangerous
+      dangerous && styles.twDangerous,
+      link && styles.twLink,
+      disabled && 'cursor-not-allowed'
     )}
   >
     {children}

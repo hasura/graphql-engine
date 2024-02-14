@@ -54,12 +54,10 @@ export const Configuration = ({ name }: Props) => {
     );
 
   return (
-    <>
-      <OpenApi3Form
-        name={name}
-        schemaObject={schema.configSchema}
-        references={schema.otherSchemas}
-      />
-    </>
+    <OpenApi3Form
+      name={name}
+      schemaObject={schema.configSchema}
+      references={schema.otherSchemas}
+    />
   );
 };

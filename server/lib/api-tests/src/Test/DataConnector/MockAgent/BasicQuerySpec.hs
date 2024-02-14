@@ -6,9 +6,9 @@ module Test.DataConnector.MockAgent.BasicQuerySpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Control.Lens ((?~))
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
-import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -20,6 +20,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -42,7 +43,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -73,19 +74,19 @@ sourceMetadata =
             configuration:
               custom_root_fields:
                 select: artists
-                select_by_pk: artists_by_pk
               column_config:
                 ArtistId:
                   custom_name: id
                 Name:
                   custom_name: name
-            array_relationships:
-              - name: albums
-                using:
-                  manual_configuration:
-                    remote_table: [Album]
-                    column_mapping:
-                      ArtistId: ArtistId
+            select_permissions:
+              - role: *testRoleName
+                permission:
+                  columns:
+                    - ArtistId
+                    - Name
+                  limit: 3
+                  filter: {}
           - table: [Employee]
           - table: [Customer]
             select_permissions:
@@ -104,8 +105,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Basic Tests" $ do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Basic Tests" $ do
   mockAgentGraphqlTest "works with simple object query" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
@@ -118,12 +119,12 @@ tests _opts = describe "Basic Tests" $ do
             }
           |]
     let queryResponse =
-          rowsResponse
-            [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -137,26 +138,117 @@ tests _opts = describe "Basic Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Just 1,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach = Nothing
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
+                    ]
+                    & API.qLimit
+                  ?~ 1
+              )
+        )
+
+  mockAgentGraphqlTest "works with simple object query with missing field" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getAlbum {
+              albums(limit: 1) {
+                id
+                title
               }
+            }
+          |]
+    let queryResponse =
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1)
+              ]
+            ]
+    let mockConfig = mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          albums:
+            - id: 1
+              title: null
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
+                    ]
+                    & API.qLimit
+                  ?~ 1
+              )
+        )
+
+  mockAgentGraphqlTest "permissions-based row limits are applied" $ \_testEnv performGraphqlRequest -> do
+    let headers = [("X-Hasura-Role", testRoleName)]
+    let graphqlRequest =
+          [graphql|
+            query getArtists {
+              artists(limit: 5) {
+                id
+                name
+              }
+            }
+          |]
+    let queryResponse =
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("name", API.mkColumnFieldValue $ J.String "AC/DC")
+              ],
+              [ ("id", API.mkColumnFieldValue $ J.Number 2),
+                ("name", API.mkColumnFieldValue $ J.String "Accept")
+              ],
+              [ ("id", API.mkColumnFieldValue $ J.Number 3),
+                ("name", API.mkColumnFieldValue $ J.String "Aerosmith")
+              ]
+            ]
+    let mockConfig = mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          artists:
+            - id: 1
+              name: AC/DC
+            - id: 2
+              name: Accept
+            - id: 3
+              name: Aerosmith
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Artist")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                      ("name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
+                    ]
+                    & API.qLimit
+                  ?~ 3 -- The permissions limit is smaller than the query limit, so it is used
+              )
         )
 
   mockAgentGraphqlTest "works with an exists-based permissions filter" $ \_testEnv performGraphqlRequest -> do
@@ -173,15 +265,15 @@ tests _opts = describe "Basic Tests" $ do
             }
           |]
     let queryResponse =
-          rowsResponse
-            [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+          mkRowsQueryResponse
+            [ [ ("CustomerId", API.mkColumnFieldValue $ J.Number 1)
               ],
-              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
+              [ ("CustomerId", API.mkColumnFieldValue $ J.Number 2)
               ],
-              [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
+              [ ("CustomerId", API.mkColumnFieldValue $ J.Number 3)
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -196,32 +288,21 @@ tests _opts = describe "Basic Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Customer" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Nothing,
-                      _qOffset = Nothing,
-                      _qWhere =
-                        Just $
-                          API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
-                            API.ApplyBinaryComparisonOperator
-                              API.Equal
-                              (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
-                              (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number")),
-                      _qOrderBy = Nothing
-                    },
-                _qrForeach = Nothing
-              }
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Customer")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("CustomerId", API.ColumnField (API.ColumnName "CustomerId") (API.ScalarType "number") Nothing)
+                    ]
+                    & API.qWhere
+                  ?~ API.Exists
+                    (API.UnrelatedTable $ mkTableName "Employee")
+                    ( API.ApplyBinaryComparisonOperator
+                        API.Equal
+                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "EmployeeId") (API.ScalarType "number") Nothing)
+                        (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
+                    )
+              )
         )
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

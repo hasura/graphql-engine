@@ -139,7 +139,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
   }
 
   return (
-    <div>
+    <div className="bootstrap-jail">
       <Helmet>
         <title
           {...titleAnalyticsAttributes}

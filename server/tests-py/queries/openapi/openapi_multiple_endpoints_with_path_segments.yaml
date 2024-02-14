@@ -96,16 +96,16 @@
             name: x-hasura-admin-secret
             schema:
               type: string
-          - description: _"last_name" is required (enter it either in parameters or
-              request body)_
-            in: path
-            name: last_name
-            schema:
-              type: string
           - description: _"first_name" is required (enter it either in parameters
               or request body)_
             in: path
             name: first_name
+            schema:
+              type: string
+          - description: _"last_name" is required (enter it either in parameters or
+              request body)_
+            in: path
+            name: last_name
             schema:
               type: string
           requestBody:

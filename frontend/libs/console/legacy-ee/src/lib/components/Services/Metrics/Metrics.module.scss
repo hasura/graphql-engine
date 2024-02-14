@@ -785,8 +785,6 @@
 /* common checkbox */
 .commonCheckBox,
 .defaultCheckBox {
-  min-width: 110px;
-
   input[type='checkbox'] {
     position: absolute; // take it out of document flow
     opacity: 0; // hide it
@@ -873,6 +871,7 @@
 }
 .modalWrapper {
   padding: 0;
+  text-align: left;
   .modalHeader {
     background-color: #f8f8f8;
     padding: 19px 32px;
@@ -1070,6 +1069,7 @@
   }
   .datePickerBtnWrapper {
     display: flex;
+    gap: 8px;
     padding: 0 16px;
     .yellowButton {
       margin-right: 15px;

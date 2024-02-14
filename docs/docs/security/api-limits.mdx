@@ -7,20 +7,19 @@ keywords:
   - enterprise
   - security
   - limits
-sidebar_position: 2
+sidebar_position: 5
 sidebar_label: API limits
 sidebar_class_name: cloud-and-enterprise-icon
-title: 'Cloud & EE: API Limits'
+title: 'Cloud & Enterprise Edition: API Limits'
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # API Limits
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge pro ee self />
 
 ## Introduction
 
@@ -49,6 +48,15 @@ You can choose any one of the above parameters to rate limit the requests.
 
 **Note**: If you set a `Unique Parameter` then the combination of both the `role_name` and the `Unique Parameter` will
 be used to rate-limit requests.
+
+:::info Note
+
+To enable rate limiting on Hasura Enterprise, you must set the
+[`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) environment
+variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server
+flag with the appropriate Redis connection string.
+
+:::
 
 Example:
 
@@ -145,8 +153,8 @@ sources.
 
 :::info Time limits on Hasura Cloud projects
 
-All Free tier and Standard tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit, the
-error contains the code `tenant-time-limit-exceeded` in the error message.
+All Free tier and Professional tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit,
+the error contains the code `tenant-time-limit-exceeded` in the error message.
 
 :::
 

@@ -1,0 +1,126 @@
+cabal-version:       2.2
+name:                ekg-prometheus
+version:             0.3.0.0
+synopsis:            Tracking of system metrics
+description:
+  This library lets you defined and track system metrics.
+homepage:            https://github.com/hasura/graphql-engine
+bug-reports:         https://github.com/hasura/graphql-engine/issues
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              Johan Tibell
+maintainer:          Johan Tibell <johan.tibell@gmail.com>,
+                     Mikhail Glushenkov <mikhail.glushenkov@gmail.com>
+category:            System
+build-type:          Simple
+extra-source-files:  CHANGES.md
+tested-with:         GHC == 9.2.5, GHC == 8.10.7
+
+common common-all
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+  default-language: Haskell2010
+
+common library-build-depends
+  build-depends:
+    base >= 4.6 && < 4.17,
+    bytestring >= 0.10.12.0 && < 0.11.4.0,
+    atomic-primops ^>= 0.8.4,
+    containers >= 0.5 && < 0.7,
+    primitive ^>= 0.7.1.0,
+    text < 1.3,
+    unordered-containers < 0.3
+
+library
+  import: common-all, library-build-depends
+  exposed-modules:
+    System.Metrics.Prometheus
+    System.Metrics.Prometheus.Counter
+    System.Metrics.Prometheus.CounterVector
+    System.Metrics.Prometheus.Export
+    System.Metrics.Prometheus.Gauge
+    System.Metrics.Prometheus.GaugeVector
+    System.Metrics.Prometheus.Histogram
+    System.Metrics.Prometheus.HistogramVector
+    System.Metrics.Prometheus.Internal.Map2
+    System.Metrics.Prometheus.Internal.Sample
+    System.Metrics.Prometheus.Internal.State
+    System.Metrics.Prometheus.Internal.Store
+    System.Metrics.Prometheus.Validation
+
+  other-modules:
+    Data.Array
+    Data.Atomic
+    System.Metrics.Prometheus.Example
+    System.Metrics.Prometheus.GroupExample
+    System.Metrics.Prometheus.SimpleExample
+    System.Metrics.Prometheus.ThreadId
+    System.Metrics.Prometheus.MetricVector
+
+library ekg-prometheus-benchmark
+  import: common-all
+  hs-source-dirs: benchmark-lib
+  exposed-modules:
+    Tasks
+  build-depends:
+    base,
+    ekg-prometheus
+
+benchmark counter
+  import: common-all
+  main-is: Counter.hs
+  type: exitcode-stdio-1.0
+  build-depends:
+    base,
+    ekg-prometheus,
+    ekg-prometheus-benchmark,
+    criterion
+  hs-source-dirs: benchmark-exe
+  ghc-options: -O2 -threaded
+
+test-suite ekg-prometheus-tests
+  import: common-all
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  other-modules:
+    Counter
+    Export
+    State
+    Store
+    Validation
+    VectorMetrics
+  build-depends:
+    base,
+    ekg-prometheus,
+    ekg-prometheus-benchmark,
+    async ^>= 2.2.1,
+    bytestring,
+    containers,
+    hspec >= 2.8.2,
+    hspec-expectations ^>= 0.8.2,
+    hspec-smallcheck ^>= 0.5.2,
+    HUnit ^>= 1.6.2.0,
+    QuickCheck ^>= 2.14.2,
+    smallcheck ^>= 1.2.1,
+    text,
+    unordered-containers
+  ghc-options: -O2 -threaded -with-rtsopts=-N
+
+test-suite ekg-prometheus-tutorial
+  import: common-all, library-build-depends
+  type: exitcode-stdio-1.0
+  main-is: Tutorial.lhs
+  build-depends:
+    ekg-prometheus,
+    ekg-prometheus-benchmark,
+    markdown-unlit
+  ghc-options:
+    -pgmL markdown-unlit
+    -O0
+    -fno-ignore-asserts
+  build-tool-depends: markdown-unlit:markdown-unlit
+
+source-repository head
+  type:     git
+  location: https://github.com/tibbe/ekg-core.git

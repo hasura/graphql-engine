@@ -12,7 +12,7 @@ export type FilterRowsProps = {
   operators: Operator[];
   name: string;
   initialFilters?: FiltersAndSortFormValues['filters'];
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const FilterRows = ({
@@ -49,16 +49,17 @@ export const FilterRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
-    onRemove();
+    onRemove?.();
   };
 
-  const columnOptions: SelectItem[] = columns.map(column => {
-    const value = column.graphQLProperties?.name ?? column.name;
-    return {
-      label: column.name,
-      value,
-    };
-  });
+  const columnOptions: SelectItem[] = columns
+    .sort((a, b) => (a.name > b.name ? 1 : -1))
+    .map(column => {
+      return {
+        label: column.name,
+        value: column.name,
+      };
+    });
 
   const operatorOptions: SelectItem[] = operators.map(operator => ({
     label: `[${operator.value}] ${operator.name}`,
@@ -80,7 +81,7 @@ export const FilterRows = ({
 
       {!fields.length && <div className="mb-sm italic">No Filters Present</div>}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-2">
         {fields.map((_, index) => (
           <FilterRow
             key={index}

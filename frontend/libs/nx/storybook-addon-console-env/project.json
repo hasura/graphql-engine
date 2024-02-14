@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/nx/storybook-addon-console-env/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:shared", "type:feature", "meta:package"],
   "targets": {
     "build": {
       "executor": "@nrwl/js:swc",
@@ -27,7 +27,7 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "libs/nx/storybook-addon-console-env/**/*.{ts,tsx,js,jsx}"
+          "libs/nx/storybook-addon-console-env/**/*.{ts,tsx,js,jsx,json}"
         ]
       }
     },
@@ -45,7 +45,6 @@
       "dependsOn": ["build"],
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "libs/nx/storybook-addon-console-env/.storybook"
       },

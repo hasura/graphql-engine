@@ -1,12 +1,9 @@
 import { useContext } from 'react';
-import { allOperators } from '../../../../../../components/Services/Data/TablePermissions/PermissionBuilder/utils';
 import { rowPermissionsContext } from './RowPermissionsProvider';
-import { tableContext } from './TableProvider';
-
-const defaultOperators = allOperators.map(operator => ({
-  name: operator,
-  operator,
-}));
+import { useOperators } from './utils/comparatorsFromSchema';
+import Select, { components } from 'react-select';
+import { FiChevronDown } from 'react-icons/fi';
+import clsx from 'clsx';
 
 export const Comparator = ({
   comparator,
@@ -17,30 +14,54 @@ export const Comparator = ({
   v: any;
   path: string[];
 }) => {
-  const { setKey, comparators } = useContext(rowPermissionsContext);
+  const { setKey, isLoading } = useContext(rowPermissionsContext);
   const comparatorLevelId = `${path?.join('.')}-comparator`;
-  const { columns } = useContext(tableContext);
-  const columnName = path[path.length - 2];
-  const column = columns.find(c => c.name === columnName);
-  const operators =
-    column?.type && comparators[column.type]?.operators
-      ? comparators[column.type].operators
-      : defaultOperators;
+  const operators = useOperators({ path });
 
   return (
-    <select
-      data-testid={comparatorLevelId}
-      className="border border-gray-200 rounded-md p-2"
-      value={comparator}
-      onChange={e => {
-        setKey({ path, key: e.target.value, type: 'comparator' });
+    <Select
+      isDisabled={isLoading}
+      inputId={`${comparatorLevelId}-select-value`}
+      isSearchable
+      aria-label={comparatorLevelId}
+      components={{
+        DropdownIndicator: props => {
+          const { className } = props;
+          return (
+            <components.DropdownIndicator
+              {...props}
+              className={clsx(className, '!text-gray-500 hover:!text-gray-500')}
+            >
+              <FiChevronDown className="w-5 h-5" />
+            </components.DropdownIndicator>
+          );
+        },
+        IndicatorSeparator: () => null,
       }}
-    >
-      {operators.map((o, index) => (
-        <option key={index} value={o.operator}>
-          {o.operator}
-        </option>
-      ))}
-    </select>
+      options={operators.map(o => ({
+        value: o.name,
+        label: o.name,
+      }))}
+      onChange={option => {
+        const { value } = option as { value: string };
+        setKey({ path, key: value, type: 'comparator' });
+      }}
+      defaultValue={{
+        value: comparator,
+        label: comparator,
+      }}
+      value={{
+        value: comparator,
+        label: comparator,
+      }}
+      styles={{
+        control: base => ({
+          ...base,
+          border: 0,
+          minHeight: 'auto',
+        }),
+      }}
+      className="w-32 border border-gray-200 rounded-md"
+    />
   );
 };

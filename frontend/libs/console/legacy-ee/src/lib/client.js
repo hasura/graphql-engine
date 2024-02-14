@@ -2,14 +2,12 @@
  * THIS IS THE ENTRY POINT FOR THE CLIENT, JUST LIKE server.js IS THE ENTRY POINT FOR THE SERVER.
  */
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ReactQueryProvider, startTracing } from '@hasura/console-legacy-ce';
 
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { useBasename } from 'history';
-import posthog from 'posthog-js';
 
 import getRoutes from './routes';
 import store from './store';
@@ -75,11 +73,4 @@ export const Main = () => (
 
 if (process.env.NODE_ENV !== 'production') {
   window.React = React; // enable debugger
-}
-
-if (process.env.CONSOLE_BUILD_ENVIRONMENT === 'cloud') {
-  posthog.init('a1dops3FFe8KioWsry6W6AVqCG_j-FXmw1LY2d6TrYU', {
-    api_host: 'https://cloud-posthog.hasura-app.io',
-    disable_session_recording: true,
-  });
 }

@@ -2,9 +2,8 @@ import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
 } from '../../../../../new-components/Form';
-import { OpenApiSchema } from '@hasura/dc-api-types';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 
@@ -41,7 +40,9 @@ export const NumberInputField = ({
           aria-label={name}
           onChange={e => {
             setLocalValue(e.target.value);
-            setValue(name, parseInt(e.target.value, 10));
+
+            // will fallback to undefined if input is empty or NaN
+            setValue(name, parseInt(e.target.value, 10) || undefined);
           }}
           data-test={name}
           className={clsx(
@@ -49,6 +50,7 @@ export const NumberInputField = ({
           )}
           data-testid={name}
           value={localValue}
+          onWheelCapture={e => e.currentTarget.blur()}
         />
       </div>
     </FieldWrapper>

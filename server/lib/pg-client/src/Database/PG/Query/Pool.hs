@@ -11,20 +11,17 @@ module Database.PG.Query.Pool
   ( ConnParams (..),
     PGPool,
     pgPoolStats,
+    pgPoolMetrics,
     PGPoolStats (..),
+    PGPoolMetrics (..),
     getInUseConnections,
-    withExpiringPGconn,
     defaultConnParams,
     initPGPool,
     resizePGPool,
     destroyPGPool,
     withConn,
-    beginTx,
-    abortTx,
-    commitTx,
     runTx,
     runTx',
-    catchConnErr,
     sql,
     sqlFromFile,
     PGExecErr (..),
@@ -44,8 +41,8 @@ import Control.Monad (when)
 import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Control (MonadBaseControl, control)
-import Control.Monad.Trans.Except (ExceptT, withExceptT)
-import Data.Aeson (ToJSON (toJSON))
+import Control.Monad.Trans.Except (ExceptT)
+import Data.Aeson (ToJSON (toJSON), Value)
 import Data.ByteString qualified as BS
 import Data.HashTable.IO qualified as HIO
 import Data.IORef (newIORef)
@@ -61,6 +58,8 @@ import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax (Exp, Q, lift, qAddDependentFile, runIO)
 import System.Metrics.Distribution (Distribution)
 import System.Metrics.Distribution qualified as EKG.Distribution
+import System.Metrics.Prometheus.Histogram (Histogram)
+import System.Metrics.Prometheus.Histogram qualified as Histogram
 import Prelude
 
 -------------------------------------------------------------------------------
@@ -69,11 +68,16 @@ data PGPool = PGPool
   { -- | the underlying connection pool
     _pool :: !(RP.Pool PGConn),
     -- | EKG stats about how we acquire, release, and manage connections
-    _stats :: !PGPoolStats
+    _stats :: !PGPoolStats,
+    -- | Prometheus metrics about how we acquire, release, and manage connections
+    _metrics :: !PGPoolMetrics
   }
 
 pgPoolStats :: PGPool -> PGPoolStats
 pgPoolStats = _stats
+
+pgPoolMetrics :: PGPool -> PGPoolMetrics
+pgPoolMetrics = _metrics
 
 -- | Actual ekg gauges and other metrics are not created here, since those depend on
 -- a store and it's much simpler to perform the sampling of the distribution from within graphql-engine.
@@ -81,6 +85,13 @@ data PGPoolStats = PGPoolStats
   { -- | time taken to acquire new connections from postgres
     _dbConnAcquireLatency :: !Distribution,
     _poolConnAcquireLatency :: !Distribution
+  }
+
+data PGPoolMetrics = PGPoolMetrics
+  { -- | time taken to establish and initialise a PostgreSQL connection
+    _pgConnAcquireLatencyMetric :: !Histogram,
+    -- | time taken to acquire a connection from the pool
+    _poolWaitTimeMetric :: !Histogram
   }
 
 getInUseConnections :: PGPool -> IO Int
@@ -110,29 +121,41 @@ initPGPoolStats = do
   _poolConnAcquireLatency <- EKG.Distribution.new
   pure PGPoolStats {..}
 
+initPGPoolMetrics :: IO PGPoolMetrics
+initPGPoolMetrics = do
+  _pgConnAcquireLatencyMetric <- Histogram.new histogramBuckets
+  _poolWaitTimeMetric <- Histogram.new histogramBuckets
+  pure PGPoolMetrics {..}
+  where
+    histogramBuckets = [0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100]
+
 initPGPool ::
   ConnInfo ->
+  Value ->
   ConnParams ->
   PGLogger ->
   IO PGPool
-initPGPool ci cp logger = do
+initPGPool ci context cp logger = do
   _stats <- initPGPoolStats
-  _pool <- RP.createPool' (creator _stats) destroyer nStripes diffTime nConns nTimeout
+  _metrics <- initPGPoolMetrics
+  _pool <- RP.createPool' (creator _stats _metrics) destroyer nStripes diffTime nConns nTimeout
   pure PGPool {..}
   where
     nStripes = cpStripes cp
     nConns = cpConns cp
     nTimeout = cpTimeout cp
     retryP = mkPGRetryPolicy $ ciRetries ci
-    creator stats = do
+    creator stats metrics = do
       createdAt <- getCurrentTime
       pqConn <- initPQConn ci logger
       connAcquiredAt <- getCurrentTime
       let connAcquiredMicroseconds = realToFrac (1000000 * diffUTCTime connAcquiredAt createdAt)
+          connAcquiredSeconds = realToFrac $ diffUTCTime connAcquiredAt createdAt
       EKG.Distribution.add (_dbConnAcquireLatency stats) connAcquiredMicroseconds
+      Histogram.observe (_pgConnAcquireLatencyMetric metrics) connAcquiredSeconds
       ctr <- newIORef 0
       table <- HIO.new
-      return $ PGConn pqConn (cpAllowPrepare cp) (cpCancel cp) retryP logger ctr table createdAt (cpMbLifetime cp)
+      return $ PGConn context pqConn (cpAllowPrepare cp) (cpCancel cp) retryP logger ctr table createdAt (cpMbLifetime cp)
     destroyer = PQ.finish . pgPQConn
     diffTime = fromIntegral $ cpIdleTime cp
 
@@ -163,25 +186,31 @@ instance FromPGTxErr PGExecErr where
 instance FromPGConnErr PGExecErr where
   fromPGConnErr = PGExecErrConn
 
+instance FromPGTxErr PGTxErr where
+  fromPGTxErr = id
+
+instance FromPGConnErr PGConnErr where
+  fromPGConnErr = id
+
 instance Show PGExecErr where
   show (PGExecErrConn pce) = show pce
   show (PGExecErrTx txe) = show txe
 
-beginTx :: (MonadIO m) => TxMode -> TxT m ()
+beginTx :: (MonadIO m, FromPGTxErr e) => TxMode -> TxET e m ()
 beginTx (i, w) =
-  unitQ query () True
+  unitQE fromPGTxErr query () True
   where
     query =
       fromText . Text.pack $
         ("BEGIN " <> show i <> " " <> maybe "" show w)
 
-commitTx :: (MonadIO m) => TxT m ()
+commitTx :: (MonadIO m, FromPGTxErr e) => TxET e m ()
 commitTx =
-  unitQ "COMMIT" () True
+  unitQE fromPGTxErr "COMMIT" () True
 
-abortTx :: (MonadIO m) => TxT m ()
+abortTx :: (MonadIO m, FromPGTxErr e) => TxET e m ()
 abortTx =
-  unitQ "ABORT" () True
+  unitQE fromPGTxErr "ABORT" () True
 
 class FromPGTxErr e where
   fromPGTxErr :: PGTxErr -> e
@@ -197,15 +226,15 @@ asTransaction ::
   ExceptT e m a
 asTransaction txm f pgConn = do
   -- Begin the transaction. If there is an error, you shouldn't call abort
-  withExceptT fromPGTxErr $ execTx pgConn $ beginTx txm
+  execTx pgConn $ beginTx txm
   -- Run the actual transaction and commit. If there is an error, abort
   flip catchError abort $ do
     a <- f pgConn
-    withExceptT fromPGTxErr $ execTx pgConn commitTx
+    execTx pgConn commitTx
     return a
   where
     abort e = do
-      withExceptT fromPGTxErr $ execTx pgConn abortTx
+      execTx pgConn abortTx
       throwError e
 
 -- | Run a command using the postgres pool.
@@ -215,11 +244,12 @@ asTransaction txm f pgConn = do
 withConn ::
   ( MonadIO m,
     MonadBaseControl IO m,
+    MonadError e m,
     FromPGConnErr e
   ) =>
   PGPool ->
-  (PGConn -> ExceptT e m a) ->
-  ExceptT e m a
+  (PGConn -> m a) ->
+  m a
 withConn pool f =
   catchConnErr $ withExpiringPGconn pool f
 
@@ -231,23 +261,16 @@ catchConnErr ::
 catchConnErr action =
   control $ \runInIO ->
     runInIO action
-      `Exc.catches` [ Handler (runInIO . handler),
+      `Exc.catches` [ Handler (runInIO . handlePGConnErr),
                       Handler (runInIO . handleTimeout)
                     ]
   where
-    handler = mkConnExHandler action fromPGConnErr
+    handlePGConnErr :: PGConnErr -> m a
+    handlePGConnErr = throwError . fromPGConnErr
 
     handleTimeout :: RP.TimeoutException -> m a
-    handleTimeout _ =
+    handleTimeout RP.TimeoutException =
       throwError (fromPGConnErr $ PGConnErr "connection acquisition timeout expired")
-
-{-# INLINE mkConnExHandler #-}
-mkConnExHandler ::
-  (MonadError e m) =>
-  m a ->
-  (PGConnErr -> e) ->
-  (PGConnErr -> m a)
-mkConnExHandler _ ef = throwError . ef
 
 -- | Run a command on the given pool wrapped in a transaction.
 runTx ::
@@ -320,7 +343,9 @@ withExpiringPGconn pool f = do
     RP.withResource (_pool pool) $ \connRsrc@PGConn {..} -> do
       now <- liftIO getCurrentTime
       let microseconds = realToFrac (1000000 * diffUTCTime now old)
+          seconds = realToFrac $ diffUTCTime now old
       liftIO (EKG.Distribution.add (_poolConnAcquireLatency (_stats pool)) microseconds)
+      liftIO (Histogram.observe (_poolWaitTimeMetric (_metrics pool)) seconds)
       let connectionStale =
             any (\lifetime -> now `diffUTCTime` pgCreatedAt > lifetime) pgMbLifetime
       when connectionStale $ do

@@ -5,6 +5,7 @@ interface PostgresConnectionInfo {
   database_url:
     | string
     | FromEnv
+    | { dynamic_from_file: string }
     | {
         username: string;
         password?: string;
@@ -63,7 +64,7 @@ export interface MssqlConfiguration {
   connection_info: {
     connection_string: string | FromEnv;
     pool_settings?: {
-      total_max_connections?: number;
+      total_max_connections?: number | null;
       idle_timeout?: number;
     };
   };
@@ -76,4 +77,4 @@ export interface BigQueryConfiguration {
   datasets: string[] | FromEnv;
 }
 
-export interface CitusConfiguration extends PostgresConfiguration {}
+export type CitusConfiguration = PostgresConfiguration;

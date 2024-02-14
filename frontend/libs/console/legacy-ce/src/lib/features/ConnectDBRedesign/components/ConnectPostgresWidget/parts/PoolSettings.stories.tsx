@@ -1,6 +1,6 @@
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
 
 import { PoolSettings } from './PoolSettings';
@@ -8,11 +8,9 @@ import { poolSettingsSchema } from '../schema';
 
 export default {
   component: PoolSettings,
-} as ComponentMeta<typeof PoolSettings>;
+} as Meta<typeof PoolSettings>;
 
-export const PoolSettingsDefaultView: ComponentStory<
-  typeof PoolSettings
-> = () => (
+export const PoolSettingsDefaultView: StoryFn<typeof PoolSettings> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
     schema={z.object({

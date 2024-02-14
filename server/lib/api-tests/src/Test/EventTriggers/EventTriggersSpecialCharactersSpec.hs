@@ -10,9 +10,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Webhook qualified as Webhook
@@ -32,7 +32,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Sqlserver.setupTablesAction schema testEnvironment),
                   Fixture.SetupAction
@@ -44,7 +44,7 @@ spec =
           (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Postgres.setupTablesAction schema testEnvironment),
                   Fixture.SetupAction
@@ -79,15 +79,11 @@ schema = [dummyTable]
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  handleSpecialCharsInEventTriggersPayload opts
-
-handleSpecialCharsInEventTriggersPayload :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-handleSpecialCharsInEventTriggersPayload opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "special characters of different languages in event trigger payload are encoded in UTF-8" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnvironment
@@ -124,7 +120,7 @@ handleSpecialCharsInEventTriggersPayload opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -170,8 +166,8 @@ dbSetup testEnvironment webhookServer = do
 
   -- Track table using custom_name for the special character column since GraphQL
   -- spec does not support special characters
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: #{backendPrefix}_track_table

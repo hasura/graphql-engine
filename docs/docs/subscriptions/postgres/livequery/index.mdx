@@ -14,22 +14,25 @@ slug: index
 
 ## Introduction
 
-A Live query subscription will return the latest result of the query being made and not necessarily all the individual
-events leading up to the result.
+A Live query subscription will return the **latest result** of the query being made and not necessarily all the
+individual events leading up to the result, such as with a
+[streaming subscription](/subscriptions/postgres/streaming/index.mdx).
 
 By default, updates are delivered to clients every **1 sec**.
 
-See more details on
-[subscriptions execution and performance](/subscriptions/postgres/livequery/execution-and-performance.mdx).
+A live query is a query that is continuously monitored for changes in the database and automatically updates the query
+result whenever the underlying data changes. Live queries are a PostgreSQL-specific implementation that allow real-time
+updates to clients without the need for manual polling or refreshing.
 
 ## Convert a query to a subscription
 
 You can turn any query into a subscription by simply replacing `query` with `subscription` as the operation type.
 
-:::info Caveat
+:::info Single subscription in each query caveat
 
 Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
-for only one root field in a subscription.
+for only one root field in a subscription. You also cannot execute multiple separate subscriptions in one query. To have
+multiple subscriptions running at the same time they must be in separate queries.
 
 :::
 

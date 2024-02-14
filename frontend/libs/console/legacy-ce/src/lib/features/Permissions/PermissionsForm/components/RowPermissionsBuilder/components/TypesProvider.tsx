@@ -7,8 +7,10 @@ import {
   useEffect,
 } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
-import { set, unset } from 'lodash';
+import set from 'lodash/set';
+import unset from 'lodash/unset';
 import { getPermissionTypes } from './utils/typeProviderHelpers';
+import { rootTableContext } from './RootTableProvider';
 
 export const typesContext = createContext<TypesContext>({
   types: {},
@@ -16,12 +18,13 @@ export const typesContext = createContext<TypesContext>({
 });
 
 // Provides types for permissions
-// This is used to determine if a permission is a column or relationship
+// This is used to determine if a permission is a column or relationship or nested object
 export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   const [types, setTypes] = useState<Record<string, { type: PermissionType }>>(
     {}
   );
-  const { permissions, tables, table } = useContext(rowPermissionsContext);
+  const { permissions } = useContext(rowPermissionsContext);
+  const { table, tables } = useContext(rootTableContext);
   const setType = useCallback(
     ({
       type,

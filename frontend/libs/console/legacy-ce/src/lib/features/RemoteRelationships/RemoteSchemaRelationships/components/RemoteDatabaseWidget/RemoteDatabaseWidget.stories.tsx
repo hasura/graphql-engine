@@ -1,6 +1,6 @@
 import React from 'react';
 import * as z from 'zod';
-import { Story, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { action } from '@storybook/addon-actions';
 import { SimpleForm } from '../../../../../new-components/Form';
@@ -39,9 +39,11 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story = args => <RemoteDatabaseWidget {...args} />;
-Primary.args = {};
-Primary.parameters = {
-  // Disable chromatic snapshot for playground stories
-  chromatic: { disableSnapshot: true },
+export const Primary: StoryObj = {
+  args: {},
+
+  parameters: {
+    // Disable chromatic snapshot for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 };

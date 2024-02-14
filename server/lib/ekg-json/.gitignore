@@ -1,0 +1,12 @@
+*.hi
+*.o
+*.p_hi
+*.prof
+*.tix
+.DS_Store
+.cabal-sandbox/
+.hpc/
+/dist/*
+cabal.config
+cabal.sandbox.config
+examples/Basic

@@ -66,11 +66,7 @@ const IntrospectionTable: React.FC<Props> = ({ rows }) => {
             index=""
             entries={[{ roleName: '', instrospectionIsDisabled: true }]}
             isSingleColumn
-            renderCol={() => (
-              <>
-                <Legends.Global />
-              </>
-            )}
+            renderCol={() => <Legends.Global />}
           />
 
           <TableForm<{ roleName: string; instrospectionIsDisabled: boolean }>>

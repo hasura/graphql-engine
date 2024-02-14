@@ -9,10 +9,12 @@ module Hasura.Backends.Postgres.Translate.Types
     ArrayRelationSource (ArrayRelationSource),
     ComputedFieldTableSetSource (ComputedFieldTableSetSource),
     CustomSQLCTEs (..),
+    NativeQueryFreshIdStore (..),
+    initialNativeQueryFreshIdStore,
     DistinctAndOrderByExpr (ASorting),
     JoinTree (..),
     MultiRowSelectNode (..),
-    ObjectRelationSource (ObjectRelationSource),
+    ObjectRelationSource (..),
     ObjectSelectSource (ObjectSelectSource, _ossPrefix),
     PermissionLimitSubQuery (..),
     SelectNode (SelectNode),
@@ -30,14 +32,15 @@ module Hasura.Backends.Postgres.Translate.Types
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
-import Hasura.LogicalModel.Metadata (InterpolatedQuery)
+import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.Local (Nullable)
 
 data SourcePrefixes = SourcePrefixes
   { -- | Current source prefix
@@ -133,7 +136,7 @@ applySortingAndSlicing SortingAndSlicing {..} =
               ApplySortingAndSlicing (Nothing, noSlicing, Nothing) (Just nodeOrderBy, _sasSlicing, nodeDistinctOn)
 
 data SelectNode = SelectNode
-  { _snExtractors :: HM.HashMap Postgres.ColumnAlias Postgres.SQLExp,
+  { _snExtractors :: InsOrdHashMap Postgres.ColumnAlias Postgres.SQLExp,
     _snJoinTree :: JoinTree
   }
   deriving stock (Eq, Show)
@@ -168,8 +171,9 @@ objectSelectSourceToSelectSource ObjectSelectSource {..} =
 
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,
-    _orsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
-    _orsSelectSource :: ObjectSelectSource
+    _orsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
+    _orsSelectSource :: ObjectSelectSource,
+    _orsNullable :: Nullable
   }
   deriving (Generic, Show)
 
@@ -179,7 +183,7 @@ deriving instance Eq ObjectRelationSource
 
 data ArrayRelationSource = ArrayRelationSource
   { _arsAlias :: Postgres.TableAlias,
-    _arsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
+    _arsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
     _arsSelectSource :: SelectSource
   }
   deriving (Generic, Show)
@@ -212,7 +216,7 @@ deriving instance Eq ComputedFieldTableSetSource
 
 data ArrayConnectionSource = ArrayConnectionSource
   { _acsAlias :: Postgres.TableAlias,
-    _acsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
+    _acsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
     _acsSplitFilter :: Maybe Postgres.BoolExp,
     _acsSlice :: Maybe ConnectionSlice,
     _acsSource :: SelectSource
@@ -226,20 +230,20 @@ instance Hashable ArrayConnectionSource
 ----
 
 data JoinTree = JoinTree
-  { _jtObjectRelations :: HM.HashMap ObjectRelationSource SelectNode,
-    _jtArrayRelations :: HM.HashMap ArrayRelationSource MultiRowSelectNode,
-    _jtArrayConnections :: HM.HashMap ArrayConnectionSource MultiRowSelectNode,
-    _jtComputedFieldTableSets :: HM.HashMap ComputedFieldTableSetSource MultiRowSelectNode
+  { _jtObjectRelations :: HashMap.HashMap ObjectRelationSource SelectNode,
+    _jtArrayRelations :: HashMap.HashMap ArrayRelationSource MultiRowSelectNode,
+    _jtArrayConnections :: HashMap.HashMap ArrayConnectionSource MultiRowSelectNode,
+    _jtComputedFieldTableSets :: HashMap.HashMap ComputedFieldTableSetSource MultiRowSelectNode
   }
   deriving stock (Eq, Show)
 
 instance Semigroup JoinTree where
   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =
     JoinTree
-      (HM.unionWith (<>) lObjs rObjs)
-      (HM.unionWith (<>) lArrs rArrs)
-      (HM.unionWith (<>) lArrConns rArrConns)
-      (HM.unionWith (<>) lCfts rCfts)
+      (HashMap.unionWith (<>) lObjs rObjs)
+      (HashMap.unionWith (<>) lArrs rArrs)
+      (HashMap.unionWith (<>) lArrConns rArrConns)
+      (HashMap.unionWith (<>) lCfts rCfts)
 
 instance Monoid JoinTree where
   mempty = JoinTree mempty mempty mempty mempty
@@ -250,12 +254,12 @@ data PermissionLimitSubQuery
   | PLSQNotRequired
   deriving (Show, Eq)
 
-type SimilarArrayFields = HM.HashMap FieldName [FieldName]
+type SimilarArrayFields = HashMap.HashMap FieldName [FieldName]
 
 ----
 
 newtype CustomSQLCTEs = CustomSQLCTEs
-  { getCustomSQLCTEs :: HM.HashMap Postgres.TableAlias (InterpolatedQuery Postgres.SQLExp)
+  { getCustomSQLCTEs :: HashMap.HashMap Postgres.TableAlias (InterpolatedQuery Postgres.SQLExp)
   }
   deriving newtype (Eq, Show, Semigroup, Monoid)
 
@@ -272,3 +276,11 @@ instance Semigroup SelectWriter where
 
 instance Monoid SelectWriter where
   mempty = SelectWriter mempty mempty
+
+----
+
+newtype NativeQueryFreshIdStore = NativeQueryFreshIdStore {nqNextFreshId :: Int}
+  deriving newtype (Eq, Show, Enum)
+
+initialNativeQueryFreshIdStore :: NativeQueryFreshIdStore
+initialNativeQueryFreshIdStore = NativeQueryFreshIdStore 0

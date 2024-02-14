@@ -1,0 +1,10 @@
+--- a/compiler/GHC/Linker/Loader.hs
++++ b/compiler/GHC/Linker/Loader.hs
+@@ -1616,8 +1616,6 @@
+        | verbatim = [lib]
+        | otherwise = [ "lib" ++ lib ++ lib_tag <.> "a"
+                      , lib <.> "a" -- native code has no lib_tag
+-                     , "lib" ++ lib
+-                     , lib
+                      ]
+      lib_tag = if is_hs && loading_profiled_hs_libs then "_p" else ""

@@ -1,17 +1,14 @@
 # CLI Migrations
 
-This docker image provides a method to run migrations and metadata at docker entrypoint.
-A temporary server is booted, with the migrations API allowed, securely through localhost.
-Once migrations and metadata have been applied, the server will reboot in a secure mode for inbound graphql usage.
+This docker image provides a method to run migrations and metadata at docker entrypoint. A temporary server is booted,
+with the migrations API allowed, securely through localhost. Once migrations and metadata have been applied, the server
+will reboot in a secure mode for inbound graphql usage.
 
 See [./docker-entrypoint.sh](docker-entrypoint.sh)
 
 - [CLI Migrations](#cli-migrations)
   - [Examples](#examples)
     - [Local](#local)
-    - [Heroku](#heroku)
-      - [Provision](#provision)
-      - [Deploy](#deploy)
   - [Configuration](#configuration)
     - [Migrations Directory (Optional)](#migrations-directory-optional)
     - [Metadata Directory (Optional)](#metadata-directory-optional)
@@ -34,44 +31,9 @@ CMD graphql-engine \
 
 ### Local
 
-This is covered in the documentation here: https://hasura.io/docs/latest/graphql/core/migrations/auto-apply-migrations.html
-The below [Configuration](#configuration) will also be applicable.
-
-### Heroku
-
-Using a docker build on heroku the manifest (`heroku.yml`) can look like:
-
-```yaml
-setup:
-  addons:
-    - plan: heroku-postgresql
-      as: DATABASE
-  config:
-    HASURA_METADATA_DATABASE_URL: DATABASE_URL
-build:
-  docker:
-    web: Dockerfile
-```
-
-This allows you to provision and migrate a database entirely without intervention.
-
-#### Provision
-
-Setup the app, with addons and the setup steps defined in the heroku.yml
-
-```bash
-heroku create heroku-migration-tester --manifest
-```
-
-#### Deploy
-
-```bash
-export HEROKU_GIT_REMOTE=https://git.heroku.com/heroku-migration-tester.git
-git init && git add .
-git commit -m "first commit"
-git remote add heroku HEROKU_GIT_REMOTE
-git push heroku master
-```
+This is covered in the documentation here:
+https://hasura.io/docs/latest/graphql/core/migrations/auto-apply-migrations.html The below
+[Configuration](#configuration) will also be applicable.
 
 ## Configuration
 
@@ -99,12 +61,12 @@ If it has been stored in a directory other than the default then it can be confi
 
 ### GraphQL Server (Optional)
 
-  Optional configuration for the server which boots during migrations.
+Optional configuration for the server which boots during migrations.
 
 - `HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT` (default=`9691`)
 
-  Specify the port running the graphql server during execution of the migration script.
-  It is advised that you do not specify a PORT that may be open e.g. 80/443 and the default should rarely require changing.
+  Specify the port running the graphql server during execution of the migration script. It is advised that you do not
+  specify a PORT that may be open e.g. 80/443 and the default should rarely require changing.
 
 - `HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT` (default=`30s`)
 

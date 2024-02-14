@@ -11,18 +11,18 @@ import Data.HashSet qualified as Set
 import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (Hasura)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.NamingCase qualified as NamingCase
+import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
 import Refined (NonNegative, Positive, refineTH, unrefine)
 import Test.Hspec qualified as Hspec
@@ -53,7 +53,7 @@ emptyServeOptionsRaw =
           },
       rsoTxIso = Nothing,
       rsoAdminSecret = Nothing,
-      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing,
+      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing Nothing,
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
@@ -64,6 +64,8 @@ emptyServeOptionsRaw =
       rsoWsReadCookie = UUT.WsReadCookieDisabled,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
+      rsoBackwardsCompatibleNullInNonNullableVariables = Nothing,
+      rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
       rsoMxBatchSize = Nothing,
@@ -90,7 +92,16 @@ emptyServeOptionsRaw =
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing,
-      rsoMetadataDefaults = Nothing
+      rsoMetadataDefaults = Nothing,
+      rsoApolloFederationStatus = Nothing,
+      rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
+      rsoMaxTotalHeaderLength = Nothing,
+      rsoTriggersErrorLogLevelStatus = Nothing,
+      rsoAsyncActionsFetchBatchSize = Nothing,
+      rsoPersistedQueries = Nothing,
+      rsoPersistedQueriesTtl = Nothing,
+      rsoRemoteSchemaResponsePriority = Nothing,
+      rsoHeaderPrecedence = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec
@@ -308,7 +319,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -321,11 +332,11 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost True))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet) Nothing}
             -- When
             env =
               [ (UUT._envVar UUT.authHookOption, "http://auth.hook.com"),
@@ -334,7 +345,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -376,17 +387,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "guest")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "guest")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = Roles.mkRoleName "visitor"}
             -- When
             env = [(UUT._envVar UUT.unAuthRoleOption, "guest")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "visitor")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "visitor")
 
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do
@@ -618,6 +629,37 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right Options.Don'tDangerouslyCollapseBooleans
+
+    Hspec.describe "soBackwardsCompatibleNullInNonNullableVariables" $ do
+      Hspec.it "Default == False" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right (UUT._default UUT.backwardsCompatibleNullInNonNullableVariablesOption)
+
+      Hspec.it "Env > Nothing" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = [(UUT._envVar UUT.backwardsCompatibleNullInNonNullableVariablesOption, "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.AllowNullInNonNullableVariables
+
+      Hspec.it "Arg > Env" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoBackwardsCompatibleNullInNonNullableVariables = Just Options.Don'tAllowNullInNonNullableVariables}
+            -- When
+            env = [(UUT._envVar UUT.dangerousBooleanCollapseOption, "true")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soBackwardsCompatibleNullInNonNullableVariables result `Hspec.shouldBe` Right Options.Don'tAllowNullInNonNullableVariables
 
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do

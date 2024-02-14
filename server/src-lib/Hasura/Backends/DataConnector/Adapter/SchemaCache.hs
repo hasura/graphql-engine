@@ -6,7 +6,7 @@
 module Hasura.Backends.DataConnector.Adapter.SchemaCache () where
 
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.SchemaCacheTypes (GetAggregationPredicatesDeps)
-import Hasura.SQL.Backend (BackendType (DataConnector))
 
 instance (Backend 'DataConnector) => GetAggregationPredicatesDeps 'DataConnector

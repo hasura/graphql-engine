@@ -1,11 +1,13 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import globals from '../../../Globals';
+import { StoryObj, Meta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
+
+import { eeLicenseInfo } from '../../../features/EETrial/mocks/http';
 import Sidebar, { Metadata } from './Sidebar';
 import { HasuraMetadataV3 } from '../../../metadata/types';
+import { ConsoleTypeDecorator } from '../../../storybook/decorators';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,102 +148,154 @@ export default {
       </div>
     ),
   ],
-} as ComponentMeta<typeof Sidebar>;
+} as Meta<typeof Sidebar>;
 
-export const MetadataOk: ComponentStory<typeof Sidebar> = args => {
-  return <Sidebar {...args} />;
-};
-MetadataOk.storyName = '💠 Demo Metadata Ok';
-MetadataOk.args = generateArgs();
-MetadataOk.parameters = {
-  msw: mockHandlers({}),
-};
+export const MetadataOk: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
 
-export const MetadataKo: ComponentStory<typeof Sidebar> = args => {
-  return <Sidebar {...args} />;
-};
-MetadataKo.storyName = '💠 Demo Metadata Ko';
-MetadataKo.args = generateArgs(false);
-MetadataKo.parameters = {
-  msw: mockHandlers({}),
+  name: '💠 Demo Metadata Ok',
+  args: generateArgs(),
+
+  parameters: {
+    msw: [...mockHandlers({}), eeLicenseInfo.active],
+  },
 };
 
-export const LogoutActive: ComponentStory<typeof Sidebar> = args => {
-  return <Sidebar {...args} />;
-};
-LogoutActive.storyName = '💠 Demo Pro Logout Active';
-LogoutActive.args = generateArgs();
-LogoutActive.parameters = {
-  msw: mockHandlers({}),
-  adminSecretSet: true,
+export const MetadataKo: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Metadata Ko',
+  args: generateArgs(false),
+
+  parameters: {
+    msw: [...mockHandlers({}), eeLicenseInfo.active],
+  },
 };
 
-export const ProLiteLoading: ComponentStory<typeof Sidebar> = args => {
-  return <Sidebar {...args} />;
-};
-ProLiteLoading.storyName = '💠 Demo Pro Lite Prometheus Loading';
-ProLiteLoading.args = generateArgs();
-ProLiteLoading.parameters = {
-  msw: mockHandlers({ delay: 'infinite' }),
-  consoleType: 'pro-lite',
+export const LogoutActive: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Logout Active',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro', adminSecret: true })],
+  parameters: {
+    msw: [...mockHandlers({}), eeLicenseInfo.active],
+  },
 };
 
-export const ProLitePrometheusEnabled: ComponentStory<
-  typeof Sidebar
-> = args => {
-  return <Sidebar {...args} />;
-};
-ProLitePrometheusEnabled.storyName = '💠 Demo Pro Lite Prometheus Enabled';
-ProLitePrometheusEnabled.args = generateArgs();
-ProLitePrometheusEnabled.parameters = {
-  msw: mockHandlers({ prometheusEnabled: true }),
-  consoleType: 'pro-lite',
+export const ProLiteLoading: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite Prometheus Loading',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: mockHandlers({ delay: 'infinite' }),
+  },
 };
 
-export const ProLitePrometheusDisabled: ComponentStory<
-  typeof Sidebar
-> = args => {
-  return <Sidebar {...args} />;
-};
-ProLitePrometheusDisabled.storyName = '💠 Demo Pro Lite Prometheus Disabled';
-ProLitePrometheusDisabled.args = generateArgs();
-ProLitePrometheusDisabled.parameters = {
-  msw: mockHandlers({ prometheusEnabled: false }),
-  consoleType: 'pro-lite',
+export const ProLitePrometheusWithoutLicense: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite Prometheus Without License',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.none],
+  },
 };
 
-export const ProLiteError: ComponentStory<typeof Sidebar> = args => {
-  return <Sidebar {...args} />;
-};
-ProLiteError.storyName = '💠 Demo Pro Lite Prometheus Error';
-ProLiteError.args = generateArgs();
-ProLiteError.parameters = {
-  msw: mockHandlers({ status: 500 }),
-  consoleType: 'pro-lite',
+export const ProLitePrometheusEnabled: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite Prometheus Enabled',
+  args: generateArgs(),
+
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [...mockHandlers({ prometheusEnabled: true }), eeLicenseInfo.active],
+  },
 };
 
-export const ProLiteOpenTelemetryEnabled: ComponentStory<
-  typeof Sidebar
-> = args => {
-  return <Sidebar {...args} />;
-};
-ProLiteOpenTelemetryEnabled.storyName =
-  '💠 Demo Pro Lite OpenTelemetry Enabled';
-ProLiteOpenTelemetryEnabled.args = generateArgs();
-ProLiteOpenTelemetryEnabled.parameters = {
-  msw: mockHandlers({ openTelemetryEnabled: true }),
-  consoleType: 'pro-lite',
+export const ProLitePrometheusDisabled: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite Prometheus Disabled',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [...mockHandlers({ prometheusEnabled: false }), eeLicenseInfo.active],
+  },
 };
 
-export const ProLiteOpenTelemetryDisabled: ComponentStory<
-  typeof Sidebar
-> = args => {
-  return <Sidebar {...args} />;
+export const ProLiteError: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite Prometheus Error',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [...mockHandlers({ status: 500 }), eeLicenseInfo.active],
+  },
 };
-ProLiteOpenTelemetryDisabled.storyName =
-  '💠 Demo Pro Lite OpenTelemetry Disabled';
-ProLiteOpenTelemetryDisabled.args = generateArgs();
-ProLiteOpenTelemetryDisabled.parameters = {
-  msw: mockHandlers({ openTelemetryEnabled: false }),
-  consoleType: 'pro-lite',
+
+export const ProLiteOpenTelemetryWithoutLicense: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite OpenTelemetry Without License',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [...mockHandlers({ openTelemetryEnabled: false }), eeLicenseInfo.none],
+  },
+};
+
+export const ProLiteOpenTelemetryEnabled: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite OpenTelemetry Enabled',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [
+      ...mockHandlers({ openTelemetryEnabled: true }),
+      eeLicenseInfo.active,
+    ],
+  },
+};
+
+export const ProLiteOpenTelemetryDisabled: StoryObj<typeof Sidebar> = {
+  render: args => {
+    return <Sidebar {...args} />;
+  },
+
+  name: '💠 Demo Pro Lite OpenTelemetry Disabled',
+  args: generateArgs(),
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
+  parameters: {
+    msw: [
+      ...mockHandlers({ openTelemetryEnabled: false }),
+      eeLicenseInfo.active,
+    ],
+  },
 };

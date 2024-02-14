@@ -13,21 +13,21 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
-    selectFromToFromItem,
     functionToIdentifier,
     withJsonBuildObj,
     withForceAggregation,
     selectToSelectWith,
     customSQLToTopLevelCTEs,
     customSQLToInnerCTEs,
-    logicalModelNameToAlias,
+    nativeQueryNameToAlias,
     toQuery,
+    selectToSelectWithM,
   )
 where
 
 import Control.Monad.Writer (Writer, runWriter)
 import Data.Bifunctor (bimap)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (toTxt)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -42,13 +42,10 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
-import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.Metadata (LogicalModelName (..))
+import Hasura.Function.Cache
+import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
-import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.RQL.Types.Function
-import Hasura.SQL.Backend
 import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | First element extractor expression from given record set
@@ -65,8 +62,8 @@ mkFirstElementExp expIdentifier =
 mkLastElementExp :: S.SQLExp -> S.SQLExp
 mkLastElementExp expIdentifier =
   let arrayExp = S.SEFnApp "array_agg" [expIdentifier] Nothing
-   in S.SEArrayIndex arrayExp $
-        S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
+   in S.SEArrayIndex arrayExp
+        $ S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
 
 cursorIdentifier :: Identifier
 cursorIdentifier = Identifier "__cursor"
@@ -118,23 +115,9 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
         (S.mkQIdenExp baseTableIdentifier . Identifier)
     baseTableIdentifier = mkBaseTableIdentifier prefix
 
-selectFromToFromItem :: TableIdentifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
-selectFromToFromItem prefix = \case
-  FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
-  FromFunction qf args defListM ->
-    S.FIFunc $
-      S.FunctionExp qf (fromTableRowArgs prefix args) $
-        Just $
-          S.mkFunctionAlias
-            qf
-            (fmap (fmap (first S.toColumnAlias)) defListM)
-  FromLogicalModel lm ->
-    S.FIIdentifier (S.tableAliasToIdentifier $ logicalModelNameToAlias (lmRootFieldName lm))
-
--- | Given a @LogicalModelName@, what should we call the CTE generated for it?
-logicalModelNameToAlias :: LogicalModelName -> S.TableAlias
-logicalModelNameToAlias lmName = S.mkTableAlias ("cte_" <> toTxt (getLogicalModelName lmName))
+-- | Given a @NativeQueryName@, what should we call the CTE generated for it?
+nativeQueryNameToAlias :: NativeQueryName -> Int -> S.TableAlias
+nativeQueryNameToAlias nqName freshId = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName) <> "_" <> tshow freshId)
 
 -- | Converts a function name to an 'Identifier'.
 --
@@ -167,12 +150,17 @@ selectToSelectWith action =
 -- | convert map of CustomSQL CTEs into named TopLevelCTEs
 customSQLToTopLevelCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.TopLevelCTE)]
 customSQLToTopLevelCTEs =
-  fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
+  fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
 
 -- | convert map of CustomSQL CTEs into named InnerCTEs
 customSQLToInnerCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.InnerCTE)]
 customSQLToInnerCTEs =
-  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
+  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
 
 toQuery :: S.SelectWithG S.TopLevelCTE -> Query
 toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE
+
+selectToSelectWithM :: (MonadIO m) => WriterT CustomSQLCTEs m S.Select -> m S.SelectWith
+selectToSelectWithM action = do
+  (selectSQL, customSQLCTEs) <- runWriterT action
+  pure $ S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) selectSQL

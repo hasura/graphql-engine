@@ -30,7 +30,7 @@ const Info: React.FC = () => {
   );
 
   return (
-    <div className="pl-0 pt-md">
+    <div className="pl-0 pt-md bootstrap-jail">
       <div className="pl-5">
         <TopicDescription
           title="What are Scheduled events?"

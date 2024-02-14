@@ -133,8 +133,10 @@ export default async function runMyExecutor(
   validateAllowedAssets(extractedAssets);
 
   console.log('This will be the loaded assets from this build :');
-  console.log(extractedAssets.js.map(it => it.url));
-  console.log(extractedAssets.css.map(it => it.url));
+  console.log('Javascript assets :');
+  extractedAssets.js.forEach(it => console.log('- ' + it.url));
+  console.log('CSS assets :');
+  extractedAssets.css.forEach(it => console.log('- ' + it.url));
 
   const finalAssets = gzAssetNames(extractedAssets);
 

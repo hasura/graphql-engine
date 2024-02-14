@@ -10,6 +10,11 @@
       "implementation": "./src/executors/chromatic/executor",
       "schema": "./src/executors/chromatic/schema.json",
       "description": "chromatic executor"
+    },
+    "validate-javascript-bundle-output": {
+      "implementation": "./src/executors/validate-javascript-bundle-output/executor",
+      "schema": "./src/executors/validate-javascript-bundle-output/schema.json",
+      "description": "A list of checks againts final bundles to do non regression testing on them"
     }
   }
 }

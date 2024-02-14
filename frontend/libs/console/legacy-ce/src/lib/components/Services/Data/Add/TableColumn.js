@@ -1,5 +1,6 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import clsx from 'clsx';
 
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
@@ -8,6 +9,9 @@ import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { FaTimes } from 'react-icons/fa';
 import { focusYellowRing, inputStyles } from '../utils';
+
+const getNewType = ({ oldType = '', isArray }) =>
+  isArray ? `${oldType.replace('[]', '')}[]` : oldType.replace('[]', '');
 
 const TableColumn = props => {
   const {
@@ -39,9 +43,41 @@ const TableColumn = props => {
     }
   }
 
+  const areArrayTypesSupported = isFeatureSupported('tables.create.arrayTypes');
+
+  const [colTypeIdentifier, setColTypeIdentifier] = useState(i);
+
+  const [colTypeValue, setColTypeValue] = useState(column.type || '');
+
+  useEffect(() => {
+    setColTypeValue(column.type || '');
+  }, [column.type]);
+
+  const [isArray, setArray] = useState(false);
+
   const handleColTypeChange = selectedOption => {
-    onColTypeChange(selectedOption.colIdentifier, selectedOption.value);
+    if (!selectedOption) return onColTypeChange(i, '');
+
+    const newType = getNewType({ oldType: selectedOption.value, isArray });
+
+    onColTypeChange(selectedOption.colIdentifier, newType);
+
+    setColTypeIdentifier(selectedOption.colIdentifier);
+    setColTypeValue(newType);
   };
+
+  const onColArrayChange = e => {
+    const isArray = e.target.checked;
+
+    setArray(isArray);
+    if (colTypeValue) {
+      const newType = getNewType({ oldType: colTypeValue, isArray });
+
+      onColTypeChange(colTypeIdentifier, newType);
+      setColTypeValue(newType);
+    }
+  };
+
   const { columnDataTypes, columnTypeValueMap } = getDataOptions(
     dataSource.commonDataTypes,
     restTypes,
@@ -73,8 +109,10 @@ const TableColumn = props => {
       ? columnDefaultFunctions[column.type]
       : getInferredDefaultValues();
 
+  const checkboxClassNames = clsx(focusYellowRing, 'cursor-pointer"');
+
   return (
-    <div key={i} className="grid mb-sm gap-sm grid-cols-1 sm:grid-cols-5">
+    <div key={i} className="mb-sm gap-sm grid grid-flow-col auto-cols-max">
       <input
         type="text"
         className={`${inputStyles}`}
@@ -83,10 +121,7 @@ const TableColumn = props => {
         onChange={onColumnChange.bind(undefined, i, column.nullable || false)}
         data-test={`column-${i}`}
       />
-      <span
-        // className={`mt-sm w-72`}
-        data-test={`col-type-${i}`}
-      >
+      <span data-test={`col-type-${i}`} className="w-[160px]">
         {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
           <ColumnTypeSelector
             options={columnDataTypes}
@@ -110,6 +145,21 @@ const TableColumn = props => {
           />
         )}
       </span>
+
+      {areArrayTypesSupported && (
+        <label className="flex items-center mr-sm cursor-pointer">
+          <input
+            className={checkboxClassNames}
+            style={{ margin: '0' }}
+            checked={column.array}
+            type="checkbox"
+            onChange={onColArrayChange}
+            data-test={`nullable-${i}`}
+          />
+          <span className="ml-xs">Array</span>
+        </label>
+      )}
+
       <span className={inputStyles}>
         <TableColumnDefault
           onChange={setColDefaultValue}
@@ -119,10 +169,11 @@ const TableColumn = props => {
           colDefaultFunctions={defaultFunctions}
         />
       </span>
+
       <div className="flex items-center">
-        <label className="flex items-center mr-sm">
+        <label className="flex items-center mr-sm cursor-pointer">
           <input
-            className={focusYellowRing}
+            className={checkboxClassNames}
             style={{ margin: '0' }}
             checked={column.nullable}
             type="checkbox"
@@ -131,9 +182,10 @@ const TableColumn = props => {
           />
           <span className="ml-xs">Nullable</span>
         </label>
-        <label className="flex items-center">
+
+        <label className="flex items-center cursor-pointer">
           <input
-            className={focusYellowRing}
+            className={checkboxClassNames}
             style={{ margin: '0' }}
             checked={isColumnUnique}
             type="checkbox"
@@ -148,7 +200,7 @@ const TableColumn = props => {
           />
           <span className="ml-xs">Unique</span>
         </label>
-        <div className="ml-auto">{getRemoveIcon(colLength)}</div>
+        <div className="ml-2">{getRemoveIcon(colLength)}</div>
       </div>
     </div>
   );

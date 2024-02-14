@@ -11,18 +11,21 @@ module Hasura.RQL.IR.Update
     auOutput,
     auAllCols,
     auNamingConvention,
+    auValidateInput,
   )
 where
 
 import Control.Lens.TH (makeLenses)
 import Data.Kind (Type)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Permission
 
 --------------------------------------------------------------------------------
 
@@ -38,7 +41,8 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
     -- | Selection set
     _auOutput :: MutationOutputG b r v,
     _auAllCols :: [ColumnInfo b],
-    _auNamingConvention :: Maybe NamingCase
+    _auNamingConvention :: Maybe NamingCase,
+    _auValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving stock (Functor, Foldable, Traversable)
 

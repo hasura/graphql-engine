@@ -13,5 +13,6 @@
 
   // adding this setting per this discussion on github:
   // https://github.com/nrwl/nx/issues/9465#issuecomment-1080093295
-  "typescript.preferences.importModuleSpecifier": "project-relative"
+  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "git.ignoreLimitWarning": true
 }

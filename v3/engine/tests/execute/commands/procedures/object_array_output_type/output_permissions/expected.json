@@ -1,0 +1,59 @@
+[
+  {
+    "data": {
+      "uppercaseAllActorNames": [
+        {
+          "actor_id": 1,
+          "movie_id": 1,
+          "name": "LEONARDO DICAPRIO"
+        },
+        {
+          "actor_id": 2,
+          "movie_id": 1,
+          "name": "KATE WINSLET"
+        },
+        {
+          "actor_id": 3,
+          "movie_id": 2,
+          "name": "IRFAN KHAN"
+        },
+        {
+          "actor_id": 4,
+          "movie_id": 3,
+          "name": "AL PACINO"
+        },
+        {
+          "actor_id": 5,
+          "movie_id": 3,
+          "name": "ROBERT DE NIRO"
+        },
+        {
+          "actor_id": 6,
+          "movie_id": 4,
+          "name": "MORGAN FREEMAN"
+        },
+        {
+          "actor_id": 7,
+          "movie_id": 5,
+          "name": "BEN KINGSLEY"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field movie_id on type CommandActor is not allowed for user_1"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field name on type CommandActor is not allowed for user_2"
+      }
+    ]
+  }
+]

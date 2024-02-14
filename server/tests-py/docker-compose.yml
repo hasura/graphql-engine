@@ -5,74 +5,6 @@ version: "3.6"
 name: hge-python-tests
 
 services:
-  cabal-update:
-    image: hasura/graphql-engine-server-builder:${DOCKER_PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
-    command:
-      - cabal
-      - update
-    volumes:
-      - .:/src
-      - hge-dist:/src/dist-newstyle
-      - cabal-cache:/root/.cabal
-    working_dir: /src
-
-  hge-build:
-    image: hasura/graphql-engine-server-builder:${DOCKER_PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
-    command:
-      - sh
-      - -c
-      - |
-        set -ex
-        cabal build graphql-engine:exe:graphql-engine
-        cabal list-bin graphql-engine:exe:graphql-engine > dist-newstyle/bin.txt
-    volumes:
-      - ../..:/src
-      - /dev/null:/src/cabal.project.local # don't include cabal.project.local in build
-      - hge-dist:/src/dist-newstyle
-      - cabal-cache:/root/.cabal
-    working_dir: /src
-    depends_on:
-      cabal-update:
-        condition: service_completed_successfully
-
-  tests-py:
-    build:
-      context: ../..
-      dockerfile: ./.buildkite/dockerfiles/server-pytest-runner/Dockerfile
-    image: hasura/graphql-engine-server-pytest-runner:${HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA}
-    command:
-      - sh
-      - -c
-      - |
-        set -ex
-        export GRAPHQL_ENGINE="$$(cat dist-newstyle/bin.txt)"
-        ./oss-.circleci/test-server.sh
-    environment:
-      - CIRCLE_NODE_INDEX=1
-      - CIRCLE_NODE_TOTAL=1
-      - OUTPUT_FOLDER=/output
-      - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@hge-python-tests-postgres-1/postgres
-      - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@hge-python-tests-postgres-2/postgres
-      - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
-      - HASURA_GRAPHQL_MSSQL_SOURCE_URL=DRIVER={ODBC Driver 18 for SQL Server};SERVER=sqlserver,1433;Uid=sa;Pwd=Password!;Encrypt=optional
-      - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@hge-python-tests-postgres-1/postgres
-      - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@hge-python-tests-postgres-2/postgres
-      - HASURA_BIGQUERY_PROJECT_ID
-      - HASURA_BIGQUERY_SERVICE_KEY
-      - SERVER_TEST_TO_RUN
-    volumes:
-      - ../..:/src
-      - hge-dist:/src/dist-newstyle
-      - output:/output
-    working_dir: /src
-    depends_on:
-      postgres:
-        condition: service_healthy
-      citus:
-        condition: service_healthy
-      sqlserver-healthcheck:
-        condition: service_healthy
-
   postgres:
     extends:
       file: ../../docker-compose/databases.yaml
@@ -95,16 +27,3 @@ services:
     extends:
       file: ../../docker-compose/databases.yaml
       service: sqlserver
-
-  sqlserver-healthcheck:
-    extends:
-      file: ../../docker-compose/databases.yaml
-      service: sqlserver-healthcheck
-    depends_on:
-      sqlserver:
-        condition: service_started
-
-volumes:
-  cabal-cache:
-  hge-dist:
-  output:

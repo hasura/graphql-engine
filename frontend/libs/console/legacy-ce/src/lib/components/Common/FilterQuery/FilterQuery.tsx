@@ -57,7 +57,7 @@ const FilterQuery: React.FC<Props> = props => {
 
   return (
     <Analytics name="EventFilterQuery" {...REDACT_EVERYTHING}>
-      <div className={styles.add_mar_top}>
+      <div className={styles.add_mar_top} data-test="event-filter-table">
         {render(rows, state, setState, runQuery)}
       </div>
     </Analytics>

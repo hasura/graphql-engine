@@ -1,0 +1,88 @@
+[
+  {
+    "data": {
+      "ActorMany": [
+        {
+          "MovieFromCommand": {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          },
+          "name": "Leonardo DiCaprio"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 1,
+            "rating": 4,
+            "title": "Titanic"
+          },
+          "name": "Kate Winslet"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 2,
+            "rating": 5,
+            "title": "Slumdog Millionaire"
+          },
+          "name": "Irfan Khan"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 3,
+            "rating": 4,
+            "title": "Godfather"
+          },
+          "name": "Al Pacino"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 3,
+            "rating": 4,
+            "title": "Godfather"
+          },
+          "name": "Robert De Niro"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 4,
+            "rating": 5,
+            "title": "Shawshank Redemption"
+          },
+          "name": "Morgan Freeman"
+        },
+        {
+          "MovieFromCommand": {
+            "movie_id": 5,
+            "rating": 4,
+            "title": "Schindler's List"
+          },
+          "name": "Ben Kingsley"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field MovieFromCommand on type Actor is not allowed for user_without_perm_on_movie_id"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field MovieFromCommand on type Actor is not allowed for user_without_perm_on_command"
+      }
+    ]
+  }
+]

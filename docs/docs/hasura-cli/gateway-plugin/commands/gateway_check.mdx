@@ -1,0 +1,43 @@
+---
+sidebar_label: gateway check
+sidebar_position: 2
+description: Check if the current Hasura's Remote Schema configuration is compatible with gateway Hasura
+keywords:
+  - hasura
+  - docs
+  - CLI
+  - connector create
+---
+
+# Hasura CLI: gateway check
+
+Check the compatibility of the child Remote Schema configuration with the gateway configuration.
+
+## Synopsis
+
+This command reads the Remote Schema configuration of the current child Hasura present in the file mentioned by the flag
+`--gateway-configuration-file`, appends it to the gateway's metadata, and checks for consistency of the final metadata with
+the gateway. Please note:
+
+- `gateway-url`, `gateway-configuration-file`, and the gateway's `admin-secret` are required to run this command.
+
+```bash
+hasura gateway [flags] check
+```
+
+## Usage
+
+```bash
+# Checking compatibility of the configuration present in gateway-configuration.json with gateway instance
+hasura gateway --gateway-url https://gateway-hasura-app.hasura.app --gateway-configuration-file /path/to/gateway-configuration.json --admin-secret myadminsecret check
+
+```
+
+## Options
+
+```sass
+    --gateway-url string                  url of the gateway instance
+    --gateway-configuration-file string   path to the current Hasura's configuration
+    --admin-secret string                 admin secret of the gateway
+-h, --help                                help for check
+```

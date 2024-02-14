@@ -9,11 +9,13 @@ sidebar_label: Disaster recovery
 sidebar_position: 70
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Disaster Recovery and Passive Standby Config for Hasura Cloud
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Enterprise</div>
+<ProductBadge ee />
 
-## Overview
+## Introduction
 
 If you're designing your system to be fault tolerant enough to account for a full region-wide outage, we recommend
 enabling a backup region on Hasura Cloud too.
@@ -41,7 +43,7 @@ with your secondary database.
 
 Depending on when and how you keep the secondary database schema and data synced with the primary database, you should
 also keep the Hasura Metadata on the secondary project up-to-date and in-sync with the primary project. You can use our
-[Github Integration](/hasura-cloud/ci-cd/github-integration.mdx) features to keep your secondary project in-sync by
+[Github Integration](/cloud-ci-cd/github-integration.mdx) features to keep your secondary project in-sync by
 deploying each commit to both projects. Care should be taken in the config of databases and ENV variables in this
 regard.
 

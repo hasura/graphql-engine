@@ -20,14 +20,14 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error (QErr)
 import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
-import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.IR.Value (Provenance (..), UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
+import Hasura.RQL.Types.Roles (mkRoleNameSafe)
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
   ( BackendOnlyFieldAccess (..),
     UserInfo (..),
-    mkRoleNameSafe,
     mkSessionVariablesText,
   )
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -81,19 +81,57 @@ spec = do
     describe "prepareWithPlan" do
       it "returns the indexed paramemter for PGArray" do
         let cvArray = ColumnValue (ColumnScalar $ PGArray PGInteger) (PGValArray [PGValInteger 1])
-        prepareWithPlan userInfo (UVParameter (Just vi) cvArray)
+        prepareWithPlan userInfo (UVParameter (FromGraphQL vi) cvArray)
           `yields` S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer[]")
 
       it "returns the indexed parameter for PGInteger" do
         -- The variable becomes prepared var (2) because that is the first
         -- available parameter index. See 'getVarArgNum'.
-        prepareWithPlan userInfo (UVParameter (Just vi) cv)
+        prepareWithPlan userInfo (UVParameter (FromGraphQL vi) cv)
           `yields` S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer")
+
+      it "reuses variable bindings" do
+        let program = do
+              x <- prepareWithPlan userInfo (UVParameter (FromGraphQL vi) cv)
+              y <- prepareWithPlan userInfo (UVParameter (FromGraphQL vi) cv)
+
+              pure (x, y)
+
+        program
+          `yields` ( S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer"),
+                     S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer")
+                   )
+
+      it "reuses internal variable bindings" do
+        let program = do
+              x <- prepareWithPlan userInfo (UVParameter (FromInternal "foo") cv)
+              y <- prepareWithPlan userInfo (UVParameter (FromInternal "bar") cv)
+              z <- prepareWithPlan userInfo (UVParameter (FromInternal "foo") cv)
+
+              pure (x, y, z)
+
+        program
+          `yields` ( S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer"),
+                     S.SETyAnn (S.SEPrep 3) (S.TypeAnn "integer"),
+                     S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer")
+                   )
+
+      it "keeps internal and external bindings separate" do
+        let program = do
+              x <- prepareWithPlan userInfo (UVParameter (FromInternal "foo") cv)
+              y <- prepareWithPlan userInfo (UVParameter (FromGraphQL vi) cv)
+
+              pure (x, y)
+
+        program
+          `yields` ( S.SETyAnn (S.SEPrep 2) (S.TypeAnn "integer"),
+                     S.SETyAnn (S.SEPrep 3) (S.TypeAnn "integer")
+                   )
 
     describe "prepareWithoutPlan" do
       it "returns the literal value" do
         -- When preparing _without_ a plan, we just inline the value.
-        prepareWithoutPlan userInfo (UVParameter (Just vi) cv)
+        prepareWithoutPlan userInfo (UVParameter (FromGraphQL vi) cv)
           `yields` S.SETyAnn (S.SELit "3") (S.TypeAnn "integer")
 
   describe "UVSessionVar" do

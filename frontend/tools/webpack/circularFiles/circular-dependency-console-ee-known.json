@@ -1,18 +1,14 @@
 [
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/index.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataRouter.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/index.ts"
+    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
+    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
+    "libs/console/legacy-ee/src/lib/components/Main/Actions.js"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js",
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/ApiExplorer/Actions.js",
-    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/ApiExplorer/Actions.js"
+    "libs/console/legacy-ee/src/lib/components/OAuthCallback/Actions.js",
+    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
+    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
+    "libs/console/legacy-ee/src/lib/components/OAuthCallback/Actions.js"
   ],
   [
     "libs/console/legacy-ce/src/lib/telemetry/Actions.ts",
@@ -21,10 +17,39 @@
     "libs/console/legacy-ce/src/lib/telemetry/Actions.ts"
   ],
   [
+    "libs/console/legacy-ce/src/lib/Globals.ts",
+    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts",
+    "libs/console/legacy-ce/src/lib/Globals.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
+    "libs/console/legacy-ce/src/lib/metadata/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
+    "libs/console/legacy-ce/src/lib/metadata/actions.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataRouter.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/index.ts"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/components/Main/Actions.js",
     "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
     "libs/console/legacy-ce/src/lib/components/App/Actions.js",
     "libs/console/legacy-ce/src/lib/components/Main/Actions.js"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/ApiExplorer/Actions.js",
+    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/ApiExplorer/Actions.js"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableBrowseRows/ViewActions.js",
+    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js"
   ],
   [
     "libs/console/legacy-ce/src/lib/new-components/Tooltip/index.ts",
@@ -38,23 +63,15 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableBrowseRows/ViewActions.js",
-    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js"
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js",
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
-    "libs/console/legacy-ce/src/lib/metadata/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
-    "libs/console/legacy-ce/src/lib/metadata/actions.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/Globals.ts",
-    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts",
-    "libs/console/legacy-ce/src/lib/Globals.ts"
+    "libs/console/legacy-ce/src/lib/components/App/Actions.js",
+    "libs/console/legacy-ce/src/lib/telemetry/Actions.ts",
+    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
+    "libs/console/legacy-ce/src/lib/components/App/Actions.js"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/index.tsx",
@@ -64,10 +81,25 @@
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/index.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
     "libs/console/legacy-ce/src/lib/components/App/Actions.js",
     "libs/console/legacy-ce/src/lib/telemetry/Actions.ts",
-    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
-    "libs/console/legacy-ce/src/lib/components/App/Actions.js"
+    "libs/console/legacy-ce/src/lib/utils/requestAction.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/metadata/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
+    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
+    "libs/console/legacy-ce/src/lib/metadata/utils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/metadata/sourcesUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
+    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
+    "libs/console/legacy-ce/src/lib/metadata/sourcesUtils.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/metadata/selector.ts",
@@ -83,9 +115,42 @@
     "libs/console/legacy-ce/src/lib/metadata/selector.ts"
   ],
   [
+    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts"
+  ],
+  [
+    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
+    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
+    "libs/console/legacy-ee/src/lib/utils/requestAction.js"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts",
+    "libs/console/legacy-ce/src/lib/Globals.ts",
+    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/utils.js",
+    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/sqlUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/utils.js"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
@@ -99,38 +164,6 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataRouter.js"
   ],
   [
-    "libs/console/legacy-ce/src/lib/utils/requestAction.ts",
-    "libs/console/legacy-ce/src/lib/components/App/Actions.js",
-    "libs/console/legacy-ce/src/lib/telemetry/Actions.ts",
-    "libs/console/legacy-ce/src/lib/utils/requestAction.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js",
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/metadata/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
-    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
-    "libs/console/legacy-ce/src/lib/metadata/utils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts",
-    "libs/console/legacy-ce/src/lib/Globals.ts",
-    "libs/console/legacy-ce/src/lib/helpers/versionUtils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/dataSources/index.ts",
     "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
@@ -139,20 +172,16 @@
     "libs/console/legacy-ce/src/lib/dataSources/index.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/Surveys/utils.ts",
-    "libs/console/legacy-ce/src/lib/features/Surveys/constants.ts",
-    "libs/console/legacy-ce/src/lib/features/Surveys/utils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/new-components/Tooltip/IconTooltip.tsx",
-    "libs/console/legacy-ce/src/lib/new-components/Tooltip/index.ts",
-    "libs/console/legacy-ce/src/lib/new-components/Tooltip/IconTooltip.tsx"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/utils/migration/utils.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
     "libs/console/legacy-ce/src/lib/utils/migration/utils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableRelationships/Actions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableReducer.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableRelationships/Actions.js"
   ],
   [
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableBrowseRows/ViewActions.js",
@@ -165,19 +194,9 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableReducer.js"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableRelationships/Actions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableInsertItem/InsertActions.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableReducer.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableRelationships/Actions.js"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/utils.js",
-    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/sqlUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/utils.js"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableInsertItem/InsertActions.js"
   ],
   [
     "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
@@ -188,9 +207,19 @@
     "libs/console/legacy-ce/src/lib/dataSources/services/index.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableInsertItem/InsertActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableInsertItem/InsertActions.js"
+    "libs/console/legacy-ce/src/lib/new-components/Tooltip/IconTooltip.tsx",
+    "libs/console/legacy-ce/src/lib/new-components/Tooltip/index.ts",
+    "libs/console/legacy-ce/src/lib/new-components/Tooltip/IconTooltip.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js",
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/RemoteSchema/RemoteSchemaRouter.js"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/new-components/Form/index.ts",
+    "libs/console/legacy-ce/src/lib/new-components/Form/CopyableInputField.tsx",
+    "libs/console/legacy-ce/src/lib/new-components/Form/index.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRoles.tsx",
@@ -200,17 +229,21 @@
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRoles.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/metadata/sourcesUtils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
-    "libs/console/legacy-ce/src/lib/metadata/actions.ts",
-    "libs/console/legacy-ce/src/lib/metadata/sourcesUtils.ts"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx",
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/components/FeatureFlags/index.ts",
@@ -227,19 +260,8 @@
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/components/FeatureFlagToast/index.ts"
   ],
   [
-    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
-    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
-    "libs/console/legacy-ee/src/lib/components/Main/Actions.js"
-  ],
-  [
-    "libs/console/legacy-ee/src/lib/components/OAuthCallback/Actions.js",
-    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
-    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
-    "libs/console/legacy-ee/src/lib/components/OAuthCallback/Actions.js"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
@@ -249,9 +271,31 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/bigquery/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/common/defaultDatabaseProps.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/index.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/Actions.js",
@@ -263,47 +307,6 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/PermissionsSummary/utils.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/utils.tsx",
     "libs/console/legacy-ce/src/lib/components/Services/Data/PermissionsSummary/utils.js"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/utils.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/PermissionsSummary/utils.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/utils.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
@@ -319,37 +322,6 @@
     "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
     "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
     "libs/console/legacy-ce/src/lib/features/Data/index.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx",
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
@@ -383,9 +355,35 @@
     "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/index.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/Surveys/constants.ts",
-    "libs/console/legacy-ce/src/lib/features/Surveys/utils.ts",
-    "libs/console/legacy-ce/src/lib/features/Surveys/constants.ts"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/utils.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/PermissionsSummary/utils.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/utils.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/ConfigureTransformation/requestTransformState.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableBrowseRows/FilterActions.js",
@@ -402,6 +400,11 @@
     "libs/console/legacy-ce/src/lib/dataSources/services/mysql/index.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/new-components/Form/CopyableInputField.tsx",
+    "libs/console/legacy-ce/src/lib/new-components/Form/index.ts",
+    "libs/console/legacy-ce/src/lib/new-components/Form/CopyableInputField.tsx"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRolesTable.tsx",
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/TableBody.tsx",
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/TableRow.tsx",
@@ -409,10 +412,9 @@
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRolesTable.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/ManageDBUtils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSources/state.ts"
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx",
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/components/FeatureFlags/FeatureFlags.tsx",
@@ -429,12 +431,7 @@
     "libs/console/legacy-ce/src/lib/features/FeatureFlags/components/FeatureFlagToast/FeatureFlagToast.tsx"
   ],
   [
-    "libs/console/legacy-ee/src/lib/utils/requestAction.js",
-    "libs/console/legacy-ee/src/lib/components/Main/Actions.js",
-    "libs/console/legacy-ee/src/lib/utils/requestAction.js"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
@@ -442,13 +439,75 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/sqlUtils.ts",
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
     "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/sqlUtils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/hooks/index.ts",
+    "libs/console/legacy-ce/src/lib/features/Data/hooks/useListAllTableColumns.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
+    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
+    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
+    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/sqlUtils.ts",
+    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/index.tsx",
+    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/sqlUtils.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/common/defaultDatabaseProps.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/DataSource/bigquery/index.ts",
@@ -483,52 +542,6 @@
     "libs/console/legacy-ce/src/lib/features/DataSource/postgres/index.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/common/defaultDatabaseProps.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/hooks/index.ts",
-    "libs/console/legacy-ce/src/lib/features/Data/hooks/useListAllTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
-    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/features/Data/hooks/index.ts",
     "libs/console/legacy-ce/src/lib/features/Data/hooks/useListAllTableColumns.ts",
     "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
@@ -544,38 +557,20 @@
     "libs/console/legacy-ce/src/lib/features/Data/hooks/index.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx"
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/RootFieldPermissions.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TablePermissions/RootFieldPermissions/useRootFieldPermissions.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx",
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/Headers/Headers.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts",
-    "libs/console/legacy-ce/src/lib/components/Common/utils/v1QueryUtils.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/index.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/index.tsx",
-    "libs/console/legacy-ce/src/lib/dataSources/services/postgresql/utils.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/sqlUtils.ts",
-    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/index.tsx",
-    "libs/console/legacy-ce/src/lib/dataSources/services/cockroach/sqlUtils.ts"
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableCommon/TableHeader.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/DatabaseRelationshipsTab.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/TableBody.tsx",
@@ -611,56 +606,58 @@
     "libs/console/legacy-ce/src/lib/components/Services/Data/TableModify/ModifyActions.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/DataSubSidebar.js",
     "libs/console/legacy-ce/src/lib/components/Services/Data/TreeView.tsx",
-    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/GDCTree.tsx",
+    "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/index.ts",
     "libs/console/legacy-ce/src/lib/components/Services/Data/GDCTree/hooks/useTreeData.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/EditConnection.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
+    "libs/console/legacy-ce/src/lib/features/ConnectDB/EditConnection.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/ManageTrackedTables.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableList.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/DataSource/common/defaultDatabaseProps.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/bigquery/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/common/defaultDatabaseProps.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/index.ts"
+    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/index.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getDatabaseConfiguration.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
     "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TrackedTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/Data/hooks/useListAllTableColumns.ts",
@@ -678,28 +675,6 @@
     "libs/console/legacy-ce/src/lib/features/Data/hooks/useListAllTableColumns.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/EditConnection.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/Connect.tsx",
-    "libs/console/legacy-ce/src/lib/features/ConnectDB/EditConnection.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/TableRow.tsx",
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRoles.tsx",
     "libs/console/legacy-ce/src/lib/components/Services/Settings/InheritedRoles/InheritedRolesTable.tsx",
@@ -712,55 +687,9 @@
     "libs/console/legacy-ce/src/lib/features/SqlQueries/hooks/useTableColumns.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/citus/introspection/getTableColumns.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/gdc/introspection/getTableColumns.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/mssql/introspection/getTableColumns.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getDatabaseConfiguration.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getDatabaseConfiguration.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getTableColumns.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/index.ts",
-    "libs/console/legacy-ce/src/lib/features/hasura-metadata-api/useMetadata.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/index.ts",
-    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getTableColumns.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TrackedTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx"
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx",
+    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx",
@@ -774,25 +703,26 @@
     "libs/console/legacy-ce/src/lib/features/BrowseRows/components/BrowseRowsContainer/BrowseRowsContainer.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQuery.tsx",
-    "libs/console/legacy-ce/src/lib/features/BrowseRows/components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.tsx"
+    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
+    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
+    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TrackedTables.tsx",
+    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getDatabaseConfiguration.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/alloydb/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/index.ts",
+    "libs/console/legacy-ce/src/lib/features/DataSource/postgres/introspection/getDatabaseConfiguration.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/ManageTrackedTables.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableList.tsx",
     "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
     "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
     "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TrackedTables.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/UntrackedTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/UntrackedTables.tsx"
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/ManageTrackedTables.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx",
@@ -806,6 +736,14 @@
     "libs/console/legacy-ce/src/lib/features/BrowseRows/BrowseRows.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableList.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/ManageTrackedTables.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableList.tsx"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/utils.tsx",
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/components/ArgFieldTitle.tsx",
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/components/ArgValueForm.tsx",
@@ -815,25 +753,6 @@
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/index.ts",
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/parsers.ts",
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useMetadataSource.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TableRow.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/TrackTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TrackedTables.tsx",
-    "libs/console/legacy-ce/src/lib/features/Data/TrackTables/components/TableRow.tsx"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/RenderProperty.tsx",
-    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/ObjectInputField.tsx",
-    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/RenderProperty.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx",
@@ -847,6 +766,20 @@
     "libs/console/legacy-ce/src/lib/features/BrowseRows/components/DataGrid/DataGrid.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableRow.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/index.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabaseContainer.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/ManageDatabase/ManageDatabase.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/ManageTrackedTables.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableList.tsx",
+    "libs/console/legacy-ce/src/lib/features/Data/TrackResources/components/TableRow.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/RenderProperty.tsx",
+    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/ObjectInputField.tsx",
+    "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/RenderProperty.tsx"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/components/ArgFieldTitle.tsx",
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/components/ArgValueForm.tsx",
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/utils.tsx",
@@ -856,13 +789,6 @@
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/parsers.ts",
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/index.ts",
     "libs/console/legacy-ce/src/lib/features/hasura-metadata-types/openTelemetry/parsers.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/OpenApi3Form/components/ObjectInputField.tsx",
@@ -897,19 +823,6 @@
     "libs/console/legacy-ce/src/lib/features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/components/ArgValueForm.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts"
-  ],
-  [
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgValueForm.tsx",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx"
-  ],
-  [
     "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/index.ts",
     "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
     "libs/console/legacy-ce/src/lib/features/BrowseRows/index.tsx",
@@ -926,17 +839,10 @@
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RootFieldPermissions/RootFieldPermissions.tsx"
   ],
   [
-    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/index.ts",
-    "libs/console/legacy-ce/src/lib/features/MetadataAPI/hooks/useLocalRelationships.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/index.ts",
-    "libs/console/legacy-ce/src/lib/features/Datasources/useTableRelationships.ts"
-  ],
-  [
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgValueForm.tsx",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx",
-    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx"
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/DeleteRow/hooks/useDeleteRow.ts",
@@ -966,27 +872,77 @@
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RootFieldPermissions/hooks/useRootFieldPermissions.ts"
   ],
   [
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgValueForm.tsx",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx",
+    "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgValueForm.tsx",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/utils.tsx",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgFieldTitle.tsx",
     "libs/console/legacy-ce/src/lib/features/DatabaseRelationships/components/RelationshipForm/parts/MapRemoteSchemaFields/parts/RemoteSchemaTree/components/ArgValueForm.tsx"
   ],
   [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/comparatorsFromSchema.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/TableProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/RowPermissionsProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/helpers.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/comparatorsFromSchema.ts"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/TableProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/RowPermissionsProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/helpers.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/comparatorsFromSchema.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/TableProvider.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/RowPermissionsProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/helpers.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/comparatorsFromSchema.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/TableProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/RowPermissionsProvider.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/helpers.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/comparatorsFromSchema.ts",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/TableProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/RowPermissionsProvider.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/utils/helpers.ts"
+  ],
+  [
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/PermissionsInput.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ObjectOrArrayEntry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/PermissionsInput.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ObjectOrArrayEntry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/PermissionsInput.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx"
   ],
   [
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ObjectOrArrayEntry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/PermissionsInput.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx",
     "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ObjectOrArrayEntry.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/PermissionsInput.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ObjectOrArrayEntry.tsx"
+  ],
+  [
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ExistsEntry.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/Entry.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryType.tsx",
+    "libs/console/legacy-ce/src/lib/features/Permissions/PermissionsForm/components/RowPermissionsBuilder/components/EntryTypes/ExistsEntry.tsx"
   ]
 ]

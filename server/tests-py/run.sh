@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-# This allows a developer, through Docker, to run the Python integration tests in pretty
-# much exactly the same way as CI does (in contrast to `dev.sh test --integration`),
-# allowing us to more readily diagnose issues locally.
+# This allows a developer to easily run the Python integration tests using the
+# `--hge-bin` flag.
 #
-# This takes an optional test configuration argument, corresponding to a name in
-# `oss-.circleci/server-test-names.txt` (else defaulting to `no-auth`).
+# The Pytest runner will start a new HGE instance for each test class, with the
+# default arguments and the environment variables provided below.
 #
-# See `case "$SERVER_TEST_TO_RUN"` in `oss-.circleci/test-server.sh` for what
-# these actually do.
+# This is a work in progress.
 
 set -e
 set -u
@@ -16,66 +14,36 @@ set -o pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
-# This `PLATFORM` value is used to pick the correct server builder image and HGE binary path.
-PLATFORM="$(uname -m)"
-if [[ "$PLATFORM" == 'x86_64' || "$PLATFORM" == 'amd64' ]]; then
-  CABAL_PLATFORM='x86_64'
-  DOCKER_PLATFORM='amd64'
-fi
-if [[ "$PLATFORM" == 'aarch64' || "$PLATFORM" == 'arm64' ]]; then
-  CABAL_PLATFORM='aarch64'
-  DOCKER_PLATFORM='arm64'
-fi
-export CABAL_PLATFORM DOCKER_PLATFORM
+DATABASES=(postgres citus sqlserver)
 
-# copied from images.go
-HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA="$(
-  sha256sum ../../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile \
-  | awk '{ print $1 }'
-)"
-export HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA
+(
+  cd ../..
+  echo '*** Building HGE ***'
+  cabal build -j graphql-engine:exe:graphql-engine
 
-# copied from images.go
-HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA="$(
-  cat \
-		../../.buildkite/dockerfiles/server-pytest-runner/Dockerfile \
-		./requirements.txt \
-		./package-lock.json \
-		./package.json \
-		./remote_schemas/nodejs/package.json \
-  | sha256sum \
-  | awk '{ print $1 }'
-)"
-export HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA
+  echo
+  echo '*** Installing test dependencies ***'
+  make server/tests-py/.hasura-dev-python-venv server/tests-py/node_modules remove-tix-file
+)
 
-# Use the Azure SQL Edge image instead of the SQL Server image on arm64.
-# The latter doesn't work yet.
-if [[ "$(uname -m)" == 'arm64' ]]; then
-  export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
-fi
-
-if [[ $# -gt 0 ]]; then
-  SERVER_TESTS_TO_RUN=("$@")
-else
-  SERVER_TESTS_TO_RUN=('no-auth')
-fi
-
-echo '*** Building images ***'
-# We rebuild the images because on arm64, we end up with an amd64 Python test
-# runner. This won't actually be able to run HGE. Until we build an arm64 image
-# on CI, we need to instead build it locally.
-if [[ "$DOCKER_PLATFORM" == 'arm64' ]]; then
-  docker compose build
-fi
+# shellcheck disable=SC1091
+source .hasura-dev-python-venv/bin/activate
 
 echo
-echo '*** Building HGE ***'
-docker compose run --rm hge-build
+echo '*** Starting databases ***'
+docker compose up -d --wait "${DATABASES[@]}"
 
-for SERVER_TEST_TO_RUN in "${SERVER_TESTS_TO_RUN[@]}"; do
-  export SERVER_TEST_TO_RUN
-  echo
-  echo "*** Running test suite: ${SERVER_TEST_TO_RUN} ***"
-  docker compose rm -svf postgres citus sqlserver sqlserver-healthcheck # tear down databases beforehand
-  docker compose run --rm tests-py
-done
+HASURA_GRAPHQL_PG_SOURCE_URL_1="postgresql://postgres:hasura@localhost:$(docker compose port --index 1 postgres 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_PG_SOURCE_URL_2="postgresql://postgres:hasura@localhost:$(docker compose port --index 2 postgres 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_MSSQL_SOURCE_URL="DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,$(docker compose port sqlserver 1433 | sed -E 's/.*://');Uid=sa;Pwd=Password!;Encrypt=optional"
+export HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2 HASURA_GRAPHQL_CITUS_SOURCE_URL HASURA_GRAPHQL_MSSQL_SOURCE_URL
+
+echo
+echo '*** Running tests ***'
+pytest \
+  --dist=loadscope \
+  -n auto \
+  --hge-bin="$(cabal list-bin graphql-engine:exe:graphql-engine)" \
+  --pg-urls "$HASURA_GRAPHQL_PG_SOURCE_URL_1" "$HASURA_GRAPHQL_PG_SOURCE_URL_2" \
+  "$@"

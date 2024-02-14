@@ -5,12 +5,13 @@ import { adaptPostgresConnection } from './utils/adaptResponse';
 
 const numberSchema = z.preprocess(
   val => parseInt(val as string, 10),
-  z.union([z.number(), z.nan()])
+  z.union([z.number().min(0), z.nan()])
 );
 
 export const poolSettingsSchema = z
   .object({
     totalMaxConnections: numberSchema.optional(),
+    maxConnections: numberSchema.optional(),
     idleTimeout: numberSchema.optional(),
     retries: numberSchema.optional(),
     poolTimeout: numberSchema.optional(),
@@ -26,6 +27,10 @@ export const databaseUrlSchema = z.discriminatedUnion('connectionType', [
   z.object({
     connectionType: z.literal('envVar'),
     envVar: z.string().min(1, 'Env variable cannot be empty'),
+  }),
+  z.object({
+    connectionType: z.literal('dynamicFromFile'),
+    dynamicFromFile: z.string().min(1, 'File path cannot be empty'),
   }),
   z.object({
     connectionType: z.literal('connectionParams'),
@@ -81,8 +86,8 @@ export const getDefaultValues = (
       configuration: {
         connectionInfo: {
           databaseUrl: {
-            connectionType: 'databaseUrl',
-            url: '',
+            connectionType: 'envVar',
+            envVar: '',
           },
         },
       },

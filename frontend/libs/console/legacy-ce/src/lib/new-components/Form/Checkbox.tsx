@@ -4,9 +4,12 @@ import { FaCheck, FaMinus } from 'react-icons/fa';
 
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
 import clsx from 'clsx';
-import { RefCallBack } from 'react-hook-form';
 
 type CheckboxProps = PropsWithChildren<{
+  /**
+   * The checkbox id
+   */
+  id?: string;
   /**
    * The checkbox name
    */
@@ -46,6 +49,7 @@ type CheckboxProps = PropsWithChildren<{
 
 export const Checkbox: React.FC<CheckboxProps> = props => {
   const {
+    id,
     children,
     name,
     disabled,
@@ -56,7 +60,7 @@ export const Checkbox: React.FC<CheckboxProps> = props => {
     onCheckedChange,
     options,
   } = props;
-  const componentId = `${name}-${uuid()}`;
+  const componentId = id ? id : `${name}-${uuid()}`;
   const [internalCheckedState, setChecked] = React.useState<
     RadixCheckbox.CheckedState | undefined
   >(undefined);
@@ -101,7 +105,7 @@ export const Checkbox: React.FC<CheckboxProps> = props => {
           className={clsx(
             (internalCheckedState === true ||
               internalCheckedState === 'indeterminate') &&
-              'absolute inset-[-1px] bg-blue-600 border border-blue-600 rounded',
+              'absolute top-[-1px] right-[-1px] bottom-[-1px] left-[-1px] bg-blue-600 border border-blue-600 rounded',
             invalid && '!border-red-600 !hover:border-red-700',
             invalid && !disabled && '!bg-red-600',
             disabled && '!cursor-not-allowed !bg-gray-300 !border-gray-300'

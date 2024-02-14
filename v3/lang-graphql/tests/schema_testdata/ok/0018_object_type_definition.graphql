@@ -1,0 +1,9 @@
+"description of type"
+type Person implements Human {
+    """
+    description of field
+    """
+    name: String
+    age: Int
+    picture: Url
+}

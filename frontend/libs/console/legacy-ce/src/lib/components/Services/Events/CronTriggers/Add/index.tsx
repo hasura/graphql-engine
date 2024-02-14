@@ -13,7 +13,7 @@ import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
 export const AddConnector: React.FC = () => {
   return (
     <Analytics name="AddScheduledTrigger" {...REDACT_EVERYTHING}>
-      <div className="md-md">
+      <div className="md-md bootstrap-jail">
         <Helmet
           title={getReactHelmetTitle(
             `Create ${CRON_TRIGGER}`,

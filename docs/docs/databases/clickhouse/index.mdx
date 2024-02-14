@@ -1,0 +1,68 @@
+---
+slug: index
+description: Hasura ClickHouse database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - clickhouse
+  - olap
+  - oltp
+---
+
+# ClickHouse
+
+## Introduction
+
+Hasura supports connecting to a [Clickhouse](https://www.clickhouse.com) service to automatically build a GraphQL API
+based on its schema.
+
+:::tip Supported versions:
+
+1.  Hasura GraphQL Engine `v2.30.0` onwards
+
+:::
+
+## Get Started
+
+To try Hasura with ClickHouse, you'll need a new or existing ClickHouse instance.
+
+Here are 2 ways you can get started with Hasura and ClickHouse:
+
+1.  [Hasura Cloud](/databases/clickhouse/getting-started/cloud.mdx): You'll need to be able to access your ClickHouse
+    instance service from Hasura Cloud.
+2.  [Docker](/databases/clickhouse/getting-started/docker.mdx): Run Hasura with Docker and then connect your ClickHouse
+    instance to Hasura.
+
+## Managing data with the Hasura Console
+
+The Hasura Console is a web UI that allows you to manage your data and metadata. It is available at
+`http://localhost:8080/console` when you run Hasura locally, or from your project's Console endpoint when you use
+[Hasura Cloud](https://cloud.hasura.io).
+
+The data-management features (such as creating tables) are available in the `Data` tab. You can access your GraphQL API
+in the `API` tab and interact with it using the GraphiQL interface.
+
+:::info Console support
+
+We recommend using your preferred ClickHouse client instead. The Hasura Console is designed to be a tool for managing
+your GraphQL API, and not a full-fledged database management tool.
+
+:::
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, subscriptions, relationships, and permissions on ClickHouse.
+
+:::
+
+If you'd like to stay informed about the status of ClickHouse support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
+
+## Know more
+
+- [Get started](/databases/clickhouse/getting-started/index.mdx)

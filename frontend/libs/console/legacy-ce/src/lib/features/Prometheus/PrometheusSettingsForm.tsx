@@ -18,14 +18,15 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa';
 import { PrometheusAnimation } from './PrometheusAnimation';
+import { EETrialCard, EELiteAccess } from '../EETrial';
 
 type PrometheusFormProps = {
   /**
-   * Flag indicating wheter the form is loading
+   * Flag indicating whether the form is loading
    */
   loading?: boolean;
   /**
-   * Flag indicating wheter the form is enabled
+   * Flag indicating whether the form is enabled
    */
   enabled?: boolean;
   /**
@@ -37,9 +38,13 @@ type PrometheusFormProps = {
    */
   prometheusConfig?: string;
   /**
-   * Flag indicating wheter the form should display error mode
+   * Flag indicating whether the form should display error mode
    */
   errorMode: boolean;
+  /**
+   * Flag indicating whether a EETrial license is activated
+   */
+  eeLiteAccess: EELiteAccess;
 };
 
 const PrometheusFormIntro = () => (
@@ -49,7 +54,7 @@ const PrometheusFormIntro = () => (
   </p>
 );
 
-type PrometheidFormFieldsProps = {
+type PrometheusFormFieldsProps = {
   loading?: boolean;
   prometheusUrl?: string;
   prometheusConfig?: string;
@@ -59,7 +64,7 @@ const PrometheusFormFields = ({
   loading,
   prometheusUrl,
   prometheusConfig,
-}: PrometheidFormFieldsProps) => (
+}: PrometheusFormFieldsProps) => (
   <SimpleForm
     schema={z.object({})}
     onSubmit={() => {}}
@@ -186,19 +191,22 @@ export const PrometheusSettingsForm: React.VFC<PrometheusFormProps> = ({
   prometheusUrl = '',
   prometheusConfig = '',
   errorMode = false,
+  eeLiteAccess,
 }) => {
   let PrometheusBadge = () => <></>;
   let PrometheusSettings = () => <></>;
+
+  const withoutLicense = eeLiteAccess.access !== 'active';
 
   if (loading) {
     PrometheusBadge = () => <Skeleton className="w-28 h-5" />;
     PrometheusSettings = () => (
       <>
         <Skeleton className="w-full h-[226px]" />
-        <PrometheusFormFields loading />
+        <Skeleton className="w-full h-[148px] mt-md" />
       </>
     );
-  } else if (errorMode) {
+  } else if (errorMode && !withoutLicense) {
     PrometheusBadge = () => (
       <Badge color="red" className="flex gap-2">
         <FaExclamationTriangle />
@@ -211,7 +219,7 @@ export const PrometheusSettingsForm: React.VFC<PrometheusFormProps> = ({
         <PrometheusErrorCard />
       </>
     );
-  } else if (enabled) {
+  } else if (enabled && !withoutLicense) {
     PrometheusBadge = () => (
       <Badge color="green" className="flex gap-2">
         <FaCheckCircle />
@@ -237,7 +245,25 @@ export const PrometheusSettingsForm: React.VFC<PrometheusFormProps> = ({
     PrometheusSettings = () => (
       <>
         <PrometheusAnimation />
-        <PrometheusInstructionsCard />
+        {eeLiteAccess.access !== 'active' ? (
+          <EETrialCard
+            id="prometheus-settings"
+            cardTitle="Gain visibility into your API performance with Prometheus metrics collection"
+            cardText={
+              <span>
+                Collect, store and query for time-series metrics for your API to
+                provide you with actionable insights and alerting capabilities
+                so you can optimize performance and troubleshoot issues in
+                real-time.
+              </span>
+            }
+            buttonLabel="Enable Enterprise"
+            horizontal
+            eeAccess={eeLiteAccess.access}
+          />
+        ) : (
+          <PrometheusInstructionsCard />
+        )}
       </>
     );
   }

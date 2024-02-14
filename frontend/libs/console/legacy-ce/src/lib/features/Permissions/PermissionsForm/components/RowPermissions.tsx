@@ -1,26 +1,32 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
-import { Table } from '../../../hasura-metadata-types';
-import { useHttpClient } from '../../../Network';
 import { useQuery } from 'react-query';
-import { DataSource, exportMetadata, Operator } from '../../../DataSource';
-import { areTablesEqual } from '../../../hasura-metadata-api';
-import { getTypeName } from '../../../GraphQLUtils';
+import { getIngForm } from '../../../../components/Services/Data/utils';
 import { InputField } from '../../../../new-components/Form';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { Collapse } from '../../../../new-components/deprecated';
-import { getIngForm } from '../../../../components/Services/Data/utils';
-import { RowPermissionBuilder } from './RowPermissionsBuilder';
+import { DataSource, Operator, exportMetadata } from '../../../DataSource';
+import { getTypeName } from '../../../GraphQLUtils';
+import { useHttpClient } from '../../../Network';
+import {
+  MetadataSelectors,
+  areTablesEqual,
+  useMetadata,
+} from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import { QueryType } from '../../types';
 import { ReturnValue } from '../hooks';
+import { copyQueryTypePermissions } from '../utils/copyQueryTypePermissions';
+import { getNonSelectedQueryTypePermissions } from '../utils/getMapQueryTypePermissions';
+import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">Without any checks&nbsp;</span>
 );
 
 const CustomLabel = () => (
-  <span data-test="custom-check" className="flex items-center">
+  <span data-testid="custom-check" className="flex items-center">
     With custom check:
     <IconTooltip message="Create custom check using permissions builder" />
   </span>
@@ -29,8 +35,7 @@ const CustomLabel = () => (
 export interface RowPermissionsProps {
   table: unknown;
   queryType: QueryType;
-  subQueryType?: string;
-  allRowChecks: Array<{ queryType: QueryType; value: string }>;
+  subQueryType?: 'pre_update' | 'post_update';
   dataSourceName: string;
   supportedOperators: Operator[];
   defaultValues: ReturnValue['defaultValues'];
@@ -42,41 +47,38 @@ enum SelectedSection {
   NoChecks = 'no_checks',
   Custom = 'custom',
   NoneSelected = 'none',
+  insert = 'insert',
+  select = 'select',
+  update = 'update',
+  delete = 'delete',
 }
 
-const getRowPermission = (queryType: QueryType, subQueryType?: string) => {
-  if (queryType === 'insert') {
+export type RowPermissionsSectionType =
+  | QueryType
+  | 'pre_update'
+  | 'post_update';
+
+export const getRowPermission = (
+  queryType: RowPermissionsSectionType
+): 'filter' | 'check' => {
+  if (queryType === 'pre_update') {
+    return 'filter';
+  }
+  if (queryType === 'post_update') {
     return 'check';
   }
-
-  if (queryType === 'update') {
-    if (subQueryType === 'post') {
-      return 'check';
-    }
-
-    return 'filter';
+  if (queryType === 'insert') {
+    return 'check';
   }
 
   return 'filter';
 };
 
 const getRowPermissionCheckType = (
-  queryType: QueryType,
-  subQueryType?: string
-) => {
-  if (queryType === 'insert') {
-    return 'checkType';
-  }
-
-  if (queryType === 'update') {
-    if (subQueryType === 'post') {
-      return 'checkType';
-    }
-
-    return 'filterType';
-  }
-
-  return 'filterType';
+  queryType: RowPermissionsSectionType
+): 'filterType' | 'checkType' => {
+  const permissionType = getRowPermission(queryType);
+  return permissionType === 'filter' ? 'filterType' : 'checkType';
 };
 
 const useTypeName = ({
@@ -134,23 +136,34 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   table,
   queryType,
   subQueryType,
-  allRowChecks,
   dataSourceName,
   defaultValues,
   permissionsKey,
   roleName,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
-  const { register, watch, setValue } = useFormContext();
-  // determines whether the inputs should be pointed at `check` or `filter`
-  const rowPermissions = getRowPermission(queryType, subQueryType);
-  // determines whether the check type should be pointer at `checkType` or `filterType`
-  const rowPermissionsCheckType = getRowPermissionCheckType(
+
+  const { data: metadataTable } = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
+
+  const nonSelectedQueryTypePermissions = getNonSelectedQueryTypePermissions(
+    metadataTable,
     queryType,
-    subQueryType
+    roleName
+  );
+
+  const { watch, setValue } = useFormContext();
+  // determines whether the inputs should be pointed at `check` or `filter`
+  const rowPermissions = getRowPermission(subQueryType ?? queryType);
+
+  // determines whether the check type should be pointed at `checkType` or `filterType`
+  const rowPermissionsCheckType = getRowPermissionCheckType(
+    subQueryType ?? queryType
   );
 
   const selectedSection = watch(rowPermissionsCheckType);
+
   return (
     <fieldset key={queryType} className="grid gap-2">
       <div>
@@ -159,11 +172,11 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
             id={SelectedSection.NoChecks}
             type="radio"
             value={SelectedSection.NoChecks}
+            checked={selectedSection === SelectedSection.NoChecks}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.NoChecks);
               setValue(rowPermissions, {});
             }}
-            {...register(rowPermissionsCheckType)}
           />
           <NoChecksLabel />
         </label>
@@ -189,43 +202,64 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
         )}
       </div>
 
-      {allRowChecks?.map(({ queryType: query, value }) => (
-        <div key={query}>
-          <label className="flex items-center gap-2">
-            <input
-              id={`custom_${query}`}
-              data-testid={getUpdatePermissionBuilderIdSuffix(
-                `external-${roleName}-${query}-input`,
-                subQueryType
-              )}
-              type="radio"
-              value={query}
-              {...register(rowPermissionsCheckType)}
-              onClick={() => {
-                setValue(rowPermissionsCheckType, query);
-                setValue(rowPermissions, JSON.parse(value));
-              }}
-            />
-            <span data-test="mutual-check">
-              With same custom check as&nbsp;<strong>{query}</strong>
-            </span>
-          </label>
-
-          {selectedSection === query && (
-            <div className="pt-4">
-              {!isLoading && tableName ? (
-                <RowPermissionBuilder
-                  permissionsKey={permissionsKey}
-                  table={table}
-                  dataSourceName={dataSourceName}
+      {nonSelectedQueryTypePermissions &&
+        nonSelectedQueryTypePermissions?.map(
+          ({ queryType: type, data }: Record<string, any>) => (
+            <div key={`${type}${queryType}`}>
+              <label className="flex items-center gap-2">
+                <input
+                  id={`custom_${type}`}
+                  data-testid={getUpdatePermissionBuilderIdSuffix(
+                    `external-${roleName}-${type}-input`,
+                    subQueryType
+                  )}
+                  type="radio"
+                  value={type}
+                  checked={selectedSection === type}
+                  onClick={() => {
+                    setValue(rowPermissionsCheckType, type);
+                    const newValues = copyQueryTypePermissions(
+                      type,
+                      queryType,
+                      subQueryType,
+                      data
+                    );
+                    setValue(...newValues);
+                  }}
                 />
-              ) : (
-                <>Loading...</>
+                <span data-test="mutual-check">
+                  With same custom check as&nbsp;<strong>{type}</strong>
+                </span>
+              </label>
+
+              {selectedSection === type && (
+                <div
+                  // Permissions are not otherwise stored in plan JSON format in the dom.
+                  // This is a hack to get the JSON into the dom for testing.
+                  data-state={JSON.stringify(
+                    getRowPermission(type) ? data?.[getRowPermission(type)] : {}
+                  )}
+                  data-testid="external-check-json-editor"
+                  className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full"
+                >
+                  <AceEditor
+                    mode="json"
+                    minLines={1}
+                    fontSize={14}
+                    height="18px"
+                    width="100%"
+                    theme="github"
+                    name={`${tableName}-json-editor`}
+                    value={JSON.stringify(data[getRowPermission(type)])}
+                    onChange={() => setValue(rowPermissionsCheckType, type)}
+                    editorProps={{ $blockScrolling: true }}
+                    setOptions={{ useWorker: false }}
+                  />
+                </div>
               )}
             </div>
-          )}
-        </div>
-      ))}
+          )
+        )}
 
       <div>
         <label className="flex items-center gap-2">
@@ -237,7 +271,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
               subQueryType
             )}
             value={SelectedSection.Custom}
-            {...register(rowPermissionsCheckType)}
+            checked={selectedSection === SelectedSection.Custom}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.Custom);
               // eslint-disable-next-line @typescript-eslint/ban-ts-comment

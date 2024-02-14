@@ -16,12 +16,14 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
 import Database.MSSQL.Transaction (forJsonQueryE)
 import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.Execute.QueryTags (withQueryTags)
 import Hasura.Backends.MSSQL.Instances.Execute
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
@@ -32,7 +34,8 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
+import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing
@@ -65,17 +68,19 @@ runQuery ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'MSSQL ->
-  OnBaseMonad (ExceptT QErr) EncJSON ->
+  OnBaseMonad (ExceptT QErr) (Maybe (AnyBackend ExecutionStats), EncJSON) ->
   Maybe (PreparedQuery 'MSSQL) ->
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _sourceConfig tx genSql _ = do
+runQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
-  withElapsedTime $
-    trace ("MSSQL Query for root field " <>> fieldName) $
-      run tx
+  withElapsedTime
+    $ newSpan ("MSSQL Query for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
+    $ fmap snd (run tx)
 
 runQueryExplain ::
   ( MonadIO m,
@@ -83,9 +88,10 @@ runQueryExplain ::
     MonadError QErr m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   DBStepInfo 'MSSQL ->
   m EncJSON
-runQueryExplain (DBStepInfo _ _ _ action _) = run action
+runQueryExplain _ (DBStepInfo _ _ _ action _) = fmap arResult (run action)
 
 runMutation ::
   ( MonadIO m,
@@ -99,6 +105,7 @@ runMutation ::
   RootFieldAlias ->
   UserInfo ->
   L.Logger L.Hasura ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   SourceConfig 'MSSQL ->
   OnBaseMonad (ExceptT QErr) EncJSON ->
   Maybe (PreparedQuery 'MSSQL) ->
@@ -106,11 +113,12 @@ runMutation ::
   -- | Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runMutation reqId query fieldName _userInfo logger _sourceConfig tx _genSql _ = do
+runMutation reqId query fieldName _userInfo logger _ sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
-  withElapsedTime $
-    trace ("MSSQL Mutation for root field " <>> fieldName) $
-      run tx
+  withElapsedTime
+    $ newSpan ("MSSQL Mutation for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
+    $ run tx
 
 runSubscription ::
   (MonadIO m, MonadBaseControl IO m) =>

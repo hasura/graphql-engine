@@ -185,8 +185,9 @@ const addAllUntrackedTablesSql = tableList => {
 
     dispatch({ type: MAKING_REQUEST });
     dispatch(showSuccessNotification('Adding...'));
-    const bulkQueryUp = [];
     const bulkQueryDown = [];
+
+    const listOfUntrackedTables = [];
 
     for (let i = 0; i < tableList.length; i++) {
       if (tableList[i].table_name !== 'schema_migrations') {
@@ -199,14 +200,14 @@ const addAllUntrackedTablesSql = tableList => {
         );
 
         const table = findTable(getState().tables.allSchemas, tableDef);
-        bulkQueryUp.push(
-          getTrackTableQuery({
-            tableDef,
-            source: currentDataSource,
-            customColumnNames: escapeTableColumns(table),
-            customName: escapeTableName(tableList[i].table_name),
-          })
-        );
+        const trackableTablePayload = getTrackTableQuery({
+          tableDef,
+          source: currentDataSource,
+          customColumnNames: escapeTableColumns(table),
+          customName: escapeTableName(tableList[i].table_name),
+        });
+
+        listOfUntrackedTables.push(trackableTablePayload.args);
         bulkQueryDown.push(
           getUntrackTableQuery(
             {
@@ -221,6 +222,14 @@ const addAllUntrackedTablesSql = tableList => {
         );
       }
     }
+
+    const requestBody = {
+      type: `${currentDriver}_track_tables`,
+      args: {
+        allow_warnings: true,
+        tables: listOfUntrackedTables,
+      },
+    };
 
     const migrationName = 'add_all_existing_table_or_view_' + currentSchema;
 
@@ -238,11 +247,10 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnError = err => {
       dispatch({ type: REQUEST_ERROR, data: err });
     };
-
     makeMigrationCall(
       dispatch,
       getState,
-      bulkQueryUp,
+      [requestBody],
       bulkQueryDown,
       migrationName,
       customOnSuccess,

@@ -1,0 +1,138 @@
+version: '3.6'
+services:
+  engine-metadata-db:
+    image: postgres:15
+    restart: always
+    container_name: 'engine-metadata-db'
+    volumes:
+      - metadata_db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: pass
+  postgres:
+    container_name: 'postgres'
+    image: postgres:15
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - ./DataSources/postgres.sql:/docker-entrypoint-initdb.d/postgres.sql
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+    volumes:
+      - ./DataSources/mysql.sql:/docker-entrypoint-initdb.d/mysql.sql
+    ports:
+      - '3306:3306'
+    container_name: 'mysql'
+  sqlite:
+    build:
+      context: '../../dc-agents/sqlite'
+    container_name: 'sqlite'
+    ports:
+      - '8100:8100'
+    volumes:
+      - ./DataSources/sqlite.db:/sqlite.db
+  # The SQL Server image will only work on macOS if you enable the relevant
+  # settings. Open the Docker Desktop settings, enable "Use Virtualization
+  # framework" in the "General" tab, and "Use Rosetta for x86/amd64 emulation on
+  # Apple Silicon" in the "Features in development" tab.
+  mssql:
+    container_name: 'mssql'
+    user: root
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssql-database-data:/var/opt/mssql
+    stdin_open: true
+    image: &mssql-image mcr.microsoft.com/mssql/server:2019-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: 'Password!'
+      MSSQL_SA_PASSWORD: 'Password!'
+  mssql-init:
+    depends_on:
+      - mssql
+    container_name: 'mssql-init'
+    image: *mssql-image
+    platform: linux/amd64
+    command:
+      - /opt/mssql_scripts/run-initialization.sh
+    stdin_open: true
+    volumes:
+      - ./DataSources/mssql:/opt/mssql_scripts
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: sample
+    volumes:
+      - ./DataSources/mongo/init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - '27017:27017'
+    command: mongod --setParameter enableLocalhostAuthBypass=0 --dbpath=/data/db --bind_ip_all --port 27017
+
+  graphql-engine:
+    image: hasura/graphql-engine:latest
+
+    # Using a build image can be done like this (need to download from build kite)
+    # image: hasura/graphql-engine:dev-80b04ef-main.ubuntu.arm64
+
+    ports:
+      - '8080:8080'
+    depends_on:
+      data-connector-agent:
+        condition: service_healthy
+    restart: always
+    container_name: 'graphql-engine'
+    extra_hosts:
+      - 'data.lux-dev.hasura.me:192.168.29.221'
+    environment:
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:pass@engine-metadata-db:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: 'naming_convention'
+      HASURA_GRAPHQL_ADMIN_SECRET: 'moocow'
+      # HASURA_GRAPHQL_EE_LICENSE_KEY: ''
+  data-connector-agent:
+    container_name: 'super-connector'
+    image: hasura/graphql-data-connector:latest
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      QUARKUS_LOG_LEVEL: ERROR # FATAL, ERROR, WARN, INFO, DEBUG, TRACE
+      ## https://quarkus.io/guides/opentelemetry#configuration-reference
+      QUARKUS_OPENTELEMETRY_ENABLED: 'false'
+      ## QUARKUS_OPENTELEMETRY_TRACER_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/api/v1/mysql/health']
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+  mongo-data-connector:
+    image: hasura/mongo-data-connector:v2.27.0
+    container_name: mongo_connector
+    ports:
+      - 3000:3000
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    ports:
+      - '26257:26257'
+      - '8090:8080'
+    command: start-single-node --insecure
+    volumes:
+      - 'cockroach-db-data:/cockroach-data/crdb:/cockroach/cockroach-data'
+
+volumes:
+  metadata_db_data:
+  mssql-database-data:
+  cockroach-db-data:

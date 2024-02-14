@@ -1,0 +1,14 @@
+query MyQuery {
+  getMovieById(movie_id: 1) {
+    getActorsFromMovie {
+      getMovieFromActor {
+        getActorsFromMovie {
+          getMovieFromActor {
+            rating
+            title
+          }
+        }
+      }
+    }
+  }
+}

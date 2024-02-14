@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  render,
-  screen,
-  cleanup,
-  waitFor,
-  fireEvent,
-} from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { renderHook, act } from '@testing-library/react-hooks';
 import type { GraphQLError } from 'graphql';
 import { ExchangeTokenResponse, useNeonOAuth } from './useNeonOAuth';

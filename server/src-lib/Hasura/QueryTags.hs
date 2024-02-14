@@ -10,16 +10,19 @@ module Hasura.QueryTags
     QueryTagsComment (..),
     emptyQueryTagsComment,
     encodeQueryTags,
+    MonadQueryTags (..),
 
     -- * Exposed for testing
     emptyQueryTagsAttributes,
   )
 where
 
+import Data.Tagged
 import Data.Text.Extended
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.Server.Types (RequestId (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -106,3 +109,15 @@ encodeQueryTags = \case
 
 operationNameAttributes :: Maybe GQL.Name -> [(Text, Text)]
 operationNameAttributes = maybe [] (\opName -> [("operation_name", GQL.unName opName)])
+
+class (Monad m) => MonadQueryTags m where
+  -- | Creates Query Tags. These are appended to the Generated SQL.
+  -- Helps users to use native database monitoring tools to get some 'application-context'.
+  createQueryTags ::
+    QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
+  default createQueryTags :: forall t n. (m ~ t n, MonadQueryTags n) => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @n qtSourceConfig attr) :: Tagged (t n) QueryTagsComment
+
+instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m)
+
+instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m)

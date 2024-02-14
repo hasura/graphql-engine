@@ -4,7 +4,7 @@ module Test.Specs.SchemaSpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens ((%~), (.~), (?~))
+import Control.Lens ((%~), (.~), (<&>), (?~))
 import Control.Lens.At (at)
 import Control.Lens.Lens ((&))
 import Control.Monad (forM_)
@@ -18,11 +18,11 @@ import Data.Foldable (find)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing, mapMaybe)
 import Data.Text qualified as Text
 import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
-import Test.AgentAPI (getSchemaGuarded)
+import Test.AgentAPI (getSchemaGuarded, getSchemaGuarded')
 import Test.AgentClient (HasAgentClient, runAgentClientT)
 import Test.AgentDatasets (HasDatasetContext)
 import Test.AgentTestContext (HasAgentTestContext)
@@ -49,6 +49,46 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
     let expectedTableNames = extractTableNames _tdSchemaTables
     tableNames `jsonShouldBe` expectedTableNames
 
+  it "returns the specified Chinook tables when filtered" $ do
+    let desiredTables = [_tdCustomersTableName, _tdInvoicesTableName, _tdInvoiceLinesTableName, _tdTracksTableName]
+    let filters = mempty {API._sfOnlyTables = Just desiredTables}
+    tableNames <- sort . fmap API._tiName . API._srTables <$> getSchemaGuarded' (API.SchemaRequest filters API.Everything)
+
+    tableNames `jsonShouldBe` desiredTables
+
+  it "returns no tables when filtered with an empty list" $ do
+    let filters = mempty {API._sfOnlyTables = Just []}
+    tableInfos <- API._srTables <$> getSchemaGuarded' (API.SchemaRequest filters API.Everything)
+
+    tableInfos `jsonShouldBe` []
+
+  it "returns only Chinook table names and types when using basic_info detail level" $ do
+    tableInfos <- sortOn API._tiName . API._srTables <$> getSchemaGuarded' (API.SchemaRequest mempty API.BasicInfo)
+
+    let expectedTableInfos =
+          _tdSchemaTables
+            <&> (\API.TableInfo {..} -> API.TableInfo _tiName _tiType [] Nothing (API.ForeignKeys mempty) Nothing False False False)
+            & sortOn API._tiName
+
+    tableInfos `jsonShouldBe` expectedTableInfos
+
+  it "can filter tables while using basic_info detail level" $ do
+    let desiredTables = [_tdAlbumsTableName, _tdArtistsTableName]
+    let filters = mempty {API._sfOnlyTables = Just desiredTables}
+    tableInfos <- sortOn API._tiName . API._srTables <$> getSchemaGuarded' (API.SchemaRequest filters API.BasicInfo)
+
+    let expectedTableInfos =
+          _tdSchemaTables
+            & mapMaybe
+              ( \API.TableInfo {..} ->
+                  if _tiName `elem` desiredTables
+                    then Just $ API.TableInfo _tiName _tiType [] Nothing (API.ForeignKeys mempty) Nothing False False False
+                    else Nothing
+              )
+            & sortOn API._tiName
+
+    tableInfos `jsonShouldBe` expectedTableInfos
+
   testPerTable "returns the correct columns in the Chinook tables" $ \expectedTable actualTable -> do
     -- We remove some properties here so that we don't compare them since they vary between agent implementations
     let extractJsonForComparison table =
@@ -74,6 +114,12 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
             & applyWhen
               (not supportsUpdates)
               (traverse %~ (_Object . at "updatable" ?~ Bool False))
+            -- If agent doesn't support update mutations then all columns won't be generated
+            -- This is a bit of a dubious assumption since it's possible a database supports
+            -- generated values but the agent just doesn't support mutations on that DB
+            & applyWhen
+              (isNothing _cMutations)
+              (traverse %~ (_Object . at "value_generated" .~ Nothing))
             & Just
 
     actualJsonColumns `jsonShouldBe` expectedJsonColumns
@@ -109,7 +155,7 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
       actualPrimaryKey `jsonShouldBe` Just _tiPrimaryKey
     else testPerTable "returns no primary keys for the Chinook tables" $ \_expectedTable actualTable -> do
       let actualPrimaryKey = API._tiPrimaryKey <$> actualTable
-      actualPrimaryKey `jsonShouldBe` Just []
+      actualPrimaryKey `jsonShouldBe` Nothing
 
   if API._dscSupportsForeignKeys _cDataSchema
     then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable actualTable -> do
@@ -135,7 +181,7 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
         Maybe API.TableInfo -> -- Actual table
         ExampleT innerContext m ()
       ) ->
-      forall context. HasPreloadedAgentSchema context => SpecFree context IO ()
+      forall context. (HasPreloadedAgentSchema context) => SpecFree context IO ()
     testPerTable description test =
       describe description $ do
         forM_ _tdSchemaTables $ \expectedTable@API.TableInfo {..} -> do

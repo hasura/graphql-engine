@@ -3,8 +3,12 @@ import React from 'react';
 import { TemplateGalleryBody } from './TemplateGalleryTable';
 import { TemplateGalleryModal } from './TemplateGalleryModal';
 import { ModalType } from './types';
+import { SupportedDrivers } from '../../../../../features/hasura-metadata-types';
 
-const TemplateGallery: React.VFC = () => {
+const TemplateGallery: React.VFC<{
+  showHeader?: boolean;
+  driver?: SupportedDrivers;
+}> = ({ showHeader = true, driver }) => {
   const [modalState, setShowModal] = React.useState<ModalType | undefined>(
     undefined
   );
@@ -12,7 +16,11 @@ const TemplateGallery: React.VFC = () => {
 
   return (
     <>
-      <TemplateGalleryBody onModalOpen={setShowModal} />
+      <TemplateGalleryBody
+        showHeader={showHeader}
+        driver={driver ?? undefined}
+        onModalOpen={setShowModal}
+      />
       {modalState !== undefined ? (
         <TemplateGalleryModal closeModal={closeModal} content={modalState} />
       ) : null}

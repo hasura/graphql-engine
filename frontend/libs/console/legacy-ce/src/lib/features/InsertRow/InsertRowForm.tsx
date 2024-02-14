@@ -4,13 +4,20 @@ import { InsertRowArgs } from '../DataSource';
 import { ColumnRow } from './components/ColumnRow';
 import { FormData } from '../Data/hooks/useInsertRow';
 import Skeleton from 'react-loading-skeleton';
+import { convertTableValue } from './InsertRowForm.utils';
 import { ListAllTableColumn } from '../Data/hooks/useListAllTableColumns';
+import { SupportedDrivers } from '../hasura-metadata-types';
 
 export type InsertRowFormProps = {
-  columns: (ListAllTableColumn & { placeholder: string })[];
+  columns: (ListAllTableColumn & {
+    placeholder: string;
+    insertable: boolean;
+    description: string;
+  })[];
   isInserting: boolean;
   isLoading: boolean;
   onInsertRow: (formData: FormData) => void;
+  driver: SupportedDrivers;
 };
 
 export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
@@ -18,15 +25,28 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
   isInserting = false,
   isLoading = false,
   onInsertRow,
+  driver,
 }) => {
   const [values, setValues] = useState<InsertRowArgs['rowValues'][]>([]);
 
   const onInsert = () => {
     const adaptedValues = values.reduce<FormData>((acc, value) => {
+      const columnName = Object.keys(value)[0];
+      const columnValue = Object.values(value)[0];
+
+      const columnDefinition = columns.find(
+        column => column.name === columnName
+      );
+
+      const finalColumnValue = convertTableValue(
+        columnValue,
+        columnDefinition?.dataType
+      );
+
       const formData: FormData = {
-        [Object.keys(value)[0]]: {
+        [columnName]: {
           option: 'value',
-          value: Object.values(value)[0],
+          value: finalColumnValue,
         },
       };
 
@@ -101,7 +121,10 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
 
   return (
     <form
-      onSubmit={() => onInsert()}
+      onSubmit={e => {
+        e.preventDefault();
+        onInsert();
+      }}
       className="w-full bg-white p-4 rounded-sm border my-2"
     >
       <div className="flex flex-col mb-6 gap-3 max-w-screen-md">
@@ -112,24 +135,26 @@ export const InsertRowForm: React.VFC<InsertRowFormProps> = ({
             name={column.name}
             onChange={onChange}
             placeholder={column.placeholder}
-            // disable if the column is auto-increment or auto-generated
-            isDisabled={false}
-            // disable if the column has no default value
+            isDisabled={
+              !column.insertable ||
+              column?.value_generated?.type === 'auto_increment'
+            }
+            // TODO-NEXT: disable if the column has no default value
             isDefaultDisabled={false}
             isNullDisabled={!column.nullable}
             resetToken={resetToken}
-            dataType={column.dataType}
+            dataType={
+              column?.value_generated?.type === 'auto_increment'
+                ? `${column.dataType} Auto Increment`
+                : column.dataType
+            }
+            driver={driver}
           />
         ))}
       </div>
       <div className="flex gap-3">
         <Button onClick={() => onResetForm()}>Reset</Button>
-        <Button
-          mode="primary"
-          onClick={() => onInsert()}
-          isLoading={isInserting}
-          type="submit"
-        >
+        <Button mode="primary" isLoading={isInserting} type="submit">
           Insert row
         </Button>
       </div>

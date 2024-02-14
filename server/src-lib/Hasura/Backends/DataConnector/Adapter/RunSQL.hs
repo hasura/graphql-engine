@@ -5,7 +5,7 @@ module Hasura.Backends.DataConnector.Adapter.RunSQL
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as H
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API (RawRequest (..))
 import Hasura.Backends.DataConnector.API qualified as API
@@ -14,10 +14,10 @@ import Hasura.Base.Error (Code (DataConnectorError), QErr (qeInternal), QErrExtr
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Common (SourceName (), sourceNameToText)
 import Hasura.RQL.Types.SchemaCache (askSourceConfig)
 import Hasura.RQL.Types.SchemaCache.Build (CacheRWM, MetadataM)
-import Hasura.SQL.Backend (BackendType (DataConnector))
 import Servant.Client (mkClientEnv, runClientM, (//))
 import Servant.Client.Generic (genericClient)
 import Witch qualified
@@ -110,6 +110,6 @@ tupleRows :: API.RawResponse -> [[(Text, J.Value)]]
 tupleRows (API.RawResponse rs) = case rs of
   [] -> []
   xs@(x : _) ->
-    let ks = H.keys x
-        lookupKeys m = (\k -> maybe [] (pure . (k,)) $ H.lookup k m) =<< ks
+    let ks = HashMap.keys x
+        lookupKeys m = (\k -> maybe [] (pure . (k,)) $ HashMap.lookup k m) =<< ks
      in map lookupKeys xs

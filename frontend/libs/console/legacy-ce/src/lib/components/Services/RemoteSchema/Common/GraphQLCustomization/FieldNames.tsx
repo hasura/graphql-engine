@@ -45,6 +45,7 @@ const SelectOne = ({
     onChange={onChange}
     className={inputStyles}
     data-test={label}
+    name={label}
   >
     <option value="">Select Type ...</option>
     {[...options].sort().map((op, i) => (
@@ -93,7 +94,7 @@ const FieldNames = ({
                 parentType: e.target.value,
               });
             }}
-            label={`remote-schema-customization-${label}-parent-type-input`}
+            label={label}
           />
         </div>
       </div>
@@ -113,6 +114,7 @@ const FieldNames = ({
               })
             }
             data-test={`remote-schema-customization-${label}-field-prefix-input`}
+            name={`${label}-prefix`}
           />
         </div>
       </div>
@@ -132,6 +134,7 @@ const FieldNames = ({
               })
             }
             data-test={`remote-schema-customization-${label}-field-suffix-input`}
+            name={`${label}-suffix`}
           />
         </div>
       </div>

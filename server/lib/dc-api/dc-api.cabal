@@ -4,6 +4,7 @@ version: 1.0.0
 extra-source-files:
   test/Test/Data/Chinook.xml.gz
   test/Test/Data/schema-tables.json
+  test/Test/Data/edge-cases-schema-tables.json
 
 flag profiling
   description: Configures the project to be profiling-compatible
@@ -62,10 +63,12 @@ library
     autodocodec-openapi3,
     base,
     bytestring,
+    containers,
     deepseq,
     extra,
     graphql-parser,
     hashable,
+    hasura-extras,
     insert-ordered-containers,
     lens,
     lens-aeson,
@@ -75,10 +78,10 @@ library
     servant-openapi3,
     text,
     unordered-containers,
-    http-media
+    http-media,
+    witch
 
   exposed-modules:
-    Autodocodec.Extended
     Hasura.Backends.DataConnector.API
     Hasura.Backends.DataConnector.API.V0
     Hasura.Backends.DataConnector.API.V0.Aggregate
@@ -87,6 +90,7 @@ library
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
     Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
+    Hasura.Backends.DataConnector.API.V0.Function
     Hasura.Backends.DataConnector.API.V0.Mutations
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
@@ -96,6 +100,8 @@ library
     Hasura.Backends.DataConnector.API.V0.Scalar
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
+    Hasura.Backends.DataConnector.API.V0.Target
+    Hasura.Backends.DataConnector.API.V0.InterpolatedQuery
     Hasura.Backends.DataConnector.API.V0.Dataset
   other-modules:
     Hasura.Backends.DataConnector.API.V0.Name
@@ -127,7 +133,7 @@ test-suite tests-dc-api
     mtl,
     optparse-applicative,
     scientific,
-    sandwich,
+    sandwich >= 0.1.3.0,
     servant,
     servant-client,
     servant-client-core,
@@ -158,6 +164,7 @@ test-suite tests-dc-api
     Test.Specs.CapabilitiesSpec
     Test.Specs.ErrorSpec
     Test.Specs.ExplainSpec
+    Test.Specs.FunctionsSpec
     Test.Specs.HealthSpec
     Test.Specs.MetricsSpec
     Test.Specs.MutationSpec
@@ -171,6 +178,7 @@ test-suite tests-dc-api
     Test.Specs.QuerySpec.FilteringSpec
     Test.Specs.QuerySpec.ForeachSpec
     Test.Specs.QuerySpec.OrderBySpec
+    Test.Specs.QuerySpec.RedactionSpec
     Test.Specs.QuerySpec.RelationshipsSpec
     Test.Specs.SchemaSpec
     Test.TestHelpers

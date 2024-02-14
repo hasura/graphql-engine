@@ -1,14 +1,15 @@
 import React, { Fragment } from 'react';
 import { FaShareSquare, FaSpinner } from 'react-icons/fa';
+import { SupportedDrivers } from '../../../../../features/hasura-metadata-types';
 import { useAppDispatch, useAppSelector } from '../../../../../storeHooks';
+import globalStyles from '../../../../Common/Common.module.scss';
 import {
   fetchGlobalSchemaSharingConfiguration,
   schemaSharingSelectors,
 } from './Actions';
-import { currentDriver } from '../../../../../dataSources';
 import styles from './TemplateGallery.module.scss';
-import globalStyles from '../../../../Common/Common.module.scss';
-import { modalOpenFn, TemplateGalleryTemplateItem } from './types';
+import { TemplateGalleryTemplateItem, modalOpenFn } from './types';
+import { currentDriver } from '../../../../../dataSources';
 
 export const TemplateGalleryContentRow: React.VFC<{
   template: TemplateGalleryTemplateItem;
@@ -26,16 +27,18 @@ export const TemplateGalleryContentRow: React.VFC<{
   );
 };
 
-export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
-  onModalOpen,
-}) => {
+export const TemplateGalleryBody: React.VFC<{
+  onModalOpen: modalOpenFn;
+  showHeader?: boolean;
+  driver?: SupportedDrivers;
+}> = ({ onModalOpen, showHeader = true, driver = currentDriver }) => {
   const dispatch = useAppDispatch();
 
   const globalStatusFetching = useAppSelector(
     schemaSharingSelectors.getGlobalConfigState
   );
   const templateForDb = useAppSelector(
-    schemaSharingSelectors.getSchemasForDb(currentDriver)
+    schemaSharingSelectors.getSchemasForDb(driver)
   );
 
   if (globalStatusFetching === 'none') {
@@ -61,11 +64,13 @@ export const TemplateGalleryBody: React.VFC<{ onModalOpen: modalOpenFn }> = ({
 
   return (
     <>
-      <h2
-        className={`${globalStyles.heading_text} ${styles.header_table_description} mb-sm`}
-      >
-        Template Gallery
-      </h2>
+      {showHeader && (
+        <h2
+          className={`${globalStyles.heading_text} ${styles.header_table_description} mb-sm`}
+        >
+          Template Gallery
+        </h2>
+      )}
       <p className={styles.mb_none}>
         Templates are a utility for applying pre-created sets of SQL migrations
         and Hasura metadata.

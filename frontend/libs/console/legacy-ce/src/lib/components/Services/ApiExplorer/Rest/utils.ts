@@ -3,6 +3,7 @@ import { parse } from 'graphql';
 import globals from '../../../../Globals';
 import { AllowedRESTMethods } from '../../../../metadata/types';
 import { VariableState } from './LivePreview/state';
+import { isJsonString } from '../../../Common/utils/export.utils';
 
 // getCurrentPageHost can be used within all components
 // that are showing the REST endpoint that will be generated
@@ -279,7 +280,7 @@ export const supportedNumericTypes = [
   'decimal',
 ];
 
-const getValueWithType = (variableData: VariableState) => {
+export const getValueWithType = (variableData: VariableState) => {
   if (variableData.type === 'Boolean') {
     if (variableData.value.trim().toLowerCase() === 'false') {
       return false;
@@ -290,6 +291,10 @@ const getValueWithType = (variableData: VariableState) => {
 
   if (supportedNumericTypes.includes(variableData.type)) {
     return Number(variableData.value);
+  }
+
+  if (isJsonString(variableData.value)) {
+    return JSON.parse(variableData.value);
   }
 
   return variableData.value?.trim()?.toString();

@@ -12,9 +12,8 @@ module Harness.Quoter.Yaml
 where
 
 import Control.Exception.Safe (Exception, impureThrow, throwM)
-import Control.Monad.Identity
 import Control.Monad.Trans.Resource (ResourceT)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Conduit (runConduitRes, (.|))
 import Data.Conduit.List qualified as CL
 import Data.Text qualified as T
@@ -64,8 +63,8 @@ templateFromYaml inputString = do
   e <- templateYaml inputString
   [|
     case fromJSON ($(pure e)) of
-      Aeson.Error err -> error err
-      Aeson.Success s -> s
+      J.Error err -> error err
+      J.Success s -> s
     |]
 
 -- | Template a YAML file contents. Throws a bunch of exception types:
@@ -87,7 +86,7 @@ templateYaml inputString = do
               (CL.sourceList (concat $(listE events)) .| Libyaml.encode)
           case Data.Yaml.decodeEither' bs of
             Left e -> impureThrow e
-            Right (v :: Aeson.Value) -> pure v
+            Right (v :: J.Value) -> pure v
       )
     |]
   where
@@ -103,7 +102,7 @@ processor =
         [|
           Data.Yaml.Internal.objToEvents
             Data.Yaml.Internal.defaultStringStyle
-            (Aeson.toJSON $(varE (mkName anchorName)))
+            (J.toJSON $(varE (mkName anchorName)))
             []
           |]
     -- We disable anchors because aliases are used only to refer to

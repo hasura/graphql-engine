@@ -1,13 +1,12 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Button } from '../../../../new-components/Button';
-import { isProConsole } from '../../../../utils/proConsole';
 import { FaFolderPlus } from 'react-icons/fa';
 import { QueryCollectionCreateDialog } from './QueryCollectionCreateDialog';
 import { AllowListStatus } from './AllowListStatus';
 
 interface AllowListSidebarHeaderProps {
-  onQueryCollectionCreate: (name: string) => void;
+  onQueryCollectionCreate?: (name: string) => void;
 }
 
 export const AllowListSidebarHeader = (props: AllowListSidebarHeaderProps) => {
@@ -17,7 +16,11 @@ export const AllowListSidebarHeader = (props: AllowListSidebarHeaderProps) => {
     <div className="pb-4">
       {isCreateModalOpen && (
         <QueryCollectionCreateDialog
-          onCreate={onQueryCollectionCreate}
+          onCreate={name => {
+            if (onQueryCollectionCreate) {
+              onQueryCollectionCreate(name);
+            }
+          }}
           onClose={() => setIsCreateModalOpen(false)}
         />
       )}
@@ -30,7 +33,7 @@ export const AllowListSidebarHeader = (props: AllowListSidebarHeaderProps) => {
             <AllowListStatus />
           </div>
         </div>
-        {isProConsole(window.__env) && (
+        {onQueryCollectionCreate && (
           <div className="mt-2 2xl:mt-0 2xl:ml-auto">
             <Button
               icon={<FaFolderPlus />}

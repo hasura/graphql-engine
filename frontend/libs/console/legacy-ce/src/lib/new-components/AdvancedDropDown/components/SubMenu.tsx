@@ -1,17 +1,20 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import React from 'react';
 import { BsChevronRight } from 'react-icons/bs';
+import { HeightOptions } from './Root';
 import * as StyleWrappers from './style-wrappers';
 
 type SubMenuProps = {
   disabled?: boolean;
-  label: string;
+  label: React.ReactNode;
+  maxHeight?: HeightOptions;
 };
 
 export const SubMenu: React.FC<SubMenuProps> = ({
   children,
   disabled = false,
   label,
+  maxHeight = '65vh',
 }) => (
   <DropdownMenu.Sub>
     <DropdownMenu.SubTrigger
@@ -27,7 +30,9 @@ export const SubMenu: React.FC<SubMenuProps> = ({
     </DropdownMenu.SubTrigger>
     <DropdownMenu.Portal>
       <DropdownMenu.SubContent sideOffset={2} alignOffset={-5}>
-        <StyleWrappers.Content>{children}</StyleWrappers.Content>
+        <StyleWrappers.Content maxHeight={maxHeight}>
+          {children}
+        </StyleWrappers.Content>
       </DropdownMenu.SubContent>
     </DropdownMenu.Portal>
   </DropdownMenu.Sub>

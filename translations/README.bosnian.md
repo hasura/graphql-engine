@@ -126,23 +126,23 @@ Pretvorite podatke u Postgres ili pokrenite poslovnu logiku na njemu da biste do
 ## Demo
 
 Pogledajte sve primjere dostupne u
-[community/sample-apps](../community/sample-apps) mapi.
+[hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) mapi.
 
 ### Stvarne aplikacije
 
 - Aplikacija za grupno dopisivanje koja koristi React, uključuje pokazatelj tipkanja, online korisnike & obavijesti o novim porukama.
   - [Isprobajte odmah](https://realtime-chat.demo.hasura.io/)
-  - [Tutorijal](../community/sample-apps/realtime-chat)
+  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [Pogledaj API](https://realtime-chat.demo.hasura.io/console)
 
 - Aplikacija za praćenje lokacije vozila uživo koja prikazuje GPS koordinate dok se vozilo kreće po mapi..
   - [Isprobajte odmah](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorijal](../community/sample-apps/realtime-location-tracking)
+  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [Pogledaj API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Nadzorna ploča u stvarnom vremenu koja objedinjuje podatke o kontinuirano mijenjanim podacima.
   - [Isprobajte odmah](https://realtime-poll.demo.hasura.io/)
-  - [Tutorijal](../community/sample-apps/realtime-poll)
+  - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
   - [Pogledaj API](https://realtime-poll.demo.hasura.io/console)
 
 ### Video

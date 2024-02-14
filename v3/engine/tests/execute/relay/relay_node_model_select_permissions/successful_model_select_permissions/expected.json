@@ -1,0 +1,18 @@
+[
+  {
+    "data": {
+      "node": {
+        "last_name": "Landin",
+        "author_id": 1
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "internal error"
+      }
+    ]
+  }
+]

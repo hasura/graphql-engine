@@ -28,6 +28,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Body (validateBodyTransformFn)
 import Hasura.RQL.DDL.Webhook.Transform.Class
+import Hasura.RQL.Types.Webhook.Transform.Class
 
 -------------------------------------------------------------------------------
 
@@ -61,7 +62,7 @@ transformFns = lens getter setter
 
 -- | Validate all 'TransformFn a' fields in the 'RequestTransform'.
 validateRequestTransform ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RequestTransform ->
   m RequestTransform
 validateRequestTransform reqTransform =

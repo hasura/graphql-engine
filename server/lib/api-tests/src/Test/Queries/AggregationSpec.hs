@@ -18,10 +18,10 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -36,10 +36,9 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "BigQuery returns numbers as strings, which means the second test fails"
+                Just
+                  $ Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True
                     }
             },
           (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -103,11 +102,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Aggregation queries" do
     it "Fetch aggregated data of an object" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -158,7 +154,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fetch aggregated data on nested objects" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -213,7 +209,7 @@ tests opts = do
                  name: Author 1
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fetch aggregated count only" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -242,4 +238,88 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Fetch __typename for an aggregate" \testEnvironment -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      -- SQL Server returns int type when the input is of int type, which is different than the rest.
+      -- https://learn.microsoft.com/en-us/sql/t-sql/functions/avg-transact-sql?view=sql-server-ver16#return-types
+      let avgResult :: String
+          avgResult
+            | fmap BackendType.backendType (getBackendTypeConfig testEnvironment) == Just Fixture.SQLServer = "3"
+            | otherwise = "3.25"
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_article_aggregate:
+                  aggregate:
+                    avg:
+                      rating: #{avgResult}
+                      __typename: #{schemaName}_article_avg_fields
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_article_aggregate {
+                    aggregate {
+                      avg {
+                        rating
+                        __typename
+                      }
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    -- This test checks an edge case where if aliasing is not done properly in the SQL, the column alias
+    -- given to the nodes field can conflict with the column alias given to the column used in the aggregation
+    -- which can break the query.
+    it "Fetch aggregation over a column while also returning a field with the same name as the column" \testEnvironment -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_article_aggregate:
+                  aggregate:
+                    sum:
+                      rating: 13
+                  rating:
+                    - id: 1
+                    - id: 2
+                    - id: 3
+                    - id: 4
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_article_aggregate(order_by: {id: asc}) {
+                   aggregate {
+                      sum {
+                        rating
+                      }
+                    }
+                    rating: nodes {
+                      id
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected

@@ -1,0 +1,230 @@
+---
+description: Hasura Oracle database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - Oracle
+slug: index
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Oracle
+
+<div className="badge-container">
+  <ProductBadge free pro ee self />
+</div>
+
+## Introduction
+
+Hasura enables you to connect to Oracle databases to automatically build a GraphQL API based on your database schema.
+
+At present, our Oracle integration is available in Hasura Cloud and Docker environments, where you can run Hasura
+GraphQL Engine and connect the Oracle GraphQL Data Connector to it. For more information on GraphQL Data Connectors
+check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
+
+To get started with Oracle:
+
+- In Hasura Cloud, check out our [Getting Started with Oracle in Hasura Cloud](/databases/oracle/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/oracle/docker.mdx) guide
+
+:::info Using Kubernetes?
+
+We have Helm charts available for deploying Hasura on Kubernetes. Check out
+[more information here](/deployment/deployment-guides/kubernetes-helm.mdx) and see the
+[`enterprise-stack` here](https://github.com/hasura/helm-charts/tree/main/charts/hasura-enterprise-stack).
+
+:::
+
+:::tip Supported versions
+
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **Oracle 18.0 and higher** including Amazon RDS.
+
+:::
+
+:::tip Supported features
+
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on Oracle.
+
+Note that Hasura doesn't yet support the ability to modify the database schema for Oracle, so the database you connect
+to should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
+
+:::
+
+## Feature Support
+
+<div className="feature-matrix-tables">
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>Oracle</td>
+  </tr>
+  <tr>
+    <td>Remote Relationships</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Views</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Default Values</td>
+    <td>✅</td>
+  </tr>
+</table>
+
+### Queries
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>Oracle</td>
+  </tr>
+  <tr>
+    <td>Simple</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Nested Object</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Aggregation</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Filter / Search</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Sort</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Distinct</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Paginate</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Multiple Arguments</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Multiple Queries</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Variables / Aliases / Fragments</td>
+    <td>✅</td>
+  </tr>
+</table>
+
+### Mutations
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>Oracle</td>
+  </tr>
+  <tr>
+    <td>Insert</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Upsert</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Update</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Delete</td>
+    <td>✅</td>
+  </tr>
+  <tr>
+    <td>Multiple per Request</td>
+    <td>✅</td>
+  </tr>
+</table>
+
+### Subscriptions
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>Oracle</td>
+  </tr>
+  <tr>
+    <td>Value of Field</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Updates to Rows</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Value of Derived Field</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>Streaming Subscriptions</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+### Event Triggers
+
+<table>
+  <tr>
+    <td>Feature</td>
+    <td>Oracle</td>
+  </tr>
+  <tr>
+    <td>INSERT</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>UPDATE</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>DELETE</td>
+    <td>❌</td>
+  </tr>
+  <tr>
+    <td>MANUAL</td>
+    <td>❌</td>
+  </tr>
+</table>
+
+</div>
+
+## Coming soon for Oracle
+
+- [Subscriptions](/subscriptions/overview.mdx)
+- [Event triggers](/event-triggers/overview.mdx)
+
+## Managing data with the Hasura Console
+
+The Hasura Console is a web UI that allows you to manage your data and metadata. It is available at
+`http://localhost:8080/console` when you run Hasura locally, or from your project's Console endpoint when you use
+[Hasura Cloud](https://cloud.hasura.io).
+
+The data-management features (such as creating tables) are available in the `Data` tab. You can access your GraphQL API
+in the `API` tab and interact with it using the GraphiQL interface.
+
+:::info Console support
+
+We recommend using your preferred Oracle client instead. The Hasura Console is designed to be a tool for managing your
+GraphQL API, and not a full-fledged database management tool.
+
+:::

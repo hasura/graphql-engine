@@ -1,9 +1,9 @@
 import { SourceCustomization } from '../../../../hasura-metadata-types';
-import { GraphQLCustomization } from '../schema';
+import { GraphQLCustomizationSchema } from '../schema';
 
 export const adaptGraphQLCustomization = (
   sourceCustomization: SourceCustomization
-): GraphQLCustomization => {
+): GraphQLCustomizationSchema => {
   return {
     rootFields: {
       namespace: sourceCustomization.root_fields?.namespace,

@@ -23,3 +23,13 @@ type Entries<T> = {
 
 export const getEntries = <T extends Record<string, unknown>>(obj: T) =>
   Object.entries(obj) as Entries<T>;
+
+export const isNotNull = <T>(arg: T): arg is Exclude<T, null> => {
+  return arg !== null;
+};
+
+// see: https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+// TS docs: https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+export type DistributiveOmit<T, K extends PropertyKey> = T extends any
+  ? Omit<T, K>
+  : never;

@@ -18,7 +18,7 @@ where
 
 import Control.Monad.Circular
 import Control.Monad.Writer (Writer, runWriter)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Sequence ((|>))
 import Data.Text qualified as T
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -145,8 +145,8 @@ analyzeGraphQLQuery schema G.TypedOperationDefinition {..} = runAnalysis schema 
         throwDiagnosis RootTypeNotAnObject
   -- analyze the variables
   variables <- analyzeVariables _todVariableDefinitions
-  pure $
-    Structure
+  pure
+    $ Structure
       (fromMaybe mempty selection)
       variables
 
@@ -162,15 +162,16 @@ analyzeObjectSelectionSet ::
   Analysis (HashMap G.Name FieldInfo)
 analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
   fields <- traverse analyzeSelection selectionSet
-  foldlM (Map.unionWithM mergeFields) mempty $ catMaybes fields
+  foldlM (HashMap.unionWithM mergeFields) mempty $ catMaybes fields
   where
     analyzeSelection :: G.Selection G.NoFragments G.Name -> Analysis (Maybe (HashMap G.Name FieldInfo))
     analyzeSelection = \case
       G.SelectionInlineFragment inlineFrag ->
         mconcat <$> traverse analyzeSelection (G._ifSelectionSet inlineFrag)
       G.SelectionField field@G.Field {..} ->
-        fmap join $
-          withField _fName $ withCatchAndRecord do
+        fmap join
+          $ withField _fName
+          $ withCatchAndRecord do
             -- attempt to find that field in the object's definition
             G.FieldDefinition {..} <-
               findDefinition _fName
@@ -182,7 +183,7 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
                 `onNothingM` throwDiagnosis (TypeNotFound baseType)
             -- attempt to build a corresponding FieldInfo
             maybeFieldInfo <- analyzeField _fldType typeDefinition field
-            pure $ Map.singleton (fromMaybe _fName _fAlias) <$> maybeFieldInfo
+            pure $ HashMap.singleton (fromMaybe _fName _fAlias) <$> maybeFieldInfo
 
     -- Additional hidden fields that are allowed despite not being listed in the
     -- schema.
@@ -207,23 +208,23 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
     mergeFields name field1 field2 = case (field1, field2) of
       -- both are scalars: we check that they're the same
       (FieldScalarInfo t1 s1, FieldScalarInfo t2 _) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         pure $ FieldScalarInfo t1 s1
       -- both are enums: we check that they're the same
       (FieldEnumInfo t1 e1, FieldEnumInfo t2 _) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         pure $ FieldEnumInfo t1 e1
       -- both are objects, we merge their selection sets
       (FieldObjectInfo t1 o1, FieldObjectInfo t2 o2) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         mergedSelection <-
-          Map.unionWithM
+          HashMap.unionWithM
             mergeFields
             (_oiSelection o1)
             (_oiSelection o2)
@@ -250,17 +251,17 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
     throwDiagnosis $ InputObjectInOutput $ G._iotdName iotd
   G.TypeDefinitionScalar std -> do
     -- scalars do not admit a selection set
-    unless (null _fSelectionSet) $
-      throwDiagnosis $
-        ScalarSelectionSet $
-          G._stdName std
+    unless (null _fSelectionSet)
+      $ throwDiagnosis
+      $ ScalarSelectionSet
+      $ G._stdName std
     pure $ Just $ FieldScalarInfo gType $ ScalarInfo std
   G.TypeDefinitionEnum etd -> do
     -- enums do not admit a selection set
-    unless (null _fSelectionSet) $
-      throwDiagnosis $
-        EnumSelectionSet $
-          G._etdName etd
+    unless (null _fSelectionSet)
+      $ throwDiagnosis
+      $ EnumSelectionSet
+      $ G._etdName etd
     pure $ Just $ FieldEnumInfo gType $ EnumInfo etd
   G.TypeDefinitionUnion _utd ->
     -- TODO: implement unions
@@ -270,18 +271,18 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
     pure Nothing
   G.TypeDefinitionObject otd -> do
     -- TODO: check field arguments?
-    when (null _fSelectionSet) $
-      throwDiagnosis $
-        ObjectMissingSelectionSet $
-          G._otdName otd
+    when (null _fSelectionSet)
+      $ throwDiagnosis
+      $ ObjectMissingSelectionSet
+      $ G._otdName otd
     subselection <- analyzeObjectSelectionSet otd _fSelectionSet
-    pure $
-      Just $
-        FieldObjectInfo gType $
-          ObjectInfo
-            { _oiTypeDefinition = otd,
-              _oiSelection = subselection
-            }
+    pure
+      $ Just
+      $ FieldObjectInfo gType
+      $ ObjectInfo
+        { _oiTypeDefinition = otd,
+          _oiSelection = subselection
+        }
 
 --------------------------------------------------------------------------------
 -- Variables analysis
@@ -302,7 +303,7 @@ analyzeVariables variables = do
         lookupType baseType
           `onNothingM` throwDiagnosis (TypeNotFound baseType)
       ifInfo <- analyzeInputField baseType typeDefinition
-      pure $ Map.singleton _vdName $ VariableInfo _vdType ifInfo _vdDefaultValue
+      pure $ HashMap.singleton _vdName $ VariableInfo _vdType ifInfo _vdDefaultValue
   pure $ fold $ catMaybes result
 
 -- | Builds an 'InputFieldInfo' for a given typename.
@@ -328,7 +329,7 @@ analyzeInputField typeName typeDefinition =
               `onNothingM` throwDiagnosis (TypeNotFound baseType)
           info <- analyzeInputField baseType typeDef
           pure (_ivdName, (_ivdType, info))
-      pure $ InputFieldObjectInfo (InputObjectInfo iotd $ Map.fromList $ catMaybes fields)
+      pure $ InputFieldObjectInfo (InputObjectInfo iotd $ HashMap.fromList $ catMaybes fields)
     G.TypeDefinitionObject _otd -> throwDiagnosis $ ObjectInInput typeName
     G.TypeDefinitionInterface _itd -> throwDiagnosis $ InterfaceInInput typeName
     G.TypeDefinitionUnion _utd -> throwDiagnosis $ UnionInInput typeName
@@ -364,10 +365,10 @@ newtype Analysis a
 
 runAnalysis :: G.SchemaIntrospection -> Analysis a -> (Maybe a, [Text])
 runAnalysis schema (Analysis a) =
-  postProcess $
-    runWriter $
-      flip runReaderT (pure "$", schema) $
-        runExceptT a
+  postProcess
+    $ runWriter
+    $ flip runReaderT (pure "$", schema)
+    $ runExceptT a
   where
     -- if there was an uncaught error, add it to the list
     postProcess = \case
@@ -383,7 +384,7 @@ lookupType ::
   m (Maybe (G.TypeDefinition [G.Name] G.InputValueDefinition))
 lookupType name = do
   G.SchemaIntrospection types <- asks snd
-  pure $ Map.lookup name types
+  pure $ HashMap.lookup name types
 
 -- | Add the current field to the error path.
 withField ::

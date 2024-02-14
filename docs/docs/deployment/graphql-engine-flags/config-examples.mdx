@@ -136,9 +136,10 @@ have to add them separately. E.g. `https://*.foo.com` doesn't include
 :::
 
 You can tell Hasura to disable handling CORS entirely via the
-`--disable-cors` flag. Hasura will not respond with CORS headers. You
-can use this option if you're already handling CORS on a reverse proxy
-etc.
+`--disable-cors` flag or the `HASURA_GRAPHQL_DISABLE_CORS`
+[environment variable](/deployment/graphql-engine-flags/reference.mdx#disable-cors).
+Hasura will not respond with CORS headers. You can use this
+option if you're already handling CORS on a reverse proxy etc.
 
 ## Run the Console offline _(i.e load console assets from server instead of CDN)_ {#console-assets-on-server}
 
@@ -178,9 +179,11 @@ it might not be the latest version of the Console.
 
 The Hasura GraphQL Engine may provide additional information for each
 object in the `extensions` key of `errors`. The `internal` key contains
-error information including the generated SQL statement and exception
-information from Postgres. This can be highly useful, especially in the
-case of debugging errors in [action](/actions/debugging.mdx) requests.
+error information including the generated SQL statement, exception
+information from Postgres and, if applicable, resolved
+[connection template](/databases/database-config/dynamic-db-connection.mdx#connection-template)
+information. This can be highly useful, especially in the case of
+debugging errors in [Action](/actions/debugging.mdx) requests.
 
 By default the `internal` key is not sent in the `extensions` response
 (except for `admin` roles). To enable this, start the GraphQL Engine
@@ -256,7 +259,7 @@ provided to the server**
 ```bash
 # env var
 HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
-HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
+PG_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 
 # flag
 --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
@@ -266,7 +269,7 @@ HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 In this case, Hasura GraphQL Engine will use the
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` to store the `metadata catalogue`
 and starts the server with the database provided in the
-`HASURA_GRAPHQL_DATABASE_URL`.
+`PG_DATABASE_URL`.
 
 **2. Only** `metadata database` **is provided to the server**
 
@@ -283,26 +286,3 @@ In this case, Hasura GraphQL Engine will use the
 and starts the server without tracking/managing any database. _i.e_ a
 Hasura GraphQL server will be started with no database. The user could
 then manually track/manage databases at a later time.
-
-**3. Only** `primary database` **is provided to the server**
-
-```bash
-# env var
-HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
-
-# flag
---database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
-```
-
-In this case, Hasura GraphQL Engine server will start with the database
-provided in the `HASURA_GRAPHQL_DATABASE_URL` and will also use the
-_same database_ to store the `metadata catalogue`.
-
-**4. Neither** `primary database` **nor** `metadata database` **is
-provided to the server**
-
-Hasura GraphQL Engine will fail to startup and will throw an error
-
-```bash
-Fatal Error: Either of --metadata-database-url or --database-url option expected
-```

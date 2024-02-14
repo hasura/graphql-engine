@@ -6,10 +6,12 @@ import {
   GraphQLSanitizedInputField,
 } from '../../../../new-components/Form';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import {
-  SuggestedRelationshipWithName,
-  useSuggestedRelationships,
-} from '../SuggestedRelationships/hooks/useSuggestedRelationships';
+import { SuggestedRelationshipWithName } from '../SuggestedRelationships/hooks/useSuggestedRelationships';
+import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
+import { DisplayToastErrorMessage } from '../../../Data/components/DisplayErrorMessage';
+import { useAppDispatch } from '../../../../storeHooks';
+import { updateSchemaInfo } from '../../../../components/Services/Data/DataActions';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 
 type SuggestedRelationshipTrackModalProps = {
   relationship: SuggestedRelationshipWithName;
@@ -20,43 +22,65 @@ type SuggestedRelationshipTrackModalProps = {
 export const SuggestedRelationshipTrackModal: React.VFC<
   SuggestedRelationshipTrackModalProps
 > = ({ relationship, dataSourceName, onClose }) => {
-  const {
-    onAddSuggestedRelationship,
-    isAddingSuggestedRelationship,
-    refetchSuggestedRelationships,
-  } = useSuggestedRelationships({
+  const dispatch = useAppDispatch();
+  const { data: driver } = useMetadata(
+    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+  );
+
+  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
+
+  const { createTableRelationships, isLoading } = useCreateTableRelationships(
     dataSourceName,
-    table: relationship.from.table,
-    existingRelationships: [],
-    isEnabled: true,
-  });
+    {
+      onSuccess: () => {
+        if (isLoadSchemaRequired) {
+          dispatch(updateSchemaInfo());
+        }
+      },
+    }
+  );
 
   const onTrackRelationship = async (relationshipName: string) => {
-    try {
-      const isObjectRelationship = !!relationship.from?.constraint_name;
-
-      await onAddSuggestedRelationship({
-        name: relationshipName,
-        columnNames: isObjectRelationship
-          ? relationship.from.columns
-          : relationship.to.columns,
-        relationshipType: isObjectRelationship ? 'object' : 'array',
-        toTable: isObjectRelationship ? undefined : relationship.to.table,
-      });
-      hasuraToast({
-        title: 'Success',
-        message: 'Relationship tracked',
-        type: 'success',
-      });
-      refetchSuggestedRelationships();
-      onClose();
-    } catch (err: unknown) {
-      hasuraToast({
-        title: 'Error',
-        message: err instanceof Error ? err.message : 'An error occurred',
-        type: 'error',
-      });
-    }
+    createTableRelationships({
+      data: [
+        {
+          name: relationshipName,
+          source: {
+            fromSource: dataSourceName,
+            fromTable: relationship.from.table,
+          },
+          definition: {
+            target: {
+              toSource: dataSourceName,
+              toTable: relationship.to.table,
+            },
+            type: relationship.type,
+            detail: {
+              fkConstraintOn:
+                'constraint_name' in relationship.from
+                  ? 'fromTable'
+                  : 'toTable',
+              fromColumns: relationship.from.columns,
+              toColumns: relationship.to.columns,
+            },
+          },
+        },
+      ],
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: 'Tracked Successfully',
+        });
+        onClose();
+      },
+      onError: err => {
+        hasuraToast({
+          type: 'error',
+          title: 'Failed to track',
+          children: <DisplayToastErrorMessage message={err.message} />,
+        });
+      },
+    });
   };
 
   const { Form, methods } = useConsoleForm({
@@ -95,7 +119,7 @@ export const SuggestedRelationshipTrackModal: React.VFC<
             callToDeny="Cancel"
             callToAction="Track relationship"
             onClose={onClose}
-            isLoading={isAddingSuggestedRelationship}
+            isLoading={isLoading}
           />
         </>
       </Form>

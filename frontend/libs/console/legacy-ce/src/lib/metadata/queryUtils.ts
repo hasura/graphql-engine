@@ -88,6 +88,7 @@ export const metadataQueryTypes = [
   'set_custom_types',
   'dump_internal_state',
   'bulk',
+  'bulk_keep_going',
   'get_catalog_state',
   'set_catalog_state',
   'set_table_customization',
@@ -103,6 +104,16 @@ export const metadataQueryTypes = [
   'dc_add_agent',
   'dc_delete_agent',
   'suggest_relationships',
+  'pg_test_connection_template',
+  'track_logical_model',
+  'untrack_logical_model',
+  'track_native_query',
+  'untrack_native_query',
+  'track_tables',
+  'untrack_tables',
+  'track_stored_procedure',
+  'untrack_stored_procedure',
+  'bulk_atomic',
 ] as const;
 
 export type MetadataQueryType = (typeof metadataQueryTypes)[number];
@@ -140,7 +151,7 @@ export const getCreatePermissionQuery = (
   action: 'update' | 'insert' | 'delete' | 'select',
   tableDef: QualifiedTable,
   role: string,
-  permission: any,
+  permissionAndComment: any,
   source: string
 ) => {
   let queryType: MetadataQueryType;
@@ -160,11 +171,13 @@ export const getCreatePermissionQuery = (
     default:
       throw new Error('Invalid action type');
   }
+  const { comment, ...permission } = permissionAndComment;
 
   return getMetadataQuery(queryType, source, {
     table: tableDef,
     role,
     permission,
+    comment,
   });
 };
 
@@ -784,6 +797,18 @@ export const getEventInvocationsLogByID = (
   },
 });
 
+export const getEventTriggerInvocationByID = (
+  currentDriver: string,
+  event_id: string,
+  source?: string
+) => ({
+  type: `${currentDriver}_get_event_by_id`,
+  args: {
+    event_id,
+    source,
+  },
+});
+
 export const getEventInvocations = (
   type: SupportedEvents,
   limit: number,
@@ -861,6 +886,64 @@ export const getScheduledEvents = (
       limit,
       offset,
       get_rows_count: false,
+    },
+  };
+};
+
+export const getScheduledEventTrigger = (
+  currentDriver: string,
+  name: string,
+  status: string,
+  source?: string,
+  limit?: number,
+  offset?: number
+) => {
+  const api_prefix = currentDriver === 'postgres' ? 'pg' : currentDriver;
+  const query = {
+    type: `${api_prefix}_get_event_logs`,
+    args: {},
+  };
+  const statusPending = 'pending';
+  const statusProcessed = 'processed';
+
+  if (status === 'pending') {
+    query.args = {
+      ...query.args,
+      status: statusPending,
+    };
+  } else {
+    query.args = {
+      ...query.args,
+      status: statusProcessed,
+    };
+  }
+  return {
+    ...query,
+    args: {
+      ...query.args,
+      name,
+      source,
+      limit,
+      offset,
+    },
+  };
+};
+
+export const getEventTriggerInvocation = (
+  currentDriver: string,
+  name: string,
+  source?: string,
+  limit?: number,
+  offset?: number
+) => {
+  const api_prefix = currentDriver === 'postgres' ? 'pg' : currentDriver;
+  return {
+    type: `${api_prefix}_get_event_invocation_logs`,
+    args: {
+      name,
+      source,
+      limit,
+      offset,
     },
   };
 };

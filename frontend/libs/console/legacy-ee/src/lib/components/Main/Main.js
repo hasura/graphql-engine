@@ -27,7 +27,16 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import globals from '../../Globals';
 import 'react-toggle/style.css';
-import { Spinner } from '@hasura/console-legacy-ce';
+import {
+  Spinner,
+  EntepriseNavbarButton,
+  WithEELiteAccess,
+  InitializeTelemetry,
+  telemetryUserEventsTracker,
+  Analytics,
+  isEEClassicConsole,
+} from '@hasura/console-legacy-ce';
+
 import {
   Badge,
   NotificationSection,
@@ -40,9 +49,9 @@ import {
   updateRequestHeaders,
   showErrorNotification,
   isMonitoringTabSupportedEnvironment,
-  isCloudConsole,
   ControlPlane,
 } from '@hasura/console-legacy-ce';
+
 import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
 import {
   loadServerVersion,
@@ -54,7 +63,12 @@ import {
   loadLuxProjectEntitlements,
 } from './Actions';
 import './NotificationOverrides.css';
-import { clearPersistedGraphiQLHeaders } from '../../utils/localstorage';
+import {
+  LS_KEYS,
+  removeLSItem,
+  getLSItem,
+  setLSItem,
+} from '@hasura/console-legacy-ce';
 
 import { moduleName, relativeModulePath } from '../Services/Metrics/constants';
 
@@ -68,16 +82,21 @@ import {
   checkAccess,
   defaultAccessState,
 } from '../../utils/computeAccess';
-
 import { restrictedPathsMetadata } from '../../utils/redirectUtils';
 import extendedGlobals from '../../Globals';
-import { appcuesIdentify } from '../../utils/appCues';
 
+import { appcuesIdentify } from '../../utils/appCues';
 import styles from './Main.module.scss';
 import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
-import projectImg from './images/project.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
+import { isHasuraCollaboratorUser } from '../Login/utils';
+import {
+  ConsoleDevTools,
+  isFeatureFlagEnabled,
+  availableFeatureFlagIds,
+} from '@hasura/console-legacy-ce';
+import { getAdminSecret } from '../AppState';
 
 const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
 class Main extends React.Component {
@@ -117,7 +136,7 @@ class Main extends React.Component {
     // clear graphiql headers from localstorage on team console unload for non-admin user
     if (window.__env.userRole === 'user' && !!globals.tenantID) {
       window.addEventListener('unload', () => {
-        clearPersistedGraphiQLHeaders();
+        removeLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
       });
     }
 
@@ -175,7 +194,7 @@ class Main extends React.Component {
     const { latestServerVersion, serverVersion } = this.props;
 
     try {
-      const isClosedBefore = window.localStorage.getItem(
+      const isClosedBefore = getLSItem(
         latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
       );
 
@@ -250,10 +269,7 @@ class Main extends React.Component {
 
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
-    window.localStorage.setItem(
-      latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
-      'true'
-    );
+    setLSItem(latestServerVersion + '_BANNER_NOTIFICATION_CLOSED', 'true');
     this.setState({ showUpdateNotification: false });
   }
   closeDropDown = () => {
@@ -291,9 +307,8 @@ class Main extends React.Component {
    */
   isEnterpriseProject() {
     return (
-      (this.props?.project?.is_enterprise_user &&
-        this.props?.project?.plan_name !== 'cloud_free') ||
-      globals.consoleType === 'pro-lite'
+      this.props?.project?.is_enterprise_user &&
+      this.props?.project?.plan_name !== 'cloud_free'
     );
   }
 
@@ -303,11 +318,6 @@ class Main extends React.Component {
    * check if entitlement is enabled for such plans
    */
   hasMetricsEntitlement() {
-    // if not a cloud console, don't check
-    if (!isCloudConsole(globals)) {
-      return true;
-    }
-
     // get the plan name and entitlements array from the project
     const {
       project: { plan_name = '' },
@@ -429,6 +439,12 @@ class Main extends React.Component {
     };
 
     const getDataPath = () => {
+      const perfMode = isFeatureFlagEnabled(
+        availableFeatureFlagIds.performanceMode
+      );
+
+      if (perfMode) return 'data/';
+
       if (currentSource && currentSchema) {
         return `data/${currentSource}/schema/${currentSchema}`;
       }
@@ -436,25 +452,37 @@ class Main extends React.Component {
     };
 
     const renderMetricsTab = () => {
-      if (
-        'hasMetricAccess' in accessState &&
-        accessState.hasMetricAccess &&
-        isMonitoringTabSupportedEnvironment(globals) &&
-        this.hasMetricsEntitlement()
-      ) {
-        return (
-          <HeaderNavItem
-            title="Monitoring"
-            icon={<FaChartLine aria-hidden="true" />}
-            tooltipText="Metrics"
-            itemPath={moduleName}
-            linkPath={relativeModulePath}
-            appPrefix={appPrefix}
-            currentActiveBlock={currentActiveBlock}
-          />
-        );
+      if (!isMonitoringTabSupportedEnvironment(globals)) {
+        return null;
       }
-      return null;
+
+      if (globals.consoleType === 'pro') {
+        if (
+          // still show the monitoring tab if the user login with admin secret
+          (!getAdminSecret() && !isHasuraCollaboratorUser()) ||
+          !accessState?.hasMetricAccess
+        ) {
+          return null;
+        }
+        // validate metrics permission for hasura cloud
+      } else if (
+        !accessState?.hasMetricAccess ||
+        !this.hasMetricsEntitlement()
+      ) {
+        return null;
+      }
+
+      return (
+        <HeaderNavItem
+          title="Monitoring"
+          icon={<FaChartLine aria-hidden="true" />}
+          tooltipText="Metrics"
+          itemPath={moduleName}
+          linkPath={relativeModulePath}
+          appPrefix={appPrefix}
+          currentActiveBlock={currentActiveBlock}
+        />
+      );
     };
 
     const renderLogout = () => {
@@ -522,25 +550,53 @@ class Main extends React.Component {
 
     const renderMetadataIcon = () => (
       <div className={itemContainerStyle}>
-        <Link
-          className={clsx(
-            linkStyle,
-            currentActiveBlock === 'settings' && activeLinkStyle
-          )}
-          to={getConsolidatedPath('/settings', '/settings', accessState)}
-        >
-          <span className="text-sm self-baseline">{getMetadataIcon()}</span>
-          <span className="uppercase text-left">Settings</span>
-        </Link>
+        <Analytics name="navbar-settings">
+          <Link
+            className={clsx(
+              linkStyle,
+              currentActiveBlock === 'settings' && activeLinkStyle
+            )}
+            to={getConsolidatedPath('/settings', '/settings', accessState)}
+          >
+            <span className="text-sm self-baseline">{getMetadataIcon()}</span>
+            <span className="uppercase text-left">Settings</span>
+          </Link>
+        </Analytics>
       </div>
     );
 
-    const getLogoSrc = () => {
-      if (this.isEnterpriseProject()) {
-        return EELogo;
-      }
+    const getLogo = () => {
+      return (
+        <WithEELiteAccess globals={globals}>
+          {({ access }) => {
+            const getLogoSrc = () => {
+              if (this.isEnterpriseProject() || isEEClassicConsole()) {
+                return EELogo;
+              }
+              if (access === 'active') {
+                return EELogo;
+              }
+              return logo;
+            };
+            return <img className="w-24" src={getLogoSrc()} alt="HasuraLogo" />;
+          }}
+        </WithEELiteAccess>
+      );
+    };
 
-      return logo;
+    const renderTelemetrySetup = () => {
+      return (
+        <WithEELiteAccess globals={globals}>
+          {({ access }) => {
+            return (
+              <InitializeTelemetry
+                tracker={telemetryUserEventsTracker}
+                skip={access === 'forbidden'}
+              />
+            );
+          }}
+        </WithEELiteAccess>
+      );
     };
 
     return (
@@ -552,7 +608,7 @@ class Main extends React.Component {
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
                 >
-                  <img className="w-24" src={getLogoSrc()} />
+                  {getLogo()}
                 </Link>
                 <Link
                   to={accessState.hasGraphQLAccess ? '/' : '/access-denied'}
@@ -562,7 +618,7 @@ class Main extends React.Component {
                   </div>
                 </Link>
               </div>
-              <ul className="flex gap-2">
+              <ul className="flex gap-2" data-testid="Nav bar">
                 <HeaderNavItem
                   title="API"
                   icon={<FaFlask aria-hidden="true" />}
@@ -632,41 +688,45 @@ class Main extends React.Component {
                 {renderMetricsTab()}
               </ul>
             </div>
-            <div
-              id="dropdown_wrapper"
-              className={clsx(
-                'flex gap-2 justify-end items-stretch relative mr-4',
-                this.state.isDropdownOpen ? 'open' : ''
-              )}
-            >
-              {getAdminSecretSection()}
-              {renderProjectInfo()}
-              {renderMetadataIcon()}
-              <div className={itemContainerStyle}>
-                <a
-                  id="help"
-                  className={clsx(linkStyle)}
-                  href={'https://hasura.io/help'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="text-sm self-baseline">
-                    <FaQuestionCircle />
-                  </span>
-                  <span className="uppercase text-left">HELP</span>
-                </a>
+            <div className="bootstrap-jail">
+              <div
+                id="dropdown_wrapper"
+                className={clsx(
+                  'flex gap-2 justify-end items-stretch relative mr-4 h-full',
+                  this.state.isDropdownOpen ? 'open' : ''
+                )}
+              >
+                {getAdminSecretSection()}
+                <EntepriseNavbarButton className="flex items-center normal-case font-normal text-slate-900 mr-sm" />
+                {renderTelemetrySetup()}
+                {renderProjectInfo()}
+                {renderMetadataIcon()}
+                <div className={itemContainerStyle}>
+                  <a
+                    id="help"
+                    className={clsx(linkStyle)}
+                    href={'https://hasura.io/help'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="text-sm self-baseline">
+                      <FaQuestionCircle />
+                    </span>
+                    <span className="uppercase text-left">HELP</span>
+                  </a>
+                </div>
+                {serverVersion &&
+                accessState &&
+                'hasDataAccess' in accessState &&
+                accessState.hasDataAccess ? (
+                  <NotificationSection
+                    isDropDownOpen={this.state.isDropdownOpen}
+                    closeDropDown={this.closeDropDown}
+                    toggleDropDown={this.toggleDropDown}
+                  />
+                ) : null}
+                {renderLogout()}
               </div>
-              {serverVersion &&
-              accessState &&
-              'hasDataAccess' in accessState &&
-              accessState.hasDataAccess ? (
-                <NotificationSection
-                  isDropDownOpen={this.state.isDropdownOpen}
-                  closeDropDown={this.closeDropDown}
-                  toggleDropDown={this.toggleDropDown}
-                />
-              ) : null}
-              {renderLogout()}
             </div>
           </div>
 
@@ -685,6 +745,7 @@ class Main extends React.Component {
           </div>
           <CloudOnboarding />
         </div>
+        <ConsoleDevTools />
       </div>
     );
   }

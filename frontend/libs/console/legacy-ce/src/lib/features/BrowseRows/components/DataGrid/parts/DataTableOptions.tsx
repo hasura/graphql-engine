@@ -66,7 +66,7 @@ const DisplayWhereClauses = ({
                 <FaFilter />
               </span>
               <span className={twFlexCenter}>
-                {columnName} {operatorMap[operator]} {value}
+                {columnName} {operatorMap[operator]} "{value}"
               </span>
               <span className={`min-h-3 ${twFlexCenter}`}>
                 <FaRegTimesCircle
@@ -165,147 +165,145 @@ export const DataTableOptions = (props: DataTableOptionsProps) => {
   };
 
   return (
-    <>
-      <div
-        className={clsx(
-          'flex items-center px-3.5 py-2 bg-white border border-gray-300',
-          query.disableRunQuery ? 'justify-end' : ' justify-between'
-        )}
-        id="query-options"
-      >
-        <div className="flex space-x-1.5 items-center">
-          <DropDown.Root
-            trigger={
+    <div
+      className={clsx(
+        'flex items-center px-3.5 py-2 bg-white border border-gray-300',
+        query.disableRunQuery ? 'justify-end' : ' justify-between'
+      )}
+      id="query-options"
+    >
+      <div className="flex space-x-1.5 items-center">
+        <DropDown.Root
+          trigger={
+            <Button
+              type="button"
+              mode="default"
+              size="sm"
+              icon={<FaFileExport />}
+              data-testid="@exportBtn"
+              title="Export to file"
+              isLoading={isExporting}
+            >
+              Export
+            </Button>
+          }
+          align="start"
+          arrow={false}
+        >
+          <DropDown.SubMenu
+            label="Export selected rows"
+            disabled={query.disableExportSelectedRows}
+          >
+            <DropDown.BasicItem
+              onClick={() => onExportSelectedRows('CSV')}
+              disabled={isExporting || query.disableExportSelectedRows}
+            >
+              CSV
+            </DropDown.BasicItem>
+            <DropDown.BasicItem
+              onClick={() => onExportSelectedRows('JSON')}
+              disabled={isExporting || query.disableExportSelectedRows}
+            >
+              JSON
+            </DropDown.BasicItem>
+          </DropDown.SubMenu>
+          <DropDown.SubMenu label="Export this table as">
+            <DropDown.BasicItem
+              onClick={() => onExport('CSV')}
+              disabled={isExporting}
+            >
+              CSV
+            </DropDown.BasicItem>
+            <DropDown.BasicItem
+              onClick={() => onExport('JSON')}
+              disabled={isExporting}
+            >
+              JSON
+            </DropDown.BasicItem>
+          </DropDown.SubMenu>
+        </DropDown.Root>
+
+        <span className="pl-2 pr-2">
+          <span className="h-6 border-r-slate-300 border-r border-solid" />
+        </span>
+        {!query.disableRunQuery && (
+          <>
+            <Button
+              type="button"
+              mode="primary"
+              size="sm"
+              icon={<FaSearch />}
+              onClick={query.onQuerySearch}
+              data-testid="@runQueryBtn"
+              disabled={query.disableRunQuery}
+              title="Update filters and sorts on your row data"
+            >
+              {`Query ${`(${totalQueriesApplied})` || ''}`}
+            </Button>
+            {totalQueriesApplied > 1 && (
               <Button
                 type="button"
                 mode="default"
-                size="sm"
-                icon={<FaFileExport />}
-                data-testid="@exportBtn"
-                title="Export to file"
-                isLoading={isExporting}
-              >
-                Export
-              </Button>
-            }
-            align="start"
-            arrow={false}
-          >
-            <DropDown.SubMenu
-              label="Export selected rows"
-              disabled={query.disableExportSelectedRows}
-            >
-              <DropDown.BasicItem
-                onClick={() => onExportSelectedRows('CSV')}
-                disabled={isExporting || query.disableExportSelectedRows}
-              >
-                CSV
-              </DropDown.BasicItem>
-              <DropDown.BasicItem
-                onClick={() => onExportSelectedRows('JSON')}
-                disabled={isExporting || query.disableExportSelectedRows}
-              >
-                JSON
-              </DropDown.BasicItem>
-            </DropDown.SubMenu>
-            <DropDown.SubMenu label="Export this table as">
-              <DropDown.BasicItem
-                onClick={() => onExport('CSV')}
-                disabled={isExporting}
-              >
-                CSV
-              </DropDown.BasicItem>
-              <DropDown.BasicItem
-                onClick={() => onExport('JSON')}
-                disabled={isExporting}
-              >
-                JSON
-              </DropDown.BasicItem>
-            </DropDown.SubMenu>
-          </DropDown.Root>
-
-          <span className="pl-2 pr-2">
-            <span className="h-6 border-r-slate-300 border-r border-solid" />
-          </span>
-          {!query.disableRunQuery && (
-            <>
-              <Button
-                type="button"
-                mode="primary"
-                size="sm"
-                icon={<FaSearch />}
-                onClick={query.onQuerySearch}
-                data-testid="@runQueryBtn"
+                onClick={query.onRefreshQueryOptions}
+                icon={<FaTimes />}
+                data-testid="@resetBtn"
                 disabled={query.disableRunQuery}
-                title="Update filters and sorts on your row data"
-              >
-                {`Query ${`(${totalQueriesApplied})` || ''}`}
-              </Button>
-              {totalQueriesApplied > 1 && (
-                <Button
-                  type="button"
-                  mode="default"
-                  onClick={query.onRefreshQueryOptions}
-                  icon={<FaTimes />}
-                  data-testid="@resetBtn"
-                  disabled={query.disableRunQuery}
-                  title="Reset all filters"
-                  size="sm"
+                title="Reset all filters"
+                size="sm"
+              />
+            )}
+            {!query.disableRunQuery && (
+              <div className="flex flex-wrap gap-3 pl-3 items-center">
+                <DisplayWhereClauses
+                  operatorMap={operatorMap}
+                  whereClauses={query.whereClauses}
+                  removeWhereClause={query.removeWhereClause}
                 />
-              )}
-              {!query.disableRunQuery && (
-                <div className="flex flex-wrap gap-3 pl-3 items-center">
-                  <DisplayWhereClauses
-                    operatorMap={operatorMap}
-                    whereClauses={query.whereClauses}
-                    removeWhereClause={query.removeWhereClause}
-                  />
-                  <DisplayOrderByClauses
-                    orderByClauses={query.orderByClauses}
-                    removeOrderByClause={query.removeOrderByClause}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="flex gap-2 items-center min-w-max">
-          <Button
-            type="button"
-            size="sm"
-            icon={<FaChevronLeft />}
-            onClick={pagination.goToPreviousPage}
-            disabled={pagination.isPreviousPageDisabled}
-            data-testid="@prevPageBtn"
-            title="Previous page"
-          />
-
-          <select
-            value={pagination.pageSize}
-            onChange={e => {
-              pagination.setPageSize(Number(e.target.value));
-            }}
-            data-testid="@rowSizeSelectInput"
-            className="block w-full max-w-xl h-8 min-h-full shadow-sm rounded pl-3 pr-6 py-0.5 border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400"
-          >
-            {DEFAULT_PAGE_SIZES.map(pageSize => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize} rows
-              </option>
-            ))}
-          </select>
-          <Button
-            type="button"
-            size="sm"
-            icon={<FaChevronRight />}
-            onClick={pagination.goToNextPage}
-            disabled={pagination.isNextPageDisabled}
-            data-testid="@nextPageBtn"
-            title="Next page"
-          />
-        </div>
+                <DisplayOrderByClauses
+                  orderByClauses={query.orderByClauses}
+                  removeOrderByClause={query.removeOrderByClause}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </>
+
+      <div className="flex gap-2 items-center min-w-max">
+        <Button
+          type="button"
+          size="sm"
+          icon={<FaChevronLeft />}
+          onClick={pagination.goToPreviousPage}
+          disabled={pagination.isPreviousPageDisabled}
+          data-testid="@prevPageBtn"
+          title="Previous page"
+        />
+
+        <select
+          value={pagination.pageSize}
+          onChange={e => {
+            pagination.setPageSize(Number(e.target.value));
+          }}
+          data-testid="@rowSizeSelectInput"
+          className="block w-full max-w-xl h-8 min-h-full shadow-sm rounded pl-3 pr-6 py-0.5 border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400"
+        >
+          {DEFAULT_PAGE_SIZES.map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize} rows
+            </option>
+          ))}
+        </select>
+        <Button
+          type="button"
+          size="sm"
+          icon={<FaChevronRight />}
+          onClick={pagination.goToNextPage}
+          disabled={pagination.isNextPageDisabled}
+          data-testid="@nextPageBtn"
+          title="Next page"
+        />
+      </div>
+    </div>
   );
 };

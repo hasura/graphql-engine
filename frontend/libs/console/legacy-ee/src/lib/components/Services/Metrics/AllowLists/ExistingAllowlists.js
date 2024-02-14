@@ -21,11 +21,7 @@ const ExistingAllowlists = props => {
               shouldCreateOperationGroup={operationGroups.length === 0}
             >
               {() => {
-                return (
-                  <React.Fragment>
-                    <BrowseAllowLists label={''} {...props} />
-                  </React.Fragment>
-                );
+                return <BrowseAllowLists label={''} {...props} />;
               }}
             </ManageAllowList>
           );

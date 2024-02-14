@@ -143,13 +143,13 @@ mutation (
   $jobId: uuid!,
   $projectId: uuid!,
   $isLatencyDisplayed: Boolean!,
-  $datasDifferenceInMilliseconds: Int!
+  $dateDifferenceInMilliseconds: Int!
 ) {
   insert_db_latency_one(object: {
     job_id: $jobId,
     is_latency_displayed: $isLatencyDisplayed,
     project_id: $projectId,
-    console_check_duration: $datasDifferenceInMilliseconds
+    console_check_duration: $dateDifferenceInMilliseconds
   }) {
     id
   }
@@ -196,3 +196,78 @@ mutation triggerOneClickDeployment ($projectId: uuid!) {
   }
 }
 `);
+
+/**
+ * GraphQl query to fetch all surveys related data
+ */
+export const FETCH_ALL_SURVEYS_DATA = gql(`
+query fetchAllSurveysData($currentTime: timestamptz!) {
+  survey_v2(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+    survey_name
+    survey_title
+    survey_description
+    survey_questions(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+      id
+      position
+      question
+      kind
+      is_mandatory
+      survey_question_options(where: {_or: [{ended_at: {_gte: $currentTime}}, {ended_at: {_is_null: true}}]}) {
+        id
+        position
+        option
+        template_config
+        additional_info_config {
+          info_description
+          is_mandatory
+        }
+      }
+    }
+    template_config
+    survey_responses {
+      survey_response_answers {
+        survey_question_id
+        survey_response_answer_options {
+          answer
+          additional_info
+          option_id
+        }
+      }
+    }
+  }
+}
+`);
+
+/**
+ * GraphQl mutation to save the survey answer
+ */
+export const ADD_SURVEY_ANSWER = gql(`
+mutation addSurveyAnswerV2 ($responses: [SurveyResponseV2]!, $surveyName: String!, $projectID: uuid) {
+   saveSurveyAnswerV2(payload: {responses: $responses, surveyName: $surveyName, projectID: $projectID}) {
+     status
+   }
+ }
+ `);
+
+/**
+ * GraphQL mutation to accept schema registry feature requests
+ * */
+
+export const ADD_SCHEMA_REGISTRY_FEATURE_REQUEST = gql(`
+  mutation addSchemaRegistryFeatureRequest ($details:jsonb!) {
+    addFeatureRequest (payload: {
+      type: "schema-registry-feature-request"
+      details: $details
+    }) {
+      status
+    }
+  }
+`);
+
+export const FETCH_CONFIG_STATUS = gql(`
+subscription FetchConfigStatus($tenantId: uuid!) {
+    config_status(where: {is_active: {_eq: true}, tenant_id: {_eq: $tenantId}, worker_state: {_eq: "live"}}) {
+    hash
+    message
+  }
+}`);

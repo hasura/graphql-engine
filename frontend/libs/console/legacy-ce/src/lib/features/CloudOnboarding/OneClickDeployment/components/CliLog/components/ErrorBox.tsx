@@ -104,6 +104,7 @@ export function ErrorBox(props: Props) {
           passHtmlAttributesToChildren
         >
           <LinkButton
+            id="one-click-deployment-error-trouble-shooting-button"
             url="https://hasura.io/docs/latest/hasura-cloud/one-click-deploy/index/#troubleshooting"
             buttonText="Troubleshooting Docs"
             icon={<FaExternalLinkAlt className="text-white" />}
@@ -125,7 +126,10 @@ export function ErrorBox(props: Props) {
                   name={`one-click-deployment-fallback-app-${app.buttonText}`}
                   passHtmlAttributesToChildren
                 >
-                  <LinkButton {...app} />
+                  <LinkButton
+                    id={`one-click-deployment-fallback-app-${app.buttonText}`}
+                    {...app}
+                  />
                 </Analytics>
               ))}
           </div>

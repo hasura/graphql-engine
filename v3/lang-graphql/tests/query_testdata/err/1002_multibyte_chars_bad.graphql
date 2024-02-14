@@ -1,0 +1,2 @@
+# invalid code point unicode escape (reserved high surrogate)
+{ field(arg: "Has a \uD801 multi-byte character.") }

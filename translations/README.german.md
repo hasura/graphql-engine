@@ -127,7 +127,7 @@ Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten able
 ## Demos
 
 Schaue dir die Beispiele in dem
-[community/sample-apps](../community/sample-apps) Verzeichnis an.
+[hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) Verzeichnis an.
 
 ### Realtime Applikationen
 
@@ -135,19 +135,19 @@ Schaue dir die Beispiele in dem
   neuen Nachrichten.
 
   - [Probiere es aus](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-chat)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [Durchsuche die APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Echtzeit Standort Tracking App, welche die Koordinaten von Fahrzeugen
   verfolgt und auf einer Karte anzeigt.
 
   - [Probiere es aus](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-location-tracking)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [Durchsuche die APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Echtzeit Dashboard für Datenaggregation von sich konstant ändernden Daten.
   - [Probiere es aus](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-poll)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
   - [Durchsuche die APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Videos

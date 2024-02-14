@@ -1,4 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Control.Monad.Memoize
   ( MonadMemoize (..),
@@ -9,18 +11,16 @@ module Control.Monad.Memoize
 where
 
 import Control.Monad.Except
-import Control.Monad.Reader (MonadReader, ReaderT, mapReaderT)
-import Control.Monad.State.Strict (MonadState (..), StateT, evalStateT)
 import Data.Dependent.Map (DMap)
 import Data.Dependent.Map qualified as DM
 import Data.Functor.Identity
 import Data.GADT.Compare.Extended
 import Data.IORef
 import Data.Kind qualified as K
+import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
-import Type.Reflection (Typeable, typeRep, (:~:) (..))
-import Prelude
+import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,7 +85,7 @@ which allows us to get sharing mostly for free. The memoization strategy also
 annotates cached parsers with a Unique that can be used to break cycles while
 traversing the graph, so we get observable sharing as well. -}
 
-class Monad m => MonadMemoize m where
+class (Monad m) => MonadMemoize m where
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
@@ -112,7 +112,7 @@ class Monad m => MonadMemoize m where
     m p
 
 instance
-  MonadMemoize m =>
+  (MonadMemoize m) =>
   MonadMemoize (ReaderT a m)
   where
   memoizeOn name key = mapReaderT (memoizeOn name key)
@@ -133,16 +133,16 @@ newtype MemoizeT m a = MemoizeT
 
 -- | Allow code in 'MemoizeT' to have access to any underlying state capabilities,
 -- hiding the fact that 'MemoizeT' itself is a state monad.
-instance MonadState s m => MonadState s (MemoizeT m) where
+instance (MonadState s m) => MonadState s (MemoizeT m) where
   get = lift get
   put = lift . put
 
-runMemoizeT :: forall m a. Monad m => MemoizeT m a -> m a
+runMemoizeT :: forall m a. (Monad m) => MemoizeT m a -> m a
 runMemoizeT = flip evalStateT mempty . unMemoizeT
 
 -- | see Note [MemoizeT requires MonadIO]
 instance
-  MonadIO m =>
+  (MonadIO m) =>
   MonadMemoize (MemoizeT m)
   where
   memoizeOn name key buildParser = MemoizeT do
@@ -174,16 +174,17 @@ instance
         -- the point at which the effect is performed can be unpredictable. But
         -- this action just reads, never writes, so that isn’t a concern.
         parserById <-
-          liftIO $
-            unsafeInterleaveIO $
-              readIORef cell >>= \case
-                Just parser -> pure $ Identity parser
-                Nothing ->
-                  error $
-                    unlines
-                      [ "memoize: parser was forced before being fully constructed",
-                        "  parser constructor: " ++ TH.pprint name
-                      ]
+          liftIO
+            $ unsafeInterleaveIO
+            $ readIORef cell
+            >>= \case
+              Just parser -> pure $ Identity parser
+              Nothing ->
+                error
+                  $ unlines
+                    [ "memoize: parser was forced before being fully constructed",
+                      "  parser constructor: " ++ TH.pprint name
+                    ]
         put $! DM.insert parserId parserById parsersById
 
         parser <- unMemoizeT buildParser

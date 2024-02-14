@@ -3,10 +3,12 @@ module Test.DataConnector.MockAgent.DeleteMutationsSpec
   )
 where
 
-import Data.Aeson qualified as Aeson
+import Control.Lens ((.~), (?~))
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockMutationResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -17,6 +19,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec
 
 --------------------------------------------------------------------------------
@@ -39,7 +42,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -81,8 +84,8 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = do
   mockAgentGraphqlTest "delete rows with delete permissions" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-ArtistId", "90"), ("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
@@ -107,38 +110,38 @@ tests _opts = do
                 { API._morAffectedRows = 3,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 112),
-                            (API.FieldName "deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "The Number of The Beast"),
-                            ( API.FieldName "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                      [ mkFieldsMap
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 112),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
+                            ( "deletedRows_Artist",
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 113),
-                            (API.FieldName "deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "The X Factor"),
-                            ( API.FieldName "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                        mkFieldsMap
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 113),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The X Factor"),
+                            ( "deletedRows_Artist",
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
                           ],
-                        HashMap.fromList
-                          [ (API.FieldName "deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 114),
-                            (API.FieldName "deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "Virtual XI"),
-                            ( API.FieldName "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                        mkFieldsMap
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 114),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "Virtual XI"),
+                            ( "deletedRows_Artist",
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
@@ -146,7 +149,7 @@ tests _opts = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -174,66 +177,61 @@ tests _opts = do
       |]
 
     let expectedRequest =
-          API.MutationRequest
-            { API._mrTableRelationships =
-                [ API.TableRelationships
-                    { API._trSourceTable = API.TableName ("Album" :| []),
-                      API._trRelationships =
+          emptyMutationRequest
+            & API.mrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
                         HashMap.fromList
                           [ ( API.RelationshipName "Artist",
                               API.Relationship
-                                { API._rTargetTable = API.TableName ("Artist" :| []),
+                                { API._rTarget = mkTableTarget "Artist",
                                   API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  API._rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
                                 }
                             )
                           ]
                     }
-                ],
-              API._mrInsertSchema = [],
-              API._mrOperations =
-                [ API.DeleteOperation $
-                    API.DeleteMutationOperation
-                      { API._dmoTable = API.TableName ("Album" :| []),
-                        API._dmoWhere =
-                          Just $
-                            API.And
-                              [ API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
-                                API.ApplyBinaryComparisonOperator
-                                  API.GreaterThan
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 111) (API.ScalarType "number"))
-                              ],
-                        API._dmoReturningFields =
-                          HashMap.fromList
-                            [ (API.FieldName "deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                              (API.FieldName "deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
-                              ( API.FieldName "deletedRows_Artist",
-                                API.RelField
-                                  ( API.RelationshipField
-                                      (API.RelationshipName "Artist")
-                                      API.Query
-                                        { _qFields =
-                                            Just $
-                                              HashMap.fromList
-                                                [ (API.FieldName "ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                                  (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                                ],
-                                          _qAggregates = Nothing,
-                                          _qLimit = Nothing,
-                                          _qOffset = Nothing,
-                                          _qWhere = Nothing,
-                                          _qOrderBy = Nothing
-                                        }
-                                  )
-                              )
-                            ]
-                      }
-                ]
-            }
+              ]
+              & API.mrOperations
+            .~ [ API.DeleteOperation
+                   $ API.DeleteMutationOperation
+                     { API._dmoTable = mkTableName "Album",
+                       API._dmoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.ScalarType "number") Nothing)
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.GreaterThan
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 111) (API.ScalarType "number"))
+                             ],
+                       API._dmoReturningFields =
+                         mkFieldsMap
+                           [ ("deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                             ("deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing),
+                             ( "deletedRows_Artist",
+                               API.RelField
+                                 ( API.RelationshipField
+                                     (API.RelationshipName "Artist")
+                                     ( emptyQuery
+                                         & API.qFields
+                                         ?~ mkFieldsMap
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
+                                           ]
+                                     )
+                                 )
+                             )
+                           ]
+                     }
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
   mockAgentGraphqlTest "delete row by pk with delete permissions" $ \_testEnv performGraphqlRequest -> do
@@ -257,14 +255,14 @@ tests _opts = do
                 { API._morAffectedRows = 1,
                   API._morReturning =
                     Just
-                      [ HashMap.fromList
-                          [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 112),
-                            (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "The Number of The Beast"),
-                            ( API.FieldName "Artist",
-                              API.mkRelationshipFieldValue $
-                                rowsResponse
-                                  [ [ (API.FieldName "ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                      [ mkFieldsMap
+                          [ ("AlbumId", API.mkColumnFieldValue $ J.Number 112),
+                            ("Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
+                            ( "Artist",
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
@@ -272,7 +270,7 @@ tests _opts = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -288,67 +286,59 @@ tests _opts = do
       |]
 
     let expectedRequest =
-          API.MutationRequest
-            { API._mrTableRelationships =
-                [ API.TableRelationships
-                    { API._trSourceTable = API.TableName ("Album" :| []),
-                      API._trRelationships =
+          emptyMutationRequest
+            & API.mrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
                         HashMap.fromList
                           [ ( API.RelationshipName "Artist",
                               API.Relationship
-                                { API._rTargetTable = API.TableName ("Artist" :| []),
+                                { API._rTarget = mkTableTarget "Artist",
                                   API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  API._rColumnMapping = API.ColumnPathMapping $ HashMap.fromList [(API.mkColumnSelector $ API.ColumnName "ArtistId", API.mkColumnSelector $ API.ColumnName "ArtistId")]
                                 }
                             )
                           ]
                     }
-                ],
-              API._mrInsertSchema = [],
-              API._mrOperations =
-                [ API.DeleteOperation $
-                    API.DeleteMutationOperation
-                      { API._dmoTable = API.TableName ("Album" :| []),
-                        API._dmoWhere =
-                          Just $
-                            API.And
-                              [ API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
-                                API.ApplyBinaryComparisonOperator
-                                  API.Equal
-                                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                  (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 112) (API.ScalarType "number"))
-                              ],
-                        API._dmoReturningFields =
-                          HashMap.fromList
-                            [ (API.FieldName "AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                              (API.FieldName "Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
-                              ( API.FieldName "Artist",
-                                API.RelField
-                                  ( API.RelationshipField
-                                      (API.RelationshipName "Artist")
-                                      API.Query
-                                        { _qFields =
-                                            Just $
-                                              HashMap.fromList
-                                                [ (API.FieldName "ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                                  (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                                ],
-                                          _qAggregates = Nothing,
-                                          _qLimit = Nothing,
-                                          _qOffset = Nothing,
-                                          _qWhere = Nothing,
-                                          _qOrderBy = Nothing
-                                        }
-                                  )
-                              )
-                            ]
-                      }
-                ]
-            }
+              ]
+              & API.mrOperations
+            .~ [ API.DeleteOperation
+                   $ API.DeleteMutationOperation
+                     { API._dmoTable = mkTableName "Album",
+                       API._dmoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.ScalarType "number") Nothing)
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 112) (API.ScalarType "number"))
+                             ],
+                       API._dmoReturningFields =
+                         mkFieldsMap
+                           [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                             ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing),
+                             ( "Artist",
+                               API.RelField
+                                 ( API.RelationshipField
+                                     (API.RelationshipName "Artist")
+                                     ( emptyQuery
+                                         & API.qFields
+                                         ?~ mkFieldsMap
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
+                                           ]
+                                     )
+                                 )
+                             )
+                           ]
+                     }
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

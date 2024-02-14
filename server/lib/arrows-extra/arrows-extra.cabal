@@ -1,4 +1,4 @@
-cabal-version: 2.2
+cabal-version: 3.6
 name: arrows-extra
 version: 1.0.0
 build-type: Simple

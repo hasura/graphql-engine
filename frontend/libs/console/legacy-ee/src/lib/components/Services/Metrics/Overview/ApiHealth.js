@@ -227,7 +227,7 @@ const ApiHealth = ({
       )}
       {!error && (
         <div
-          className={`${styles.animated} ${styles.row} ${styles.fadeIn} ${styles.inline} ${styles.wd100Percent}`}
+          className={`${styles.animated} ${styles.row} ${styles.fadeIn} ${styles.inline} ${styles.wd100Percent} bootstrap-jail`}
           ref={chartDiv}
         >
           <Col md={4}>

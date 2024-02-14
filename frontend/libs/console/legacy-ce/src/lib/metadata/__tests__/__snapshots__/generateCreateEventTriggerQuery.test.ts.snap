@@ -1,0 +1,245 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Testing generateCreateEventTriggerQuery while creating ET with request transform 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [
+      {
+        "name": "key",
+        "value": "value",
+      },
+    ],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name",
+    "replace": false,
+    "request_transform": {
+      "body": {
+        "action": "transform",
+        "template": "{
+  "table": {
+    "name": {{$body.table.name}},
+    "schema": {{$body.table.schema}}
+  }
+}",
+      },
+      "method": "GET",
+      "query_params": {
+        "userId": "123",
+      },
+      "request_headers": {
+        "remove_headers": [
+          "content-type",
+        ],
+      },
+      "template_engine": "Kriti",
+      "url": "{{$base_url}}/me",
+      "version": 2,
+    },
+    "retry_conf": {
+      "interval_sec": 20,
+      "num_retries": 10,
+      "timeout_sec": 90,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;
+
+exports[`Testing generateCreateEventTriggerQuery while creating ET without request transform 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [
+      {
+        "name": "key",
+        "value": "value",
+      },
+    ],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name",
+    "replace": false,
+    "request_transform": undefined,
+    "retry_conf": {
+      "interval_sec": 20,
+      "num_retries": 10,
+      "timeout_sec": 90,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;
+
+exports[`Testing generateCreateEventTriggerQuery while creating ET without request transform and headers 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name_1",
+    "replace": false,
+    "request_transform": undefined,
+    "retry_conf": {
+      "interval_sec": 10,
+      "num_retries": 0,
+      "timeout_sec": 60,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;
+
+exports[`Testing generateCreateEventTriggerQuery while mofifying ET with request transform 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [
+      {
+        "name": "key",
+        "value": "value",
+      },
+    ],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name",
+    "replace": true,
+    "request_transform": {
+      "body": {
+        "action": "transform",
+        "template": "{
+  "table": {
+    "name": {{$body.table.name}},
+    "schema": {{$body.table.schema}}
+  }
+}",
+      },
+      "method": "GET",
+      "query_params": {
+        "userId": "123",
+      },
+      "request_headers": {
+        "remove_headers": [
+          "content-type",
+        ],
+      },
+      "template_engine": "Kriti",
+      "url": "{{$base_url}}/me",
+      "version": 2,
+    },
+    "retry_conf": {
+      "interval_sec": 20,
+      "num_retries": 10,
+      "timeout_sec": 90,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;
+
+exports[`Testing generateCreateEventTriggerQuery while mofifying ET without request transform 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [
+      {
+        "name": "key",
+        "value": "value",
+      },
+    ],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name",
+    "replace": true,
+    "request_transform": undefined,
+    "retry_conf": {
+      "interval_sec": 20,
+      "num_retries": 10,
+      "timeout_sec": 90,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;
+
+exports[`Testing generateCreateEventTriggerQuery while mofifying ET without request transform and headers 1`] = `
+{
+  "args": {
+    "delete": null,
+    "enable_manual": false,
+    "headers": [],
+    "insert": {
+      "columns": "*",
+    },
+    "name": "trigger_name_1",
+    "replace": true,
+    "request_transform": undefined,
+    "retry_conf": {
+      "interval_sec": 10,
+      "num_retries": 0,
+      "timeout_sec": 60,
+    },
+    "source": "default",
+    "table": {
+      "name": "table_name",
+      "schema": "public",
+    },
+    "update": null,
+    "webhook": "http://httpbin.org/post",
+    "webhook_from_env": null,
+  },
+  "type": "pg_create_event_trigger",
+}
+`;

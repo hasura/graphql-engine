@@ -1,0 +1,16 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Punctuation(
+                    BraceL,
+                ),
+            ],
+            found: EndOfFile,
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 17,
+        },
+    },
+)

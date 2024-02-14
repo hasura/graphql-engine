@@ -7,8 +7,7 @@ module Hasura.Backends.MSSQL.FromIr.Insert
   )
 where
 
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.Extended qualified as HM
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as HS
 import Hasura.Backends.MSSQL.FromIr (FromIr)
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameInserted, tempTableNameValues)
@@ -18,14 +17,14 @@ import Hasura.Backends.MSSQL.Types.Insert (IfMatched (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
-import Hasura.SQL.Backend
 
 fromInsert :: IR.AnnotatedInsert 'MSSQL Void Expression -> Insert
 fromInsert IR.AnnotatedInsert {..} =
   let IR.AnnotatedInsertData {..} = _aiData
       (insertColumnNames, insertRows) = normalizeInsertRows _aiPresetValues $ _aiInsertObject
-      insertValues = map (Values . HM.elems) insertRows
+      insertValues = map (Values . HashMap.elems) insertRows
       allColumnNames = map IR.ciColumn _aiTableColumns
       insertOutput = Output Inserted $ map OutputColumn allColumnNames
       tempTable = TempTable tempTableNameInserted allColumnNames
@@ -57,13 +56,13 @@ fromInsert IR.AnnotatedInsert {..} =
 -- >   OUTPUT INSERTED.id
 -- >   VALUES (1, 'Foo', 21), (2, 'Bar', DEFAULT)
 normalizeInsertRows ::
-  HM.HashMap (Column 'MSSQL) Expression ->
+  HashMap.HashMap (Column 'MSSQL) Expression ->
   [IR.AnnotatedInsertRow 'MSSQL Expression] ->
-  (HashSet (Column 'MSSQL), [HM.HashMap (Column 'MSSQL) Expression])
+  (HashSet (Column 'MSSQL), [HashMap.HashMap (Column 'MSSQL) Expression])
 normalizeInsertRows presets insertRows =
-  HM.homogenise
+  HashMap.homogenise
     DefaultExpression
-    (map ((presets <>) . HM.fromList . IR.getInsertColumns) insertRows)
+    (map ((presets <>) . HashMap.fromList . IR.getInsertColumns) insertRows)
 
 -- | Construct a MERGE statement from AnnotatedInsert information.
 --   A MERGE statement is responsible for actually inserting and/or updating
@@ -76,17 +75,16 @@ toMerge ::
   FromIr Merge
 toMerge tableName insertRows allColumns IfMatched {..} = do
   let insertColumnNames =
-        HS.toList $
-          HM.keysSet _imColumnPresets
-            <> HS.unions (map (HM.keysSet . HM.fromList . IR.getInsertColumns) insertRows)
+        HS.toList
+          $ HashMap.keysSet _imColumnPresets
+          <> HS.unions (map (HashMap.keysSet . HashMap.fromList . IR.getInsertColumns) insertRows)
       allColumnNames = map IR.ciColumn allColumns
 
   matchConditions <-
-    flip runReaderT (EntityAlias "target") $ -- the table is aliased as "target" in MERGE sql
-      fromGBoolExp _imConditions
-
-  pure $
-    Merge
+    flip runReaderT (EntityAlias "target")
+      $ fromGBoolExp _imConditions -- the table is aliased as "target" in MERGE sql
+  pure
+    $ Merge
       { mergeTargetTable = tableName,
         mergeUsing = MergeUsing tempTableNameValues insertColumnNames,
         mergeOn = MergeOn _imMatchColumns,
@@ -107,7 +105,7 @@ toInsertValuesIntoTempTable :: TempTableName -> IR.AnnotatedInsert 'MSSQL Void E
 toInsertValuesIntoTempTable tempTable IR.AnnotatedInsert {..} =
   let IR.AnnotatedInsertData {..} = _aiData
       (insertColumnNames, insertRows) = normalizeInsertRows _aiPresetValues _aiInsertObject
-      insertValues = map (Values . HM.elems) insertRows
+      insertValues = map (Values . HashMap.elems) insertRows
    in InsertValuesIntoTempTable
         { ivittTempTableName = tempTable,
           ivittColumns = HS.toList insertColumnNames,

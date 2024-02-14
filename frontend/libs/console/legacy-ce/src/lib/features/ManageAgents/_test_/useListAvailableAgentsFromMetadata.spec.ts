@@ -45,8 +45,8 @@ describe('useListAvailableAgentsFromMetadata tests: ', () => {
     );
 
     const expectedResult: DcAgent[] = [
-      { name: 'csv', url: 'http://host.docker.internal:8101' },
-      { name: 'sqlite', url: 'http://host.docker.internal:8100' },
+      { name: 'csv', uri: 'http://host.docker.internal:8101' },
+      { name: 'sqlite', uri: 'http://host.docker.internal:8100' },
     ];
 
     await waitFor(() => result.current.isSuccess);

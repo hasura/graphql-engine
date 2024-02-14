@@ -17,7 +17,7 @@ import Data.Text qualified as T
 import Data.Text.Conversions (FromText (..), ToText (..))
 import Hasura.Prelude
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax hiding (makeRelativeToProject) -- TODO can we ditch file-embed?
 import Text.Regex.TDFA ((=~~))
 
 data Version
@@ -48,24 +48,25 @@ instance FromJSON Version where
 
 currentVersion :: Version
 currentVersion =
-  fromText $
-    T.dropWhileEnd (== '\n') $
-      T.pack $
-        -- NOTE: This must work correctly in the presence of a caching! See
-        -- graphql-engine.cabal (search for “CURRENT_VERSION”) for details
-        -- about our approach here. We could use embedFile but want a nice
-        -- error message
-        $( do
-             versionFileName <- makeRelativeToProject "CURRENT_VERSION"
-             addDependentFile versionFileName
-             let noFileErr =
-                   "\n==========================================================================="
-                     <> "\n>>> DEAR HASURIAN: The way we bake versions into the server has "
-                     <> "\n>>> changed; You'll need to run the following once in your repo to proceed: "
-                     <> "\n>>>  $ echo 12345 > \"$(git rev-parse --show-toplevel)/server/CURRENT_VERSION\""
-                     <> "\n===========================================================================\n"
-             runIO (readFile versionFileName `onException` error noFileErr) >>= stringE
-         )
+  fromText
+    $ T.dropWhileEnd (== '\n')
+    $ T.pack
+    $
+    -- NOTE: This must work correctly in the presence of a caching! See
+    -- graphql-engine.cabal (search for “CURRENT_VERSION”) for details
+    -- about our approach here. We could use embedFile but want a nice
+    -- error message
+    $( do
+         versionFileName <- makeRelativeToProject "CURRENT_VERSION"
+         addDependentFile versionFileName
+         let noFileErr =
+               "\n==========================================================================="
+                 <> "\n>>> DEAR HASURIAN: The way we bake versions into the server has "
+                 <> "\n>>> changed; You'll need to run the following once in your repo to proceed: "
+                 <> "\n>>>  $ echo 12345 > \"$(git rev-parse --show-toplevel)/server/CURRENT_VERSION\""
+                 <> "\n===========================================================================\n"
+         runIO (readFile versionFileName `onException` error noFileErr) >>= stringE
+     )
 
 versionToAssetsVersion :: Version -> Text
 versionToAssetsVersion = \case
@@ -84,8 +85,8 @@ versionToAssetsVersion = \case
         Nothing -> Nothing
         Just r ->
           if
-              | T.null r -> Nothing
-              | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
+            | T.null r -> Nothing
+            | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
     getChannelFromPreRelease :: String -> Maybe String
     getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)" :: String)

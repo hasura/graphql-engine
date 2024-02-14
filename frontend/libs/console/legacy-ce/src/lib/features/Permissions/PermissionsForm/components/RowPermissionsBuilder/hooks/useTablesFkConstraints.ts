@@ -3,14 +3,14 @@ import { useQuery, UseQueryResult } from 'react-query';
 import { useHttpClient } from '../../../../../Network';
 import { generateQueryKeys } from '../../../../../DatabaseRelationships/utils/queryClientUtils';
 import { DataSource, TableFkRelationships } from '../../../../../DataSource';
-import { TrackableTable } from '../../../../../Data/TrackTables/types';
+import { TableWithColumns } from './useTablesWithColumns';
 
 export function useTablesFkConstraints({
   dataSourceName,
   tables,
 }: {
   dataSourceName: string;
-  tables: TrackableTable[] | undefined;
+  tables: TableWithColumns[] | undefined;
 }): UseQueryResult<
   Array<{ table: Table; relationships: TableFkRelationships[] }>
 > {
@@ -27,11 +27,11 @@ export function useTablesFkConstraints({
       for (const table of tables) {
         const result = await DataSource(httpClient).getTableFkRelationships({
           dataSourceName,
-          table: table.table,
+          table: table.metadataTable.table,
         });
         if (result) {
           fkConstraints.push({
-            table: table.table,
+            table: table.metadataTable.table,
             relationships: result,
           });
         }

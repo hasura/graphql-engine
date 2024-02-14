@@ -15,6 +15,7 @@ module Test.AgentAPI
     getHealth,
     getSourceHealth,
     getSchemaGuarded,
+    getSchemaGuarded',
     guardSchemaResponse,
     queryGuarded,
     queryExpectError,
@@ -46,13 +47,13 @@ import Test.Expectations (yamlShow)
 import Test.Sandwich (HasBaseContext, expectationFailure)
 import Prelude
 
-client :: RunClient m => API.Routes (AsClientT m)
+client :: (RunClient m) => API.Routes (AsClientT m)
 client = genericClient @API.Routes
 
 getCapabilitiesGuarded :: (HasBaseContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.CapabilitiesResponse
 getCapabilitiesGuarded = guardCapabilitiesResponse =<< (client // API._capabilities)
 
-guardCapabilitiesResponse :: MonadThrow m => Union API.CapabilitiesResponses -> m API.CapabilitiesResponse
+guardCapabilitiesResponse :: (MonadThrow m) => Union API.CapabilitiesResponses -> m API.CapabilitiesResponse
 guardCapabilitiesResponse = API.capabilitiesCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected CapabilitiesResponse"
@@ -70,9 +71,14 @@ getSourceHealth = do
 getSchemaGuarded :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => AgentClientT m API.SchemaResponse
 getSchemaGuarded = do
   (sourceName, config) <- getSourceNameAndConfig
-  guardSchemaResponse =<< (client // API._schema) sourceName config
+  guardSchemaResponse =<< (client // API._schemaPost) sourceName config (API.SchemaRequest mempty API.Everything)
 
-guardSchemaResponse :: MonadThrow m => Union API.SchemaResponses -> m API.SchemaResponse
+getSchemaGuarded' :: (HasBaseContext context, HasAgentTestContext context, HasDatasetContext context, MonadReader context m, MonadThrow m, MonadIO m) => API.SchemaRequest -> AgentClientT m API.SchemaResponse
+getSchemaGuarded' schemaRequest = do
+  (sourceName, config) <- getSourceNameAndConfig
+  guardSchemaResponse =<< (client // API._schemaPost) sourceName config schemaRequest
+
+guardSchemaResponse :: (MonadThrow m) => Union API.SchemaResponses -> m API.SchemaResponse
 guardSchemaResponse = API.schemaCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected SchemaResponse"
@@ -84,7 +90,7 @@ queryGuarded queryRequest = do
   (sourceName, config) <- getSourceNameAndConfig
   guardQueryResponse =<< (client // API._query) sourceName config queryRequest
 
-guardQueryResponse :: MonadThrow m => Union API.QueryResponses -> m API.QueryResponse
+guardQueryResponse :: (MonadThrow m) => Union API.QueryResponses -> m API.QueryResponse
 guardQueryResponse = API.queryCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected QueryResponse"
@@ -96,7 +102,7 @@ queryExpectError queryRequest = do
   (sourceName, config) <- getSourceNameAndConfig
   guardQueryErrorResponse =<< (client // API._query) sourceName config queryRequest
 
-guardQueryErrorResponse :: MonadThrow m => Union API.QueryResponses -> m API.ErrorResponse
+guardQueryErrorResponse :: (MonadThrow m) => Union API.QueryResponses -> m API.ErrorResponse
 guardQueryErrorResponse = API.queryCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected ErrorResponse"
@@ -116,7 +122,7 @@ mutationGuarded mutationRequest = do
   (sourceName, config) <- getSourceNameAndConfig
   guardMutationResponse =<< (client // API._mutation) sourceName config mutationRequest
 
-guardMutationResponse :: MonadThrow m => Union API.MutationResponses -> m API.MutationResponse
+guardMutationResponse :: (MonadThrow m) => Union API.MutationResponses -> m API.MutationResponse
 guardMutationResponse = API.mutationCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected MutationResponse"
@@ -128,7 +134,7 @@ mutationExpectError mutationRequest = do
   (sourceName, config) <- getSourceNameAndConfig
   guardMutationErrorResponse =<< (client // API._mutation) sourceName config mutationRequest
 
-guardMutationErrorResponse :: MonadThrow m => Union API.MutationResponses -> m API.ErrorResponse
+guardMutationErrorResponse :: (MonadThrow m) => Union API.MutationResponses -> m API.ErrorResponse
 guardMutationErrorResponse = API.mutationCase defaultAction successAction errorAction
   where
     defaultAction = expectationFailure "Expected ErrorResponse"

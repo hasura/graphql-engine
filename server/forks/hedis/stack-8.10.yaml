@@ -1,0 +1,8 @@
+resolver: lts-18.23
+packages:
+- '.'
+extra-deps:
+flags:
+  hedis:
+    dev: true
+extra-package-dbs: []

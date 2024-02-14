@@ -55,8 +55,10 @@ const capabilities: Capabilities = {
     supports_foreign_keys: true,
     column_nullability: "nullable_and_non_nullable",
   },
+  post_schema: {},
   queries: {
-    foreach: {}
+    foreach: {},
+    redaction: {},
   },
   relationships: {},
   comparisons: {
@@ -65,7 +67,8 @@ const capabilities: Capabilities = {
     }
   },
   scalar_types: scalarTypes,
-  datasets: {}
+  datasets: {},
+  user_defined_functions: {}
 }
 
 export const capabilitiesResponse: CapabilitiesResponse = {

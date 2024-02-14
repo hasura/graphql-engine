@@ -30,9 +30,14 @@ data PGDumpReqBody = PGDumpReqBody
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->
     PGDumpReqBody
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "opts"
-      <*> o .:? "clean_output" .!= False
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "opts"
+      <*> o
+      .:? "clean_output"
+      .!= False
 
 execPGDump ::
   (MonadError RTE.QErr m, MonadIO m) =>
@@ -40,22 +45,20 @@ execPGDump ::
   PG.ConnInfo ->
   m BL.ByteString
 execPGDump b ci = do
-  eOutput <- liftIO $ try execProcess
-  output <- onLeft eOutput throwException
-  onLeft output $ \err ->
-    RTE.throw500 $ "error while executing pg_dump: " <> err
+  eOutput <- liftIO $ try @IOException execProcess
+  output <- eOutput `onLeft` (throwException "internal exception while executing pg_dump" . show)
+  output `onLeft` throwException "error while executing pg_dump"
   where
-    throwException :: (MonadError RTE.QErr m) => IOException -> m a
-    throwException _ = RTE.throw500 "internal exception while executing pg_dump"
+    throwException :: (MonadError RTE.QErr m, ToJSON e) => Text -> e -> m a
+    throwException text err = throwError (RTE.err500 RTE.Unexpected text) {RTE.qeInternal = Just (RTE.ExtraInternal (toJSON err))}
 
     execProcess = do
+      connString <- T.unpack . bsToTxt <$> PG.pgConnString (PG.ciDetails ci)
+      let opts = connString : "--encoding=utf8" : prbOpts b
       (exitCode, stdOut, stdErr) <- readProcessWithExitCode "pg_dump" opts ""
       return $ case exitCode of
         ExitSuccess -> Right $ unUTF8 $ convertText (clean stdOut)
         ExitFailure _ -> Left $ toText stdErr
-
-    connString = T.unpack $ bsToTxt $ PG.pgConnString $ PG.ciDetails ci
-    opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
       | prbCleanOutput b =

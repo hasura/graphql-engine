@@ -3,11 +3,11 @@ import {
   FieldWrapper,
   FieldWrapperPassThroughProps,
 } from '../../../../../new-components/Form';
-import isEqual from 'lodash.isequal';
-import get from 'lodash.get';
+import isEqual from 'lodash/isEqual';
+import get from 'lodash/get';
 import React from 'react';
 import { Controller, FieldError, useFormContext } from 'react-hook-form';
-import { FaDatabase, FaPlug, FaTable } from 'react-icons/fa';
+import { FaPlug, FaTable } from 'react-icons/fa';
 import Select, {
   components,
   ControlProps,
@@ -99,7 +99,7 @@ export const SourceSelect = ({
             onBlur={onBlur}
             value={options.find(c => isEqual(c.value, value))}
             onChange={val => onChange((val as SourceOption).value)}
-            inputRef={ref}
+            ref={ref}
             components={{ Option, SingleValue }}
             options={options}
             styles={selectStyles}

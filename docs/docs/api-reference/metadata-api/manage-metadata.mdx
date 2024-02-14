@@ -1,6 +1,6 @@
 ---
 sidebar_label: Manage Metadata
-sidebar_position: 17
+sidebar_position: 20
 description: Manage Metadata with the Hasura Metadata API
 keywords:
   - hasura
@@ -213,6 +213,7 @@ HTTP/1.1 200 OK
   "inconsistent_objects": [],
   "warnings: [
     {
+      "code": "illegal-event-trigger-name",
       "message": "The event trigger with name \"weird]name]\" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name",
       "type": "event_trigger",
       "name": "event_trigger weird]name] in table hasura.authors in source mssql"
@@ -232,6 +233,7 @@ HTTP/1.1 400 Bad Request
   "error": "failed due to metadata warnings",
   "internal": [
     {
+      "code": "illegal-event-trigger-name",
       "message": "The event trigger with name \"weird]name]\" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name",
       "name": "event_trigger weird]name] in table hasura.authors in source mssql",
       "type": "event_trigger"

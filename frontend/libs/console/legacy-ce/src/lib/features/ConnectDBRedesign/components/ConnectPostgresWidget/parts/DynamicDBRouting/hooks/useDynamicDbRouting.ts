@@ -4,6 +4,29 @@ import {
   useMetadataMigration,
 } from '../../../../../../MetadataAPI';
 
+type ConnectionTemplateTestArgs = {
+  request_context: {
+    headers?: {
+      [key: string]: string;
+    };
+    session?: {
+      [key: string]: string;
+    };
+    query: {
+      operation_type: string;
+      operation_name?: string;
+    };
+  };
+} & (
+  | {
+      connection_template: {
+        template: string;
+      };
+    }
+  | {
+      source_name: string;
+    }
+);
 export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
   const { data, isLoading: isMetadaLoading } = useMetadata();
 
@@ -121,6 +144,24 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
     );
   };
 
+  const testConnectionTemplate = async (
+    args: ConnectionTemplateTestArgs,
+    options?: Parameters<typeof mutate>[1]
+  ) => {
+    await mutate(
+      {
+        query: {
+          ...(data?.resource_version && {
+            resource_version: data.resource_version,
+          }),
+          type: 'pg_test_connection_template',
+          args,
+        },
+      },
+      options
+    );
+  };
+
   return {
     connectionTemplate,
     connectionSet,
@@ -130,5 +171,6 @@ export const useDynamicDbRouting = ({ sourceName }: { sourceName: string }) => {
     updateConnectionTemplate,
     isLoading,
     isMetadaLoading,
+    testConnectionTemplate,
   };
 };

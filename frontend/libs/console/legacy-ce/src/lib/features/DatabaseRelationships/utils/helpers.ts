@@ -1,6 +1,11 @@
 import { isSchemaTable } from '../../DataSource/utils';
 import { Table } from '../../hasura-metadata-types';
-import isObject from 'lodash.isobject';
+import isObject from 'lodash/isObject';
+import {
+  LocalRelationship,
+  Relationship,
+  RemoteDatabaseRelationship,
+} from '../types';
 
 /*
 this function isn't entirely generic but it will hold for the current set of native DBs we have & GDC as well
@@ -19,7 +24,7 @@ export const getTableDisplayName = (table: Table): string => {
   }
 
   if (typeof table === 'object' && isSchemaTable(table)) {
-    return table.name;
+    return [table.schema, table.name].join('.');
   }
 
   if (isObject(table)) {
@@ -32,3 +37,9 @@ export const getTableDisplayName = (table: Table): string => {
 
   return JSON.stringify(table);
 };
+
+export function isNotRemoteSchemaRelationship(
+  relationship: Relationship
+): relationship is LocalRelationship | RemoteDatabaseRelationship {
+  return relationship.type !== 'remoteSchemaRelationship';
+}

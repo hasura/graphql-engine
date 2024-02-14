@@ -132,3 +132,51 @@ export type MakeNever<T> = {
 export type DiscriminatedTypes<T, K extends keyof T> =
   | MakeNever<Partial<Pick<T, K>> & Partial<Omit<T, K>>>
   | (Required<Pick<T, K>> & Omit<T, K>);
+
+/**
+ *
+ * Pass in a `Record` type, and this will create a string union of all dot notations into the type
+ *
+ * For example:
+ *
+ * ```
+ * type SomeObject = { foo: string; bar: { baz: string; bing: string } };
+ * type AllPaths = PathInto<x>;
+ * ```
+ *
+ * And `AllPaths` would be equivalent to this:
+ *
+ * ```
+ * type AllPaths = "foo" | "bar.baz" | "bar.bing"
+ * ```
+ *
+ */
+export type PathInto<ObjectType extends Record<string, unknown>> = keyof {
+  [Key in keyof ObjectType as ObjectType[Key] extends string
+    ? Key
+    : ObjectType[Key] extends Record<string, unknown>
+    ? `${Key & string}.${PathInto<ObjectType[Key]> & string}`
+    : never]: unknown;
+};
+/**
+ *
+ * This allows you to pass in a `Record` type and the 2nd argument is dot notation to extract a type.
+ *
+ * For example:
+ *
+ * ```
+ * type SomeObject = { foo: { bar: { baz: SomeType } } };
+ * type TypeOfBaz = Choose<SomeObject, 'foo.bar.baz'>;
+ * ```
+ *
+ * `TypeOfBaz` would be equal to `SomeType`
+ *
+ */
+export type Choose<
+  T extends Record<string, unknown>,
+  K extends PathInto<T>
+> = K extends `${infer U}.${infer Rest}`
+  ? T[U] extends Record<string, unknown>
+    ? Choose<T[U], Rest extends PathInto<T[U]> ? Rest : never>
+    : T[K]
+  : T[K];

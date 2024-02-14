@@ -4,7 +4,7 @@ import {
   getRunSqlQuery,
   getSelectQuery,
 } from '../../../components/Common/utils/v1QueryUtils';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
+import Endpoints from '../../../Endpoints';
 import {
   generateInsertRequestType,
   GenerateBulkDeleteRowRequest,
@@ -15,7 +15,6 @@ import { getEstimateCountQuery, getStatementTimeoutSql } from './sqlUtils';
 import { QualifiedTable, TableConfig } from '../../../metadata/types';
 
 type Tables = ReduxState['tables'];
-type Headers = Tables['dataHeaders'];
 
 const getTableRowRequestBody = ({
   tables,

@@ -1,0 +1,20 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Name,
+            ],
+            found: LexerError(
+                InvalidString(
+                    UnknownEscapeSequence(
+                        "\\97",
+                    ),
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 2,
+            col: 11,
+        },
+    },
+)

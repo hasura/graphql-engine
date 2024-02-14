@@ -1,50 +1,20 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import produce from 'immer';
-import addons from '@storybook/addons';
-import { DocsContainer, DocsPage } from '@storybook/addon-docs';
 import { initialize, mswDecorator } from 'msw-storybook-addon';
-import { DARK_MODE_EVENT_NAME } from 'storybook-dark-mode';
-import mockDateDecorator from '@netsells/storybook-mockdate';
+import mockdate from 'mockdate';
+import dayjs from 'dayjs';
 import theme from './theme';
 import 'react-loading-skeleton/dist/skeleton.css';
 import '../src/lib/theme/tailwind.css';
 import { store } from '../src/lib/store';
 import '../src/lib/components/Common/Common.module.scss';
 import { ToastsHub } from '../src/lib/new-components/Toasts';
+import { AlertProvider } from '../src/lib/new-components/Alert/AlertProvider';
 
-const channel = addons.getChannel();
 initialize();
 
-const DocsContainerElement = props => {
-  // Sync Docs dark mode with Storybook Manager
-  const [isDark, setDark] = React.useState();
-
-  React.useEffect(() => {
-    channel.on(DARK_MODE_EVENT_NAME, setDark);
-    return () => channel.removeListener(DARK_MODE_EVENT_NAME, setDark);
-  }, [channel, setDark]);
-
-  return (
-    <div className={isDark ? 'dark' : 'light'}>
-      <DocsContainer
-        {...props}
-        context={{
-          ...props.context,
-          storyById: id => {
-            return produce(props.context.storyById(id), draft => {
-              draft.parameters.docs.theme = isDark ? theme.dark : theme.light;
-            });
-          },
-        }}
-      >
-        {props.children}
-      </DocsContainer>
-    </div>
-  );
-};
-
 export const parameters = {
+  // Add a minimum of 300 ms of delay for ui testing
   actions: { argTypesRegex: '^on.*' },
   options: {
     storySort: {
@@ -57,10 +27,6 @@ export const parameters = {
       date: /Date$/,
     },
   },
-  docs: {
-    container: DocsContainerElement,
-    page: DocsPage,
-  },
   darkMode: {
     dark: { ...theme.dark },
     light: { ...theme.light },
@@ -70,14 +36,47 @@ export const parameters = {
 export const decorators = [
   (fn, c) => <Provider store={store}>{fn(c)}</Provider>,
   mswDecorator,
-  mockDateDecorator,
+  (story, { parameters }) => {
+    mockdate.reset();
+
+    if (!parameters.mockdate) {
+      return story();
+    }
+
+    // Allows us to "time travel" to ensure our stories don't change over time
+    mockdate.set(parameters.mockdate);
+
+    const mockedDate = dayjs(parameters.mockdate).format('DD-MM-YYYY HH:mma');
+
+    return (
+      <div>
+        {story()}
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            right: 0,
+            background: 'rgba(0, 0, 0, 0.15)',
+            padding: '5px',
+            lineHeight: 1,
+          }}
+        >
+          <span className={'font-bold'}>Mocked date:</span> {mockedDate}
+        </div>
+      </div>
+    );
+  },
   Story => {
     document.body.classList.add('hasura-tailwind-on');
     return (
-      <>
-        <ToastsHub />
-        <div className={'bg-legacybg'}>{Story()}</div>
-      </>
+      <AlertProvider>
+        <div>
+          <ToastsHub />
+          <div className={'bg-legacybg'}>
+            <Story />
+          </div>
+        </div>
+      </AlertProvider>
     );
   },
 ];

@@ -8,7 +8,7 @@ keywords:
   - postgresql
   - firecracker
 sidebar_position: 11
-sidebar_label: Using Koyeb Serverless Platform
+sidebar_label: Using Koyeb (one-click)
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -26,48 +26,54 @@ To successfully follow and complete this guide, you need:
 - A PostgreSQL database to use as the Hasura GraphQL Engine backend.
 - A [Koyeb account](https://app.koyeb.com) to deploy and run the Hasura GraphQL Engine.
 
-## Deploy Hasura GraphQL Engine on Koyeb
+## One-click deploy to Koyeb
 
-To deploy the Hasura GraphQL Engine on Koyeb, we use the `hasura/graphql-engine` Docker image.
+To deploy Hasura to Koyeb quickly, click the button below:
 
-On the Koyeb control panel, click the **Create App** button. You land on the Koyeb App creation form.
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?name=hasura-demo&type=docker&image=hasura/graphql-engine&env[HASURA_GRAPHQL_DATABASE_URL]=CHANGE_ME&env[HASURA_GRAPHQL_ENABLE_CONSOLE]=true&env[HASURA_GRAPHQL_ADMIN_SECRET]=CHANGE_ME&ports=8080;http;/)
 
-<Thumbnail src="/img/deployment/koyeb-hasura-app-creation.png" alt="Koyeb control panel" />
+On the configuration screen, set the `HASURA_METADATA_DATABASE_URL` (depicted as `HASURA_GRAPHQL_ENGINE_DATABASE_URL` in this screenshot) environment variable to the connection string for your database and the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable to a secret value to access the Hasura Console.
 
-1. Fill the `Docker image` field with `hasura/graphql-engine`.
+Click the **Deploy** button when you are finished.  When the deployment completes, you can [access the Hasura Console](#access-the-hasura-console).
 
-2. In the _Ports_ section, change the export port from `80` to `8080`, which is the port the `hasura/graphql-engine`
-   Docker image app is listening on. This setting is required to let Koyeb know which port your application is listening
-   to and properly route incoming HTTP requests. If you want the Hasura GraphQL Engine to be available on a specific
-   path, you can change the default one (`/`) to the path of your choice.
+## Deploy Hasura GraphQL Engine on Koyeb manually
 
-3. In the _Environment variables_ section, configure the environment variables required to properly run the Hasura
-   GraphQL Engine.
+To deploy the Hasura GraphQL Engine on Koyeb manually, we use the `hasura/graphql-engine` Docker image.
 
-   - HASURA_GRAPHQL_DATABASE_URL: The environment variable containing the PostgreSQL URL, i.e.
-     `postgres://<user>:<password>@<host>:<port>/<database>`. To store this value which contains sensitive information,
-     we strongly recommend configuring the environment variable using Koyeb secrets instead of storing it as a plaintext
-     value. Secrets are encrypted at rest. They are ideal to store sensitive data like API keys, OAuth tokens, etc.
-   - HASURA_GRAPHQL_ENABLE_CONSOLE: Set to `true`. This will expose and allow you to access the Hasura Console.
-   - HASURA_GRAPHQL_ADMIN_SECRET: The secret to access the Hasura Graphql admin. As for the
-     `HASURA_GRAPHQL_DATABASE_URL`, we strongly recommend using a secret to store this value.
+On the [Koyeb control panel](https://app.koyeb.com/), click the **Create App** button. You land on the first page of the Koyeb App creation form.
 
-4. Give your App a name, i.e `hasura-demo`, and click **Create App**.
+<Thumbnail src="/img/deployment/koyeb-hasura-app-creation.png" alt="Koyeb App creation form" />
+
+1. Select **Docker** as the deployment method.
+
+2. Fill the `Image` field with `hasura/graphql-engine`.  Leave the `Tag` field blank to use the latest image.  Click **Next** to continue.
+
+3. Click the **Advanced** button to access additional options.
+
+4. In the **Environment variables** section, configure the environment variables required to properly run the Hasura GraphQL Engine:
+
+   - `HASURA_METADATA_DATABASE_URL`: Hasura requires a PostgreSQL database to store its metadata.  This can be the same database as `PG_DATABASE_URL` or a different one.  We strongly recommend using a secret to store this value.
+   - `PG_DATABASE_URL`: The environment variable containing the PostgreSQL URL, i.e.  `postgres://<user>:<password>@<host>:<port>/<database>`. Since this value contains sensitive information, select the "Secret" type.  Secrets are encrypted at rest and are ideal for storing sensitive data like API keys, OAuth tokens, etc.  Choose "Create secret" in the "Value" drop-down menu and enter the secret value in the "Create secret" form.
+   - `HASURA_GRAPHQL_ENABLE_CONSOLE`: Set to `true`. This will expose and allow you to access the Hasura Console.
+   - `HASURA_GRAPHQL_ADMIN_SECRET`: The secret to access the Hasura Console. As with the other environment variables, we strongly recommend using a secret to store this value.
+
+5. In the **Exposing your service** section, change the `Port` from `80` to `8080` to match the port that the `hasura/graphql-engine` Docker image app listens on. Koyeb uses this setting to perform application health checks and to properly route incoming HTTP requests. If you want the Hasura GraphQL Engine to be available on a specific path, you can change the default one (`/`) to the path of your choice.
+
+6. Give your App a name, i.e `hasura-demo`, and click **Deploy**.
 
 The deployment should be up and running in a few seconds.
 
 ## Access the Hasura Console
 
-Once your Koyeb App is deployed, you can click the App link in the Koyeb control panel to access the Hasura Console.
+Once your Koyeb App is deployed, you can click the App link in the Koyeb control panel to access the Hasura Console:
 
 <Thumbnail src="/img/deployment/koyeb-hasura-service.png" alt="Koyeb control panel" />
 
-```bash
+```
 https://<your-app-name>-<your-org-name>.koyeb.app/
 ```
 
-At any time, you can track your Hasura service status in the Koyeb control panel and visualize the Hasura GraphQL Engine
-web service logs in the **Logs** tab of your service.
+At any time, you can track your Hasura service status in the Koyeb Control Panel and view the Hasura GraphQL Engine web service logs in the **Logs** tab of your service.
 
 ## References
 

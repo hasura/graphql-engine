@@ -9,7 +9,9 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -34,6 +36,20 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
+  it "perform an object relationship query by joining artist to albums but with zero artist fields" $ do
+    let query = albumsWithArtistQuery (qFields ?~ mempty)
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
+
+    let joinInArtist (album :: HashMap FieldName FieldValue) =
+          let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
+              artistPropVal = Data.filterColumns [] $ maybeToList artist
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
+    let removeArtistId = Data.deleteField "ArtistId"
+
+    let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
+    Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
     receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
@@ -43,6 +59,21 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
               albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               albums' = Data.deleteField "ArtistId" <$> albums
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
+
+    let expectedAlbums = joinInAlbums <$> _tdArtistsRows
+    Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedArtists `jsonShouldBe` Nothing
+
+  it "perform an array relationship query by joining albums to artists but with zero album fields" $ do
+    let query = artistsWithAlbumsQuery (qFields ?~ mempty)
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+
+    let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+          let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+              albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
+              albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
+              albums' = Data.filterColumns [] albums
            in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
@@ -170,7 +201,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
         -- { FirstName: { _cgt: ["LastName"] } }
         let customersWhere =
               Exists (RelatedTable _tdSupportRepRelationshipName) $
-                And
+                Data.mkAndExpr
                   [ ( ApplyBinaryComparisonOperator
                         GreaterThan
                         (_tdCurrentComparisonColumn "FirstName" employeeFirstNameScalarType)
@@ -216,7 +247,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Artist", RelField $ RelationshipField _tdArtistRelationshipName artistsSubquery)
               ]
           query = albumsQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships] query Nothing
+       in TableQueryRequest _tdAlbumsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]) mempty mempty query Nothing
 
     artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
     artistsWithAlbumsQuery modifySubquery =
@@ -230,7 +261,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           query = artistsQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships] query Nothing
+       in TableQueryRequest _tdArtistsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]) mempty mempty query Nothing
 
     employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
     employeesWithCustomersQuery modifySubquery =
@@ -242,7 +273,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRepForCustomers", RelField $ RelationshipField _tdSupportRepForCustomersRelationshipName customersSubquery)
                 ]
           query = employeesQuery & qFields ?~ fields
-       in QueryRequest _tdEmployeesTableName [Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships] query Nothing
+       in TableQueryRequest _tdEmployeesTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]) mempty mempty query Nothing
 
     customersWithSupportRepQuery :: (Query -> Query) -> QueryRequest
     customersWithSupportRepQuery modifySubquery =
@@ -253,7 +284,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRep", RelField $ RelationshipField _tdSupportRepRelationshipName supportRepSubquery)
                 ]
           query = customersQuery & qFields ?~ fields
-       in QueryRequest _tdCustomersTableName [Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships] query Nothing
+       in TableQueryRequest _tdCustomersTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships]) mempty mempty query Nothing
 
     artistsQuery :: Query
     artistsQuery =

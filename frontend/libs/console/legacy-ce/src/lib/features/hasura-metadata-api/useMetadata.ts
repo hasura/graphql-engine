@@ -1,8 +1,12 @@
-import { exportMetadata } from '../DataSource';
-import { Metadata } from '../hasura-metadata-types';
+import React from 'react';
+import { useQuery } from 'react-query';
+import { APIError } from '../../hooks/error';
+import { exportMetadata as exportMetadataAction } from '../../metadata/actions';
+import { getCurrentReduxResourceVersion } from '../../store/utils';
+import { useAppDispatch } from '../../storeHooks';
 import { useHttpClient } from '../Network';
-import { useCallback } from 'react';
-import { useQuery, useQueryClient } from 'react-query';
+import { Metadata } from '../hasura-metadata-types';
+import { exportMetadata } from './exportMetadata';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -12,38 +16,55 @@ export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
   Default stale time is 5 minutes, but can be adjusted using the staleTime arg
 */
 
-export const METADATA_QUERY_KEY = 'export_metadata';
+export type MetadataQueryKey = 'export_metadata';
 
-export const useInvalidateMetadata = () => {
-  const queryClient = useQueryClient();
-  const invalidate = useCallback(
-    () => queryClient.invalidateQueries([METADATA_QUERY_KEY]),
-    [queryClient]
-  );
+export const METADATA_QUERY_KEY: MetadataQueryKey = 'export_metadata';
 
-  return invalidate;
+export type Options = {
+  staleTime?: number;
+  enabled?: boolean;
 };
 
-export const useMetadata = <T = Metadata>(
-  selector?: (m: Metadata) => T,
-  staleTime: number = DEFAULT_STALE_TIME
+export const useSyncResourceVersionToRedux = () => {
+  const dispatch = useAppDispatch();
+
+  const syncToRedux = React.useCallback(
+    (resource_version: number) => {
+      if (resource_version !== getCurrentReduxResourceVersion()) {
+        dispatch(exportMetadataAction());
+      }
+    },
+    [dispatch]
+  );
+
+  return { syncToRedux };
+};
+
+export const useMetadata = <FinalResult = Metadata>(
+  selector?: (m: Metadata) => FinalResult,
+  options: Options = {
+    staleTime: DEFAULT_STALE_TIME,
+    enabled: true,
+  }
 ) => {
   const httpClient = useHttpClient();
-  const invalidateMetadata = useInvalidateMetadata();
-
-  const queryReturn = useQuery({
+  const { syncToRedux } = useSyncResourceVersionToRedux();
+  const queryReturn = useQuery<Metadata, APIError, FinalResult>({
     queryKey: [METADATA_QUERY_KEY],
     queryFn: async () => {
       const result = await exportMetadata({ httpClient });
+
+      syncToRedux(result.resource_version);
+
       return result;
     },
-    staleTime: staleTime || DEFAULT_STALE_TIME,
+    staleTime: options.staleTime,
     refetchOnWindowFocus: false,
     select: selector,
+    enabled: options.enabled,
   });
 
   return {
     ...queryReturn,
-    invalidateMetadata,
   };
 };

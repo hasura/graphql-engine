@@ -21,7 +21,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Morph qualified as Morph
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.UTF8 qualified as BLU
 import Data.Char qualified as Char
 import Data.HashSet qualified as HashSet
@@ -34,19 +34,20 @@ import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema)
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
+import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.NamingCase qualified as NamingCase
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Hasura.Server.Types qualified as Server.Types
 import Hasura.Server.Utils qualified as Utils
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Refined (NonNegative, Positive, Refined, refineFail, unrefine)
 
@@ -62,8 +63,11 @@ considerEnv envVar = do
     Just val -> either throwErr (pure . Just) $ fromEnv val
   where
     throwErr s =
-      throwError $
-        "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
+      throwError
+        $ "Fatal Error:- Environment variable "
+        ++ envVar
+        ++ ": "
+        ++ s
 
 -- | Lookup a list of keys with 'considerEnv' and return the first
 -- value to parse successfully.
@@ -110,12 +114,12 @@ withOptionDefault parsed Config.Option {..} =
 --
 -- A 'Monoid' instance would be super valuable to cleanup arg/env
 -- parsing but this solution feels somewhat unsatisfying.
-withOptionSwitch :: Monad m => Bool -> Config.Option Bool -> WithEnvT m Bool
+withOptionSwitch :: (Monad m) => Bool -> Config.Option Bool -> WithEnvT m Bool
 withOptionSwitch parsed option = withOptionSwitch' parsed (id, id) option
 
 -- | Given an 'Iso a Bool' we can apply the same boolean env merging
 -- semantics as we do for 'Bool' in `withOptionsSwitch' to @a@.
-withOptionSwitch' :: Monad m => a -> (a -> Bool, Bool -> a) -> Config.Option a -> WithEnvT m a
+withOptionSwitch' :: (Monad m) => a -> (a -> Bool, Bool -> a) -> Config.Option a -> WithEnvT m a
 withOptionSwitch' parsed (fwd, bwd) option =
   if fwd parsed
     then pure (bwd True)
@@ -176,7 +180,7 @@ instance FromEnv Warp.HostPreference where
 instance FromEnv Text where
   fromEnv = Right . Text.pack
 
-instance FromEnv a => FromEnv (Maybe a) where
+instance (FromEnv a) => FromEnv (Maybe a) where
   fromEnv = fmap Just . fromEnv
 
 instance FromEnv Auth.AuthHookType where
@@ -191,12 +195,18 @@ instance FromEnv Int where
       Nothing -> Left "Expecting Int value"
       Just m -> Right m
 
+instance FromEnv Integer where
+  fromEnv s =
+    case readMaybe s of
+      Nothing -> Left "Expecting Integer value"
+      Just m -> Right m
+
 instance FromEnv Auth.AdminSecretHash where
   fromEnv = Right . Auth.hashAdminSecret . Text.pack
 
-instance FromEnv Session.RoleName where
+instance FromEnv RoleName where
   fromEnv string =
-    case Session.mkRoleName (Text.pack string) of
+    case mkRoleName (Text.pack string) of
       Nothing -> Left "empty string not allowed"
       Just roleName -> Right roleName
 
@@ -225,14 +235,14 @@ instance FromEnv Config.AdminInternalErrorsStatus where
 instance FromEnv Config.WsReadCookieStatus where
   fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
 
-instance FromEnv Aeson.Value where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+instance FromEnv J.Value where
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv MetadataDefaults where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Metadata where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool
@@ -242,6 +252,12 @@ instance FromEnv Options.RemoteSchemaPermissions where
 
 instance FromEnv Options.DangerouslyCollapseBooleans where
   fromEnv = fmap (bool Options.Don'tDangerouslyCollapseBooleans Options.DangerouslyCollapseBooleans) . fromEnv @Bool
+
+instance FromEnv Options.BackwardsCompatibleNullInNonNullableVariables where
+  fromEnv = fmap (bool Options.Don'tAllowNullInNonNullableVariables Options.AllowNullInNonNullableVariables) . fromEnv @Bool
+
+instance FromEnv Options.RemoteNullForwardingPolicy where
+  fromEnv = fmap (bool Options.RemoteForwardAccurately Options.RemoteOnlyForwardNonNull) . fromEnv @Bool
 
 instance FromEnv Options.InferFunctionPermissions where
   fromEnv = fmap (bool Options.Don'tInferFunctionPermissions Options.InferFunctionPermissions) . fromEnv @Bool
@@ -279,9 +295,9 @@ instance FromEnv (HashSet Server.Types.ExperimentalFeature) where
       readAPI si = case Text.toLower $ Text.strip si of
         key | Just (_, ef) <- find ((== key) . fst) experimentalFeatures -> Right ef
         _ ->
-          Left $
-            "Only expecting list of comma separated experimental features, options are:"
-              ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
+          Left
+            $ "Only expecting list of comma separated experimental features, options are:"
+            ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
 
       experimentalFeatures :: [(Text, Server.Types.ExperimentalFeature)]
       experimentalFeatures = [(Server.Types.experimentalFeatureKey ef, ef) | ef <- [minBound .. maxBound]]
@@ -325,7 +341,7 @@ instance FromEnv Auth.JWTConfig where
 instance FromEnv [Auth.JWTConfig] where
   fromEnv = readJson
 
-instance Logging.EnabledLogTypes impl => FromEnv (HashSet (Logging.EngineLogType impl)) where
+instance (Logging.EnabledLogTypes impl) => FromEnv (HashSet (Logging.EngineLogType impl)) where
   fromEnv = fmap HashSet.fromList . Logging.parseEnabledLogTypes
 
 instance FromEnv Logging.LogLevel where
@@ -336,8 +352,8 @@ instance FromEnv Logging.LogLevel where
     "error" -> Right Logging.LevelError
     _ -> Left "Valid log levels: debug, info, warn or error"
 
-instance FromEnv Template.URLTemplate where
-  fromEnv = Template.parseURLTemplate . Text.pack
+instance FromEnv Template.Template where
+  fromEnv = Template.parseTemplate . Text.pack
 
 instance (Num a, Ord a, FromEnv a) => FromEnv (Refined NonNegative a) where
   fromEnv s =
@@ -356,3 +372,24 @@ instance FromEnv Cache.CacheSize where
 
 instance FromEnv ExtensionsSchema where
   fromEnv = Right . MonadTx.ExtensionsSchema . Text.pack
+
+instance FromEnv Server.Types.ApolloFederationStatus where
+  fromEnv = fmap (bool Server.Types.ApolloFederationDisabled Server.Types.ApolloFederationEnabled) . fromEnv @Bool
+
+instance FromEnv GranularPrometheusMetricsState where
+  fromEnv = fmap (bool GranularMetricsOff GranularMetricsOn) . fromEnv @Bool
+
+instance FromEnv Server.Types.CloseWebsocketsOnMetadataChangeStatus where
+  fromEnv = fmap (bool Server.Types.CWMCDisabled Server.Types.CWMCEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.TriggersErrorLogLevelStatus where
+  fromEnv = fmap (bool Server.Types.TriggersErrorLogLevelDisabled Server.Types.TriggersErrorLogLevelEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.PersistedQueriesState where
+  fromEnv = fmap (bool Server.Types.PersistedQueriesDisabled Server.Types.PersistedQueriesEnabled) . fromEnv @Bool
+
+instance FromEnv Server.Types.RemoteSchemaResponsePriority where
+  fromEnv = fmap (bool Server.Types.RemoteSchemaResponseErrors Server.Types.RemoteSchemaResponseData) . fromEnv @Bool
+
+instance FromEnv Server.Types.HeaderPrecedence where
+  fromEnv = fmap (bool Server.Types.ClientHeadersFirst Server.Types.ConfiguredHeadersFirst) . fromEnv @Bool

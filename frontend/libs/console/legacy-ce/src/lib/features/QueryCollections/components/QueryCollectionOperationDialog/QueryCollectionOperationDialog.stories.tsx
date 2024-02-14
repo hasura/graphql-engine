@@ -3,7 +3,7 @@ import { action } from '@storybook/addon-actions';
 
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { handlers } from '../../../../mocks/metadata.mock';
 
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';
@@ -20,7 +20,7 @@ export default {
   parameters: {
     msw: handlers({ delay: 500 }),
   },
-} as ComponentMeta<typeof QueryCollectionOperationDialog>;
+} as Meta<typeof QueryCollectionOperationDialog>;
 
 export const AddOperation = () => {
   return (

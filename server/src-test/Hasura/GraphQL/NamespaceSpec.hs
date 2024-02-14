@@ -1,6 +1,6 @@
 module Hasura.GraphQL.NamespaceSpec (spec) where
 
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.GraphQL.Namespace
   ( NamespacedFieldMap,
     flattenNamespaces,
@@ -17,5 +17,5 @@ spec = do
   describe "NamespacedField" $ do
     prop "flatten/unflatten roundtrip" $ \(unflattened :: NamespacedFieldMap Int) ->
       -- If all namespaced fields are non-empty then flattening then unflattening should be the identity
-      let nonEmptyFields = OMap.filter (namespacedField (const True) $ not . OMap.null) unflattened
+      let nonEmptyFields = InsOrdHashMap.filter (namespacedField (const True) $ not . InsOrdHashMap.null) unflattened
        in unflattenNamespaces (flattenNamespaces nonEmptyFields) `shouldBe` nonEmptyFields

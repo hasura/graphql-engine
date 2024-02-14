@@ -57,4 +57,4 @@ export default config;
 
 ### Testing
 
-This addon is tested thanks to Chrmatic snapshots. No interaction test has been implemented yet, as the play function cannot interact with addons control.
+This addon is tested thanks to Chromatic snapshots. No interaction test has been implemented yet, as the play function cannot interact with addons control.

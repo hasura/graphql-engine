@@ -1,0 +1,207 @@
+---
+description: Quickstart Actions
+title: Quickstart Actions
+keywords:
+  - hasura
+  - docs
+  - actions
+  - quickstart
+  - guide
+  - tutorial
+sidebar_label: Quickstart
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart Actions
+
+Actions extend your GraphQL schema, allowing it to include traditional REST endpoints. This quickstart will show you how
+to implement an Action using the Console of your Hasura project. This Action, using a REST API, will convert a
+currency value that we'll query directly from our GraphQL API.
+
+**All you need to do is to follow the steps listed below, but if you're more curious about what's happening, check out
+the [recap at the bottom of the page](#recap).**
+
+<SampleAppBlock />
+
+## Step 1: Open the Actions page
+
+From the Console of a Hasura Project, open the `Actions` page and click `Create`:
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-1_console_2-17-0.png"
+  alt="Click create for new Action"
+  className="no-shadow"
+/>
+
+## Step 2: Describe the Action {#step-2}
+
+Copy and paste the following string in the `Comment / Description` field at the top of the page:
+
+```text
+Convert currency with real-time exchange rates.
+```
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-2_console_2-17-0.png"
+  alt="Add a description for your Action"
+  className="no-shadow"
+/>
+
+## Step 3: Define the Action {#step-3}
+
+Copy and paste the block below into the `Action Definition` field. It will take the place of all placeholder text:
+
+```graphql
+type Query {
+  currencyConverter(CurrencyInfo: InputParams!): ConvertedCurrency
+}
+```
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-3_console_2-17-0.png"
+  alt="Define your Action"
+  className="no-shadow"
+/>
+
+## Step 4: Configure your types {#step-4}
+
+Copy and paste the block below into the `Type Configuration` field. It will take the place of all placeholder text:
+
+```graphql
+input InputParams {
+  from: String
+  to: String
+  amt: Int
+}
+
+type Info {
+  rate: Float
+}
+
+type Query {
+  amount: Int
+  from: String
+  to: String
+}
+
+type ConvertedCurrency {
+  date: String
+  info: Info
+  query: Query
+  result: Float
+  success: Boolean
+}
+```
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-4_console_2-17-0.png"
+  alt="Click create for new Action"
+  className="no-shadow"
+/>
+
+## Step 5: Add the REST endpoint {#step-5}
+
+In the `Webhook Handler` field, copy and paste the following:
+
+```text
+https://api.exchangerate.host/convert
+```
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-5_console_2-17-0.png"
+  alt="Click create for new Action"
+  className="no-shadow"
+/>
+
+## Step 6: Change the request options and add query params {#step-6}
+
+Click `Add Request Options Transform` and change the `Request Method` to `GET`:
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_step-6_console_2-17-0.png"
+  alt="Click create for new Action"
+  className="no-shadow"
+/>
+
+Add the following query parameters and values as separate pairs in the available fields:
+
+| Query Param | Value                               |
+| ----------- | ----------------------------------- |
+| from        | `{{$body.input.CurrencyInfo.from}}` |
+| to          | `{{$body.input.CurrencyInfo.to}}`   |
+| amount      | `{{$body.input.CurrencyInfo.amt}}`  |
+
+Scroll to the bottom of the page, click `Create Action`, then head to your API page.
+
+## Step 7: Run a query
+
+Copy and paste the query on the left into your GraphiQL explorer and execute the query by clicking the `Play` button.
+The response should look similar to what's on the right (depending on rates):
+
+<GraphiQLIDE
+  query={`query CurrencyQuery {
+  currencyConverter(CurrencyInfo: { amt: 1, from: "EUR", to: "USD" }) {
+    result
+  }
+}
+  `}
+  response={`{
+  "data": {
+    "currencyConverter": {
+      "result": 1.088456
+    }
+  }
+}
+  `}
+/>
+
+## Recap
+
+What just happened? Congrats! You just extended your GraphQL API with a REST endpoint 🎉
+
+Actions can do a lot of things, but chances are - wherever you are in your GraphQL journey - you still have some legacy
+REST APIs that you need to integrate with. Whether you built them yourself or you're trying to integrate with public
+APIs, Actions are a great way to do that.
+
+We started by [describing our Action](#step-2). This may seem like an excessive step, but - since our GraphQL API is
+self-documenting - it's a good idea to add a description to your Action so that your consumers know what it does. The
+value we entered is available as a tooltip in the GraphiQL explorer and in the API's documentation.
+
+From there, we [defined our Action](#step-3). This is where we tell Hasura what our Action will do. In this case, we're
+defining a `Query` that will return a `ConvertedCurrency` type. This is the type that we'll be returning from our REST
+API. We haven't actually defined these types yet; we're just telling Hasura that when running this query, with these
+inputs, we'll be returning a `ConvertedCurrency` type.
+
+Next, we [configured our types](#step-4). This is where we tell Hasura what our `ConvertedCurrency` type looks like. We
+defined the types of our inputs and output. In the case of our inputs, we're defining an `InputParams` type that will be
+used as the input to our Action (i.e., a user will have to pass in an `InputParams` object that contains `from`, `to`,
+and `amt` when executing our Query).
+
+We're also defining the types of our outputs. In this case, we're defining a `ConvertedCurrency` type that will be
+returned from our REST API. It can be laborious to define these types, but Hasura can take care of that for you. The
+Console's Type Generator is a great way to do that: simply paste in some sample JSON output from your endpoint and
+Hasura will generate the types for you.
+
+<Thumbnail
+  src="/img/actions/actions-quickstart_type-generator_console_2-17-0.png"
+  alt="Generate types from a REST API"
+  className="no-shadow"
+/>
+
+Finally, we [added the REST endpoint](#step-5) and [configured the request options](#step-6). This is where we tell
+Hasura where to send our request and what to send. In this case, we're sending a `GET` request to the
+`https://api.exchangerate.host/convert` endpoint. We're also passing in the `from`, `to`, and `amount` query parameters
+that our REST API expects.
+
+Hasura automatically amends the base url of the REST endpoint with these query parameters and their values from the
+query to produce a request that looks like this:
+
+```text
+https://api.exchangerate.host/convert?from=EUR&to=USD&amount=1
+```
+
+To learn about creating your own Actions, check out the [Create Actions page](/actions/create.mdx).

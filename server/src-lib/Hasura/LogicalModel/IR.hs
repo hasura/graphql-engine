@@ -1,25 +1,27 @@
--- | The RQL IR representation of an invocation of a logical model.
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hasura.LogicalModel.IR
   ( LogicalModel (..),
   )
 where
 
-import Hasura.LogicalModel.Metadata
-import Hasura.Prelude
-import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column (ColumnValue)
+import Data.Aeson (ToJSON (toEncoding), defaultOptions, genericToEncoding)
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName)
+import Hasura.Prelude hiding (first)
+import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendType (BackendType)
 
--- | The RQL IR representation of an invocation of a logical model.
-data LogicalModel b field = LogicalModel
-  { -- | The graphql name of the logical model.
-    lmRootFieldName :: LogicalModelName,
-    -- | The raw sql to use in the query
-    lmInterpolatedQuery :: InterpolatedQuery field,
-    -- | The arguments passed to the query, if any.
-    lmArgs :: HashMap LogicalModelArgumentName (ColumnValue b)
+-- | Description of a logical model for use in IR
+data LogicalModel (b :: BackendType) = LogicalModel
+  { lmName :: LogicalModelName,
+    lmFields :: InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b)
   }
-  deriving (Functor, Foldable, Traversable)
+  deriving (Generic)
 
-deriving instance (Backend b, Eq field) => Eq (LogicalModel b field)
+deriving instance (Backend b) => Eq (LogicalModel b)
 
-deriving instance (Backend b, Show field) => Show (LogicalModel b field)
+deriving instance (Backend b) => Show (LogicalModel b)
+
+instance (Backend b) => ToJSON (LogicalModel b) where
+  toEncoding = genericToEncoding defaultOptions

@@ -1,0 +1,51 @@
+---
+description: Continuous Integration and Continuous Deployment with Hasura Cloud
+keywords:
+  - hasura
+  - preview-apps
+  - deployment
+  - ci-cd
+  - github-integration
+slug: index
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Continuous Integration and Continuous Deployment with Hasura Cloud
+
+<ProductBadge free pro ee />
+
+## Introduction
+
+Hasura Cloud also enables automatically creating Preview Apps with Migrations and Metadata from a branch on a GitHub
+repo by triggering a new deployment. These features are intended to improve the CI/CD experience on Hasura Cloud.
+
+## Hasura Cloud GitHub Integration
+
+Hasura Cloud can automatically detect Metadata and Migration changes in a linked GitHub repo and deploy these changes to
+the linked project. Read more on how to add this integration in your project
+[here](/cloud-ci-cd/github-integration.mdx).
+
+## Hasura Cloud Preview Apps
+
+Hasura Cloud enables creating Preview Apps from a branch on GitHub. This allows you to spin up a Hasura Cloud Preview
+App on each pull request in order to automatically preview changes.
+
+This can be achieved using either of the following:
+
+- [Preview App GitHub Action](/cloud-ci-cd/preview-apps.mdx#preview-apps-github-action)
+- [Preview App APIs](/cloud-ci-cd/preview-apps.mdx#preview-apps-api)
+
+:::info Note
+
+This feature is currently in beta. Please reach out through our support channels with any questions or concerns.
+
+:::
+
+:::info Usage Limit
+
+For users with only `Free` tier projects on Hasura Cloud, usage of the Preview App API is limited to 60 calls per month.
+More plans are coming soon.
+
+:::

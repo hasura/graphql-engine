@@ -15,6 +15,8 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Get Started with Docker and Amazon Athena
 
+## Introduction
+
 Currently, testing continues on the Amazon Athena connector for use in self-hosted environments. Our suggested
 installation method is to use Docker Compose to deploy a working deployment of Hasura with the Amazon Athena connector
 enabled.
@@ -33,6 +35,19 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 When you use these to launch the services, you'll see three containers running instead of two. The third container is
 the Amazon Athena GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the Amazon
 Athena data source as a type that can now be added to your Hasura GraphQL Service instance.
+
+You can check the health of the connector using the `/health` endpoint. The connector is available at the following
+endpoint:
+
+```bash
+http://localhost:8081/api/v1/athena/health
+```
+
+:::info Data connector
+
+This data source utilizes the `hasura/graphql-data-connector` to connect your data source to the GraphQL engine.
+
+:::
 
 ## Keep up to date
 

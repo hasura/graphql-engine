@@ -11,6 +11,8 @@ export const selectArgs: CreateInsertArgs = {
     filterType: 'custom',
     filter: { _not: { AlbumId: { _eq: 'X-Hasura-User-Id' } } },
     columns: { AlbumId: true, Title: true, ArtistId: true },
+    computed_fields: {},
+    comment: '',
     presets: [],
     rowCount: '0',
     aggregationEnabled: false,
@@ -60,6 +62,7 @@ export const deleteArgs: CreateInsertArgs = {
       { name: '<=', value: '_lte' },
     ],
     clonePermissions: [{ tableName: '', queryType: '', roleName: '' }],
+    comment: '',
   },
   accessType: 'partialAccess',
   existingPermissions: [
@@ -94,6 +97,8 @@ export const insertArgs: CreateInsertArgs = {
       ],
     },
     columns: { AlbumId: false, Title: false, ArtistId: false },
+    computed_fields: {},
+    comment: '',
     presets: [{ columnName: 'default', presetType: 'static', columnValue: '' }],
     backendOnly: false,
     supportedOperators: [

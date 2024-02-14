@@ -1,0 +1,11 @@
+Err(
+    Positioned {
+        item: OtherError(
+            "A fragment may not be named \"on\". Maybe you forgot the name?",
+        ),
+        position: SourcePosition {
+            line: 1,
+            col: 10,
+        },
+    },
+)

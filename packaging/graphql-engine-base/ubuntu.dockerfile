@@ -1,6 +1,7 @@
-# DATE VERSION: 2023-01-31
+# DATE VERSION: 2024-01-23
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
-FROM ubuntu:focal-20230126
+
+FROM ubuntu:jammy-20240111
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -15,13 +16,17 @@ RUN set -ex; \
 
 RUN set -ex; \
     apt-get update; \
-    apt-get install -y apt-transport-https curl gnupg2; \
-    apt-get update; \
-    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
+    apt-get upgrade -y; \
+    # basic deps
+    apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release;  \
+    # deps needed for graphql-engine
+    apt-get install -y libkrb5-3 libpq5 libnuma1 unixodbc-dev; \
+    # deps needed for cli-migrations
+    apt-get install -y netcat
 
 RUN set -ex; \
-    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
-    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
+    curl -fsS "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list" > /etc/apt/sources.list.d/mssql-release.list; \
+    curl -fsS 'https://packages.microsoft.com/keys/microsoft.asc' | apt-key add -; \
     apt-get update; \
     ACCEPT_EULA=Y apt-get install -y msodbcsql18; \
     if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
@@ -33,9 +38,9 @@ RUN set -ex; \
 # Install pg_dump
 RUN set -ex; \
     curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -; \
-    echo 'deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
+    echo 'deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
     apt-get -y update; \
-    apt-get install -y postgresql-client-15; \
+    apt-get install -y postgresql-client-16; \
     # delete all pg tools except pg_dump to keep the image minimal
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 

@@ -10,9 +10,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -32,7 +32,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Sqlserver.setupTablesAction (schema "authors") testEnvironment),
                   Fixture.SetupAction
@@ -71,18 +71,14 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  nextRetryAtTimezoneChange opts
-
-nextRetryAtTimezoneChange :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-nextRetryAtTimezoneChange opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "event trigger retries if the event trigger is undelivered (and retries are available)" do
     -- The test checks that the event trigger retries as expected. In the test, we fire up the event trigger by adding a
     -- row to the table. We wait for a few seconds so the event has retried completely and then see if the number of
     -- retries are 2 (the event retries once)
-    it "check: the total number of tries is (number of retries + 1)" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: the total number of tries is (number of retries + 1)"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -127,7 +123,7 @@ nextRetryAtTimezoneChange opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -145,7 +141,7 @@ nextRetryAtTimezoneChange opts =
         -- Check the retries column of hdb_catalog.event_log table to see that the event has been retried once (that is
         -- the event has tried to deliver 2 times in total)
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment selectQuery)
           expectedTotalTries
 
@@ -158,8 +154,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerNextRetryEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/nextRetry"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -179,8 +175,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
 
 mssqlTeardown :: TestEnvironment -> IO ()
 mssqlTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: mssql_delete_event_trigger

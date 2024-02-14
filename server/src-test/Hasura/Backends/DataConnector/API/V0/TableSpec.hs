@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTableInfo) where
+module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTableTarget, genTableInfo) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnInfo, genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnInfo, genColumnName, genColumnSelector)
 import Hasura.Generator.Common
 import Hasura.Prelude
 import Hedgehog
@@ -21,21 +21,21 @@ spec = do
     testToFromJSONToSchema (TableName ["my_table_name"]) [aesonQQ|["my_table_name"]|]
     jsonOpenApiProperties genTableName
   describe "TableInfo" $ do
-    describe "minimal" $
-      testFromJSON
-        (TableInfo (TableName ["my_table_name"]) Table [] [] (ForeignKeys mempty) Nothing False False False)
+    describe "minimal"
+      $ testFromJSON
+        (TableInfo (TableName ["my_table_name"]) Table [] Nothing (ForeignKeys mempty) Nothing False False False)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
           }
         |]
-    describe "non-minimal" $
-      testToFromJSONToSchema
+    describe "non-minimal"
+      $ testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
             View
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
-            [ColumnName "id"]
+            [ColumnInfo (ColumnName "id") (ColumnTypeScalar $ ScalarType "string") False Nothing False False Nothing]
+            (Just $ ColumnName "id" :| [])
             (ForeignKeys mempty)
             (Just "my description")
             True
@@ -53,14 +53,21 @@ spec = do
             "deletable": true
           }
         |]
-    describe "foreign-key" $
-      testToFromJSONToSchema
+    describe "foreign-key"
+      $ testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
             Table
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False]
-            [ColumnName "id"]
-            (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
+            [ColumnInfo (ColumnName "id") (ColumnTypeScalar $ ScalarType "string") False Nothing False False Nothing]
+            (Just $ ColumnName "id" :| [])
+            ( ForeignKeys
+                $ HashMap.singleton
+                  (ConstraintName "Artist")
+                  ( Constraint
+                      (TableName ["artist_table"])
+                      (ColumnPathMapping $ HashMap.singleton (mkColumnSelector $ ColumnName "ArtistId") (mkColumnSelector $ ColumnName "ArtistId"))
+                  )
+            )
             (Just "my description")
             False
             False
@@ -87,31 +94,34 @@ spec = do
         |]
     jsonOpenApiProperties genTableInfo
 
-genTableName :: MonadGen m => m TableName
+genTableName :: (MonadGen m) => m TableName
 genTableName = TableName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
 
-genForeignKeys :: MonadGen m => m ForeignKeys
+genTableTarget :: (MonadGen m) => m Target
+genTableTarget = TTable . TargetTable <$> genTableName
+
+genForeignKeys :: (MonadGen m) => m ForeignKeys
 genForeignKeys = ForeignKeys <$> genHashMap genConstraintName genConstraint defaultRange
 
-genConstraintName :: MonadGen m => m ConstraintName
+genConstraintName :: (MonadGen m) => m ConstraintName
 genConstraintName = ConstraintName <$> genArbitraryAlphaNumText defaultRange
 
-genConstraint :: MonadGen m => m Constraint
+genConstraint :: (MonadGen m) => m Constraint
 genConstraint =
-  let mapping = genHashMap genColumnName genColumnName defaultRange
+  let mapping = ColumnPathMapping <$> genHashMap genColumnSelector genColumnSelector defaultRange
    in Constraint <$> genTableName <*> mapping
 
-genTableType :: MonadGen m => m TableType
+genTableType :: (MonadGen m) => m TableType
 genTableType = Gen.enumBounded
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
-genTableInfo :: (MonadGen m, GenBase m ~ Identity) => m TableInfo
+genTableInfo :: Gen TableInfo
 genTableInfo =
   TableInfo
     <$> genTableName
     <*> genTableType
     <*> Gen.list defaultRange genColumnInfo
-    <*> Gen.list defaultRange genColumnName
+    <*> Gen.maybe (Gen.nonEmpty defaultRange genColumnName)
     <*> genForeignKeys
     <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
     <*> Gen.bool

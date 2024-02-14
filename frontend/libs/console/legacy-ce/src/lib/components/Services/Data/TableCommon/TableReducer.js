@@ -73,6 +73,7 @@ import {
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
   PERM_TOGGLE_BACKEND_ONLY,
+  PERM_VALIDATE_INPUT_FIELD,
   toggleField,
   toggleAllFields,
   getBasePermissionsState,
@@ -85,6 +86,7 @@ import {
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   modifyRootPermissionState,
+  PERM_SET_COMMENT,
 } from '../TablePermissions/Actions';
 import {
   getDefaultFilterType,
@@ -374,7 +376,17 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-
+    case PERM_SET_COMMENT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'comment',
+            action.comment
+          ),
+        },
+      };
     case PERM_ALLOW_ALL:
       return {
         ...modifyState,
@@ -543,6 +555,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           modifyState.permissionsState,
           'backend_only',
           !isBackendOnly
+        ),
+      };
+    case PERM_VALIDATE_INPUT_FIELD:
+      return {
+        ...modifyState,
+        permissionsState: updatePermissionsState(
+          modifyState.permissionsState,
+          'validate_input',
+          action?.payload
         ),
       };
     /* Preset operations */

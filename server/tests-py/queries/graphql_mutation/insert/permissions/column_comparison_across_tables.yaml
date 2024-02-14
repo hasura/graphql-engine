@@ -13,7 +13,7 @@
   query:
     query: |
       mutation {
-        insert_order_cart( objects: { item_id: 1, quantity: 106 }) {
+        insert_order_cart( objects: { item_id: 1, order_cart_quantity: 106 }) {
           affected_rows
         }
       }
@@ -30,7 +30,7 @@
   query:
     query: |
       mutation {
-        insert_order_cart( objects: { item_id: 1, quantity: 6 }) {
+        insert_order_cart( objects: { item_id: 1, order_cart_quantity: 6 }) {
           affected_rows
         }
       }

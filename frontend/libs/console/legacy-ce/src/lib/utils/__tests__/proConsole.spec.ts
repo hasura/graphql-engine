@@ -43,7 +43,7 @@ describe('isProConsole', () => {
         consoleMode: 'server',
         consoleType: 'pro-lite',
       };
-      expect(isProConsole(env)).toBe(true);
+      expect(isProConsole(env)).toBe(false);
     });
   });
 
@@ -93,7 +93,7 @@ describe('isProConsole', () => {
         consoleMode: 'cli',
         consoleType: 'pro-lite',
       };
-      expect(isProConsole(env)).toBe(true);
+      expect(isProConsole(env)).toBe(false);
     });
   });
 

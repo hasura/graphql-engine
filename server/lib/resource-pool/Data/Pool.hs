@@ -6,9 +6,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use sleep" #-}
 
 -- |
 -- Module:      Data.Pool
@@ -73,6 +70,8 @@ import Data.Typeable (Typeable)
 import qualified Data.Vector as V
 import GHC.Conc.Sync (labelThread)
 import qualified GHC.Event as Event
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
 
 -- | A single resource pool entry.
 data Entry a = Entry
@@ -446,7 +445,7 @@ tryTakeResource pool@Pool {..} = do
             return $
               Just
                 <$> create
-                `onException` atomically (modifyTVar_ inUse (subtract 1))
+                  `onException` atomically (modifyTVar_ inUse (subtract 1))
   return $ (,local) <$> resource
 {-# INLINEABLE tryTakeResource #-}
 

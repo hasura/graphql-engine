@@ -1,21 +1,26 @@
 import { useMetadataMigration } from '../../MetadataAPI';
-import { useFireNotification } from '../../../new-components/Notifications';
+import { hasuraToast } from '../../../new-components/Toasts';
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
 
 export const useRemoveAgent = () => {
-  const { fireNotification } = useFireNotification();
   const queryClient = useQueryClient();
   const mutation = useMetadataMigration({
     onSuccess: () => {
-      fireNotification({
+      hasuraToast({
         title: 'Success',
         type: 'success',
         message: 'Data connector agent removed successfully!',
       });
       queryClient.refetchQueries(['agent_list'], { exact: true });
     },
-    onError: () => {},
+    onError: err => {
+      hasuraToast({
+        title: 'Error',
+        type: 'error',
+        message: err.toString(),
+      });
+    },
   });
 
   const removeAgent = useCallback(

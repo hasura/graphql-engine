@@ -1,9 +1,7 @@
 import * as React from 'react';
-
-import { OpenTelemetry } from '../OpenTelemetry/OpenTelemetry';
-
 import { useOpenTelemetry } from './hooks/useOpenTelemetry';
 import { useSetOpenTelemetry } from './hooks/useSetOpenTelemetry';
+import { OpenTelemetry } from '../OpenTelemetry/OpenTelemetry';
 
 /**
  * Allow isolating OpenTelemetry (the UI core of the feature) from every ap logic like
@@ -13,7 +11,7 @@ export function OpenTelemetryProvider() {
   const { isLoadingMetadata, metadataFormValues, isFirstTimeSetup } =
     useOpenTelemetry();
 
-  const { setOpenTelemetry } = useSetOpenTelemetry();
+  const { setOpenTelemetry, isLoading } = useSetOpenTelemetry();
 
   return (
     <OpenTelemetry
@@ -21,6 +19,7 @@ export function OpenTelemetryProvider() {
       skeletonMode={isLoadingMetadata}
       metadataFormValues={metadataFormValues}
       setOpenTelemetry={setOpenTelemetry}
+      loading={isLoading}
     />
   );
 }

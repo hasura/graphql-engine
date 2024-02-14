@@ -65,9 +65,9 @@ spec = do
         |]
     testToFromJSON val jsonVal
 
-    it "OpenAPI spec is as expected" $
-      toJSON (toSchema (Proxy @ConfigSchemaResponse))
-        `shouldBe` [aesonQQ|
+    it "OpenAPI spec is as expected"
+      $ toJSON (toSchema (Proxy @ConfigSchemaResponse))
+      `shouldBe` [aesonQQ|
         {
           "required": [
             "config_schema",

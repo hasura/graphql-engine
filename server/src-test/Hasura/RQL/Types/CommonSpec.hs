@@ -5,7 +5,7 @@ module Hasura.RQL.Types.CommonSpec (spec) where
 import Control.Arrow.Extended
 import Control.Lens qualified as Lens
 import Control.Monad.Trans.Writer
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens
 import Data.Text qualified as Text
 import Data.Text.Extended
@@ -15,7 +15,6 @@ import Hasura.Generator.Common
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Generic
@@ -86,18 +85,18 @@ pgConnectionStringFromParamsSpec =
 commentSpec :: Spec
 commentSpec =
   describe "Comment" $ do
-    prop "should roundtrip between Comment and Maybe Text" $
-      \str ->
+    prop "should roundtrip between Comment and Maybe Text"
+      $ \str ->
         let text = Text.pack <$> str
          in (commentToMaybeText . commentFromMaybeText) text `shouldBe` text
 
 withRecordInconsistencyEqualSpec :: Spec
 withRecordInconsistencyEqualSpec =
   describe "withRecordInconsistency" do
-    prop "Should equal withRecordInconsistencyM" $
-      \inputMetadata (errOrUnit :: Either QErr ()) ->
+    prop "Should equal withRecordInconsistencyM"
+      $ \inputMetadata (errOrUnit :: Either QErr ()) ->
         let arrowInputArr = ErrorA (arr (const errOrUnit))
-            arrow = withRecordInconsistency @_ @InconsistentMetadata arrowInputArr
+            arrow = withRecordInconsistency arrowInputArr
             arrowOutput =
               runWriter $ runKleisli arrow ((), (inputMetadata, ()))
             monadInput = liftEither errOrUnit
@@ -116,7 +115,7 @@ envRecordSpec :: Spec
 envRecordSpec = describe "EnvRecord" do
   it "Serializes to JSON" $ hedgehog do
     term <- forAll genEnvRecord
-    let value :: Aeson.Value = Aeson.toJSON term
+    let value :: J.Value = J.toJSON term
 
     Lens.preview (key "env_var" . _String) value === Just (_envVarName term)
 
@@ -124,7 +123,7 @@ remoteRelationshipGSpec :: Spec
 remoteRelationshipGSpec = describe "RemoteRelationshipG" do
   it "Serializes to JSON" $ hedgehog $ do
     term <- forAll genRemoteRelationshipG
-    let value :: Aeson.Value = Aeson.toJSON term
+    let value :: J.Value = J.toJSON term
 
     Lens.preview (key "name" . _String) value === Just (toTxt (_rrName term))
     Lens.preview (key "definition" . _JSON) value === Just ()

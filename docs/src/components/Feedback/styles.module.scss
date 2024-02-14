@@ -143,21 +143,14 @@ html[data-theme='dark'] {
 }
 
 .successMessage {
-  display: block;
+  display: grid;
   place-items: center center;
   width: 100%;
   text-align: center;
-  color: var(--ifm-color-primary);
-  font-size: 1.1rem;
   font-weight: 500;
   font-family: var(--ifm-font-family-base);
   p {
     margin-bottom: 0 !important;
-  }
-}
-html[data-theme='dark'] {
-  .successMessage {
-    color: var(--ifm-color-primary-lighter);
   }
 }
 

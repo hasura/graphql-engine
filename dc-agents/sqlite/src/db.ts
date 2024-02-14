@@ -26,7 +26,15 @@ export async function withConnection<Result>(config: Config, mode: number, sqlLo
     }
   }
 
-  const db_ = new SQLite.Database(config.db, mode);
+  const db_ = await new Promise<SQLite.Database>((resolve, reject) => {
+    const db = new SQLite.Database(config.db, mode, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(db);
+      }
+    });
+  });
 
   // NOTE: Avoiding util.promisify as this seems to be causing connection failures.
   const query = (query: string, params?: Record<string, unknown>): Promise<Array<any>> => {

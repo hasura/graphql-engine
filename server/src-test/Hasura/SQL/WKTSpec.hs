@@ -29,13 +29,13 @@ negativeSpecs =
     mkPoint $ mkPosition 1 2 (Just (-1))
   ]
 
-runNegativeSpec :: forall a. ToWKT a => String -> [a] -> Spec
+runNegativeSpec :: forall a. (ToWKT a) => String -> [a] -> Spec
 runNegativeSpec name = it name . traverse_ go
   where
     go wkt =
       getWKT <$> toWKT wkt `shouldSatisfy` isLeft
 
-runSpec :: forall a. ToWKT a => String -> [(Text, a)] -> Spec
+runSpec :: forall a. (ToWKT a) => String -> [(Text, a)] -> Spec
 runSpec name = it name . traverse_ go
   where
     go (t, wkt) =
@@ -182,8 +182,8 @@ geometryCollectionSpec =
   [ ( "GEOMETRYCOLLECTION (POINT (1.0 2.0), LINESTRING (3.0 4.0, 5.0 6.0))",
       mkGeometryCollection
         [ G.GPoint $ mkPoint $ mkPosition 1 2 Nothing,
-          G.GLineString $
-            mkLineString
+          G.GLineString
+            $ mkLineString
               [ mkPosition 3 4 Nothing,
                 mkPosition 5 6 Nothing
               ]
@@ -192,19 +192,19 @@ geometryCollectionSpec =
     ( "GEOMETRYCOLLECTION (POINT (1.1 -2.2), MULTIPOINT (1.1 2.2, 4.4 5.5), LINESTRING (1.1 2.2, 4.4 5.5, 7.7 8.8), MULTILINESTRING ((1.1 2.2, 4.4 5.5, 7.7 8.8), (1.1 2.2, 4.4 5.5)), POLYGON ((1.1 2.2, 4.4 5.5, 7.7 8.8, 1.1 2.2), (1.1 2.2, 4.4 5.5, 7.7 8.8, 1.0 1.0, 1.1 2.2)), MULTIPOLYGON (((1.1 2.2, 4.4 5.5, 7.7 8.8, 1.1 2.2)), ((1.1 2.2, 4.4 5.5, 7.7 8.8, 1.1 2.2), (1.1 2.2, 4.4 5.5, 7.7 8.8, 1.0 1.0, 1.1 2.2))))",
       mkGeometryCollection
         [ G.GPoint $ mkPoint $ mkPosition 1.1 (-2.2) Nothing,
-          G.GMultiPoint $
-            mkMultiPoint
+          G.GMultiPoint
+            $ mkMultiPoint
               [ mkPosition 1.1 2.2 Nothing,
                 mkPosition 4.4 5.5 Nothing
               ],
-          G.GLineString $
-            mkLineString
+          G.GLineString
+            $ mkLineString
               [ mkPosition 1.1 2.2 Nothing,
                 mkPosition 4.4 5.5 Nothing,
                 mkPosition 7.7 8.8 Nothing
               ],
-          G.GMultiLineString $
-            mkMultiLineString
+          G.GMultiLineString
+            $ mkMultiLineString
               [ mkLineString
                   [ mkPosition 1.1 2.2 Nothing,
                     mkPosition 4.4 5.5 Nothing,
@@ -215,8 +215,8 @@ geometryCollectionSpec =
                     mkPosition 4.4 5.5 Nothing
                   ]
               ],
-          G.GPolygon $
-            mkPolygon
+          G.GPolygon
+            $ mkPolygon
               [ mkLinearRing
                   [ mkPosition 1.1 2.2 Nothing,
                     mkPosition 4.4 5.5 Nothing,
@@ -229,8 +229,8 @@ geometryCollectionSpec =
                     mkPosition 1.0 1.0 Nothing
                   ]
               ],
-          G.GMultiPolygon $
-            mkMultiPolygon
+          G.GMultiPolygon
+            $ mkMultiPolygon
               [ mkPolygon
                   [ mkLinearRing
                       [ mkPosition 1.1 2.2 Nothing,

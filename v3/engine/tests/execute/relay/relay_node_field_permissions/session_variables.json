@@ -1,0 +1,8 @@
+[
+  {
+    "x-hasura-role": "non-existent-role"
+  },
+  {
+    "x-hasura-role": "user"
+  }
+]

@@ -57,6 +57,8 @@ test('', () => {
 
 If a test ends without an assertion, it is not clear what is the expected behaviour. Should the subject tested just not failing? Should the subject trigger any side-effect? This ambiguity does not help trusting the test when refactoring the subject.
 
+More: closing assertions also prevent the next test from starting before the previous one completed its actions.
+
 ```ts
 // ❌ don't
 test('', () => {

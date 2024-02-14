@@ -34,6 +34,7 @@ module Hasura.Server.Utils
     useBackendOnlyPermissionsHeader,
     userIdHeader,
     userRoleHeader,
+    contentLengthHeader,
     sessionVariablePrefix,
   )
 where
@@ -42,7 +43,7 @@ import Control.Lens ((^..))
 import Crypto.Hash qualified as Crypto
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Internal
+import Data.Aeson.Types
 import Data.ByteArray (convert)
 import Data.ByteString qualified as B
 import Data.ByteString.Base16 qualified as Base16
@@ -60,6 +61,7 @@ import Data.Vector qualified as V
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (isSessionVariable)
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.HTTP.Client qualified as HC
 import Network.HTTP.Types qualified as HTTP
@@ -77,22 +79,25 @@ sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
 gzipHeader :: HTTP.Header
 gzipHeader = ("Content-Encoding", "gzip")
 
-userRoleHeader :: IsString a => a
+userRoleHeader :: (IsString a) => a
 userRoleHeader = "x-hasura-role"
 
-deprecatedAccessKeyHeader :: IsString a => a
+deprecatedAccessKeyHeader :: (IsString a) => a
 deprecatedAccessKeyHeader = "x-hasura-access-key"
 
-adminSecretHeader :: IsString a => a
+adminSecretHeader :: (IsString a) => a
 adminSecretHeader = "x-hasura-admin-secret"
 
-userIdHeader :: IsString a => a
+userIdHeader :: (IsString a) => a
 userIdHeader = "x-hasura-user-id"
 
-requestIdHeader :: IsString a => a
+requestIdHeader :: (IsString a) => a
 requestIdHeader = "x-request-id"
 
-useBackendOnlyPermissionsHeader :: IsString a => a
+contentLengthHeader :: (IsString a) => a
+contentLengthHeader = "Content-Length"
+
+useBackendOnlyPermissionsHeader :: (IsString a) => a
 useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
 
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
@@ -200,9 +205,6 @@ commonClientHeadersIgnored =
 sessionVariablePrefix :: Text
 sessionVariablePrefix = "x-hasura-"
 
-isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
-
 isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower
 
@@ -278,13 +280,14 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
         parseWithPathElement = \case
           Key k -> withObject "Object" (.: k)
           Index i ->
-            withArray "Array" $
-              maybe (fail "Array index out of range") pure . (V.!? i)
+            withArray "Array"
+              $ maybe (fail "Array index out of range") pure
+              . (V.!? i)
 
 sha1 :: BL.ByteString -> B.ByteString
 sha1 = convert @_ @B.ByteString . Crypto.hashlazy @Crypto.SHA1
 
-cryptoHash :: J.ToJSON a => a -> B.ByteString
+cryptoHash :: (J.ToJSON a) => a -> B.ByteString
 cryptoHash = Base16.encode . sha1 . J.encode
 
 readIsoLevel :: String -> Either String PG.TxIsolation

@@ -13,12 +13,11 @@ sidebar_label: Maintenance mode
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Maintenance Mode
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free pro ee />
 
 ## Introduction
 
@@ -56,7 +55,7 @@ actions are disallowed:
 - [Switching pricing plans](/hasura-cloud/projects/pricing.mdx)
 - [Adding, updating and deleting an environment variable](/hasura-cloud/projects/env-vars.mdx)
 - [Changing project region](/hasura-cloud/projects/regions.mdx)
-- [Enabling and disabling Heroku database URL sync](/hasura-cloud/projects/heroku-url-sync.mdx)
+- [Enabling and disabling Heroku database URL sync](/hasura-cloud/heroku-url-sync.mdx)
 - [Deleting project](/hasura-cloud/projects/delete.mdx)
 
 If you are trying to apply these changes when maintenance mode is activated, you will encounter an error.

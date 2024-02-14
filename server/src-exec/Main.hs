@@ -6,6 +6,7 @@ where
 import Control.Concurrent.Extended qualified as C
 import Control.Exception
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BC
 import Data.Environment qualified as Env
 import Data.Int (Int64)
@@ -18,12 +19,16 @@ import GHC.Debug.Stub
 import GHC.TypeLits (Symbol)
 import Hasura.App
 import Hasura.App.State
+  ( AppEnv (..),
+    Loggers (..),
+  )
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.GC qualified as GC
 import Hasura.Logging (Hasura, LogLevel (..), defaultEnabledEngineLogTypes)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema
+import Hasura.Server.App (CEConsoleType (OSSConsole))
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
@@ -34,11 +39,12 @@ import Hasura.Tracing (sampleAlways)
 import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
+import System.Monitor.Heartbeat
 import System.Posix.Signals qualified as Signals
 
-{-# ANN main ("HLINT: ignore Use env_from_function_argument" :: String) #-}
+{-# ANN main ("HLINT: ignore avoid getEnvironment" :: String) #-}
 main :: IO ()
-main = maybeWithGhcDebug $ do
+main = maybeWithGhcDebug $ monitorHeartbeatMain $ do
   catch
     do
       env <- Env.getEnvironment
@@ -59,8 +65,24 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
 
   case hgeCmd of
-    HCServe serveOptions -> do
-      globalCtx@GlobalCtx {} <- initGlobalCtx env metadataDbUrl rci
+    HCServe serveOptions@ServeOptions {..} -> do
+      let poolSettings =
+            PostgresPoolSettings
+              { ppsMaxConnections = Just $ PG.cpConns soConnParams,
+                ppsTotalMaxConnections = Nothing,
+                ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                ppsRetries = _pciRetries rci <|> Just 1,
+                ppsPoolTimeout = PG.cpTimeout soConnParams,
+                ppsConnectionLifetime = PG.cpMbLifetime soConnParams
+              }
+      basicConnectionInfo <-
+        initBasicConnectionInfo
+          env
+          metadataDbUrl
+          rci
+          (Just poolSettings)
+          (PG.cpAllowPrepare soConnParams)
+          soTxIso
       (ekgStore, serverMetrics) <- liftIO $ do
         store <- EKG.newStore @AppMetricsSpec
         void $ EKG.register (EKG.subset GcSubset store) EKG.registerGcMetrics
@@ -76,51 +98,41 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
       prometheusMetrics <- makeDummyPrometheusMetrics
 
-      -- It'd be nice if we didn't have to call runManagedT twice here, but
-      -- there is a data dependency problem since the call to runPGMetadataStorageApp
-      -- below depends on appCtx.
-      runManagedT (initialiseContext env globalCtx serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) $ \(appCtx, appEnv) -> do
+      -- It'd be nice if we didn't have to call lowerManagedT twice here, but
+      -- there is a data dependency problem since the call to runAppM below
+      -- depends on appCtx.
+      runManagedT (initialiseAppEnv env basicConnectionInfo serveOptions Nothing serverMetrics prometheusMetrics sampleAlways) \(appInit, appEnv) -> do
         -- Catches the SIGTERM signal and initiates a graceful shutdown.
         -- Graceful shutdown for regular HTTP requests is already implemented in
         -- Warp, and is triggered by invoking the 'closeSocket' callback.
         -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C
         -- once again, we terminate the process immediately.
-
-        liftIO $ do
-          void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
-          void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+        void $ Signals.installHandler Signals.sigTERM (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
+        void $ Signals.installHandler Signals.sigINT (Signals.CatchOnce (shutdownGracefully $ appEnvShutdownLatch appEnv)) Nothing
 
         let Loggers _ logger _ = appEnvLoggers appEnv
 
         _idleGCThread <-
-          C.forkImmortal "ourIdleGC" logger $
-            GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
+          C.forkImmortal "ourIdleGC" logger
+            $ GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
-        flip runPGMetadataStorageAppT (appCtx, appEnv) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) appCtx appEnv initTime Nothing ekgStore
+        runAppM appEnv do
+          appStateRef <- initialiseAppContext env serveOptions appInit
+          lowerManagedT
+            $ runHGEServer (const $ pure ()) appStateRef initTime Nothing OSSConsole ekgStore
     HCExport -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
+      metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
+      res <- runTxWithMinimalPool metadataConnection fetchMetadataFromCatalog
       either (throwErrJExit MetadataExportError) printJSON res
     HCClean -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo dropHdbCatalogSchema
+      metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
+      res <- runTxWithMinimalPool metadataConnection dropHdbCatalogSchema
       let cleanSuccessMsg = "successfully cleaned graphql-engine related data"
       either (throwErrJExit MetadataCleanError) (const $ liftIO $ putStrLn cleanSuccessMsg) res
     HCDowngrade opts -> do
-      GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
-      let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo
-      let defaultSourceConfig =
-            maybeDefaultPgConnInfo <&> \(dbUrlConf, _) ->
-              let pgSourceConnInfo =
-                    PostgresSourceConnInfo
-                      dbUrlConf
-                      (Just setPostgresPoolSettings {_ppsRetries = maybeRetries <|> Just 1})
-                      False
-                      PG.ReadCommitted
-                      Nothing
-               in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty
-      res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
+      let poolSettings = setPostgresPoolSettings {ppsRetries = _pciRetries rci <|> Just 1}
+      BasicConnectionInfo {..} <- initBasicConnectionInfo env metadataDbUrl rci (Just poolSettings) False PG.ReadCommitted
+      res <- runTxWithMinimalPool bciMetadataConnInfo $ downgradeCatalog bciDefaultPostgres opts initTime
       either (throwErrJExit DowngradeProcessError) (liftIO . print) res
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
@@ -131,7 +143,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
     mkMinimalPool connInfo = do
       pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
       let connParams = PG.defaultConnParams {PG.cpConns = 1}
-      liftIO $ PG.initPGPool connInfo connParams pgLogger
+      liftIO $ PG.initPGPool connInfo J.Null connParams pgLogger
 
 -- | A specification of all EKG metrics tracked in `runApp`.
 data

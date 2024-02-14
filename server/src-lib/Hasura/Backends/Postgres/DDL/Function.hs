@@ -18,16 +18,17 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.Base.Error
-import Hasura.GraphQL.Schema.NamingCase
+import Hasura.Function.Cache
+import Hasura.Function.Common (getFunctionAggregateGQLName, getFunctionArgsGQLName, getFunctionGQLName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -65,7 +66,7 @@ buildFunctionInfo ::
   SourceName ->
   QualifiedFunction ->
   SystemDefined ->
-  FunctionConfig ->
+  FunctionConfig ('Postgres pgKind) ->
   FunctionPermissionsMap ->
   RawFunctionInfo ('Postgres pgKind) ->
   Maybe Text ->
@@ -95,8 +96,8 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
     throwValidateError = MV.dispute . pure
 
     validateFunction = do
-      unless (has _Right $ qualifiedObjectToName qf) $
-        throwValidateError FunctionNameNotGQLCompliant
+      unless (has _Right $ qualifiedObjectToName qf)
+        $ throwValidateError FunctionNameNotGQLCompliant
       when hasVariadic $ throwValidateError FunctionVariadic
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
       unless returnsTab $ throwValidateError FunctionReturnNotTable
@@ -110,8 +111,8 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
       -- This is the one exception where we do some validation. We're not
       -- commited to this check, and it would be backwards compatible to remove
       -- it, but this seemed like an obvious case:
-      when (funVol /= FTVOLATILE && _fcExposedAs == Just FEAMutation) $
-        throwValidateError NonVolatileFunctionAsMutation
+      when (funVol /= FTVOLATILE && _fcExposedAs == Just FEAMutation)
+        $ throwValidateError NonVolatileFunctionAsMutation
       -- If 'exposed_as' is omitted we'll infer it from the volatility:
       let exposeAs = flip fromMaybe _fcExposedAs $ case funVol of
             FTVOLATILE -> FEAMutation
@@ -147,9 +148,9 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
       pure
         ( functionInfo,
           SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITable @('Postgres pgKind) retTable
+            ( SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITable @('Postgres pgKind) retTable
             )
             DRTable
         )
@@ -157,19 +158,20 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
     validateFunctionArgNames = do
       let argNames = mapMaybe faName functionArgs
           invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
-      unless (null invalidArgs) $
-        throwValidateError $
-          FunctionInvalidArgumentNames invalidArgs
+      unless (null invalidArgs)
+        $ throwValidateError
+        $ FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
       case _fcSessionArgument of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
-          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
-            throwValidateError $
-              FunctionInvalidSessionArgument sessionArgName
-          fmap Seq.fromList $
-            forM functionArgs $ \arg ->
+          unless (any (\arg -> Just sessionArgName == faName arg) functionArgs)
+            $ throwValidateError
+            $ FunctionInvalidSessionArgument sessionArgName
+          fmap Seq.fromList
+            $ forM functionArgs
+            $ \arg ->
               if Just sessionArgName == faName arg
                 then do
                   let argTy = _qptName $ faType arg
@@ -180,7 +182,8 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
 
     showErrors allErrors =
       "the function "
-        <> qf <<> " cannot be tracked "
+        <> qf
+        <<> " cannot be tracked "
         <> makeReasonMessage allErrors showOneError
 
     showOneError = \case

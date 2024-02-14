@@ -1,0 +1,20 @@
+[
+  {
+    "data": {
+      "getLatestActorId": 7
+    }
+  },
+  {
+    "data": {
+      "getLatestActorId": 7
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field getLatestActorId on type Query is not allowed for user_2"
+      }
+    ]
+  }
+]

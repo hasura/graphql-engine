@@ -1,0 +1,16 @@
+.menuExternalLink {
+  align-items: center;
+}
+
+.sidebar_link_wrapper {
+  display: flex;
+  align-items: center;
+  svg {
+    margin-left: 0.5rem;
+  }
+
+  //   second svg in case of cloud-and-enterprise icon
+  svg:nth-child(2) {
+    margin-left: 0;
+  }
+}

@@ -158,6 +158,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
       });
     }
   });
+
   const rowsFormatted = rows.map(r => {
     let formattedRow: any = {};
     Object.keys(r).forEach((col: string) => {
@@ -165,7 +166,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
     });
     formattedRow = {
       ...formattedRow,
-      status: <div>{getInvocationLogStatus(r.status)}</div>,
+      status: <div>{getInvocationLogStatus(r.http_status || r.status)}</div>,
       created_at: r.created_at && (
         <div>{convertDateTimeToLocale(r.created_at)}</div>
       ),

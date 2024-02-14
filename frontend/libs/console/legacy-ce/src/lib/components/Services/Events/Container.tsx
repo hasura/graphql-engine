@@ -28,7 +28,7 @@ import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import { getEventTriggers } from '../../../metadata/selector';
 import { useGetCronTriggers } from './CronTriggers/Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Container: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
@@ -64,7 +64,7 @@ const Container: React.FC<Props> = props => {
 
   const sidebarContent = (
     <Analytics name="EventsSidebar" {...REDACT_EVERYTHING}>
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={isDataEventsRoute(currentLocation) ? styles.active : ''}

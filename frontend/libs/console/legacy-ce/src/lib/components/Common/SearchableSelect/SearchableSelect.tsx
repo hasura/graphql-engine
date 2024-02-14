@@ -1,17 +1,17 @@
 import React, { ReactText, useState, useMemo, useEffect, useRef } from 'react';
-import Select, {
+import { ReactSelect } from './../../../new-components/Form';
+import {
   components,
   createFilter,
   OptionProps,
-  OptionTypeBase,
-  ValueType,
+  OnChangeValue,
 } from 'react-select';
 
 import { isArray, isObject } from '../utils/jsUtils';
 
 const { Option } = components;
 
-const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
+const CustomOption: React.FC<OptionProps<any>> = props => {
   return (
     <div
       title={props.data.description || ''}
@@ -25,32 +25,36 @@ const CustomOption: React.FC<OptionProps<OptionTypeBase>> = props => {
 type Option = { label: string; value: string };
 
 export interface SearchableSelectProps {
-  options: OptionTypeBase | ReactText[];
-  onChange: (value: ValueType<OptionTypeBase> | string) => void;
+  options: any | ReactText[];
+  onChange: (value: OnChangeValue<any, boolean> | string) => void;
   value?: Option | string;
   bsClass?: string;
   styleOverrides?: Record<PropertyKey, any>;
-  placeholder: string;
-  filterOption: 'prefix' | 'fulltext';
+  placeholder?: string;
+  filterOption?: 'prefix' | 'fulltext';
   isCreatable?: boolean;
   onSearchValueChange?: (v: string | undefined | null) => void;
-  createNewOption?: (v: string) => ValueType<OptionTypeBase>;
+  createNewOption?: (v: string) => OnChangeValue<any, boolean>;
+  isClearable?: boolean;
 }
+
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
   options,
   onChange,
   value,
   bsClass,
   styleOverrides,
-  placeholder,
-  filterOption,
+  placeholder = 'Select...',
+  filterOption = 'prefix',
   isCreatable,
   createNewOption,
   onSearchValueChange,
+  isClearable,
 }) => {
   const [searchValue, setSearchValue] = useState<string | null>(null);
+  const [localValue, setLocalValue] = useState<Option | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const selectedItem = useRef<ValueType<OptionTypeBase> | string>(null);
+  const selectedItem = useRef<OnChangeValue<any, boolean> | string>(null);
 
   const inputValue = useMemo(() => {
     // if input is not focused we don't want to show inputValue
@@ -66,18 +70,48 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   useEffect(() => {
     if (onSearchValueChange) onSearchValueChange(searchValue);
   }, [searchValue]);
+  useEffect(() => {
+    let tempValue: Option | null;
+    if (value === '') {
+      setLocalValue(null);
+    } else {
+      if (value && !isObject(value)) {
+        tempValue = { value: value as string, label: value as string };
+      } else {
+        tempValue = value as Option;
+      }
+      setLocalValue(tempValue);
+    }
+  }, [value]);
 
   const onMenuClose = () => {
     if (selectedItem.current) onChange(selectedItem.current);
-    else if (createNewOption) onChange(createNewOption(searchValue || ''));
+    else if (createNewOption && isCreatable)
+      onChange(createNewOption(searchValue || ''));
 
     setIsFocused(false);
     setSearchValue(null);
     selectedItem.current = null;
   };
-  const onSelect = (v: ValueType<OptionTypeBase> | string) => {
-    selectedItem.current = v;
-  };
+  const onSelect = React.useCallback(
+    (v: OnChangeValue<any, boolean>) => {
+      let tempValue: Option | null;
+
+      // Force update when field is cleared
+      if (v === null) {
+        onChange('');
+      }
+
+      if (v && !isObject(v)) {
+        tempValue = { value: v as string, label: v as string };
+      } else {
+        tempValue = v as Option;
+      }
+      setLocalValue(tempValue);
+      selectedItem.current = tempValue;
+    },
+    [selectedItem]
+  );
   const onFocus = () => {
     setIsFocused(true);
     let ipValue;
@@ -117,29 +151,20 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     });
   }
 
-  if (value && !isObject(value)) {
-    value = { value: value as string, label: value as string };
-  }
-
-  if (isCreatable && createNewOption) {
-    if (searchValue) {
-      options = [createNewOption(searchValue), ...(options as Option[])];
-    }
-  }
-
   return (
-    <Select
+    <ReactSelect
       isSearchable
+      isClearable={isClearable}
       blurInputOnSelect
       components={{ Option: CustomOption }}
       classNamePrefix={bsClass}
       placeholder={placeholder}
       options={options as Option[]}
       onChange={onSelect}
-      value={value as Option}
+      value={localValue}
       onFocus={onFocus}
       onBlur={onMenuClose}
-      inputValue={inputValue}
+      defaultInputValue={inputValue}
       onInputChange={(s: string) => setSearchValue(s)}
       styles={customStyles}
       filterOption={searchValue ? customFilter : null}

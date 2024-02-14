@@ -1,15 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Table } from '../hasura-metadata-types';
-import { Button } from '../../new-components/Button';
-import { useFireNotification } from '../../new-components/Notifications';
+import { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
-import Legend from './components/Legend';
-import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
-import { MODE, Relationship } from './types';
+import { Button } from '../../new-components/Button';
+import {
+  MetadataSelectors,
+  useMetadata,
+  useSyncResourceVersionOnMount,
+} from '../hasura-metadata-api';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+  Table,
+  isBulkAtomicResponseError,
+} from '../hasura-metadata-types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
-import { NOTIFICATIONS } from './components/constants';
+import Legend from './components/Legend';
 import { RenderWidget } from './components/RenderWidget/RenderWidget';
-import { useInvalidateMetadata } from '../hasura-metadata-api';
+import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
+import { NOTIFICATIONS } from './components/constants';
+import { MODE, Relationship } from './types';
+import { useDriverCapabilities } from '../Data/hooks/useDriverCapabilities';
+import { Feature } from '../DataSource';
+import Skeleton from 'react-loading-skeleton';
+import { useAppDispatch } from '../../storeHooks';
+import { updateSchemaInfo } from '../../components/Services/Data/DataActions';
+import { DisplayToastErrorMessage } from '../Data/components/DisplayErrorMessage';
+import { hasuraToast } from '../../new-components/Toasts';
+import { safeParseErrors } from './hooks/useCreateTableRelationships/utils';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;
@@ -27,9 +43,22 @@ export const DatabaseRelationships = ({
     mode: undefined,
     relationship: undefined,
   });
-  const { fireNotification } = useFireNotification();
 
-  const invalidateMetadata = useInvalidateMetadata();
+  const { data: driver } = useMetadata(
+    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+  );
+  const dispatch = useAppDispatch();
+
+  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
+
+  const { data: areForeignKeysSupported, isLoading } = useDriverCapabilities({
+    dataSourceName,
+    select: data => {
+      if (data === Feature.NotImplemented) return false;
+
+      return data.data_schema?.supports_foreign_keys;
+    },
+  });
 
   const onCancel = () => {
     setTabState({
@@ -38,34 +67,61 @@ export const DatabaseRelationships = ({
     });
   };
 
-  // just invalidate metadata when this screen loads for the first time
-  // why? because the user might be coming from a redux based paged and the resource_version might gone out of sync
-  useEffect(() => {
-    invalidateMetadata();
-  }, [invalidateMetadata]);
+  useSyncResourceVersionOnMount({
+    componentName: 'DatabaseRelationships',
+  });
 
   const onError = (err: Error) => {
-    if (mode)
-      fireNotification({
+    if (mode) {
+      hasuraToast({
         type: 'error',
         title: NOTIFICATIONS.onError[mode],
         message: err?.message ?? '',
       });
+      if (isLoadSchemaRequired) {
+        dispatch(updateSchemaInfo());
+      }
+    }
   };
 
-  const onSuccess = () => {
-    if (mode)
-      fireNotification({
-        type: 'success',
-        title: 'Success!',
-        message: NOTIFICATIONS.onSuccess[mode],
-      });
+  const onSuccess = (data: BulkAtomicResponse | BulkKeepGoingResponse) => {
+    if (mode) {
+      /**
+       * Errors for BulkAtomic are reported with a 500/400 response from the server. We aleady handle this
+       * with onError callback
+       */
+      const errors = Array.isArray(data)
+        ? data.filter(isBulkAtomicResponseError)
+        : [];
+
+      if (errors.length) {
+        hasuraToast({
+          type: 'error',
+          title: NOTIFICATIONS.onError[mode],
+          children: (
+            <DisplayToastErrorMessage message={safeParseErrors(errors)} />
+          ),
+        });
+      } else {
+        hasuraToast({
+          type: 'success',
+          title: 'Success!',
+          message: NOTIFICATIONS.onSuccess[mode],
+        });
+      }
+
+      if (isLoadSchemaRequired) {
+        dispatch(updateSchemaInfo());
+      }
+    }
 
     setTabState({
       mode: undefined,
       relationship: undefined,
     });
   };
+
+  if (isLoading) return <Skeleton count={10} height={20} />;
 
   return (
     <div className="my-2">
@@ -81,7 +137,12 @@ export const DatabaseRelationships = ({
           }}
         />
 
-        <SuggestedRelationships dataSourceName={dataSourceName} table={table} />
+        {areForeignKeysSupported && (
+          <SuggestedRelationships
+            dataSourceName={dataSourceName}
+            table={table}
+          />
+        )}
 
         <Legend />
       </div>

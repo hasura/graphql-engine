@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 -- | Types and subroutines related to constructing transformations on
 -- HTTP requests.
 module Hasura.RQL.DDL.Webhook.Transform.Request
@@ -27,8 +25,7 @@ where
 
 import Control.Arrow (left)
 import Control.Lens qualified as Lens
-import Data.Aeson (FromJSON, ToJSON, (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions qualified as KFunc
 import Data.Bifunctor
 import Data.ByteString (ByteString)
@@ -36,33 +33,11 @@ import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class (Template (..), TemplatingEngine (..), TransformErrorBundle (..), UnescapedTemplate, encodeScalar, wrapUnescapedTemplate)
+import Hasura.RQL.Types.Webhook.Transform.Request (RequestTransformCtx (..), Version (..))
 import Hasura.Session (SessionVariables)
 import Kriti.Error qualified as Kriti
 import Kriti.Parser qualified as Kriti
 import Network.HTTP.Client.Transformable qualified as HTTP
-
--------------------------------------------------------------------------------
-
--- | Common context that is made available to all request transformations.
-data RequestTransformCtx = RequestTransformCtx
-  { rtcBaseUrl :: Maybe Aeson.Value,
-    rtcBody :: Aeson.Value,
-    rtcSessionVariables :: Maybe SessionVariables,
-    rtcQueryParams :: Maybe Aeson.Value,
-    rtcEngine :: TemplatingEngine
-  }
-
-instance ToJSON RequestTransformCtx where
-  toJSON RequestTransformCtx {..} =
-    let required =
-          [ "body" .= rtcBody,
-            "session_variables" .= rtcSessionVariables
-          ]
-        optional =
-          [ ("base_url" .=) <$> rtcBaseUrl,
-            ("query_params" .=) <$> rtcQueryParams
-          ]
-     in Aeson.object (required <> catMaybes optional)
 
 -- | A smart constructor for constructing the 'RequestTransformCtx'
 --
@@ -76,16 +51,16 @@ mkReqTransformCtx ::
   HTTP.Request ->
   RequestTransformCtx
 mkReqTransformCtx url sessionVars rtcEngine reqData =
-  let rtcBaseUrl = Just $ Aeson.toJSON url
+  let rtcBaseUrl = Just $ J.toJSON url
       rtcBody =
-        let mBody = Lens.view HTTP.body reqData >>= Aeson.decode @Aeson.Value
-         in fromMaybe Aeson.Null mBody
+        let mBody = Lens.preview (HTTP.body . HTTP._RequestBodyLBS) reqData >>= J.decode @J.Value
+         in fromMaybe J.Null mBody
       rtcSessionVariables = sessionVars
       rtcQueryParams =
         let queryParams =
               Lens.view HTTP.queryParams reqData & fmap \(key, val) ->
                 (TE.decodeUtf8 key, fmap TE.decodeUtf8 val)
-         in Just $ Aeson.toJSON queryParams
+         in Just $ J.toJSON queryParams
    in RequestTransformCtx {..}
 
 -------------------------------------------------------------------------------
@@ -99,11 +74,11 @@ mkReqTransformCtx url sessionVars rtcEngine reqData =
 runRequestTemplateTransform ::
   Template ->
   RequestTransformCtx ->
-  Either TransformErrorBundle Aeson.Value
+  Either TransformErrorBundle J.Value
 runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..} =
   let context =
         [ ("$body", rtcBody),
-          ("$session_variables", Aeson.toJSON rtcSessionVariables)
+          ("$session_variables", J.toJSON rtcSessionVariables)
         ]
           <> catMaybes
             [ ("$query_params",) <$> rtcQueryParams,
@@ -112,7 +87,7 @@ runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..}
       kritiFuncs = KFunc.sessionFunctions rtcSessionVariables
       eResult = KFunc.runKritiWith (unTemplate $ template) context kritiFuncs
    in eResult & left \kritiErr ->
-        let renderedErr = Aeson.toJSON kritiErr
+        let renderedErr = J.toJSON kritiErr
          in TransformErrorBundle [renderedErr]
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
@@ -123,7 +98,7 @@ validateRequestTemplateTransform ::
 validateRequestTemplateTransform Kriti (Template template) =
   bimap packBundle (const ()) $ Kriti.parser $ TE.encodeUtf8 template
   where
-    packBundle = TransformErrorBundle . pure . Aeson.toJSON . Kriti.serialize
+    packBundle = TransformErrorBundle . pure . J.toJSON . Kriti.serialize
 
 validateRequestTemplateTransform' ::
   TemplatingEngine ->
@@ -131,28 +106,6 @@ validateRequestTemplateTransform' ::
   Validation TransformErrorBundle ()
 validateRequestTemplateTransform' engine =
   fromEither . validateRequestTemplateTransform engine
-
--------------------------------------------------------------------------------
-
--- | 'RequestTransform' Versioning
-data Version
-  = V1
-  | V2
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (Hashable, NFData)
-
-instance FromJSON Version where
-  parseJSON v = do
-    version :: Int <- Aeson.parseJSON v
-    case version of
-      1 -> pure V1
-      2 -> pure V2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
-
-instance ToJSON Version where
-  toJSON = \case
-    V1 -> Aeson.toJSON @Int 1
-    V2 -> Aeson.toJSON @Int 2
 
 -------------------------------------------------------------------------------
 
@@ -180,8 +133,8 @@ runUnescapedRequestTemplateTransform' ::
   UnescapedTemplate ->
   Validation TransformErrorBundle ByteString
 runUnescapedRequestTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedRequestTemplateTransform context unescapedTemplate
+  fromEither
+    $ runUnescapedRequestTemplateTransform context unescapedTemplate
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
 validateRequestUnescapedTemplateTransform ::

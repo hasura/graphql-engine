@@ -1,7 +1,6 @@
-import React from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
-// import BootstrapModalButton from 'react-bootstrap/lib/Button';
+import clsx from 'clsx';
 import CustomCopy from './CustomCopy';
+import { Dialog } from '@hasura/console-legacy-ce';
 
 import { transformedVals } from '../Operations/utils';
 import styles from '../Metrics.module.scss';
@@ -57,6 +56,22 @@ const TraceGraph = props => {
   return root ? <FlameGraph data={root} height={200} width={375} /> : null;
 };
 
+const LabelValue = props => {
+  const { label, value, className } = props;
+  return (
+    <div className={className}>
+      <div className={clsx('bg-white rounded p-2', className)}>
+        <div className="text-slate-500 text-base mr-1 whitespace-nowrap">
+          {label}
+        </div>
+        <div>
+          <strong>{value}</strong>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Modal = props => {
   const { onHide, data, nullData, configData } = props;
 
@@ -68,7 +83,7 @@ const Modal = props => {
     analyzeVariables = configData.analyze_query_variables;
   }
 
-  const renderSessonVars = () => {
+  const renderSessionVars = () => {
     const { user_vars: userVars } = data;
     const userVarKeys = Object.keys(userVars);
     const sessionVariables = {};
@@ -78,12 +93,15 @@ const Modal = props => {
       });
     }
     return (
-      <div
-        className={`${styles.resetInfoWrapperPadd} ${styles.alignedCustomCopy} ${styles.paddingTop}`}
-      >
+      <div className="rounded bg-white text-sm">
         <CustomCopy
-          label="SESSION VARIABLES"
+          label={
+            <LabelValue className="inline-block" label="Session variables" />
+          }
           copy={JSON.stringify(sessionVariables, null, 2)}
+          displayColon={false}
+          displayAcknowledgement={false}
+          contentMaxHeight="200px"
         />
       </div>
     );
@@ -136,11 +154,19 @@ const Modal = props => {
         d = 'Enable response body analysis';
       }
       return (
-        <div
-          className={`${styles.resetInfoWrapperPadd} ${styles.alignedCustomCopy}
-          }`}
-        >
-          <CustomCopy label="EMPTY ARRAYS & NULLS IN RESPONSE" copy={d} />
+        <div className="rounded bg-white text-sm">
+          <CustomCopy
+            label={
+              <LabelValue
+                className="inline-block"
+                label="Empty arrays & nulls in response"
+              />
+            }
+            copy={d}
+            displayColon={false}
+            displayAcknowledgement={false}
+            contentMaxHeight="200px"
+          />
         </div>
       );
     }
@@ -152,7 +178,7 @@ const Modal = props => {
       const formattedError = JSON.stringify(requestError, null, 2);
       return (
         <div className={styles.boxwrapper + ' ' + styles.errorBox}>
-          <div className={styles.errorMessage}>ERROR:</div>
+          <LabelValue label="Error:" />
           <div className={styles.errorBox}>
             <code className={styles.queryCode}>
               <pre style={{ whitespace: 'pre-wrap' }}>{formattedError}</pre>
@@ -168,14 +194,37 @@ const Modal = props => {
     if (query) {
       const { query: graphQLQuery, variables } = query;
       const queryElement = (
-        <CustomCopy label={'OPERATION STRING'} copy={graphQLQuery} />
+        <div className="rounded bg-white text-sm">
+          <CustomCopy
+            label={
+              <LabelValue className="inline-block" label="Operation string" />
+            }
+            copy={graphQLQuery}
+            displayColon={false}
+            displayAcknowledgement={false}
+            contentMaxHeight="200px"
+          />
+        </div>
       );
       renderItem.push(queryElement);
       if (variables && analyzeVariables) {
         try {
           const formattedVar = JSON.stringify(variables, null, 2);
           const variablesElement = [
-            <CustomCopy label={'QUERY VARIABLES'} copy={formattedVar} />,
+            <div className="rounded bg-white text-sm">
+              <CustomCopy
+                label={
+                  <LabelValue
+                    className="inline-block"
+                    label="Query variables"
+                  />
+                }
+                copy={formattedVar}
+                displayColon={false}
+                displayAcknowledgement={false}
+                contentMaxHeight="200px"
+              />
+            </div>,
           ];
           renderItem.push(variablesElement);
         } catch (e) {
@@ -191,10 +240,17 @@ const Modal = props => {
     if (generatedSql) {
       try {
         return (
-          <CustomCopy
-            label={'GENERATED SQL'}
-            copy={JSON.stringify(generatedSql, null, 2)}
-          />
+          <div className="rounded bg-white text-sm">
+            <CustomCopy
+              label={
+                <LabelValue className="inline-block" label="Generated Query" />
+              }
+              copy={JSON.stringify(generatedSql, null, 2)}
+              displayColon={false}
+              displayAcknowledgement={false}
+              contentMaxHeight="200px"
+            />
+          </div>
         );
       } catch (e) {
         console.error(e);
@@ -207,166 +263,113 @@ const Modal = props => {
     if (!requestHeaders) return null;
     try {
       const stringified = JSON.stringify(requestHeaders, null, 2);
-      return <CustomCopy label="REQUEST HEADERS" copy={stringified} />;
+      return (
+        <div className="rounded bg-white text-sm">
+          <CustomCopy
+            label={
+              <LabelValue className="inline-block" label="Request headers:" />
+            }
+            copy={stringified}
+            displayColon={false}
+            displayAcknowledgement={false}
+            contentMaxHeight="200px"
+          />
+        </div>
+      );
     } catch (e) {
       console.log(e);
     }
   };
 
   return (
-    <BootstrapModal
+    <Dialog
       id="operationInspect"
-      onHide={onHide}
-      show
-      size="modal-lg"
-      className={styles.modalWrapper}
-    >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Inspect
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body
-        className={styles.modalContainer}
-        style={{ maxHeight: '986px' }}
-      >
-        <div
-          className={
-            styles.noPadd +
-            ' col-md-6 ' +
-            styles.borderRight +
-            ' ' +
-            styles.flexColumn
-          }
-        >
-          <div className={styles.infoWrapper}>
-            <div className={`${styles.infoField} ${styles.paddingBottom}`}>
-              <div className={styles.information}>
-                TIMESTAMP: <span>{new Date(time).toLocaleString()}</span>
-              </div>
-              {/*
-              <div className={styles.information}>
-                ID: <span>{id}</span>
-              </div>
-              */}
-              <div className={styles.information}>
-                OPERATION NAME: <span>{operationName || 'N/A'}</span>
-              </div>
-              <div className={styles.information}>
-                OPERATION ID: <span>{operationId || 'N/A'}</span>
-              </div>
-              <div className={styles.information}>
-                REQUEST ID: <span>{requestId}</span>
-              </div>
-              <div
-                className={
-                  styles.information +
-                  ' ' +
-                  styles.borderBottom +
-                  ' ' +
-                  styles.addPaddBottom
-                }
-              >
-                TRANSPORT: <span>{transport}</span>
-              </div>
-              {transport === 'ws' ? (
-                <div className={styles.borderBottom + ' ' + styles.paddingTop}>
-                  <div className={styles.information}>
-                    WEBSOCKET ID: <span>{websocketId}</span>
-                  </div>
-                  <div className={styles.information}>
-                    WEBSOCKET OPERATION ID: <span>{websocketOperationId}</span>
-                  </div>
-                  {operationType === 'subscription' ? (
-                    <div className={styles.information}>
-                      SUBSCRIPTION STATUS <span>{status}</span>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
+      onClose={onHide}
+      hasBackdrop
+      size="xxxl"
+      title={
+        <div className="font-normal text-slate-900 flex gap-2 text-left w-full">
+          <div>
+            <div>
+              <span className="text-slate-500">Operation </span>
+              <strong>{operationName || 'N/A'}</strong>
             </div>
-            <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
-              {/*
-              <div className={styles.information}>
-                CLIENT ID: <span>{clientId}</span>
-              </div>
-              */}
-              <div className={styles.information}>
-                CLIENT NAME: <span>{client_name || 'N/A'}</span>
-              </div>
-              <div
-                className={`${styles.information} ${styles.noPaddingBottom}`}
-              >
-                ROLE: <span>{role || 'N/A'}</span>
-              </div>
+            <div className="text-sm">
+              <span className="text-slate-500">Id </span>
+              {operationId || 'N/A'}
             </div>
           </div>
-          {renderSessonVars()}
-          <div className={`${styles.infoWrapper} ${styles.noPaddingTop}`}>
-            <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
-              <div
-                className={`
-                  ${styles.information} ${styles.borderTop} ${styles.paddingTop}
-                `}
-              >
-                EXECUTION TIME:{' '}
-                <span>
-                  {('execution_time' in transformedVals &&
-                    transformedVals.execution_time(executionTime)) ||
-                    executionTime}{' '}
-                  ms
-                </span>
-              </div>
-              <div
-                className={`
-                  ${styles.information} ${styles.paddingTop}
-                `}
-              >
-                TIMING
-                <div className={styles.paddingTop}>
-                  {trace && trace?.length && <TraceGraph trace={trace} />}
-                </div>
-              </div>
-              <div className={`${styles.information} ${styles.addPaddBottom}`}>
-                REQUEST SIZE:{' '}
-                <span>
-                  {(transformedVals.hasOwnProperty('request_size') &&
-                    transformedVals.request_size(requestSize)) ||
-                    requestSize}{' '}
-                  kB
-                </span>
-                <br />
-                RESPONSE SIZE:{' '}
-                <span>
-                  {('response_size' in transformedVals &&
-                    transformedVals.response_size(responseSize)) ||
-                    responseSize}{' '}
-                  kB
-                </span>
-              </div>
-            </div>
+          <div className="text-base flex-grow text-right pr-6 pt-2">
+            <LabelValue
+              label="Timestamp:"
+              value={new Date(time).toLocaleString()}
+              className="bg-transparent flex justify-end"
+            />
+          </div>
+        </div>
+      }
+    >
+      <div
+        className={`border border-top overflow-y-auto flex w-full text-left bg-slate-100`}
+      >
+        <div className="flex flex-col flex-shrink p-4 pr-2 gap-4 w-1/2">
+          <LabelValue label="Request Id" value={requestId} />
+          <LabelValue label="Transport" value={transport} />
+          {transport === 'ws' ? (
+            <>
+              <LabelValue label="Websocket Id" value={websocketId} />
+              <LabelValue
+                label="Websocket operation Id"
+                value={websocketOperationId}
+              />
+              {operationType === 'subscription' ? (
+                <LabelValue label="Subscription status" value={status} />
+              ) : null}
+            </>
+          ) : null}
+          <LabelValue label="Client name" value={role || 'N/A'} />
+          <LabelValue label="Role" value={client_name || 'N/A'} />
+          <LabelValue
+            label="Request size"
+            value={
+              ((transformedVals.hasOwnProperty('request_size') &&
+                transformedVals.request_size(requestSize)) ||
+                requestSize) + ' kB'
+            }
+          />
+          <LabelValue
+            label="Response size"
+            value={
+              (('response_size' in transformedVals &&
+                transformedVals.response_size(responseSize)) ||
+                responseSize) + ' kB'
+            }
+          />
+          {renderSessionVars()}
+          <div>
+            <LabelValue
+              label="Execution time"
+              value={
+                (('execution_time' in transformedVals &&
+                  transformedVals.execution_time(executionTime)) ||
+                  executionTime) + ' ms'
+              }
+            />
+            <LabelValue
+              label="Timing"
+              value={trace && trace?.length && <TraceGraph trace={trace} />}
+            />
           </div>
           {renderError()}
           {renderResponseAnalysis()}
         </div>
-        <div className={styles.noPadd + ' col-md-6'}>
+        <div className="flex flex-col flex-shrink p-4 gap-4 w-1/2">
           {renderOperationQuery()}
           {renderGeneratedSql()}
           {renderRequestHeaders()}
-          {/*
-          <div className={styles.infoWrapper}>
-            <div className={styles.information}>
-              GENERATED SQL:{' '}
-              <button className={styles.analyzeBtn}>ANALYZE</button>
-            </div>
-          </div>
-          <div className={styles.boxwrapper + ' ' + styles.errorBox}>
-            <div className={styles.box} />
-          </div>
-          */}
         </div>
-      </BootstrapModal.Body>
-    </BootstrapModal>
+      </div>
+    </Dialog>
   );
 };
 

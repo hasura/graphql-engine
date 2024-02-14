@@ -8,7 +8,6 @@ import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import { Button } from '../../../../new-components/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
-import { isImportFromOpenAPIEnabled } from '../../../../utils';
 import { FaEdit, FaFileImport } from 'react-icons/fa';
 import { Badge } from '../../../../new-components/Badge';
 
@@ -44,7 +43,7 @@ class Landing extends React.Component {
         <div className="ml-md">
           <Button
             icon={<FaEdit />}
-            data-test="data-create-actions"
+            data-testid="data-create-actions"
             mode="primary"
             onClick={handleClick}
           >
@@ -59,35 +58,31 @@ class Landing extends React.Component {
     return (
       <Analytics name="Actions" {...REDACT_EVERYTHING}>
         <div>
-          <div className="p-5">
+          <div className="p-5 bootstrap-jail">
             <Helmet title={`${pageTitle} | Hasura`} />
             <div>
               <div className={'flex'}>
                 <h2 className="font-bold text-3xl pr-3">Actions</h2>
                 {getAddBtn()}
-                {isImportFromOpenAPIEnabled(window.__env) && (
-                  <Analytics
-                    name="action-tab-btn-import-action-from-openapi"
-                    passHtmlAttributesToChildren
+                <Analytics
+                  name="action-tab-btn-import-action-from-openapi"
+                  passHtmlAttributesToChildren
+                >
+                  <Button
+                    icon={<FaFileImport />}
+                    className="ml-2"
+                    onClick={() => {
+                      dispatch(
+                        push(`${globals.urlPrefix}${appPrefix}/manage/add-oas`)
+                      );
+                    }}
                   >
-                    <Button
-                      icon={<FaFileImport />}
-                      className="ml-2"
-                      onClick={() => {
-                        dispatch(
-                          push(
-                            `${globals.urlPrefix}${appPrefix}/manage/add-oas`
-                          )
-                        );
-                      }}
-                    >
-                      Import from OpenAPI
-                      <Badge className="ml-2 font-xs" color="purple">
-                        New
-                      </Badge>
-                    </Button>
-                  </Analytics>
-                )}
+                    Import from OpenAPI
+                    <Badge className="ml-2 font-xs" color="purple">
+                      New
+                    </Badge>
+                  </Button>
+                </Analytics>
               </div>
               <hr className="mt-5 mb-5" />
               {getIntroSection()}

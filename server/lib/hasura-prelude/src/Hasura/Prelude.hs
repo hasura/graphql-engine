@@ -4,6 +4,9 @@
 
 module Hasura.Prelude
   ( module M,
+    HashMap,
+    InsOrdHashMap,
+    mapKeys,
 
     -- * Maybe
     catMaybes,
@@ -32,6 +35,7 @@ module Hasura.Prelude
     bsToTxt,
     lbsToTxt,
     txtToBs,
+    txtToLbs,
     base64Decode,
     tshow,
 
@@ -64,6 +68,7 @@ module Hasura.Prelude
     findWithIndex,
     alphabet,
     alphaNumerics,
+    labelMe,
 
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
@@ -76,8 +81,11 @@ import Control.Applicative as M (Alternative (..), liftA2)
 import Control.Arrow as M (first, second, (&&&), (***), (<<<), (>>>))
 import Control.DeepSeq as M (NFData, deepseq, force)
 import Control.Lens as M (ix, (%~))
+import Control.Monad as M
 import Control.Monad.Base as M
 import Control.Monad.Except as M
+import Control.Monad.Fix as M
+import Control.Monad.IO.Class as M
 import Control.Monad.Identity as M
 import Control.Monad.Reader as M
 import Control.Monad.State.Strict as M
@@ -111,10 +119,10 @@ import Data.Foldable as M
 import Data.Function as M (on, (&))
 import Data.Functor as M (($>), (<&>))
 import Data.Functor.Const as M (Const)
-import Data.HashMap.Strict as M (HashMap, mapKeys)
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict as HashMap (HashMap, mapKeys)
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet as M (HashSet)
 import Data.Hashable as M (Hashable)
 import Data.List as M
@@ -159,6 +167,7 @@ import Data.Void as M (Void, absurd)
 import Data.Word as M (Word64)
 import Debug.Trace qualified as Debug (trace, traceM)
 import GHC.Clock qualified as Clock
+import GHC.Conc
 import GHC.Generics as M (Generic)
 import System.IO.Unsafe (unsafePerformIO) -- for custom trace functions
 import Text.Pretty.Simple qualified as PS
@@ -171,16 +180,16 @@ import Prelude as M hiding (fail, init, lookup)
 
 -- | Performs default 'Applicative' action if 'Nothing' is
 -- given. Otherwise returns content of 'Just' pured to 'Applicative'.
-onNothing :: Applicative m => Maybe a -> m a -> m a
+onNothing :: (Applicative m) => Maybe a -> m a -> m a
 onNothing m act = maybe act pure m
 
 -- | Monadic version of 'onNothing'.
-onNothingM :: Monad m => m (Maybe a) -> m a -> m a
+onNothingM :: (Monad m) => m (Maybe a) -> m a -> m a
 onNothingM m act = m >>= (`onNothing` act)
 
 -- | Perform some operation on 'Just', given the field inside the
 -- 'Just'. Like most good things in life, this is a specialized 'for_'.
-onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
+onJust :: (Applicative m) => Maybe a -> (a -> m ()) -> m ()
 onJust = for_
 
 -- | Like 'when', but return either 'Nothing' if the predicate was 'False',
@@ -188,7 +197,7 @@ onJust = for_
 --
 -- > whenMaybe True  (print 1) == fmap Just (print 1)
 -- > whenMaybe False (print 1) == pure Nothing
-whenMaybe :: Applicative m => Bool -> m a -> m (Maybe a)
+whenMaybe :: (Applicative m) => Bool -> m a -> m (Maybe a)
 whenMaybe True = fmap Just
 whenMaybe False = const $ pure Nothing
 
@@ -221,7 +230,7 @@ spanMaybeM f = go . toList
 -- | Upgrade a 'Maybe' to a 'MaybeT'.
 --
 -- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistMaybe
-hoistMaybe :: Applicative m => Maybe b -> MaybeT m b
+hoistMaybe :: (Applicative m) => Maybe b -> MaybeT m b
 hoistMaybe = MaybeT . pure
 
 --------------------------------------------------------------------------------
@@ -229,11 +238,11 @@ hoistMaybe = MaybeT . pure
 
 -- | Eliminate an 'Either' by puring the 'Right' value and applying an
 -- applicative action to the 'Left' value.
-onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
+onLeft :: (Applicative m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e
 
 -- | Similar to 'onLeft', but accepts a monadic action on its LHS.
-onLeftM :: Monad m => m (Either e a) -> (e -> m a) -> m a
+onLeftM :: (Monad m) => m (Either e a) -> (e -> m a) -> m a
 onLeftM e f = e >>= (`onLeft` f)
 
 -- | Map over the 'Left' value of an 'Either'. This is a
@@ -242,13 +251,13 @@ mapLeft :: (e1 -> e2) -> Either e1 a -> Either e2 a
 mapLeft = Data.Bifunctor.first
 
 -- | Like 'liftEither', but accepts a monadic action.
-liftEitherM :: MonadError e m => m (Either e a) -> m a
+liftEitherM :: (MonadError e m) => m (Either e a) -> m a
 liftEitherM action = action >>= liftEither
 
 -- | Upgrade an 'Either' to an 'ExceptT'.
 --
 -- cf. http://hackage.haskell.org/package/errors-2.3.0/docs/src/Control.Error.Util.html#hoistEither
-hoistEither :: Applicative m => Either e a -> ExceptT e m a
+hoistEither :: (Applicative m) => Either e a -> ExceptT e m a
 hoistEither = ExceptT . pure
 
 --------------------------------------------------------------------------------
@@ -257,7 +266,7 @@ hoistEither = ExceptT . pure
 -- | 'choice' ps tries to apply the actions in the list ps in order,
 -- until one of them succeeds. Returns the value of the succeeding
 -- action.
-choice :: Alternative f => [f a] -> f a
+choice :: (Alternative f) => [f a] -> f a
 choice = asum
 
 -- | Nondeterministically choose an element from a Foldable collection.
@@ -279,38 +288,45 @@ lbsToTxt = bsToTxt . BL.toStrict
 txtToBs :: Text -> B.ByteString
 txtToBs = TE.encodeUtf8
 
+-- | UTF8 encode a 'Text' to 'BL.ByteString'.
+txtToLbs :: Text -> BL.ByteString
+txtToLbs = BL.fromStrict . TE.encodeUtf8
+
 -- | Base64 decode a 'Text' to 'B.ByteString'.
 base64Decode :: Text -> BL.ByteString
 base64Decode =
   Base64.decodeLenient . BL.fromStrict . txtToBs
 
 -- | Given 'Show' @a@, convert @a@ into a 'Text'.
-tshow :: Show a => a -> Text
+tshow :: (Show a) => a -> Text
 tshow = T.pack . show
 
 --------------------------------------------------------------------------------
 -- Trace debugging
 
 -- | Labeled, prettified 'traceShowId'.
-ltrace :: Show a => String -> a -> a
+ltrace :: (Show a) => String -> a -> a
 ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
-{-# WARNING ltrace "ltrace left in code" #-}
+
+{- HLINT ignore ltrace -}
 
 -- | Labeled, prettified 'traceShowM'.
-ltraceM :: Applicative m => Show a => String -> a -> m ()
+ltraceM :: (Applicative m) => (Show a) => String -> a -> m ()
 ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
-{-# WARNING ltraceM "ltraceM left in code" #-}
+
+{- HLINT ignore ltraceM -}
 
 -- | Trace a prettified value to a file.
-traceToFile :: Show a => FilePath -> a -> a
+traceToFile :: (Show a) => FilePath -> a -> a
 traceToFile filepath x =
   Debug.trace
     ("tracing to " <> filepath)
     (unsafePerformIO (TLIO.writeFile filepath (PS.pShowNoColor x) $> x))
-{-# WARNING traceToFile "traceToFile left in code" #-}
+
+{- HLINT ignore traceToFile -}
 
 -- | Trace a prettified value to a file in an Applicative context.
-traceToFileM :: Applicative m => Show a => FilePath -> a -> m ()
+traceToFileM :: (Applicative m) => (Show a) => FilePath -> a -> m ()
 traceToFileM filepath x =
   Debug.traceM $
     unwords
@@ -318,23 +334,24 @@ traceToFileM filepath x =
         filepath,
         show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
       ]
-{-# WARNING traceToFileM "traceToFileM left in code" #-}
+
+{- HLINT ignore traceToFileM -}
 
 --------------------------------------------------------------------------------
 -- Map-related utilities
 
--- | Construct a 'Map.HashMap' from a '[]' given a key builder
+-- | Construct a 'HashMap.HashMap' from a '[]' given a key builder
 -- function @a -> k@.
 --
 -- TODO (from main): Move to 'Data.HashMap.Strict.Extended'; rename to
 -- fromListWith?
-mapFromL :: (Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
-mapFromL f = Map.fromList . map (\v -> (f v, v))
+mapFromL :: (Hashable k) => (a -> k) -> [a] -> HashMap.HashMap k a
+mapFromL f = HashMap.fromList . map (\v -> (f v, v))
 
 -- | Construct an 'InsOrdHashMap' from a '[]' given a key builder
 -- function @a -> k@.
 oMapFromL :: (Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
-oMapFromL f = OMap.fromList . map (\v -> (f v, v))
+oMapFromL f = InsOrdHashMap.fromList . map (\v -> (f v, v))
 
 --------------------------------------------------------------------------------
 -- Measuring and working with moments and durations
@@ -343,7 +360,7 @@ oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 -- result of the input action will be evaluated to WHNF.
 --
 -- The result 'DiffTime' is guaranteed to be >= 0.
-withElapsedTime :: MonadIO m => m a -> m (DiffTime, a)
+withElapsedTime :: (MonadIO m) => m a -> m (DiffTime, a)
 withElapsedTime ma = do
   stopTimer <- startTimer
   !a <- ma
@@ -418,3 +435,7 @@ alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
 {-# NOINLINE alphaNumerics #-}
 alphaNumerics :: String
 alphaNumerics = alphabet ++ "0123456789"
+
+-- | 'labelThread' on this thread
+labelMe :: (MonadIO m) => String -> m ()
+labelMe l = liftIO (myThreadId >>= flip labelThread l)

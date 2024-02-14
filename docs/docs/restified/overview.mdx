@@ -1,0 +1,69 @@
+---
+description: Caching in Hasura Cloud and EE
+sidebar_label: Overview
+title: 'RESTified Endpoints'
+keywords:
+  - hasura
+  - docs
+  - RESTified
+  - REST
+  - endpoint
+sidebar_position: 1
+hide_table_of_contents: true
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import VersionedLink from '@site/src/components/VersionedLink';
+import REST from '@site/static/icons/features/restified.svg';
+
+# <REST /> RESTified Endpoints
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      RESTified endpoints allow you to quickly and easily create REST endpoints without needing to write any custom
+      code. Any query or mutation can be converted into a RESTified endpoint, complete with query parameters, arguments,
+      and permissions.
+    </p>
+    <p>
+      You can also enable default CRUD REST endpoints on your data sources with just a few clicks. Once your
+      REST endpoints are created, you can export the corresponding OpenAPI documentation to allow automatic
+      integration with other services where available!
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/restified/quickstart/">Create a REST endpoint in less than 30 seconds.</VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/ZdrJMntMN2E"
+    frameBorder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  />
+</div>
+
+## Using RESTified Endpoints
+
+<div className="overview-gallery">
+  <VersionedLink to="/restified/restified-config#configuration-options">
+    <div className="card">
+      <h3>Configuration Options</h3>
+      <p>Check out the available configuration options for RESTified endpoints.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/restified/restified-config#queries">
+    <div className="card">
+      <h3>Queries</h3>
+      <p>Configure your queries as RESTified endpoints.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/restified/restified-config#mutations">
+    <div className="card">
+      <h3>Mutations</h3>
+      <p>Configure your mutations as RESTified endpoints.</p>
+    </div>
+  </VersionedLink>
+</div>

@@ -28,7 +28,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
 
   const {
     Form,
-    methods: { setError, formState, trigger, getValues },
+    methods: { setError },
   } = useConsoleForm({
     schema,
     options: {
@@ -46,7 +46,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
 
   return (
     <Form
-      onSubmit={values => {
+      onSubmit={(values: z.infer<typeof schema>) => {
         if (alreadyUseNames?.includes(values.name)) {
           setError('name', {
             type: 'manual',
@@ -60,7 +60,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
       <Dialog
         size="lg"
         hasBackdrop
-        title={defaultValues ? 'Edit connection' : 'Add connection'}
+        title={defaultValues ? 'Edit Connection' : 'Add Connection'}
         description={`${
           defaultValues ? 'Edit connection' : 'Add connections'
         } which will be available to be referenced in your dynamic connection template.`}
@@ -119,9 +119,13 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
           </div>
           <Dialog.Footer
             callToDeny="Cancel"
-            callToAction="Submit"
+            callToAction={
+              defaultValues ? 'Update Connection' : 'Add Connection'
+            }
             onClose={onClose}
             onSubmit={() => {}}
+            onSubmitAnalyticsName="data-tab-dynamic-db-routing-add-connection-submit"
+            onCancelAnalyticsName="data-tab-dynamic-db-routing-add-connection-cancel"
           />
         </>
       </Dialog>

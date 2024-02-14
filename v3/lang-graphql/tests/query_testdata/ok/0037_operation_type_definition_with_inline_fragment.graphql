@@ -1,0 +1,16 @@
+query SomeQuery(
+  $param1: String!
+  $param2: String!
+) {
+  item1(
+    param1: $param1
+    param2: $param2
+  ) {
+    id
+    ... on Fragment1 {
+      field3 {
+        field4
+      }
+    }
+  }
+}

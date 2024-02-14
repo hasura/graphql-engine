@@ -1,0 +1,162 @@
+---
+description: Hasura GraphQL Data Federation Supergraphs
+title: Hasura GraphQL federation architectures
+sidebar_label: Federation Architectures
+keywords:
+  - hasura
+  - docs
+  - data
+  - federation
+  - data federation
+  - supergraphs
+  - subgraphs
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Hasura GraphQL Federation Architectures
+
+## Introduction
+
+In GraphQL, a supergraph is a unified and coherent schema that combines multiple sub-graphs, each representing a
+distinct part of the overall data model. The distinctions between supergraphs and a sub-graphs is largely academic and
+depends on the boundaries between one or more data sources.
+
+<Thumbnail src="/img/data-federation/data-federation_federation-layer.png" alt="Data Federation Layer" className="no-shadow" />
+
+For example:
+
+** For an individual team ** A supergraph federates a set of databases and existing GraphQL or REST APIs all owned and
+managed by the team.
+
+** For an organization or Business unit ** a supergraph federates a set of APIs or other sources (including sub-graphs
+like the one above) which are owned and managed by individual teams.
+
+There are four common federation patterns with Hasura which are described in the below sections:
+
+1. Hasura multi-protocol data federation
+2. Hasura as a GraphQL gateway to REST services or microservices.
+3. Hasura as a federated supergraph gateway
+4. Hasura as a sub-graph
+
+## Hasura Multi-Protocol Data Federation
+
+Hasura works with data from multiple protocols or sources like databases of from differing providers, REST and GraphQL
+APIs. Hasura enables federating data across these disparate sources by creating relationships between types agnostic of
+their source:
+
+| Source                   | Database                                                                                                         | Existing REST API                                                                                   | Existing GraphQL API                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Database**             | [DB to DB relationships](/schema/postgres/remote-relationships/remote-source-relationships.mdx)                  | [Action relationships](/actions/action-relationships.mdx)                                           | [Database to Remote Schema Relationships](schema/postgres/remote-relationships/remote-schema-relationships.mdx)      |
+| **Existing REST API**    | [Action relationships](actions/action-relationships.mdx)                                                         | [Action to Actions relationships](/actions/action-relationships.mdx#action-to-action-relationships) | ❌                                                                                                                   |
+| **Existing GraphQL API** | [Database to Remote Schema Relationships](/schema/postgres/remote-relationships/remote-schema-relationships.mdx) | ❌                                                                                                  | [Remote schema to Remote schema relationships](/remote-schemas/remote-relationships/remote-schema-relationships.mdx) |
+
+<Thumbnail
+  src="/img/data-federation/data-federation_multi-protocol-federation.png"
+  alt="Multi-protocol federation with Hasura"
+  className="no-shadow"
+/>
+
+### When to use this architecture
+
+#### Technical standpoint
+
+- Your team has access to all the sources (databases, REST and GraphQL APIs) and you want to federate these sources into
+  a unified graph.
+- High performance joins across databases are required.
+
+#### Ownership standpoint
+
+- Your team has access to all the sources (databases, REST and GraphQL APIs) and you want to federate these sources into
+  a unified graph.
+
+### Comparison to alternatives
+
+#### GraphQL stitching
+
+Server-side GraphQL schema stitching requires that your sub-graphs are GraphQL APIs. With Hasura, you can federate
+existing REST and GraphQL APIs without adding any middleware.
+
+#### Apollo federation
+
+Hasura is multi-protocol and doesn't require a custom GraphQL specification as standard GraphQL is acceptable. No
+resolvers are needed in Hasura for graph evolution. Hasura also provides API management such as authentication,
+authorization, caching, etc.
+
+## Hasura as a GraphQL gateway to REST services or microservices
+
+Hasura allows you to expose existing REST APIs behind a single GraphQL API by declaratively adding these REST APIs as
+Actions in Hasura without any middleware by leveraging request/response transforms. Additionally, you can also create
+relationships across types from different REST APIs.
+
+This architecture pattern allows you the flexibility to rapidly evolve this graph by connecting Hasura to the underlying
+databases.
+
+<Thumbnail
+  src="/img/data-federation/data-federation_rest-api-federation.png"
+  alt="REST API federation with Hasura"
+  className="no-shadow"
+/>
+
+### When to use this architecture
+
+#### Technical standpoint
+
+- You want to expose a GraphQL API to consumers while leveraging existing REST APIs and/or microservices.
+- To accelerate development on this API by connecting Hasura to any underlying databases, the database(s) must be one of
+  those supported by Hasura like Postgres, SQL Server, MySQL, Oracle, etc.
+- You want to query data from multiple REST APIs in a single request from a client application.
+
+#### Ownership standpoint
+
+- Your team may or may not own or manage the underlying REST APIs but are allowed to consume or expose the APIs.
+
+## Hasura as a federated supergraph gateway
+
+Hasura can act as a centralized supergraph gateway to multiple multi-protocol (REST and GraphQL) sub-graphs that are
+possibly owned and managed by other teams. This architecture allows you to centralize access to these sub-graphs by
+providing a unified interface and managing authentication, authorization, caching, and more, centrally.
+
+<Thumbnail
+  src="/img/data-federation/data-federation_multi-protocol-federation-capabilities.png"
+  alt="Multi-protocol federation capabilities"
+  className="no-shadow"
+/>
+
+### When to use this architecture
+
+#### Technical standpoint
+
+- You want to create a unified/centralized API over multiple sub-graphs owned/maintained by either your teams or other
+  teams.
+
+#### Ownership standpoint
+
+- Your team may or may not own or manage the underlying REST APIs but are allowed to consume and expose the APIs.
+
+## Hasura as a sub-graph
+
+Hasura generates a GraphQL spec compliant schema so Hasura’s API can be included as a sub-graph into any specification
+compliant federation tools.
+
+Hasura also works with some proprietary federation tools. Hasura GraphQL Engine supports the Apollo Federation v1 spec,
+so you can add Hasura as a sub-graph in your Apollo federated gateway. You can also use Hasura generated table types in
+your other sub-graphs by enabling tables for [Apollo Federation](/data-federation/apollo-federation.mdx) explicitly.
+
+<Thumbnail
+  src="/img/data-federation/data-federation_third-party-federation-layer.png"
+  alt="Third-party federation with Hasura"
+  className="no-shadow"
+/>
+
+### When to use this architecture
+
+#### Technical standpoint
+
+- You have a Hasura-based GraphQL API and you need to make this API part of a Federation layer.
+
+#### Ownership standpoint
+
+- You own or manage the Hasura-based API and you or another team wants to include this API with others in a single
+  federated API.

@@ -8,9 +8,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..), permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -28,7 +28,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (setupTableAction' testEnvironment),
                   Fixture.SetupAction
@@ -73,15 +73,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  clearMetadataWithEventTriggersWithAutoCleanup opts
-
-clearMetadataWithEventTriggersWithAutoCleanup :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-clearMetadataWithEventTriggersWithAutoCleanup opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "doing clear_metadata with an event trigger containing auto cleanup config should succeed" do
-    it "remove source via replace_metadata, check that the event_log table is removed as well" $
-      \(testEnvironment, (_, _)) -> do
+    it "remove source via replace_metadata, check that the event_log table is removed as well"
+      $ \(testEnvironment, (_, _)) -> do
         -- remove the source using replace_meatadata API
         let clearMetadata =
               [yaml|
@@ -96,7 +92,7 @@ clearMetadataWithEventTriggersWithAutoCleanup opts =
 
         -- Checking if the clear_metadata call was successful
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment clearMetadata)
           expectedResponse
 
@@ -109,8 +105,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger

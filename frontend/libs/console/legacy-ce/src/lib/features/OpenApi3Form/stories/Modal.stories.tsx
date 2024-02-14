@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ActionInitialModal } from '../components/Modal';
 
@@ -11,11 +11,13 @@ export default {
     handleActionForm: { action: 'clicked' },
     handleOpenApiForm: { action: 'clicked' },
   },
-} as ComponentMeta<typeof ActionInitialModal>;
+} as Meta<typeof ActionInitialModal>;
 
-export const Primary: ComponentStory<typeof ActionInitialModal> = args => (
-  <ActionInitialModal
-    handleActionForm={args.handleActionForm}
-    handleOpenApiForm={args.handleOpenApiForm}
-  />
-);
+export const Primary: StoryObj<typeof ActionInitialModal> = {
+  render: args => (
+    <ActionInitialModal
+      handleActionForm={args.handleActionForm}
+      handleOpenApiForm={args.handleOpenApiForm}
+    />
+  ),
+};

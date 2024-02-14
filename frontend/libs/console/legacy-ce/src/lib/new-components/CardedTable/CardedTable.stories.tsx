@@ -1,11 +1,11 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { CardedTable } from './CardedTable';
 
 export default {
   title: 'components/CardedTable',
   component: CardedTable,
-} as ComponentMeta<typeof CardedTable>;
+} as Meta<typeof CardedTable>;
 
 const columns = ['name', 'title', 'email', 'role'];
 

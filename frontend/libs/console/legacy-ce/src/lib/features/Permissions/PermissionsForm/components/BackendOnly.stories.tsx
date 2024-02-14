@@ -1,12 +1,11 @@
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { z } from 'zod';
 import { SimpleForm } from '../../../../new-components/Form';
 
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 
 export default {
-  title: 'Features/Permissions/Form/Backend Only Section',
   component: BackendOnlySection,
   parameters: {
     // Disable storybook for playground stories
@@ -18,53 +17,54 @@ const schema = z.object({
   backendOnly: z.boolean(),
 });
 
-export const BackendOnlyEnabled: Story<BackEndOnlySectionProps> = args => (
-  <BackendOnlySection {...args} />
-);
-BackendOnlyEnabled.args = {
-  queryType: 'insert',
-};
-BackendOnlyEnabled.decorators = [
-  (StoryComponent: React.FC) => (
-    <SimpleForm
-      schema={schema}
-      onSubmit={() => {}}
-      options={{ defaultValues: { backendOnly: true } }}
-      className="p-4"
-    >
-      <StoryComponent />
-    </SimpleForm>
-  ),
-];
+export const BackendOnlyEnabled: StoryObj<BackEndOnlySectionProps> = {
+  args: {
+    queryType: 'insert',
+  },
 
-export const BackendOnlyDisabled: Story<BackEndOnlySectionProps> = args => (
-  <BackendOnlySection {...args} />
-);
-BackendOnlyDisabled.args = {
-  queryType: 'insert',
+  decorators: [
+    (StoryComponent: React.FC) => (
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {}}
+        options={{ defaultValues: { backendOnly: true } }}
+        className="p-4"
+      >
+        <StoryComponent />
+      </SimpleForm>
+    ),
+  ],
 };
-BackendOnlyDisabled.decorators = [
-  (StoryComponent: React.FC) => (
-    <SimpleForm
-      schema={schema}
-      onSubmit={() => {}}
-      options={{ defaultValues: { backendOnly: false } }}
-      className="p-4"
-    >
-      <StoryComponent />
-    </SimpleForm>
-  ),
-];
 
-export const Showcase: Story<BackEndOnlySectionProps> = args => (
-  <BackendOnlySection {...args} />
-);
-Showcase.args = {
-  queryType: 'insert',
-  defaultOpen: true,
+export const BackendOnlyDisabled: StoryObj<BackEndOnlySectionProps> = {
+  args: {
+    queryType: 'insert',
+  },
+
+  decorators: [
+    (StoryComponent: React.FC) => (
+      <SimpleForm
+        schema={schema}
+        onSubmit={() => {}}
+        options={{ defaultValues: { backendOnly: false } }}
+        className="p-4"
+      >
+        <StoryComponent />
+      </SimpleForm>
+    ),
+  ],
 };
-Showcase.parameters = {
-  // Enable storybook for Showcase stories
-  chromatic: { disableSnapshot: false },
+
+export const Showcase: StoryObj<BackEndOnlySectionProps> = {
+  args: {
+    queryType: 'insert',
+    defaultOpen: true,
+  },
+
+  parameters: {
+    // Enable storybook for Showcase stories
+    chromatic: { disableSnapshot: false },
+  },
+
+  decorators: BackendOnlyEnabled.decorators,
 };
-Showcase.decorators = BackendOnlyEnabled.decorators;

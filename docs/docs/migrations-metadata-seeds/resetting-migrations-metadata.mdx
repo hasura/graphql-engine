@@ -1,6 +1,6 @@
 ---
 sidebar_label: Reset Migrations and Metadata
-sidebar_position: 7
+sidebar_position: 10
 description: Reset Hasura Migrations and Metadata
 keywords:
   - hasura
@@ -66,6 +66,15 @@ server using the following commands:
 
 hasura migrate create "init" --from-server --database-name <database-name>
 ```
+
+:::info When using a non-Postgres database
+
+Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
+Should you wish to use a different database, you will need to manually create the migration files. For more information,
+please see this section of the [Migrations](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations)
+documentation.
+
+:::
 
 ```bash
 ## note down the version

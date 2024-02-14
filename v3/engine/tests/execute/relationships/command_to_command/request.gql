@@ -1,0 +1,9 @@
+query MyQuery {
+  getActorById(actor_id: 1) {
+    getMovieFromActor {
+      rating
+      title
+    }
+    name
+  }
+}

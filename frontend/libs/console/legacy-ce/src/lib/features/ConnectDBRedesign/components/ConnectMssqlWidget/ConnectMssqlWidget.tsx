@@ -1,6 +1,6 @@
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
 import { Button } from '../../../../new-components/Button';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { getDefaultValues, MssqlConnectionSchema, schema } from './schema';
 import { ReadReplicas } from './parts/ReadReplicas';
@@ -9,9 +9,11 @@ import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { generateMssqlRequestPayload } from './utils/generateRequests';
 import { ConnectionString } from './parts/ConnectionString';
-import { areReadReplicasEnabled } from '../ConnectPostgresWidget/utils/helpers';
 import { Collapsible } from '../../../../new-components/Collapsible';
 import { PoolSettings } from './parts/PoolSettings';
+import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectMssqlWidgetProps {
   dataSourceName?: string;
@@ -21,6 +23,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
   const { dataSourceName } = props;
 
   const isEditMode = !!dataSourceName;
+  const [tab, setTab] = useState('connectionDetails');
 
   const { data: metadataSource } = useMetadata(m =>
     m.metadata.sources.find(source => source.name === dataSourceName)
@@ -39,8 +42,8 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: 'Error while adding database',
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });
@@ -52,7 +55,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }
@@ -82,59 +85,82 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
       <div className="text-xl text-gray-600 font-semibold">
         {isEditMode ? 'Edit MSSQL Connection' : 'Connect MSSQL Database'}
       </div>
-      <Form onSubmit={handleSubmit}>
-        <InputField
-          name="name"
-          label="Database name"
-          placeholder="Database name"
-        />
-        <ConnectionString name="configuration.connectionInfo.connectionString" />
 
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">Advanced Settings</div>
-            }
-          >
-            <PoolSettings name="configuration.connectionInfo.poolSettings" />
-          </Collapsible>
-        </div>
+      <Tabs
+        value={tab}
+        onValueChange={value => setTab(value)}
+        items={[
+          {
+            value: 'connectionDetails',
+            label: 'Connection Details',
+            content: (
+              <div className="mt-sm">
+                <Form onSubmit={handleSubmit}>
+                  <InputField
+                    name="name"
+                    label="Database name"
+                    placeholder="Database name"
+                  />
+                  <ConnectionString name="configuration.connectionInfo.connectionString" />
 
-        {areReadReplicasEnabled() && (
-          <div className="mt-sm">
-            <Collapsible
-              triggerChildren={
-                <div className="font-semibold text-muted">Read Replicas</div>
-              }
-            >
-              <ReadReplicas name="configuration.readReplicas" />
-            </Collapsible>
-          </div>
-        )}
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          Advanced Settings
+                        </div>
+                      }
+                    >
+                      <PoolSettings name="configuration.connectionInfo.poolSettings" />
+                    </Collapsible>
+                  </div>
 
-        <div className="mt-sm">
-          <Collapsible
-            triggerChildren={
-              <div className="font-semibold text-muted">
-                GraphQL Customization
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          GraphQL Customization
+                        </div>
+                      }
+                    >
+                      <GraphQLCustomization name="customization" />
+                    </Collapsible>
+                  </div>
+
+                  <div className="mt-sm">
+                    <LimitedFeatureWrapper
+                      title="Looking to add Read Replicas?"
+                      id="read-replicas"
+                      description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+                    >
+                      <Collapsible
+                        triggerChildren={
+                          <div className="font-semibold text-muted">
+                            Read Replicas
+                          </div>
+                        }
+                      >
+                        <ReadReplicas name="configuration.readReplicas" />
+                      </Collapsible>
+                    </LimitedFeatureWrapper>
+                  </div>
+
+                  <div className="flex justify-end mt-sm">
+                    <Button
+                      type="submit"
+                      mode="primary"
+                      isLoading={isLoading}
+                      loadingText="Saving"
+                    >
+                      {isEditMode ? 'Update Connection' : 'Connect Database'}
+                    </Button>
+                  </div>
+                </Form>
               </div>
-            }
-          >
-            <GraphQLCustomization name="customization" />
-          </Collapsible>
-        </div>
-
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={isLoading}
-            loadingText="Saving"
-          >
-            {isEditMode ? 'Update Connection' : 'Connect Database'}
-          </Button>
-        </div>
-      </Form>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

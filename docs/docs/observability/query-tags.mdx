@@ -8,16 +8,16 @@ keywords:
   - cloud
   - query-tags
   - monitoring
-sidebar_position: 9
+sidebar_position: 6
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Query Tags
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge pro ee self />
 
 ## Introduction
 
@@ -115,10 +115,12 @@ In the above Metadata spec:
 4.  To add the `request_id` part of the query tags for any source, set the value of <em>omit_request_id</em> field to
     <em>false</em>.
 
-:::info
+:::info Compatibility with prepared statements
 
-When the `use_prepared_statements` flag for a Postgres source is enabled, omitting the `request_id` part of the query
-tags is recommended.
+The `use_prepared_statements` flag supported by Postgres sources is largely incompatible with query tags. With query
+tags enabled, two otherwise identical GraphQL queries may produce different SQL text, which negates the caching benefit
+of prepared statements. If both query tags and `use_prepared_statements` are enabled at the same time, the
+`omit_request_id` should be set to `true`.
 
 :::
 

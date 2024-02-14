@@ -3,31 +3,32 @@ import {
   isManualArrayRelationship,
   isManualObjectRelationship,
   isRemoteSchemaRelationship,
-  TableFkRelationships,
 } from '../../DataSource';
-import { MetadataTable, Table } from '../../hasura-metadata-types';
+import { MetadataTable } from '../../hasura-metadata-types';
+import { SuggestedRelationshipWithName } from '../components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import {
   LocalRelationship,
   Relationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
+  // SuggestedRelationship,
 } from '../types';
 import {
   adaptLegacyRemoteSchemaRelationship,
   adaptLocalArrayRelationshipWithFkConstraint,
   adaptLocalArrayRelationshipWithManualConfiguration,
   adaptLocalObjectRelationshipWithFkConstraint,
-  adaptLocalObjectRelationshipWithManualConfigruation,
+  adaptLocalObjectRelationshipWithManualConfiguration,
   adaptRemoteDatabaseRelationship,
   adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
 
-export function tableRelationships(
+export const getTableLocalRelationships = (
   metadataTable: MetadataTable | undefined,
-  table: Table,
   dataSourceName: string,
-  fkConstraints: TableFkRelationships[] | undefined
-): Relationship[] {
+  suggestedRelationships: SuggestedRelationshipWithName[]
+) => {
+  const table = metadataTable?.table;
   // adapt local array relationships
   const localArrayRelationships = (
     metadataTable?.array_relationships ?? []
@@ -39,32 +40,54 @@ export function tableRelationships(
         relationship,
       });
 
+    const arraySuggestedRelationship = suggestedRelationships.filter(
+      rel => rel.type === 'array'
+    );
     return adaptLocalArrayRelationshipWithFkConstraint({
       table,
       dataSourceName,
       relationship,
-      fkConstraints: fkConstraints ?? [],
+      suggestedRelationships: arraySuggestedRelationship,
     });
   });
 
-  // adapt local object relationships
   const localObjectRelationships = (
     metadataTable?.object_relationships ?? []
   ).map<LocalRelationship>(relationship => {
     if (isManualObjectRelationship(relationship))
-      return adaptLocalObjectRelationshipWithManualConfigruation({
+      return adaptLocalObjectRelationshipWithManualConfiguration({
         table,
         dataSourceName,
         relationship,
       });
+
+    const objectSuggestedRelationship = suggestedRelationships.filter(
+      rel => rel.type === 'object'
+    );
+
     return adaptLocalObjectRelationshipWithFkConstraint({
       table,
       dataSourceName,
       relationship,
-      fkConstraints: fkConstraints ?? [],
+      suggestedRelationships: objectSuggestedRelationship,
     });
   });
 
+  return [...localArrayRelationships, ...localObjectRelationships];
+};
+
+export const getAllTableRelationships = (
+  metadataTable: MetadataTable | undefined,
+  dataSourceName: string,
+  suggestedRelationships: SuggestedRelationshipWithName[]
+): Relationship[] => {
+  const table = metadataTable?.table;
+  // adapt local array relationships
+  const localRelationships = getTableLocalRelationships(
+    metadataTable,
+    dataSourceName,
+    suggestedRelationships
+  );
   const remoteRelationships = (metadataTable?.remote_relationships ?? []).map<
     RemoteSchemaRelationship | RemoteDatabaseRelationship
   >(relationship => {
@@ -89,9 +112,5 @@ export function tableRelationships(
     });
   });
 
-  return [
-    ...localArrayRelationships,
-    ...localObjectRelationships,
-    ...remoteRelationships,
-  ];
-}
+  return [...localRelationships, ...remoteRelationships];
+};

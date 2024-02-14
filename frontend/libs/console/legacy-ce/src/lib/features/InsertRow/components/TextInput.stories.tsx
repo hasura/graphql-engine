@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { handlers } from '../../../mocks/metadata.mock';
 import { TextInput } from './TextInput';
 import { userEvent, within } from '@storybook/testing-library';
@@ -14,36 +14,42 @@ export default {
     onChange: { action: true },
     onInput: { action: true },
   },
-} as ComponentMeta<typeof TextInput>;
+} as Meta<typeof TextInput>;
 
-const Template: ComponentStory<typeof TextInput> = args => (
+const Template: StoryFn<typeof TextInput> = args => (
   <div className="max-w-screen-md">
     <TextInput {...args} />
   </div>
 );
 
-export const Base = Template.bind({});
-Base.args = {
-  name: 'id',
-  disabled: false,
-  placeholder: 'placeholder...',
+export const Base = {
+  render: Template,
+
+  args: {
+    name: 'id',
+    disabled: false,
+    placeholder: 'placeholder...',
+  },
+
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Type in text input field
+    await userEvent.type(
+      await canvas.findByPlaceholderText('placeholder...'),
+      'John Doe'
+    );
+
+    await expect(args.onChange).toHaveBeenCalled();
+    await expect(args.onInput).toHaveBeenCalled();
+  },
 };
 
-export const Disabled = Template.bind({});
-Disabled.args = {
-  ...Base.args,
-  disabled: true,
-};
+export const Disabled = {
+  render: Template,
 
-Base.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  // Type in text input field
-  userEvent.type(
-    await canvas.findByPlaceholderText('placeholder...'),
-    'John Doe'
-  );
-
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+  args: {
+    ...Base.args,
+    disabled: true,
+  },
 };

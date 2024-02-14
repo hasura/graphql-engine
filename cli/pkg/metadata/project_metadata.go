@@ -68,6 +68,16 @@ func (p *ProjectMetadata) Diff() (io.Reader, error) {
 	return r, nil
 }
 
+// Export will return the server metadata
+func (p *ProjectMetadata) Export() (io.Reader, error) {
+	var op errors.Op = "metadata.ProjectMetadata.Export"
+	r, err := getModeHandler(p.ec.MetadataMode).Export(p)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return r, nil
+}
+
 type ProjectMetadataOption func(*ProjectMetadata)
 
 func WithAdminSecret(adminSecret string) ProjectMetadataOption {

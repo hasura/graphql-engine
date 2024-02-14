@@ -9,7 +9,7 @@ class ApiRequestWrapper extends Component {
     };
 
     return (
-      <div id="apiRequestBlock" className="px-md h-full w-full">
+      <div id="apiRequestBlock" className="px-md h-full w-full bootstrap-jail">
         {getAPIRequestDetailsSection()}
 
         <ApiRequest

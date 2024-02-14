@@ -2,7 +2,7 @@ import {
   BigQueryConfiguration,
   Source,
 } from '../../../../hasura-metadata-types';
-import { isArray } from 'lodash';
+import isArray from 'lodash/isArray';
 import { adaptGraphQLCustomization } from '../../GraphQLCustomization/utils/adaptResponse';
 import { BigQueryConnectionSchema } from '../schema';
 

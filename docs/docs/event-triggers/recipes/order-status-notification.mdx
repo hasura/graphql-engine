@@ -1,0 +1,314 @@
+---
+title: Using Event Triggers to send order-status-change notifications.
+description: Succinct, tested, and reusable code recipes for common use cases in Hasura.
+sidebar_label: Send a Notification when a Value Changes
+keywords:
+  - hasura
+  - docs
+  - recipes
+  - event triggers
+  - order
+  - status change
+  - notifications
+sidebar_position: 3
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Send a Notification when a Value Changes
+
+## Introduction
+
+Using Event Triggers allows you to call a webhook with a contextual payload whenever a specific event occurs in your
+database. In this recipe, we'll create an Event Trigger that will fire whenever the status of an order changes. We'll
+then send a notification to that user.
+
+<SampleAppBlock dependent />
+
+## Prerequisites
+
+Before getting started, ensure that you have the following in place:
+
+- The docs e-commerce sample app deployed to Hasura Cloud.
+
+:::info Tunneling your webhook endpoint from your local machine
+
+If you plan on using a webhook endpoint hosted on your own machine, ensure that you have a tunneling service such as
+[ngrok](https://ngrok.com/) set up so that your Cloud Project can communicate with your local machine.
+
+:::
+
+## Our model
+
+Event Triggers are designed to run when specific operations occur on a table, such as insertions, updates, and
+deletions. When architecting your own Event Trigger, you need to consider the following:
+
+- Which table's changes will initiate the Event Trigger?
+- Which operation(s) on that table will initiate the Event Trigger?
+- What should my webhook do with the data it receives?
+
+## Step 1: Create the Event Trigger
+
+Head to the `Events` tab of the Hasura Console and click `Create`:
+
+<Thumbnail
+  src="/img/event-triggers/recipes/review-moderation/click-create-event-trigger.png"
+  alt="Click Create"
+  width="1000px"
+/>
+
+## Step 2: Configure the Event Trigger
+
+First, provide a name for your trigger, e.g., `order_status_change`. Choose the `public` schema and the `orders` table.
+Then, select the `update` operation under `Trigger Operations`. Then, select the `status` column under
+`Listen columns for update`.
+
+Finally, enter a webhook URL that will be called when the event is triggered. This webhook will be responsible for
+parsing the body of the request and sending the notification to the user to whom order belongs; it can be hosted
+anywhere, and written in any language you like.
+
+The route on our webhook we'll use is `/order-status-change`. Below, we'll see what this looks like with a service like
+[ngrok](https://ngrok.com/), but the format will follow this template:
+
+```text
+https://<your-webhook-url>/order-status-change
+```
+
+:::info Tunneling your webhook endpoint
+
+Since our project is running on Hasura Cloud, and our handler will run on our local machine, we'll use ngrok to expose
+the webhook endpoint to the internet. This will allow us to expose a public URL that will forward requests to our local
+machine and the server we'll configure below.
+
+You'll need to modify your webhook URL to use the public URL provided by ngrok.
+
+After installing ngrok and
+[authenticating](https://ngrok.com/docs/secure-tunnels/ngrok-agent/tunnel-authtokens/#:~:text=Once%20you've%20signed%20up,make%20installing%20the%20authtoken%20simple.),
+you can do this by running:
+
+```bash
+ngrok http 4000
+```
+
+Then, copy the `Forwarding` value for use in our webhook 🎉
+
+:::
+
+Under `Advanced Settings`, we can configure the headers that will be sent with the request. We'll add an
+`authentication` header to prevent abuse of the endpoint and ensure that only Hasura can trigger the event. Set the
+`Key` as `secret-authorization-string` and the `Value` as `super_secret_string_123`:
+
+<Thumbnail
+  src="/img/event-triggers/recipes/review-moderation/event-trigger-secret-header.png"
+  alt="Add the secret header"
+  width="1000px"
+/>
+
+Before exiting, open the `Add Request Options Transform` section and check `POST`. Then, click `Create Event Trigger`.
+
+## Step 3: Create a webhook to handle the request
+
+Whenever a status is changed in the `orders` table, the Event Trigger fires. Hasura will send a request to the webhook
+URL you provided. In this example, we're simply going to send a `POST` request. Our webhook will parse the request,
+ensure the header is correct, and then send a notification to user in our application.
+
+Event Triggers sent by Hasura to your webhook as a request include a [payload](/event-triggers/payload.mdx) with `event`
+data nested inside the `body` object of the request. This `event` object can then be parsed and values extracted from it
+to be used in your webhook.
+
+Below, we've written an example of webhook. As we established earlier, this runs on port `4000`. If you're attempting to
+run this locally, follow the instructions below. If you're running this in a hosted environment, use this code as a
+guide to write your own webhook.
+
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
+
+Init a new project with `npm init` and install the following dependencies:
+
+```bash
+npm install express body-parser
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.js</code> and add the following code:
+</summary>
+
+```javascript
+const express = require('express');
+const bodyParser = require('body-parser');
+
+// get express sorted
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// notification for user about change in status of order
+async function sendNotification(userId, orderId, orderStatus) {
+  const response = await fetch(`<YOUR_PROJECT_ENDPOINT>`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-hasura-admin-secret': `<YOUR_ADMIN_SECRET>`,
+    },
+    body: JSON.stringify({
+      query: `
+                mutation InsertNotification($user_id: uuid!, $message: String!) {
+                    insert_notifications_one(object: {user_id: $user_id, message: $message}) {
+                        id
+                    }
+                }
+            `,
+      variables: {
+        user_id: userId,
+        message: `Status of Order #${orderId} is now ${orderStatus}.`,
+      },
+    }),
+  });
+  console.log(
+    `Notification sent. The user has received the following notification: Status of Order #${orderId} is now ${orderStatus}.`
+  );
+  const { data } = await response.json();
+  return data.insert_notifications_one;
+}
+
+// now we can write the actual handler using functions
+app.post('/order-status-change', async (req, res) => {
+  // check the header for auth
+  const authHeader = req.headers['secret-authorization-string'];
+  if (authHeader !== 'super_secret_string_123') {
+    return res.status(401).json({
+      message: 'Unauthorized',
+    });
+  }
+
+  // parse the status from the event payload
+  const orderStatus = req.body.event.data.new.status;
+  const orderId = req.body.event.data.new.id;
+  const userId = req.body.event.data.new.user_id;
+
+  // send notification to user
+  await sendNotification(userId, orderId, orderStatus);
+
+  // send some JSON to the client
+  res.json({
+    orderId: orderId,
+    orderStatus: orderStatus,
+  });
+});
+
+// start the server
+app.listen(4000, () => {
+  console.log('Server started on port 4000');
+});
+```
+
+</details>
+
+You can run the server by running `node index.js` in your terminal.
+
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import requests
+
+app = Flask(__name__)
+
+# Hasura and OpenAI config
+config = {
+    'url': '<YOUR_PROJECT_ENDPOINT>',
+    'secret': '<YOUR_ADMIN_SECRET>',
+}
+
+def sendNotification(user_id, order_id, order_status):
+    #REST Api call to HASURA
+    response = requests.post(
+        config["url"],
+        json={
+            "query": """
+        mutation InsertNotification($user_id: uuid!, $message: String!) {
+            insert_notifications_one(object: {user_id: $user_id, message: $message}) {
+                id
+            }
+        }
+        """,
+            "variables": {
+                "user_id": user_id,
+                "message": f"Status of Order #{order_id} is now {order_status}.",
+            },
+        },
+        headers={
+            "Content-Type": "application/json",
+            "x-hasura-admin-secret": config["secret"],
+        },
+    )
+    print(f"Notification sent. The user has received the following notification: Status of Order #{order_id} is now {order_status}.")
+    data = response.json()
+    return data.get("insert_notifications_one", None)
+
+
+@app.route('/order-status-change', methods=['POST'])
+def order_status_change():
+    # Confirm the authentication header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Get the user's name and email from the request body
+    data = request.get_json()
+    order_status = data['event']['data']['new']['status']
+    order_id = data['event']['data']['new']['id']
+    user_id = data['event']['data']['new']['user_id']
+
+    sendNotification(user_id, order_id, order_status)
+
+    return jsonify({'message': 'Order Change Notification sent!'})
+
+if __name__ == '__main__':
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
+  </TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
+
+## Step 4: Test the setup
+
+Head to the `Data` tab and modify one of the orders. Change the `status` to `delivered` and click `Save`. You should see
+your server log the following:
+
+```text
+Notification sent. The user has received the following notification: Status of Order #<ORDER_ID> is now delivered.
+```
+
+We can then head to our `notifications` table in the `Data` tab and we'll also see the new notification 🎉
+
+Feel free to customize the webhook implementation based on your specific requirements. Remember to handle error
+scenarios, implement necessary validations, and add appropriate security measures to your webhook endpoint.

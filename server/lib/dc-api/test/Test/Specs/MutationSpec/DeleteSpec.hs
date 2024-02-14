@@ -6,8 +6,11 @@ import Data.Aeson qualified as J
 import Data.Foldable (for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -54,7 +57,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
   usesDataset chinookTemplate $ it "can delete a range of rows" $ do
     let whereExp =
-          And
+          Data.mkAndExpr
             [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 10) invoiceLineIdScalarType),
               ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 20) invoiceLineIdScalarType)
             ]
@@ -115,11 +118,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
       let deleteOperation =
             mkDeleteOperation _tdInvoiceLinesTableName
               & dmoWhere ?~ whereExp
-      let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+      let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [DeleteOperation deleteOperation]
-              & mrTableRelationships .~ tableRelationships
+              & mrRelationships .~ tableRelationships
 
       response <- mutationGuarded mutationRequest
 
@@ -135,7 +138,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                     pure $ track ^? Data.field "Composer" . Data._ColumnFieldString /= Just "Eric Clapton"
                 )
 
-      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrTableRelationships .~ tableRelationships)
+      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrRelationships .~ tableRelationships)
       Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedRemainingRows
 
   for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
@@ -178,11 +181,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.singleton $ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -224,6 +227,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                                                           [ ("PlaylistId", _tdColumnField _tdPlaylistTracksTableName "PlaylistId"),
                                                             ("TrackId", _tdColumnField _tdPlaylistTracksTableName "TrackId")
                                                           ]
+                                                      & qOrderBy
+                                                        ?~ OrderBy
+                                                          mempty
+                                                          ( NonEmpty.fromList
+                                                              [ _tdOrderByColumn [] "PlaylistId" Ascending,
+                                                                _tdOrderByColumn [] "TrackId" Ascending
+                                                              ]
+                                                          )
                                                 )
                                             )
                                           )
@@ -233,19 +244,23 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
         let joinInPlaylistTracks (track :: HashMap FieldName FieldValue) =
               let trackId = track ^? Data.field "TrackId" . Data._ColumnFieldNumber
-                  playlistTracks = _tdPlaylistTracksRows & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                  playlistTracks =
+                    _tdPlaylistTracksRows
+                      & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                      & sortOn (\playlistTrack -> (playlistTrack ^? Data.field "PlaylistId", playlistTrack ^? Data.field "TrackId"))
                in Data.insertField "PlaylistTracks" (Data.mkSubqueryRowsFieldValue playlistTracks) track
 
         let joinInTrack (invoiceLine :: HashMap FieldName FieldValue) =
@@ -290,13 +305,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ RTable $ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -353,13 +369,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
-              ]
+              Set.fromList
+                [ RTable $ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  RTable $ Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
-                & mrTableRelationships .~ tableRelationships
+                & mrRelationships .~ tableRelationships
 
         response <- mutationGuarded mutationRequest
 
@@ -390,7 +407,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
         let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
         let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
         let whereExp =
-              And
+              Data.mkAndExpr
                 [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (Data.scalarValueComparison (J.String "Beverly") firstNameScalarType),
                   ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (Data.scalarValueComparison (J.String "Crusher") lastNameScalarType)
                 ]
@@ -435,7 +452,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in QueryRequest _tdInvoiceLinesTableName [] query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"

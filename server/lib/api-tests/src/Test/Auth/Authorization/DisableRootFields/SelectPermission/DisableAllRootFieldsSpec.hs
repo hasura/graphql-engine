@@ -7,9 +7,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -92,24 +92,24 @@ postgresSetupPermissions testEnv =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = describe "DisableAllRootFieldsSpec" $ do
+tests :: SpecWith TestEnvironment
+tests = describe "DisableAllRootFieldsSpec" $ do
   let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-User-Id", "1")]
   it "query root: 'list' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (listQuery testEnvironment))
       (listRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'pk' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (pkQuery testEnvironment))
       (pkRFDisabledExpectedResponse testEnvironment)
 
   it "query root: 'aggregate' root field is disabled and not accessible" $ \testEnvironment -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders (aggregateQuery testEnvironment))
       (aggRFDisabledExpectedResponse testEnvironment)
 
@@ -124,7 +124,7 @@ tests opts = describe "DisableAllRootFieldsSpec" $ do
           |]
 
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders queryTypesIntrospection)
       expectedResponse
 
@@ -137,6 +137,6 @@ tests opts = describe "DisableAllRootFieldsSpec" $ do
           |]
 
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders subscriptionTypesIntrospection)
       expectedResponse

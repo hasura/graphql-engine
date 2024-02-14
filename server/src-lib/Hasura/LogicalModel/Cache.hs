@@ -1,47 +1,31 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | The representation of logical models as derived from the schema cache.
 module Hasura.LogicalModel.Cache
   ( LogicalModelInfo (..),
     LogicalModelCache,
-    lmiRootFieldName,
-    lmiCode,
-    lmiReturns,
-    lmiArguments,
-    lmiPermissions,
-    lmiDescription,
   )
 where
 
-import Control.Lens (makeLenses)
-import Data.Aeson (ToJSON (toJSON), genericToJSON)
-import Hasura.CustomReturnType (CustomReturnType)
-import Hasura.LogicalModel.Metadata (InterpolatedQuery, LogicalModelArgumentName, LogicalModelName)
-import Hasura.LogicalModel.Types (NullableScalarType)
-import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend)
-import Hasura.RQL.Types.Table (RolePermInfoMap)
-import Hasura.SQL.Backend (BackendType)
+import Data.Aeson (ToJSON (..), genericToJSON)
+import Hasura.LogicalModel.Types (LogicalModelFields, LogicalModelName)
+import Hasura.Prelude hiding (first)
+import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendType (BackendType)
+import Hasura.Table.Cache (RolePermInfoMap)
 
 type LogicalModelCache b = HashMap LogicalModelName (LogicalModelInfo b)
 
--- | The type into which 'LogicalModelMetadata' is resolved in
--- 'Hasura/RQL/DDL/Schema/Cache.buildSchemaCacheRule'.
+-- | Description of a logical model for use in metadata (after schema cache)
 data LogicalModelInfo (b :: BackendType) = LogicalModelInfo
-  { _lmiRootFieldName :: LogicalModelName,
-    _lmiCode :: InterpolatedQuery LogicalModelArgumentName,
-    _lmiReturns :: CustomReturnType b,
-    _lmiArguments :: HashMap LogicalModelArgumentName (NullableScalarType b),
-    _lmiPermissions :: RolePermInfoMap b,
-    _lmiDescription :: Maybe Text
+  { _lmiName :: LogicalModelName,
+    _lmiFields :: LogicalModelFields b,
+    _lmiDescription :: Maybe Text,
+    _lmiPermissions :: RolePermInfoMap b
   }
-  deriving stock (Generic)
+  deriving (Show, Generic)
 
 instance
   (Backend b, ToJSON (RolePermInfoMap b)) =>
   ToJSON (LogicalModelInfo b)
   where
   toJSON = genericToJSON hasuraJSON
-
-makeLenses ''LogicalModelInfo

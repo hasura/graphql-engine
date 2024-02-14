@@ -32,7 +32,7 @@ The following are the most significant conceptual changes introduced in Hasura v
   unique "source name" that is used to identify it. Apart from Postgres, connecting to SQL server databases is also now
   supported.
 - Config for connecting a database used to be a startup configuration (i.e. set via env vars/flags) but since v2, it is
-  a part of Hasura Metadata and can be managed dynamically. See [connecting databases](/databases/connect-db/index.mdx).
+  a part of Hasura Metadata and can be managed dynamically. See [connecting databases](/databases/overview.mdx).
 - Hasura Metadata can now be stored in a separate dedicated Postgres DB.
 
 :::info Note
@@ -72,17 +72,22 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   i.e. `[{field1: sortOrder}, {field2: sortOrder}]` but it is also accepts a single object with multiple keys as an
   input, i.e. `{field1: sortOrder, field2: sortOrder}`. In earlier versions, Hasura's query parsing logic used to
   maintain the order of keys in the input object and hence the appropriate `order by` clauses with the fields in the
-  right order were generated .
+  right order were generated.
 
-  As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values) mentions that input object keys are
-  unordered, Hasura v2.0's new and stricter query parsing logic doesn't maintain the order of keys in the input object
-  taking away the guarantee of the generated `order by` clauses to have the fields in the given order.
+  As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values) specifies that input object keys are
+  unordered, Hasura v2.0's new and stricter query parsing logic doesn't maintain the order of keys in the input object,
+  removing the previous guarantee that the generated `order by` clauses specify the fields in the given order.
 
   For example: The query `fetch_users(order_by: {age: desc, name: asc}) {id name age}` which is intended to fetch users
   ordered by their age and then by their name is now not guaranteed to return results first ordered by age and then by
-  their name as the `order_by` input is passed as an object. To achieve the expected behavior, the following query
-  `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used which uses an array to define the
+  their name as the `order_by` input is passed as an object. To achieve the expected behavior, the query
+  `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used, which uses an array to define the
   order of fields to generate the appropriate `order by` clause.
+
+  This has an effect on query operators that depend on `order_by`, most notably `distinct_on`. The `distinct_on`
+  operator relies on the order of `order_by`, and therefore is also impacted by this change.
+
+  To avoid confusion and potentially-unwanted behavior, you should use an array value for all `order_by` clauses.
 
 - **Type name for computed fields' input argument has changed**
 
@@ -168,25 +173,19 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   with Hasura v2 instances. Hasura v2 will assume the `v2` Metadata and Migrations belong to a database connected with
   the name `default`.
 
-- A new optional env var `HASURA_GRAPHQL_METADATA_DATABASE_URL` is now introduced. When set, this Postgres database is
-  used to store the Hasura Metadata. If not set, the database set using `HASURA_GRAPHQL_DATABASE_URL` is used to store
-  the Hasura Metadata.
-
-  Either one of `HASURA_GRAPHQL_METADATA_DATABASE_URL` or `HASURA_GRAPHQL_DATABASE_URL` needs to be set with a Postgres
-  database to start a Hasura v2 instance as Hasura always needs a Postgres database to store its metadata.
-
-- The database set using the `HASURA_GRAPHQL_DATABASE_URL` env var is connected automatically with the name `default` in
-  Hasura v2 while updating an existing instance or while starting a fresh instance.
-
-  Setting this env var post initial setup/update will have no effect as the Hasura Metadata for data sources would
-  already have been initialized and the env var will be treated as any other custom env var.
-
-  It is now not mandatory to set this env var if a dedicated `HASURA_GRAPHQL_METADATA_DATABASE_URL` is set.
+- A new mandatory env var `HASURA_GRAPHQL_METADATA_DATABASE_URL` is now introduced and is mandatory for storing Hasura
+  Metadata.
 
 - Custom env vars can now be used to connect databases dynamically at runtime.
 
 - With support for multiple databases, older database specific env vars have been deprecated.
   [See details](#hasura-v2-env-changes)
+
+:::info Existing Metadata
+
+`HASURA_GRAPHQL_METADATA_DATABASE_URL` must be the connection string for where your metadata existed previously.
+
+:::
 
 ## Moving from Hasura v1 to Hasura v2 {#moving-from-hasura-v1-to-v2}
 
@@ -201,14 +200,12 @@ instance**.
 Post adding a database named `default`, the Hasura v2 instance should behave equivalently to the Hasura v1 instance and
 all previous workflows will continue working as they were.
 
-Refer to [connecting databases](/databases/connect-db/index.mdx) to add a database to Hasura v2.
+Refer to [connecting databases](/databases/quickstart.mdx) to add a database to Hasura v2.
 
 ### Migrate Hasura v1 instance to Hasura v2
 
 Hasura v2 is backwards compatible with Hasura v1. Hence simply updating the Hasura docker image version number and
-restarting your Hasura instance should work seamlessly. The database connected using the `HASURA_GRAPHQL_DATABASE_URL`
-env var will be added as a database with the name `default` automatically and all existing Metadata and Migrations will
-be assumed to belong to it.
+restarting your Hasura instance should work seamlessly.
 
 :::info Note
 
@@ -277,7 +274,7 @@ by reverting the Hasura docker image version and using the [downgrade command](/
 the Hasura Metadata catalogue changes:
 
 ```bash
-docker run -e HASURA_GRAPHQL_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
+docker run -e HASURA_METADATA_DATABASE_URL=$POSTGRES_URL hasura/graphql-engine:v2.0.0 graphql-engine downgrade --to-v1.3.3
 ```
 
 :::info Note

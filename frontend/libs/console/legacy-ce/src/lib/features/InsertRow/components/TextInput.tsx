@@ -21,7 +21,7 @@ export type TextInputProps = Omit<
 };
 
 export const baseInputTw =
-  'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-slate-300 placeholder:italic';
+  'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-slate-400';
 
 export const TextInput: React.VFC<TextInputProps> = ({
   name,
@@ -48,7 +48,6 @@ export const TextInput: React.VFC<TextInputProps> = ({
       type="text"
       className={clsx(inputTw, className || '')}
       disabled={disabled}
-      tabIndex={2}
       placeholder={placeholder}
     />
   );

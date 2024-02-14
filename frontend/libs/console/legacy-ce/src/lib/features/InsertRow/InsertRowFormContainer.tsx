@@ -1,10 +1,17 @@
 import { hasuraToast } from '../../new-components/Toasts';
-import { useState } from 'react';
 import { useInsertRow, FormData } from '../Data/hooks/useInsertRow';
 import { useListAllTableColumns } from '../Data/hooks/useListAllTableColumns';
 import { getPlaceholder } from './utils/getPlaceholder';
 import { Table } from '../hasura-metadata-types/source/table';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
+import { useTableInfo } from '../Data/hooks/useTableInfo';
+import { useMetadata } from '../hasura-metadata-api';
+import {
+  NATIVE_DRIVERS,
+  NativeDrivers,
+  SupportedDrivers,
+} from '../hasura-metadata-types';
+import { columnDataType } from '../DataSource/utils';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -15,7 +22,22 @@ export const InsertRowFormContainer = ({
   dataSourceName,
   table,
 }: InsertRowFormContainerProps) => {
-  const { columns, isLoading } = useListAllTableColumns(dataSourceName, table);
+  const { columns: tableColumns, isLoading: isLoadingColumns } =
+    useListAllTableColumns(dataSourceName, table);
+
+  const { data: driver, isLoading: isLoadingMetadata } = useMetadata(
+    m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
+  );
+
+  const isGdc = !NATIVE_DRIVERS.includes((driver || '') as NativeDrivers);
+
+  const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableInfo({
+    dataSourceName,
+    table,
+    isEnabled: isGdc,
+  });
+
+  const isLoading = isLoadingColumns || isLoadingTableInfo || isLoadingMetadata;
 
   const onInsertSuccess = () =>
     hasuraToast({
@@ -32,36 +54,45 @@ export const InsertRowFormContainer = ({
     });
   };
 
-  const { insertRow } = useInsertRow({
+  const { insertRow, isLoading: isInserting } = useInsertRow({
     dataSourceName,
     table,
     onSuccess: onInsertSuccess,
     onError: onInsertError,
   });
 
-  const [isInserting, setInserting] = useState(false);
-
   const onInsertRow = async (formData: FormData) => {
-    setInserting(true);
     await insertRow(formData);
-    setInserting(false);
   };
 
-  const columnsWithPlaceholder: InsertRowFormProps['columns'] = columns.map(
-    column => {
-      return {
-        ...column,
-        placeholder: getPlaceholder(column.dataType),
-      };
-    }
-  );
+  const columnsDefinitions = tableInfo?.columns;
+
+  const columns: InsertRowFormProps['columns'] = tableColumns.map(column => {
+    const columnInfo = columnsDefinitions?.find(
+      columnDefinition => columnDefinition.name === column.name
+    );
+
+    const dataType = columnInfo?.type || column.dataType;
+
+    return {
+      ...column,
+      insertable:
+        typeof columnInfo?.insertable !== 'undefined'
+          ? columnInfo?.insertable
+          : true,
+      description: columnInfo?.description || '',
+      dataType,
+      placeholder: getPlaceholder(columnDataType(dataType)),
+    };
+  });
 
   return (
     <InsertRowForm
-      columns={columnsWithPlaceholder}
+      columns={columns}
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}
+      driver={driver as SupportedDrivers}
     />
   );
 };

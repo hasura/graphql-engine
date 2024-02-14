@@ -18,8 +18,7 @@ runSetGraphqlSchemaIntrospectionOptions ::
   SetGraphqlIntrospectionOptions ->
   m EncJSON
 runSetGraphqlSchemaIntrospectionOptions introspectionOptions = do
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        metaSetGraphqlIntrospectionOptions .~ introspectionOptions
+  let metadataModifier = MetadataModifier $ metaSetGraphqlIntrospectionOptions .~ introspectionOptions
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache metadataModifier
   return successMsg

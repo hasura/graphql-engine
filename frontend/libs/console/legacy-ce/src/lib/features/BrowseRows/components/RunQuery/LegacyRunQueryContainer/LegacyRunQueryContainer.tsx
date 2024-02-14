@@ -16,11 +16,10 @@ import {
 } from './LegacyRunQueryContainer.utils';
 import { LegacyRunQuery } from './LegacyRunQuery';
 import { FiltersAndSortFormValues, UserQuery } from '../types';
-import { useLegacyTableColumns } from '../hooks/useLegacyTableColumns';
-import { useTableName } from '../hooks/useTableName';
-import { useDatabaseOperators } from '../hooks/useDatabaseOperators';
 import { useTableSchema } from '../hooks/useTableSchema';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTableColumns } from '../../../hooks';
+import { getTableDisplayName } from '../../../../DatabaseRelationships';
 
 type LegacyRunQueryContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
@@ -73,8 +72,13 @@ export const LegacyRunQueryContainer = ({
   ) as any;
   const limit = curFilter.limit;
 
-  const tableColumns = useLegacyTableColumns({ dataSourceName, table });
-  const tableOperators = useDatabaseOperators({ dataSourceName });
+  const {
+    data: {
+      columns: tableColumns = [],
+      supportedOperators: tableOperators = [],
+    } = {},
+  } = useTableColumns({ dataSourceName, table });
+  // const tableOperators = useDatabaseOperators({ dataSourceName });
   const tableSchema = useTableSchema(table);
 
   const onSubmit = (userQuery: UserQuery) => {
@@ -97,7 +101,7 @@ export const LegacyRunQueryContainer = ({
     );
   };
 
-  const tableName = useTableName({ dataSourceName, table });
+  const tableName = getTableDisplayName(table);
   const onExportData = (
     type: 'CSV' | 'JSON',
     formValues: FiltersAndSortFormValues

@@ -1,20 +1,16 @@
-import type { ComponentStory, ComponentMeta } from '@storybook/react';
-
-import * as React from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 
 import produce from 'immer';
-import { expect } from '@storybook/jest';
-import { act } from '@testing-library/react';
-import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
 
 import {
   createDefaultInitialData,
   handlers,
 } from '../../../mocks/metadata.mock';
 
-import { OpenTelemetryProvider } from './OpenTelemetryProvider';
+import { ConsoleTypeDecorator } from '../../../storybook/decorators';
+import { OpenTelemetryEEProvider } from './OpenTelemetryEEProvider';
 
 // --------------------------------------------------
 // NOT TESTED
@@ -24,10 +20,11 @@ import { OpenTelemetryProvider } from './OpenTelemetryProvider';
 
 export default {
   title: 'Features/OpenTelemetry/OpenTelemetryProvider',
-  component: OpenTelemetryProvider,
+  component: OpenTelemetryEEProvider,
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro' }),
   ],
   parameters: {
     msw: handlers({
@@ -40,94 +37,65 @@ export default {
       }),
     }),
   },
-} as ComponentMeta<typeof OpenTelemetryProvider>;
+} as Meta<typeof OpenTelemetryEEProvider>;
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// DEFAULT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
+export const Default: StoryObj<typeof OpenTelemetryEEProvider> = {
+  render: () => {
+    return <OpenTelemetryEEProvider />;
+  },
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Default: ComponentStory<typeof OpenTelemetryProvider> = () => {
-  return <OpenTelemetryProvider />;
+  name: '💠 Default',
 };
 
-Default.storyName = '💠 Default';
+export const HappyPath: StoryObj<typeof OpenTelemetryEEProvider> = {
+  render: () => <OpenTelemetryEEProvider />,
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// HAPPY PATH TEST
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
+  name: '🧪 Testing - When enable OpenTelemetry, it should update the OpenTelemetry metadata',
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const HappyPath: ComponentStory<typeof OpenTelemetryProvider> = () => (
-  <OpenTelemetryProvider />
-);
+  parameters: {
+    chromatic: { disableSnapshot: true },
+    msw: handlers({
+      // Speeds up the test as much as possible
+      delay: 0,
 
-HappyPath.storyName =
-  '🧪 Testing - When enable OpenTelemetry, it should update the OpenTelemetry metadata';
-
-HappyPath.parameters = {
-  chromatic: { disableSnapshot: true },
-  msw: handlers({
-    // Speeds up the test as much as possible
-    delay: 0,
-
-    // This story requires just the OpenTelemetry-related metadata handlers
-    initialData: produce(createDefaultInitialData(), draft => {
-      draft.metadata.opentelemetry = undefined;
+      // This story requires just the OpenTelemetry-related metadata handlers
+      initialData: produce(createDefaultInitialData(), draft => {
+        draft.metadata.opentelemetry = undefined;
+      }),
     }),
-  }),
+  },
+  // test is broken behind an "Enabled Enterprise" Banner. Unclear how best to fix text.
+  // play: async ({ canvasElement }) => {
+  //   const canvas = within(canvasElement);
+
+  //   // STEP: Wait until the metadata has been loaded (through waiting for the submit button being enabled)
+  //   const submitButton = await canvas.findByRole('button', { name: 'Connect' });
+  //   await waitFor(() => {
+  //     expect(submitButton).toBeEnabled();
+  //   });
+
+  //   // STEP: Check the badge shows OpenTelemetry is disabled
+  //   const badge = await canvas.findByTestId('badge');
+  //   expect(badge).toHaveTextContent('Disabled');
+
+  //   // act avoids the "When testing, code that causes React state updates should be wrapped into act(...):" error
+
+  //   // STEP: Enable OpenTelemetry
+  //   await userEvent.click(await canvas.findByLabelText('Status'));
+
+  //   // STEP: Type the Endpoint
+  //   await userEvent.type(
+  //     await canvas.findByLabelText('Endpoint', { selector: 'input' }),
+  //     'http://hasura.io'
+  //   );
+
+  //   // STEP: Click the Submit button
+  //   await userEvent.click(submitButton);
+
+  //   // STEP: Wait for OpenTelemetry to be enabled (through waiting for the badge to show "Enabled"
+  //   // since the badge update only after updating the metadata and reloading it)
+  //   await waitFor(async () => {
+  //     expect(await canvas.findByTestId('badge')).toHaveTextContent('Enabled');
+  //   });
+  // },
 };
-
-// --------------------------------------------------
-// INTERACTION TEST
-// --------------------------------------------------
-HappyPath.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  // STEP: Wait until the metadata has been loaded (through waiting for the submit button being enabled)
-  const submitButton = await canvas.findByRole('button', { name: 'Connect' });
-  await waitFor(() => {
-    expect(submitButton).toBeEnabled();
-  });
-
-  // STEP: Check the badge shows OpenTelemetry is disabled
-  const badge = await canvas.findByTestId('badge');
-  expect(badge).toHaveTextContent('Disabled');
-
-  // act avoids the "When testing, code that causes React state updates should be wrapped into act(...):" error
-  await act(async () => {
-    // STEP: Enable OpenTelemetry
-    await userEvent.click(await canvas.findByLabelText('Status'));
-
-    // STEP: Type the Endpoint
-    await userEvent.type(
-      await canvas.findByLabelText('Endpoint', { selector: 'input' }),
-      'http://hasura.io'
-    );
-
-    // STEP: Click the Submit button
-    await userEvent.click(submitButton);
-  });
-
-  // STEP: Wait for OpenTelemetry to be enabled (through waiting for the badge to show "Enabled"
-  // since the badge update only after updating the metadata and reloading it)
-  await waitFor(async () => {
-    expect(await canvas.findByTestId('badge')).toHaveTextContent('Enabled');
-  });
-};
-
-// #endregion

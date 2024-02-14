@@ -1,4 +1,4 @@
-cabal-version: 3.0
+cabal-version: 3.6
 name:          graphql-parser
 version:       0.2.0.0
 synopsis:      A native Haskell GraphQL parser.

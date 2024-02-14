@@ -106,6 +106,21 @@
         "testing-library/prefer-find-by": "warn",
         "testing-library/prefer-presence-queries": "warn"
       }
+    },
+    {
+      "files": [
+        "*.stories.@(ts|tsx|js|jsx|mjs|cjs)",
+        "*.story.@(ts|tsx|js|jsx|mjs|cjs)"
+      ],
+      "parserOptions": {
+        "project": [
+          "libs/console/legacy-ce/tsconfig.*?.json",
+          "libs/console/legacy-ce/.storybook/tsconfig.json"
+        ]
+      },
+      "rules": {
+        "@typescript-eslint/no-floating-promises": "error"
+      }
     }
   ]
 }

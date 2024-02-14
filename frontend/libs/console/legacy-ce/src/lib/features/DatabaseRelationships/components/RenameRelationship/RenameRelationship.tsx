@@ -3,24 +3,26 @@ import { z } from 'zod';
 import { Dialog } from '../../../../new-components/Dialog';
 import { InputField, SimpleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
 import { Relationship } from '../../types';
+import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+} from '../../../hasura-metadata-types';
 
 interface RenameRelationshipProps {
   relationship: Relationship;
   onCancel: () => void;
   onError?: (err: Error) => void;
-  onSuccess?: () => void;
+  onSuccess?: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
 }
 
 export const RenameRelationship = (props: RenameRelationshipProps) => {
   const { relationship, onCancel, onSuccess, onError } = props;
-  const { renameRelationship } = useManageLocalRelationship({
-    dataSourceName: relationship.fromSource,
-    table: relationship.fromTable,
-    onSuccess,
-    onError,
-  });
+  const { renameRelationships } = useCreateTableRelationships(
+    relationship.fromSource,
+    { onSuccess, onError }
+  );
 
   if (
     relationship.type === 'remoteDatabaseRelationship' ||
@@ -56,7 +58,16 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
           updatedName: z.string().min(1, 'Updated name cannot be empty!'),
         })}
         onSubmit={data => {
-          renameRelationship(relationship, data.updatedName);
+          renameRelationships({
+            data: [
+              {
+                name: relationship.name,
+                new_name: data.updatedName,
+                source: relationship.fromSource,
+                table: relationship.fromTable,
+              },
+            ],
+          });
         }}
       >
         <>

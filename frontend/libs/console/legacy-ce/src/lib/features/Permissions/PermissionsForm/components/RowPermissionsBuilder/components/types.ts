@@ -1,6 +1,8 @@
-import { Table } from '../../../../../hasura-metadata-types';
+import { Source, Table } from '../../../../../hasura-metadata-types';
 import { GraphQLType } from 'graphql';
 import { Relationship } from '../../../../../DatabaseRelationships';
+import { TableColumn } from '../../../../../DataSource';
+import { ComputedField } from '../../../../../../metadata/types';
 
 export type Operators = Record<
   string,
@@ -9,11 +11,10 @@ export type Operators = Record<
 
 export type Permissions = Record<string, any>;
 
-export type Columns = Array<{
-  name: string;
-  type: string;
-  graphQLType: GraphQLType;
-}>;
+export type Columns = Pick<
+  TableColumn,
+  'dataType' | 'name' | 'graphQLProperties'
+>[];
 
 export type Relationships = Array<Relationship>;
 
@@ -21,23 +22,30 @@ export type Tables = Array<{
   table: Table;
   columns: Columns;
   relationships: Relationships;
+  dataSource: Pick<Source, 'kind' | 'name'> | undefined;
+  computedFields: ComputedField[];
 }>;
 
+export type Operator = {
+  name: string;
+  inputStructure?: string;
+  inputType?: string;
+  type: string;
+  graphqlType?: GraphQLType;
+};
+
 export type Comparator = {
-  operators: Array<{
-    name: string;
-    operator: string;
-    defaultValue?: string;
-    type?: GraphQLType;
-  }>;
+  operators: Array<Operator>;
 };
 
 export type Comparators = Record<string, Comparator>;
 
 export type PermissionType =
   | 'column'
+  | 'computedField'
   | 'exist'
   | 'relationship'
+  | 'object'
   | 'value'
   | 'comparator';
 
@@ -45,11 +53,11 @@ export type RowPermissionsState = {
   operators: Operators;
   permissions: Permissions;
   comparators: Comparators;
-  table: Table;
-  tables: Tables;
   setValue: (path: string[], value: any) => void;
   setKey: (props: { path: string[]; key: any; type: PermissionType }) => void;
   setPermissions: (permissions: Permissions) => void;
+  loadRelationships?: (relationships: Relationships) => void;
+  isLoading?: boolean;
 };
 
 export type TypesContext = {
@@ -72,6 +80,10 @@ export type TableContext = {
   setComparator: (comparator: string | undefined) => void;
   columns: Columns;
   setColumns: (columns: Columns) => void;
+  computedFields: ComputedField[];
+  setComputedFields: (computedFields: ComputedField[]) => void;
   relationships: Relationships;
   setRelationships: (relationships: Relationships) => void;
 };
+
+export type TableToLoad = { source: string; table: Table }[];

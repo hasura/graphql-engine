@@ -1,0 +1,300 @@
+---
+sidebar_label: Filter using text values
+sidebar_position: 3
+description: Filter query results and search queries on Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter Using Text Values
+
+## Introduction
+
+The `_like`, `_nlike`, `_ilike`, `_nilike`, `_similar`, `_nsimilar`, `_regex`, `_nregex`, `_iregex`, `_niregex`
+operators are used for pattern matching on string/text fields.
+
+For more details on text search operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#text-operators).
+
+## \_like
+
+Fetch a list of articles whose titles contain the word “amet”:
+
+<GraphiQLIDE
+  query={`query {
+  articles(
+    where: {title: {_like: "%amet%"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet"
+      },
+      {
+        "id": 3,
+        "title": "amet justo morbi"
+      },
+      {
+        "id": 9,
+        "title": "sit amet"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_ilike
+
+This query will return all users whose name contains the string "john", regardless of case.
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _ilike: "%john%" } }) {
+    id
+    name
+  }
+}
+`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "id": 1,
+          "name": "John Doe"
+        },
+        {
+          "id": 2,
+          "name": "John Smith"
+        }
+      ]
+  }
+  `}
+/>
+
+## \_nilike
+
+This query would return all users whose name does not contain the string "John".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _nilike: "%John%" } }) {
+    name
+  }
+}
+`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "name": "Jane Doe"
+        },
+        {
+          "name": "Jane Smith"
+        }
+      ]
+  }
+  `}
+/>
+
+:::info Note
+
+`_like` is case-sensitive. Use `_ilike` for case-insensitive search.
+
+:::
+
+## \_similar
+
+Fetch a list of authors whose names begin with A or C:
+
+<GraphiQLIDE
+  query={`query {
+  authors(
+    where: {name: {_similar: "(A|C)%"}}
+  ) {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 4,
+        "name": "Anjela"
+      },
+      {
+        "id": 5,
+        "name": "Amii"
+      },
+      {
+        "id": 6,
+        "name": "Corny"
+      },
+      {
+        "id": 8,
+        "name": "April"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_nsimilar
+
+Fetch a list of authors whose names do not begin with A or C:
+
+<GraphiQLIDE
+  query={`query {
+  authors(
+    where: {name: {_nsimilar: "(A|C)%"}}
+  ) {
+    id
+    name
+  }
+}
+  `}
+  response={`
+  {
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin"
+      },
+      {
+        "id": 2,
+        "name": "Beltran"
+      },
+      {
+        "id": 3,
+        "name": "Sidney"
+      },
+      {
+        "id": 7,
+        "name": "Dorothy"
+      }
+    ]
+  }
+  `}
+/>
+
+:::info Note
+
+`_similar` and `_nsimilar` are case-sensitive.
+
+:::
+
+## \_regex
+
+Fetch a list of articles whose titles match the regex `[ae]met`:
+
+<GraphiQLIDE
+  query={`query {
+  articles(
+    where: {title: {_regex: "[ae]met"}}
+  ) {
+    id
+    title
+  }
+}`}
+  response={`{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet"
+      },
+      {
+        "id": 3,
+        "title": "cremet justo morbi"
+      },
+      {
+        "id": 9,
+        "title": "sit ametist"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_iregex
+
+This query will return all users whose name matches the regular expression `/^joh?n$/i`, which matches "John" and "Jon".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _iregex: "/^joh?n$/i" } }) {
+    id
+    name
+  }
+}`}
+  response={`{
+    "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe"
+      },
+      {
+        "id": 2,
+        "name": "Jon Smith"
+      }
+    ]
+  }`}
+/>
+
+## \_nregex
+
+The \_nregex operator in this GraphQL query is a negated regular expression filter that matches all users whose names do
+not start with the letter "J".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _nregex: "/^J/" } }) {
+    id
+    name
+  }
+}`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "id": 3,
+          "name": "Tom Smith"
+        },
+        {
+          "id": 4,
+          "name": "Alan Doe"
+        }
+      ]
+  }
+  `}
+/>
+
+:::info Note
+
+`_regex` is case-sensitive. Use `_iregex` for case-insensitive search.
+
+:::
+
+:::info Note
+
+`regex` operators are supported in in `v2.0.0` and above
+
+:::

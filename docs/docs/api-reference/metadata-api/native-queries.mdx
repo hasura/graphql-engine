@@ -1,0 +1,232 @@
+---
+sidebar_label: Native queries
+sidebar_position: 4
+description: Manage Native Queries with the Hasura Metadata API
+keywords:
+  - hasura
+  - docs
+  - Metadata API
+  - API reference
+  - logical models
+  - native queries
+---
+
+# Metadata API Reference: Native Queries
+
+## Introduction
+
+Track/untrack Native Queries in the Hasura GraphQL Engine.
+
+:::tip Supported from
+
+Native queries are supported from v2.26.0.
+
+:::
+
+## pg_track_native_query {#metadata-pg-track-native-query}
+
+`pg_track_native_query` is used to add a Native Query to the GraphQL schema.
+
+Track a Native Query as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_native_query",
+  "args": {
+    "source": "default",
+    "root_field_name": "<name>",
+    "type": "query",
+    "arguments": {
+      "<name>": {
+        "type": "<postgres field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      }
+    },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
+    "code": "<SQL query>",
+    "returns": "<logical model name>"
+  }
+}
+```
+
+### Args syntax {#metadata-pg-track-native-query-syntax}
+
+| Key             | Required | Schema                                                                                           | Description                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
+| type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| code            | true     | String                                                                                           | The SQL to run on request                                   |
+| returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
+
+### Native Query relationships
+
+See [Native Query relationship](/api-reference/syntax-defs.mdx#nativequeryrelationship).
+
+## pg_untrack_native_query {#metadata-pg-untrack-native-query}
+
+`pg_untrack_native_query` is used to remove a Native Query from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "pg_untrack_native_query",
+    "args": {
+      "source": "default",
+      "root_field_name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-untrack-native-query-syntax}
+
+| Key             | Required | Schema                                                  | Description                                      |
+| --------------- | -------- | ------------------------------------------------------- | ------------------------------------------------ |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database (default: `default`) |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)   | Name of the Native Query                         |
+
+## mssql_track_native_query {#metadata-mssql-track-native-query}
+
+`mssql_track_native_query` is used to add a Native Query to the GraphQL schema.
+
+Track a Native Query as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_track_native_query",
+  "args": {
+    "source": "default",
+    "root_field_name": "<name>",
+    "type": "query",
+    "arguments": {
+      "<name>": {
+        "type": "<mssql field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      }
+    },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
+    "code": "<SQL query>",
+    "returns": "<logical model name>"
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-track-native-query-syntax}
+
+| Key             | Required | Schema                                                                                           | Description                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
+| type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| code            | true     | String                                                                                           | The SQL to run on request                                   |
+| returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
+
+## mssql_untrack_native_query {#metadata-mssql-untrack-native-query}
+
+`mssql_untrack_native_query` is used to remove a Native Query from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_untrack_native_query",
+    "args": {
+      "source": "default",
+      "root_field_name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-mssql-untrack-native-query-syntax}
+
+| Key             | Required | Schema                                                  | Description                                      |
+| --------------- | -------- | ------------------------------------------------------- | ------------------------------------------------ |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database (default: `default`) |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)   | Name of the Native Query                         |
+
+## bigquery_track_native_query {#metadata-bigquery-track-native-query}
+
+`bigquery_track_native_query` is used to add a Native Query to the GraphQL schema.
+
+Track a Native Query as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_track_native_query",
+  "args": {
+    "source": "default",
+    "root_field_name": "<name>",
+    "type": "query",
+    "arguments": {
+      "<name>": {
+        "type": "<bigquery field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      }
+    },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
+    "code": "<SQL query>",
+    "returns": "<logical model name>"
+  }
+}
+```
+
+### Args syntax {#metadata-bigquery-track-native-query-syntax}
+
+| Key             | Required | Schema                                                                                           | Description                                                 |
+| --------------- | -------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
+| type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| code            | true     | String                                                                                           | The SQL to run on request                                   |
+| returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
+
+## bigquery_untrack_native_query {#metadata-bigquery-untrack-native-query}
+
+`bigquery_untrack_native_query` is used to remove a Native Query from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "bigquery_untrack_native_query",
+    "args": {
+      "source": "default",
+      "root_field_name": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-bigquery-untrack-native-query-syntax}
+
+| Key             | Required | Schema                                                  | Description                                      |
+| --------------- | -------- | ------------------------------------------------------- | ------------------------------------------------ |
+| source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database (default: `default`) |
+| root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)   | Name of the Native Query                         |

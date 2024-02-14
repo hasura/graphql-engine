@@ -1,0 +1,92 @@
+---
+sidebar_label: Enable caching in EE
+sidebar_position: 5
+description: Caching in Hasura Enterprise Edition
+title: 'Enterprise Edition: Enable GraphQL caching'
+sidebar_class_name: enterprise-icon
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - graphql engine
+  - data plane
+  - caching
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Enable Caching in Hasura Enterprise Edition
+
+<ProductBadge pro ee self />
+
+## Introduction
+
+To start using [Hasura Caching](/caching/overview.mdx) with your Hasura Enterprise Edition GraphQL Engine you will need
+a Redis instance that is co-located with the Hasura GraphQL containers.
+
+Once you provision a Redis instance, provide the URL to the Hasura GraphQL Engine docker configuration using the
+following environment variable:
+
+```
+HASURA_GRAPHQL_REDIS_URL=redis://username:password@redishostname:port
+```
+
+## Enable Redis TLS
+
+TLS connection information can be specified via the following environment variables:
+
+- `HASURA_GRAPHQL_REDIS_USE_TLS`: Opt-in flag that enables the use of TLS for the caching Redis instance, defaults to
+  false.
+- `HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS`: Opt-in flag that enables the use of TLS for the rate-limiting Redis
+  instance, defaults to false.
+- `HASURA_GRAPHQL_REDIS_TLS_HOSTNAME`: TLS hostname to use for caching Redis instance.
+- `HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME`: TLS hostname to use for rate-limiting Redis instance.
+- `HASURA_GRAPHQL_REDIS_TLS_SHARED_CA_STORE_PATH`: path to the shared CA certificate store to use for both the caching
+  and rate-limiting Redis instances. If unspecified, it defaults to the system CA store if available.
+
+### Example
+
+```
+HASURA_GRAPHQL_REDIS_USE_TLS="true"
+HASURA_GRAPHQL_REDIS_URL="redis://username:password@redishostname:port"
+HASURA_GRAPHQL_REDIS_TLS_HOSTNAME="redishostname"
+```
+
+For rate limit Redis:
+
+```
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS="true"
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL="redis://username:password@redishostname:port"
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME="redishostname"
+```
+
+## Tune caching parameters
+
+You can tune the various caching parameters according to your use-case. For example, you can configure the maximum
+TTL allowed, the max entry size in the cache etc.
+
+| Env var                               | Flag                           | Description                                                                                                                                                  |
+|---------------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL`  | `--query-cache-max-ttl`        | Maximum TTL allowed in seconds. Clients can request TTL via the `@cached` directive. But an upper limit can be set using this setting. Default: 3600 seconds |
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE` | `--query-cache-max-entry-size` | Maximum size of the response that is allowed to be cached (in MB). default: 1000 MB                                                                          |
+| `HASURA_GRAPHQL_CACHE_BUCKET_RATE`    | `--query-cache-bucket-rate`    | Recharge rate for the Query Response Cache token bucket. Default: 10,000,000 bytes/second (10 MB/s)                                                          |
+| `HASURA_GRAPHQL_CACHE_BUCKET_SIZE`    | `--query-cache-bucket-size`    | Maximum capacity in bytes for the Query Response Cache token bucket algorithm. See https://hasura.io/docs/latest/queries/response-caching for more info. Default: 1000000000 bytes (1 GB) |
+
+
+### How to tune these parameters
+- `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL` - TTL is the only automatic way of invalidating cache entries in Hasura. Ideally,
+  you would like to keep the TTL closer to the frequency of your data updates. In some use-cases, if you want to cache
+  for large amounts of time (in the order of 10s of hours), you may set the max TTL to that, and have some way of
+  using the [cache clear APIs](/caching/caching-config.mdx/#clearing-items-from-the-cache) to invalidate the cache
+  when you update your data.
+- `HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE` - The default response size for a single cache entry is 1000MB. If you want to
+  cache responses larger than 1000MB, configure this parameter accordingly.
+- `HASURA_GRAPHQL_CACHE_BUCKET_RATE` - The default bucket recharge rate is 10MB per second. Set this value to the total
+  or cumulative response sizes across all your data sources during peak traffic. By setting this parameter
+  appropriately, you guard your data sources, as well as the cache itself, from being overloaded by the caching
+  mechanism. Changing this parameter is probably mainly important for non-standard workloads, in which case you can
+  reach out to Hasura Support.
+- `HASURA_GRAPHQL_CACHE_BUCKET_SIZE` - Maximum size of the cache store. If your cache store exceeds this size, new items
+  cannot be stored. So you should tune this such that at peak traffic, given your configured max entry size and TTL, you
+  should have ample space to store all the items.

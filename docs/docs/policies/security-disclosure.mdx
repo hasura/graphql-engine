@@ -6,7 +6,7 @@ keywords:
   - security
   - security disclosure
   - vulnerability
-sidebar_position: 1
+sidebar_position: 3
 sidebar_label: Security vulnerability protocol
 ---
 
@@ -31,7 +31,11 @@ reports are thoroughly investigated by the Hasura team.
 To report a security issue, please email us at <security@hasura.io> with details, if possible attaching relevant
 information. The more details we have, the quicker will we be able to fix potential vulnerabilities.
 
-We do not currently have a bug bounty program, however, for valid high and critical severity issues we may, at our discretion, choose to award a bounty. Please see our guidance at the bottom of the page for types of vulnerabilities which are in and out of scope. Do not use social engineering and make a good faith effort to avoid privacy violations, destruction of data, and interruption or degradation of our service. If you should accidentally do any of these things, stop immediately and report the issue.
+We do not currently have a bug bounty program, however, for valid high and critical severity issues we may, at our
+discretion, choose to award a bounty. Please see our guidance at the bottom of the page for types of vulnerabilities
+which are in and out of scope. Do not use social engineering and make a good faith effort to avoid privacy violations,
+destruction of data, and interruption or degradation of our service. If you should accidentally do any of these things,
+stop immediately and report the issue.
 
 ### When should I report a vulnerability?
 
@@ -87,7 +91,8 @@ We are keen on hearing about the vulnerabilities encompassing the following cate
 
 ## Out of scope vulnerabilities
 
-When reporting vulnerabilities, please consider (1) attack scenario / exploitability, and (2) security impact of the bug. The following issues are considered out of scope:
+When reporting vulnerabilities, please consider (1) attack scenario / exploitability, and (2) security impact of the
+bug. The following issues are considered out of scope:
 
 - Clickjacking on pages with no sensitive actions.
 - Cross-Site Request Forgery (CSRF) on unauthenticated forms or forms with no sensitive actions.
@@ -101,13 +106,19 @@ When reporting vulnerabilities, please consider (1) attack scenario / exploitabi
 - Missing best practices in Content Security Policy.
 - Missing HttpOnly or Secure flags on cookies.
 - Missing email best practices (invalid, incomplete or missing SPF/DKIM/DMARC records, etc.).
-- Vulnerabilities only affecting users of outdated or unpatched browsers [Less than 2 stable versions behind the latest released stable version].
-- Software version disclosure / Banner identification issues / Descriptive error messages or headers (e.g. stack traces, application or server errors).
-- Public Zero-day vulnerabilities that have had an official patch for less than 1 month will be awarded on a case-by-case basis.
+- Vulnerabilities only affecting users of outdated or unpatched browsers [Less than 2 stable versions behind the latest
+  released stable version].
+- Software version disclosure / Banner identification issues / Descriptive error messages or headers (e.g. stack traces,
+  application or server errors).
+- Public Zero-day vulnerabilities that have had an official patch for less than 1 month will be awarded on a
+  case-by-case basis.
 - Tabnabbing.
 - Open redirect - unless an additional security impact can be demonstrated.
 - Issues that require unlikely user interaction.
 - Missing best practices in Content Security Policy (CSP) or lack of other security-related headers.
 - Leakage of sensitive tokens (e.g., reset password token) to trusted third parties on secure connection (HTTPS).
-- Bugs in third-party components which the Hasura uses only qualify if you can prove that they can be used to successfully attack Hasura's in scope applications.
-- SSRF issues - To be eligible for a bounty on HTTP/WS based SSRF submissions, please provide a proof of concept demonstrating access to sensitive resources such as leaking sensitive API keys or the ability to trigger state changing actions. Exploits just demonstrating a service header being responded would not meet the threshold.
+- Bugs in third-party components which the Hasura uses only qualify if you can prove that they can be used to
+  successfully attack Hasura's in scope applications.
+- SSRF issues - To be eligible for a bounty on HTTP/WS based SSRF submissions, please provide a proof of concept
+  demonstrating access to sensitive resources such as leaking sensitive API keys or the ability to trigger state
+  changing actions. Exploits just demonstrating a service header being responded would not meet the threshold.

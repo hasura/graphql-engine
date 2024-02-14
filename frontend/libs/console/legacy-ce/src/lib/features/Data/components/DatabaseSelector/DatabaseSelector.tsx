@@ -1,6 +1,6 @@
 import { DataTarget } from '../../../Datasources';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import React, { useState } from 'react';
 import { FieldError } from 'react-hook-form';
 import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';

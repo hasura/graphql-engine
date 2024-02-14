@@ -1,16 +1,13 @@
-import type { StorybookConfig } from '@storybook/core-common';
+import type { StorybookConfig } from '@storybook/react-webpack5';
 import { Configuration } from 'webpack';
 import rootMain from '../../../../.storybook/main';
 
 const config: StorybookConfig = {
   ...rootMain,
 
-  core: { ...rootMain.core, builder: 'webpack5' },
-
   staticDirs: ['../../../../static'],
 
   stories: [
-    ...rootMain.stories,
     '../src/stories/**/*.stories.mdx',
     '../src/stories/**/*.stories.@(js|jsx|ts|tsx)',
   ],
@@ -30,6 +27,11 @@ const config: StorybookConfig = {
     }
 
     return config;
+  },
+
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
   },
 };
 

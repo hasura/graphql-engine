@@ -1,4 +1,8 @@
-import { Table } from '../../../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+  Table,
+} from '../../../hasura-metadata-types';
 import { Button } from '../../../../new-components/Button';
 import {
   InputField,
@@ -18,12 +22,14 @@ import { SourceSelect } from './parts/SourceSelect';
 import { useHandleSubmit } from './utils';
 import { useSourceOptions } from '../../hooks/useSourceOptions';
 import Skeleton from 'react-loading-skeleton';
+import { useInconsistentMetadata } from '../../../hasura-metadata-api';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 
 interface WidgetProps {
   dataSourceName: string;
   table: Table;
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
   onError: (err: Error) => void;
   defaultValue?: Relationship;
 }
@@ -85,6 +91,11 @@ export const Widget = (props: WidgetProps) => {
   const isEditMode = !!defaultValue;
 
   const { data: sourceOptions } = useSourceOptions();
+  const { data: inconsistentSources = [] } = useInconsistentMetadata(m => {
+    return m.inconsistent_objects
+      .filter(item => item.type === 'source')
+      .map(source => source.definition);
+  });
 
   const {
     Form,
@@ -147,6 +158,19 @@ export const Widget = (props: WidgetProps) => {
     }
   }, [defaultValue, setValue, toSource]);
 
+  if (inconsistentSources.includes(dataSourceName)) {
+    return (
+      <IndicatorCard
+        headline="Source is inconsistent"
+        status="negative"
+        showIcon
+      >
+        Relationships cannot be added to a source that is inconsistent. More
+        details are available in Settings tab {'>'} Metadata Status.
+      </IndicatorCard>
+    );
+  }
+
   return (
     <Form onSubmit={handleSubmit}>
       <div
@@ -184,6 +208,15 @@ export const Widget = (props: WidgetProps) => {
                 label="To Reference"
               />
             </div>
+            {inconsistentSources.length ? (
+              <div className="col-span-12">
+                <IndicatorCard status="negative" showIcon>
+                  Inconsistent sources have been found in your metadata.
+                  Inconsistent objects will be filtered off from the list of
+                  available options until they are fixed.
+                </IndicatorCard>
+              </div>
+            ) : null}
           </div>
 
           {toSource ? (

@@ -1,0 +1,13 @@
+status: enabled
+data_types:
+  - traces
+  - logs
+exporter_otlp:
+  headers: []
+  otlp_logs_endpoint: "{{OTEL_COLLECTOR_HOST}}/v1/logs"
+  otlp_metrics_endpoint: "{{OTEL_COLLECTOR_HOST}}/v1/metrics"
+  otlp_traces_endpoint: "{{OTEL_COLLECTOR_HOST}}/v1/traces"
+  protocol: http/protobuf
+  resource_attributes: []
+batch_span_processor:
+  max_export_batch_size: 512

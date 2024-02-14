@@ -1,5 +1,5 @@
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import * as z from 'zod';
 
 import { SimpleForm } from '../../../../new-components/Form';
@@ -10,7 +10,6 @@ import {
 } from './ClonePermissions';
 
 export default {
-  title: 'Features/Permissions/Form/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
@@ -21,23 +20,27 @@ export default {
   ],
 } as Meta;
 
-export const Default: Story<ClonePermissionsSectionProps> = args => (
-  <ClonePermissionsSection {...args} />
-);
-Default.args = {
-  tables: ['users', 'public'],
-  supportedQueryTypes: ['insert', 'select', 'update', 'delete'],
-  roles: ['one', 'two'],
-};
-Default.parameters = {
-  // Disable storybook for playground stories
-  chromatic: { disableSnapshot: true },
+export const Default: StoryObj<ClonePermissionsSectionProps> = {
+  args: {
+    tables: [
+      {
+        name: 'users',
+        schema: 'public',
+      },
+    ],
+    supportedQueryTypes: ['insert', 'select', 'update', 'delete'],
+    roles: ['one', 'two'],
+  },
+
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 };
 
-export const Showcase: Story<ClonePermissionsSectionProps> = args => (
-  <ClonePermissionsSection {...args} />
-);
-Showcase.args = {
-  ...Default.args,
-  defaultOpen: true,
+export const Showcase: StoryObj<ClonePermissionsSectionProps> = {
+  args: {
+    ...Default.args,
+    defaultOpen: true,
+  },
 };

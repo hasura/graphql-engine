@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaPlay, FaPlusCircle } from 'react-icons/fa';
 import z from 'zod';
 import { Badge } from '../../../../../../new-components/Badge';
 import { Button } from '../../../../../../new-components/Button';
@@ -10,10 +10,11 @@ import { schema as postgresSchema } from '../../schema';
 import { CodeEditorField } from '../../../../../../new-components/Form';
 import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
 import { IconTooltip } from '../../../../../../new-components/Tooltip';
+import { Analytics, trackCustomEvent } from '../../../../../Analytics';
 
 const editorOptions = {
-  minLines: 33,
-  maxLines: 33,
+  minLines: 34,
+  maxLines: 34,
   showLineNumbers: true,
   useSoftTabs: true,
   showPrintMargin: false,
@@ -32,7 +33,7 @@ const templates = {
   tenancy: {
     value: 'tenancy',
     title: 'Database Tenancy',
-    body: 'Tenancy template using a x-hasura-tenant variable to connect to a named database.',
+    body: 'Using x-hasura-tenant variable to route queries to different tenant databases.',
     template: `{{ if ($.request.session.x-hasura-tenant-id == "my_tenant_1")}}
     {{$.connection_set.my_tenant_1_connection}}
 {{ elif ($.request.session.x-hasura-tenant-id == "my_tenant_2")}}
@@ -46,7 +47,7 @@ const templates = {
   'no-stale-reads': {
     value: 'no-stale-reads',
     title: 'Read Replicas - No Stale Reads',
-    body: 'No stale reads template using the primary for reads on mutations and replicas for all other reads.',
+    body: 'Routing reads to primary instead of read-replicas based on a header configuration.',
     template: `{{ if (($.request.query.operation_type == "query") 
 || ($.request.query.operation_type == "subscription")) 
 && ($.request.headers.x-query-read-no-stale == "true") }}
@@ -60,7 +61,7 @@ const templates = {
   },
   sharding: {
     value: 'sharding',
-    title: 'Different credentials',
+    title: 'Multi-user Database Credentials',
     body: 'Route specific queries to specific databases in a distributed database system model.',
     template: `{{ if ($.request.session.x-hasura-role == "manager")}}
     {{$.connection_set.manager_connection}}
@@ -94,6 +95,7 @@ interface DynamicDBRoutingFormProps {
   onEditConnection: (name: string) => void;
   isLoading: boolean;
   connectionTemplate?: string | null;
+  onOpenValidate: () => void;
 }
 
 export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
@@ -104,12 +106,28 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
     onEditConnection,
     isLoading,
     connectionTemplate,
+    onOpenValidate,
   } = props;
-  const { setValue } = useFormContext();
+  const { setValue, watch } = useFormContext();
   const [template, setTemplate] = React.useState<keyof typeof templates>(
     (Object.entries(templates).find(([_, template]) =>
       template.isSelected(connectionTemplate)
     )?.[0] as keyof typeof templates) || 'disabled'
+  );
+
+  const localConnectionTemplate = watch('connection_template');
+
+  const [localTemplate, setLocalTemplate] = React.useState<
+    Record<string, string | null | undefined>
+  >(
+    Object.fromEntries(
+      Object.entries(templates).map(([key, template]) => [
+        key,
+        template.isSelected(connectionTemplate)
+          ? connectionTemplate
+          : template.template,
+      ])
+    )
   );
 
   return (
@@ -121,15 +139,22 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               className={`flex items-center rounded bg-gray-200 border border-gray-300 py-sm px-sm mb-md`}
             >
               <FaExclamationCircle className="fill-current self-start h-md text-muted" />
-              <div className="ml-xs">
-                <strong>Dynamic Database Routing Precedence</strong>
+              <div className="ml-xs max-w-2xl">
+                <strong>Dynamic Routing Precedence</strong>
                 <p>
                   {' '}
-                  Dynamic database routing takes precedence over read replicas.
-                  You may use both read replica routing and default database
-                  routing in your connection template.
+                  Dynamic routing takes precedence over read replicas. You may
+                  use both read replica routing and default database routing in
+                  your connection template.
                 </p>
               </div>
+              <a
+                href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#setting-up-connection-set-and-connection-template"
+                target="__blank"
+                className="font-semibold ml-auto mr-md px-sm py-xs font-base text-muted border border-muted rounded hover:bg-gray-300"
+              >
+                Learn More
+              </a>
             </div>
           )}
           <div className="block flex items-center text-gray-600 font-semibold">
@@ -138,7 +163,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             </label>
             <IconTooltip message="Connection templates to route GraphQL requests based on different request parameters such as session variables, headers and tenant IDs." />
             <LearnMoreLink
-              href="https://hasura.io/docs/latest/databases/connect-db/dynamic-db-connection/#connection-template"
+              href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-template"
               className="font-normal"
             />
           </div>
@@ -151,10 +176,26 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             value={template}
             orientation="vertical"
             onChange={value => {
+              setLocalTemplate({
+                ...localTemplate,
+                [template]: localConnectionTemplate,
+              });
               setTemplate(value as keyof typeof templates);
               setValue(
                 'connection_template',
-                templates[value as keyof typeof templates]?.template
+                localTemplate[value as keyof typeof templates]
+              );
+              trackCustomEvent(
+                {
+                  location: 'DynamicDBRouting',
+                  action: 'change',
+                  object: 'defaultTemplate',
+                },
+                {
+                  data: {
+                    temlate: value,
+                  },
+                }
               );
             }}
             items={Object.values(templates).map(template => ({
@@ -172,6 +213,39 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             />
           </div>
         </div>
+        <div className="flex justify-end mt-4">
+          <Analytics
+            name="data-tab-dynamic-db-routing-validate-connection-template"
+            passHtmlAttributesToChildren
+          >
+            <Button
+              onClick={onOpenValidate}
+              disabled={template === 'disabled'}
+              className="mr-2"
+              icon={
+                <div className="w-3 h-3 mr-1">
+                  <FaPlay />
+                </div>
+              }
+            >
+              Validate
+            </Button>
+          </Analytics>
+          <Analytics
+            name="data-tab-dynamic-db-routing-update-connection-template"
+            passHtmlAttributesToChildren
+          >
+            <Button
+              type="submit"
+              mode="primary"
+              disabled={
+                isLoading || localConnectionTemplate === connectionTemplate
+              }
+            >
+              Update Connection Template
+            </Button>
+          </Analytics>
+        </div>
       </div>
       <div className="mb-2 mt-8 flex justify-between items-end">
         <div>
@@ -181,7 +255,7 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             </label>
             <IconTooltip message="Available database connections which can be referenced in your dynamic connection template." />
             <LearnMoreLink
-              href="https://hasura.io/docs/latest/databases/connect-db/dynamic-db-connection/#connection-set"
+              href="https://hasura.io/docs/latest/databases/database-config/dynamic-db-connection/#connection-set"
               text="(Learn More)"
               className="font-normal"
             />
@@ -191,14 +265,18 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
             connection template.{' '}
           </div>
         </div>
-
-        <Button
-          onClick={onAddConnection}
-          icon={<FaPlusCircle />}
-          disabled={isLoading}
+        <Analytics
+          name="data-tab-dynamic-db-routing-add-connection"
+          passHtmlAttributesToChildren
         >
-          Add Connection
-        </Button>
+          <Button
+            onClick={onAddConnection}
+            icon={<FaPlusCircle />}
+            disabled={isLoading}
+          >
+            Add Connection
+          </Button>
+        </Analytics>
       </div>
       <div>
         <CardedTable
@@ -218,33 +296,38 @@ export const DynamicDBRoutingForm = (props: DynamicDBRoutingFormProps) => {
               <Badge color="light-gray">Read Replica Routing</Badge>,
             ],
             ...connectionSetMembers.map(connection => [
-              `{{$.${connection.name}}}`,
+              `{{$.connection_set.${connection.name}}}`,
               <>
-                <Button
-                  disabled={isLoading}
-                  className="mr-2"
-                  size="sm"
-                  onClick={() => onEditConnection(connection.name)}
+                <Analytics
+                  name="data-tab-dynamic-db-routing-edit-connection"
+                  passHtmlAttributesToChildren
                 >
-                  Edit Connection
-                </Button>
-                <Button
-                  disabled={isLoading}
-                  mode="destructive"
-                  size="sm"
-                  onClick={() => onRemoveConnection(connection.name)}
+                  <Button
+                    disabled={isLoading}
+                    className="mr-2"
+                    size="sm"
+                    onClick={() => onEditConnection(connection.name)}
+                  >
+                    Edit Connection
+                  </Button>
+                </Analytics>
+                <Analytics
+                  name="data-tab-dynamic-db-routing-remove-connection"
+                  passHtmlAttributesToChildren
                 >
-                  Remove
-                </Button>
+                  <Button
+                    disabled={isLoading}
+                    mode="destructive"
+                    size="sm"
+                    onClick={() => onRemoveConnection(connection.name)}
+                  >
+                    Remove
+                  </Button>
+                </Analytics>
               </>,
             ]),
           ]}
         />
-      </div>
-      <div className="flex justify-end">
-        <Button type="submit" mode="primary">
-          Update Database Connection
-        </Button>
       </div>
     </div>
   );

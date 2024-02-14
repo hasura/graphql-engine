@@ -1,10 +1,11 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Regression tests for issue 8345.
 module Test.Regression.NullRemoteRelationship8345Spec (spec) where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
@@ -17,9 +18,9 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, focusFixtureLeft, focusFixtureRight, stopServer)
 import Harness.Yaml (shouldReturnYaml)
@@ -35,16 +36,16 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
     contexts = NE.fromList $ do
       (rhsName, rhsMkLocalEnv, rhsSetup, rhsTeardown, albumJoin, artistJoin) <- [rhsPostgres, rhsRemoteServer]
       (lhsName, lhsMkLocalEnv, lhsSetup, lhsTeardown) <- [lhsPostgres, lhsRemoteServer]
-      pure $
-        Fixture.Fixture
+      pure
+        $ Fixture.Fixture
           { Fixture.name = Fixture.Combine lhsName rhsName,
             Fixture.mkLocalTestEnvironment = \testEnvironment -> do
               lhsServer <- lhsMkLocalEnv testEnvironment
               rhsServer <- rhsMkLocalEnv testEnvironment
               pure $ LocalTestTestEnvironment lhsServer rhsServer,
             Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) -> do
-              pure $
-                Fixture.SetupAction
+              pure
+                $ Fixture.SetupAction
                   { Fixture.setupAction = do
                       let schemaName = Schema.getSchemaName testEnvironment
                       -- RHS must always be setup before the LHS
@@ -98,8 +99,8 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
         rhsRemoteServerMkLocalTestEnvironment,
         rhsRemoteServerSetup,
         rhsRemoteServerTeardown,
-        const $
-          [yaml|
+        const
+          $ [yaml|
             to_remote_schema:
               remote_schema: target
               lhs_fields: [album_id]
@@ -108,8 +109,8 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
                   arguments:
                     album_id: $album_id
           |],
-        const $
-          [yaml|
+        const
+          $ [yaml|
             to_remote_schema:
               remote_schema: target
               lhs_fields: [artist_id]
@@ -179,7 +180,7 @@ rhsArtist =
 lhsPostgresMkLocalTestEnvironment :: TestEnvironment -> Managed (Maybe Server)
 lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 
-lhsPostgresSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup :: J.Value -> J.Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup albumJoin artistJoin (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceName = "source"
@@ -288,7 +289,7 @@ data LHSQuery m = LHSQuery
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSQuery m) where
+instance (Typeable m) => Morpheus.GQLType (LHSQuery m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackArgs = LHSHasuraTrackArgs
@@ -309,7 +310,7 @@ data LHSHasuraTrack m = LHSHasuraTrack
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSHasuraTrack m) where
+instance (Typeable m) => Morpheus.GQLType (LHSHasuraTrack m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackOrderBy = LHSHasuraTrackOrderBy
@@ -368,12 +369,12 @@ lhsRemoteServerMkLocalTestEnvironment _ =
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
           limitFunction = maybe Hasura.Prelude.id take ta_limit
-      pure $
-        tracks
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkTrack
+      pure
+        $ tracks
+        & filter filterFunction
+        & sortBy orderByFunction
+        & limitFunction
+        & map mkTrack
     -- Returns True iif the given track matches the given boolean expression.
     matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId, maybeArtistId) (LHSHasuraTrackBoolExp {..}) =
       and
@@ -395,18 +396,18 @@ lhsRemoteServerMkLocalTestEnvironment _ =
       (trackId2, trackTitle2, trackAlbumId2, trackArtistId2) =
         flip foldMap orderByList \LHSHasuraTrackOrderBy {..} ->
           if
-              | Just idOrder <- tob_id -> case idOrder of
-                  Asc -> compare trackId1 trackId2
-                  Desc -> compare trackId2 trackId1
-              | Just titleOrder <- tob_title -> case titleOrder of
-                  Asc -> compare trackTitle1 trackTitle2
-                  Desc -> compare trackTitle2 trackTitle1
-              | Just albumIdOrder <- tob_album_id ->
-                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
-              | Just artistIdOrder <- tob_artist_id ->
-                  compareWithNullLast artistIdOrder trackArtistId1 trackArtistId2
-              | otherwise ->
-                  error "empty track_order object"
+            | Just idOrder <- tob_id -> case idOrder of
+                Asc -> compare trackId1 trackId2
+                Desc -> compare trackId2 trackId1
+            | Just titleOrder <- tob_title -> case titleOrder of
+                Asc -> compare trackTitle1 trackTitle2
+                Desc -> compare trackTitle2 trackTitle1
+            | Just albumIdOrder <- tob_album_id ->
+                compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+            | Just artistIdOrder <- tob_artist_id ->
+                compareWithNullLast artistIdOrder trackArtistId1 trackArtistId2
+            | otherwise ->
+                error "empty track_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT
@@ -426,7 +427,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           t_artist_id = pure artistId
         }
 
-lhsRemoteServerSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: J.Value -> J.Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup albumJoin artistJoin (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBObjectRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -510,8 +511,8 @@ rhsRemoteServerTeardown (_, server) = traverse_ stopServer server
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-tests opts = do
+tests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests = do
   it "joins album when artist is null" \(testEnvironment, _) -> do
     let query =
           [graphql|
@@ -537,7 +538,7 @@ tests opts = do
                artist: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins artist when album is null" \(testEnvironment, _) -> do
@@ -565,7 +566,7 @@ tests opts = do
                  name: artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins both when nothing is null" \(testEnvironment, _) -> do
@@ -594,7 +595,7 @@ tests opts = do
                  name: artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
   it "joins neither when both null" \(testEnvironment, _) -> do
@@ -621,6 +622,6 @@ tests opts = do
                artist: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

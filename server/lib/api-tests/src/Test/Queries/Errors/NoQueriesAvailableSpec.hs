@@ -15,9 +15,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -25,7 +25,7 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  let execute :: [Schema.Table] -> (Fixture.Options -> SpecWith TestEnvironment) -> SpecWith GlobalTestEnvironment
+  let execute :: [Schema.Table] -> SpecWith TestEnvironment -> SpecWith GlobalTestEnvironment
       execute tables =
         Fixture.run
           ( NE.fromList
@@ -54,8 +54,8 @@ spec = do
                       [ BigQuery.setupTablesAction tables testEnvironment
                       ],
                     Fixture.customOptions =
-                      Just $
-                        Fixture.defaultOptions
+                      Just
+                        $ Fixture.defaultOptions
                           { Fixture.stringifyNumbers = True
                           }
                   },
@@ -84,11 +84,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-queriesAvailable :: Fixture.Options -> SpecWith TestEnvironment
-queriesAvailable opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+queriesAvailable :: SpecWith TestEnvironment
+queriesAvailable = do
   it "Should disappear when queries are available" \testEnvironment -> do
     let actual :: IO Value
         actual =
@@ -111,13 +108,10 @@ queriesAvailable opts = do
                field 'no_queries_available' not found in type: 'query_root'
          |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
-noQueriesAvailable :: Fixture.Options -> SpecWith TestEnvironment
-noQueriesAvailable opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+noQueriesAvailable :: SpecWith TestEnvironment
+noQueriesAvailable = do
   it "Should be present when queries are not" \testEnvironment -> do
     let actual :: IO Value
         actual =
@@ -138,4 +132,4 @@ noQueriesAvailable opts = do
                 have the required permissions.
          |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

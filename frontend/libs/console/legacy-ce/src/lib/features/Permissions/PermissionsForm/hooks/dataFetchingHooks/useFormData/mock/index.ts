@@ -75,6 +75,7 @@ export const useFormDataCreateDefaultValuesMock = {
                   role: 'asdf',
                   permission: {
                     columns: ['id', 'teacher'],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: { name: 'testing', schema: 'public' },
@@ -165,6 +166,7 @@ export const useFormDataCreateDefaultValuesMock = {
                   role: 'new',
                   permission: {
                     columns: ['class', 'id'],
+                    computed_fields: [],
                     filter: {},
                     allow_aggregations: true,
                     query_root_fields: [
@@ -213,6 +215,7 @@ export const useFormDataCreateDefaultValuesMock = {
                   role: 'user',
                   permission: {
                     columns: ['deleted_at', 'id', 'metadata'],
+                    computed_fields: [],
                     filter: { deleted_at: { _is_null: true } },
                     allow_aggregations: true,
                   },
@@ -738,6 +741,7 @@ export const useFormDataCreateDefaultValuesMock = {
     { name: 'like', value: '_like', defaultValue: '%%' },
     { name: 'not like', value: '_nlike', defaultValue: '%%' },
   ],
+  tableComputedFields: [],
 } as any;
 
 export const createFormDataMock = {
@@ -816,6 +820,7 @@ export const createFormDataMock = {
                   role: 'asdf',
                   permission: {
                     columns: ['id', 'teacher'],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: { name: 'testing', schema: 'public' },
@@ -833,6 +838,7 @@ export const createFormDataMock = {
                   role: 'new',
                   permission: {
                     columns: ['id', 'teacher'],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: { name: 'testing', schema: 'public' },
@@ -845,6 +851,7 @@ export const createFormDataMock = {
                   role: 'sdfsf',
                   permission: {
                     columns: ['id'],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: { name: 'class_student', schema: 'public' },
@@ -859,6 +866,7 @@ export const createFormDataMock = {
                   role: 'testrole',
                   permission: {
                     columns: ['id', 'teacher'],
+                    computed_fields: [],
                     filter: {
                       class_students: { class: { _eq: 'X-Hasura-User-Id' } },
                     },
@@ -868,6 +876,7 @@ export const createFormDataMock = {
                   role: 'user',
                   permission: {
                     columns: ['id'],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: { name: 'class', schema: 'public' },
@@ -906,6 +915,7 @@ export const createFormDataMock = {
                   role: 'new',
                   permission: {
                     columns: ['class', 'id'],
+                    computed_fields: [],
                     filter: {},
                     allow_aggregations: true,
                     query_root_fields: [
@@ -924,6 +934,7 @@ export const createFormDataMock = {
                   role: 'user',
                   permission: {
                     columns: ['class', 'id', 'student_id'],
+                    computed_fields: [],
                     filter: {},
                     allow_aggregations: true,
                   },
@@ -939,6 +950,7 @@ export const createFormDataMock = {
                   permission: {
                     check: {},
                     columns: ['id', 'metadata', 'deleted_at'],
+                    computed_fields: [],
                   },
                 },
               ],
@@ -947,6 +959,7 @@ export const createFormDataMock = {
                   role: 'asdf',
                   permission: {
                     columns: ['id', 'metadata', 'deleted_at'],
+                    computed_fields: [],
                     filter: {},
                   },
                 },
@@ -954,6 +967,7 @@ export const createFormDataMock = {
                   role: 'user',
                   permission: {
                     columns: ['deleted_at', 'id', 'metadata'],
+                    computed_fields: [],
                     filter: { deleted_at: { _is_null: true } },
                     allow_aggregations: true,
                   },
@@ -964,6 +978,7 @@ export const createFormDataMock = {
                   role: 'user',
                   permission: {
                     columns: ['id', 'metadata'],
+                    computed_fields: [],
                     filter: {},
                     check: {},
                   },
@@ -989,6 +1004,7 @@ export const createFormDataMock = {
                   role: 'sdfsf',
                   permission: {
                     columns: ['id', 'name', 'deleted_at'],
+                    computed_fields: [],
                     filter: { _or: [] },
                     query_root_fields: ['select', 'select_by_pk'],
                     subscription_root_fields: ['select', 'select_by_pk'],
@@ -998,6 +1014,7 @@ export const createFormDataMock = {
                   role: 'user',
                   permission: {
                     columns: ['deleted_at', 'id', 'name'],
+                    computed_fields: [],
                     filter: { deleted_at: { _is_null: true } },
                     query_root_fields: ['select', 'select_by_pk'],
                     subscription_root_fields: ['select', 'select_by_pk'],
@@ -1049,6 +1066,7 @@ export const createFormDataMock = {
                   role: 'asdf',
                   permission: {
                     columns: ['AlbumId'],
+                    computed_fields: [],
                     filter: {
                       _or: [{ AlbumId: { _eq: 'X-Hasura-User-Id' } }],
                     },
@@ -1058,6 +1076,7 @@ export const createFormDataMock = {
                   role: 'new',
                   permission: {
                     columns: ['AlbumId'],
+                    computed_fields: [],
                     filter: {
                       _or: [{ AlbumId: { _eq: 'X-Hasura-User-Id' } }],
                     },
@@ -1067,6 +1086,7 @@ export const createFormDataMock = {
                   role: 'sdfsf',
                   permission: {
                     columns: ['AlbumId', 'Title', 'ArtistId'],
+                    computed_fields: [],
                     filter: {
                       _and: [{ AlbumId: { _eq: 'X-Hasura-User-Id' } }],
                     },
@@ -1076,6 +1096,7 @@ export const createFormDataMock = {
                   role: 'testrole',
                   permission: {
                     columns: ['AlbumId', 'Title'],
+                    computed_fields: [],
                     filter: { _and: [{ AlbumId: { _eq: 'X-Hasura-User' } }] },
                   },
                 },
@@ -1094,6 +1115,7 @@ export const createFormDataMock = {
                   role: 'testrole',
                   permission: {
                     columns: [],
+                    computed_fields: [],
                     filter: {
                       _exists: {
                         _table: ['Album'],
@@ -1155,6 +1177,7 @@ export const createFormDataMock = {
                   role: 'asdf',
                   permission: {
                     columns: [],
+                    computed_fields: [],
                     filter: { _not: { Data_value: { _eq: 1337 } } },
                   },
                 },
@@ -1162,6 +1185,7 @@ export const createFormDataMock = {
                   role: 'new',
                   permission: {
                     columns: ['Series_reference', 'Period'],
+                    computed_fields: [],
                     filter: {
                       _and: [
                         { Data_value: { _eq: 'X-Hasura-User-Id' } },
@@ -1176,6 +1200,7 @@ export const createFormDataMock = {
                 {
                   role: 'sdfsf',
                   permission: {
+                    computed_fields: [],
                     columns: [
                       'Series_reference',
                       'Period',
@@ -1201,6 +1226,7 @@ export const createFormDataMock = {
                   role: 'testrole',
                   permission: {
                     columns: [],
+                    computed_fields: [],
                     filter: { Magnitude: { _eq: '123' } },
                   },
                 },
@@ -1223,6 +1249,7 @@ export const createFormDataMock = {
                       'Series_title_4',
                       'Series_title_5',
                     ],
+                    computed_fields: [],
                     filter: {},
                   },
                 },
@@ -1382,6 +1409,7 @@ export const createFormDataMock = {
       nullable: false,
     },
   ],
+  computedFields: [],
   trackedTables: [
     {
       table: { dataset: 'bigquery_sample', name: 'sample_table' },
@@ -1425,6 +1453,7 @@ export const createFormDataMock = {
           role: 'new',
           permission: {
             columns: ['Series_reference', 'Period'],
+            computed_fields: [],
             filter: {
               _and: [
                 { Data_value: { _eq: 'X-Hasura-User-Id' } },
@@ -1439,6 +1468,7 @@ export const createFormDataMock = {
         {
           role: 'sdfsf',
           permission: {
+            computed_fields: [],
             columns: [
               'Series_reference',
               'Period',
@@ -1462,11 +1492,16 @@ export const createFormDataMock = {
         },
         {
           role: 'testrole',
-          permission: { columns: [], filter: { Magnitude: { _eq: '123' } } },
+          permission: {
+            columns: [],
+            computed_fields: [],
+            filter: { Magnitude: { _eq: '123' } },
+          },
         },
         {
           role: 'user',
           permission: {
+            computed_fields: [],
             columns: [
               'Series_reference',
               'Period',
@@ -1528,6 +1563,7 @@ export const createFormDataMock = {
             role: 'asdf',
             permission: {
               columns: [],
+              computed_fields: [],
               filter: { _not: { Data_value: { _eq: 1337 } } },
             },
           },
@@ -1535,6 +1571,7 @@ export const createFormDataMock = {
             role: 'new',
             permission: {
               columns: ['Series_reference', 'Period'],
+              computed_fields: [],
               filter: {
                 _and: [
                   { Data_value: { _eq: 'X-Hasura-User-Id' } },
@@ -1549,6 +1586,7 @@ export const createFormDataMock = {
           {
             role: 'sdfsf',
             permission: {
+              computed_fields: [],
               columns: [
                 'Series_reference',
                 'Period',
@@ -1572,11 +1610,16 @@ export const createFormDataMock = {
           },
           {
             role: 'testrole',
-            permission: { columns: [], filter: { Magnitude: { _eq: '123' } } },
+            permission: {
+              columns: [],
+              computed_fields: [],
+              filter: { Magnitude: { _eq: '123' } },
+            },
           },
           {
             role: 'user',
             permission: {
+              computed_fields: [],
               columns: [
                 'Series_reference',
                 'Period',

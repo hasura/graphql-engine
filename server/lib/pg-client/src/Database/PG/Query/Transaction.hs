@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveLift #-}
-{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -17,38 +18,37 @@ module Database.PG.Query.Transaction
     TxET (..),
     TxE,
     TxT,
-    withNotices,
-    withQ,
     withQE,
     rawQE,
-    unitQ,
     unitQE,
     multiQE,
     discardQE,
     serverVersion,
     execTx,
-    catchE,
     Query,
     fromText,
     fromBuilder,
     getQueryText,
+    describePreparedStatement,
+    PreparedDescription (..),
+    transformerJoinTxET,
   )
 where
 
 -------------------------------------------------------------------------------
 
-import Control.Monad.Base (MonadBase (liftBase))
-import Control.Monad.Except (MonadError)
+import Control.Monad.Base (MonadBase)
+import Control.Monad.Except (MonadError, runExceptT, throwError)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO (liftIO))
-import Control.Monad.Morph (MFunctor, hoist)
+import Control.Monad.Morph (MFunctor (..), MonadTrans (..))
 import Control.Monad.Reader (MonadReader, asks)
-import Control.Monad.Trans.Class (MonadTrans (lift))
-import Control.Monad.Trans.Control (MonadBaseControl (StM, liftBaseWith, restoreM))
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Except (ExceptT, withExceptT)
-import Control.Monad.Trans.Reader (ReaderT (..), mapReaderT, runReaderT)
+import Control.Monad.Trans.Reader (ReaderT (..))
 import Data.Aeson (ToJSON (toJSON), object, (.=))
 import Data.Aeson.Text (encodeToLazyText)
+import Data.ByteString (ByteString)
 import Data.Hashable (Hashable)
 import Data.String (IsString)
 import Data.Text (Text)
@@ -68,7 +68,6 @@ data TxIsolation
   deriving stock (Eq, Lift)
 
 instance Show TxIsolation where
-  {-# INLINE show #-}
   show ReadCommitted = "ISOLATION LEVEL READ COMMITTED"
   show RepeatableRead = "ISOLATION LEVEL REPEATABLE READ"
   show Serializable = "ISOLATION LEVEL SERIALIZABLE"
@@ -79,7 +78,6 @@ data TxAccess
   deriving stock (Eq, Lift)
 
 instance Show TxAccess where
-  {-# INLINE show #-}
   show ReadWrite = "READ WRITE"
   show ReadOnly = "READ ONLY"
 
@@ -98,27 +96,29 @@ newtype TxET e m a = TxET
       MonadFix
     )
 
+transformerJoinTxET :: (Monad m) => TxET e (TxET e m) a -> TxET e m a
+transformerJoinTxET x =
+  TxET $ ReaderT $ \pgConn -> do
+    result <- runReaderT (txHandler $ runExceptT (runReaderT (txHandler x) pgConn)) pgConn
+    case result of
+      Left err -> throwError err
+      Right r -> pure r
+
+{- HLINT ignore "Use onLeft" -}
+
 instance MonadTrans (TxET e) where
   lift = TxET . lift . lift
 
 instance MFunctor (TxET e) where
   hoist f = TxET . hoist (hoist f) . txHandler
 
-instance (MonadBase IO m) => MonadBase IO (TxET e m) where
-  liftBase = lift . liftBase
+deriving via (ReaderT PGConn (ExceptT e m)) instance (MonadBase IO m) => MonadBase IO (TxET e m)
 
-instance (MonadBaseControl IO m) => MonadBaseControl IO (TxET e m) where
-  type StM (TxET e m) a = StM (ReaderT PGConn (ExceptT e m)) a
-  liftBaseWith f = TxET $ liftBaseWith $ \run -> f (run . txHandler)
-  restoreM = TxET . restoreM
+deriving via (ReaderT PGConn (ExceptT e m)) instance (MonadBaseControl IO m) => MonadBaseControl IO (TxET e m)
 
 type TxE e a = TxET e IO a
 
 type TxT m a = TxET PGTxErr m a
-
-{-# INLINE catchE #-}
-catchE :: (Functor m) => (e -> e') -> TxET e m a -> TxET e' m a
-catchE f action = TxET $ mapReaderT (withExceptT f) $ txHandler action
 
 data PGTxErr = PGTxErr
   { pgteStatement :: !Text,
@@ -129,7 +129,6 @@ data PGTxErr = PGTxErr
   -- PGCustomErr !T.Text
   deriving stock (Eq)
 
-{-# INLINE getPGStmtErr #-}
 getPGStmtErr :: PGTxErr -> Maybe PGStmtErrDetail
 getPGStmtErr (PGTxErr _ _ _ ei) = case ei of
   PGIStatement e -> return e
@@ -147,7 +146,6 @@ instance ToJSON PGTxErr where
 instance Show PGTxErr where
   show = show . encodeToLazyText
 
-{-# INLINE execTx #-}
 execTx :: PGConn -> TxET e m a -> ExceptT e m a
 execTx conn tx = runReaderT (txHandler tx) conn
 
@@ -157,21 +155,11 @@ newtype Query = Query
   deriving stock (Eq, Show)
   deriving newtype (Hashable, IsString, ToJSON)
 
-{-# INLINE fromText #-}
 fromText :: Text -> Query
 fromText = Query
 
-{-# INLINE fromBuilder #-}
 fromBuilder :: TB.Builder -> Query
 fromBuilder = Query . TB.run
-
-withQ ::
-  (MonadIO m, FromRes a, ToPrepArgs r) =>
-  Query ->
-  r ->
-  Bool ->
-  TxT m a
-withQ = withQE id
 
 withQE ::
   (MonadIO m, FromRes a, ToPrepArgs r) =>
@@ -215,33 +203,6 @@ multiQE ef q = TxET $
     txErrF = PGTxErr stmt [] False
     stmt = getQueryText q
 
-withNotices :: (MonadIO m) => TxT m a -> TxT m (a, [Text])
-withNotices tx = do
-  conn <- asks pgPQConn
-  setToNotice
-  liftIO $ PQ.enableNoticeReporting conn
-  a <- tx
-  notices <- liftIO $ getNotices conn []
-  liftIO $ PQ.disableNoticeReporting conn
-  setToWarn
-  return (a, map lenientDecodeUtf8 notices)
-  where
-    setToNotice = unitQE id "SET client_min_messages TO NOTICE;" () False
-    setToWarn = unitQE id "SET client_min_messages TO WARNING;" () False
-    getNotices conn xs = do
-      notice <- PQ.getNotice conn
-      case notice of
-        Nothing -> return xs
-        Just bs -> getNotices conn (bs : xs)
-
-unitQ ::
-  (MonadIO m, ToPrepArgs r) =>
-  Query ->
-  r ->
-  Bool ->
-  TxT m ()
-unitQ = withQ
-
 unitQE ::
   (MonadIO m, ToPrepArgs r) =>
   (PGTxErr -> e) ->
@@ -262,8 +223,20 @@ discardQE ef t r p = do
   Discard () <- withQE ef t r p
   return ()
 
+-- | Extract the description of a prepared statement.
+describePreparedStatement ::
+  (MonadIO m) =>
+  (PGTxErr -> e) ->
+  ByteString ->
+  TxET e m (PreparedDescription PQ.Oid)
+describePreparedStatement ef name = TxET $
+  ReaderT $ \pgConn ->
+    withExceptT (ef . PGTxErr mempty [] False) $
+      hoist liftIO $
+        describePrepared pgConn name
+
 serverVersion ::
-  MonadIO m => TxET e m Int
+  (MonadIO m) => TxET e m Int
 serverVersion = do
   conn <- asks pgPQConn
   liftIO $ PQ.serverVersion conn

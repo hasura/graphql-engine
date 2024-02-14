@@ -1,0 +1,114 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    platform: linux/amd64
+    restart: always
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+    ports:
+      - 64001:5432
+    environment:
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./engine/tests/db_definition.sql
+        target: /docker-entrypoint-initdb.d/db_definition.sql
+        read_only: true
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+  reference_agent:
+    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.13
+    ports:
+      - 8102:8100
+  auth_hook:
+    ports:
+      - "3050:3050"
+    build: ./hasura-authn-webhook/dev-auth-webhook
+  jaeger:
+    image: jaegertracing/all-in-one:1.37
+    restart: always
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 4002:16686
+      - 14250:14250
+      - 14268:14268
+      - 14269:14269
+      - 4317:4317 # OTLP gRPC
+      - 4318:4318 # OTLP HTTP
+      - 9411:9411
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+      COLLECTOR_ZIPKIN_HOST_PORT: '9411'
+  postgres_connector:
+    image: ghcr.io/hasura/ndc-postgres:dev-main-dd4172889
+    ports:
+      - 8100:8100
+    volumes:
+      - ./engine/tests/pg_ndc_config.json:/config.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["serve", "--configuration", "/config.json", "--otlp-endpoint", "http://jaeger:4317"]
+  custom_connector:
+    build:
+      context: .
+      target: builder
+    ports:
+      - 8101:8101
+    healthcheck:
+      test: curl --fail http://localhost:8101/schema || exit 1
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    command: ["sh", "-c", "cargo run --bin agent"]
+  engine:
+    build:
+      context: .
+      target: builder
+    depends_on:
+      - reference_agent
+      - jaeger
+      - auth_hook
+
+    command: ["sh", "-c", "cargo run --bin engine -- --metadata-path $METADATA_PATH --otlp-endpoint http://jaeger:4317 --authn-config-path $AUTHN_CONFIG_PATH"]
+    ports:
+      # Binding to localhost:3001 avoids conflict with dev_setup
+      - 3001:3000
+
+  dev_setup:
+    build:
+      context: .
+      target: builder
+    depends_on:
+      - jaeger
+      - auth_hook
+      - postgres
+      - postgres_connector
+      - custom_connector
+    volumes:
+      - ./tracing-util:/app/tracing-util
+      - ./lang-graphql:/app/lang-graphql
+      - ./open-dds:/app/open-dds
+      - ./engine:/app/engine
+      - ./hasura-authn-core:/app/hasura-authn-core
+      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+    ports:
+      - 3000:3000
+
+volumes:
+  postgres:

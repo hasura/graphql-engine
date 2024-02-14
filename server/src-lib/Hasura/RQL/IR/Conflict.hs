@@ -8,7 +8,7 @@ where
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- TODO: When adding support for other backends, consider whether these types
 -- really are generic. If not, please start by moving them to a Postgres-specific
@@ -18,9 +18,9 @@ data ConflictTarget (b :: BackendType)
   = CTColumn [Column b]
   | CTConstraint (ConstraintName b)
 
-deriving instance Backend b => Show (ConflictTarget b)
+deriving instance (Backend b) => Show (ConflictTarget b)
 
-deriving instance Backend b => Eq (ConflictTarget b)
+deriving instance (Backend b) => Eq (ConflictTarget b)
 
 data OnConflictClauseData b v = OnConflictClauseData
   { cp1udConflictTarget :: ConflictTarget b,

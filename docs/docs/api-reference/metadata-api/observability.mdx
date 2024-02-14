@@ -1,6 +1,6 @@
 ---
 sidebar_label: Observability Options
-sidebar_position: 20
+sidebar_position: 24
 description: Manage observability options with the Hasura metadata API
 keywords:
   - hasura
@@ -13,17 +13,17 @@ keywords:
   - traces
   - tracing
   - metrics config
+  - metrics
   - monitoring
   - enterprise
   - ee
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: Observability Options
 
-<div className="badge badge--primary heading-badge">
-  Available on: Community Edition, Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted
-  Enterprise
-</div>
+<ProductBadge ce free pro ee self />
 
 ## Introduction
 
@@ -31,7 +31,7 @@ The API to manage `Observability` related metadata configurations.
 
 ## Logs and metrics configuration
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Standard, Cloud Professional</div>
+<ProductBadge pro />
 
 These are the configurations that govern the metrics and logging output for debugging and analytics.
 
@@ -58,7 +58,7 @@ X-Hasura-Role: admin
 | analyze_query_variables | false    | boolean | Enables logging of the values of the query variables provided for each request. Default is `false`. |
 
 Please see the corresponding
-[feature documentation for the usage of these configurations](/observability/operations.mdx#capture-query-variables).
+[feature documentation for the usage of these configurations](/observability/cloud-monitoring/operations.mdx#capture-query-variables).
 
 ## remove_metrics_config {#metadata-remove-metrics-config}
 
@@ -76,9 +76,10 @@ X-Hasura-Role: admin
 
 ## OpenTelemetry Configuration
 
-<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+<ProductBadge self />
 
-The OpenTelemetry configuration enables export of [distributed traces](/observability/tracing.mdx) to an
+The OpenTelemetry configuration enables export of [distributed traces](/observability/cloud-monitoring/tracing.mdx) and
+[metrics](/observability/enterprise-edition/prometheus/metrics.mdx) to an to an
 [OpenTelemetry](https://opentelemetry.io/) compliant APM receiver.
 
 ## set_opentelemetry_config {#metadata-set-opentelemetry-config}
@@ -100,11 +101,16 @@ X-Hasura-Role: admin
     "args": {
         "status": "enabled",
         "data_types": [
-            "traces"
+            "traces",
+            "metrics",
+            "logs"
         ],
         "exporter_otlp": {
             "otlp_traces_endpoint": "http://localhost:4318/v1/traces",
+            "otlp_metrics_endpoint": "http://localhost:4318/v1/metrics",
+            "otlp_logs_endpoint": "http://localhost:4318/v1/logs",
             "protocol": "http/protobuf",
+            "traces_propagators": ["tracecontext"],
             "headers": [
                 {
                     "name": "x-test-header",
@@ -138,7 +144,7 @@ X-Hasura-Role: admin
 | Key                  | Required | Schema                                                                                             | Description                                                                                                                                                                            |
 | -------------------- | -------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | status               | false    | `String`                                                                                           | Toggle to enable or disable the export. Allowed values are `enabled` and `disabled`. Default is `disabled` (If status is not explicitely passed, then the configuration gets disabled) |
-| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces` only                                                                                            |
+| data_types           | false    | `[String]`                                                                                         | List of the types of observability data points to be exported. Allowed types: `traces` and `metrics` only                                                                              |
 | exporter_otlp        | false    | [OTLPExporter](/api-reference/syntax-defs.mdx#otlpexporter). This is required if status is enabled | OpenTelemetry compliant receiver configuration                                                                                                                                         |
 | batch_span_processor | false    | [OpenTelemetryBatchSpanProcessor](/api-reference/syntax-defs.mdx#opentelemetrybatchspanprocessor)  | OpenTelemetry batch export configuration                                                                                                                                               |
 

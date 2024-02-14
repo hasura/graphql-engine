@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Entry } from './Entry';
 import { Operator } from './Operator';
 import { isPrimitive } from './utils';
@@ -25,6 +25,8 @@ export const PermissionsInput = ({
       <>
         {permissions.map((v, i) => {
           const index = isEmpty(v) ? 0 : i;
+          // Don't show empty arrays. They get handled by <EmptyEntry/ >
+          if (v === '') return null;
           return (
             <PermissionsInput
               key={path.join('.') + '.' + index}

@@ -38,7 +38,7 @@ services:
     ports:
       - "65008:26257"
     environment:
-      COCKROACH_USER: "root"
+      COCKROACH_USER: "hasura"
       COCKROACH_DATABASE: "hasura"
     volumes:
       - cockroach-data:/cockroach/cockroach-data
@@ -51,14 +51,6 @@ services:
       - "65003:1433"
     volumes:
       - mssql-data:/var/opt/mssql
-
-  sqlserver-healthcheck:
-    extends:
-      file: ../../../docker-compose/databases.yaml
-      service: sqlserver-healthcheck
-    depends_on:
-      sqlserver:
-        condition: service_started
 
   dc-reference-agent:
     extends:
@@ -73,6 +65,5 @@ services:
 volumes:
   citus-data:
   cockroach-data:
-  mariadb-data:
   mssql-data:
   postgres-data:

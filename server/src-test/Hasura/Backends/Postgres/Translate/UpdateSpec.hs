@@ -8,7 +8,7 @@ where
 import Database.PG.Query.Pool qualified as QQ
 import Hasura.Backends.Postgres.Types.Update (UpdateOpExpression (..))
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
 import Test.Backend.Postgres.Misc qualified as P
 import Test.Backend.Postgres.Update qualified as Test
@@ -25,10 +25,10 @@ spec =
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
-                  ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                  ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                 },
           expectedSQL =
             [QQ.sql|
@@ -47,18 +47,18 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations =
                     [ (P.nameColumn, UpdateSet P.textNew),
                       (P.descColumn, UpdateSet P.textOther)
                     ],
-                  ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                  ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                 },
           expectedSQL =
             [QQ.sql|
               UPDATE "public"."test"
-                SET "name" = ('new name')::text, "description" = ('other')::text
+                SET "description" = ('other')::text, "name" = ('new name')::text
                 WHERE
                   (("public"."test"."id") = (('1')::integer))
                 RETURNING * , ('true')::boolean AS "check__constraint"
@@ -72,12 +72,12 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere =
-                    [ (P.idColumn, [AEQ True P.integerOne]),
-                      (P.nameColumn, [AEQ False P.textOld])
+                    [ (P.idColumn, [AEQ NonNullableComparison P.integerOne]),
+                      (P.nameColumn, [AEQ NullableComparison P.textOld])
                     ]
                 },
           expectedSQL =
@@ -107,13 +107,13 @@ spec =
               [ Expect.UpdateBatchBuilder
                   { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                     ubbWhere =
-                      [ (P.idColumn, [AEQ True P.integerOne]),
-                        (P.nameColumn, [AEQ False P.textNew])
+                      [ (P.idColumn, [AEQ NonNullableComparison P.integerOne]),
+                        (P.nameColumn, [AEQ NullableComparison P.textNew])
                       ]
                   },
                 Expect.UpdateBatchBuilder
                   { ubbOperations = [(P.descColumn, UpdateSet P.textNew)],
-                    ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                    ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                   }
               ],
           expectedSQL =

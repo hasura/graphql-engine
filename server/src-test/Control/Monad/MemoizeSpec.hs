@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Control.Monad.MemoizeSpec (spec) where
 
@@ -16,7 +17,7 @@ instance Memoizer MemoizeWithExtraParamsT where
   runMemoizer = runMemoizeT . unMemoizeWithExtraParamsT
   memoize name key = MemoizeWithExtraParamsT . memoizeOn name key . unMemoizeWithExtraParamsT
 
-deriving newtype instance MonadState s m => MonadState s (MemoizeWithExtraParamsT k v m)
+deriving newtype instance (MonadState s m) => MonadState s (MemoizeWithExtraParamsT k v m)
 
 spec :: Spec
 spec = memoizationSpec @MemoizeWithExtraParamsT

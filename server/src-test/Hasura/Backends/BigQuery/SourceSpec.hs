@@ -26,11 +26,14 @@ data MockServiceAccount = MockServiceAccount
 
 instance HasCodec MockServiceAccount where
   codec =
-    object "MockServiceAccount" $
-      MockServiceAccount
-        <$> requiredField' "client_email" .= _msaClientEmail
-        <*> requiredField' "private_key" .= _msaPrivateKey
-        <*> requiredField' "project_id" .= _msaProjectId
+    object "MockServiceAccount"
+      $ MockServiceAccount
+      <$> requiredField' "client_email"
+      .= _msaClientEmail
+        <*> requiredField' "private_key"
+      .= _msaPrivateKey
+        <*> requiredField' "project_id"
+      .= _msaProjectId
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = False} ''MockServiceAccount)
 
@@ -47,8 +50,8 @@ spec = do
         let privateKey = "-----BEGIN RSA PRIVATE KEY----- etc."
         let projectId = "2"
         let input =
-              encode $
-                [aesonQQ|
+              encode
+                $ [aesonQQ|
                   { client_email: #{clientEmail},
                     private_key: #{privateKey},
                     project_id: #{projectId}
@@ -68,9 +71,9 @@ spec = do
         let privateKey = "-----BEGIN RSA PRIVATE KEY----- etc."
         let projectId = "2"
         let input =
-              decodeUtf8 $
-                encode $
-                  [aesonQQ|
+              decodeUtf8
+                $ encode
+                $ [aesonQQ|
                     { client_email: #{clientEmail},
                       private_key: #{privateKey},
                       project_id: #{projectId}

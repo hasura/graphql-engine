@@ -9,9 +9,9 @@ import Control.Concurrent.MVar qualified as MVar
 import Control.Concurrent.STM qualified as STM
 import Control.Immortal qualified as Immortal
 import Control.Lens ((.~))
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.UTF8 qualified as LBS
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.UUID qualified as UUID
@@ -35,14 +35,14 @@ import Hasura.Logging
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..))
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
-import Hasura.Server.Types (RequestId (..))
-import Hasura.Session (RoleName, mkRoleName)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (ModelInfoLogOff), RequestId (..))
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
@@ -55,24 +55,26 @@ buildStreamingSubscriptionSuite :: IO Spec
 buildStreamingSubscriptionSuite = do
   env <- getEnvironment
 
-  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $
-    runWithEnv env $ do
+  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack)
+    $ runWithEnv env
+    $ do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
-      onNothing maybeV $
-        throwError $
-          "Expected: " <> envVar
+      onNothing maybeV
+        $ throwError
+        $ "Expected: "
+        <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
-  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
+  pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty Nothing
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
 
-  pure $
-    describe "Streaming subscriptions polling tests" $
-      streamingSubscriptionPollingSpec dbSourceConfig
+  pure
+    $ describe "Streaming subscriptions polling tests"
+    $ streamingSubscriptionPollingSpec dbSourceConfig
 
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "Use a non empty string") . mkRoleName
@@ -95,6 +97,9 @@ getStaticCohortSnapshot (Cohort cohortId _respRef existingSubsTV newSubsTV _) = 
 
 streamingSubscriptionPollingSpec :: SourceConfig ('Postgres 'Vanilla) -> Spec
 streamingSubscriptionPollingSpec srcConfig = do
+  dummyServerStore <- runIO newStore
+  dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
+  dummyPromMetrics <- runIO makeDummyPrometheusMetrics
   let setupDDLTx =
         PG.unitQE
           defaultTxErrorHandler
@@ -132,6 +137,8 @@ streamingSubscriptionPollingSpec srcConfig = do
   runIO setup
 
   pollerId <- runIO $ PollerId <$> UUID.nextRandom
+  pollerResponseState <- runIO $ STM.newTVarIO PRSSuccess
+  emptyOperationNamesMap <- runIO $ STM.atomically $ TMap.new
   let defaultSubscriptionOptions = mkSubscriptionsOptions Nothing Nothing -- use default values
       paramQueryHash = mkUnsafeParameterizedQueryHash "random"
       -- hardcoded multiplexed query which is generated for the following GraphQL query:
@@ -150,10 +157,15 @@ streamingSubscriptionPollingSpec srcConfig = do
               ORDER BY "root.pg.id" ASC   ) AS "_2_root"      ) AS "numbers_stream"      )
               AS "_fld_resp" ON ('true')
         |]
+  let logger' :: Logger Hasura = Logger $ \l -> do
+        let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+        t <- liftIO $ getFormattedTime Nothing
+        liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail Nothing Nothing
   let pollingAction cohortMap testSyncAction =
         pollStreamingQuery
           @('Postgres 'Vanilla)
           pollerId
+          pollerResponseState
           defaultSubscriptionOptions
           (SNDefault, srcConfig)
           (mkRoleNameE "random")
@@ -163,6 +175,14 @@ streamingSubscriptionPollingSpec srcConfig = do
           [G.name|randomRootField|]
           (const $ pure ())
           testSyncAction
+          dummyPromMetrics
+          (pure GranularMetricsOff)
+          emptyOperationNamesMap
+          Nothing
+          Nothing
+          logger'
+          []
+          (pure ModelInfoLogOff)
 
       mkSubscriber sId =
         let wsId = maybe (error "Invalid UUID") WS.mkUnsafeWSId $ UUID.fromString "ec981f92-8d5a-47ab-a306-80af7cfb1113"
@@ -181,48 +201,51 @@ streamingSubscriptionPollingSpec srcConfig = do
       -- well create a new function with the other variables being set to `mempty`
       mkCohortVariables' = mkCohortVariables mempty mempty mempty mempty
 
-  describe "Streaming subcription poll" $ do
+  describe "Streaming subscription poll" $ do
     cohortId1 <- runIO newCohortId
     (subscriberId1, subscriberId2) <- runIO $ (,) <$> newSubscriberId <*> newSubscriberId
     let subscriber1 = mkSubscriber subscriberId1
         subscriber2 = mkSubscriber subscriberId2
-    let initialCursorValue = Map.singleton Name._id (TELit "1")
-    cohort1 <- runIO $
-      liftIO $
-        STM.atomically $ do
-          cohort1' <- mkNewCohort cohortId1 initialCursorValue
-          -- adding a subscriber to the newly created cohort
-          addSubscriberToCohort subscriber1 cohort1'
-          pure cohort1'
+    let initialCursorValue = HashMap.singleton Name._id (TELit "1")
+    cohort1 <- runIO
+      $ liftIO
+      $ STM.atomically
+      $ do
+        cohort1' <- mkNewCohort cohortId1 initialCursorValue
+        -- adding a subscriber to the newly created cohort
+        addSubscriberToCohort subscriber1 cohort1'
+        pure cohort1'
     cohortMap <- runIO $ liftIO $ STM.atomically $ TMap.new
     let cohortKey1 = mkCohortVariables' (mkUnsafeValidateVariables initialCursorValue)
     cohortId2 <- runIO newCohortId
-    cohort2 <- runIO $
-      liftIO $
-        STM.atomically $ do
-          cohort2' <- mkNewCohort cohortId2 initialCursorValue
-          addSubscriberToCohort subscriber2 cohort2'
-          pure cohort2'
+    cohort2 <- runIO
+      $ liftIO
+      $ STM.atomically
+      $ do
+        cohort2' <- mkNewCohort cohortId2 initialCursorValue
+        addSubscriberToCohort subscriber2 cohort2'
+        pure cohort2'
 
     let mkCohortKey n = cohortKey1 & cvCursorVariables . unValidatedVariables . ix [G.name|id|] .~ TELit n
         cohortKey2 = mkCohortKey "2"
         cohortKey3 = mkCohortKey "3"
 
     describe "after first poll, the key of the cohort should be updated to contain the next cursor value" $ do
-      runIO $
-        STM.atomically $ do
+      runIO
+        $ STM.atomically
+        $ do
           TMap.reset cohortMap
           TMap.insert cohort1 cohortKey1 cohortMap
 
-      runIO $ pollingAction cohortMap Nothing Nothing
+      runIO $ pollingAction cohortMap Nothing
       currentCohortMap <- runIO $ STM.atomically $ TMap.getMap cohortMap
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should not be found anymore at cohortKey1" $ do
-        cohortMappedToCohortKey1 <- STM.atomically $ traverse getStaticCohortSnapshot $ Map.lookup cohortKey1 currentCohortMap
+        cohortMappedToCohortKey1 <- STM.atomically $ traverse getStaticCohortSnapshot $ HashMap.lookup cohortKey1 currentCohortMap
         cohortMappedToCohortKey1 `shouldBe` Nothing
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should be found anymore at cohortKey2" $ do
-        cohortMappedToCohortKey2 <- STM.atomically $ traverse getStaticCohortSnapshot $ Map.lookup cohortKey2 currentCohortMap
+        cohortMappedToCohortKey2 <- STM.atomically $ traverse getStaticCohortSnapshot $ HashMap.lookup cohortKey2 currentCohortMap
         cohortMappedToCohortKey2 `shouldBe` Just (CohortStaticSnapshot cohortId1 [subscriberId1] mempty)
 
     describe "manipulating cohorts" $ do
@@ -237,17 +260,19 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.insert cohort2 cohortKey3 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let currentCohort2 = Map.lookup cohortKey3 currentCohortMap
+        let currentCohort2 = HashMap.lookup cohortKey3 currentCohortMap
 
         (originalCohort2StaticSnapshot, currentCohort2StaticSnapshot) <-
-          STM.atomically $
-            (,) <$> getStaticCohortSnapshot cohort2 <*> traverse getStaticCohortSnapshot currentCohort2
+          STM.atomically
+            $ (,)
+            <$> getStaticCohortSnapshot cohort2
+            <*> traverse getStaticCohortSnapshot currentCohort2
         Just originalCohort2StaticSnapshot `shouldBe` currentCohort2StaticSnapshot
 
       it "deleting a cohort concurrently should not retain the deleted cohort in the cohort map" $ do
@@ -260,13 +285,13 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete cohortKey1 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        Map.size currentCohortMap `shouldBe` 0 -- since there was only one cohort initially, now the cohort map should not have any cohorts
+        HashMap.size currentCohortMap `shouldBe` 0 -- since there was only one cohort initially, now the cohort map should not have any cohorts
     describe "manipulating adding and deleting of subscribers concurrently" $ do
       it "adding a new subscriber concurrently should place the subscriber in the appropriate cohort" $ do
         temporarySubscriberId <- newSubscriberId
@@ -279,7 +304,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ addSubscriberToCohort newTemporarySubscriber cohort1
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               -- concurrently inserting a new cohort to a key (cohortKey2) to which
               -- cohort1 is expected to be associated after the current poll
@@ -287,8 +312,8 @@ streamingSubscriptionPollingSpec srcConfig = do
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let cohortKey2Cohort = Map.lookup cohortKey2 currentCohortMap
-            cohortKey1Cohort = Map.lookup cohortKey1 currentCohortMap
+        let cohortKey2Cohort = HashMap.lookup cohortKey2 currentCohortMap
+            cohortKey1Cohort = HashMap.lookup cohortKey1 currentCohortMap
         cohortKey1CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey1Cohort
         _cssNewSubscribers <$> cohortKey1CohortSnapshot `shouldBe` Just [temporarySubscriberId]
 
@@ -296,8 +321,8 @@ streamingSubscriptionPollingSpec srcConfig = do
         cohortKey2CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey2Cohort
         _cssNewSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
         _cssExistingSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
-        STM.atomically $
-          TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
+        STM.atomically
+          $ TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
 
       it "deleting a subscriber from a cohort should not retain the subscriber in any of the cohorts" $ do
         temporarySubscriberId <- newSubscriberId
@@ -311,34 +336,34 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
           )
         currentCohortMap <- STM.atomically $ TMap.getMap cohortMap
-        let cohortKey2Cohort = Map.lookup cohortKey2 currentCohortMap
-            cohortKey1Cohort = Map.lookup cohortKey1 currentCohortMap
+        let cohortKey2Cohort = HashMap.lookup cohortKey2 currentCohortMap
+            cohortKey1Cohort = HashMap.lookup cohortKey1 currentCohortMap
         cohortKey1CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey1Cohort
         cohortKey2CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey2Cohort
 
         -- check the deleted subscriber in the older cohort
-        _cssExistingSubscribers <$> cohortKey1CohortSnapshot
+        _cssExistingSubscribers
+          <$> cohortKey1CohortSnapshot
           `shouldSatisfy` (\existingSubs -> temporarySubscriberId `notElem` concat (maybeToList existingSubs))
-        _cssNewSubscribers <$> cohortKey1CohortSnapshot
+        _cssNewSubscribers
+          <$> cohortKey1CohortSnapshot
           `shouldSatisfy` (\newSubs -> temporarySubscriberId `notElem` concat (maybeToList newSubs))
-        _cssExistingSubscribers <$> cohortKey2CohortSnapshot
+        _cssExistingSubscribers
+          <$> cohortKey2CohortSnapshot
           `shouldSatisfy` (\existingSubs -> temporarySubscriberId `notElem` concat (maybeToList existingSubs))
-        _cssNewSubscribers <$> cohortKey2CohortSnapshot
+        _cssNewSubscribers
+          <$> cohortKey2CohortSnapshot
           `shouldSatisfy` (\newSubs -> temporarySubscriberId `notElem` concat (maybeToList newSubs))
-        STM.atomically $
-          TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
+        STM.atomically
+          $ TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
 
     describe "Adding two subscribers concurrently" $ do
-      dummyServerStore <- runIO newStore
-      dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
-      dummyPromMetrics <- runIO makeDummyPrometheusMetrics
-
       subscriptionState <- do
         runIO $ initSubscriptionsState (const (pure ()))
 
@@ -367,7 +392,7 @@ streamingSubscriptionPollingSpec srcConfig = do
       let logger :: Logger Hasura = Logger $ \l -> do
             let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
             t <- liftIO $ getFormattedTime Nothing
-            liftIO $ putStrLn $ LBS.toString $ A.encode $ EngineLog t logLevel logType logDetail
+            liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail Nothing Nothing
 
           subOptions = mkSubscriptionsOptions Nothing Nothing
           addStreamSubQuery subscriberMetadata reqId =
@@ -378,20 +403,24 @@ streamingSubscriptionPollingSpec srcConfig = do
               dummyPromMetrics
               subscriberMetadata
               subscriptionState
-              subOptions
+              (pure (subOptions, subOptions))
               SNDefault
               dummyParamQueryHash
               Nothing
               reqId
               [G.name|numbers_stream|]
               subscriptionQueryPlan
+              (pure GranularMetricsOff)
               (const (pure ()))
+              Nothing
+              []
+              (pure ModelInfoLogOff)
 
       it "concurrently adding two subscribers should retain both of them in the poller map" $ do
         -- Adding two subscribers that query identical queries should be adding them into the same
         -- cohort of the same poller
-        liftIO $
-          Async.concurrently_
+        liftIO
+          $ Async.concurrently_
             (addStreamSubQuery subscriber1Metadata requestId1)
             (addStreamSubQuery subscriber2Metadata requestId2)
 
@@ -399,7 +428,7 @@ streamingSubscriptionPollingSpec srcConfig = do
 
         streamQueryMapEntries <- STM.atomically $ ListT.toList $ STMMap.listT streamQueryMap
         length streamQueryMapEntries `shouldBe` 1
-        let (pollerKey, (Poller currentCohortMap ioState)) = head streamQueryMapEntries
+        let (pollerKey, (Poller currentCohortMap _ ioState _ _)) = head streamQueryMapEntries
         cohorts <- STM.atomically $ TMap.toList currentCohortMap
         length cohorts `shouldBe` 1
         let (_cohortKey, Cohort _ _ curSubsTV newSubsTV _) = head cohorts

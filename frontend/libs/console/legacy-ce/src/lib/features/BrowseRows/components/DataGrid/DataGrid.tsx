@@ -404,6 +404,7 @@ export const DataGrid = (props: DataGridProps) => {
           onRowsSelect={onRowsSelect}
           onRowDelete={deleteRow}
           isRowsSelectionEnabled={primaryKeys.length > 0}
+          tableColumns={tableColumnQueryResult?.columns ?? []}
         />
       )}
 

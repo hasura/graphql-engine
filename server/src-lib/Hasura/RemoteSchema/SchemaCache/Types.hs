@@ -53,20 +53,21 @@ import Data.ByteString.Lazy qualified as BL
 import Data.Char qualified as C
 import Data.Environment qualified as Env
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers (HeaderConf (..))
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
-import Hasura.Session
+import Hasura.Session (SessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.URI.Extended qualified as N
 import Witherable (Filterable (..))
@@ -94,7 +95,7 @@ data RemoteSchemaCtxG remoteFieldInfo = RemoteSchemaCtx
     -- | The raw response from the introspection query against the remote server.
     -- We store this so we can efficiently service 'introspect_remote_schema'.
     _rscRawIntrospectionResult :: BL.ByteString,
-    _rscPermissions :: Map.HashMap RoleName IntrospectionResult,
+    _rscPermissions :: HashMap.HashMap RoleName IntrospectionResult,
     _rscRemoteRelationships :: RemoteSchemaRelationshipsG remoteFieldInfo
   }
   deriving (Eq, Functor, Foldable, Traversable)
@@ -129,7 +130,8 @@ type PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition =
 
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
-  { _vrsdUrl :: EnvRecord N.URI,
+  { _vrsdName :: RemoteSchemaName,
+    _vrsdUrl :: EnvRecord N.URI,
     _vrsdHeaders :: [HeaderConf],
     _vrsdFwdClientHeaders :: Bool,
     _vrsdTimeoutSeconds :: Int,
@@ -160,7 +162,7 @@ instance Hashable RemoteSchemaCustomizer
 
 remoteSchemaCustomizeTypeName :: RemoteSchemaCustomizer -> MkTypename
 remoteSchemaCustomizeTypeName RemoteSchemaCustomizer {..} = MkTypename $ \typeName ->
-  Map.lookupDefault typeName typeName _rscCustomizeTypeName
+  HashMap.lookupDefault typeName typeName _rscCustomizeTypeName
 
 newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
   { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
@@ -172,11 +174,11 @@ withRemoteFieldNameCustomization = local . set hasLens
 
 remoteSchemaCustomizeFieldName :: RemoteSchemaCustomizer -> CustomizeRemoteFieldName
 remoteSchemaCustomizeFieldName RemoteSchemaCustomizer {..} = CustomizeRemoteFieldName $ \typeName fieldName ->
-  Map.lookup typeName _rscCustomizeFieldName >>= Map.lookup fieldName & fromMaybe fieldName
+  HashMap.lookup typeName _rscCustomizeFieldName >>= HashMap.lookup fieldName & fromMaybe fieldName
 
 hasTypeOrFieldCustomizations :: RemoteSchemaCustomizer -> Bool
 hasTypeOrFieldCustomizations RemoteSchemaCustomizer {..} =
-  not $ Map.null _rscCustomizeTypeName && Map.null _rscCustomizeFieldName
+  not $ HashMap.null _rscCustomizeTypeName && HashMap.null _rscCustomizeFieldName
 
 -- | 'RemoteSchemaDef' after the RemoteSchemaCustomizer has been generated
 -- by fetchRemoteSchema
@@ -198,19 +200,21 @@ validateRemoteSchemaCustomization Nothing = pure ()
 validateRemoteSchemaCustomization (Just RemoteSchemaCustomization {..}) =
   for_ _rscFieldNames $ \fieldCustomizations ->
     for_ fieldCustomizations $ \RemoteFieldCustomization {..} ->
-      for_ (Map.keys _rfcMapping) $ \fieldName ->
-        when (isReservedName fieldName) $
-          throw400 InvalidParams $
-            "attempt to customize reserved field name " <>> fieldName
+      for_ (HashMap.keys _rfcMapping) $ \fieldName ->
+        when (isReservedName fieldName)
+          $ throw400 InvalidParams
+          $ "attempt to customize reserved field name "
+          <>> fieldName
   where
     isReservedName = ("__" `T.isPrefixOf`) . G.unName
 
 validateRemoteSchemaDef ::
   (MonadError QErr m) =>
+  RemoteSchemaName ->
   Env.Environment ->
   RemoteSchemaDef ->
   m ValidatedRemoteSchemaDef
-validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
+validateRemoteSchemaDef name env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
   validateRemoteSchemaCustomization customization
   case (mUrl, mUrlEnv) of
     -- case 1: URL is supplied as a template
@@ -218,11 +222,11 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout 
       resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
       case N.parseURI $ T.unpack resolvedWebhookTxt of
         Nothing -> throw400 InvalidParams $ "not a valid URI generated from the template: " <> getTemplateFromUrl url
-        Just uri -> return $ ValidatedRemoteSchemaDef (EnvRecord (getTemplateFromUrl url) uri) hdrs fwdHdrs timeout customization
+        Just uri -> return $ ValidatedRemoteSchemaDef name (EnvRecord (getTemplateFromUrl url) uri) hdrs fwdHdrs timeout customization
     -- case 2: URL is supplied as an environment variable
     (Nothing, Just urlEnv) -> do
       urlEnv' <- getUrlFromEnv env urlEnv
-      return $ ValidatedRemoteSchemaDef urlEnv' hdrs fwdHdrs timeout customization
+      return $ ValidatedRemoteSchemaDef name urlEnv' hdrs fwdHdrs timeout customization
     -- case 3: No url is supplied, throws an error 400
     (Nothing, Nothing) ->
       throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
@@ -232,7 +236,7 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout 
   where
     hdrs = fromMaybe [] hdrC
     timeout = fromMaybe 60 mTimeout
-    getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
+    getTemplateFromUrl url = printTemplate $ unInputWebhook url
 
 -- | See `resolveRemoteVariable` function. This data type is used
 --   for validation of the session variable value
@@ -285,7 +289,7 @@ lookupType ::
   RemoteSchemaIntrospection ->
   G.Name ->
   Maybe (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
-lookupType (RemoteSchemaIntrospection types) name = Map.lookup name types
+lookupType (RemoteSchemaIntrospection types) name = HashMap.lookup name types
 
 lookupObject ::
   RemoteSchemaIntrospection ->
@@ -411,10 +415,10 @@ $(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
 instance (J.ToJSON remoteFieldInfo) => J.ToJSON (RemoteSchemaCtxG remoteFieldInfo) where
   toJSON RemoteSchemaCtx {..} =
-    J.object $
-      [ "name" J..= _rscName,
-        "info" J..= J.toJSON _rscInfo
-      ]
+    J.object
+      $ [ "name" J..= _rscName,
+          "info" J..= J.toJSON _rscInfo
+        ]
 
 instance J.ToJSON RemoteSchemaFieldInfo where
   toJSON RemoteSchemaFieldInfo {..} =

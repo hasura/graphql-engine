@@ -13,6 +13,8 @@ export const getEndpoints = (globals: typeof consoleGlobals) => {
     graphQLUrl: `${baseUrl}/v1/graphql`,
     relayURL: `${baseUrl}/v1beta1/relay`,
     query: `${baseUrl}/v2/query`,
+    entitlement: `${baseUrl}/v1/entitlement`,
+    license: `${baseUrl}/v1/entitlement/license`,
     metadata: `${baseUrl}/v1/metadata`,
     // metadata: `${baseUrl}/v1/query`,
     queryV2: `${baseUrl}/v2/query`,
@@ -30,6 +32,10 @@ export const getEndpoints = (globals: typeof consoleGlobals) => {
       globals.luxDataHost
     }/v1/graphql`,
     prometheusUrl: `${baseUrl}/v1/metrics`,
+    registerEETrial: `https://licensing.pro.hasura.io/v1/graphql`,
+    schemaRegistry: `${window.location.protocol}//${globals.schemaRegistryHost}/v1/graphql`,
+    // registerEETrial: `http://licensing.lux-dev.hasura.me/v1/graphql`,
+    exportOpenApi: 'api/swagger/json',
   };
 
   return endpoints;

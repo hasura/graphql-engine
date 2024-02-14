@@ -5,9 +5,9 @@ import { IntrospectedTable, TableColumn } from '../../types';
 export const adaptIntrospectedBigQueryTables = (
   runSqlResponse: RunSQLResponse
 ): IntrospectedTable[] => {
-  /* 
+  /*
     The `slice(1)` on the result is done because the first item of the result is always the columns names from the SQL output.
-    It is not required for the final result and should be avoided 
+    It is not required for the final result and should be avoided
   */
   const adaptedResponse = runSqlResponse.result
     ?.slice(1)
@@ -41,6 +41,7 @@ export function adaptSQLDataType(
       ],
       number: ['BIGNUMERIC', 'FLOAT64', 'INT64', 'INTERVAL', 'NUMERIC'],
       json: ['JSON', 'xml'],
+      float: ['FLOAT64'],
     };
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>

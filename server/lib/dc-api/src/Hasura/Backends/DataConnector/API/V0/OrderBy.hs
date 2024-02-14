@@ -1,11 +1,18 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.OrderBy
   ( OrderBy (..),
     OrderByRelation (..),
     OrderByElement (..),
+    obeTargetPath,
+    obeTarget,
+    obeOrderDirection,
     OrderByTarget (..),
+    _OrderByColumn,
+    _OrderByStarCountAggregate,
+    _OrderBySingleColumnAggregate,
     OrderDirection (..),
   )
 where
@@ -13,6 +20,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
@@ -76,7 +84,7 @@ instance HasCodec OrderByElement where
         <*> requiredField "order_direction" "The direction of ordering to apply" .= _obeOrderDirection
 
 data OrderByTarget
-  = OrderByColumn API.V0.ColumnName
+  = OrderByColumn API.V0.ColumnSelector (Maybe API.V0.RedactionExpressionName)
   | OrderByStarCountAggregate
   | OrderBySingleColumnAggregate API.V0.SingleColumnAggregate
   deriving stock (Eq, Generic, Ord, Show)
@@ -87,16 +95,19 @@ instance HasCodec OrderByTarget where
     object "OrderByTarget" $
       discriminatedUnionCodec "type" enc dec
     where
-      columnCodec = requiredField' "column"
+      columnCodec =
+        (,)
+          <$> requiredField' "column" .= fst
+          <*> optionalFieldOrNull "redaction_expression" "If present, the name of the redaction expression to evaluate. If the expression is false, the column value must be nulled out before being ordered over." .= snd
       starAggregateCodec = pureCodec ()
       singleColumnAggregateCodec = API.V0.singleColumnAggregateObjectCodec
       enc = \case
-        OrderByColumn c -> ("column", mapToEncoder c columnCodec)
+        OrderByColumn c r -> ("column", mapToEncoder (c, r) columnCodec)
         OrderByStarCountAggregate -> ("star_count_aggregate", mapToEncoder () starAggregateCodec)
         OrderBySingleColumnAggregate agg -> ("single_column_aggregate", mapToEncoder agg singleColumnAggregateCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("OrderByColumn", mapToDecoder OrderByColumn columnCodec)),
+          [ ("column", ("OrderByColumn", mapToDecoder (uncurry OrderByColumn) columnCodec)),
             ("star_count_aggregate", ("OrderByStarCountAggregate", mapToDecoder (const OrderByStarCountAggregate) starAggregateCodec)),
             ("single_column_aggregate", ("OrderBySingleColumnAggregate", mapToDecoder OrderBySingleColumnAggregate singleColumnAggregateCodec))
           ]
@@ -111,3 +122,6 @@ instance HasCodec OrderDirection where
   codec =
     named "OrderDirection" $
       stringConstCodec [(Ascending, "asc"), (Descending, "desc")]
+
+$(makeLenses 'OrderByElement)
+$(makePrisms ''OrderByTarget)

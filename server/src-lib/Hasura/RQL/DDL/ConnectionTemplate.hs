@@ -12,6 +12,7 @@ where
 
 import Data.Aeson (FromJSON (parseJSON), ToJSON (toJSON))
 import Data.Aeson qualified as J
+import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..))
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -24,15 +25,21 @@ import Hasura.SQL.AnyBackend qualified as AB
 -- | The input type for the metadata API `<backend>_test_connection_template`
 data TestConnectionTemplate b = TestConnectionTemplate
   { _tctSourceName :: SourceName,
-    _tctRequestContext :: ConnectionTemplateRequestContext b
+    _tctRequestContext :: ConnectionTemplateRequestContext b,
+    _tctConnectionTemplate :: (Maybe ConnectionTemplate)
   }
 
 instance (Backend b) => FromJSON (TestConnectionTemplate b) where
   parseJSON v =
     flip (J.withObject "TestConnectionTemplate") v $ \o ->
       TestConnectionTemplate
-        <$> o J..:? "source_name" J..!= defaultSource
-        <*> o J..: "request_context"
+        <$> o
+        J..:? "source_name"
+        J..!= defaultSource
+        <*> o
+        J..: "request_context"
+        <*> o
+        J..:? "connection_template"
 
 -- | Resolver for the metadata API `<backend>_test_connection_template`
 runTestConnectionTemplate ::
@@ -40,9 +47,9 @@ runTestConnectionTemplate ::
   (MonadError QErr m, CacheRM m, Backend b, MetadataM m) =>
   TestConnectionTemplate b ->
   m EncJSON
-runTestConnectionTemplate (TestConnectionTemplate sourceName requestContext) = do
+runTestConnectionTemplate (TestConnectionTemplate sourceName requestContext connectionTemplateMaybe) = do
   sourceConfig <- askSourceConfig @b sourceName
-  liftEither $ resolveConnectionTemplate @b sourceConfig requestContext
+  liftEither $ resolveConnectionTemplate @b sourceConfig requestContext connectionTemplateMaybe
 
 -- A wrapper around the `ResolvedConnectionTemplate` for adding this to `query-log`
 newtype ResolvedConnectionTemplateWrapper b = ResolvedConnectionTemplateWrapper

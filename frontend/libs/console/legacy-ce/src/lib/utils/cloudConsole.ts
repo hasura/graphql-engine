@@ -10,6 +10,10 @@ export function isCloudConsole(g: typeof globals) {
   return !!g.hasuraCloudTenantId && g.consoleType === 'cloud';
 }
 
+export function isEECloud(g: typeof globals) {
+  return !g.hasuraCloudTenantId && g.consoleType === 'cloud';
+}
+
 //  This function returns true if the current user has access to a lux feature
 export function hasLuxFeatureAccess(g: typeof globals, feature: LuxFeature) {
   return (globals.allowedLuxFeatures || []).includes(feature);

@@ -1,0 +1,11 @@
+{
+  "validationFails": 6,
+  "invalidEnumValue": 0,
+  "invalidFields": 0,
+  "duplicateNamesInSchema": 0,
+  "cannotSanitize": 16,
+  "resolveAllOf": 0,
+  "itemsPropertyMissing": 0,
+  "invalidReference": 7,
+  "other": 0
+}

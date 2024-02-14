@@ -229,6 +229,16 @@ export HASURA_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 # Maybe launch the hasura instance we'll benchmark
 function maybe_launch_hasura_container() {
   if [ -n "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
+    # NOTE!: presence of HASURA_GRAPHQL_EE_LICENSE_KEY will determine if we run
+    # in EE mode or not, and this will happen silently! version doesn't indicate
+    # the mode we're in.
+    if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY}" ]; then
+        echo_pretty "Running in OSS mode"
+    else
+        echo_pretty "Running in EE mode"
+        # consistent across scripts/dev.sh and server/benchmarks:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+    fi
     HASURA_CONTAINER_NAME="graphql-engine-to-benchmark"
     # `TASKSET_HASURA`, `$DOCKER_NETWORK_HOST_MODE`, and `HASURA_RTS` depend on
     # word-splitting.
@@ -243,12 +253,18 @@ function maybe_launch_hasura_container() {
       --env HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       --env HASURA_GRAPHQL_ENABLE_CONSOLE=true \
       --env HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
+      --env HASURA_GRAPHQL_ADMIN_SECRET \
+      --env HASURA_GRAPHQL_EE_LICENSE_KEY \
+      --env HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL=0 \
+      --env HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL=0 \
       $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve \
         +RTS -T $HASURA_RTS -RTS
-      # ^^^ We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
+      # ^^^ - We run with `+RTS -T` to expose the /dev/rts_stats endpoint for
       #     inspecting memory usage stats
+      #     - We disable some unneeded (currently) polling to try to eliminate
+      #     some sources of non-determinism
   else
     echo_pretty "We'll benchmark the hasura instance at port $HASURA_GRAPHQL_SERVER_PORT"
   fi
@@ -256,18 +272,30 @@ function maybe_launch_hasura_container() {
 
 function hasura_wait() {
   # Wait for the graphql-engine under bench to be ready
-  echo -n "Waiting for graphql-engine at $HASURA_URL"
+  wait_time=120
+  echo -n "Waiting for graphql-engine at $HASURA_URL for $wait_time seconds"
   if [ -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
     echo -n " (e.g. from 'dev.sh graphql-engine')"
   fi
+  start_time="$(date +%s)"
   until curl -s "$HASURA_URL/v1/query" &>/dev/null; do
+    if [[ $(( "$(date +%s)" - start_time )) -gt "$wait_time" ]]; then
+      echo
+      echo 'Timed out.'
+      if [ -n "$HASURA_CONTAINER_NAME" ]; then
+        echo 'Container logs:'
+        docker logs -f "$HASURA_CONTAINER_NAME" 2>&1 &
+        docker stop "$HASURA_CONTAINER_NAME" || : >/dev/null
+      fi
+      return 1
+    fi
     echo -n '.' && sleep 0.2
   done
-  echo ""
-  echo " Ok"
+  echo
+  echo ' Ok'
   echo -n "Sleeping for an additional $POST_SETUP_SLEEP_TIME seconds as requested... "
   sleep "$POST_SETUP_SLEEP_TIME"
-  echo " Ok"
+  echo ' Ok'
 }
 
 #####################
@@ -347,6 +375,10 @@ function run_adhoc_operation_benchmarks() (
       if ! [[ "$iterations" =~ ^[0-9]+$ ]] ; then
           echo "Error: $script must define 'iterations'" >&2; exit 1
       fi
+      # shellcheck disable=SC2154
+      if ! [[ "$pause_after_seconds" =~ ^[0-9]+$ ]] ; then
+          echo "Error: $script must define 'pause_after_seconds'" >&2; exit 1
+      fi
 
       # TODO I was relying on being able to also get 'mutator_cpu_ns' to get a
       # stable metric of CPU usage (like counting instructions with 'perf').
@@ -384,6 +416,9 @@ function run_adhoc_operation_benchmarks() (
          latencies_ns+=" $((time_ns_after-time_ns_before))"
       done
       echo
+
+      # Allowing any asynchronous activity to settle:
+      sleep "$pause_after_seconds"
 
       allocated_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
       mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')
@@ -495,6 +530,7 @@ function load_data_and_schema() {
       --fail \
       --request POST \
       --header "Content-Type: application/json" \
+      --header "X-Hasura-Admin-Secret: my-secret" \
       --data @replace_metadata.json \
       "$HASURA_URL/v1/query"
   else

@@ -5,9 +5,6 @@ import {
 
 import globals from '../Globals';
 
-const adminSecretLabel = `x-hasura-${globals.adminSecretLabel}`;
-const personalAccessTokenLabel = globals.patLabel;
-
 import {
   CONSTANT_HEADERS,
   CLIENT_NAME_HEADER,
@@ -15,6 +12,9 @@ import {
   HASURA_COLLABORATOR_TOKEN,
 } from '../constants';
 import extendedGlobals from '../Globals';
+
+const adminSecretLabel = `x-hasura-${globals.adminSecretLabel}`;
+const personalAccessTokenLabel = globals.patLabel;
 
 const persistFilteredGraphiQLHeaders = headers => {
   const filteredHeaders = headers.filter(header => {
@@ -111,18 +111,26 @@ const upsertToLS = (key, value) => {
        */
       if (key.toLowerCase() === adminSecretLabel) {
         initialHeader = initialHeader.filter(i => {
-          return i.key !== globals.collabLabel;
+          return ![
+            globals.collabLabel,
+            globals.ssoLabel,
+            globals.patLabel,
+          ].includes(i.key);
         });
       } else if (key.toLowerCase() === globals.collabLabel) {
         // The admin secret should not be filtered for team console
         if (extendedGlobals.consoleType !== 'cloud') {
           initialHeader = initialHeader.filter(i => {
-            return i.key !== adminSecretLabel;
+            return ![globals.ssoLabel, globals.patLabel].includes(i.key);
           });
         }
       } else if (key.toLowerCase() === globals.patLabel) {
         initialHeader = initialHeader.filter(i => {
           return i.key !== personalAccessTokenLabel;
+        });
+      } else if (key.toLowerCase() === globals.ssoLabel) {
+        initialHeader = initialHeader.filter(i => {
+          return ![globals.collabLabel, globals.patLabel].includes(i.key);
         });
       }
       persistFilteredGraphiQLHeaders(initialHeader);

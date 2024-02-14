@@ -1,12 +1,8 @@
 import pytest
-import os
 import redis
 
-from validate import check_query_f, check_query, get_conf_f
+from validate import check_query_f
 from context import PytestConf
-
-# Mark that all tests in this module can be run as server upgrade tests
-pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 

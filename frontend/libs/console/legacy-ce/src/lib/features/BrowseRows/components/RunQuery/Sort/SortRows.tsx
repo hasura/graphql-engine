@@ -11,7 +11,7 @@ export type SortRowsProps = {
   columns: TableColumn[];
   name: string;
   initialSorts?: FiltersAndSortFormValues['sorts'];
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const SortRows = ({
@@ -32,13 +32,14 @@ export const SortRows = ({
     }
   }, [initialSorts?.length]);
 
-  const columnOptions: SelectItem[] = columns.map(column => {
-    const value = column.graphQLProperties?.name ?? column.name;
-    return {
-      label: column.name,
-      value,
-    };
-  });
+  const columnOptions: SelectItem[] = columns
+    .sort((a, b) => (a.name > b.name ? 1 : -1))
+    .map(column => {
+      return {
+        label: column.name,
+        value: column.name,
+      };
+    });
 
   const orderByOptions = [
     {
@@ -53,7 +54,7 @@ export const SortRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
-    setTimeout(() => onRemove(), 100);
+    onRemove?.();
   };
 
   return (
@@ -64,7 +65,7 @@ export const SortRows = ({
         <div className="mb-sm italic">No sort conditions present.</div>
       )}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-2">
         {fields.map((_, index) => (
           <SortRow
             key={index}

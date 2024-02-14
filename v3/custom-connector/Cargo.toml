@@ -1,0 +1,18 @@
+[package]
+name = "custom-connector"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.13" }
+indexmap = "2"
+serde_json = "^1.0.92"
+tokio = { version = "^1.26.0", features = [
+    "macros",
+    "rt-multi-thread",
+    "parking_lot",
+] }
+axum = "^0.6.9"
+regex = "^1.7.3"
+csv = "^1.2.2"
+prometheus = "^0.13.3"

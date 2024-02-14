@@ -62,7 +62,6 @@ import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpda
 import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
@@ -75,10 +74,11 @@ import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | buildTableQueryAndSubscriptionFields builds the field parsers of a table.
@@ -159,10 +159,9 @@ buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo gqlName
         selectPerm <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-        let tableSelPerm = tablePermissionsInfo selectPerm
         tableGQLName <- getTableIdentifierName tableInfo
         let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
-        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
+        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo selectPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
 
       pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)
   where
@@ -208,8 +207,8 @@ buildTableStreamingSubscriptionFields mkRootFieldName tableName tableInfo tableI
           customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
           selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
           selectStreamName =
-            runMkRootFieldName mkRootFieldName $
-              setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
+            runMkRootFieldName mkRootFieldName
+              $ setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
       catMaybes
         <$> sequenceA
           [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable tableInfo selectStreamName selectDesc

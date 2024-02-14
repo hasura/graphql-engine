@@ -1,29 +1,29 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { Driver } from '../../../../../dataSources';
-import { ReduxState } from '../../../../../types';
-import requestAction from '../../../../../utils/requestAction';
-import type { AsyncThunkConfig } from '../../../../../store';
-import { makeMigrationCall } from '../../DataActions';
-import { getRunSqlQuery } from '../../../../Common/utils/v1QueryUtils';
 import Endpoints from '../../../../../Endpoints';
+import { SupportedDrivers } from '../../../../../features/hasura-metadata-types';
 import {
   exportMetadataQuery,
   generateReplaceMetadataQuery,
 } from '../../../../../metadata/queryUtils';
 import { HasuraMetadataV3 } from '../../../../../metadata/types';
-import {
-  TemplateGallerySection,
-  TemplateGalleryStore,
-  TemplateGalleryTemplateDetailFull,
-  TemplateGalleryTemplateItem,
-  ServerJsonRootConfig,
-  ServerJsonTemplateDefinition,
-} from './types';
+import type { AsyncThunkConfig } from '../../../../../store';
+import { ReduxState } from '../../../../../types';
+import requestAction from '../../../../../utils/requestAction';
+import { getRunSqlQuery } from '../../../../Common/utils/v1QueryUtils';
+import { makeMigrationCall } from '../../DataActions';
 import {
   BASE_URL_PUBLIC,
   BASE_URL_TEMPLATE,
   ROOT_CONFIG_PATH,
 } from './templateGalleryConfig';
+import {
+  ServerJsonRootConfig,
+  ServerJsonTemplateDefinition,
+  TemplateGallerySection,
+  TemplateGalleryStore,
+  TemplateGalleryTemplateDetailFull,
+  TemplateGalleryTemplateItem,
+} from './types';
 
 const mapRootJsonFromServerToState = (
   data: ServerJsonRootConfig,
@@ -102,7 +102,7 @@ export const schemaSharingSelectors = {
       }
       return maybeTemplate;
     },
-  getSchemasForDb: (driver: Driver) => (state: ReduxState) =>
+  getSchemasForDb: (driver: SupportedDrivers) => (state: ReduxState) =>
     state.templateGallery.templates?.sections
       .map(section => ({
         ...section,

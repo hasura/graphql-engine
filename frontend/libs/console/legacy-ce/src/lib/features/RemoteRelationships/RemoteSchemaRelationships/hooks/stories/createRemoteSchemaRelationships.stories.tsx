@@ -3,7 +3,7 @@ import { Button } from '../../../../../new-components/Button';
 import HookStatusWrapperWithMetadataVersion from '../../../../../storybook/HookStatusWrapperWithMetadataVersion';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { useAddRemoteSchemaRelationship } from '..';
 
@@ -36,27 +36,29 @@ function AddRemoteSchemaRelationshipComponent({
   );
 }
 
-export const AddRemoteSchemaRelationship: ComponentStory<
+export const AddRemoteSchemaRelationship: StoryObj<
   typeof AddRemoteSchemaRelationshipComponent
-> = args => {
-  return <AddRemoteSchemaRelationshipComponent {...args} />;
-};
+> = {
+  render: args => {
+    return <AddRemoteSchemaRelationshipComponent {...args} />;
+  },
 
-AddRemoteSchemaRelationship.args = {
-  rel: {
-    source: 'default',
-    table: 'person',
-    name: 'name_of_the_remote_relationship',
-    definition: {
-      to_remote_schema: {
-        remote_schema: 'name_of_the_remote_schema',
-        lhs_fields: ['id'],
-        remote_field: {
-          countries: {
-            arguments: {
-              filter: {
-                code: {
-                  eq: '$id',
+  args: {
+    rel: {
+      source: 'default',
+      table: 'person',
+      name: 'name_of_the_remote_relationship',
+      definition: {
+        to_remote_schema: {
+          remote_schema: 'name_of_the_remote_schema',
+          lhs_fields: ['id'],
+          remote_field: {
+            countries: {
+              arguments: {
+                filter: {
+                  code: {
+                    eq: '$id',
+                  },
                 },
               },
             },
@@ -73,4 +75,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof AddRemoteSchemaRelationshipComponent>;
+} as Meta<typeof AddRemoteSchemaRelationshipComponent>;

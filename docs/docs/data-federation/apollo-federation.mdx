@@ -1,6 +1,6 @@
 ---
 sidebar_label: Apollo Federation
-sidebar_position: 3
+sidebar_position: 5
 description: Use Hasura as a subgraph in an Apollo gateway
 keywords:
   - hasura
@@ -23,17 +23,21 @@ Hasura GraphQL Engine supports the Apollo Federation v1 spec, so you can add Has
 federated gateway. You can also use Hasura generated table types in your other subgraphs by enabling tables for Apollo
 Federation explicitly.
 
-:::caution Experimental
+:::tip Supported from
 
-Apollo Federation is an experimental feature and can be enabled by adding `apollo_federation` to the
-`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` [environment variable array](/deployment/graphql-engine-flags/reference.mdx) or
-with the server flag `--experimental-feature`.
+Apollo Federation is available from Hasura version `v2.10.0` and above.
 
 :::
 
-:::note Supported from
+:::caution Enabling apollo-federation
 
-Apollo Federation is available from Hasura version `v2.10.0` and above.
+Apollo Federation can be enabled using
+[the server configuration](deployment/graphql-engine-flags/reference.mdx#enable-apollo-federation)
+(`--enable-apollo-federation` flag or setting `HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION` to `true`).
+
+For backwards compatibility, the feature can also be enabled by adding `apollo_federation` to the
+`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` [environment variable array](/deployment/graphql-engine-flags/reference.mdx) or
+with the server flag `--experimental-feature`.
 
 :::
 
@@ -56,7 +60,7 @@ extending Hasura types with other subgraphs is not possible currently. We recomm
 [remote relationships](/remote-schemas/remote-relationships/index.mdx) for extending types from other subgraphs in
 Hasura.
 
-:::note Note
+:::info Supported types
 
 Other types such as action types, Remote Schema types, etc. cannot be extended to other subgraphs.
 
@@ -64,6 +68,17 @@ Other types such as action types, Remote Schema types, etc. cannot be extended t
 
 <Tabs groupId="user-preference" className="api-tabs">
   <TabItem value="console" label="Console">
+
+:::info Prerequisite before enabling Apollo Federation on the Hasura Console
+
+To enable Apollo Federation using the Hasura Console, you'll first need to add `apollo_federation` to the list of
+experimental features using the
+[`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` environment variable](/deployment/graphql-engine-flags/reference.mdx/#experimental-features)
+array or with the
+[server flag `--experimental-feature`](/deployment/graphql-engine-flags/reference.mdx/#experimental-features). You can
+learn more about setting these [here](/deployment/graphql-engine-flags/index.mdx/#setting-server-configurations).
+
+:::
 
 Head to the `Data -> [table-name] -> Modify` tab in the Console and toggle the switch in the `Enable Apollo Federation`
 section:

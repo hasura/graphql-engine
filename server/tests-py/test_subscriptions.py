@@ -102,7 +102,7 @@ class TestSubscriptionCtrl(object):
 @pytest.mark.requires_an_admin_secret
 class TestSubscriptionBasicNoAuth:
 
-    def test_closed_connection(self, ws_client):
+    def test_closed_connection_apollo(self, ws_client):
         # sends empty header so that there is not authentication present in the test
         init_msg = {
             'type': 'connection_init',
@@ -111,6 +111,17 @@ class TestSubscriptionBasicNoAuth:
         ws_client.send(init_msg)
         time.sleep(2)
         ev = ws_client.get_conn_close_state()
+        assert ev == True, ev
+
+    def test_closed_connection_graphql_ws(self, ws_client_graphql_ws):
+        # sends empty header so that there is not authentication present in the test
+        init_msg = {
+            'type': 'connection_init',
+            'payload':{'headers':{}}
+        }
+        ws_client_graphql_ws.send(init_msg)
+        time.sleep(2)
+        ev = ws_client_graphql_ws.get_conn_close_state()
         assert ev == True, ev
 
 @pytest.mark.backend('mssql', 'postgres')

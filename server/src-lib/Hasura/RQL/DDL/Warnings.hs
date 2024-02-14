@@ -21,11 +21,12 @@ module Hasura.RQL.DDL.Warnings
     runMetadataWarnings,
     mkSuccessResponseWithWarnings,
     successMsgWithWarnings,
+    WarningCode (..),
   )
 where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Extended ((.=))
 import Data.Sequence qualified as Seq
 import Hasura.EncJSON (EncJSON, encJFromJValue)
@@ -60,32 +61,50 @@ Also, we can expand the scope of `MetadataAPIOutput` to include other types of r
 -- | Allow/Disallow metadata warnings
 data AllowWarnings
   = AllowWarnings
-  | NoAllowWarnings
+  | DisallowWarnings
   deriving (Show, Eq)
 
 instance FromJSON AllowWarnings where
   parseJSON =
-    Aeson.withBool "AllowWarnings" $
-      pure . bool NoAllowWarnings AllowWarnings
+    J.withBool "AllowWarnings"
+      $ pure
+      . bool DisallowWarnings AllowWarnings
 
 instance ToJSON AllowWarnings where
-  toJSON = Aeson.toJSON . toBool
+  toJSON = J.toJSON . toBool
     where
       toBool AllowWarnings = True
-      toBool NoAllowWarnings = False
+      toBool DisallowWarnings = False
+
+data WarningCode
+  = WCSourceCleanupFailed
+  | WCIllegalEventTriggerName
+  | WCTimeLimitExceededSystemLimit
+  | WCTrackTableFailed
+  | WCUntrackTableFailed
+  deriving (Eq, Ord)
+
+instance ToJSON WarningCode where
+  toJSON WCIllegalEventTriggerName = "illegal-event-trigger-name"
+  toJSON WCTimeLimitExceededSystemLimit = "time-limit-exceeded-system-limit"
+  toJSON WCSourceCleanupFailed = "source-cleanup-failed"
+  toJSON WCTrackTableFailed = "track-table-failed"
+  toJSON WCUntrackTableFailed = "untrack-table-failed"
 
 data MetadataWarning = MetadataWarning
-  { _mwMetadataObj :: MetadataObjId,
+  { _mwCode :: WarningCode,
+    _mwMetadataObj :: MetadataObjId,
     _mwMessage :: Text
   }
   deriving (Eq, Ord)
 
 instance ToJSON MetadataWarning where
-  toJSON (MetadataWarning mObj msg) =
-    Aeson.object
+  toJSON (MetadataWarning code mObj msg) =
+    J.object
       [ "message" .= msg,
         "type" .= moiTypeName mObj,
-        "name" .= moiName mObj
+        "name" .= moiName mObj,
+        "code" .= code
       ]
 
 type MetadataWarnings = Seq MetadataWarning
@@ -102,10 +121,11 @@ runMetadataWarnings = flip runStateT mempty
 
 mkSuccessResponseWithWarnings :: MetadataWarnings -> EncJSON
 mkSuccessResponseWithWarnings warnings =
-  encJFromJValue . Aeson.object $
-    [ "message" .= ("success" :: Text)
-    ]
-      <> ["warnings" .= warnings | not (null warnings)]
+  encJFromJValue
+    . J.object
+    $ [ "message" .= ("success" :: Text)
+      ]
+    <> ["warnings" .= warnings | not (null warnings)]
 
 successMsgWithWarnings :: (Monad m) => (StateT MetadataWarnings m ()) -> m EncJSON
 successMsgWithWarnings action = do

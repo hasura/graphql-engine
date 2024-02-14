@@ -14,10 +14,10 @@ where
 
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Time.Clock qualified as C
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.ScheduledTrigger
@@ -36,7 +36,7 @@ import System.Cron.Types (CronSchedule)
 populateInitialCronTriggerEvents ::
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CronSchedule ->
   TriggerName ->
@@ -54,7 +54,7 @@ runCreateCronTrigger ::
     CacheRWM m,
     MonadIO m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CreateCronTrigger ->
   m EncJSON
@@ -75,13 +75,13 @@ runCreateCronTrigger CreateCronTrigger {..} = do
     True -> updateCronTrigger q
     False -> do
       cronTriggersMap <- scCronTriggers <$> askSchemaCache
-      case Map.lookup (ctName q) cronTriggersMap of
+      case HashMap.lookup (ctName q) cronTriggersMap of
         Nothing -> pure ()
         Just _ ->
-          throw400 AlreadyExists $
-            "cron trigger with name: "
-              <> triggerNameToTxt (ctName q)
-              <> " already exists"
+          throw400 AlreadyExists
+            $ "cron trigger with name: "
+            <> triggerNameToTxt (ctName q)
+            <> " already exists"
 
       let metadataObj = MOCronTrigger _cctName
           metadata =
@@ -96,9 +96,10 @@ runCreateCronTrigger CreateCronTrigger {..} = do
               _cctComment
               _cctRequestTransform
               _cctResponseTransform
-      buildSchemaCacheFor metadataObj $
-        MetadataModifier $
-          metaCronTriggers %~ OMap.insert _cctName metadata
+      buildSchemaCacheFor metadataObj
+        $ MetadataModifier
+        $ metaCronTriggers
+        %~ InsOrdHashMap.insert _cctName metadata
       populateInitialCronTriggerEvents _cctCronSchedule _cctName
       return successMsg
 
@@ -110,9 +111,9 @@ resolveCronTrigger ::
 resolveCronTrigger env CronTriggerMetadata {..} = do
   webhookInfo <- resolveWebhook env ctWebhook
   headerInfo <- getHeaderInfosFromConf env ctHeaders
-  let urlTemplate = printURLTemplate $ unInputWebhook ctWebhook
-  pure $
-    CronTriggerInfo
+  let urlTemplate = printTemplate $ unInputWebhook ctWebhook
+  pure
+    $ CronTriggerInfo
       ctName
       ctSchedule
       ctPayload
@@ -128,16 +129,17 @@ updateCronTrigger ::
     CacheRWM m,
     MonadIO m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   CronTriggerMetadata ->
   m EncJSON
 updateCronTrigger cronTriggerMetadata = do
   let triggerName = ctName cronTriggerMetadata
   checkExists triggerName
-  buildSchemaCacheFor (MOCronTrigger triggerName) $
-    MetadataModifier $
-      metaCronTriggers %~ OMap.insert triggerName cronTriggerMetadata
+  buildSchemaCacheFor (MOCronTrigger triggerName)
+    $ MetadataModifier
+    $ metaCronTriggers
+    %~ InsOrdHashMap.insert triggerName cronTriggerMetadata
   liftEitherM $ dropFutureCronEvents $ SingleCronTrigger triggerName
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
@@ -148,24 +150,24 @@ runDeleteCronTrigger ::
   ( MonadError QErr m,
     CacheRWM m,
     MetadataM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   ScheduledTriggerName ->
   m EncJSON
 runDeleteCronTrigger (ScheduledTriggerName stName) = do
   checkExists stName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropCronTriggerInMetadata stName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropCronTriggerInMetadata stName
   liftEitherM $ dropFutureCronEvents $ SingleCronTrigger stName
   return successMsg
 
 dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
 dropCronTriggerInMetadata name =
-  MetadataModifier $ metaCronTriggers %~ OMap.delete name
+  MetadataModifier $ metaCronTriggers %~ InsOrdHashMap.delete name
 
 runCreateScheduledEvent ::
-  (MonadError QErr m, MonadMetadataStorageQueryAPI m) =>
+  (MonadError QErr m, MonadMetadataStorage m) =>
   CreateScheduledEvent ->
   m EncJSON
 runCreateScheduledEvent scheduledEvent = do
@@ -175,13 +177,15 @@ runCreateScheduledEvent scheduledEvent = do
 checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
   cronTriggersMap <- scCronTriggers <$> askSchemaCache
-  void $
-    onNothing (Map.lookup name cronTriggersMap) $
-      throw400 NotExists $
-        "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
+  void
+    $ onNothing (HashMap.lookup name cronTriggersMap)
+    $ throw400 NotExists
+    $ "cron trigger with name: "
+    <> triggerNameToTxt name
+    <> " does not exist"
 
 runDeleteScheduledEvent ::
-  (MonadMetadataStorageQueryAPI m, MonadError QErr m) => DeleteScheduledEvent -> m EncJSON
+  (MonadMetadataStorage m, MonadError QErr m) => DeleteScheduledEvent -> m EncJSON
 runDeleteScheduledEvent DeleteScheduledEvent {..} = do
   liftEitherM $ dropEvent _dseEventId _dseType
   pure successMsg
@@ -189,7 +193,7 @@ runDeleteScheduledEvent DeleteScheduledEvent {..} = do
 runGetScheduledEvents ::
   ( MonadError QErr m,
     CacheRM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   GetScheduledEvents ->
   m EncJSON
@@ -202,7 +206,7 @@ runGetScheduledEvents gse = do
 runGetScheduledEventInvocations ::
   ( MonadError QErr m,
     CacheRM m,
-    MonadMetadataStorageQueryAPI m
+    MonadMetadataStorage m
   ) =>
   GetScheduledEventInvocations ->
   m EncJSON
@@ -213,16 +217,17 @@ runGetScheduledEventInvocations getEventInvocations@GetScheduledEventInvocations
       SEOneOff -> pure ()
       SECron name -> checkExists name
   WithOptionalTotalCount countMaybe invocations <- liftEitherM $ fetchScheduledEventInvocations getEventInvocations
-  pure $
-    encJFromJValue $
-      J.object $
-        ("invocations" J..= invocations) : (maybe mempty (\count -> ["count" J..= count]) countMaybe)
+  pure
+    $ encJFromJValue
+    $ J.object
+    $ ("invocations" J..= invocations)
+    : (maybe mempty (\count -> ["count" J..= count]) countMaybe)
 
 -- | Metadata API handler to retrieve all the cron triggers from the metadata
-runGetCronTriggers :: MetadataM m => m EncJSON
+runGetCronTriggers :: (MetadataM m) => m EncJSON
 runGetCronTriggers = do
   cronTriggers <- toList . _metaCronTriggers <$> getMetadata
-  pure $
-    encJFromJValue $
-      J.object
-        ["cron_triggers" J..= cronTriggers]
+  pure
+    $ encJFromJValue
+    $ J.object
+      ["cron_triggers" J..= cronTriggers]

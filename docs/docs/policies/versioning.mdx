@@ -1,0 +1,61 @@
+---
+description: The version support policy for Hasura GraphQL Engine
+sidebar_label: Version Support Policy
+sidebar_position: 1
+keywords:
+  - version
+  - support
+  - LTS
+  - long term support
+---
+
+# Hasura Version Support Policy
+
+## Releases and support
+
+Hasura releases its software via:
+
+- **Major versions** that may have incompatible or breaking changes from the previous version.
+- **Minor versions** that provide new functionality and bug fixes in a backwards-compatible manner.
+- **Patch versions** that have backwards-compatible bug fixes.
+
+Hasura provides support for a given major or minor version of our software to eligible customers. Support includes:
+
+1. **Bug fixes**: Critical issues or bugs identified in the software are either provided a workaround or addressed
+   through minor or patch versions.
+1. **Security updates**: Updates are provided via patches to address known security vulnerabilities in the software.
+1. **Technical support**: Assistance is provided to users who encounter issues or have questions about the software.
+
+Hasura will support the latest minor version of the previous major version of the GraphQL Engine, including critical
+security updates, for up to one year after the release of the current major version.
+
+You can find the latest version — and all changelog entries for each version — of the Hasura GraphQL Engine on the
+[Hasura GraphQL Engine releases page](https://github.com/hasura/graphql-engine/releases).
+
+## Long-term support (LTS) releases
+
+Hasura also provides long term support (LTS) releases of the Hasura GraphQL Engine (HGE) for Hasura Enterprise Edition
+customers. An LTS version is a combination of a major and minor version. _For example: Hasura `v2.11`_.
+
+While we recommend our users to be on the latest release, we recognize the need for a long-term support release where
+upgrading to a new feature release requires significant effort and planning, and there is a need to be up-to-date on
+critical security fixes and critical bug fixes.
+
+- Hasura will support GraphQL Engine LTS releases for versions that are part of the Enterprise Edition packages.
+- LTS releases will include critical security fixes, determined by Hasura with input from the customer's IT security
+  department, that leave the environment vulnerable to external threats.
+- LTS releases will include bug fixes that are determined by Hasura to be critical or high priority and are causing the
+  Hasura GraphQL Engine to be inoperable in production.
+- Security and critical bug fixes will be patched to a designated LTS version release. _E.g., `v2.x.1` will have the
+  first set of patches to the LTS version `v2.x.0.`_
+- An LTS release will be supported for two years from the initial release date.
+- A new LTS version will be announced annually (at a minimum).
+
+LTS releases will not include new (or extended) features that are released in future major or minor versions.
+
+## Support and EOL for current LTS versions
+
+| LTS version | EOL Date    |
+| ----------- | ----------- |
+| `v2.11`     | Sep-01-2024 |
+| `v2.36`     | Dec-12-2025 |

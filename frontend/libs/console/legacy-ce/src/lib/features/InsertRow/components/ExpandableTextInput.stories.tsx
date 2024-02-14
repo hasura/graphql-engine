@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { handlers } from '../../../mocks/metadata.mock';
 import { ExpandableTextInput } from './ExpandableTextInput';
 import { userEvent, within } from '@storybook/testing-library';
@@ -14,41 +14,44 @@ export default {
     onChange: { action: true },
     onInput: { action: true },
   },
-} as ComponentMeta<typeof ExpandableTextInput>;
+} as Meta<typeof ExpandableTextInput>;
 
-const Template: ComponentStory<typeof ExpandableTextInput> = args => (
+const Template: StoryFn<typeof ExpandableTextInput> = args => (
   <div className="max-w-screen-md">
     <ExpandableTextInput {...args} />
   </div>
 );
 
-export const Base = Template.bind({});
-Base.args = {
-  name: 'id',
-  disabled: false,
-  placeholder: 'placeholder...',
-};
+export const Base = {
+  render: Template,
 
-Base.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
+  args: {
+    name: 'id',
+    disabled: false,
+    placeholder: 'placeholder...',
+  },
 
-  // Type in text input field
-  userEvent.type(
-    await canvas.findByPlaceholderText('placeholder...'),
-    'John Doe'
-  );
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+    // Type in text input field
+    await userEvent.type(
+      await canvas.findByPlaceholderText('placeholder...'),
+      'John Doe'
+    );
 
-  expect(await canvas.findByTitle('Expand')).toBeInTheDocument();
+    await expect(args.onChange).toHaveBeenCalled();
+    await expect(args.onInput).toHaveBeenCalled();
 
-  await userEvent.click(await canvas.findByTitle('Expand'));
+    await expect(await canvas.findByTitle('Expand')).toBeInTheDocument();
 
-  await userEvent.keyboard('Enter', { delay: 50 });
+    await userEvent.click(await canvas.findByTitle('Expand'));
 
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
+    await userEvent.keyboard('Enter', { delay: 50 });
 
-  await userEvent.click(await canvas.findByTitle('Collapse'));
+    await expect(args.onChange).toHaveBeenCalled();
+    await expect(args.onInput).toHaveBeenCalled();
+
+    await userEvent.click(await canvas.findByTitle('Collapse'));
+  },
 };

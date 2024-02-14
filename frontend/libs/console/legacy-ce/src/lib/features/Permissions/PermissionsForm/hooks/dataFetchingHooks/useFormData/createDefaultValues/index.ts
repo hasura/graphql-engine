@@ -1,4 +1,4 @@
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 
 import { TableColumn } from '../../../../../../DataSource';
 import { getTypeName } from '../../../../../../GraphQLUtils';
@@ -12,14 +12,14 @@ import { SourceCustomization } from '../../../../../../hasura-metadata-types/sou
 import { Operator } from '../../../../../../DataSource/types';
 
 import {
+  ComputedField,
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
 
-import {
-  createPermissionsObject,
-  getRowPermissionsForAllOtherQueriesMatchingSelectedRole,
-} from './utils';
+import { createPermissionsObject } from './utils';
+import z from 'zod';
+import { inputValidationSchema } from '../../../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
 
 interface GetMetadataTableArgs {
   table: unknown;
@@ -40,11 +40,13 @@ export interface CreateDefaultValuesArgs {
   roleName: string;
   table: unknown;
   dataSourceName: string;
-  metadata: Metadata;
+  metadata: Metadata | undefined;
   tableColumns: TableColumn[];
+  tableComputedFields: ComputedField[];
   defaultQueryRoot: string | never[];
   metadataSource: MetadataDataSource | undefined;
   supportedOperators: Operator[];
+  validateInput: z.infer<typeof inputValidationSchema>;
 }
 
 export const createDefaultValues = ({
@@ -52,9 +54,11 @@ export const createDefaultValues = ({
   roleName,
   table,
   tableColumns,
+  tableComputedFields,
   defaultQueryRoot,
   metadataSource,
   supportedOperators,
+  validateInput,
 }: CreateDefaultValuesArgs) => {
   const selectedTable = getMetadataTable({
     table,
@@ -68,18 +72,14 @@ export const createDefaultValues = ({
     configuration: selectedTable?.configuration,
   });
 
-  const allRowChecks = getRowPermissionsForAllOtherQueriesMatchingSelectedRole(
-    queryType,
-    roleName,
-    selectedTable
-  );
-
   const baseDefaultValues: DefaultValues = {
     queryType: 'select',
+    comment: '',
     filterType: 'none',
     columns: {},
-    allRowChecks,
+    computed_fields: {},
     supportedOperators,
+    validateInput,
   };
 
   if (selectedTable) {
@@ -88,6 +88,7 @@ export const createDefaultValues = ({
       selectedTable,
       roleName,
       tableColumns,
+      tableComputedFields,
       tableName,
       metadataSource,
     });
@@ -99,6 +100,5 @@ export const createDefaultValues = ({
 };
 
 type DefaultValues = PermissionsSchema & {
-  allRowChecks: { queryType: QueryType; value: string }[];
   operators?: Record<string, unknown>;
 };

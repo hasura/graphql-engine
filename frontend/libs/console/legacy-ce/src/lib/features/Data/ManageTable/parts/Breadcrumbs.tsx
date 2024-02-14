@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaAngleRight, FaDatabase } from 'react-icons/fa';
+import { FaAngleRight, FaDatabase, FaTable } from 'react-icons/fa';
 
 export const Breadcrumbs: React.VFC<{
   dataSourceName: string;
@@ -12,7 +12,7 @@ export const Breadcrumbs: React.VFC<{
     </div>
     <FaAngleRight className="text-muted" />
     <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-      <FaDatabase className="mr-1.5" />
+      <FaTable className="mr-1.5" />
       <span className="text-sm">{tableName}</span>
     </div>
     <FaAngleRight className="text-muted" />

@@ -60,7 +60,7 @@ const ActionContainer = ({
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${actionName}`}
       />
-      <div className="pt-xl">{childrenWithProps}</div>
+      <div className="pt-xl bootstrap-jail">{childrenWithProps}</div>
     </div>
   );
 };

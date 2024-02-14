@@ -86,6 +86,7 @@ const HeadersEditor = (props: HeaderEditorProps) => {
         property="headers"
         service="modify-trigger"
         saveFunc={save}
+        dataTest="edit-header"
       />
     </div>
   );

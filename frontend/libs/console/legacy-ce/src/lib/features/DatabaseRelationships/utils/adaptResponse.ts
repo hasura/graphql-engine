@@ -1,7 +1,4 @@
-import {
-  isSameTableObjectRelationship,
-  TableFkRelationships,
-} from '../../DataSource';
+import { isSameTableObjectRelationship } from '../../DataSource';
 import { areTablesEqual } from '../../hasura-metadata-api';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
@@ -14,11 +11,12 @@ import {
   SourceToSourceRelationship,
   Table,
 } from '../../hasura-metadata-types';
-import isEqual from 'lodash.isequal';
+import isEqual from 'lodash/isEqual';
 import {
   LocalRelationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
+  SuggestedRelationship,
 } from '../types';
 
 const getKeyValuePair = (arr1: string[], arr2: string[]) => {
@@ -29,14 +27,22 @@ const getKeyValuePair = (arr1: string[], arr2: string[]) => {
   return result;
 };
 
+type FkDefinition = {
+  fromColumns?: string[];
+  fromTable: Table;
+  toColumns?: string[];
+  toTable: Table;
+  mapping: Record<string, string>;
+};
+
 const getFkDefinition = (
   table: Table,
   relationship:
     | SameTableObjectRelationship
     | LocalTableObjectRelationship
     | LocalTableArrayRelationship,
-  fkConstraints: TableFkRelationships[]
-): { toTable: Table; mapping: Record<string, string> } => {
+  suggestedRelationships: SuggestedRelationship[]
+): FkDefinition => {
   if (isSameTableObjectRelationship(relationship)) {
     const fromTable = table;
     const fromColumns = Array.isArray(
@@ -45,46 +51,66 @@ const getFkDefinition = (
       ? relationship.using.foreign_key_constraint_on
       : [relationship.using.foreign_key_constraint_on];
 
-    const matchingFkConstraint = fkConstraints.find(
-      fkConstraint =>
-        areTablesEqual(fromTable, fkConstraint.from.table) &&
-        isEqual(fromColumns.sort(), fkConstraint.from.column)
+    const matchingFkConstraint = suggestedRelationships.find(
+      suggestedRelationship =>
+        areTablesEqual(fromTable, suggestedRelationship.from.table) &&
+        isEqual(fromColumns.sort(), suggestedRelationship.from.columns)
     );
 
     return {
       toTable: matchingFkConstraint?.to.table,
+      toColumns: matchingFkConstraint?.to.columns,
+      fromTable: matchingFkConstraint?.from.table,
+      fromColumns: matchingFkConstraint?.from.columns,
       mapping: matchingFkConstraint
         ? getKeyValuePair(
-            matchingFkConstraint.from.column,
-            matchingFkConstraint.to.column
+            matchingFkConstraint.from.columns,
+            matchingFkConstraint.to.columns
           )
         : {},
     };
   }
 
-  const toTable = table;
   const toColumn =
     'column' in relationship.using.foreign_key_constraint_on
       ? [relationship.using.foreign_key_constraint_on.column]
       : relationship.using.foreign_key_constraint_on.columns;
 
-  const matchingFkConstraint = fkConstraints.find(
-    fkConstraint =>
-      areTablesEqual(toTable, fkConstraint.to.table) &&
-      isEqual(toColumn.sort(), fkConstraint.to.column)
+  const matchingFkConstraint = suggestedRelationships.find(
+    suggestedRelationship => {
+      const sameFromTable = areTablesEqual(
+        table,
+        suggestedRelationship.from.table
+      );
+
+      const sameToColumns = isEqual(
+        toColumn.sort(),
+        suggestedRelationship.to.columns
+      );
+      const sameToTable = areTablesEqual(
+        relationship.using.foreign_key_constraint_on.table,
+        suggestedRelationship.to.table
+      );
+
+      return sameFromTable && sameToColumns && sameToTable;
+    }
   );
+
   return {
-    toTable: matchingFkConstraint?.from.table,
+    toTable: matchingFkConstraint?.to.table,
+    toColumns: matchingFkConstraint?.to.columns,
+    fromTable: matchingFkConstraint?.from.table,
+    fromColumns: matchingFkConstraint?.from.columns,
     mapping: matchingFkConstraint
       ? getKeyValuePair(
-          matchingFkConstraint.to.column,
-          matchingFkConstraint.from.column
+          matchingFkConstraint.to.columns,
+          matchingFkConstraint.from.columns
         )
       : {},
   };
 };
 
-export const adaptLocalObjectRelationshipWithManualConfigruation = ({
+export const adaptLocalObjectRelationshipWithManualConfiguration = ({
   table,
   dataSourceName,
   relationship,
@@ -110,21 +136,29 @@ export const adaptLocalObjectRelationshipWithFkConstraint = ({
   table,
   dataSourceName,
   relationship,
-  fkConstraints,
+  suggestedRelationships,
 }: {
   table: Table;
   dataSourceName: string;
   relationship: SameTableObjectRelationship | LocalTableObjectRelationship;
-  fkConstraints: TableFkRelationships[];
+  suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
-  return {
+  const fkDefinition = getFkDefinition(
+    table,
+    relationship,
+    suggestedRelationships
+  );
+
+  const localRelationship: LocalRelationship = {
     name: relationship.name,
     fromSource: dataSourceName,
     fromTable: table,
     relationshipType: 'Object',
     type: 'localRelationship',
-    definition: getFkDefinition(table, relationship, fkConstraints),
+    definition: fkDefinition,
   };
+
+  return localRelationship;
 };
 
 export const adaptLocalArrayRelationshipWithManualConfiguration = ({
@@ -153,21 +187,29 @@ export const adaptLocalArrayRelationshipWithFkConstraint = ({
   table,
   dataSourceName,
   relationship,
-  fkConstraints,
+  suggestedRelationships,
 }: {
   table: Table;
   dataSourceName: string;
   relationship: LocalTableArrayRelationship;
-  fkConstraints: TableFkRelationships[];
+  suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
-  return {
+  const fkDefinition = getFkDefinition(
+    table,
+    relationship,
+    suggestedRelationships
+  );
+
+  const localRelationship: LocalRelationship = {
     name: relationship.name,
     fromSource: dataSourceName,
-    fromTable: table,
+    fromTable: fkDefinition.fromTable,
     relationshipType: 'Array',
     type: 'localRelationship',
-    definition: getFkDefinition(table, relationship, fkConstraints),
+    definition: getFkDefinition(table, relationship, suggestedRelationships),
   };
+
+  return localRelationship;
 };
 
 export const adaptRemoteSchemaRelationship = ({

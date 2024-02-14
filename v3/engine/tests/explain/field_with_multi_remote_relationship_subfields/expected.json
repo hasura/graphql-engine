@@ -1,0 +1,146 @@
+{
+  "explain": {
+    "type": "sequence",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "Album",
+          "queryRequest": {
+            "collection": "Album",
+            "query": {
+              "fields": {
+                "ArtistId": {
+                  "type": "column",
+                  "column": "ArtistId"
+                },
+                "__hasura_phantom_field__ArtistId": {
+                  "type": "column",
+                  "column": "ArtistId"
+                },
+                "__hasura_phantom_field__AlbumId": {
+                  "type": "column",
+                  "column": "AlbumId"
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {}
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "parallel",
+        "value": [
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "Artist",
+                "queryRequest": {
+                  "collection": "Artist",
+                  "query": {
+                    "fields": {
+                      "ArtistId": {
+                        "type": "column",
+                        "column": "ArtistId"
+                      },
+                      "Name": {
+                        "type": "column",
+                        "column": "Name"
+                      }
+                    },
+                    "where": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "ArtistId",
+                        "path": []
+                      },
+                      "operator": {
+                        "type": "equal"
+                      },
+                      "value": {
+                        "type": "variable",
+                        "name": "$ArtistId"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {},
+                  "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "Tracks",
+                "queryRequest": {
+                  "collection": "Track",
+                  "query": {
+                    "fields": {
+                      "TrackId": {
+                        "type": "column",
+                        "column": "TrackId"
+                      }
+                    },
+                    "where": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "AlbumId",
+                        "path": []
+                      },
+                      "operator": {
+                        "type": "equal"
+                      },
+                      "value": {
+                        "type": "variable",
+                        "name": "$AlbumId"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {},
+                  "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "hashJoin"
+      }
+    ]
+  }
+}

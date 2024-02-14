@@ -3,12 +3,12 @@ import { Input } from '../../../new-components/Form/Input';
 import { ChangeEventHandler, useState } from 'react';
 import { FaCalendar } from 'react-icons/fa';
 import DatePicker, { CalendarContainer } from 'react-datepicker';
+import { format } from 'date-fns';
+import clsx from 'clsx';
 import { CustomEventHandler, TextInputProps } from './TextInput';
 
 import 'react-datepicker/dist/react-datepicker.css';
 import './date-input.css';
-import { format } from 'date-fns';
-import clsx from 'clsx';
 
 export const DateInput: React.VFC<TextInputProps> = ({
   name,
@@ -88,6 +88,7 @@ export const DateInput: React.VFC<TextInputProps> = ({
         <DatePicker
           inline
           onSelect={() => setCalendarPickerVisible(false)}
+          onClickOutside={() => setCalendarPickerVisible(false)}
           onChange={onDateChange}
           calendarContainer={CustomPickerContainer}
         />

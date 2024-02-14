@@ -16,8 +16,8 @@ export const connectionInfoSchema = z.object({
   ]),
   poolSettings: z
     .object({
-      totalMaxConnections: z.number().optional(),
-      idleTimeout: z.number().optional(),
+      totalMaxConnections: z.number().min(0).optional(),
+      idleTimeout: z.number().min(0).optional(),
     })
     .optional(),
 });
@@ -43,8 +43,8 @@ export const getDefaultValues = (
       configuration: {
         connectionInfo: {
           connectionString: {
-            connectionType: 'databaseUrl',
-            url: '',
+            connectionType: 'envVar',
+            envVar: '',
           },
         },
       },

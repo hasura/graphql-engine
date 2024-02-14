@@ -15,27 +15,27 @@ module Test.Parser.Expectation
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Types.Update (PgUpdateVariant (..), UpdateOpExpression (..))
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema (Definition (..))
 import Hasura.GraphQL.Parser.Variable (Variable (..))
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
+import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), AnnRedactionExp (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Update.Batch (UpdateBatch (..))
 import Hasura.RQL.IR.Value (UnpreparedValue)
+import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
-import Hasura.RQL.Types.Common (SourceName (..))
-import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Source (SourceInfo (..))
+import Hasura.RQL.Types.Common (ResolvedWebhook, SourceName (..))
+import Hasura.RQL.Types.NamingCase
+import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
-import Hasura.RQL.Types.Table (TableInfo (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
+import Hasura.Table.Cache (TableInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as Syntax
 import Test.Hspec
 import Test.Parser.Internal
@@ -97,12 +97,16 @@ runUpdateFieldTest UpdateTestSetup {..} =
     sourceInfo =
       SourceInfo
         { _siName = SNDefault,
-          _siTables = HM.singleton table tableInfo,
+          _siSourceKind = PostgresVanillaKind,
+          _siTables = HashMap.singleton table tableInfo,
           _siFunctions = mempty,
+          _siNativeQueries = mempty,
+          _siStoredProcedures = mempty,
           _siLogicalModels = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
-          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing
+          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing,
+          _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty mempty
         }
 
     byName :: Syntax.Name -> Parser -> Bool
@@ -194,7 +198,7 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     mapUpdateBatch UpdateBatchBuilder {..} =
       UpdateBatch
         { _ubWhere = toBoolExp ubbWhere,
-          _ubOperations = HM.fromList $ fmap (first ciColumn) ubbOperations
+          _ubOperations = HashMap.fromList $ fmap (first ciColumn) ubbOperations
         }
 
     _auOutput :: Output r
@@ -206,11 +210,14 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     _auUpdatePermissions :: BoolExp
     _auUpdatePermissions =
       BoolAnd
-        . fmap (\c -> BoolField . AVColumn c $ [])
+        . fmap (\c -> BoolField . AVColumn c NoRedaction $ [])
         $ aubColumns
 
     _auNamingConvention :: Maybe NamingCase
     _auNamingConvention = Just HasuraCase
 
+    _auValidateInput :: Maybe (ValidateInput ResolvedWebhook)
+    _auValidateInput = Nothing
+
 toBoolExp :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])] -> BoolExp
-toBoolExp = BoolAnd . fmap (\(c, ops) -> BoolField $ AVColumn c ops)
+toBoolExp = BoolAnd . fmap (\(c, ops) -> BoolField $ AVColumn c NoRedaction ops)

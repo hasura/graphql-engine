@@ -1,0 +1,50 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_latest_actor_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_latest_actor_id",
+            "arguments": [],
+            "outputType": "Int",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "latest_actor_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getLatestActorId",
+              "rootFieldKind": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

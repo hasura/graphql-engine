@@ -136,11 +136,12 @@ You can use context variables in the transforms to achieve dynamic behavior for 
 
 The context variables available in transforms are:
 
-| Context variable   | Value                                   |
-| ------------------ | --------------------------------------- |
-| $body              | Original body of action request         |
-| $base_url          | Original configured webhook handler URL |
-| $session_variables | Session variables                       |
+| Context variable   | Value                                      |
+| ------------------ | ------------------------------------------ |
+| $body              | Original body of action request            |
+| $base_url          | Original configured webhook handler URL    |
+| $session_variables | Session variables                          |
+| $response.status   | HTTP response staus code from the webhook  |
 
 In addition to these variables, the following functions are available in addition to the standard
 [Basic Functions](/api-reference/kriti-templating.mdx#kriti-function-reference):
@@ -915,6 +916,56 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
+
+:::info Note
+
+You can also apply multiple transforms based on the following:
+
+1. HTTP response received from the Action webhook in the response transform template. For example:
+
+```
+{{ if $response.status == 200 }}
+  {
+    "users": {
+      "name": {{$body}},
+      "password": {{$body}}
+    }
+  }
+{{ elif $response.status == 400 }}
+  {
+    "message": {{$body.error}}
+  }
+{{ else }}
+  {
+    "message" : "internal error"
+  }
+{{ end }}
+```
+
+2. Session Variables. For example:
+
+```
+{{ if $session_variables["x-hasura-role"] == "admin" }}
+  {
+    "users": {
+      "name": {{$body}},
+      "password": {{$body}}
+    }
+  }
+{{ elif $session_variables["x-hasura-role"] == "user" }}
+  {
+    "users": {
+      "name": {{$body.username}},
+      "password": "<redacted password>"
+    }
+  }
+{{ else }}
+  {
+    "message" : "internal error"
+  }
+{{ end }}
+```
+:::
 
 ## Example
 

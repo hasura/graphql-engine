@@ -17,10 +17,10 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -28,8 +28,8 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  withEachProtocol $
-    Fixture.run
+  withEachProtocol
+    $ Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -91,11 +91,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Primary key queries" do
     it "Lookup with primary key" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -123,7 +120,7 @@ tests opts = do
                   name: Justin
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Lookup with (missing) primary key" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -149,7 +146,7 @@ tests opts = do
                 #{schemaName}_authors_by_pk: null
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing tables" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -179,7 +176,7 @@ tests opts = do
                   field '#{schemaName}_unknown_by_pk' not found in type: 'query_root'
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing fields" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -208,7 +205,7 @@ tests opts = do
                   field 'unknown' not found in type: '#{schemaName}_authors'
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on missing primary key value" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -237,7 +234,7 @@ tests opts = do
                   missing required field 'id'
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on empty query" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -265,4 +262,4 @@ tests opts = do
                   not a valid graphql query
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

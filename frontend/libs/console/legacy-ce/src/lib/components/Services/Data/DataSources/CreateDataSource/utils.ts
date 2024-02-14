@@ -94,7 +94,7 @@ export const updateEnvVars = (
         if (response.errors) {
           throw new Error(response.errors[0]?.message);
         } else {
-          return response.updateTenantEnv;
+          return response.data.updateTenantEnv;
         }
       });
     })
@@ -129,7 +129,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
           value: dbURL,
         },
       ]).then(() => {
-        return emptyEnvVar;
+        return { envVar: emptyEnvVar, oldConfigHash: hash };
       });
     })
     .catch(e => {

@@ -2,11 +2,11 @@
 
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Text qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Text qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
@@ -19,23 +19,29 @@ import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Base.Error qualified as E
 import Hasura.EncJSON
+import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
-import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Parser.Variable qualified as G
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
   ( emptyQueryTagsComment,
   )
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
+import Hasura.Server.Types (HeaderPrecedence)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'BigQuery where
@@ -67,14 +73,13 @@ bqDBQueryPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
-  Env.Environment ->
   SourceName ->
   SourceConfig 'BigQuery ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  m (DBStepInfo 'BigQuery)
-bqDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
+bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = OnBaseMonad do
@@ -83,9 +88,12 @@ bqDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
             sourceConfig
             (DataLoader.executeSelect select)
         case result of
-          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ Aeson.toJSON err
-          Right recordSet -> pure $! recordSetToEncJSON (BigQuery.selectCardinality select) recordSet
-  pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
+          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ J.toJSON err
+          Right (job, recordSet) -> pure ActionResult {arStatistics = Just BigQuery.ExecutionStatistics {_esJob = job}, arResult = recordSetToEncJSON (BigQuery.selectCardinality select) recordSet}
+  modelNames <- irToModelInfoGen sourceName ModelSourceTypeBigQuery qrf
+  let modelInfo = getModelInfoPartfromModelNames modelNames (ModelOperationType G.OperationTypeQuery)
+
+  pure $ (DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action (), modelInfo)
 
 -- | Convert the dataloader's 'RecordSet' type to JSON.
 recordSetToEncJSON :: BigQuery.Cardinality -> DataLoader.RecordSet -> EncJSON
@@ -97,10 +105,10 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
     BigQuery.Many -> encJFromList (toList (fmap encJFromRecord rows))
   where
     encJFromRecord =
-      encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
+      encJFromInsOrdHashMap . fmap encJFromOutputValue . InsOrdHashMap.mapKeys coerce
     encJFromOutputValue outputValue =
       case outputValue of
-        DataLoader.NullOutputValue -> encJFromJValue Aeson.Null
+        DataLoader.NullOutputValue -> encJFromJValue J.Null
         DataLoader.DecimalOutputValue i -> encJFromJValue i
         DataLoader.BigDecimalOutputValue i -> encJFromJValue i
         DataLoader.FloatOutputValue i -> encJFromJValue i
@@ -113,6 +121,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
         DataLoader.GeographyOutputValue i -> encJFromJValue i
         DataLoader.BoolOutputValue i -> encJFromJValue i
         DataLoader.IntegerOutputValue i -> encJFromJValue i
+        DataLoader.JsonOutputValue i -> encJFromJValue i
         DataLoader.ArrayOutputValue vector ->
           encJFromList (toList (fmap encJFromOutputValue vector))
         -- Really, the case below shouldn't be happening. But if it
@@ -126,22 +135,26 @@ bqDBMutationPlan ::
   forall m.
   ( MonadError E.QErr m
   ) =>
-  UserInfo ->
   Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _environment _stringifyNum _sourceName _sourceConfig _mrf _headers _gName =
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  HeaderPrecedence ->
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs _ =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain
 
 bqDBQueryExplain ::
-  MonadError E.QErr m =>
+  (MonadError E.QErr m) =>
   RootFieldAlias ->
   UserInfo ->
   SourceName ->
@@ -153,21 +166,22 @@ bqDBQueryExplain ::
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let textSQL = selectSQLTextForExplain select
-  pure $
-    AB.mkAnyBackend $
-      DBStepInfo @'BigQuery
-        sourceName
-        sourceConfig
-        Nothing
-        ( OnBaseMonad $
-            pure $
-              encJFromJValue $
-                ExplainPlan
-                  fieldName
-                  (Just $ textSQL)
-                  (Just $ T.lines $ textSQL)
-        )
-        ()
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo @'BigQuery
+      sourceName
+      sourceConfig
+      Nothing
+      ( OnBaseMonad
+          $ pure
+          $ withNoStatistics
+          $ encJFromJValue
+          $ ExplainPlan
+            fieldName
+            (Just $ textSQL)
+            (Just $ T.lines $ textSQL)
+      )
+      ()
 
 -- | Get the SQL text for a select, with parameters left as $1, $2, .. holes.
 selectSQLTextForExplain :: BigQuery.Select -> Text
@@ -200,12 +214,11 @@ bqDBRemoteRelationshipPlan ::
   forall m.
   ( MonadError QErr m
   ) =>
-  Env.Environment ->
   UserInfo ->
   SourceName ->
   SourceConfig 'BigQuery ->
   -- | List of json objects, each of which becomes a row of the table.
-  NonEmpty Aeson.Object ->
+  NonEmpty J.Object ->
   -- | The above objects have this schema
   --
   -- XXX: What is this for/what does this mean?
@@ -217,22 +230,24 @@ bqDBRemoteRelationshipPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   Options.StringifyNumbers ->
-  m (DBStepInfo 'BigQuery)
-bqDBRemoteRelationshipPlan _env userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
-  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection reqHeaders operationName
+  m (DBStepInfo 'BigQuery, [ModelInfoPart])
+bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship reqHeaders operationName stringifyNumbers = do
+  (dbStepInfo, modelInfo) <- flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection reqHeaders operationName
+  pure (dbStepInfo, modelInfo)
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema
 
     rowsArgument :: UnpreparedValue 'BigQuery
     rowsArgument =
-      UVParameter Nothing $
-        ColumnValue (ColumnScalar BigQuery.StringScalarType) $
-          BigQuery.StringValue . LT.toStrict $
-            Aeson.encodeToLazyText lhs
+      UVParameter IR.FreshVar
+        $ ColumnValue (ColumnScalar BigQuery.StringScalarType)
+        $ BigQuery.StringValue
+        . LT.toStrict
+        $ J.encodeToLazyText lhs
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : HashMap.toList (fmap snd joinColumnMapping)
 
     jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
     jsonToRecordSet =

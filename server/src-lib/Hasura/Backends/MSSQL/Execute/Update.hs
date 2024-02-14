@@ -25,14 +25,17 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.IR.ModelInformation
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.IR.Update.Batch qualified as IR
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SourceName (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
 -- | Executes an Update IR AST and return results as JSON.
@@ -40,16 +43,32 @@ executeUpdate ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   Options.StringifyNumbers ->
+  SourceName ->
+  ModelSourceType ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (OnBaseMonad (ExceptT QErr) EncJSON)
-executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
+  m (OnBaseMonad (ExceptT QErr) EncJSON, [ModelNameInfo])
+executeUpdate userInfo stringifyNum sourceName modelSourceType sourceConfig updateOperation = do
   queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
+
+  let (modelName, modelType) = (tableName (_auTable updateOperation), ModelTypeTable)
+  let returnModels = getMutationOutputModelNamesGen sourceName modelSourceType (_auOutput updateOperation)
+  let mutationUpdateVariant = IR._ubWhere $ _auUpdateVariant updateOperation
+  argModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ mutationUpdateVariant
+    pure res
+  preUpdatePermissionModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ _auUpdatePermissions updateOperation
+    pure res
+  postUpdateCheckModelNames <- do
+    (_, res) <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ _auCheck updateOperation
+    pure res
+  let modelNames = [ModelNameInfo (modelName, modelType, sourceName, modelSourceType)] <> preUpdatePermissionModelNames <> postUpdateCheckModelNames <> (argModelNames) <> (returnModels)
   if IR.updateBatchIsEmpty $ _auUpdateVariant updateOperation
-    then pure $ OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
+    then pure $ (OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate, modelNames)
+    else pure $ (OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags), modelNames)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
@@ -76,19 +95,21 @@ buildUpdateTx ::
 buildUpdateTx updateOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $ TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
-  updateQueryValidated <- toQueryFlat <$> runFromIr updateQuery
+  updateQueryValidated <- toQueryFlat . qwdQuery <$> runFromIrErrorOnCTEs updateQuery
+
   -- Execute UPDATE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (updateQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
+  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
   let checkCondition = _auCheck updateOperation
+
   -- The check constraint is translated to boolean expression
-  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
+  checkBoolExp <- qwdQuery <$> runFromIrErrorOnCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect
@@ -96,7 +117,7 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
             selectFrom = Just $ FromTempTable $ Aliased tempTableNameUpdated "updated_alias"
           }
       mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
-      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
   let finalSelectQuery = toQueryFlat $ TQ.fromSelect finalSelect
@@ -104,6 +125,6 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   -- Drop the temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameUpdated) `withQueryTags` queryTags)
   -- Raise an exception if the check condition is not met
-  unless (checkConditionInt == (0 :: Int)) $
-    throw400 PermissionError "check constraint of an insert/update permission has failed"
+  unless (checkConditionInt == (0 :: Int))
+    $ throw400 PermissionError "check constraint of an insert/update permission has failed"
   pure $ encJFromText responseText

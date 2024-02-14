@@ -1,0 +1,178 @@
+---
+title: RESTified Config
+keywords:
+  - hasura
+  - docs
+  - RESTified
+  - REST
+  - endpoint
+  - config
+sidebar_position: 4
+toc_max_heading_level: 3
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# RESTified Endpoint Config
+
+## Introduction
+
+In this document, we cover the RESTified endpoint configuration options. We will also cover how to use the RESTified
+endpoint to query and mutate data in your database.
+
+:::info Subscriptions and RESTified endpoints
+
+Currently, only queries and mutations are supported in RESTified endpoints.
+
+:::
+
+## Configuration options {#configuration-options}
+
+Four fields are required to configure a RESTified endpoint:
+
+| Field             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name              | The name of the endpoint. This will be used to identify the endpoint in the RESTified endpoint list.                                                                                                                                                                                                                                                                                                                                            |
+| Location          | The path of the endpoint. This will be appended to the base URL of your Hasura instance to form the full URL of the endpoint.<br /><br /> The location can contain variables, which will be replaced with the values of the corresponding arguments when the endpoint is called. For example, if the location is `/api/rest/carts/:userId`, then `userId` will be replaced with the value of the `userId` argument when the endpoint is called. |
+| HTTP method       | The HTTP method to use when making requests to the endpoint. This can be either `GET`, `POST`, `PUT`, `PATCH`, or `DELETE`.                                                                                                                                                                                                                                                                                                                     |
+| GraphQL operation | The GraphQL query to execute when the endpoint is called. This can be either a query or a mutation.                                                                                                                                                                                                                                                                                                                                             |
+
+## Examples
+
+### Queries {#queries}
+
+#### Simple endpoints
+
+Simple endpoints are endpoints that do not have any arguments. A common use case for simple endpoints is to expose a
+list of all the items in a table. In the example below, we will create a RESTified endpoint for the `products` table,
+allowing us to fetch all the products in the database.
+
+We would begin by writing a GraphQL query in the GraphiQL IDE:
+
+```graphql
+query AllProductsQuery {
+  products {
+    id
+    name
+    manufacturerByManufacturer {
+      id
+      name
+    }
+  }
+}
+```
+
+After entering the query, we'd then click the `REST` button in the Explorer to configure the endpoint. On the
+configuration screen that appears, enter whatever name you wish. In the `Location` field, as our query does not have any
+arguments, we can simply set this to `/products`.
+
+This means that the endpoint will be available at `https://<your-domain>/api/rest/products` and hitting it will return
+the result of the query, being the list of all the products in the database.
+
+As this endpoint is fetching data, we'd select `GET` as the HTTP method.
+
+After clicking `Create`, you would be able to access the endpoint at `https://<your-domain>/api/rest/products` and see
+the list of products.
+
+#### Endpoints with arguments
+
+Suppose we only want to fetch the products that are produced by a specific manufacturer. We can do this by adding a
+`where` clause to our query and passing in the manufacturer's ID as an argument to the endpoint:
+
+```graphql
+query AllProductsQuery($manufacturerId: uuid!) {
+  products(where: { manufacturer: { _eq: $manufacturerId } }) {
+    id
+    name
+    manufacturerByManufacturer {
+      id
+      name
+    }
+  }
+}
+```
+
+The only difference between this query and the previous one is the addition of the `where` clause. This clause allows us
+to filter the results of the query based on the value of the `manufacturer` column. We can utilize this value in our
+endpoint by passing it in as an argument. Instead of our endpoint being `/products`, we'd set it to
+`/products/:manufacturerId`.
+
+Hasura will parse the `manufacturerId` argument from the URL and pass it to the query as a variable. This means that the
+endpoint will be available at `https://<your-domain>/api/rest/products/:manufacturerId` and hitting it will return the
+result of the query, being the list of products belonging to the manufacturer with the specified ID.
+
+### Mutations {#mutations}
+
+Mutations work identically to queries, except that they are executed using a `POST` request. The response will be the
+result of the mutation as you've configured it.
+
+To add an item to a cart, we'll need to insert a new row using the `insert_carts_items_one` mutation:
+
+```graphql
+mutation CreateCartItemMutation($product_id: uuid!, $quantity: Int!, $cart_id: uuid!) {
+  insert_cart_items_one(object: { product_id: $product_id, quantity: $quantity, cart_id: $cart_id }) {
+    id
+    cart_id
+  }
+}
+```
+
+For simple mutations, we can use the same approach as we did for queries by accepting a query parameter for the
+necessary field. However, we can also send JSON data in the request body. This is useful for mutations that require
+multiple arguments. For the example above, we'd set the `Location` to `/cartItem`. We could then use the following curl
+command to add an item to a cart:
+
+```bash
+curl -H "<YOUR_ADMIN_SECRET>" -X POST https://<YOUR_DOMAIN>/api/rest/cartItem/ -d '{
+"product_id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
+"quantity": 1,
+"cart_id": "e6e0edc0-673d-11ed-8a25-7224baf239e5"
+}'
+```
+
+Note that the `product_id`, `quantity`, and `cart_id` fields are required and match the names of the arguments in the
+mutation. As in our mutation, the returned values are the `id` and `cart_id` fields.
+
+## Use cases
+
+Ultimately, RESTified queries are not promoted as the primary interface to Hasura due to the lower flexibility and
+expressivity compared to native GraphQL queries, as well as the normal GraphQL query interface being the best place to
+develop the queries that could be RESTified later. The feature exists to augment the features of Hasura and make Hasura
+easier to adopt in environments that have a heavier REST focus than GraphQL.
+
+Below, you'll find several scenarios in which REST endpoints could be useful.
+
+### Simplifying client code
+
+Rather than having to adapt application stacks and tools, RESTified endpoints can be created to allow use of existing
+processes. This is enhanced by providing OpenAPI documentation for the endpoints to allow automatic integration where
+supported.
+
+### Simplifying access control
+
+Having a limited GraphQL query allow-list can add protection against accidental or intentional DOS, however this
+requires that the allowed queries be known ahead of time. By using the RESTified queries API, these can be dynamically
+curated for users so that they don't have to change client code to adapt to new policies.
+
+### Simplifying onboarding
+
+Rather than distributing recommended usage patterns of the GraphQL API out-of-band, a curated set of RESTified endpoints
+can serve as a very easy way to get users up to speed with a Hasura instance by providing “recommended patterns.” Since
+the associated GraphQL query is available for review, users can always adapt the RESTified endpoint into a customized
+GraphQL query if required.
+
+RESTified queries could also be used for “tightening up” usage patterns when moving from the experimentation/development
+phase to the production/maintenance phase and used as a requirement for transitioning application maturity.
+
+### Simplifying caching
+
+Related to curation, [directives such as `@cached`](/caching/overview.mdx) can be applied to queries to ensure that
+cached responses are always requested instead of leaving that up to the client and possibly omitting them when they
+should be used.
+
+HTTP caching headers are also inserted when `@cached` directives are applied which can be taken advantage of by many
+HTTP clients so that manual/explicit caching logic doesn't need to be written in applications.
+
+## Utilizing the API
+
+To learn more about how to use the REST API, please refer to the [REST API documentation](/api-reference/restified.mdx).

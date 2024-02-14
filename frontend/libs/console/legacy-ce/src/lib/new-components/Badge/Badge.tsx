@@ -9,7 +9,8 @@ export type BadgeColor =
   | 'gray'
   | 'blue'
   | 'purple'
-  | 'light-gray';
+  | 'light-gray'
+  | 'dark-gray';
 interface BadgeProps extends React.ComponentProps<'span'> {
   /**
    * The color of the basge
@@ -22,6 +23,7 @@ const badgeClassnames: Record<BadgeColor, string> = {
   red: 'bg-red-100 text-red-800',
   yellow: 'bg-yellow-100 text-yellow-800',
   gray: 'bg-gray-300 text-gray-800',
+  'dark-gray': 'text-white bg-gray-500',
   indigo: 'bg-indigo-100 text-indigo-800',
   blue: 'bg-blue-100 text-blue-800',
   purple: 'bg-purple-100 text-purple-800',

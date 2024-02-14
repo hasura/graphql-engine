@@ -58,6 +58,9 @@ import HeaderNavItem, {
 } from './HeaderNavItem';
 import { Tooltip } from './../../new-components/Tooltip';
 import { Badge } from './../../new-components/Badge';
+import { ConsoleDevTools } from '../../utils/console-dev-tools/ConsoleDevTools';
+import { isFeatureFlagEnabled } from '../../features/FeatureFlags/hooks/useFeatureFlags';
+import { availableFeatureFlagIds } from '../../features/FeatureFlags';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -85,7 +88,7 @@ export const updateRequestHeaders = props => {
     }
   }
 };
-
+/*
 const getSettingsSelectedMarker = pathname => {
   const currentActiveBlock = getPathRoot(pathname);
 
@@ -95,6 +98,7 @@ const getSettingsSelectedMarker = pathname => {
 
   return null;
 };
+ */
 
 class Main extends React.Component {
   constructor(props) {
@@ -272,14 +276,17 @@ class Main extends React.Component {
       serverVersion,
     } = this.props;
 
-    const {
-      proClickState: { isProClicked },
-      isPopUpOpen,
-    } = this.state;
+    const { isPopUpOpen } = this.state;
 
     const appPrefix = '';
 
     const getDataPath = () => {
+      const perfMode = isFeatureFlagEnabled(
+        availableFeatureFlagIds.performanceMode
+      );
+
+      if (perfMode) return '/data';
+
       return currentSource
         ? schemaList.length
           ? getSchemaBaseRoute(currentSchema, currentSource)
@@ -363,7 +370,7 @@ class Main extends React.Component {
             <div className="flex gap-1 flex-grow">
               <div className="px-5 py-2 flex items-center gap-3">
                 <Link to="/">
-                  <img className="w-24" src={logo} />
+                  <img className="w-24" src={logo} alt="" />
                 </Link>
                 <Link to="/">
                   <div className="text-white text-xs max-w-[128px]">
@@ -371,7 +378,7 @@ class Main extends React.Component {
                   </div>
                 </Link>
               </div>
-              <ul className="flex gap-2">
+              <ul className="flex gap-2" data-testid="Nav bar">
                 <HeaderNavItem
                   title="API"
                   icon={<FaFlask aria-hidden="true" />}
@@ -415,63 +422,70 @@ class Main extends React.Component {
                 />
               </ul>
             </div>
-            <div
-              id="dropdown_wrapper"
-              className={clsx(
-                'flex gap-2 justify-end items-stretch relative mr-4',
-                this.state.isDropdownOpen ? 'open' : ''
-              )}
-            >
-              {getAdminSecretSection()}
-              <div className={itemContainerStyle}>
-                <Link
-                  className={clsx(
-                    linkStyle,
-                    currentActiveBlock === 'settings' && activeLinkStyle
-                  )}
-                  to="/settings"
-                >
-                  <span className="text-sm self-baseline">
-                    {getMetadataStatusIcon()}
-                  </span>
-                  <span className="uppercase text-left">Settings</span>
-                </Link>
-              </div>
-              {/* Compensate legacy styles directly with style attribute */}
-              <div className={styles.proWrapper} style={{ padding: '0' }}>
+            <div className="bootstrap-jail">
+              <div
+                id="dropdown_wrapper"
+                className={clsx(
+                  'flex gap-2 justify-end items-stretch relative mr-4 h-full',
+                  this.state.isDropdownOpen ? 'open' : ''
+                )}
+              >
+                {getAdminSecretSection()}
                 <div className={itemContainerStyle}>
-                  <div
-                    className={clsx(linkStyle, isPopUpOpen && activeLinkStyle)}
-                    onClick={this.onProIconClick}
+                  <Link
+                    className={clsx(
+                      linkStyle,
+                      currentActiveBlock === 'settings' && activeLinkStyle
+                    )}
+                    to="/settings"
                   >
                     <span className="text-sm self-baseline">
-                      <FaInfoCircle />
+                      {getMetadataStatusIcon()}
                     </span>
-                    <span className="uppercase text-left">CLOUD</span>
+                    <span className="uppercase text-left">Settings</span>
+                  </Link>
+                </div>
+                {/* Compensate legacy styles directly with style attribute */}
+                <div className={styles.proWrapper} style={{ padding: '0' }}>
+                  <div className={itemContainerStyle}>
+                    <div
+                      className={clsx(
+                        linkStyle,
+                        isPopUpOpen && activeLinkStyle
+                      )}
+                      onClick={this.onProIconClick}
+                    >
+                      <span className="text-sm self-baseline">
+                        <FaInfoCircle />
+                      </span>
+                      <span className="uppercase text-left">CLOUD</span>
+                    </div>
                   </div>
+                  {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
                 </div>
-                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
-              </div>
 
-              <Help isSelected={currentActiveBlock === 'support'} />
-              <NotificationSection
-                isDropDownOpen={this.state.isDropdownOpen}
-                closeDropDown={this.closeDropDown}
-                toggleDropDown={this.toggleDropDown}
-              />
-              {!this.state.loveConsentState.isDismissed ? (
-                <div
-                  id="dropdown_wrapper"
-                  className={`self-stretch ${
-                    this.state.isLoveSectionOpen ? 'open' : ''
-                  }`}
-                >
-                  <LoveSection
-                    closeLoveSection={this.closeLoveSection}
-                    toggleLoveSection={this.toggleLoveSection}
-                  />
-                </div>
-              ) : null}
+                <Help isSelected={currentActiveBlock === 'support'} />
+                <NotificationSection
+                  isDropDownOpen={this.state.isDropdownOpen}
+                  closeDropDown={this.closeDropDown}
+                  toggleDropDown={this.toggleDropDown}
+                />
+                {!this.state.loveConsentState.isDismissed ? (
+                  <div className="bootstrap-jail">
+                    <div
+                      id="dropdown_wrapper"
+                      className={`self-stretch h-full ${
+                        this.state.isLoveSectionOpen ? 'open' : ''
+                      }`}
+                    >
+                      <LoveSection
+                        closeLoveSection={this.closeLoveSection}
+                        toggleLoveSection={this.toggleLoveSection}
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
           <div className={styles.main + ' container-fluid'}>
@@ -484,6 +498,7 @@ class Main extends React.Component {
             updateNotificationVersion={this.state.updateNotificationVersion}
           />
         </div>
+        <ConsoleDevTools />
       </div>
     );
   }

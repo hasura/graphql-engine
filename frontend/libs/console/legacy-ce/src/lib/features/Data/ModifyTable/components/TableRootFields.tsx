@@ -7,7 +7,7 @@ import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';
 import { ModifyTableProps } from '../ModifyTable';
 
-const RootField: React.VFC<{ property: string; value: string }> = ({
+export const RootField: React.VFC<{ property: string; value: string }> = ({
   property,
   value,
 }) => (
@@ -83,6 +83,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
         dialogDescription=""
         show={showCustomModal}
         currentConfiguration={metadataTable?.configuration}
+        source={dataSourceName}
       />
     </div>
   );

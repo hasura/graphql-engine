@@ -1,7 +1,6 @@
 import type { DataSourcesAPI } from '../..';
-import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
-import { isColTypeString } from '.';
+import { isColTypeArray, isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
 import { quoteDefault } from '../../../components/Services/Data/utils';
@@ -103,7 +102,12 @@ export const getFetchTablesListQuery = (options: {
                WHEN nt.nspname = 'pg_catalog' THEN format_type(a.atttypid, null)
                ELSE 'USER-DEFINED' END
         END AS data_type,
-        coalesce(bt.typname, t.typname) AS data_type_name
+        coalesce(bt.typname, t.typname) AS data_type_name,
+      CASE 
+        WHEN a.attidentity = 'd' THEN TRUE
+        WHEN a.attidentity = 'a' THEN TRUE
+        ELSE FALSE
+      END as is_identity
       FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
         JOIN (pg_class c JOIN pg_namespace nc ON (c.relnamespace = nc.oid)) ON a.attrelid = c.oid
         JOIN (pg_type t JOIN pg_namespace nt ON (t.typnamespace = nt.oid)) ON a.atttypid = t.oid
@@ -272,7 +276,8 @@ export const getCreateTableQueries = (
       currentCols[i].default?.value !== ''
     ) {
       if (
-        isColTypeString(currentCols[i].type) &&
+        (isColTypeString(currentCols[i].type) ||
+          isColTypeArray(currentCols[i].type)) &&
         !isSQLFunction(currentCols[i]?.default?.value)
       ) {
         // if a column type is text and if it has a non-func default value, add a single quote by default
@@ -1329,61 +1334,6 @@ WHERE
 	AND schema_name NOT LIKE 'pg_toast%'
 	AND schema_name NOT LIKE 'pg_temp_%';
 `;
-
-export const getDataTriggerLogsQuery = (
-  triggerOp: TriggerOperation,
-  triggerName: string,
-  limit?: number,
-  offset?: number
-): string => {
-  const triggerTypes = {
-    pending: 'pending',
-    processed: 'processed',
-    invocation: 'invocation',
-  };
-  const eventRelTable = `"hdb_catalog"."event_log"`;
-  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-  let sql = '';
-
-  switch (triggerOp) {
-    case triggerTypes.pending:
-      sql = `SELECT *
-      FROM ${eventRelTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC `;
-      break;
-
-    case triggerTypes.processed:
-      sql = `SELECT *
-      FROM ${eventRelTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC `;
-      break;
-
-    case triggerTypes.invocation:
-      sql = `
-      SELECT data_table.*
-      FROM ${eventInvTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      ORDER BY data_table.created_at DESC NULLS LAST`;
-      break;
-    default:
-      break;
-  }
-
-  if (limit) {
-    sql += ` LIMIT ${limit}`;
-  } else {
-    sql += ` LIMIT 10`;
-  }
-
-  if (offset) {
-    sql += ` OFFSET ${offset};`;
-  } else {
-    sql += ` OFFSET 0;`;
-  }
-  return sql;
-};
 
 export const getDataTriggerInvocations = (eventId: string): string => {
   const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;

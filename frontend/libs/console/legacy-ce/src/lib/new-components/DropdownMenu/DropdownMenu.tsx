@@ -53,12 +53,14 @@ export interface DropdownMenuProps {
     portal?: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>;
   };
   items: React.ReactNode[][];
+  zIndex?: string;
 }
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   children,
   items,
   options,
+  zIndex = 'z-[101]',
 }) => (
   <DropdownMenuPrimitive.Root {...options?.root}>
     <DropdownMenuTrigger {...options?.trigger}>{children}</DropdownMenuTrigger>
@@ -66,9 +68,9 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
       <DropdownMenuPrimitive.Content
         align="start"
         {...options?.content}
-        className="z-50"
+        className={zIndex}
       >
-        <div className="origin-top-left absolute left-0 z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
+        <div className="z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
           {items.map((group, groupIndex) => (
             <div className="py-1" key={groupIndex}>
               {group.map((item, itemIndex) => (

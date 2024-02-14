@@ -1,13 +1,12 @@
 module Hasura.RQL.PermissionSpec (spec) where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Permission
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Roles
-import Hasura.Session
 import Test.Hspec
 
 spec :: Spec
@@ -37,14 +36,15 @@ booleanPermissionSpec = do
       inheritedRole3 = Role inheritedRole3Name $ ParentRoles $ Set.fromList [role1Name, role2Name]
       orderedRoles = orderRolesE [role1, role2, role3, inheritedRole1, inheritedRole2, inheritedRole3]
       metadataPermissions =
-        Map.fromList $ [(role3Name, ActionPermissionInfo role3Name), (inheritedRole1Name, ActionPermissionInfo inheritedRole1Name)]
+        HashMap.fromList $ [(role3Name, ActionPermissionInfo role3Name), (inheritedRole1Name, ActionPermissionInfo inheritedRole1Name)]
       processedPermissions = mkBooleanPermissionMap ActionPermissionInfo metadataPermissions orderedRoles
   describe "Action Permissions" $ do
-    it "overrides the inherited permission for a role if permission already exists in the metadata" $
-      Map.lookup inheritedRole1Name processedPermissions
-        `shouldBe` (Just (ActionPermissionInfo inheritedRole1Name))
-    it "when a role doesn't have a metadata permission and at least one of its parents has, then the inherited role should inherit the permission" $
-      Map.lookup inheritedRole2Name processedPermissions
-        `shouldBe` (Just (ActionPermissionInfo inheritedRole2Name))
-    it "when a role doesn't have a metadata permission and none of the parents have permissions, then the inherited role should not inherit the permission" $
-      Map.lookup inheritedRole3Name processedPermissions `shouldBe` Nothing
+    it "overrides the inherited permission for a role if permission already exists in the metadata"
+      $ HashMap.lookup inheritedRole1Name processedPermissions
+      `shouldBe` (Just (ActionPermissionInfo inheritedRole1Name))
+    it "when a role doesn't have a metadata permission and at least one of its parents has, then the inherited role should inherit the permission"
+      $ HashMap.lookup inheritedRole2Name processedPermissions
+      `shouldBe` (Just (ActionPermissionInfo inheritedRole2Name))
+    it "when a role doesn't have a metadata permission and none of the parents have permissions, then the inherited role should not inherit the permission"
+      $ HashMap.lookup inheritedRole3Name processedPermissions
+      `shouldBe` Nothing

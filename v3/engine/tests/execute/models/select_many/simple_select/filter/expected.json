@@ -1,0 +1,11 @@
+{
+  "data": {
+    "AuthorMany": [
+      {
+        "author_id": 2,
+        "first_name": "John",
+        "last_name": "Hughes"
+      }
+    ]
+  }
+}

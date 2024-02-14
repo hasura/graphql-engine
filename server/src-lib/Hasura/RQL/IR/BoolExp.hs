@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Boolean Expressions
@@ -15,23 +14,22 @@ module Hasura.RQL.IR.BoolExp
     GBoolExp (..),
     gBoolExpTrue,
     GExists (..),
-    geWhere,
-    geTable,
-    _BoolExists,
     DWithinGeomOp (..),
     DWithinGeogOp (..),
     CastExp,
     OpExpG (..),
     opExpDepCol,
+    ComparisonNullability (..),
     STIntersectsNbandGeommin (..),
     STIntersectsGeomminNband (..),
     ComputedFieldBoolExp (..),
     AnnComputedFieldBoolExp (..),
     AnnBoolExpFld (..),
+    RelationshipFilters (..),
     AnnBoolExp,
-    AnnColumnCaseBoolExpPartialSQL,
-    AnnColumnCaseBoolExp,
-    AnnColumnCaseBoolExpField (..),
+    AnnRedactionExpPartialSQL,
+    AnnRedactionExpUnpreparedValue,
+    AnnRedactionExp (..),
     annBoolExpTrue,
     andAnnBoolExps,
     AnnBoolExpFldSQL,
@@ -44,30 +42,34 @@ module Hasura.RQL.IR.BoolExp
     PreSetColsPartial,
     RootOrCurrentColumn (..),
     RootOrCurrent (..),
+    RemoteRelPermBoolExp (..),
+    RemoteRelRHSFetchInfo (..),
   )
 where
 
 import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
+import Control.DeepSeq (rnf)
 import Control.Lens.Plated
-import Control.Lens.TH
 import Data.Aeson.Extended
-import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH
-import Data.Aeson.Types (parseEither)
-import Data.HashMap.Strict qualified as M
+import Data.Aeson.Types
+import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (hashWithSalt)
 import Data.Monoid
 import Data.Text.Extended
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.Function.Cache
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelRHSFetchWhereExp)
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 
 ----------------------------------------------------------------------------------------------------
@@ -102,15 +104,15 @@ instance (Backend b, FromJSONKeyValue a) => FromJSON (GBoolExp b a) where
   parseJSON = withObject "boolean expression" \o ->
     BoolAnd <$> forM (KM.toList o) \(k, v) ->
       if
-          | k == "$or" -> BoolOr <$> parseJSON v <?> Key k
-          | k == "_or" -> BoolOr <$> parseJSON v <?> Key k
-          | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
-          | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
-          | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
-          | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
-          | k == "$exists" -> BoolExists <$> parseJSON v <?> Key k
-          | k == "_exists" -> BoolExists <$> parseJSON v <?> Key k
-          | otherwise -> BoolField <$> parseJSONKeyValue (k, v)
+        | k == "$or" -> BoolOr <$> parseJSON v <?> Key k
+        | k == "_or" -> BoolOr <$> parseJSON v <?> Key k
+        | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
+        | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
+        | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
+        | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
+        | k == "$exists" -> BoolExists <$> parseJSON v <?> Key k
+        | k == "_exists" -> BoolExists <$> parseJSON v <?> Key k
+        | otherwise -> BoolField <$> parseJSONKeyValue (k, v)
 
 instance (Backend backend, ToJSONKeyValue field) => ToJSON (GBoolExp backend field) where
   -- A representation for boolean values as JSON.
@@ -118,7 +120,7 @@ instance (Backend backend, ToJSONKeyValue field) => ToJSON (GBoolExp backend fie
     -- @and@ expressions can be represented differently than the rest
     -- if the keys are unique
     BoolAnd bExps ->
-      let m = M.fromList $ map getKV bExps
+      let m = HashMap.fromList $ map getKV bExps
        in -- if the keys aren't repeated, then the special notation of object encoding can be used
           if length m == length bExps
             then toJSON m
@@ -173,8 +175,6 @@ instance (Backend b, ToJSONKeyValue a) => ToJSON (GExists b a) where
         "_where" .= gWhere
       ]
 
-makeLenses ''GExists
-
 ----------------------------------------------------------------------------------------------------
 -- Boolean expressions in permissions
 
@@ -203,8 +203,8 @@ newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
 -- decoding GBoolExp. To accurately represent GBoolExp with a codec we will need
 -- Autodocodec to gain support for expressing an object type with "additional
 -- properties" for fields.
-instance Backend b => HasCodec (BoolExp b) where
-  codec = CommentCodec doc $ named (codecNamePrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
+instance (Backend b) => HasCodec (BoolExp b) where
+  codec = CommentCodec doc $ named (backendPrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
     where
       jsonCodec :: JSONCodec (GBoolExp b ColExp)
       jsonCodec = bimapCodec (parseEither parseJSON) toJSON valueCodec
@@ -215,10 +215,6 @@ instance Backend b => HasCodec (BoolExp b) where
           <> "A value for \"_exists\" is an object with \"table\" and \"where\" properties where \"table\" is a table name, "
           <> "and \"where\" is another BoolExp expression. "
           <> "All other properties represent fields where the property name represents a column name, and the value represents a row value."
-
-$(makeWrapped ''BoolExp)
-
-makePrisms ''GBoolExp
 
 -- | Permissions get translated into boolean expressions that are threaded throuhgout the
 -- parsers. For the leaf values of those permissions, we use this type, which references but doesn't
@@ -243,7 +239,7 @@ instance
   ) =>
   Hashable (PartialSQLExp b)
 
-instance Backend b => ToJSON (PartialSQLExp b) where
+instance (Backend b) => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
     PSESession -> String "hasura_session"
@@ -255,22 +251,35 @@ isStaticValue = \case
   PSESession -> False
   PSESQLExp _ -> True
 
-hasStaticExp :: Backend b => OpExpG b (PartialSQLExp b) -> Bool
+hasStaticExp :: (Backend b) => OpExpG b (PartialSQLExp b) -> Bool
 hasStaticExp = getAny . foldMap (Any . isStaticValue)
 
 ----------------------------------------------------------------------------------------------------
 -- Boolean expressions in the schema
 
 -- | Operand for cast operator
-type CastExp backend field = M.HashMap (ScalarType backend) [OpExpG backend field]
+type CastExp backend field = HashMap.HashMap (ScalarType backend) [OpExpG backend field]
+
+data ComparisonNullability = NonNullableComparison | NullableComparison
+  deriving (Generic)
+
+deriving instance Show ComparisonNullability
+
+deriving instance Eq ComparisonNullability
+
+instance NFData ComparisonNullability
+
+instance Hashable ComparisonNullability
+
+instance ToJSON ComparisonNullability
 
 -- | This type represents the boolean operators that can be applied on values of a column. This type
 -- only contains the common core, that we expect to be ultimately entirely supported in most if not
 -- all backends. Backends can extend this with the @BooleanOperators@ type in @Backend@.
 data OpExpG (backend :: BackendType) field
   = ACast (CastExp backend field)
-  | AEQ Bool field
-  | ANE Bool field
+  | AEQ ComparisonNullability field
+  | ANE ComparisonNullability field
   | AIN field
   | ANIN field
   | AGT field
@@ -290,18 +299,23 @@ data OpExpG (backend :: BackendType) field
   | ABackendSpecific (BooleanOperators backend field)
   deriving (Generic)
 
+-- NOTE: There is no redaction expression ('AnnRedactionExp') required for the
+-- column involved here, because RootOrCurrentColumn is only used in the permissions
+-- system, where no redaction is applied anyway.
+-- If we start using this type in normal GraphQL 'where' bool exps, we will need
+-- to add a redaction expression here to deal with redaction from inherited roles.
 data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
   deriving (Generic)
 
-deriving instance Backend b => Show (RootOrCurrentColumn b)
+deriving instance (Backend b) => Show (RootOrCurrentColumn b)
 
-deriving instance Backend b => Eq (RootOrCurrentColumn b)
+deriving instance (Backend b) => Eq (RootOrCurrentColumn b)
 
-instance Backend b => NFData (RootOrCurrentColumn b)
+instance (Backend b) => NFData (RootOrCurrentColumn b)
 
-instance Backend b => Hashable (RootOrCurrentColumn b)
+instance (Backend b) => Hashable (RootOrCurrentColumn b)
 
-instance Backend b => ToJSON (RootOrCurrentColumn b)
+instance (Backend b) => ToJSON (RootOrCurrentColumn b)
 
 -- | The arguments of column-operators may refer to either the so-called 'root
 -- tabular value' or 'current tabular value'.
@@ -387,11 +401,11 @@ opExpDepCol = \case
   CLTE c -> Just c
   _ -> Nothing
 
--- | This type is used to represent the kinds of boolean expression used for compouted fields
+-- | This type is used to represent the kinds of boolean expression used for computed fields
 -- based on the return type of the SQL function.
 data ComputedFieldBoolExp (backend :: BackendType) scalar
   = -- | SQL function returning a scalar
-    CFBEScalar [OpExpG backend scalar]
+    CFBEScalar (AnnRedactionExp backend scalar) [OpExpG backend scalar]
   | -- | SQL function returning SET OF table
     CFBETable (TableName backend) (AnnBoolExp backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
@@ -481,6 +495,39 @@ instance
   ) =>
   Hashable (AnnComputedFieldBoolExp b a)
 
+data RemoteRelPermBoolExp b field = RemoteRelPermBoolExp
+  { rawBoolExp :: (RelName, Value),
+    lhsCol :: (Column b, ColumnType b),
+    rhsFetchInfo :: AB.AnyBackend (RemoteRelRHSFetchInfo field)
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Functor (RemoteRelPermBoolExp b)
+
+deriving instance (Backend b) => Foldable (RemoteRelPermBoolExp b)
+
+deriving instance (Backend b) => Traversable (RemoteRelPermBoolExp b)
+
+instance Eq (RemoteRelPermBoolExp b f) where
+  (RemoteRelPermBoolExp rawBoolExp1 _ _) == (RemoteRelPermBoolExp rawBoolExp2 _ _) = rawBoolExp1 == rawBoolExp2
+
+instance Hashable (RemoteRelPermBoolExp b a) where
+  hashWithSalt salt (RemoteRelPermBoolExp rawBoolExp _ _) = hashWithSalt salt rawBoolExp
+
+instance NFData (RemoteRelPermBoolExp b a) where
+  rnf (RemoteRelPermBoolExp rawBoolExp _ _) = rnf rawBoolExp
+
+instance (Show (RemoteRelPermBoolExp b f)) where
+  show (RemoteRelPermBoolExp boolExp _ _) = show (boolExp)
+
+data RemoteRelRHSFetchInfo field b = RemoteRelRHSFetchInfo
+  { rrrfiColumn :: (ScalarType b, Column b),
+    rrrfiTable :: TableName b,
+    rrrfiWhere :: RemoteRelRHSFetchWhereExp (Column b),
+    rrrfiSource :: SourceName,
+    rrrfiSourceConfig :: SourceConfig b
+  }
+
 -- | This type is used for boolean terms in GBoolExp in the schema; there are four kinds boolean
 -- terms:
 --   - operators on a column of the current table, using the 'OpExpG' kind of operators
@@ -490,10 +537,14 @@ instance
 --
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
-  = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
-  | AVRelationship (RelInfo backend) (AnnBoolExp backend leaf)
+  = AVColumn (ColumnInfo backend) (AnnRedactionExp backend leaf) [OpExpG backend leaf]
+  | AVNestedObject (NestedObjectInfo backend) (AnnBoolExp backend leaf)
+  | AVRelationship
+      (RelInfo backend)
+      (RelationshipFilters backend leaf)
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
   | AVAggregationPredicates (AggregationPredicates backend leaf)
+  | AVRemoteRelationship (RemoteRelPermBoolExp backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
@@ -501,7 +552,8 @@ deriving instance
     Eq (AggregationPredicates b a),
     Eq (AnnBoolExp b a),
     Eq (AnnComputedFieldBoolExp b a),
-    Eq (OpExpG b a)
+    Eq (OpExpG b a),
+    Eq (RemoteRelPermBoolExp b a)
   ) =>
   Eq (AnnBoolExpFld b a)
 
@@ -510,7 +562,8 @@ deriving instance
     Show (AggregationPredicates b a),
     Show (AnnBoolExp b a),
     Show (AnnComputedFieldBoolExp b a),
-    Show (OpExpG b a)
+    Show (OpExpG b a),
+    Show (RemoteRelPermBoolExp b a)
   ) =>
   Show (AnnBoolExpFld b a)
 
@@ -519,7 +572,8 @@ instance
     NFData (AggregationPredicates b a),
     NFData (AnnBoolExp b a),
     NFData (AnnComputedFieldBoolExp b a),
-    NFData (OpExpG b a)
+    NFData (OpExpG b a),
+    NFData (RemoteRelPermBoolExp b a)
   ) =>
   NFData (AnnBoolExpFld b a)
 
@@ -528,7 +582,8 @@ instance
     Hashable (AggregationPredicates b a),
     Hashable (AnnBoolExp b a),
     Hashable (AnnComputedFieldBoolExp b a),
-    Hashable (OpExpG b a)
+    Hashable (OpExpG b a),
+    Hashable (RemoteRelPermBoolExp b a)
   ) =>
   Hashable (AnnBoolExpFld b a)
 
@@ -541,22 +596,67 @@ instance
   ToJSONKeyValue (AnnBoolExpFld b a)
   where
   toJSONKeyValue = \case
-    AVColumn pci opExps ->
+    AVColumn pci _redactionExp opExps ->
       ( K.fromText $ toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
-    AVRelationship ri relBoolExp ->
+    AVNestedObject noi boolExp ->
+      ( K.fromText $ toTxt $ _noiColumn noi,
+        toJSON (noi, boolExp)
+      )
+    AVRelationship ri filters ->
       ( K.fromText $ relNameToTxt $ riName ri,
-        toJSON (ri, toJSON relBoolExp)
+        toJSON (ri, toJSON filters)
       )
     AVComputedField cfBoolExp ->
       ( K.fromText $ toTxt $ _acfbName cfBoolExp,
         let function = _acfbFunction cfBoolExp
          in case _acfbBoolExp cfBoolExp of
-              CFBEScalar opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
+              CFBEScalar _redactionExp opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
     AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
+    AVRemoteRelationship (RemoteRelPermBoolExp (relName, fieldValue) _ _) ->
+      (K.fromText (relNameToTxt relName), fieldValue)
+
+-- | This type represents a boolean expression over a relationship. In addition
+-- to the actual user-specified predicate, we need to also consider the
+-- permissions of the target table.
+--
+-- Because the permissions may include column-comparison-operators, they need to
+-- be translated in the context of the table they apply to. Thus we keep the
+-- permissions and filters separate.
+data RelationshipFilters (backend :: BackendType) leaf = RelationshipFilters
+  { rfTargetTablePermissions :: AnnBoolExp backend leaf,
+    rfFilter :: AnnBoolExp backend leaf
+  }
+  deriving (Functor, Foldable, Traversable, Generic)
+
+deriving instance
+  ( Backend b,
+    Eq (AnnBoolExp b a)
+  ) =>
+  Eq (RelationshipFilters b a)
+
+deriving instance
+  ( Backend b,
+    Show (AnnBoolExp b a)
+  ) =>
+  Show (RelationshipFilters b a)
+
+instance
+  ( Backend b,
+    NFData (AnnBoolExp b a)
+  ) =>
+  NFData (RelationshipFilters b a)
+
+instance
+  ( Backend b,
+    Hashable (AnnBoolExp b a)
+  ) =>
+  Hashable (RelationshipFilters b a)
+
+instance (ToJSON (AnnBoolExp backend leaf)) => ToJSON (RelationshipFilters backend leaf)
 
 -- | A simple alias for the kind of boolean expressions used in the schema, that ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnBoolExpFld'.
@@ -592,7 +692,12 @@ instance (NFData a) => NFData (DWithinGeomOp a)
 
 instance (Hashable a) => Hashable (DWithinGeomOp a)
 
-$(deriveJSON hasuraJSON ''DWithinGeomOp)
+instance (FromJSON a) => FromJSON (DWithinGeomOp a) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (ToJSON a) => ToJSON (DWithinGeomOp a) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STDWithin opoerator
 data DWithinGeogOp field = DWithinGeogOp
@@ -606,7 +711,12 @@ instance (NFData a) => NFData (DWithinGeogOp a)
 
 instance (Hashable a) => Hashable (DWithinGeogOp a)
 
-$(deriveJSON hasuraJSON ''DWithinGeogOp)
+instance (FromJSON a) => FromJSON (DWithinGeogOp a) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (ToJSON a) => ToJSON (DWithinGeogOp a) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STIntersect
 data STIntersectsNbandGeommin field = STIntersectsNbandGeommin
@@ -619,7 +729,12 @@ instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 
-$(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
+instance (FromJSON field) => FromJSON (STIntersectsNbandGeommin field) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (ToJSON field) => ToJSON (STIntersectsNbandGeommin field) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STIntersect
 data STIntersectsGeomminNband field = STIntersectsGeomminNband
@@ -632,57 +747,46 @@ instance (NFData a) => NFData (STIntersectsGeomminNband a)
 
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 
-$(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
+instance (FromJSON field) => FromJSON (STIntersectsGeomminNband field) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (ToJSON field) => ToJSON (STIntersectsGeomminNband field) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 ----------------------------------------------------------------------------------------------------
 -- Miscellaneous
 
--- | This is a simple newtype over AnnBoolExpFld. At time of writing, I do not know why we want
--- this, and why it exists. It might be a relic of a needed differentiation, now lost?
--- TODO: can this be removed?
-newtype AnnColumnCaseBoolExpField (backend :: BackendType) field = AnnColumnCaseBoolExpField {_accColCaseBoolExpField :: AnnBoolExpFld backend field}
-  deriving (Functor, Foldable, Traversable, Generic)
+-- | This captures a boolean expression where, if it is false, some associated data needs to be redacted
+-- (in practice, nulled out) because the user doesn't have access to it. Alternatively,
+-- "no redaction" is explicitly defined, which is used as an optimization to avoid evaluating a boolexp
+-- if unnecessary (as opposed to defining a boolean exp which always evaluates to true).
 
-deriving instance
-  ( Eq (AnnBoolExpFld b a)
-  ) =>
-  Eq (AnnColumnCaseBoolExpField b a)
+-- See notes [Inherited roles architecture for read queries] and [SQL generation for inherited roles]
+-- for more information about what this is used for.
+data AnnRedactionExp b v
+  = NoRedaction
+  | RedactIfFalse (GBoolExp b (AnnBoolExpFld b v))
+  deriving stock (Functor, Foldable, Traversable, Generic)
 
-deriving instance
-  ( Backend b,
-    Show (AnnBoolExpFld b a),
-    Show a
-  ) =>
-  Show (AnnColumnCaseBoolExpField b a)
+deriving stock instance (Backend b, Show (GBoolExp b (AnnBoolExpFld b v))) => Show (AnnRedactionExp b v)
 
-instance
-  ( Backend b,
-    NFData (AnnBoolExpFld b a),
-    NFData a
-  ) =>
-  NFData (AnnColumnCaseBoolExpField b a)
+deriving stock instance (Backend b, Eq (GBoolExp b (AnnBoolExpFld b v))) => Eq (AnnRedactionExp b v)
 
-instance
-  ( Backend b,
-    Hashable (AnnBoolExpFld b a),
-    Hashable a
-  ) =>
-  Hashable (AnnColumnCaseBoolExpField b a)
+instance (Backend b, Hashable (GBoolExp b (AnnBoolExpFld b v))) => Hashable (AnnRedactionExp b v)
 
-instance
-  ( ToJSONKeyValue (AnnBoolExpFld b a)
-  ) =>
-  ToJSONKeyValue (AnnColumnCaseBoolExpField b a)
-  where
-  toJSONKeyValue = toJSONKeyValue . _accColCaseBoolExpField
+instance (Backend b, NFData (GBoolExp b (AnnBoolExpFld b v))) => NFData (AnnRedactionExp b v)
 
--- | Similar to AnnBoolExp, this type alias ties together
--- 'GBoolExp', 'OpExpG', and 'AnnColumnCaseBoolExpFld'.
-type AnnColumnCaseBoolExp b a = GBoolExp b (AnnColumnCaseBoolExpField b a)
+instance (Backend b, ToJSON (GBoolExp b (AnnBoolExpFld b v))) => ToJSON (AnnRedactionExp b v) where
+  toJSON = \case
+    NoRedaction -> Null
+    RedactIfFalse boolExp -> toJSON boolExp
 
 -- misc type aliases
-type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
+type AnnRedactionExpPartialSQL b = AnnRedactionExp b (PartialSQLExp b)
 
-type PreSetColsG b v = M.HashMap (Column b) v
+type AnnRedactionExpUnpreparedValue b = AnnRedactionExp b (UnpreparedValue b)
 
-type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
+type PreSetColsG b v = HashMap.HashMap (Column b) v
+
+type PreSetColsPartial b = HashMap.HashMap (Column b) (PartialSQLExp b)

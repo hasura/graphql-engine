@@ -12,6 +12,8 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Manage Migrations
 
+## Introduction
+
 Hasura will create pure SQL files representing every change made to tracked databases made while using the Console
 served by the Hasura CLI.
 
@@ -66,6 +68,14 @@ hasura migrate create "init" --from-server
 This will create a new folder named in the format `<timestamp>_init` within another folder of the name of the database
 in Hasura which is being referenced. It will contain only an `up.sql` file which describes in SQL how to create the
 schema in full for that database.
+
+:::info When using a non-Postgres database
+
+Please note that when using the `migrate create init --from-server` command, Hasura only supports Postgres databases.
+Should you wish to use a different database, you will need to manually create the migration files. For more information,
+please see the section below.
+
+:::
 
 ### Create a Migration manually {#create-manual-migrations}
 
@@ -177,6 +187,18 @@ hasura migrate apply --endpoint https://another-hasura-instance.hasura.app --ver
 You can also leave out the `--endpoint` flag if the project has already been initialized in which case the Hasura CLI
 will use the endpoint information from the config.yaml file. Note that Hasura Server keeps track of which Migrations
 have already been applied and will not reapply a migration if it has already been applied.
+
+## Marking Migrations as applied {#mark-migrations-applied}
+
+If the schema already exists on your database or you have already applied a Migration to a database, you can let
+Hasura Engine know by marking it as applied in the Hasura Metadata. This is in order to make the Migration states
+consistent.
+
+To do this, use the `--skip-execution` flag with the `migrate apply` command in the Hasura CLI, eg:
+
+```bash
+hasura migrate apply --skip-execution --version 1650879664716 --endpoint https://another-hasura-instance.hasura.app
+```
 
 ## Rolling back applied Migrations {#roll-back-migrations}
 
@@ -322,7 +344,7 @@ hasura migrate delete --all --database-name <database-name>
 
 ## Auto-Applying Migrations in CI/CD {#auto-apply-migrations}
 
-If you need an automated way of applying Migrations and Metadata, take a look at the [cli-migrations]
-(/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply Migrations and
-Metadata when the Hasura Server starts.
+If you need an automated way of applying Migrations and Metadata, take a look at the
+[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply
+Migrations and Metadata when the Hasura Server starts.
 [Check out more information here](/migrations-metadata-seeds/auto-apply-migrations.mdx).

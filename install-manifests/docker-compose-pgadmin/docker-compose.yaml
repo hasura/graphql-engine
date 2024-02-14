@@ -1,29 +1,29 @@
-version: '3.6'
+version: "3.6"
 services:
   postgres:
-    image: postgres:14
+    image: postgres:15
     restart: always
     volumes:
-    - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
   pgadmin:
     image: dpage/pgadmin4
     restart: always
     depends_on:
-    - postgres
+      - postgres
     ports:
-    - 5050:80
+      - 5050:80
     ## you can change pgAdmin default username/password with below environment variables
     environment:
       PGADMIN_DEFAULT_EMAIL: pgadmin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
   graphql-engine:
-    image: hasura/graphql-engine:v2.2.0
+    image: hasura/graphql-engine:v2.37.0
     ports:
-    - "8080:8080"
+      - "8080:8080"
     depends_on:
-    - "postgres"
+      - "postgres"
     restart: always
     environment:
       ## postgres database to store Hasura metadata

@@ -28,7 +28,7 @@ import Network.Wai.Extended qualified as Wai
 -- | TODO (from master): Limitation: This parses the query, which is not ideal if we already
 -- have the query cached. The parsing happens unnecessary. But getting this to
 -- either return a plan or parse was tricky and complicated.
-class Monad m => MonadGQLExecutionCheck m where
+class (Monad m) => MonadGQLExecutionCheck m where
   checkGQLExecution ::
     UserInfo ->
     ([HTTP.Header], Wai.IpAddress) ->
@@ -54,7 +54,7 @@ class Monad m => MonadGQLExecutionCheck m where
     SchemaCache ->
     m (Either QErr ())
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
+instance (MonadGQLExecutionCheck m) => MonadGQLExecutionCheck (ReaderT r m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 
@@ -64,7 +64,7 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
   checkGQLBatchedReqs userInfo requestId reqs sc =
     lift $ checkGQLBatchedReqs userInfo requestId reqs sc
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
+instance (MonadGQLExecutionCheck m) => MonadGQLExecutionCheck (ExceptT e m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 
@@ -74,7 +74,7 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
   checkGQLBatchedReqs userInfo requestId reqs sc =
     lift $ checkGQLBatchedReqs userInfo requestId reqs sc
 
-instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
+instance (MonadGQLExecutionCheck m) => MonadGQLExecutionCheck (Tracing.TraceT m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 

@@ -1,6 +1,6 @@
 ---
 sidebar_label: Computed fields
-sidebar_position: 6
+sidebar_position: 3.1
 description: Use computed fields over BigQuery in Hasura
 keywords:
   - hasura
@@ -18,13 +18,14 @@ import TabItem from '@theme/TabItem';
 ## What are computed fields?
 
 Computed fields are virtual fields that are dynamically computed and can be queried along with a table's columns.
-Computed fields are computed upon request. They are computed by executing user-defined SQL functions using other columns
-of the table and other custom inputs if needed.
 
-:::info Note
+Computed fields are computed upon request. They are computed by executing user-defined SQL functions which take columns
+of the table, and other custom values if needed, as inputs to compute the field.
 
-Computed fields are only exposed over the GraphQL API and the BigQuery database schema is not modified on addition of a
-computed field.
+:::info Computed fields do not modify the database schema
+
+Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed
+field. i.e. a computed field cannot be fetched as a table column directly from the database.
 
 :::
 

@@ -44,8 +44,10 @@ instance J.ToJSON SubscriptionsOptions where
 instance J.FromJSON SubscriptionsOptions where
   parseJSON = J.withObject "live query options" \o ->
     SubscriptionsOptions
-      <$> o J..: "batch_size"
-      <*> o J..: "refetch_delay"
+      <$> o
+      J..: "batch_size"
+      <*> o
+      J..: "refetch_delay"
 
 newtype BatchSize = BatchSize {unBatchSize :: Refined NonNegative Int}
   deriving (Show, Eq, J.ToJSON, J.FromJSON)

@@ -58,6 +58,13 @@ export const showNotification = (
       toast.remove();
     }
 
+    if (options?.action && options?.action?.callback) {
+      toastProps.button = {
+        label: options.action.label,
+        onClick: options.action.callback,
+      };
+    }
+
     if (options.alternateActionButtonProps) {
       toastProps.button = {
         label: options.alternateActionButtonProps.label,
@@ -70,13 +77,13 @@ export const showNotification = (
       }
     }
 
-    if (typeof options?.title === 'object' && toastProps?.children) {
+    if (typeof options?.title === 'object') {
       titleAsNode = options.title;
     } else if (typeof options?.title === 'string') {
       toastProps.title = options.title;
     }
 
-    if (typeof options?.message === 'object' && toastProps?.children) {
+    if (typeof options?.message === 'object') {
       messageAsNode = options.message;
     } else if (typeof options?.message === 'string') {
       toastProps.message = options.message;
@@ -98,7 +105,7 @@ export const getNotificationDetails = (
   detailsJson: Json,
   children: React.ReactNode
 ) => {
-  return (
+  return children || detailsJson ? (
     <div className="notification-details">
       <AceEditor
         readOnly
@@ -115,7 +122,7 @@ export const getNotificationDetails = (
       />
       {children}
     </div>
-  );
+  ) : null;
 };
 
 // NOTE: this type has been created by reverse-engineering the original getErrorMessage function
@@ -347,12 +354,16 @@ const showErrorNotification = (
     };
 
     const action = getNotificationAction();
+    const errorDetails = [
+      getNotificationDetails(errorJson as Json, getRefreshBtn()),
+    ];
     dispatch(
       showNotification(
         {
           title,
           message: errorMessage,
           action,
+          children: errorDetails,
         },
         'error'
       )
@@ -411,7 +422,10 @@ const showWarningNotification = (
 ): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
-    children.push(getNotificationDetails(dataObj, null));
+    const notificationDetails = getNotificationDetails(dataObj, null);
+    if (notificationDetails) {
+      children.push(notificationDetails);
+    }
   }
   if (child) {
     children.push(child);

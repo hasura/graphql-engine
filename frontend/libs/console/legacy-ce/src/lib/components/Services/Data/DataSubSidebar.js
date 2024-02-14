@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { FaCheckCircle } from 'react-icons/fa';
@@ -23,10 +23,8 @@ import { Button } from '../../../new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../features/FeatureFlags';
+import useCustomCompareEffect from '../../../hooks/useCustomCompareEffect';
+import isEqual from 'lodash/isEqual';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -87,9 +85,6 @@ const DataSubSidebar = props => {
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [preLoadState, setPreLoadState] = useState(true);
-  const { enabled: isBigQueryEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.enabledNewUIForBigQuery
-  );
 
   const onDatabaseChange = newSourceName => {
     if (newSourceName === currentDataSource) {
@@ -129,84 +124,84 @@ const DataSubSidebar = props => {
 
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
-    sources
-      .filter(source => !isBigQueryEnabled || source.kind !== 'bigquery')
-      .forEach(source => {
-        if (isInconsistentSource(source.name, inconsistentObjects)) return;
+    sources.forEach(source => {
+      if (source.kind === 'bigquery') return;
 
-        const sourceItem = { name: source.name, type: 'database' };
-        const sourceTables = !source.tables
-          ? []
-          : source.tables.map(data => {
-              const is_enum = data.is_enum ? true : false;
-              return {
-                name: data.table.name,
-                schema: data.table.schema,
-                type: 'table',
-                is_enum: is_enum,
-              };
-            });
-        const sourceFunctions = !source.functions
-          ? []
-          : source.functions.map(data => ({
-              name: data.function.name,
-              schema: data.function.schema,
-              type: 'function',
-            }));
+      if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
-        const schemaGroups = groupByKey(
-          [...sourceTables, ...sourceFunctions],
-          'schema'
-        );
-
-        // Find out the difference between schemas from metadata and SchemaList from state
-        const schemasFromMetadata = Array.from(
-          new Set([
-            ...sourceTables.map(i => i.schema),
-            ...sourceFunctions.map(i => i.schema),
-          ])
-        );
-        const missingSchemas = schemaList.filter(
-          x => !schemasFromMetadata.includes(x)
-        );
-
-        let schemaItems = [];
-        Object.keys(schemaGroups).forEach(schema => {
-          const schemaItem = { name: schema, type: 'schema' };
-          const tableItems = [];
-          schemaGroups[schema].forEach(table => {
-            const is_view =
-              schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
-                'view' ||
-              schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
-                'materialized_view';
-            let type = table.type;
-            if (is_view) type = 'view';
-            if (table.is_enum) type = 'enum';
-            tableItems.push({
-              name: table.name,
-              type: type,
-            });
+      const sourceItem = { name: source.name, type: 'database' };
+      const sourceTables = !source.tables
+        ? []
+        : source.tables.map(data => {
+            const is_enum = data.is_enum ? true : false;
+            return {
+              name: data.table.name,
+              schema: data.table.schema,
+              type: 'table',
+              is_enum: is_enum,
+            };
           });
-          schemaItem.children = tableItems;
-          schemaItems = [...schemaItems, schemaItem];
+      const sourceFunctions = !source.functions
+        ? []
+        : source.functions.map(data => ({
+            name: data.function.name,
+            schema: data.function.schema,
+            type: 'function',
+          }));
+
+      const schemaGroups = groupByKey(
+        [...sourceTables, ...sourceFunctions],
+        'schema'
+      );
+
+      // Find out the difference between schemas from metadata and SchemaList from state
+      const schemasFromMetadata = Array.from(
+        new Set([
+          ...sourceTables.map(i => i.schema),
+          ...sourceFunctions.map(i => i.schema),
+        ])
+      );
+      const missingSchemas = schemaList.filter(
+        x => !schemasFromMetadata.includes(x)
+      );
+
+      let schemaItems = [];
+      Object.keys(schemaGroups).forEach(schema => {
+        const schemaItem = { name: schema, type: 'schema' };
+        const tableItems = [];
+        schemaGroups[schema].forEach(table => {
+          const is_view =
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'view' ||
+            schemaInfo?.[source.name]?.[schema]?.[table.name]?.table_type ===
+              'materialized_view';
+          let type = table.type;
+          if (is_view) type = 'view';
+          if (table.is_enum) type = 'enum';
+          tableItems.push({
+            name: table.name,
+            type: type,
+          });
         });
-
-        sourceItem.children = schemaItems;
-
-        if (source.name === currentDataSource) {
-          sourceItem.children = [
-            ...missingSchemas.map(schemaName => ({
-              name: schemaName,
-              type: 'schema',
-              children: [],
-            })),
-            ...sourceItem.children,
-          ];
-        }
-
-        sourceItems = [...sourceItems, sourceItem];
+        schemaItem.children = tableItems;
+        schemaItems = [...schemaItems, schemaItem];
       });
+
+      sourceItem.children = schemaItems;
+
+      if (source.name === currentDataSource) {
+        sourceItem.children = [
+          ...missingSchemas.map(schemaName => ({
+            name: schemaName,
+            type: 'schema',
+            children: [],
+          })),
+          ...sourceItem.children,
+        ];
+      }
+
+      sourceItems = [...sourceItems, sourceItem];
+    });
     return sourceItems;
   };
 
@@ -214,43 +209,80 @@ const DataSubSidebar = props => {
 
   const { handleClick } = useGDCTreeItemClick(dispatch);
 
-  useEffect(() => {
-    // skip api call, if the data is there in store
-    if (canReUseTableTypes(allSourcesSchemas, sources)) {
-      const newItems = getItems(allSourcesSchemas);
-      if (isFetching) setIsFetching(false);
-      if (preLoadState) setPreLoadState(false);
-      return setTreeViewItems(newItems);
-    }
+  useCustomCompareEffect(
+    () => {
+      // skip api call, if the data is there in store
+      if (canReUseTableTypes(allSourcesSchemas, sources)) {
+        const newItems = getItems(allSourcesSchemas);
+        if (isFetching) setIsFetching(false);
+        if (preLoadState) setPreLoadState(false);
+        return setTreeViewItems(newItems);
+      }
 
-    const schemaRequests = [];
-    sources.forEach(source => {
-      const currentSourceTables = sources
-        .filter(i => i.name === source.name)[0]
-        .tables.map(t => t.table);
-      schemaRequests.push({
-        sourceType: source.kind,
-        sourceName: source.name,
-        tables: currentSourceTables,
+      const schemaRequests = [];
+      sources.forEach(source => {
+        const currentSourceTables = sources
+          .filter(i => i.name === source.name)[0]
+          .tables.map(t => t.table);
+        schemaRequests.push({
+          sourceType: source.kind,
+          sourceName: source.name,
+          tables: currentSourceTables,
+        });
       });
-    });
-    setIsFetching(true);
+      setIsFetching(true);
 
-    if (schemaRequests.length === 0) {
-      setIsFetching(false);
-      setPreLoadState(false);
-      return;
-    }
-
-    dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
-      schemaInfo => {
+      if (schemaRequests.length === 0) {
         setIsFetching(false);
         setPreLoadState(false);
-        const newItems = getItems(schemaInfo);
-        setTreeViewItems(newItems);
+        return;
       }
-    );
-  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
+
+      dispatch(getDatabaseTableTypeInfoForAllSources(schemaRequests)).then(
+        schemaInfo => {
+          setIsFetching(false);
+          setPreLoadState(false);
+          const newItems = getItems(schemaInfo);
+          setTreeViewItems(newItems);
+        }
+      );
+    },
+    {
+      sources,
+      tables,
+      functions,
+      enums,
+      schemaList,
+      currentTable,
+    },
+    (newValue, oldValue) => {
+      // Custom check for sources names
+      const newSourceNames = newValue?.sources?.map(i => i.name);
+      const oldSourceNames = oldValue?.sources?.map(i => i.name);
+      const sourcesNamesNotChanged = isEqual(newSourceNames, oldSourceNames);
+
+      // Standard checks for other values previously watched
+      const sourcesLengthNotChanged =
+        newValue?.sources?.length === oldValue?.sources?.length;
+      const tablesNotChanged = newValue?.tables === oldValue?.tables;
+      const functionsNotChanged = newValue?.functions === oldValue?.functions;
+      const enumsNotChanged = newValue?.enums === oldValue?.enums;
+      const schemaListNotChanged =
+        newValue?.schemaList === oldValue?.schemaList;
+      const currentTableNotChanged =
+        newValue?.currentTable === oldValue?.currentTable;
+
+      return (
+        sourcesNamesNotChanged &&
+        sourcesLengthNotChanged &&
+        tablesNotChanged &&
+        functionsNotChanged &&
+        enumsNotChanged &&
+        schemaListNotChanged &&
+        currentTableNotChanged
+      );
+    }
+  );
 
   const databasesCount = metadataSources.length;
 

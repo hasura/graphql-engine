@@ -1,0 +1,185 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Hasura Cloud for ClickHouse
+keywords:
+  - hasura
+  - docs
+  - databases
+  - clickhouse
+  - hasura cloud
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Hasura Cloud & ClickHouse
+
+## Try it out
+
+:::info Connecting ClickHouse to Hasura
+
+To connect ClickHouse to Hasura, you'll need to take advantage of
+[Hasura Data Connectors](/databases/data-connectors/index.mdx). You can deploy any custom data connector agent to Hasura
+Cloud using our CLI plugin. For more information, refer to the [docs](/hasura-cli/connector-plugin/index.mdx).
+
+If you're curious what other connectors are available, check out our [NDC Hub](https://github.com/hasura/ndc-hub).
+
+:::
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
+and create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail
+  src="/img/databases/data-connector/create-project.png"
+  alt="Connect new or existing database"
+  width="1000px"
+/>
+
+### Step 2: Deploy a data connector agent
+
+**We'll use the Hasura CLI to deploy a custom data connector agent to Hasura Cloud. If you haven't already done so,
+install the [data connector plugin](/hasura-cli/connector-plugin/index.mdx).**
+
+Below, we're using the `create` command and naming our connector `clickhouse-connector:v1`. We're also passing in the
+GitHub repo URL for the connector agent using the `--github-repo-url` flag:
+
+```bash
+hasura connector create clickhouse-connector:v1 --github-repo-url https://github.com/hasura/clickhouse_gdc_v2/tree/main
+```
+
+We can check on the progress of the deployment using the `status` command:
+
+```bash
+hasura connector status clickhouse-connector:v1
+```
+
+Once the `DONE` status is returned, we can grab the URL for our data connector agent using the `list` command:
+
+```bash
+hasura connector list
+```
+
+This will return a list of all the custom data connector agents you own. **The second value returned is the URL which
+we'll use in the next step; copy it to your clipboard.**
+
+### Step 3: Add the data connector agent to your Hasura Cloud project
+
+In your Cloud project, navigate to the `Data` tab and click `Manage` in the left-hand sidebar.
+
+At the bottom of the screen, you'll see an expandable section titled `Data Connector Agents`.
+
+<Thumbnail src="/img/databases/clickhouse/add-agent.png" alt="Add the agent for a ClickHouse database" width="1000px" />
+
+Click this and scroll down to `Add Agent`.
+
+Name this agent `clickhouse` and paste the URL you copied from the CLI into the `URL` field and click `Connect`.
+
+<Thumbnail
+  src="/img/databases/clickhouse/configure-agent.png"
+  alt="Add the agent for a ClickHouse database"
+  width="1000px"
+/>
+
+### Step 4: Add your ClickHouse database as a source to Hasura
+
+Head to the `Data > Manage databases` section on the Console to add your ClickHouse database as a source to Hasura.
+
+:::info Make sure your ClickHouse service is reachable by Hasura Cloud:
+
+1.  **Allow public connections or
+    [whitelist the Hasura Cloud IP](/hasura-cloud/projects/create.mdx#cloud-projects-create-allow-nat-ip) on your
+    [Clickhouse firewall](https://clickhouse.com/docs/en/manage/security/ip-access-list#create-or-modify-an-ip-access-list):**
+    This is good for testing and will allow you to quickly try out Hasura with your database!
+2.  **VPC peering:** VPC peering and private network access is available on Hasura Cloud paid tiers and is recommended
+    for production. Get in touch with us if you'd like to try this out against your existing databases.
+
+:::
+
+#### Step 4.1: Begin by clicking `Connect Database`
+
+<Thumbnail src="/img/databases/data-connector/manage-databases.png" alt="Manage databases" width="1000px" />
+
+#### Step 4.2: Next, choose the `Clickhouse` driver
+
+<Thumbnail src="/img/databases/clickhouse/choose-clickhouse.png" alt="temp" width="1000px" />
+
+#### Step 4.3: Enter your ClickHouse JDBC Connection string
+
+<Thumbnail
+  src="/img/databases/clickhouse/database-config.png"
+  alt="Setting the ClickHouse connection details."
+  width="1000px"
+/>
+
+You can get create your connection URL by logging in to ClickHouse and selecting `Connect -> View connection string` for
+the database to which you want to connect.
+
+Once you add the ClickHouse service, you will find it listed as an available database on the sidebar.
+
+:::info Setting the connection string as an environment variable
+
+It's generally accepted that setting the password as an environment variable is a better practice as it's more secure
+and prevents any secrets from being exposed in your instance's metadata.
+
+An example would be to create a new
+[environment variable](/deployment/graphql-engine-flags/index.mdx#using-environment-variables) called
+`CLICKHOUSE_PASSWORD` and set it equal to your ClickHouse password.
+
+Then, export the metadata - in JSON form - using the Console's `Settings` page or by making a call using the
+[metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) and add the following key-value
+pair to the `metadata.json`'s `configuration` object:
+
+```json
+"template": "{\"url\": \"your_clickhouse_url_here\", \"user\": \"your_clickhouse_user\", \"password\": \"{{getEnvironmentVariable(\"CLICKHOUSE_PASSWORD\")}}\", \"tables\": null}"
+```
+
+You can then apply the metadata to your instance by either using the Console's `Settings` page or by making a call using
+the [metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-apply-metadata).
+
+:::
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
+### Step 5: Track existing tables
+
+To query your ClickHouse service using Hasura, you'll need to have existing tables to select. Those tables will appear
+under the database as shown below:
+
+<Thumbnail src="/img/databases/clickhouse/track-tables-1.png" alt="Tracking tables." width="1000px" />
+
+You can select all or select individual tables to track. Click `Track Selected` for Hasura to introspect them and create
+the corresponding GraphQL schema.
+
+<Thumbnail src="/img/databases/clickhouse/track-tables-2.png" alt="Tracking tables selected." width="1000px" />
+
+### Step 6: Try out a GraphQL query
+
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphiQL to get help
+in creating a GraphQL query.
+
+<Thumbnail src="/img/databases/clickhouse/query.png" alt="Try a GraphQL query" width="1000px" />
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, relationships, and permissions on ClickHouse. Column comparison operators
+are not supported with permissions on ClickHouse.
+
+:::
+
+If you'd like to stay informed about the status of ClickHouse support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

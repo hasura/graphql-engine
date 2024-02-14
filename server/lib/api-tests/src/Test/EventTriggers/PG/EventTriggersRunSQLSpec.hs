@@ -14,9 +14,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, Server (..), TestEnvironment, getServer)
 import Harness.Webhook qualified as Webhook
@@ -37,7 +37,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Postgres.setupTablesAction (schema "authors") testEnvironment),
                   Fixture.SetupAction
@@ -87,15 +87,15 @@ schema authorTableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  triggerListeningToAllColumnTests opts
-  triggerListeningToSpecificColumnsTests opts
-  dropTableContainingTriggerTest opts
-  renameTableContainingTriggerTests opts
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = do
+  triggerListeningToAllColumnTests
+  triggerListeningToSpecificColumnsTests
+  dropTableContainingTriggerTest
+  renameTableContainingTriggerTests
 
-triggerListeningToAllColumnTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-triggerListeningToAllColumnTests opts = do
+triggerListeningToAllColumnTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToAllColumnTests = do
   it
     ( "when a run_sql query drops a column of a table,"
         <> " it should not throw any error even when an event trigger"
@@ -105,7 +105,7 @@ triggerListeningToAllColumnTests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -120,12 +120,12 @@ args:
 result_type: CommandOk
 result: null
          |]
-  it "inserting a new row should work fine" $
-    \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+  it "inserting a new row should work fine"
+    $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -154,8 +154,8 @@ new:
   id: '1'
                                         |]
 
-triggerListeningToSpecificColumnsTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-triggerListeningToSpecificColumnsTests _ = do
+triggerListeningToSpecificColumnsTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+triggerListeningToSpecificColumnsTests = do
   -- TODO: Use postWithHeadersStatus to match the errors instead of the call via getResponseBody
   it
     ( "when a run_sql query drops a column of a table"
@@ -198,8 +198,8 @@ error: 'cannot drop due to the following dependent objects: event-trigger #{sche
 code: dependency-error
                                         |]
 
-dropTableContainingTriggerTest :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-dropTableContainingTriggerTest opts = do
+dropTableContainingTriggerTest :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+dropTableContainingTriggerTest = do
   it
     ( "when a run_sql query drops a table"
         <> " dependency error should be thrown when an event trigger"
@@ -209,7 +209,7 @@ dropTableContainingTriggerTest opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -225,8 +225,8 @@ result_type: CommandOk
 result: null
          |]
 
-renameTableContainingTriggerTests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-renameTableContainingTriggerTests opts = do
+renameTableContainingTriggerTests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+renameTableContainingTriggerTests = do
   it
     ( "when a run_sql query drops a column of a table"
         <> " should not throw any error even when an event trigger"
@@ -236,7 +236,7 @@ renameTableContainingTriggerTests opts = do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -251,12 +251,12 @@ renameTableContainingTriggerTests opts = do
            result_type: CommandOk
            result: null
          |]
-  it "inserting a new row should work fine" $
-    \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+  it "inserting a new row should work fine"
+    $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postV2Query
             200
             testEnvironment
@@ -294,8 +294,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -324,8 +324,8 @@ postgresSetup testEnvironment webhookServer = do
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger

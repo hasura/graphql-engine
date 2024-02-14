@@ -25,7 +25,7 @@ export const useListAvailableAgentsFromMetadata = () => {
 
           return {
             name: dcAgentName,
-            url: definition.uri,
+            uri: definition.uri,
           };
         }
       );

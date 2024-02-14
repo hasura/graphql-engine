@@ -217,11 +217,13 @@ export const getPermissionsIcon = (
 
 export const hasSelectPrimaryKey = (
   primaryKeys: string[],
-  selectedColumns: string[]
+  selectedColumns: string[] | '*'
 ) =>
-  primaryKeys?.every(primaryKeyColumn =>
-    selectedColumns?.includes(primaryKeyColumn)
-  );
+  selectedColumns === '*'
+    ? true
+    : primaryKeys?.every(primaryKeyColumn =>
+        selectedColumns?.includes(primaryKeyColumn)
+      );
 
 export type Schema = { table_name: string; primary_key: { columns: string[] } };
 export type State = {

@@ -33,10 +33,8 @@ spec = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "`bigquery_run_sql` with invalid SQL returns an `INVALID_ARGUMENT` error" \testEnvironment -> do
     let actual =
           GraphqlEngine.postV2Query
@@ -61,11 +59,11 @@ tests opts = do
                   - domain: global
                     location: q
                     locationType: parameter
-                    message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+                    message: 'Syntax error: Unexpected keyword SOME at [1:1]'
                     reason: invalidQuery
-                  message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+                  message: 'Syntax error: Unexpected keyword SOME at [1:1]'
                   status: INVALID_ARGUMENT
             path: $
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

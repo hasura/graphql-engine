@@ -1,0 +1,12 @@
+"Just one interface"
+type One implements A { field: Int! }
+
+"Several interfaces"
+type Two implements A & B & C { field: Int! }
+
+"&-prefixed"
+type Three implements
+  & A
+  & B
+  & C
+{ field: Int! }

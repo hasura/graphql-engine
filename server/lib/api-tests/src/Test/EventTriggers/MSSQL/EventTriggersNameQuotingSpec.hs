@@ -9,9 +9,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
@@ -29,7 +29,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction (schema "authors") testEnvironment,
                   Fixture.SetupAction
@@ -67,56 +67,52 @@ authorsTable tableName =
 
 -- ** Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  weirdTriggerNameAllowed opts
-
-weirdTriggerNameAllowed :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-weirdTriggerNameAllowed opts =
-  describe "weird trigger names are allowed" do
-    it "metadata_api: allow creating an event trigger with weird name via replace_metadata" $
-      \(testEnvironment, (webhookServer, _)) -> do
-        let createEventTriggerWithWeirdName =
-              addEventTriggerViaReplaceMetadata testEnvironment "weird]name]" webhookServer
-            createEventTriggerWithWeirdNameExpectedResponse =
-              [yaml|
-                message: success
-                warnings:
-                  - message: >-
-                      The event trigger with name "weird]name]" may not work as expected,
-                      hasura suggests to use only alphanumeric, underscore and hyphens in
-                      an event trigger name
-                    type: event_trigger
-                    name: event_trigger weird]name] in table hasura.authors in source mssql
-              |]
-
-        -- Creating a event trigger with weird name should succeed
-        shouldReturnYaml
-          opts
-          (GraphqlEngine.postWithHeadersStatus 200 testEnvironment "/v1/metadata/" mempty createEventTriggerWithWeirdName)
-          createEventTriggerWithWeirdNameExpectedResponse
-
-        let checkAllSQLTriggersQuery =
-              [yaml|
-              type: mssql_run_sql
-              args:
-                source: mssql
-                sql: |-
-                  SELECT tr.name AS TriggerName FROM sys.triggers tr
-                  INNER JOIN sys.tables t ON t.object_id = tr.parent_id
-                  WHERE t.name in ('authors');
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = describe "weird trigger names are allowed" do
+  it "metadata_api: allow creating an event trigger with weird name via replace_metadata"
+    $ \(testEnvironment, (webhookServer, _)) -> do
+      let createEventTriggerWithWeirdName =
+            addEventTriggerViaReplaceMetadata testEnvironment "weird]name]" webhookServer
+          createEventTriggerWithWeirdNameExpectedResponse =
+            [yaml|
+              message: success
+              warnings:
+                - code: illegal-event-trigger-name
+                  message: >-
+                    The event trigger with name "weird]name]" may not work as expected,
+                    hasura suggests to use only alphanumeric, underscore and hyphens in
+                    an event trigger name
+                  type: event_trigger
+                  name: event_trigger weird]name] in table hasura.authors in source mssql
             |]
 
-        -- Check if the trigger is created on the database
-        shouldReturnYaml
-          opts
-          (GraphqlEngine.postV2Query 200 testEnvironment checkAllSQLTriggersQuery)
-          [yaml|
-            result_type: TuplesOk
-            result:
-              - - TriggerName
-              - - notify_hasura_weird]name]_INSERT
+      -- Creating a event trigger with weird name should succeed
+      shouldReturnYaml
+        testEnvironment
+        (GraphqlEngine.postMetadataWithStatus 200 testEnvironment createEventTriggerWithWeirdName)
+        createEventTriggerWithWeirdNameExpectedResponse
+
+      let checkAllSQLTriggersQuery =
+            [yaml|
+            type: mssql_run_sql
+            args:
+              source: mssql
+              sql: |-
+                SELECT tr.name AS TriggerName FROM sys.triggers tr
+                INNER JOIN sys.tables t ON t.object_id = tr.parent_id
+                WHERE t.name in ('authors');
           |]
+
+      -- Check if the trigger is created on the database
+      shouldReturnYaml
+        testEnvironment
+        (GraphqlEngine.postV2Query 200 testEnvironment checkAllSQLTriggersQuery)
+        [yaml|
+          result_type: TuplesOk
+          result:
+            - - TriggerName
+            - - notify_hasura_weird]name]_INSERT
+        |]
 
 --------------------------------------------------------------------------------
 

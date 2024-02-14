@@ -48,10 +48,6 @@ import {
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { services } from '../../../dataSources/services';
 import insertReducer from './TableInsertItem/InsertActions';
-import {
-  checkFeatureSupport,
-  READ_ONLY_RUN_SQL_QUERIES,
-} from '../../../helpers/versionUtils';
 import { FiRefreshCw } from 'react-icons/fi';
 
 const SET_TABLE = 'Data/SET_TABLE';
@@ -283,8 +279,7 @@ const loadSchema = (configOptions = {}) => {
               '',
               {
                 action: body.args,
-                message:
-                  'Click "Details" to see more information about the request',
+                message: 'See details about the slowly running queries below',
               }
             )
           );
@@ -1079,7 +1074,7 @@ export const fetchTableIndexDetails = tableInfo => {
       dataSource.tableIndexSql({ table, schema }),
       currentDataSource,
       false,
-      checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) || false
+      true
     );
     const options = {
       credentials: globalCookiePolicy,

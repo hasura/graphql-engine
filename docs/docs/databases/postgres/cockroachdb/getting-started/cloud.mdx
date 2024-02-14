@@ -14,13 +14,13 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Get Started with Hasura Cloud & CockroachDB
 
-## Try it out
+## Introduction
 
 ### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 
 Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
-create a new Hasura Cloud account.
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true),
+and create a new Hasura Cloud account.
 
 Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
 
@@ -34,20 +34,19 @@ connection string will start with `postgres://`, i.e, there is no difference bet
 and Postgres’s connection strings.
 
 CockroachDB requires an SSL root certificate by default. To use this, you must set an environment variable for your
-Hasura GraphQL Engine instance with the contents of the certificate as the value, and then specify the name of the environment
-variable as the `SSL Root Certificate`.
+Hasura GraphQL Engine instance with the contents of the certificate as the value, and then specify the name of the
+environment variable as the `SSL Root Certificate`.
 
 :::info Note
 
-Pay extra notice that if you use one of CockroachDB's serverless databases, you will be prompted with a connection string
-that contains the parameter `sslverify`. You must add this parameter manually via the "SSL Certificates Settings" section.
+Pay extra notice that if you use one of CockroachDB's serverless databases, you will be prompted with a connection
+string that contains the parameter `sslverify`. You must add this parameter manually via the "SSL Certificates Settings"
+section.
 
-Depending on how you have configured [Network
-Authorization](https://www.cockroachlabs.com/docs/cockroachcloud/network-authorization.html) on your CockroachDB
-Serverless database, you will also need to either add the Hasura IP (which can be
-found on the `General` tab of your Hasura Project details page) to the allowlist,
-or setup a [dedicated
-VPC](/hasura-cloud/dedicated-vpc.mdx).
+Depending on how you have configured
+[Network Authorization](https://www.cockroachlabs.com/docs/cockroachcloud/network-authorization.html) on your
+CockroachDB Serverless database, you will also need to either add the Hasura IP (which can be found on the `General` tab
+of your Hasura Project details page) to the allowlist, or setup a [dedicated VPC](/hasura-cloud/dedicated-vpc/index.mdx).
 
 :::
 

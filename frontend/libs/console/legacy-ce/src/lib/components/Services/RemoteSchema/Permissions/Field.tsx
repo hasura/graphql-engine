@@ -12,21 +12,25 @@ import { ArgSelect } from './ArgSelect';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { generateTypeString, getChildArguments } from './utils';
 import Pen from './Pen';
+import { FaChevronDown, FaChevronRight, FaFilter } from 'react-icons/fa';
 
 export interface FieldProps {
   i: FieldType;
   setItem: (e: FieldType) => void;
   onExpand?: () => void;
   expanded: boolean;
+  items?: FieldType[];
 }
 
 export const Field: React.FC<FieldProps> = ({
   i,
-  setItem = e => console.log(e),
-  onExpand = console.log,
+  setItem = e => () => {},
+  onExpand = () => {},
   expanded,
+  items,
 }) => {
   const [inputPresetMode, setInputPresetMode] = useState<boolean>(false);
+  const [argumentsExpanded, setArgumentsExpanded] = useState<boolean>(true);
   const [autoExpandInputPresets, setAutoExpandInputPresets] =
     useState<boolean>(false);
   const context: any = useContext(PermissionEditorContext);
@@ -90,12 +94,20 @@ export const Field: React.FC<FieldProps> = ({
 
   if (!i.checked)
     return (
-      <CollapsedField
-        field={i}
-        onClick={handleClick}
-        onExpand={onExpand}
-        expanded={expanded}
-      />
+      <>
+        <CollapsedField
+          field={i}
+          onClick={handleClick}
+          onExpand={onExpand}
+          expanded={expanded}
+        />
+        {items && (
+          <span className="text-gray-400 pt-4 pb-2 pl-6">
+            {items.filter((item: any) => item.checked).length ?? 0} of{' '}
+            {items.length ?? 0} Fields
+          </span>
+        )}
+      </>
     );
 
   const isFirstLevelInputObjPreset =
@@ -108,44 +120,68 @@ export const Field: React.FC<FieldProps> = ({
     <>
       <span className="pl-xs font-semibold" id={i.name}>
         {i.name}
+        {i.return && (
+          <span className="font-semibold">
+            {' '}
+            :{' '}
+            <a
+              onClick={handleClick}
+              id={generateTypeString(i.return || '')}
+              href={`./permissions#${generateTypeString(i.return || '')}`}
+            >
+              {i.return}
+            </a>
+          </span>
+        )}
       </span>
       {(i.isInputObjectType &&
         inputPresetMode &&
         !isFirstLevelInputObjPreset) ||
       !i.isInputObjectType ? (
-        <>
-          {i.args && Object.keys(i.args).length !== 0 && ' ('}
-          {i.args && (
-            <ul data-test={i.name}>
-              {i.args &&
-                Object.entries(i.args).map(([k, v]) => (
-                  <ArgSelect
-                    key={k}
-                    keyName={k}
-                    valueField={v}
-                    value={fieldVal[k]}
-                    setArg={setArg}
-                    level={0}
-                    isInputObjectType={i.isInputObjectType}
-                  />
-                ))}
-            </ul>
+        <div className="ml-4">
+          {Object.keys(i?.args ?? {})?.length > 0 && (
+            <>
+              <div className="flex items-center text-gray-400 mt-1">
+                <button
+                  onClick={() => setArgumentsExpanded(!argumentsExpanded)}
+                >
+                  {argumentsExpanded ? (
+                    <FaChevronDown className="relative -top-0.5" size={10} />
+                  ) : (
+                    <FaChevronRight className="relative -top-0.5" size={10} />
+                  )}
+                  <span className="pl-xs">Arguments</span>
+                </button>
+                {!argumentsExpanded &&
+                  Object.keys(i.args).some(key => !!fieldVal[key]) && (
+                    <FaFilter className="relative ml-2" size={10} />
+                  )}
+              </div>
+              {argumentsExpanded && (
+                <ul data-test={i.name} className="ml-8">
+                  {i.args && (
+                    <>
+                      {Object.entries(i.args).map(([k, v]) => (
+                        <div className="my-1">
+                          <ArgSelect
+                            key={k}
+                            keyName={k}
+                            valueField={v}
+                            value={fieldVal[k]}
+                            setArg={setArg}
+                            level={0}
+                            isInputObjectType={i.isInputObjectType}
+                          />
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </ul>
+              )}
+            </>
           )}
-          {i.args && Object.keys(i.args).length !== 0 && ' )'}
-        </>
+        </div>
       ) : null}
-      {i.return && (
-        <span className="font-semibold">
-          :
-          <a
-            onClick={handleClick}
-            id={generateTypeString(i.return || '')}
-            href={`./permissions#${generateTypeString(i.return || '')}`}
-          >
-            {i.return}
-          </a>
-        </span>
-      )}
       {/* show pen icon for input object types presets */}
       {i.isInputObjectType && !inputPresetMode && !autoExpandInputPresets ? (
         <button onClick={() => setInputPresetMode(true)}>

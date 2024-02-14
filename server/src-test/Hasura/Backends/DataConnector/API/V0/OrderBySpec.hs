@@ -12,8 +12,8 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genSingleColumnAggregate)
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnSelector)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genRedactionExpressionName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
@@ -26,28 +26,30 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "OrderByTarget" $ do
-    describe "OrderByColumn" $
-      testToFromJSONToSchema
-        (OrderByColumn (ColumnName "test_column"))
+    describe "OrderByColumn"
+      $ testToFromJSONToSchema
+        (OrderByColumn (mkColumnSelector $ ColumnName "test_column") (Just $ RedactionExpressionName "RedactionExp2"))
         [aesonQQ|
           { "type": "column",
-            "column": "test_column"
+            "column": "test_column",
+            "redaction_expression": "RedactionExp2"
           }
         |]
-    describe "OrderByStarCountAggregate" $
-      testToFromJSONToSchema
+    describe "OrderByStarCountAggregate"
+      $ testToFromJSONToSchema
         (OrderByStarCountAggregate)
         [aesonQQ|
           { "type": "star_count_aggregate" }
         |]
-    describe "OrderBySingleColumnAggregate" $
-      testToFromJSONToSchema
-        (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column") (ScalarType "number")))
+    describe "OrderBySingleColumnAggregate"
+      $ testToFromJSONToSchema
+        (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column") (Just $ RedactionExpressionName "RedactionExp2") (ScalarType "number")))
         [aesonQQ|
           { "type": "single_column_aggregate",
             "function": "sum",
             "column": "test_column",
-            "result_type": "number"
+            "result_type": "number",
+            "redaction_expression": "RedactionExp2"
           }
         |]
     jsonOpenApiProperties genOrderByTarget
@@ -56,14 +58,15 @@ spec = do
     testToFromJSONToSchema
       ( OrderByElement
           [RelationshipName "relation1", RelationshipName "relation2"]
-          (OrderByColumn (ColumnName "my_column_name"))
+          (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") (Just $ RedactionExpressionName "RedactionExp2"))
           Ascending
       )
       [aesonQQ|
         { "target_path": ["relation1", "relation2"],
           "target": {
             "type": "column",
-            "column": "my_column_name"
+            "column": "my_column_name",
+            "redaction_expression": "RedactionExp2"
           },
           "order_direction": "asc"
         }
@@ -116,10 +119,10 @@ spec = do
     jsonOpenApiProperties genOrderBy
 
   describe "OrderDirection" $ do
-    describe "Ascending" $
-      testToFromJSONToSchema Ascending [aesonQQ|"asc"|]
-    describe "Descending" $
-      testToFromJSONToSchema Descending [aesonQQ|"desc"|]
+    describe "Ascending"
+      $ testToFromJSONToSchema Ascending [aesonQQ|"asc"|]
+    describe "Descending"
+      $ testToFromJSONToSchema Descending [aesonQQ|"desc"|]
     jsonOpenApiProperties genOrderDirection
 
 genOrderBy :: Gen OrderBy
@@ -145,7 +148,7 @@ genOrderByElement =
 genOrderByTarget :: Gen OrderByTarget
 genOrderByTarget =
   Gen.choice
-    [ OrderByColumn <$> genColumnName,
+    [ OrderByColumn <$> genColumnSelector <*> Gen.maybe genRedactionExpressionName,
       pure OrderByStarCountAggregate,
       OrderBySingleColumnAggregate <$> genSingleColumnAggregate
     ]

@@ -9,7 +9,14 @@ export const dataInitialData: Partial<Metadata['metadata']> = {
     {
       name: 'default',
       kind: 'postgres',
-      tables: [],
+      tables: [
+        {
+          table: {
+            name: 'user',
+            schema: 'public',
+          },
+        },
+      ],
       configuration: {
         connection_info: {
           database_url: {

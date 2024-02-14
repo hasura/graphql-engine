@@ -3,6 +3,8 @@ import React from 'react';
 import { useServerConfig } from '../../hooks';
 import endpoints from '../../Endpoints';
 import { PrometheusSettingsForm } from './PrometheusSettingsForm';
+import globals from '../../Globals';
+import { useEELiteAccess } from '../../features/EETrial';
 
 export const extractPrometheusUrl = (prometheusUrl: string) => {
   const urlRegExp =
@@ -15,13 +17,20 @@ export const extractPrometheusUrl = (prometheusUrl: string) => {
 };
 
 export const PrometheusSettings: React.VFC<Record<string, never>> = () => {
-  const { data: configData, isLoading, isError } = useServerConfig();
+  const eeLiteAccess = useEELiteAccess(globals);
+  const { data: configData, isLoading } = useServerConfig();
+
+  // eslint-disable-next-line no-underscore-dangle
+  if (eeLiteAccess.access === 'forbidden') {
+    return null;
+  }
+
   const prometheusUrlExtract = extractPrometheusUrl(endpoints.prometheusUrl);
   return (
     <PrometheusSettingsForm
-      loading={isLoading}
+      loading={isLoading || eeLiteAccess.access === 'loading'}
       enabled={configData?.is_prometheus_metrics_enabled}
-      errorMode={isError}
+      errorMode={false}
       prometheusUrl={endpoints.prometheusUrl}
       prometheusConfig={`global:
   scrape_interval: 60s
@@ -39,6 +48,7 @@ scrape_configs:
         labels:
           service_name: hasura
           container_id: hasura`}
+      eeLiteAccess={eeLiteAccess}
     />
   );
 };

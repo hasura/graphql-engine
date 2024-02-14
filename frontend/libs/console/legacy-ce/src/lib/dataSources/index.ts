@@ -116,6 +116,7 @@ export interface DataSourcesAPI {
     NUMERIC?: string;
     DATE?: string;
     BOOLEAN?: string;
+    BOOL?: string;
     TEXT?: string;
     ARRAY?: string;
     BIGSERIAL?: string;
@@ -445,6 +446,7 @@ export interface DataSourcesAPI {
 }
 
 export let currentDriver: Driver = 'postgres';
+
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
 export const isFeatureSupported = (

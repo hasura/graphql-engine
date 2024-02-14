@@ -285,6 +285,14 @@
   color: #b00;
 }
 
+.graphiql-container .toolbar-button.primary {
+  background: #f9c548;
+  border: 1px solid #d5ae52;
+  box-shadow: none;
+  color: #475569;
+  font-weight: 500;
+}
+
 .graphiql-container .toolbar-button-group {
   margin: 0 5px;
   white-space: nowrap;

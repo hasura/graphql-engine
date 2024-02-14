@@ -1,0 +1,259 @@
+---
+description: Quickstart Auth
+title: Quickstart Auth
+keywords:
+  - hasura
+  - docs
+  - actions
+  - quickstart
+  - guide
+  - tutorial
+sidebar_label: Quickstart
+sidebar_position: 2
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart Auth
+
+In this quickstart, we'll use a JWT and permissions to limit a query to only the user making the request. We're using
+our sample app, which you can read more about below. If you don't use the sample app, you'll need to ensure your data
+model includes a `users` table and modify the values of the encoded and decoded JWT to match your user's information.
+
+<SampleAppBlock />
+
+## Step 1: Add an environment variable
+
+Depending on how your instance is deployed, you can either use the GUI or your configuration files to set this secret.
+
+<Tabs groupId="user-preference">
+<TabItem value="cloud" label="Cloud">
+
+Head to your Project's settings page and click on the Env vars option in the side navigation:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_env.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+Once there, click on New Env Var and select `HASURA_GRAPHQL_JWT_SECRET` from the `Key` field. Paste this value into the
+environment variable's value field:
+
+```json
+{
+  "key": "oursupersecretsupersecurekey1234567890",
+  "type": "HS256"
+}
+```
+
+Click `Add`:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_env-add.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+</TabItem>
+<TabItem value="self-hosted" label="Self-hosted">
+
+In your `docker-compose.yml`, add the following environment variable and value:
+
+```yaml
+HASURA_GRAPHQL_JWT_SECRET: '{ "type": "HS256", "key": "oursupersecretsupersecurekey1234567890" }'
+```
+
+If you don't already have a `users` table, add one with the following SQL using the `Data` tab's SQL editor:
+
+```sql
+CREATE TABLE users (
+  id uuid NOT NULL,
+  name text NOT NULL,
+  email text NOT NULL,
+  PRIMARY KEY (id)
+);
+```
+
+Then, insert these users:
+
+```sql
+INSERT INTO public.users (id, name, email) VALUES ('7cf0a66c-65b7-11ed-b904-fb49f034fbbb', 'Sean', 'seandemo@hasura.io');
+INSERT INTO public.users (id, name, email) VALUES ('82001336-65b7-11ed-b905-7fa26a16d198', 'Rob', 'robdemo@hasura.io');
+INSERT INTO public.users (id, name, email) VALUES ('86d5fba0-65b7-11ed-b906-afb985970e2e', 'Marion', 'mariondemo@hasura.io');
+INSERT INTO public.users (id, name, email) VALUES ('8dea1160-65b7-11ed-b907-e3c5123cb650', 'Sandeep', 'sandeepdemo@hasura.io');
+INSERT INTO public.users (id, name, email) VALUES ('9bd9d300-65b7-11ed-b908-571fef22d2ba', 'Abby', 'abbydemo@hasura.io');
+```
+
+</TabItem>
+</Tabs>
+
+## Step 2: Create a user role
+
+Head to the `Data` tab of the Hasura Console. If you have a `users` table, select it from the list on the left-hand
+side, and open the `Permissions` tab:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_default-roles.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+As you can see, we currently only have an admin role. To make access to data more granular, we'll create a new role by
+entering `user` into the text input. After entering the name of the role, click the ❌ in the `select` column:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_add-user-role.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+Configure the `Row select permissions` by choosing `With custom check` and pasting the following value in the editor on
+line 1:
+
+```json
+{ "id": { "_eq": "X-Hasura-User-Id" } }
+```
+
+Configure the `Column select permissions` by clicking `Toggle All`:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_configure-user-role.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+Finally, click `Save Permissions`.
+
+## Step 3: Add a header in the GraphiQL explorer
+
+Head back to the `API` tab and add a new row to the `Request Headers`. Enter this `key`:
+
+```plaintext
+Authorization
+```
+
+And this value:
+
+```plaintext
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlNlYW4iLCJlbWFpbCI6InNlYW5kZW1vQGhhc3VyYS5pbyIsImlhdCI6MTUxNjIzOTAyMiwiaHR0cHM6Ly9oYXN1cmEuaW8vand0L2NsYWltcyI6eyJ4LWhhc3VyYS1hbGxvd2VkLXJvbGVzIjpbInVzZXIiLCJhZG1pbiJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJ1c2VyIiwieC1oYXN1cmEtdXNlci1pZCI6IjdjZjBhNjZjLTY1YjctMTFlZC1iOTA0LWZiNDlmMDM0ZmJiYiJ9fQ.jSp42PsCa4r-2ObfopkiDBvTn9nDysIv-NOIEnU3wR0
+```
+
+Check the box next to `Authorization`; the final result should look like this:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_add-auth-header.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+## Step 4: Test it out
+
+Before demonstrating the access control you just designed, run the following query:
+
+```graphql
+query GetUsers {
+  users {
+    id
+    email
+    name
+  }
+}
+```
+
+You should see an array of 5 records returned:
+
+```json
+{
+  "data": {
+    "users": [
+      {
+        "id": "7cf0a66c-65b7-11ed-b904-fb49f034fbbb",
+        "email": "seandemo@hasura.io",
+        "name": "Sean"
+      },
+      {
+        "id": "82001336-65b7-11ed-b905-7fa26a16d198",
+        "email": "robdemo@hasura.io",
+        "name": "Rob"
+      },
+      {
+        "id": "86d5fba0-65b7-11ed-b906-afb985970e2e",
+        "email": "mariondemo@hasura.io",
+        "name": "Marion"
+      },
+      {
+        "id": "8dea1160-65b7-11ed-b907-e3c5123cb650",
+        "email": "sandeepdemo@hasura.io",
+        "name": "Sandeep"
+      },
+      {
+        "id": "9bd9d300-65b7-11ed-b908-571fef22d2ba",
+        "email": "abbydemo@hasura.io",
+        "name": "Abby"
+      }
+    ]
+  }
+}
+```
+
+Uncheck the `x-hasura-admin-secret` request header. Re-run the query; this time, your output should be similar to this:
+
+```json
+{
+  "data": {
+    "users": [
+      {
+        "id": "7cf0a66c-65b7-11ed-b904-fb49f034fbbb",
+        "email": "seandemo@hasura.io",
+        "name": "Sean"
+      }
+    ]
+  }
+}
+```
+
+:::tip Did you see that?!
+
+If you weren't watching closely, you may have missed it. When you deselected your admin secret in the request headers
+and used only the `authorization` header, the available schema changed to what you defined in step 2 🔥
+
+You can see that in the screenshot below, the only field available to the user is the `users` table:
+
+<Thumbnail
+  src="/img/auth/quickstart/auth-jwt_getting-started-guide_2.18.0_user-schema.png"
+  alt="Authentication and authorization with Hasura"
+  className="no-shadow overview-img"
+/>
+
+:::
+
+## Recap
+
+What did we just do? Well, you just implemented a JWT-based authorization system with Hasura 🎉
+
+Is this production-grade? Not quite. In a real-world application, you'd need to generate and verify the
+[JWTs](/auth/authentication/jwt.mdx) on the server-side. You'd also need to implement a mechanism to refresh the JWTs.
+What we've demonstrated is how Hasura utilizes the JWT to determine the role of the user and the
+[permissions](/auth/authorization/index.mdx) that they have access to.
+
+The environment variable we set up in the beginning contains a secret; this secret is used to encode your JWTs wherever
+they're generated, be it on your own server, a third-party service, or even a client-side library. Hasura is agnostic
+about how or where you generate your JWTs. Saving that secret as an environment variable allows Hasura to decode the
+JWTs and verify that they're valid.
+
+If you're curious about the composition of the JWT, you can view the decoded version one of two ways. By visiting
+[this link](https://jwt.io/#debugger-io?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlNlYW4iLCJlbWFpbCI6InNlYW5kZW1vQGhhc3VyYS5pbyIsImlhdCI6MTUxNjIzOTAyMiwiaHR0cHM6Ly9oYXN1cmEuaW8vand0L2NsYWltcyI6eyJ4LWhhc3VyYS1hbGxvd2VkLXJvbGVzIjpbInVzZXIiLCJhZG1pbiJdLCJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJ1c2VyIiwieC1oYXN1cmEtdXNlci1pZCI6IjdjZjBhNjZjLTY1YjctMTFlZC1iOTA0LWZiNDlmMDM0ZmJiYiJ9fQ.FQJp6we0EFXWtmeqcM3-gAqxeNURL3Qa6AMDM6qv2NE),
+you can see the payload and other data associated with the JWT we used in this example. Alternatively, Hasura provides a
+JWT decoder tool that you can use to decode any JWT. You can utilize this by clicking the "detective" icon next to the
+`Authorization` header's value in the GraphiQL explorer.
+
+The permissions we set up in step 2 are the most basic form of access control. We created a new role called `user` and
+limited the rows returned on the `users` table to only those whose `id` matches the `x-hasura-user-id` claim in the JWT.
+
+As you can see from the example, Hasura automatically provides a schema that only exposes the `users` table to the
+`user` role. This is a great way to limit the exposure of your data to the outside world and ensure that your users only
+have access to the data they're authorized to see.

@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Tests for array remote relationships to databases. Remote relationships are
 -- relationships that are not local to a given source or remote schema, and are
@@ -12,7 +13,7 @@ module Test.Schema.RemoteRelationships.XToDBArrayRelationshipSpec (spec) where
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value (..))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
@@ -25,19 +26,20 @@ import Data.Text qualified as Text
 import Data.Typeable (Typeable)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Permissions (SelectPermissionDetails (..))
+import Harness.Permissions qualified as Permissions
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..))
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Fixture (LHSFixture, RHSFixture)
+import Harness.Test.Fixture (LHSFixture, RHSFixture, SetupAction (..))
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (SelectPermissionDetails (..))
-import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (Table (..))
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
 import Harness.TestEnvironment
@@ -50,6 +52,7 @@ import Harness.TestEnvironment
     stopServer,
   )
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (HasCallStack, SpecWith, describe, it)
 
@@ -59,9 +62,10 @@ import Test.Hspec (HasCallStack, SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment fixtures tests
   where
-    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsRemoteServer]
-    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus]
-    fixtures = NE.fromList $ Fixture.combineFixtures <$> lhsFixtures <*> rhsFixtures
+    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsCitus, lhsSqlite, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer, rhsCitus, rhsSqlite]
+    fixtures = NE.fromList $ Fixture.combineFixtures [setupSqliteAgentAction] <$> lhsFixtures <*> rhsFixtures
+    setupSqliteAgentAction testEnv = SetupAction.noTeardown (Sqlite.setupSqliteAgent testEnv)
 
 --------------------------------------------------------------------------------
 -- Fixtures
@@ -120,6 +124,15 @@ lhsRemoteServer tableName =
         ]
     }
 
+lhsSqlite :: LHSFixture
+lhsSqlite tableName =
+  (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+    { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
+      Fixture.setupTeardown = \testEnv ->
+        [ SetupAction (lhsSqliteSetup tableName testEnv) sqliteTeardown
+        ]
+    }
+
 -- | Right-hand-side (RHS) fixtures
 rhsPostgres :: RHSFixture
 rhsPostgres =
@@ -170,6 +183,18 @@ rhsSQLServer =
           }
    in (rhsTable, fixture)
 
+rhsSqlite :: RHSFixture
+rhsSqlite =
+  let sqliteRhsTableName = J.toJSON ["main", rhsTableName_]
+      fixture =
+        (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+          { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
+            Fixture.setupTeardown = \testEnv ->
+              [ SetupAction (rhsSqliteSetup testEnv) sqliteTeardown
+              ]
+          }
+   in (sqliteRhsTableName, fixture)
+
 --------------------------------------------------------------------------------
 -- Schema
 
@@ -215,24 +240,21 @@ lhsRole2 =
         selectPermissionSource = Just lhsSourceName_
       }
 
-createRemoteRelationship :: HasCallStack => Value -> TestEnvironment -> IO ()
-createRemoteRelationship rhsTableName testEnvironment = do
+createRemoteRelationship :: (HasCallStack) => Value -> Value -> TestEnvironment -> IO ()
+createRemoteRelationship lhsTableName rhsTableName testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
-      schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [interpolateYaml|
         type: #{ backendType }_create_remote_relationship
         args:
           source: #{ lhsSourceName_ }
-          table:
-            schema: #{ schemaName }
-            name: artist
+          table: #{ lhsTableName }
           name: albums
           definition:
             to_source:
-              source: target
+              source: #{ rhsSourceName_ }
               table: #{ rhsTableName }
               relationship_type: array
               field_mapping:
@@ -286,7 +308,7 @@ rhsRole2 =
         selectPermissionTable = rhsTableName_,
         selectPermissionColumns = (["id", "title", "artist_id"] :: [Text]),
         selectPermissionAllowAggregations = True,
-        selectPermissionLimit = Aeson.Number 2,
+        selectPermissionLimit = J.Number 2,
         selectPermissionRows =
           [yaml|
         artist_id:
@@ -295,7 +317,14 @@ rhsRole2 =
         selectPermissionSource = Just rhsSourceName_
       }
 
-rhsTable :: Aeson.Value
+mkLhsTable :: Schema.SchemaName -> J.Value
+mkLhsTable (Schema.SchemaName schemaName) =
+  [yaml|
+    schema: *schemaName
+    name: *lhsTableName_
+  |]
+
+rhsTable :: J.Value
 rhsTable =
   [yaml|
     schema: hasura
@@ -305,10 +334,11 @@ rhsTable =
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -319,18 +349,22 @@ lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment lhsRole1
-  Permissions.createPermission testEnvironment lhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole1
 
-  createRemoteRelationship rhsTableName testEnvironment
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole2
+
+  createRemoteRelationship (mkLhsTable schemaName) rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
-lhsCockroachSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
   -- TODO(SOLOMON): Remove BackendTypeConfig param from all of these functions
@@ -342,18 +376,22 @@ lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment lhsRole1
-  Permissions.createPermission testEnvironment lhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole1
 
-  createRemoteRelationship rhsTableName testEnvironment
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole2
+
+  createRemoteRelationship (mkLhsTable schemaName) rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS Citus
 
-lhsCitusSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -364,18 +402,22 @@ lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment lhsRole1
-  Permissions.createPermission testEnvironment lhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole1
 
-  createRemoteRelationship rhsTableName testEnvironment
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole2
+
+  createRemoteRelationship (mkLhsTable schemaName) rhsTableName testEnvironment
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
   Schema.addSource lhsSourceName_ sourceConfig testEnvironment
@@ -386,10 +428,48 @@ lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack lhsSourceName_) artist testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment lhsRole1
-  Permissions.createPermission testEnvironment lhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole1
 
-  createRemoteRelationship rhsTableName testEnvironment
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole2
+
+  createRemoteRelationship (mkLhsTable schemaName) rhsTableName testEnvironment
+
+--------------------------------------------------------------------------------
+-- LHS SQLite
+
+lhsSqliteSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO API.DatasetCloneName
+lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureLeft wholeTestEnvironment
+  let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
+  let sourceName = Text.unpack lhsSourceName_
+
+  (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
+
+  -- Add remote source
+  Schema.addSource lhsSourceName_ (J.Object sourceConfig) testEnvironment
+
+  -- Setup tables
+  Sqlite.createTable sourceName testEnvironment artist
+  Sqlite.insertTable sourceName testEnvironment artist
+  Sqlite.trackTable sourceName testEnvironment artist
+
+  -- Setup permissions
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment lhsRole2
+
+  let sqliteLhsTableName = J.toJSON ["main", lhsTableName_]
+  createRemoteRelationship sqliteLhsTableName rhsTableName testEnvironment
+
+  pure cloneName
+
+sqliteTeardown :: Maybe API.DatasetCloneName -> IO ()
+sqliteTeardown cloneName = do
+  traverse_ Sqlite.deleteDatasetClone cloneName
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
@@ -423,7 +503,7 @@ data Query m = Query
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (Query m)
+instance (Typeable m) => Morpheus.GQLType (Query m)
 
 data HasuraArtistArgs = HasuraArtistArgs
   { aa_where :: Maybe HasuraArtistBoolExp,
@@ -441,7 +521,7 @@ data HasuraArtist m = HasuraArtist
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (HasuraArtist m) where
+instance (Typeable m) => Morpheus.GQLType (HasuraArtist m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data HasuraArtistOrderBy = HasuraArtistOrderBy
@@ -496,12 +576,12 @@ lhsRemoteServerMkLocalTestEnvironment _ =
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderArtist orderByArg
           limitFunction = maybe id take aa_limit
-      pure $
-        artists
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkArtist
+      pure
+        $ artists
+        & filter filterFunction
+        & sortBy orderByFunction
+        & limitFunction
+        & map mkArtist
     -- Returns True iif the given artist matches the given boolean expression.
     matchArtist artistInfo@(artistId, artistName) (HasuraArtistBoolExp {..}) =
       and
@@ -520,13 +600,13 @@ lhsRemoteServerMkLocalTestEnvironment _ =
       (artistId2, artistName2) =
         flip foldMap orderByList \HasuraArtistOrderBy {..} ->
           if
-              | Just idOrder <- aob_id ->
-                  compareWithNullLast idOrder artistId1 artistId2
-              | Just nameOrder <- aob_name -> case nameOrder of
-                  Asc -> compare artistName1 artistName2
-                  Desc -> compare artistName2 artistName1
-              | otherwise ->
-                  error "empty artist_order object"
+            | Just idOrder <- aob_id ->
+                compareWithNullLast idOrder artistId1 artistId2
+            | Just nameOrder <- aob_name -> case nameOrder of
+                Asc -> compare artistName1 artistName2
+                Desc -> compare artistName2 artistName1
+            | otherwise ->
+                error "empty artist_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT
@@ -544,7 +624,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           a_name = pure $ Just artistName
         }
 
-lhsRemoteServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBArrayRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -593,8 +673,11 @@ rhsPostgresSetup (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment rhsRole1
-  Permissions.createPermission testEnvironment rhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- RHS Cockroach
@@ -613,8 +696,11 @@ rhsCockroachSetup (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment rhsRole1
-  Permissions.createPermission testEnvironment rhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- RHS Citus
@@ -633,8 +719,11 @@ rhsCitusSetup (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment rhsRole1
-  Permissions.createPermission testEnvironment rhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole2
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer
@@ -653,22 +742,56 @@ rhsSQLServerSetup (wholeTestEnvironment, _) = do
   Schema.trackTable (Text.unpack rhsSourceName_) album testEnvironment
 
   -- Setup permissions
-  Permissions.createPermission testEnvironment rhsRole1
-  Permissions.createPermission testEnvironment rhsRole2
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole2
+
+--------------------------------------------------------------------------------
+-- RHS SQLite
+
+rhsSqliteSetup :: (TestEnvironment, ()) -> IO API.DatasetCloneName
+rhsSqliteSetup (wholeTestEnvironment, _) = do
+  let testEnvironment = focusFixtureRight wholeTestEnvironment
+  let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-rhs"
+  let sourceName = Text.unpack rhsSourceName_
+
+  (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
+
+  -- Add remote source
+  Schema.addSource rhsSourceName_ (J.Object sourceConfig) testEnvironment
+
+  -- Setup tables
+  Sqlite.createTable sourceName testEnvironment album
+  Sqlite.insertTable sourceName testEnvironment album
+  Sqlite.trackTable sourceName testEnvironment album
+
+  -- Setup permissions
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole1
+
+  GraphqlEngine.postMetadata_ testEnvironment do
+    Permissions.createPermissionMetadata testEnvironment rhsRole2
+
+  pure cloneName
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-tests opts = describe "array-relationship" do
-  schemaTests opts
-  executionTests opts
-  permissionTests opts
+tests :: SpecWith (TestEnvironment, Maybe Server)
+tests = describe "array-relationship" do
+  schemaTests
+  executionTests
+  permissionTests
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-schemaTests _opts =
+schemaTests :: SpecWith (TestEnvironment, Maybe Server)
+schemaTests =
   -- we introspect the schema and validate it
   it "graphql-schema" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+    let rhsSchema = Schema.getSchemaName $ focusFixtureRight testEnvironment
+
     let query =
           [graphql|
           fragment type_info on __Type {
@@ -687,7 +810,7 @@ schemaTests _opts =
             }
           }
           query {
-            artist_fields: __type(name: "hasura_artist") {
+            artist_fields: __type(name: "#{lhsSchema}_artist") {
               fields {
                 name
                 type {
@@ -710,14 +833,14 @@ schemaTests _opts =
             . key "fields"
             . values
         albumsField =
-          Unsafe.fromJust $
-            findOf
+          Unsafe.fromJust
+            $ findOf
               focusArtistFields
               (has $ key "name" . _String . only "albums")
               introspectionResult
         albumsAggregateField =
-          Unsafe.fromJust $
-            findOf
+          Unsafe.fromJust
+            $ findOf
               focusArtistFields
               (has $ key "name" . _String . only "albums_aggregate")
               introspectionResult
@@ -725,7 +848,7 @@ schemaTests _opts =
     -- check the return type of albums field
     shouldBeYaml
       (albumsField ^?! key "type")
-      [yaml|
+      [interpolateYaml|
       kind: NON_NULL
       name: null
       ofType:
@@ -735,30 +858,32 @@ schemaTests _opts =
           kind: NON_NULL
           name: null
           ofType:
-            name: hasura_album
+            name: #{rhsSchema}_album
       |]
 
     -- check the return type of albums_aggregate field
     shouldBeYaml
       (albumsAggregateField ^?! key "type")
-      [yaml|
+      [interpolateYaml|
       name: null
       kind: NON_NULL
       ofType:
-        name: hasura_album_aggregate
+        name: #{rhsSchema}_album_aggregate
         kind: OBJECT
         ofType: null
       |]
 
 -- | Basic queries using DB-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-executionTests opts = describe "execution" do
+executionTests :: SpecWith (TestEnvironment, Maybe Server)
+executionTests = describe "execution" do
   -- fetches the relationship data
   it "related-data" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let query =
           [graphql|
           query {
-            artist: hasura_artist(where: {name: {_eq: "artist1"}}) {
+            artist: #{lhsSchema}_artist(where: {name: {_eq: "artist1"}}) {
               name
               albums {
                 title
@@ -777,16 +902,18 @@ executionTests opts = describe "execution" do
                - title: album3_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when there are no matching rows, the relationship response should be []
   it "related-data-empty-array" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let query =
           [graphql|
           query {
-            artist: hasura_artist(where: {name: {_eq: "artist3_no_albums"}}) {
+            artist: #{lhsSchema}_artist(where: {name: {_eq: "artist3_no_albums"}}) {
               name
               albums {
                 title
@@ -802,16 +929,18 @@ executionTests opts = describe "execution" do
                albums: []
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when any of the join columns are null, the relationship should be null
   it "related-data-null" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let query =
           [graphql|
           query {
-            artist: hasura_artist(where: {name: {_eq: "artist4_no_id"}}) {
+            artist: #{lhsSchema}_artist(where: {name: {_eq: "artist4_no_id"}}) {
               name
               albums {
                 title
@@ -827,16 +956,18 @@ executionTests opts = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when the lhs response has both null and non-null values for join columns
   it "related-data-non-null-and-null" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {
                 _or: [
                   {name: {_eq: "artist1"}},
@@ -865,7 +996,7 @@ executionTests opts = describe "execution" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
@@ -876,15 +1007,17 @@ executionTests opts = describe "execution" do
 -- 1. _aggregate
 
 -- | tests that describe an array relationship's data in the presence of permisisons
-permissionTests :: Fixture.Options -> SpecWith (TestEnvironment, Maybe Server)
-permissionTests opts = describe "permission" do
+permissionTests :: SpecWith (TestEnvironment, Maybe Server)
+permissionTests = describe "permission" do
   -- only the allowed rows on the target table are queryable
   it "only-allowed-rows" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               order_by: [{name: asc}]
             ) {
               name
@@ -911,7 +1044,7 @@ permissionTests opts = describe "permission" do
                albums: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
@@ -919,16 +1052,19 @@ permissionTests opts = describe "permission" do
   -- 1. the type 'hasura_album' has only 'artist_id' and 'title', the allowed columns
   -- 2. the albums field in 'hasura_artist' type is of type 'hasura_album'
   it "only-allowed-columns" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+    let rhsSchema = Schema.getSchemaName $ focusFixtureRight testEnvironment
+
     let userHeaders = [("x-hasura-role", "role1"), ("x-hasura-artist-id", "1")]
         query =
           [graphql|
           query {
-            album_fields: __type(name: "hasura_album") {
+            album_fields: __type(name: "#{rhsSchema}_album") {
               fields {
                 name
               }
             }
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -939,7 +1075,7 @@ permissionTests opts = describe "permission" do
           }
           |]
         expectedResponse =
-          [yaml|
+          [interpolateYaml|
           data:
             album_fields:
               fields:
@@ -948,20 +1084,22 @@ permissionTests opts = describe "permission" do
             artist:
             - name: artist1
               albums:
-              - __typename: hasura_album
+              - __typename: #{rhsSchema}_album
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- _aggregate field should not be generated when 'allow_aggregations' isn't set to 'true'
   it "aggregations-not-allowed" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let userHeaders = [("x-hasura-role", "role1")]
         query =
           [graphql|
           query {
-            artist_fields: __type(name: "hasura_artist") {
+            artist_fields: __type(name: "#{lhsSchema}_artist") {
               fields {
                 name
               }
@@ -978,17 +1116,19 @@ permissionTests opts = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- _aggregate field should only be allowed when 'allow_aggregations' is set to 'true'
   it "aggregations-allowed" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
     let userHeaders = [("x-hasura-role", "role2")]
         query =
           [graphql|
           query {
-            artist_fields: __type(name: "hasura_artist") {
+            artist_fields: __type(name: "#{lhsSchema}_artist") {
               fields {
                 name
               }
@@ -1006,17 +1146,19 @@ permissionTests opts = describe "permission" do
               - name: name
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- permission limit should kick in when no query limit is specified
   it "no-query-limit" \(testEnvironment, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -1036,17 +1178,19 @@ permissionTests opts = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- query limit should be applied when query limit <= permission limit
   it "user-limit-less-than-permission-limit" \(testEnvironment, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -1065,17 +1209,19 @@ permissionTests opts = describe "permission" do
                  - title: album1_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- permission limit should be applied when query limit > permission limit
   it "user-limit-greater-than-permission-limit" \(testEnvironment, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -1095,17 +1241,19 @@ permissionTests opts = describe "permission" do
                - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- permission limit should only apply on 'nodes' but not on 'aggregate'
   it "aggregations" \(testEnvironment, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -1133,17 +1281,19 @@ permissionTests opts = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse
 
   -- query limit applies to both 'aggregate' and 'nodes'
   it "aggregations-query-limit" \(testEnvironment, _) -> do
     let userHeaders = [("x-hasura-role", "role2"), ("x-hasura-artist-id", "1")]
+    let lhsSchema = Schema.getSchemaName $ focusFixtureLeft testEnvironment
+
         query =
           [graphql|
           query {
-            artist: hasura_artist(
+            artist: #{lhsSchema}_artist(
               where: {name: {_eq: "artist1"}}
             ) {
               name
@@ -1171,6 +1321,6 @@ permissionTests opts = describe "permission" do
                  - title: album2_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphqlWithHeaders testEnvironment userHeaders query)
       expectedResponse

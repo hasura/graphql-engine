@@ -31,7 +31,9 @@ SELECT
       'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
     ) END,
     'description', description.description,
-    'extra_table_metadata', '[]'::json
+    'extra_table_metadata', jsonb_build_object(
+      'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
+    )
   )::json AS info
 FROM "tabletable" "table"
 
@@ -39,7 +41,7 @@ FROM "tabletable" "table"
 -- $1 parameter provides JSON array of tracked tables
 -- FROM
 --   ( SELECT "tracked"."name" AS "table_name",
---            "tracked"."schema" AS "table_schema"
+--            "tracked"."schema" AS "table_schema"cockroach
 --       FROM jsonb_to_recordset($1::jsonb) AS "tracked"("schema" text, "name" text)
 --   ) "tracked_table"
 
@@ -67,7 +69,10 @@ LEFT JOIN LATERAL
   ( SELECT jsonb_agg(jsonb_build_object(
       'name', "column".attname,
       'position', "column".attnum,
-      'type', json_build_object('name', coalesce(base_type.typname, "type".typname), 'type', "type".typtype),
+      'type', json_build_object('name', (CASE WHEN "array_type".typname IS NULL
+                                              THEN coalesce(base_type.typname, "type".typname)
+                                              ELSE "array_type".typname || '[]' END),
+                                'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
       'description', '', -- pg_catalog.col_description("table".oid, "column".attnum), -- removing this for now as it takes ~20 seconds per lookup
       'mutability', jsonb_build_object(
@@ -80,6 +85,8 @@ LEFT JOIN LATERAL
       ON "type".oid = "column".atttypid
     LEFT JOIN pg_catalog.pg_type base_type
       ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
+    LEFT JOIN pg_catalog.pg_type array_type
+      ON "type".typelem = array_type.oid AND "type".typcategory = 'A'
     WHERE "column".attrelid = "table".oid
       -- columns where attnum <= 0 are special, system-defined columns
       AND "column".attnum > 0

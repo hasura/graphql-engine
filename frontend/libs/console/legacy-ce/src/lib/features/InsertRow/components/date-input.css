@@ -1,3 +1,7 @@
+.react-datepicker {
+  overflow: hidden;
+}
+
 .react-datepicker-popper[data-placement^='bottom']
   .react-datepicker__triangle::before,
 .react-datepicker-popper[data-placement^='top']
@@ -104,6 +108,15 @@
   ul.react-datepicker__time-list
   li.react-datepicker__time-list-item {
   padding: 7px 10px;
+}
+
+.react-datepicker__time,
+.react-datepicker__time ul {
+  height: 173px !important;
+}
+
+.react-datepicker__time-box {
+  height: 173px;
 }
 
 .react-datepicker__time-container

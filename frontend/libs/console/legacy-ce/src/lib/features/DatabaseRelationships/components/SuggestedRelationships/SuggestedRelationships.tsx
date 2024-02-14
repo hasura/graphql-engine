@@ -1,26 +1,16 @@
 import { useState } from 'react';
+import { FaColumns, FaDatabase, FaMagic, FaTable } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
 import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
-import { Table } from '../../../hasura-metadata-types';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
-import {
-  FaArrowRight,
-  FaColumns,
-  FaDatabase,
-  FaMagic,
-  FaTable,
-} from 'react-icons/fa';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { getSupportsForeignKeys } from '../../../hasura-metadata-api/utils';
-import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
+import { useSuggestedRelationships } from '../../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import { areTablesEqual } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../utils/helpers';
-import {
-  SuggestedRelationshipWithName,
-  useSuggestedRelationships,
-} from './hooks/useSuggestedRelationships';
-import type { LocalRelationship } from '../../types';
-import Skeleton from 'react-loading-skeleton';
+import { RelationshipIcon } from '../RelationshipIcon';
 import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
+import { SuggestedRelationshipWithName } from './hooks/useSuggestedRelationships';
 
 type SuggestedRelationshipsProps = {
   dataSourceName: string;
@@ -31,39 +21,23 @@ export const SuggestedRelationships = ({
   dataSourceName,
   table,
 }: SuggestedRelationshipsProps) => {
-  const { data: existingRelationships } = useListAllDatabaseRelationships({
-    dataSourceName,
-    table,
-  });
-  const localRelationships = existingRelationships.filter(rel => {
-    if (rel.type === 'localRelationship') {
-      return true;
-    }
-    return false;
-  }) as LocalRelationship[];
-
-  const { data: source } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-
-  const supportsForeignKeys = getSupportsForeignKeys(source);
-
-  const { suggestedRelationships, isLoadingSuggestedRelationships } =
+  const { data: { untracked = [] } = {}, isLoading } =
     useSuggestedRelationships({
       dataSourceName,
-      table,
-      existingRelationships: localRelationships,
-      isEnabled: supportsForeignKeys,
+      which: 'all',
     });
+
+  const untrackedSuggestedRelationships = untracked.filter(rel =>
+    areTablesEqual(rel.from.table, table)
+  );
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
     useState<SuggestedRelationshipWithName | null>(null);
 
-  if (isLoadingSuggestedRelationships)
-    return <Skeleton count={4} height={30} />;
+  if (isLoading) return <Skeleton count={4} height={30} />;
 
-  return suggestedRelationships.length > 0 ? (
+  return untrackedSuggestedRelationships.length > 0 ? (
     <>
       <CardedTable.Table>
         <CardedTable.Header
@@ -78,7 +52,7 @@ export const SuggestedRelationships = ({
         />
 
         <CardedTable.TableBody>
-          {suggestedRelationships.map(relationship => (
+          {untrackedSuggestedRelationships.map(relationship => (
             <CardedTable.TableBodyRow key={relationship.constraintName}>
               <CardedTable.TableBodyCell>
                 <div className="flex flex-row items-center">
@@ -111,8 +85,14 @@ export const SuggestedRelationships = ({
                   <span>{getTableDisplayName(relationship.from.table)}</span>
                   /
                   <FaColumns />
-                  {relationship.from.columns.join(' ')}
-                  <FaArrowRight />
+                  <span>{relationship.from.columns.join(' ')}</span>
+                  <RelationshipIcon
+                    type={
+                      relationship.type === 'array'
+                        ? 'one-to-many'
+                        : 'one-to-one'
+                    }
+                  />
                   <FaTable />
                   <span>{getTableDisplayName(relationship.to.table)}</span>
                   /

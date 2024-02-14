@@ -23,7 +23,7 @@ import Hasura.Prelude hiding (first)
 --   Will run the action. If the action fails and throws an exception,
 --   it will run the cleanup and will throw the original exception after it is done.
 --   If the cleanup fails as well, it will throw both raised exceptions.
-catchRethrow :: HasCallStack => IO a -> IO () -> IO a
+catchRethrow :: (HasCallStack) => IO a -> IO () -> IO a
 catchRethrow action cleanup =
   catch
     -- attempt action
@@ -37,7 +37,7 @@ catchRethrow action cleanup =
     )
 
 -- | Try actions in order. If one succeeds, it succeeds. If both fail, throw both exceptions.
-tryInOrder :: HasCallStack => IO a -> IO a -> IO a
+tryInOrder :: (HasCallStack) => IO a -> IO a -> IO a
 tryInOrder action1 action2 =
   catch
     action1
@@ -59,7 +59,7 @@ forFinally_ list f =
 -- raised as a single 'Exceptions' exception. If 'Exceptions' thrown in the
 -- 'actions', these are collapsed into a single top-level 'Exceptions'
 -- exception.
-rethrowAll :: HasCallStack => [IO ()] -> IO ()
+rethrowAll :: (HasCallStack) => [IO ()] -> IO ()
 rethrowAll actions = do
   exns <-
     concat

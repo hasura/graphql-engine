@@ -1,8 +1,11 @@
 export { getDatabaseConfiguration } from './getDatabaseConfiguration';
+export { getDriverCapabilities } from './getDriverCapabilities';
 export { getSupportedOperators } from './getSupportedOperators';
 export { getTableColumns } from './getTableColumns';
 export { getFKRelationships } from './getFKRelationships';
 export { getTablesListAsTree } from './getTablesListAsTree';
 export { getTrackableTables } from './getTrackableTables';
+export { getTrackableObjects } from './getTrackableObjects';
+export { getSupportedScalars } from './getSupportedScalars';
 export { convertToTreeData } from './utils';
 export type { GetTableInfoResponse } from './types';

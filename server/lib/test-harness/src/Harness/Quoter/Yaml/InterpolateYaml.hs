@@ -10,8 +10,8 @@ module Harness.Quoter.Yaml.InterpolateYaml
 where
 
 import Control.Exception.Safe (impureThrow)
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Text qualified as Aeson.Text
+import Data.Aeson qualified as J
+import Data.Aeson.Text qualified as J.Text
 import Data.Bifunctor qualified as Bifunctor
 import Data.String
 import Data.Text qualified as T
@@ -39,8 +39,8 @@ instance ToYamlString Text where
 instance ToYamlString Int where
   showYml = show
 
-instance ToYamlString Aeson.Value where
-  showYml = TL.unpack . Aeson.Text.encodeToLazyText
+instance ToYamlString J.Value where
+  showYml = TL.unpack . J.Text.encodeToLazyText
 
 -- | Treats Yaml as a string, and allows #{ stuff } to be spliced in
 -- '[interpolateYaml| hello #{ 1 + 2 + 3 } |]`
@@ -60,7 +60,7 @@ interpolateYamlExp inputString = do
   appE [|stringToYaml|] (evalInterpolation inputString)
 
 -- Produces 'Value'.
-stringToYaml :: String -> Aeson.Value
+stringToYaml :: String -> J.Value
 stringToYaml inputString =
   case Data.Yaml.decodeEither' (encodeUtf8 (T.pack $ inputString)) of
     Left e -> impureThrow e

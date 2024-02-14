@@ -1,38 +1,19 @@
-import { AxiosInstance, AxiosResponseHeaders } from 'axios';
+import { AxiosInstance } from 'axios';
 import {
-  Metadata,
   NativeDrivers,
   Source,
   SupportedDrivers,
 } from '../hasura-metadata-types';
 import { isPostgres } from '../../metadata/dataSource.utils';
-
+export { runMetadataQuery, exportMetadata } from '../hasura-metadata-api';
 export interface NetworkArgs {
   httpClient: AxiosInstance;
 }
 
-export const exportMetadata = async ({
-  httpClient,
-}: NetworkArgs): Promise<Metadata> => {
-  return (
-    await httpClient.post('/v1/metadata', {
-      type: 'export_metadata',
-      version: 2,
-      args: {},
-    })
-  ).data;
-};
-
-export const runMetadataQuery = async <ResponseType>({
-  httpClient,
-  body,
-}: { body: Record<string, any> } & NetworkArgs): Promise<ResponseType> => {
-  return (await httpClient.post('/v1/metadata', body)).data;
-};
-
 type RunSqlArgs = {
   source: Pick<Source, 'kind' | 'name'>;
   sql: string;
+  readOnly?: boolean;
 };
 
 export type RunSQLSelectResponse = {
@@ -55,6 +36,9 @@ const getRunSqlType = (driver: NativeDrivers) => {
   return `${driver}_run_sql`;
 };
 
+// We need to type this better
+export type RunSQLAPIError = Record<string, any>;
+
 export const runQuery = async <ResponseType>({
   body,
   httpClient,
@@ -62,7 +46,10 @@ export const runQuery = async <ResponseType>({
   /**
    * Use v2 query instead of v1 because it supports other <db>_run_sql commands
    */
-  const result = await httpClient.post<ResponseType>('v2/query', body);
+  const result = await httpClient.post<ResponseType, RunSQLAPIError>(
+    'v2/query',
+    body
+  );
   return result.data;
 };
 
@@ -74,7 +61,7 @@ export const runGraphQL = async ({
 }: {
   operationName: string;
   query: string;
-  headers?: AxiosResponseHeaders;
+  headers?: Record<string, string>;
 } & NetworkArgs) => {
   try {
     const result = await httpClient.post('v1/graphql', {
@@ -96,9 +83,14 @@ export const runGraphQL = async ({
 export const runSQL = async ({
   source,
   sql,
+  readOnly,
   httpClient,
 }: RunSqlArgs & NetworkArgs): Promise<RunSQLResponse> => {
   const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const readOnlyArg =
+    readOnly === null || readOnly === undefined ? {} : { read_only: readOnly };
+
   const result = await runQuery<RunSQLResponse>({
     httpClient,
     body: {
@@ -106,6 +98,7 @@ export const runSQL = async ({
       args: {
         sql,
         source: source.name,
+        ...readOnlyArg,
       },
     },
   });
@@ -213,6 +206,33 @@ export const runIntrospectionQuery = async ({ httpClient }: NetworkArgs) => {
     }`,
     httpClient,
   });
+};
+
+export const runReadOnlySQLBulk = async ({
+  source,
+  sqlQueries,
+  httpClient,
+}: {
+  source: Pick<Source, 'kind' | 'name'>;
+  sqlQueries: string[];
+} & NetworkArgs): Promise<RunSQLResponse[]> => {
+  const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const result = await runQuery<RunSQLResponse>({
+    httpClient,
+    body: {
+      type: 'concurrent_bulk',
+      source: source.name,
+      args: sqlQueries.map(sql => ({
+        type,
+        args: {
+          sql,
+          source: source.name,
+        },
+      })),
+    },
+  });
+  return result;
 };
 
 export const getDriverPrefix = (driver: SupportedDrivers) =>

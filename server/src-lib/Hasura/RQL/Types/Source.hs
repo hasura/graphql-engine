@@ -12,13 +12,18 @@ module Hasura.RQL.Types.Source
     unsafeSourceInfo,
     unsafeSourceName,
     unsafeSourceTables,
+    unsafeSourceLogicalModels,
     siConfiguration,
+    siNativeQueries,
+    siStoredProcedures,
     siLogicalModels,
     siFunctions,
     siName,
+    siSourceKind,
     siQueryTagsConfig,
     siTables,
     siCustomization,
+    siDbObjectsIntrospection,
 
     -- * Schema cache
     DBObjectsIntrospection (..),
@@ -44,23 +49,27 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
 import Data.Environment
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.QueryTags
+import Hasura.RQL.Types.Metadata.Common (LogicalModels)
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
+import Hasura.StoredProcedure.Cache (StoredProcedureCache)
+import Hasura.Table.Cache (DBTablesMetadata, TableCache)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -69,21 +78,24 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,
+    _siSourceKind :: BackendSourceKind b,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
+    _siNativeQueries :: NativeQueryCache b,
+    _siStoredProcedures :: StoredProcedureCache b,
     _siLogicalModels :: LogicalModelCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
-    _siCustomization :: ResolvedSourceCustomization
+    _siCustomization :: ResolvedSourceCustomization,
+    _siDbObjectsIntrospection :: DBObjectsIntrospection b
   }
-
-$(makeLenses ''SourceInfo)
 
 instance
   ( Backend b,
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
-    ToJSON (LogicalModelCache b),
+    ToJSON (NativeQueryCache b),
+    ToJSON (StoredProcedureCache b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
@@ -94,7 +106,8 @@ instance
       [ "name" .= _siName,
         "tables" .= _siTables,
         "functions" .= _siFunctions,
-        "logical_models" .= _siLogicalModels,
+        "native_queries" .= _siNativeQueries,
+        "stored_procedures" .= _siStoredProcedures,
         "configuration" .= _siConfiguration,
         "query_tags_config" .= _siQueryTagsConfig
       ]
@@ -110,22 +123,23 @@ type SourceCache = HashMap SourceName BackendSourceInfo
 -- They are thus a temporary workaround as we work on generalizing code that
 -- uses the schema cache.
 
-unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
+unsafeSourceInfo :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (SourceInfo b)
 unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
-unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go (SourceInfo name _ _ _ _ _ _) = name
+unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi _siName
 
-unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
+unsafeSourceTables :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
 
-unsafeSourceFunctions :: forall b. HasTag b => BackendSourceInfo -> Maybe (FunctionCache b)
+unsafeSourceFunctions :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (FunctionCache b)
 unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
-unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
+unsafeSourceConfiguration :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
+
+unsafeSourceLogicalModels :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (LogicalModelCache b)
+unsafeSourceLogicalModels = fmap _siLogicalModels . unsafeSourceInfo @b
 
 --------------------------------------------------------------------------------
 -- Schema cache
@@ -139,16 +153,35 @@ unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 data DBObjectsIntrospection b = DBObjectsIntrospection
   { _rsTables :: DBTablesMetadata b,
     _rsFunctions :: DBFunctionsMetadata b,
-    _rsScalars :: ScalarMap b
+    _rsScalars :: ScalarMap b,
+    _rsLogicalModels :: LogicalModels b
   }
   deriving (Eq, Generic)
 
-instance Backend b => FromJSON (DBObjectsIntrospection b) where
+instance (Backend b) => FromJSON (DBObjectsIntrospection b) where
   parseJSON = withObject "DBObjectsIntrospection" \o -> do
+    -- "tables": [["<table-1>", "<table-metadata-1>"], ["<table-2>", "<table-metadata-2>"]]
     tables <- o .: "tables"
     functions <- o .: "functions"
     scalars <- o .: "scalars"
-    pure $ DBObjectsIntrospection (Map.fromList tables) (Map.fromList functions) (ScalarMap (Map.fromList scalars))
+    logicalModels <- o .:? "logical_models" .!= mempty
+    pure
+      DBObjectsIntrospection
+        { _rsTables = HashMap.fromList tables,
+          _rsFunctions = HashMap.fromList functions,
+          _rsScalars = ScalarMap $ HashMap.fromList scalars,
+          _rsLogicalModels = InsOrdHashMap.fromList logicalModels
+        }
+
+instance (Backend b) => ToJSON (DBObjectsIntrospection b) where
+  toJSON (DBObjectsIntrospection tables functions (ScalarMap scalars) logicalModels) =
+    -- "tables": [["<table-1>", "<table-metadata-1>"], ["<table-2>", "<table-metadata-2>"]]
+    object
+      [ "tables" .= HashMap.toList tables,
+        "functions" .= HashMap.toList functions,
+        "scalars" .= HashMap.toList scalars,
+        "logical_models" .= InsOrdHashMap.toList logicalModels
+      ]
 
 instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
@@ -163,7 +196,7 @@ instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
 newtype ScalarMap b = ScalarMap (HashMap G.Name (ScalarType b))
   deriving newtype (Semigroup, Monoid)
 
-deriving stock instance Backend b => Eq (ScalarMap b)
+deriving stock instance (Backend b) => Eq (ScalarMap b)
 
 --------------------------------------------------------------------------------
 -- Source resolver
@@ -183,6 +216,10 @@ instance (MonadResolveSource m) => MonadResolveSource (ExceptT e m) where
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (ReaderT r m) where
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
+
+instance (MonadResolveSource m) => MonadResolveSource (StateT s m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
@@ -227,3 +264,5 @@ data SourcePingInfo b = SourcePingInfo
 type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
 
 type SourcePingCache = HashMap SourceName BackendSourcePingInfo
+
+$(makeLenses ''SourceInfo)

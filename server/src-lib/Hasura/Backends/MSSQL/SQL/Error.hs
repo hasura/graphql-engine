@@ -175,23 +175,24 @@ mkMSSQLTxErrorHandler isExpectedError = \case
     let unexpectedQueryError =
           (Error.internalError "database query error")
             { Error.qeInternal =
-                Just $
-                  Error.ExtraInternal $
-                    object
-                      [ "query" .= ODBC.renderQuery query,
-                        "exception" .= odbcExceptionToJSONValue exception
-                      ]
+                Just
+                  $ Error.ExtraInternal
+                  $ object
+                    [ "query" .= ODBC.renderQuery query,
+                      "exception" .= odbcExceptionToJSONValue exception
+                    ]
             }
-     in fromMaybe unexpectedQueryError $
-          asExpectedError exception
-            <&> \err -> err {Error.qeInternal = Just $ Error.ExtraInternal $ object ["query" .= ODBC.renderQuery query]}
+     in maybe
+          unexpectedQueryError
+          (\err -> err {Error.qeInternal = Just $ Error.ExtraInternal $ object ["query" .= ODBC.renderQuery query]})
+          (asExpectedError exception)
   MSSQLConnError exception ->
     let unexpectedConnError =
           (Error.internalError "mssql connection error")
             { Error.qeInternal =
-                Just $
-                  Error.ExtraInternal $
-                    object ["exception" .= odbcExceptionToJSONValue exception]
+                Just
+                  $ Error.ExtraInternal
+                  $ object ["exception" .= odbcExceptionToJSONValue exception]
             }
      in fromMaybe unexpectedConnError $ asExpectedError exception
   MSSQLInternal err ->

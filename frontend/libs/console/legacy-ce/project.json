@@ -3,13 +3,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/console/legacy-ce/src",
   "projectType": "library",
-  "tags": ["legacy"],
+  "tags": ["scope:console", "type:feature", "meta:legacy"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
@@ -23,7 +23,6 @@
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "libs/console/legacy-ce/.storybook"
       },
@@ -37,7 +36,6 @@
       "executor": "@nrwl/storybook:build",
       "outputs": ["{options.outputDir}"],
       "options": {
-        "uiFramework": "@storybook/react",
         "configDir": "libs/console/legacy-ce/.storybook",
         "outputDir": "dist/storybook/console/legacy-ce"
       },

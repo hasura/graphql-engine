@@ -120,7 +120,10 @@ const SourceView: React.FC<Props> = props => {
 
   return (
     <Analytics name="SourceView" {...REDACT_EVERYTHING}>
-      <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
+      <div
+        style={{ paddingTop: '20px', paddingLeft: '15px' }}
+        className="bootstrap-jail"
+      >
         <Helmet title="Source - Data | Hasura" />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div>

@@ -1,0 +1,14 @@
+query {
+  AuthorManyWithLimitZero: AuthorMany(limit: 0) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimitOne: AuthorMany(limit: 1) {
+    author_id
+    first_name
+  }
+  AuthorManyWithLimitTwo: AuthorMany(limit: 2) {
+    author_id
+    first_name
+  }
+}

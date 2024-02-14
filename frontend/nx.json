@@ -24,14 +24,22 @@
       "dependsOn": ["^build"],
       "inputs": ["production", "^production", "sharedWebpack"]
     },
+    "serve": {
+      "dependsOn": ["^build"]
+    },
     "test": {
       "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"]
     },
     "e2e": {
+      "dependsOn": ["^build"],
       "inputs": ["default", "^production"]
     },
     "lint": {
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/tools/eslint-rules/**/*"
+      ]
     },
     "build-storybook": {
       "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]

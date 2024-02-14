@@ -1,0 +1,176 @@
+{
+  "explain": {
+    "type": "sequence",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "Album",
+          "queryRequest": {
+            "collection": "Album",
+            "query": {
+              "fields": {
+                "AlbumId": {
+                  "type": "column",
+                  "column": "AlbumId"
+                },
+                "ArtistId": {
+                  "type": "column",
+                  "column": "ArtistId"
+                },
+                "__hasura_phantom_field__ArtistId": {
+                  "type": "column",
+                  "column": "ArtistId"
+                },
+                "Tracks": {
+                  "type": "relationship",
+                  "query": {
+                    "fields": {
+                      "TrackId": {
+                        "type": "column",
+                        "column": "TrackId"
+                      },
+                      "__hasura_phantom_field__AlbumId": {
+                        "type": "column",
+                        "column": "AlbumId"
+                      }
+                    }
+                  },
+                  "relationship": "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]",
+                  "arguments": {}
+                }
+              }
+            },
+            "arguments": {},
+            "collection_relationships": {
+              "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]": {
+                "column_mapping": {
+                  "AlbumId": "AlbumId"
+                },
+                "relationship_type": "array",
+                "target_collection": "Track",
+                "arguments": {}
+              }
+            }
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "parallel",
+        "value": [
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "Artist",
+                "queryRequest": {
+                  "collection": "Artist",
+                  "query": {
+                    "fields": {
+                      "ArtistId": {
+                        "type": "column",
+                        "column": "ArtistId"
+                      }
+                    },
+                    "where": {
+                      "type": "binary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "ArtistId",
+                        "path": []
+                      },
+                      "operator": {
+                        "type": "equal"
+                      },
+                      "value": {
+                        "type": "variable",
+                        "name": "$ArtistId"
+                      }
+                    }
+                  },
+                  "arguments": {},
+                  "collection_relationships": {},
+                  "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "sequence",
+            "value": [
+              {
+                "type": "forEach",
+                "value": {
+                  "type": "modelSelect",
+                  "value": {
+                    "modelName": "Album",
+                    "queryRequest": {
+                      "collection": "Album",
+                      "query": {
+                        "fields": {
+                          "AlbumId": {
+                            "type": "column",
+                            "column": "AlbumId"
+                          }
+                        },
+                        "where": {
+                          "type": "binary_comparison_operator",
+                          "column": {
+                            "type": "column",
+                            "name": "AlbumId",
+                            "path": []
+                          },
+                          "operator": {
+                            "type": "equal"
+                          },
+                          "value": {
+                            "type": "variable",
+                            "name": "$AlbumId"
+                          }
+                        }
+                      },
+                      "arguments": {},
+                      "collection_relationships": {},
+                      "variables": []
+                    },
+                    "ndcExplain": {
+                      "type": "response",
+                      "value": {
+                        "details": {
+                          "explain": "<redacted>"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "hashJoin"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "hashJoin"
+      }
+    ]
+  }
+}

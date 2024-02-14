@@ -2,7 +2,6 @@ import { isColumnUnique } from '../../components/Services/Data/TableModify/Modif
 import { quoteDefault } from '../../components/Services/Data/utils';
 import gqlPattern from '../../components/Services/Data/Common/GraphQLValidation';
 import Migration from './Migration';
-import { RunSqlType } from '../../types';
 import { Table } from '../../dataSources/types';
 import {
   dataSource,

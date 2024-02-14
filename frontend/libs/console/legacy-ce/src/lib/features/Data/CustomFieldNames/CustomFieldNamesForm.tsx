@@ -3,13 +3,19 @@ import { MetadataTableConfig } from '../../hasura-metadata-types';
 import { Button } from '../../../new-components/Button';
 import { Collapse } from '../../../new-components/deprecated';
 import { Dialog } from '../../../new-components/Dialog';
-import { GraphQLSanitizedInputField } from '../../../new-components/Form';
+import {
+  GraphQLSanitizedInputField,
+  Select,
+} from '../../../new-components/Form';
 import { SanitizeTips } from '../../../utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { FaExclamationCircle } from 'react-icons/fa';
 import { useCustomFieldNamesForm } from './hooks';
 import { CustomFieldNamesFormVals } from './types';
 import { mutation_field_props, query_field_props } from './utils';
+import { MetadataUtils, useMetadata } from '../../hasura-metadata-api';
+import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
+import { supportsSchemaLessTables } from '../LogicalModels/LogicalModelWidget/utils';
 
 export type CustomFieldNamesFormProps = {
   initialTableName: string;
@@ -22,12 +28,15 @@ export type CustomFieldNamesFormProps = {
   callToAction?: string;
   callToActionLoadingText?: string;
   callToDeny?: string;
+  isLoading: boolean;
+  source: string;
 };
 
 export const CustomFieldNamesForm: React.VFC<
   CustomFieldNamesFormProps
 > = props => {
   const {
+    isLoading,
     onClose,
     callToAction = 'Save',
     callToActionLoadingText = 'Saving...',
@@ -44,6 +53,12 @@ export const CustomFieldNamesForm: React.VFC<
     placeholders,
     reset,
   } = useCustomFieldNamesForm(props);
+  const { data: capabilities } = useDriverCapabilities({
+    dataSourceName: props.source,
+  });
+  const { data: logicalModels } = useMetadata(
+    m => MetadataUtils.findMetadataSource(props.source, m)?.logical_models
+  );
 
   return (
     <Form onSubmit={handleSubmit}>
@@ -66,6 +81,20 @@ export const CustomFieldNamesForm: React.VFC<
                 placeholder={placeholders.custom_name}
               />
             </Analytics>
+            {supportsSchemaLessTables(capabilities) && (
+              <Analytics name="logical_model" htmlAttributesToRedact="value">
+                <Select
+                  name="logical_model"
+                  placeholder={placeholders.logical_model}
+                  options={
+                    logicalModels?.map(model => ({
+                      label: model.name,
+                      value: model.name,
+                    })) ?? []
+                  }
+                />
+              </Analytics>
+            )}
           </div>
           {errors.custom_name?.type === 'required' && (
             <div className="grid grid-cols-12 gap-3">
@@ -149,8 +178,8 @@ export const CustomFieldNamesForm: React.VFC<
             </div>
           </div>
         </div>
-        {/* 
-              Implementing a custom footer here because there's no way to submit the form from the footer buttons otherwise. 
+        {/*
+              Implementing a custom footer here because there's no way to submit the form from the footer buttons otherwise.
               Since this creates buttons within the form, the form submit is automatically triggered when these buttons are clicked.
               The only other approach would be to wrap the form around the entire dialog.
               However, if this is done, the form stays rendered in memory when the dialog is opened and closed and must be manually reset and reinit'd each time it happens
@@ -158,6 +187,7 @@ export const CustomFieldNamesForm: React.VFC<
             */}
         <Dialog.Footer
           callToAction={callToAction}
+          isLoading={isLoading}
           callToActionLoadingText={callToActionLoadingText}
           callToDeny={callToDeny}
           onClose={onClose}

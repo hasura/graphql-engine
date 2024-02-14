@@ -6,13 +6,14 @@ keywords:
   - docs
   - deployment
   - allow list
-sidebar_position: 8
+sidebar_position: 4
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Allow List of Operations
 
@@ -147,9 +148,7 @@ query ($id: Int!) {
 
 ## Role-based Allow List
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge pro ee self />
 
 A role-based Allow List is useful when you would like a query collection(s) to be accessible to only certain roles.
 
@@ -222,9 +221,7 @@ Metadata API.
 
 ## Quick-create allowed operations
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free pro ee />
 
 ### Hasura Cloud
 

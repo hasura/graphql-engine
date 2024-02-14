@@ -17,4 +17,6 @@ export const graphQLCustomizationSchema = z.object({
   namingConvention: z.string().optional(),
 });
 
-export type GraphQLCustomization = z.infer<typeof graphQLCustomizationSchema>;
+export type GraphQLCustomizationSchema = z.infer<
+  typeof graphQLCustomizationSchema
+>;

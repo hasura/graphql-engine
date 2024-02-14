@@ -12,7 +12,7 @@ import Control.Monad.Reader (MonadReader (..), ReaderT (..))
 import Control.Monad.State.Strict (MonadState (..), StateT, execStateT)
 import Data.Foldable (traverse_)
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -27,7 +27,7 @@ import Language.GraphQL.Draft.Syntax
   )
 
 data TypeDefinitionsWrapper origin where
-  TypeDefinitionsWrapper :: HasTypeDefinitions origin a => a -> TypeDefinitionsWrapper origin
+  TypeDefinitionsWrapper :: (HasTypeDefinitions origin a) => a -> TypeDefinitionsWrapper origin
 
 {-
 Note [Collecting types from the GraphQL schema]
@@ -93,13 +93,13 @@ different data sources.
 -- attempting to detect any conflicting defintions that may have made it this
 -- far (See 'ConflictingDefinitions' for details).
 collectTypeDefinitions ::
-  HasTypeDefinitions origin a =>
+  (HasTypeDefinitions origin a) =>
   a ->
   Either (ConflictingDefinitions origin) (HashMap Name (SomeDefinitionTypeInfo origin))
 collectTypeDefinitions x =
   fmap (fmap fst) $
     runExcept $
-      flip execStateT Map.empty $
+      flip execStateT HashMap.empty $
         flip runReaderT (TypeOriginStack []) $
           runTypeAccumulation $
             accumulateTypeDefinitions x
@@ -187,9 +187,9 @@ instance HasTypeDefinitions origin (Definition origin (TypeInfo origin k)) where
     definitions <- get
     stack <- ask
     let someNew = SomeDefinitionTypeInfo new
-    case Map.lookup dName definitions of
+    case HashMap.lookup dName definitions of
       Nothing -> do
-        put $! Map.insert dName (someNew, pure stack) definitions
+        put $! HashMap.insert dName (someNew, pure stack) definitions
         -- This type definition might reference other type definitions, so we
         -- still need to recur.
         local (typeRootRecurse dName) $ accumulateTypeDefinitions dInfo
@@ -198,13 +198,13 @@ instance HasTypeDefinitions origin (Definition origin (TypeInfo origin k)) where
         -- before to avoid infinite loops; see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
         -- (NOTE: I tried making `origins` an STRef and doing a mutable update
         -- here but the performance was about the same)
-        | someOld == someNew -> put $! Map.insert dName (someOld, stack `NE.cons` origins) definitions
+        | someOld == someNew -> put $! HashMap.insert dName (someOld, stack `NE.cons` origins) definitions
         | otherwise -> throwError $ ConflictingDefinitions (someNew, stack) (someOld, origins)
 
-instance HasTypeDefinitions origin a => HasTypeDefinitions origin [a] where
+instance (HasTypeDefinitions origin a) => HasTypeDefinitions origin [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
 
-instance HasTypeDefinitions origin a => HasTypeDefinitions origin (Maybe a) where
+instance (HasTypeDefinitions origin a) => HasTypeDefinitions origin (Maybe a) where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
 
 instance HasTypeDefinitions origin (TypeDefinitionsWrapper origin) where

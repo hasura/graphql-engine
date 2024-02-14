@@ -11,11 +11,26 @@ keywords:
   - subscription
 ---
 
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
 # API Reference - Query / Subscription
 
-## **query** / **subscription** syntax
+## Overview
 
-```none
+The Hasura GraphQL API exposes a set of GraphQL queries so that you can get started with building your application right
+away. The queries are [auto-generated](/getting-started/how-it-works/index.mdx#tracking-tables--schema-generation) by
+Hasura based on the tables and relationships in your database.
+
+Below, you'll find the overviews and syntax definitions for queries and subscriptions.
+
+## Query / Subscription syntax
+
+Each query / subscription is a GraphQL object with a set of fields. The fields are auto-generated based on the tables
+and relationships in your database. An **object** is - as the name suggests - an object, which can have multiple fields
+of its own. Objects can return complex data structures, including nested objects and arrays. Alternatively, **object
+fields** are scalar values (e.g., string, integer, boolean, etc.) that do not contain any nested objects or arrays.
+
+```plaintext
 query|subscription [<op-name>] {
   object [([argument])]{
     object-fields
@@ -23,16 +38,19 @@ query|subscription [<op-name>] {
 }
 ```
 
-| Key      | Required | Schema                | Description                                                               |
-| -------- | -------- | --------------------- | ------------------------------------------------------------------------- |
-| op-name  | false    | Value                 | Name query/subscription for observability                                 |
-| object   | true     | [Object](#object)     | Name of the table/object                                                  |
-| argument | false    | [Argument](#argument) | One or more of filter criteria, instructions for sort order or pagination |
+| Key      | Required | Schema                | Description                                                                                             |
+| -------- | -------- | --------------------- | ------------------------------------------------------------------------------------------------------- |
+| op-name  | `false`  | Value                 | The user-generated name of the query / subscription; useful for observability and analyzing operations. |
+| object   | `true`   | [Object](#object)     | The name of the table / object on which to perform the operation.                                       |
+| argument | `false`  | [Argument](#argument) | One or more of filter criteria, or instructions for ordering, pagination, etc.                          |
 
-**Example: Query**
+### Query example
+
+In the example below, the query retrieves the `id` and `name` fields of all authors whose articles have a rating of 4 or
+higher. The results are ordered by the `name` field in ascending order.
 
 ```graphql
-query {
+query AuthorQuery {
   author(where: { articles: { rating: { _gte: 4 } } }, order_by: { name: asc }) {
     id
     name
@@ -40,11 +58,17 @@ query {
 }
 ```
 
-**Example: Subscription**
+Referencing the table above, the author is the object, and `id` and `name` are the object fields. The arguments are
+`where` and `order_by`.
+
+### Subscription example
+
+In this example, we're executing the exact same logic as above, but as a subscription. The subscription will re-deliver
+all the results of the query whenever there is a change in the data that matches the query criteria.
 
 ```graphql
-subscription {
-  author(where: {articles: rating: {_gte: 4}}} order_by: {name: asc}) {
+subscription AuthorSubscription {
+  author(where: { articles: { rating: { _gte: 4 } } }, order_by: { name: asc }) {
     id
     name
   }
@@ -57,9 +81,12 @@ For more examples and details of usage, please see [this](/queries/postgres/inde
 
 :::
 
-## **query_by_pk** / **subscription_by_pk** syntax
+## By PK syntax
 
-```none
+`query_by_pk` / `subscription_by_pk` are special queries / subscriptions that can be used to fetch a single row from a
+table by its **primary key**. The primary key is specified as an argument to the query / subscription.
+
+```plaintext
 query|subscription [<op-name>] {
   <query-field-name> (
     column1: value1
@@ -69,15 +96,20 @@ query|subscription [<op-name>] {
 }
 ```
 
-| Key              | Required | Schema | Description                                                  |
-| ---------------- | -------- | ------ | ------------------------------------------------------------ |
-| op-name          | false    | Value  | Name query/subscription for observability                    |
-| query-field-name | true     | Value  | Name of the auto-generated query field, e.g. _article_by_pk_ |
+| Key              | Required | Schema | Description                                                                              |
+| ---------------- | -------- | ------ | ---------------------------------------------------------------------------------------- |
+| op-name          | `false`  | Value  | The name of the query / subscription; useful for observability and analyzing operations. |
+| query-field-name | `true`   | Value  | The name of the auto-generated query field (e.g. `article_by_pk`).                       |
+| column1          | `true`   | Value  | The argument for the primary key column's name.                                          |
 
-**Example: Query by PK**
+### Query by PK example
+
+This GraphQL query retrieves the `id` and `title` fields of the article with `id` of `1`. The primary key id is passed
+as an argument to the `article_by_pk` field. The desired fields to retrieve from the article record, `id` and `title`,
+are specified in the `object-fields` section of the query.
 
 ```graphql
-query {
+query GetSingleAuthor {
   article_by_pk(id: 1) {
     id
     title
@@ -85,10 +117,13 @@ query {
 }
 ```
 
-**Example: Subscription by PK**
+### Subscription by PK example
+
+In this example, we're executing the exact same logic as above, but as a subscription. The subscription will trigger
+whenever there is a change in the data that matches the query criteria.
 
 ```graphql
-subscription {
+subscription GetSingleAuthor {
   article_by_pk(id: 1) {
     id
     title
@@ -98,21 +133,21 @@ subscription {
 
 ## Syntax definitions
 
+Below, you'll find the syntax definitions for the various components of a query / subscription. The syntax definitions
+are grouped by the type of component.
+
 ### Object
 
-<div className="parsed-literal">
-
-<pre>
-  <code>
-    <a href="#simpleobject">SimpleObject</a>
-    {' | '}
-    <a href="#aggregateobject">AggregateObject</a>
-  </code>
-</pre>
-
-</div>
+An object is a table or a view in your database. Objects can be simple or aggregates.
+**[Simple objects](#simpleobject)** typically represent a single record in a table.
+**[Aggregate objects](#aggregateobject)** typically represent a group of records in a table grouped by an aggregate
+function applied to a specified column.
 
 #### Simple object {#simpleobject}
+
+Below, you'll find the syntax definition for a simple object. Simple objects are tables or views in your database that
+can have multiple fields of their own. Simple objects can return complex data structures, including nested objects and
+arrays.
 
 ```none
 object-name {
@@ -127,11 +162,17 @@ object-name {
 }
 ```
 
-| Key  | Required | Schema | Description                                                                                                                                                |
-| ---- | -------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| path | false    | Value  | `path` argument of `json`/`jsonb` follows simple [JSONPath specification](https://github.com/json-path/JsonPath). However, prefix symbol `$.` is optional. |
+Here's a breakdown of some of the key components of the syntax definition:
 
-_Example_
+| Key                     | Required | Schema                               | Description                                                                                                                                                |
+| ----------------------- | -------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| field                   | `false`  | Value                                | The name of the column in the table / view which returns a scalar value.                                                                                   |
+| nested object           | `false`  | [Object](#object)                    | A reference to another object via a relationship that contains multiple fields.                                                                            |
+| json_field              | `false`  | Value                                | The name of the column in the table / view which returns a JSON value.                                                                                     |
+| path                    | false    | Value                                | `path` argument of `json`/`jsonb` follows simple [JSONPath specification](https://github.com/json-path/JsonPath). However, prefix symbol `$.` is optional. |
+| aggregate nested object | `false`  | [Aggregate object](#aggregateobject) | A reference to an aggregate object.                                                                                                                        |
+
+Below, you'll find an example of a simple object based on the definition above:
 
 ```graphql
 author {
@@ -163,6 +204,11 @@ author {
 ```
 
 #### Aggregate object {#aggregateobject}
+
+Aggregate objects represent a group of records in a table grouped by an aggregate function applied to a specified
+column. These are useful for performing aggregate queries on your data (e.g. `count`, `sum`, `avg`, etc.) and
+simplifying your frontend code. For more details on aggregate functions, refer to the
+[Postgres docs](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE).
 
 ```none
 object-name_aggregate {
@@ -220,86 +266,157 @@ object-name_aggregate {
 }
 ```
 
-(For more details on aggregate functions, refer to the
-[Postgres docs](https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE)).
+Here's a breakdown of some of the key components of the syntax definition:
 
-_Example_
+| Key         | Required | Schema                  | Description                                                                     |
+| ----------- | -------- | ----------------------- | ------------------------------------------------------------------------------- |
+| aggregate   | `true`   | [Aggregate](#aggregate) | The aggregate function to apply to the specified column.                        |
+| count       | `false`  | Value                   | The number of records in the table.                                             |
+| sum         | `false`  | Value                   | The sum of the values in the specified column.                                  |
+| avg         | `false`  | Value                   | The average of the values in the specified column.                              |
+| stddev      | `false`  | Value                   | The standard deviation of the values in the column.                             |
+| stddev_samp | `false`  | Value                   | The sample standard deviation of the values in the column.                      |
+| stddev_pop  | `false`  | Value                   | The population standard deviation of the values in the column.                  |
+| variance    | `false`  | Value                   | The variance of the values in the column.                                       |
+| var_samp    | `false`  | Value                   | The sample variance of the values in the column.                                |
+| var_pop     | `false`  | Value                   | The population variance of the values in the column.                            |
+| max         | `false`  | Value                   | The maximum value in the column.                                                |
+| min         | `false`  | Value                   | The minimum value in the column.                                                |
+| nodes       | `true`   | [Object](#object)       | A reference to another object via a relationship that contains multiple fields. |
 
-```graphql
-author_aggregate {
-  aggregate {
-    count  # total count
-    sum {
-      id  # sum aggregate on id
-    }
-    avg {
-      id  # avg aggregate on id
-    }
-    stddev {
-      id  # stddev aggregate on id
-    }
-    stddev_samp {
-      id  # stddev_samp aggregate on id
-    }
-    stddev_pop {
-      id  # stddev_pop aggregate on id
-    }
-    variance {
-      id  # variance aggregate on id
-    }
-    var_samp {
-      id  # var_samp aggregate on id
-    }
-    var_pop {
-      id  # var_pop aggregate on id
-    }
-    max {
-      id  # max aggregate on id
-    }
-    min {
-      id  # min aggregate on id
-    }
-  }
+Below, you'll find an example of an aggregate object based on the definition above:
 
-  nodes {  # objects
-    id  # scalar field
-    name  # scalar field
-
-    article {  # nested object
-      title
-    }
-
-    article_aggregate {  # aggregate nested object
-      aggregate {
-        count
+<GraphiQLIDE
+  query={`query DistinctOnProductsQuery {
+  distinct_on: products(
+    distinct_on: "category"
+  ) {
+    aggregate {
+      count
+      sum {
+        price
       }
-      nodes {
-        title
+      avg {
+        price
       }
+      stddev {
+        price
+      }
+      stddev_samp {
+        price
+      }
+      stddev_pop {
+        price
+      }
+      variance {
+        price
+      }
+      var_samp {
+        price
+      }
+      var_pop {
+        price
+      }
+      max {
+        price
+      }
+      min {
+        price
+      }
+    }
+    nodes {
+      id
+      name
+      category
+      price
     }
   }
 }
-```
+`}
+  response={`{
+  "data": {
+    "distinct_on: products": {
+      "aggregate": {
+        "count": 4,
+        "sum": {
+          "price": 150
+        },
+        "avg": {
+          "price": 37.5
+        },
+        "stddev": {
+          "price": 16.33
+        },
+        "stddev_samp": {
+          "price": 18.71
+        },
+        "stddev_pop": {
+          "price": 15
+        },
+        "variance": {
+          "price": 267.19
+        },
+        "var_samp": {
+          "price": 350
+        },
+        "var_pop": {
+          "price": 225
+        },
+        "max": {
+          "price": 50
+        },
+        "min": {
+          "price": 20
+        }
+      },
+      "nodes": [
+        {
+          "id": 1,
+          "name": "Product 1",
+          "category": "Category 1",
+          "price": 20
+        },
+        {
+          "id": 2,
+          "name": "Product 2",
+          "category": "Category 2",
+          "price": 30
+        },
+        {
+          "id": 3,
+          "name": "Product 3",
+          "category": "Category 3",
+          "price": 40
+        },
+        {
+          "id": 4,
+          "name": "Product 4",
+          "category": "Category 4",
+          "price": 50
+        }
+      ]
+    }
+  }
+}
+`}
+/>
 
 ### Argument
 
-<div className="parsed-literal">
+An argument is a value passed to a field. Arguments can be simple or complex. Within Hasura, you can use four types of
+arguments:
 
-<pre>
-  <code>
-    <a href="#distinctonexp">DistinctOnExp</a>
-    {` | `}
-    <a href="#whereexp">WhereExp</a>
-    {` | `}
-    <a href="#orderbyexp">OrderByExp</a>
-    {` | `}
-    <a href="#paginationexp">PaginationExp</a>
-  </code>
-</pre>
-
-</div>
+| Argument type                   | GraphQL expression                 | Description                                                                                 |
+| ------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------- |
+| [DistinctOnExp](#distinctonexp) | `distinct_on`                      | A distinct on expression that specifies the columns on which to apply the distinct operator |
+| [WhereExp](#whereexp)           | `where`                            | A where expression that specifies the filter criteria                                       |
+| [OrderByExp](#orderbyexp)       | `order_by`                         | An order by expression that specifies the sort order                                        |
+| [PaginationExp](#paginationexp) | `offset: <OFFSET>, limit: <LIMIT>` | A pagination expression that specifies the limit and offset                                 |
 
 #### DistinctOnExp {#distinctonexp}
+
+The distinct on expression specifies the columns on which to apply the distinct operator. This is useful for eliminating
+duplicate rows in the result set.
 
 <div className="parsed-literal">
 
@@ -324,10 +441,13 @@ query {
 }
 ```
 
+In the example above, the `title` column is used to eliminate duplicate rows in the result set. Our query will return
+only one row for each unique title.
+
 ##### TableSelectColumnEnum {#tableselectcolumnenum}
 
 ```graphql
-#example table_select_column enum for "article" table
+# example table_select_column enum for "article" table
 enum article_select_column {
   id
   title
@@ -338,6 +458,9 @@ enum article_select_column {
 ```
 
 #### WhereExp {#whereexp}
+
+The where expression specifies the filter criteria. This is useful for filtering the result set to only include records
+that match the specified criteria.
 
 <div className="parsed-literal">
 
@@ -363,29 +486,26 @@ query {
 }
 ```
 
+In the example above, the `author` field is filtered to only include authors with a rating greater than 4.
+
 ##### BoolExp
 
-<div className="parsed-literal">
+The boolean expression is used to filter the result set by a specified criteria. It can be used in conjunction with
+other boolean expressions to create complex filters. Hasura makes the following boolean expressions available:
 
-<pre>
-  <code>
-    <a href="#andexp">AndExp</a>
-    {` | `}
-    <a href="#orexp">OrExp</a>
-    {` | `}
-    <a href="#notexp">NotExp</a>
-    {` | `}
-    <a href="#trueexp">TrueExp</a>
-    {` | `}
-    <a href="#columnexp">ColumnExp</a>
-    {` | `}
-    <a href="#aggregationexp">AggregationExp</a>
-  </code>
-</pre>
-
-</div>
+| Boolean expression                | GraphQL expression         | Description                                                                  |
+| --------------------------------- | -------------------------- | ---------------------------------------------------------------------------- |
+| [AndExp](#andexp)                 | `_and`                     | A boolean expression that specifies the logical AND operator.                |
+| [OrExp](#orexp)                   | `_or`                      | A boolean expression that specifies the logical OR operator.                 |
+| [NotExp](#notexp)                 | `_not`                     | A boolean expression that specifies the logical NOT operator.                |
+| [TrueExp](#trueexp)               | `Boolean!`                 | A boolean expression that specifies the logical TRUE operator.               |
+| [ColumnExp](#columnexp)           | `<columnName>`             | A boolean expression that specifies a column.                                |
+| [AggregationExp](#aggregationexp) | `<relationship>_aggregate` | A boolean expression that specifies an aggregation on an array relationship. |
 
 ###### AndExp {#andexp}
+
+The `_and` expression specifies the logical AND operator. You can use the `_and` operator to combine multiple boolean
+expressions into a single expression where all expressions must evaluate to true.
 
 <div className="parsed-literal">
 
@@ -401,7 +521,8 @@ query {
 
 </div>
 
-_Example_
+In the example below, the `article` field is filtered to only include articles with a rating greater than 4 and a
+publication date greater than 2018-01-01.
 
 ```graphql
 query {
@@ -462,6 +583,9 @@ rating: {
 
 ###### OrExp {#orexp}
 
+The `_or` expression specifies the logical OR operator. You can use the `_or` operator to combine multiple boolean
+expressions into a single expression where at least one of the sub-expressions must evaluate to true.
+
 <div className="parsed-literal">
 
 <pre>
@@ -476,7 +600,8 @@ rating: {
 
 </div>
 
-_Example_
+In the example below, the `article` field is filtered to only include articles with a rating greater than 4 or that are
+published.
 
 ```graphql
 query {
@@ -530,6 +655,9 @@ _Example:_
 
 ###### NotExp
 
+The `_not` expression specifies the logical NOT operator. You can use the `_not` operator to negate a boolean
+expression. This is useful when you want to filter out results that match a certain criteria.
+
 <div className="parsed-literal">
 
 <pre>
@@ -544,7 +672,8 @@ _Example:_
 
 </div>
 
-_Example_
+In the example below, the `article` field is filtered to only include articles with a title that is not an empty string.
+Effectively, this will filter out articles with an empty title.
 
 ```graphql
 query {
@@ -557,11 +686,15 @@ query {
 
 ###### TrueExp
 
+The `_true` expression specifies the logical TRUE operator. You can use the `_true` operator to return all rows in a
+table which match the specified criteria.
+
 <pre>
   <code>{`{}`}</code>
 </pre>
 
-_Example_
+In the example below, the `author` field is filtered to only include authors that have at least one article.
+Essentially, we're saying "return all authors if articles is `true`."
 
 ```graphql
 query {
@@ -579,6 +712,9 @@ query {
 
 ###### ColumnExp
 
+The `_col` expression specifies a column. You can use the `_col` operator to reference a column in a table. In the
+definition below, the `field-name` is the name of the column.
+
 <div className="parsed-literal">
 
 <pre>
@@ -593,7 +729,8 @@ query {
 
 </div>
 
-_Example_
+In the example below, the `article` field is filtered to only include articles with a title that is equal to "GraphQL
+Tutorial".
 
 ```graphql
 query {
@@ -605,6 +742,8 @@ query {
 ```
 
 ###### Operator {#operator}
+
+Operators are used to compare a column value with a specified value. The following operators are available:
 
 <div id="generic-operators" />
 
@@ -794,6 +933,9 @@ Currently, only the following type casts are supported:
 
 ###### AggregationExp
 
+The `AggregationExp` type is used to specify aggregation predicates in the `where` clause of a query. This requires an
+array relationship.
+
 <div className="parsed-literal">
 
 <pre>
@@ -808,28 +950,24 @@ Currently, only the following type casts are supported:
 
 </div>
 
-Note that each `field-name_aggregate` object may refer to only one aggregation
-predicate. Multiple aggregation predicates can be specified via the `_and`
-operator, however.
+Note that each `field-name_aggregate` object may refer to only one aggregation predicate. Multiple aggregation
+predicates can be specified via the `_and` operator, however.
 
-_Example_
+In the following example, we query for restaurants that have an average review rating greater than 5. The `where` clause
+specifies an aggregation predicate on the `reviews` field, which is of type `review_aggregate`.
 
 ```graphql
-query {
-  restaurant ( where: {
-    reviews_aggregate: {
-      average: {
-        arguments: "rating",
-        predicate: { _gt: 5 }
-      }
-    }
-  })
-  {
+query RestaurantsWithHighRatings {
+  restaurant(where: { reviews_aggregate: { average: { arguments: "rating", predicate: { _gt: 5 } } } }) {
     name
   }
+}
 ```
 
 #### AggregationPredicate
+
+The `AggregationPredicate` type is used to specify aggregation predicates in the `where` clause of a query. It is
+composed of an aggregation function and a predicate.
 
 <div className="parsed-literal">
 
@@ -850,9 +988,8 @@ query {
 
 </div>
 
-Aggregation functions may differ in the `arguments` that they support. For
-instance, `count` may take an arbitrary number of arguments, while `sum` takes
-exactly one. Certain functions take named arguments.
+Aggregation functions may differ in the `arguments` that they support. For instance, `count` may take an arbitrary
+number of arguments, while `sum` takes exactly one. Certain functions take named arguments.
 
 The functions supported are specific to each backend.
 
@@ -888,6 +1025,8 @@ _Examples_
 
 #### OrderByExp {#orderbyexp}
 
+The `OrderByExp` type is used to specify ordering in the `order_by` clause of a query.
+
 <div className="parsed-literal">
 
 <pre>
@@ -902,32 +1041,22 @@ _Examples_
 
 </div>
 
-_Example 1_
+In the example below, we query for articles, ordered by their rating in descending order.
 
 ```graphql
-query {
-  author(order_by: { rating: desc }) {
+query ArticlesOrderedByRating {
+  article(order_by: { rating: desc }) {
     name
     rating
   }
 }
 ```
 
-_Example 2_
+Here, we query for articles, ordered by their rating in descending order, and then by their author's id in ascending
+order.
 
 ```graphql
-query {
-  article(order_by: [{ id: desc }, { author: { id: asc } }]) {
-    title
-    rating
-  }
-}
-```
-
-_Example 3_
-
-```graphql
-query {
+query ArticlesOrderedByRatingAndAuthorId {
   article(order_by: [{ id: desc }, { author: { id: asc } }]) {
     title
     rating
@@ -936,6 +1065,9 @@ query {
 ```
 
 ##### TableOrderBy
+
+`TableOrderBy` is a composite type that consists of one or more fields, each of which specifies the order in which query
+results should be sorted.
 
 **For columns**
 
@@ -951,7 +1083,7 @@ query {
 
 </div>
 
-_Example_
+In the example below, we query for articles, ordered by their rating in ascending order:
 
 ```graphql
 query {
@@ -976,7 +1108,7 @@ query {
 
 </div>
 
-_Example_
+Here, we query for articles, ordered by their author's rating in descending order:
 
 ```graphql
 query {
@@ -1001,7 +1133,7 @@ query {
 
 </div>
 
-_Example_
+Below, we query for authors, ordered by the maximum rating of their articles in ascending order:
 
 ```graphql
 query {
@@ -1082,13 +1214,11 @@ input article_order_by {
 
 </div>
 
-_Example_
-
 Consider a table `student` contains integer columns for course subjects to store marks. A computed field with the name
 `total_marks` defined to calculate sum of all subject marks. We need to fetch `student` rows sorted by `total_marks`.
 
 ```graphql
-query {
+query StudentsOrderByTotalMarks {
   student(order_by: { total_marks: desc }) {
     id
     name
@@ -1113,13 +1243,11 @@ Computed fields returning set of table rows can be used to sort the query by the
 
 </div>
 
-_Example_
-
 A computed field `get_articles` is defined on the `author` table which returns set of `article` table rows. Fetch
 authors sorted by the count of their articles.
 
 ```graphql
-query {
+query AuthorsOrderByArticleCount {
   author(order_by: { get_articles_aggregate: { count: desc } }) {
     id
     name
@@ -1133,6 +1261,8 @@ query {
 ```
 
 ###### OrderByEnum {#orderbyenum}
+
+We can use the `order_by` enum type to specify the order in which query results should be sorted.
 
 ```graphql
 #the order_by enum type
@@ -1152,7 +1282,20 @@ enum order_by {
 }
 ```
 
+In the example below, we query for articles, ordered by their rating in ascending order:
+
+```graphql
+query ArticleOrderByRating {
+  article(order_by: { rating: asc }) {
+    title
+    content
+  }
+}
+```
+
 ###### AggregateOrderBy
+
+We can use the `aggregate_order_by` enum type to specify the order in which query results should be sorted.
 
 **Count aggregate**
 
@@ -1168,10 +1311,10 @@ enum order_by {
 
 </div>
 
-_Example_
+In this example, we query for authors, ordered by the count of their articles in descending order:
 
 ```graphql
-query {
+query AuthorOrderByArticleCount {
   author(order_by: { articles_aggregate: { count: desc } }) {
     name
   }
@@ -1179,6 +1322,8 @@ query {
 ```
 
 **Operation aggregate**
+
+The `operation` aggregate type is used to specify the order in which query results should be sorted.
 
 <div className="parsed-literal">
 
@@ -1192,10 +1337,10 @@ query {
 
 </div>
 
-_Example_
+Below, we query for authors, ordered by the sum of their article ids in descending order:
 
 ```graphql
-query {
+query AuthorOrderBySumOfArticles {
   author(order_by: { articles_aggregate: { sum: { id: desc } } }) {
     id
   }
@@ -1206,6 +1351,9 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`, `stddev_samp`, `s
 `var_pop`.
 
 ###### TableAggOpOrderBy
+
+`table_agg_op_order_by` is a type used to specify the order in which the aggregate query results should be returned. It
+is used as an argument to the `order_by` field of an aggregate query.
 
 <div className="parsed-literal">
 
@@ -1219,7 +1367,27 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`, `stddev_samp`, `s
 
 </div>
 
+In the example below, we query for an `orders_aggregate` , ordered by the sum of their total_price in descending order:
+
+```graphql
+query AggregateOrderBy {
+  orders_aggregate(order_by: { sum_total_price: desc }) {
+    aggregate {
+      sum {
+        total_price
+      }
+    }
+    nodes {
+      customer_id
+    }
+  }
+}
+```
+
 #### PaginationExp {#paginationexp}
+
+Pagination expression is used to paginate the query results. It is used as an argument to the `limit` and `offset`
+fields of a query.
 
 <div className="parsed-literal">
 
@@ -1232,10 +1400,10 @@ Available operations are `sum`, `avg`, `max`, `min`, `stddev`, `stddev_samp`, `s
 
 </div>
 
-_Example_
+In this final example, we query for articles, limiting the results to 6 rows, and skipping the first 2 rows:
 
 ```graphql
-query {
+query ArticlesPagination {
   article(limit: 6, offset: 2) {
     title
     content

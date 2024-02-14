@@ -2,7 +2,6 @@ import { DownOutlined } from '@ant-design/icons';
 import { Tree } from 'antd';
 import { Key } from 'antd/lib/table/interface';
 import React from 'react';
-import { useTreeData } from './hooks/useTreeData';
 import '../../../../features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/index.css';
 import { GDCTreeData } from './types';
 

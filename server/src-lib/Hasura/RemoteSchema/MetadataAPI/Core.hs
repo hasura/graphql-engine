@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.MetadataAPI.Core
   ( AddRemoteSchemaQuery (..),
     RemoteSchemaNameQuery (..),
@@ -14,19 +12,21 @@ module Hasura.RemoteSchema.MetadataAPI.Core
   )
 where
 
-import Data.Aeson.TH qualified as J
+import Data.Aeson qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
+import Hasura.GraphQL.Schema.Common (SchemaSampledFeatureFlags)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
@@ -34,7 +34,7 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Build (addRemoteSchemaP2Setup)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Services
-import Hasura.Session
+import Hasura.Session (UserInfoM)
 import Hasura.Tracing qualified as Tracing
 
 -- | The payload for 'add_remote_schema', and a component of 'Metadata'.
@@ -49,14 +49,24 @@ data AddRemoteSchemaQuery = AddRemoteSchemaQuery
 
 instance NFData AddRemoteSchemaQuery
 
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
+instance J.FromJSON AddRemoteSchemaQuery where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON AddRemoteSchemaQuery where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 newtype RemoteSchemaNameQuery = RemoteSchemaNameQuery
   { _rsnqName :: RemoteSchemaName
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
+instance J.FromJSON RemoteSchemaNameQuery where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON RemoteSchemaNameQuery where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runAddRemoteSchema ::
   ( QErrM m,
@@ -67,14 +77,16 @@ runAddRemoteSchema ::
     Tracing.MonadTrace m
   ) =>
   Env.Environment ->
+  SchemaSampledFeatureFlags ->
   AddRemoteSchemaQuery ->
   m EncJSON
-runAddRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
+runAddRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name defn comment) = do
   addRemoteSchemaP1 name
-  void $ addRemoteSchemaP2Setup env name defn
-  buildSchemaCacheFor (MORemoteSchema name) $
-    MetadataModifier $
-      metaRemoteSchemas %~ OMap.insert name remoteSchemaMeta
+  void $ addRemoteSchemaP2Setup name env schemaSampledFeatureFlags defn
+  buildSchemaCacheFor (MORemoteSchema name)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    %~ InsOrdHashMap.insert name remoteSchemaMeta
   pure successMsg
   where
     -- NOTE: permissions here are empty, manipulated via a separate API with
@@ -87,10 +99,11 @@ addRemoteSchemaP1 ::
   m ()
 addRemoteSchemaP1 name = do
   remoteSchemaNames <- getAllRemoteSchemas <$> askSchemaCache
-  when (name `elem` remoteSchemaNames) $
-    throw400 AlreadyExists $
-      "remote schema with name "
-        <> name <<> " already exists"
+  when (name `elem` remoteSchemaNames)
+    $ throw400 AlreadyExists
+    $ "remote schema with name "
+    <> name
+    <<> " already exists"
 
 runRemoveRemoteSchema ::
   (QErrM m, UserInfoM m, CacheRWM m, MetadataM m) =>
@@ -98,9 +111,9 @@ runRemoveRemoteSchema ::
   m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   void $ removeRemoteSchemaP1 rsn
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropRemoteSchemaInMetadata rsn
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropRemoteSchemaInMetadata rsn
   pure successMsg
 
 removeRemoteSchemaP1 ::
@@ -110,9 +123,9 @@ removeRemoteSchemaP1 ::
 removeRemoteSchemaP1 rsn = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
-  void $
-    onNothing (Map.lookup rsn rmSchemas) $
-      throw400 NotExists "no such remote schema"
+  void
+    $ onNothing (HashMap.lookup rsn rmSchemas)
+    $ throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
       roles = mapMaybe getRole depObjs
       nonPermDependentObjs = filter nonPermDependentObjPredicate depObjs
@@ -141,14 +154,16 @@ runReloadRemoteSchema ::
   m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   remoteSchemas <- getAllRemoteSchemas <$> askSchemaCache
-  unless (name `elem` remoteSchemas) $
-    throw400 NotExists $
-      "remote schema with name " <> name <<> " does not exist"
+  unless (name `elem` remoteSchemas)
+    $ throw400 NotExists
+    $ "remote schema with name "
+    <> name
+    <<> " does not exist"
 
   let invalidations = mempty {ciRemoteSchemas = S.singleton name}
   metadata <- getMetadata
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata Nothing
   pure successMsg
 
 runIntrospectRemoteSchema ::
@@ -156,7 +171,7 @@ runIntrospectRemoteSchema ::
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
   RemoteSchemaCtx {..} <-
-    Map.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
+    HashMap.lookup rsName (scRemoteSchemas sc) `onNothing` throw400 NotExists ("remote schema: " <> rsName <<> " not found")
   pure $ encJFromLBS _rscRawIntrospectionResult
 
 runUpdateRemoteSchema ::
@@ -168,13 +183,14 @@ runUpdateRemoteSchema ::
     Tracing.MonadTrace m
   ) =>
   Env.Environment ->
+  SchemaSampledFeatureFlags ->
   AddRemoteSchemaQuery ->
   m EncJSON
-runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
+runUpdateRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name defn comment) = do
   remoteSchemaNames <- getAllRemoteSchemas <$> askSchemaCache
   remoteSchemaMap <- _metaRemoteSchemas <$> getMetadata
 
-  let metadataRMSchema = OMap.lookup name remoteSchemaMap
+  let metadataRMSchema = InsOrdHashMap.lookup name remoteSchemaMap
       metadataRMSchemaPerms = maybe mempty _rsmPermissions metadataRMSchema
       -- `metadataRMSchemaURL` and `metadataRMSchemaURLFromEnv` represent
       -- details that were stored within the metadata
@@ -185,11 +201,13 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
       currentRMSchemaURL = _rsdUrl defn
       currentRMSchemaURLFromEnv = _rsdUrlFromEnv defn
 
-  unless (name `elem` remoteSchemaNames) $
-    throw400 NotExists $
-      "remote schema with name " <> name <<> " doesn't exist"
+  unless (name `elem` remoteSchemaNames)
+    $ throw400 NotExists
+    $ "remote schema with name "
+    <> name
+    <<> " doesn't exist"
 
-  rsi <- validateRemoteSchemaDef env defn
+  rsi <- validateRemoteSchemaDef name env defn
 
   -- we only proceed to fetch the remote schema if the url has been updated
   unless
@@ -197,14 +215,15 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
         || (isJust metadataRMSchemaURLFromEnv && isJust currentRMSchemaURLFromEnv && metadataRMSchemaURLFromEnv == currentRMSchemaURLFromEnv)
     )
     $ void
-    $ fetchRemoteSchema env name rsi
+    $ fetchRemoteSchema env schemaSampledFeatureFlags rsi
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MORemoteSchema name) $
-      MetadataModifier $
-        metaRemoteSchemas %~ OMap.insert name (remoteSchemaMeta metadataRMSchemaPerms)
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MORemoteSchema name)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    %~ InsOrdHashMap.insert name (remoteSchemaMeta metadataRMSchemaPerms)
 
   pure successMsg
   where

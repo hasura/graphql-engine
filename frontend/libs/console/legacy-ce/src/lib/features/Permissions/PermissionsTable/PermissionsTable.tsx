@@ -6,9 +6,30 @@ import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
+import { useDriverCapabilities } from '../../Data/hooks/useDriverCapabilities';
+import { Capabilities } from '@hasura/dc-api-types';
+import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
+import { useIsTableView } from '../../Data/hooks/useIsTableView';
+import { isPermissionCheckboxDisabled } from './utils/isPermissionCheckboxDisabled';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
 type QueryType = (typeof queryType)[number];
+
+const getIsColumnEditable = (
+  roleName: string,
+  isView: boolean | undefined,
+  driverSupportedQueries: string[],
+  permissionType: string
+) => {
+  if (roleName === 'admin') return false;
+
+  if (isView) {
+    return permissionType === 'select';
+  }
+  if (driverSupportedQueries.includes(permissionType)) return true;
+
+  return false;
+};
 
 interface ViewPermissionsNoteProps {
   viewsSupported: boolean;
@@ -62,7 +83,14 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     table,
   });
 
+  const driverCapabilities = useDriverCapabilities({ dataSourceName });
+  const driverSupportedQueries = getDriversSupportedQueryTypes(
+    driverCapabilities?.data as Capabilities
+  );
+
   const [state, send] = machine;
+
+  const { data: isView } = useIsTableView({ dataSourceName, table });
 
   if (isLoading)
     return (
@@ -115,11 +143,18 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     isSelectable={bulkSelect.isSelectable}
                     isSelected={state.context.bulkSelections.includes(roleName)}
                     machine={machine}
+                    disabled={isPermissionCheckboxDisabled(permissionTypes)}
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {
                     // TODO: add checks to see what permissions are supported by each db
-                    const isEditable = true;
+
+                    const isEditable = getIsColumnEditable(
+                      roleName,
+                      isView,
+                      driverSupportedQueries,
+                      permissionType
+                    );
 
                     if (isNewRole) {
                       return (

@@ -8,6 +8,11 @@
       "executor": "@hasura/internal-plugin:build-server-assets",
       "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
       "outputs": ["{workspaceRoot}/dist/apps/server-assets-console-ee"],
+      "dependsOn": ["validate-javascript-bundle-output"]
+    },
+    "validate-javascript-bundle-output": {
+      "executor": "@hasura/internal-plugin:validate-javascript-bundle-output",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
       "dependsOn": ["build"]
     },
     "build": {
@@ -19,6 +24,7 @@
         "outputPath": "dist/apps/console-ee",
         "index": "apps/console-ee/src/index.html",
         "baseHref": "/",
+        "buildLibsFromSource": false,
         "main": "apps/console-ee/src/main.tsx",
         "polyfills": "apps/console-ee/src/polyfills.ts",
         "tsConfig": "apps/console-ee/tsconfig.app.json",
@@ -85,7 +91,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
@@ -97,5 +103,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:console", "type:app", "meta:legacy"]
 }

@@ -1,0 +1,189 @@
+---
+sidebar_label: Google Cloud SQL for MySQL
+description: Using Hasura with a Google Cloud SQL for MySQL database
+title: 'Cloud: Using Hasura Cloud with a Google Cloud SQL for MySQL database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - sql
+  - mysql
+  - gcp
+sidebar_position: 3
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to a Google Cloud SQL for MySQL Database
+
+## Introduction
+
+This guide explains how to connect a new or existing [Google Cloud SQL for MySQL database](https://cloud.google.com/sql)
+to a Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions.
+
+:::info Hasura Cloud or self-hosted steps
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-gcp).
+
+:::
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-gcp}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
+JDBC URL. We'll create this in the next step and then come back here.
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
+
+## Step 3: Create a MySQL DB on Google Cloud SQL {#create-mysql-db-gcp}
+
+:::info Already have an existing database?
+
+If you have an existing MySQL database on Google Cloud SQL, you can skip this step and move on to
+[step 4](#allow-connections).
+
+:::
+
+Log into the [GCP console](https://console.cloud.google.com/).
+
+On the left-side navigation, scroll down to `Storage` and click on `SQL`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/navigate-to-sql.png" alt="Navigate to SQL in GCP" width="250px" />
+
+On the top, click on `Create instance`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/create-instance.png" alt="Create database instance in GCP" width="1000px" />
+
+Select MySQL:
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/select-MySQL.png" alt="Select MySQL database instance in GCP" width="1000px" />
+
+Select an instance ID, as well as a default user password. Choose a preset, and, if required, a specific region and
+zone.
+
+<Thumbnail
+  src="/img/cloud-dbs/gcp/mysql/configure-instance.png"
+  alt="Configure database instance in GCP"
+  width="1000px"
+/>
+
+Then click `Create Instance`.
+
+## Step 4: Allow connections to your DB from Hasura {#allow-connections}
+
+On the dashboard of your Google Cloud SQL database instance, on the left sidebar, click on `Connections` and then the
+`Networking` tab. Then scroll down to the checkbox `Public IP`, and click `Add a network`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/connections.png" alt="Navigate to connections in GCP" />
+
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
+
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Note
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
+
+Enter the Hasura IP address that you copied along with a name (e.g., `Hasura`):
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/add-network.png" alt="Add a new network in GCP" />
+
+Then click `Done` and `Save`.
+
+## Step 5: Construct the database connection URL {#construct-db-url-gcp}
+
+The structure of the database connection URL looks as follows:
+
+```text
+jdbc:mysql://<hostname>:<port>/<database_name>?user=<username>&password=<password>
+```
+
+- `port`: The default port for MySQL is `3306` if not specified otherwise.
+- `database_name`: The name is `mysql` by default unless otherwise specified.
+- `username`: If you have a separate database user, the username will be theirs. If you didn't specify a user, the
+  default username is `root`.
+- `password`: If you have a separate database user, use their password. Otherwise, use the password that you chose when
+  creating the database.
+- `hostname`: The public IP can be obtained by clicking on `Overview` on the left-side navigation and then scrolling
+  down to `Connect to this instance`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/public-ip.png" alt="Find the public IP for a GCP MySQL database" />
+
+:::info About Cloud SQL connections
+
+If you're having trouble creating your connection string, check out
+[Google Cloud SQL's docs](https://cloud.google.com/sql/docs/mysql/connect-overview?_ga=2.46986085.-395235927.1674823952#external-connection-methods).
+
+:::
+
+## Step 6: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we created in [step 5](#construct-db-url-gcp):
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/gcp-complete.png" alt="Database setup" />
+
+Then click `Connect Database`.
+
+:::info Database URL security
+
+It is recommended to set database connection URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) in Hasura Engine
+instead of raw database URLs which would be saved to metadata and likely committed to a repository which may be a
+security risk.
+
+:::
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
+Track the tables on which you want to create your API, and voilà: you're ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/hasura-console.png" alt="Hasura Console" />
+
+## Next steps
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/domains.mdx)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info MySQL feature support
+
+For more information on which MySQL features we support, check out
+[this page](/databases/mysql/index.mdx#feature-support).
+
+:::
+
+### Auth Proxy
+
+Google Cloud SQL offers a [Cloud SQL Auth proxy](https://cloud.google.com/sql/docs/mysql/sql-proxy) that can be used to
+connect to your database. This is useful if you want to connect to your database from a local machine or a server that
+doesn't have a public IP address.
+
+To use the Cloud SQL Auth proxy, follow the instructions in the
+[Cloud SQL Auth proxy docs](https://cloud.google.com/sql/docs/mysql/sql-proxy#install).

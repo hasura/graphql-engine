@@ -167,7 +167,7 @@ describe('useExportRows', () => {
 
     expect(downloadObjectAsJsonFile).not.toHaveBeenCalled();
     expect(downloadObjectAsCsvFile).toHaveBeenCalledWith(
-      expect.stringContaining('export_Album_'),
+      expect.stringContaining('export_public_Album'),
       expectedResult
     );
   });
@@ -181,7 +181,7 @@ describe('useExportRows', () => {
 
     expect(downloadObjectAsCsvFile).not.toHaveBeenCalled();
     expect(downloadObjectAsJsonFile).toHaveBeenCalledWith(
-      expect.stringContaining('export_Album_'),
+      expect.stringContaining('export_public_Album'),
       expectedResult
     );
   });

@@ -1,6 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { FiSearch } from 'react-icons/fi';
-import { z } from 'zod';
 import { Input } from '.';
 import { Button } from '../Button';
 

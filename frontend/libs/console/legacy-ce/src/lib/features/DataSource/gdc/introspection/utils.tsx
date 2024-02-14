@@ -1,24 +1,36 @@
-import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';
 import { TableColumn } from '../../types';
+import { TbMathFunction } from 'react-icons/tb';
 
 export function convertToTreeData(
   tables: string[][],
   key: string[],
-  dataSourceName: string
+  dataSourceName: string,
+  mode?: 'function'
 ): DataNode[] {
   if (tables.length === 0) return [];
 
   if (tables[0].length === 1) {
     const leafNodes: DataNode[] = tables.map(table => {
       return {
-        icon: <FaTable />,
-        key: JSON.stringify({
-          database: dataSourceName,
-          table: [...key, table[0]],
-        }),
+        icon:
+          mode === 'function' ? (
+            <TbMathFunction className="text-muted mr-xs" />
+          ) : (
+            <FaTable />
+          ),
+        key:
+          mode === 'function'
+            ? JSON.stringify({
+                database: dataSourceName,
+                function: [...key, table[0]],
+              })
+            : JSON.stringify({
+                database: dataSourceName,
+                table: [...key, table[0]],
+              }),
         title: table[0],
       };
     });
@@ -41,7 +53,7 @@ export function convertToTreeData(
       {
         icon: <FaFolder />,
         selectable: false,
-        key: JSON.stringify([...key, levelValue[0]]),
+        key: JSON.stringify([...key, levelValue]),
         title: levelValue,
         children: convertToTreeData(
           _childTables,
@@ -56,21 +68,9 @@ export function convertToTreeData(
 }
 
 export function adaptAgentDataType(
-  sqlDataType: string
+  sqlDataType: TableColumn['dataType']
 ): TableColumn['dataType'] {
-  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
-    bool: ['bool'],
-    string: ['string'],
-    number: ['number'],
-    datetime: [],
-    timestamp: [],
-    xml: [],
-    json: [],
-  };
-
-  const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
-    value.includes(sqlDataType)
-  ) ?? ['string', []];
-
-  return dataType;
+  return typeof sqlDataType === 'string'
+    ? sqlDataType.toLowerCase()
+    : sqlDataType.type.toLowerCase();
 }

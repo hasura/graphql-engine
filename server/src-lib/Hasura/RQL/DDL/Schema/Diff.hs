@@ -14,29 +14,30 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson
-import Data.HashMap.Strict qualified as M
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.List.Extended
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (ConstraintName, FunctionName, TableName)
 import Hasura.Base.Error
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Rename
-import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.Metadata hiding (fmFunction, tmComputedFields, tmTable)
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
+import Hasura.Table.API
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (tmConfiguration)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta
@@ -99,7 +100,7 @@ data TableDiff (b :: BackendType) = TableDiff
   }
 
 getTableDiff ::
-  Backend b =>
+  (Backend b) =>
   TableMeta b ->
   TableMeta b ->
   TableDiff b
@@ -118,9 +119,9 @@ getTableDiff oldtm newtm =
     newCols = _ptmiColumns $ tmInfo newtm
 
     uniqueOrPrimaryCons =
-      map _cName $
-        maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
-          <> (_ucConstraint <$> toList (_ptmiUniqueConstraints (tmInfo newtm)))
+      map _cName
+        $ maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
+        <> (_ucConstraint <$> toList (_ptmiUniqueConstraints (tmInfo newtm)))
 
     mNewDesc = _ptmiDescription $ tmInfo newtm
 
@@ -131,16 +132,17 @@ getTableDiff oldtm newtm =
     -- foreign keys are considered dropped only if their oid
     -- and (ref-table, column mapping) are changed
     droppedFKeyConstraints =
-      map (_cName . _fkConstraint) $
-        HS.toList $
-          droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
+      map (_cName . _fkConstraint)
+        $ HS.toList
+        $ droppedFKeysWithOid
+        `HS.intersection` droppedFKeysWithUniq
     tmForeignKeys = fmap unForeignKeyMetadata . toList . _ptmiForeignKeys . tmInfo
     droppedFKeysWithOid =
-      HS.fromList $
-        (getDifferenceOn (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
+      HS.fromList
+        $ (getDifferenceOn (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
     droppedFKeysWithUniq =
-      HS.fromList $
-        (getDifferenceOn mkFKeyUniqId `on` tmForeignKeys) oldtm newtm
+      HS.fromList
+        $ (getDifferenceOn mkFKeyUniqId `on` tmForeignKeys) oldtm newtm
     mkFKeyUniqId (ForeignKey _ reftn colMap) = (reftn, colMap)
 
     -- calculate computed field diff
@@ -148,8 +150,8 @@ getTableDiff oldtm newtm =
     newComputedFieldMeta = tmComputedFields newtm
 
     droppedComputedFields =
-      map ccmName $
-        getDifferenceOn (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
+      map ccmName
+        $ getDifferenceOn (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
 
     alteredComputedFields =
       getOverlapWith (fmOid . ccmFunctionMeta) oldComputedFieldMeta newComputedFieldMeta
@@ -157,8 +159,9 @@ getTableDiff oldtm newtm =
     overloadedComputedFieldFunctions =
       let getFunction = fmFunction . ccmFunctionMeta
           getSecondElement (_ NE.:| list) = listToMaybe list
-       in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement) $
-            flip NE.groupBy newComputedFieldMeta $ \l r ->
+       in mapMaybe (fmap ((&&&) ccmName getFunction) . getSecondElement)
+            $ flip NE.groupBy newComputedFieldMeta
+            $ \l r ->
               ccmName l == ccmName r && getFunction l == getFunction r
 
     computedFieldDiff =
@@ -177,22 +180,24 @@ getTableChangeDeps ::
 getTableChangeDeps source tn tableDiff = do
   sc <- askSchemaCache
   -- for all the dropped columns
-  droppedColDeps <- fmap concat $
-    forM droppedCols $ \droppedCol -> do
+  droppedColDeps <- fmap concat
+    $ forM droppedCols
+    $ \droppedCol -> do
       let objId =
-            SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITableObj @b tn $
-                  TOCol @b droppedCol
+            SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj @b tn
+              $ TOCol @b droppedCol
       return $ getDependentObjs sc objId
   -- for all dropped constraints
-  droppedConsDeps <- fmap concat $
-    forM droppedFKeyConstraints $ \droppedCons -> do
+  droppedConsDeps <- fmap concat
+    $ forM droppedFKeyConstraints
+    $ \droppedCons -> do
       let objId =
-            SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITableObj @b tn $
-                  TOForeignKey @b droppedCons
+            SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj @b tn
+              $ TOForeignKey @b droppedCons
       return $ getDependentObjs sc objId
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
@@ -284,7 +289,8 @@ processTablesDiff ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   TableCache b ->
@@ -297,7 +303,7 @@ processTablesDiff source preActionTables tablesDiff = do
   for_ alteredTables $ \(oldQtn, tableDiff) -> do
     ti <-
       onNothing
-        (M.lookup oldQtn preActionTables)
+        (HashMap.lookup oldQtn preActionTables)
         (throw500 $ "old table metadata not found in cache: " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
@@ -308,7 +314,8 @@ alterTableInMetadata ::
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   TableCoreInfo b ->
@@ -344,26 +351,26 @@ alterTableInMetadata source ti tableDiff = do
       let ComputedFieldDiff _ altered overloaded = computedFieldDiff
           getFunction = fmFunction . ccmFunctionMeta
       forM_ overloaded $ \(columnName, function) ->
-        throw400 NotSupported $
-          "The function "
-            <> function
-              <<> " associated with computed field"
-            <> columnName
-              <<> " of table "
-            <> table
-              <<> " is being overloaded"
+        throw400 NotSupported
+          $ "The function "
+          <> function
+          <<> " associated with computed field"
+          <> columnName
+          <<> " of table "
+          <> table
+          <<> " is being overloaded"
       forM_ altered $ \(old, new) ->
         if
-            | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
-                throw400 NotSupported $
-                  "The type of function "
-                    <> getFunction old
-                      <<> " associated with computed field "
-                    <> ccmName old
-                      <<> " of table "
-                    <> table
-                      <<> " is being altered to \"VOLATILE\""
-            | otherwise -> pure ()
+          | (fmType . ccmFunctionMeta) new == FTVOLATILE ->
+              throw400 NotSupported
+                $ "The type of function "
+                <> getFunction old
+                <<> " associated with computed field "
+                <> ccmName old
+                <<> " of table "
+                <> table
+                <<> " is being altered to \"VOLATILE\""
+          | otherwise -> pure ()
 
 dropTablesInMetadata ::
   forall b m.
@@ -374,15 +381,16 @@ dropTablesInMetadata ::
   [TableName b] ->
   m ()
 dropTablesInMetadata source droppedTables =
-  forM_ droppedTables $
-    \tn -> tell $ MetadataModifier $ metaSources . ix source . toSourceMetadata . (smTables @b) %~ OMap.delete tn
+  forM_ droppedTables
+    $ \tn -> tell $ MetadataModifier $ metaSources . ix source . toSourceMetadata . (smTables @b) %~ InsOrdHashMap.delete tn
 
 alterColumnsInMetadata ::
   forall b m.
   ( MonadError QErr m,
     CacheRM m,
     MonadWriter MetadataModifier m,
-    BackendMetadata b
+    BackendMetadata b,
+    Column b ~ ColumnPath b
   ) =>
   SourceName ->
   [(RawColumnInfo b, RawColumnInfo b)] ->
@@ -391,28 +399,30 @@ alterColumnsInMetadata ::
   TableName b ->
   m ()
 alterColumnsInMetadata source alteredCols fields sc tn =
-  for_ alteredCols $
-    \( RawColumnInfo {rciName = oldName, rciType = oldType},
-       RawColumnInfo {rciName = newName, rciType = newType}
-       ) -> do
+  for_ alteredCols
+    $ \( RawColumnInfo {rciName = oldName, rciType = oldType},
+         RawColumnInfo {rciName = newName, rciType = newType}
+         ) -> do
         if
-            | oldName /= newName ->
-                renameColumnInMetadata oldName newName source tn fields
-            | oldType /= newType -> do
-                let colId =
-                      SOSourceObj source $
-                        AB.mkAnyBackend $
-                          SOITableObj @b tn $
-                            TOCol @b oldName
-                    typeDepObjs = getDependentObjsWith (== DROnType) sc colId
+          | oldName /= newName ->
+              renameColumnInMetadata oldName newName source tn fields
+          | oldType /= newType -> do
+              let colId =
+                    SOSourceObj source
+                      $ AB.mkAnyBackend
+                      $ SOITableObj @b tn
+                      $ TOCol @b oldName
+                  typeDepObjs = getDependentObjsWith (== DROnType) sc colId
 
-                unless (null typeDepObjs) $
-                  throw400 DependencyError $
-                    "cannot change type of column "
-                      <> oldName <<> " in table "
-                      <> tn <<> " because of the following dependencies: "
-                      <> reportSchemaObjs typeDepObjs
-            | otherwise -> pure ()
+              unless (null typeDepObjs)
+                $ throw400 DependencyError
+                $ "cannot change type of column "
+                <> oldName
+                <<> " in table "
+                <> tn
+                <<> " because of the following dependencies: "
+                <> reportSchemaObjs typeDepObjs
+          | otherwise -> pure ()
 
 removeDroppedColumnsFromMetadataField ::
   forall b m.
@@ -422,13 +432,15 @@ removeDroppedColumnsFromMetadataField ::
   TableCoreInfo b ->
   m ()
 removeDroppedColumnsFromMetadataField source droppedCols tableInfo = do
-  when (newColumnConfig /= originalColumnConfig) $
-    tell $
-      MetadataModifier $
-        tableMetadataSetter @b source tableName . tmConfiguration .~ newTableConfig
+  when (newColumnConfig /= originalColumnConfig)
+    $ tell
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName
+    . tmConfiguration
+    .~ newTableConfig
   where
     tableName = _tciName tableInfo
     originalTableConfig = _tciCustomConfig tableInfo
     originalColumnConfig = _tcColumnConfig originalTableConfig
-    newColumnConfig = foldl' (flip M.delete) originalColumnConfig droppedCols
+    newColumnConfig = foldl' (flip HashMap.delete) originalColumnConfig droppedCols
     newTableConfig = originalTableConfig & tcColumnConfig .~ newColumnConfig

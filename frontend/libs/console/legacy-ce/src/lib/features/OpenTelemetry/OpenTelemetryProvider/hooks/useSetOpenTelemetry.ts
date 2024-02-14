@@ -1,14 +1,14 @@
 import type { SetOpenTelemetryQuery } from '../../../hasura-metadata-types';
 
-import { useMetadataVersion, useMetadataMigration } from '../../../MetadataAPI';
+import { useMetadataMigration } from '../../../MetadataAPI';
 
 import { useFireNotification } from '../../../../new-components/Notifications';
-import { useInvalidateMetadata } from '../../../hasura-metadata-api';
 
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 
 import { formValuesToOpenTelemetry } from '../utils/openTelemetryToFormValues';
 import { useOnSetOpenTelemetryError } from './useOnSetOpenTelemetryError';
+import { useMetadata } from '../../../hasura-metadata-api';
 
 type QueryArgs = SetOpenTelemetryQuery['args'];
 
@@ -20,9 +20,8 @@ function errorTransform(error: unknown) {
  * Allow updating the OpenTelemetry configuration.
  */
 export function useSetOpenTelemetry() {
-  const mutation = useMetadataMigration({ errorTransform });
-  const { data: version } = useMetadataVersion();
-  const invalidateMetadata = useInvalidateMetadata();
+  const { mutate, ...rest } = useMetadataMigration({ errorTransform });
+  const { data: version } = useMetadata(m => m.resource_version);
 
   const { fireNotification } = useFireNotification();
 
@@ -34,7 +33,7 @@ export function useSetOpenTelemetry() {
     // Please note: not checking if the component is still mounted or not is made on purpose because
     // the callbacks do not direct mutate any component state.
     return new Promise<void>(resolve => {
-      mutation.mutate(
+      mutate(
         {
           query: {
             type: 'set_opentelemetry_config',
@@ -45,7 +44,6 @@ export function useSetOpenTelemetry() {
         {
           onSuccess: () => {
             resolve();
-            invalidateMetadata();
 
             fireNotification({
               title: 'Success!',
@@ -68,5 +66,6 @@ export function useSetOpenTelemetry() {
 
   return {
     setOpenTelemetry,
+    ...rest,
   };
 }

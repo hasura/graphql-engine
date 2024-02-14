@@ -13,7 +13,7 @@ where
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch (..), updateBatchIsEmpty)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (Postgres))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 
 -- | The various @update operators@ supported by PostgreSQL,
 -- i.e. the @_set@, @_inc@ operators that appear in the schema.
@@ -38,15 +38,15 @@ data PgUpdateVariant pgKind v
   = SingleBatch (UpdateBatch ('Postgres pgKind) UpdateOpExpression v)
   | MultipleBatches [UpdateBatch ('Postgres pgKind) UpdateOpExpression v]
 
-deriving stock instance Eq (UpdateBatch ('Postgres pgKind) UpdateOpExpression v) => Eq (PgUpdateVariant pgKind v)
+deriving stock instance (Eq (UpdateBatch ('Postgres pgKind) UpdateOpExpression v)) => Eq (PgUpdateVariant pgKind v)
 
-deriving stock instance Show (UpdateBatch ('Postgres pgKind) UpdateOpExpression v) => Show (PgUpdateVariant pgKind v)
+deriving stock instance (Show (UpdateBatch ('Postgres pgKind) UpdateOpExpression v)) => Show (PgUpdateVariant pgKind v)
 
-deriving stock instance Backend ('Postgres pgKind) => Functor (PgUpdateVariant pgKind)
+deriving stock instance (Backend ('Postgres pgKind)) => Functor (PgUpdateVariant pgKind)
 
-deriving stock instance Backend ('Postgres pgKind) => Foldable (PgUpdateVariant pgKind)
+deriving stock instance (Backend ('Postgres pgKind)) => Foldable (PgUpdateVariant pgKind)
 
-deriving stock instance Backend ('Postgres pgKind) => Traversable (PgUpdateVariant pgKind)
+deriving stock instance (Backend ('Postgres pgKind)) => Traversable (PgUpdateVariant pgKind)
 
 -- | Are we updating anything?
 updateVariantIsEmpty :: PgUpdateVariant b v -> Bool

@@ -1,16 +1,22 @@
 import { dataSource, TableColumn } from '../../../dataSources';
 
+const getDateISOString = () => new Date().toISOString();
+const getISODatePart = () => getDateISOString().slice(0, 10);
+const getISOTimePart = () => getDateISOString().slice(11, 19);
+
 export const getPlaceholder = (type: TableColumn['data_type']) => {
   switch (type) {
     case dataSource.columnDataTypes.TIMESTAMP:
-      return new Date().toISOString();
+    case dataSource.columnDataTypes.DATETIME:
+      return getDateISOString();
     case dataSource.columnDataTypes.DATE:
-      return new Date().toISOString().slice(0, 10);
+      return getISODatePart();
     case dataSource.columnDataTypes.TIME:
-      const time = new Date().toISOString().slice(11, 19);
+    case 'time':
+      // eslint-disable-next-line no-case-declarations
+      const time = getISOTimePart();
       return `${time}Z or ${time}+05:30`;
     case dataSource.columnDataTypes.JSONDTYPE:
-      return '{"name": "foo"} or [12, "bar"]';
     case dataSource.columnDataTypes.JSONB:
       return '{"name": "foo"} or [12, "bar"]';
     case dataSource.columnDataTypes.ARRAY:

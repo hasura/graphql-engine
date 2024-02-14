@@ -11,32 +11,26 @@ sidebar_label: Create Projects
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Create Projects
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free pro ee />
 
 ## Introduction
 
 You can create a new Hasura Cloud Project with either a new database, or an existing database with a publicly available
-IP address. For a list of supported databases and features [see here](/databases/index.mdx).
+IP address. For a list of supported databases and features [see here](/databases/feature-support.mdx).
 
 ## Project setup
 
-You can quickly and easily create a new Hasura Cloud Project. To begin, navigate to the
-[Projects](https://cloud.hasura.io/projects) page on Hasura Cloud and click the "New Project" link.
+Navigate to the [Projects](https://cloud.hasura.io/projects) page on Hasura Cloud and click the `New Project` link.
 
 This opens a form on the right where you can create your new project.
 
 Choose a pricing plan and select a region for your project.
 
-<Thumbnail
-  src="/img/projects/create-project_console_2.12.png"
-  alt="Create new project in Hasura Console"
-  width="900px"
-/>
+<Thumbnail src="/img/projects/create-project.png" alt="Create new project in Hasura Console" width="900px" />
 
 Once you have completed the project setup, click `Create Project`.
 
@@ -45,4 +39,4 @@ Once created, you can specify a new name for your Project if you want.
 ## Connect to a database
 
 Once your project is created you can connect to a new or existing database. For full details on how to connect to a
-database, see [connecting to a database here](/databases/connect-db/index.mdx).
+database, see [connecting to a database here](/databases/overview.mdx).

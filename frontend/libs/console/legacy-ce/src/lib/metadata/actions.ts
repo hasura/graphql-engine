@@ -75,7 +75,8 @@ import {
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
-import ExportMetadata from '../components/Services/Settings/MetadataOptions/ExportMetadata';
+import { hasuraToast } from '../new-components/Toasts';
+import { createTextWithLinks } from './hyperlinkErrorMessageLink';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -651,8 +652,29 @@ export const replaceMetadata =
       const successMsg = 'Metadata imported';
       const errorMsg = 'Failed importing metadata';
 
-      const customOnSuccess = () => {
+      const customOnSuccess = (
+        response: [{ warnings: { code: string; message: string }[] }]
+      ) => {
         if (successCb) successCb();
+        const title = (code: string) => {
+          if (code === 'illegal-event-trigger-name')
+            return 'Rename Event Trigger Suggested';
+          if (code === 'source-cleanup-failed') {
+            return 'Manual Event Trigger Cleanup Needed';
+          } else {
+            return 'Time Limit Exceeded System Limit';
+          }
+        };
+        response?.[0]?.warnings?.forEach(i => {
+          hasuraToast({
+            type: 'warning',
+            title: title(i.code),
+            children: createTextWithLinks(i.message),
+            toastOptions: {
+              duration: Infinity,
+            },
+          });
+        });
 
         const updateCurrentDataSource = (newState: MetadataResponse) => {
           const currentSource = newState.metadata.sources.find(
@@ -734,13 +756,23 @@ export const resetMetadata =
     return dispatch(
       requestAction(Endpoints.metadata, options as RequestInit)
     ).then(
-      () => {
+      (response: { warnings: { code: string; message: string }[] }) => {
         dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: '' });
         dispatch(exportMetadata());
-        if (successCb) {
-          successCb();
-        }
-        dispatch(showSuccessNotification('Metadata reset successfully!'));
+        if (successCb) successCb();
+
+        response?.warnings?.forEach(i => {
+          hasuraToast({
+            type: 'warning',
+            title: 'Manual Event Trigger Cleanup Needed',
+            children: createTextWithLinks(i.message),
+            toastOptions: {
+              duration: Infinity,
+            },
+          });
+        });
+
+        hasuraToast({ title: 'Metadata reset successfully!', type: 'success' });
       },
       error => {
         console.error(error);

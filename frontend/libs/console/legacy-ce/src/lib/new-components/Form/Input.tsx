@@ -63,11 +63,11 @@ export type InputProps = FieldWrapperPassThroughProps & {
   /**
    * The input field prepend label
    */
-  prependLabel?: string;
+  prependLabel?: string | React.ReactNode;
   /**
    * The input field append label
    */
-  appendLabel?: string;
+  appendLabel?: string | React.ReactNode;
   /**
    * Renders a button to clear the input onClick
    */
@@ -103,6 +103,11 @@ export type InputProps = FieldWrapperPassThroughProps & {
    * Optional right button
    */
   rightButton?: React.ReactElement;
+
+  /**
+   * Custom props to be passed to the HTML input element
+   */
+  fieldProps?: React.HTMLProps<HTMLInputElement>;
 };
 
 export const Input = ({
@@ -115,6 +120,7 @@ export const Input = ({
   prependLabel = '',
   appendLabel = '',
   dataTest,
+  dataTestId,
   clearButton,
   inputClassName,
   maybeError,
@@ -125,6 +131,7 @@ export const Input = ({
   label,
   className = '',
   rightButton,
+  fieldProps = {},
 }: InputProps) => {
   const showInputEndContainer = clearButton || (iconPosition === 'end' && icon);
 
@@ -151,7 +158,7 @@ export const Input = ({
           aria-label={label}
           data-test={dataTest}
           className={clsx(
-            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-muted',
+            'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder:text-slate-400',
             prependLabel !== '' ? 'rounded-l-none' : '',
             appendLabel !== '' ? 'rounded-r-none' : '',
             maybeError
@@ -166,14 +173,17 @@ export const Input = ({
             },
             type === 'file' && 'h-auto',
             inputClassName,
-            rightButton && 'rounded-r-none border-r-0'
+            rightButton && 'rounded-r-none border-r-0',
+            showInputEndContainer && 'pr-8'
           )}
           placeholder={placeholder}
           {...inputProps}
           onChange={onChange}
           onInput={onInput}
           disabled={disabled}
-          data-testid={name}
+          data-testid={dataTestId || name}
+          onWheelCapture={fieldProps?.onWheelCapture || undefined}
+          {...fieldProps}
         />
         {showInputEndContainer && (
           <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none">

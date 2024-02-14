@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Backends.Postgres.Execute.ConnectionTemplate
   ( PrimaryTag (..),
     DefaultTag (..),
@@ -22,9 +20,8 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Prelude
@@ -114,7 +111,12 @@ data ConnectionSetMemberTemplateContext = ConnectionSetMemberTemplateContext
   }
   deriving (Eq, Show, Generic)
 
-$(J.deriveJSON hasuraJSON ''ConnectionSetMemberTemplateContext)
+instance J.FromJSON ConnectionSetMemberTemplateContext where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON ConnectionSetMemberTemplateContext where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance Hashable ConnectionSetMemberTemplateContext
 
@@ -157,9 +159,14 @@ instance J.ToJSON PostgresResolvedConnectionTemplate where
 
 -- | Headers information for the connection template context
 data RequestContextHeaders = RequestContextHeaders (HashMap Text Text)
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveJSON hasuraJSON ''RequestContextHeaders)
+instance J.FromJSON RequestContextHeaders where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON RequestContextHeaders where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 -- | Data type for connection_set for connection template context
 newtype ConnectionSetTemplateContext = ConnectionSetTemplateContext {_getConnectionSet :: HashMap PostgresConnectionSetMemberName ConnectionSetMemberTemplateContext}
@@ -175,11 +182,11 @@ instance J.FromJSON ConnectionSetTemplateContext where
             pure (connSetMemberName, connSetMember)
         )
         (KM.toList o)
-    pure $ ConnectionSetTemplateContext (Map.fromList connections)
+    pure $ ConnectionSetTemplateContext (HashMap.fromList connections)
 
 instance J.ToJSON ConnectionSetTemplateContext where
   toJSON (ConnectionSetTemplateContext connections) =
-    J.Object $ KM.fromHashMap $ Map.map (J.toJSON) (Map.mapKeys (K.fromText . toTxt) connections)
+    J.Object $ KM.fromHashMap $ HashMap.map (J.toJSON) (HashMap.mapKeys (K.fromText . toTxt) connections)
 
 newtype QueryOperationType = QueryOperationType G.OperationType
   deriving (Show)
@@ -203,9 +210,14 @@ data QueryContext = QueryContext
   { _qcOperationName :: Maybe G.Name,
     _qcOperationType :: QueryOperationType
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''QueryContext)
+instance J.FromJSON QueryContext where
+  parseJSON = J.genericParseJSON hasuraJSON {J.omitNothingFields = True}
+
+instance J.ToJSON QueryContext where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 -- | Request information for connection template context
 data RequestContext = RequestContext
@@ -234,9 +246,14 @@ data PostgresConnectionTemplateContext = PostgresConnectionTemplateContext
     _pctcDefault :: DefaultTag,
     _pctcConnectionSet :: ConnectionSetTemplateContext
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveJSON hasuraJSON ''PostgresConnectionTemplateContext)
+instance J.FromJSON PostgresConnectionTemplateContext where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON PostgresConnectionTemplateContext where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 -- | Construct template context
 makeConnectionTemplateContext :: RequestContext -> [PostgresConnectionSetMemberName] -> PostgresConnectionTemplateContext
@@ -249,7 +266,7 @@ makeConnectionTemplateContext reqCtx connectionSetMembers =
     connectionSet
   where
     connectionSet =
-      ConnectionSetTemplateContext $ Map.fromList $ map (id &&& mkConnectionSetMemberTemplateContext) connectionSetMembers
+      ConnectionSetTemplateContext $ HashMap.fromList $ map (id &&& mkConnectionSetMemberTemplateContext) connectionSetMembers
 
 -- | We should move this to Data.Aeson.Kriti.Functions
 runKritiEval :: PostgresConnectionTemplateContext -> KritiTemplate -> Either Kriti.EvalError J.Value
@@ -260,5 +277,5 @@ runKritiEval ktcContext (KritiTemplate rawTemplate templateAST) = Kriti.runEval 
 
 makeRequestContext :: Maybe QueryContext -> [HTTP.Header] -> SessionVariables -> RequestContext
 makeRequestContext queryContext reqHeaders sessionVars =
-  let reqHeaderHashMap = Map.fromList $ map (\(hdrName, hdrVal) -> (bsToTxt (CI.original hdrName), bsToTxt hdrVal)) reqHeaders
+  let reqHeaderHashMap = HashMap.fromList $ map (\(hdrName, hdrVal) -> (bsToTxt (CI.original hdrName), bsToTxt hdrVal)) reqHeaders
    in RequestContext (RequestContextHeaders reqHeaderHashMap) sessionVars queryContext

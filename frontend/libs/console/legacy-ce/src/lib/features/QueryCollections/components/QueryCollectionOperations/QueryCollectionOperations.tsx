@@ -78,7 +78,7 @@ export const QueryCollectionsOperations: React.FC<
     <Check
       data-testid={`operation-${operation.name}`}
       checked={selectedOperations.includes(operation)}
-      onClick={() => {
+      onChange={() => {
         setSelectedOperations(
           selectedOperations.includes(operation)
             ? selectedOperations.filter(o => o !== operation)

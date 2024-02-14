@@ -13,8 +13,8 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Managed (Managed)
-import Data.Aeson qualified as Aeson
-import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Data.Aeson qualified as J
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
@@ -35,12 +35,14 @@ backendTypeConfig =
             data_schema:
               supports_primary_keys: true
               supports_foreign_keys: true
+            post_schema: {}
             queries:
               foreach: {}
             relationships: {}
             comparisons:
               subquery:
                 supports_relations: true
+            user_defined_functions: {}
             scalar_types:
               DateTime:
                 comparison_operators:
@@ -77,19 +79,29 @@ backendTypeConfig =
       backendDisplayNameString = "reference",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const "",
+      backendGraphQLType = const ""
     }
 
 --------------------------------------------------------------------------------
 
 mkChinookStaticTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
-mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting sourceConfiguration
+mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfiguration
 
 nameFormatting :: NameFormatting
 nameFormatting = NameFormatting id id id
 
+scalarTypes :: ScalarTypes
+scalarTypes =
+  ScalarTypes
+    { _stFloatType = "number",
+      _stIntegerType = "number",
+      _stStringType = "string"
+    }
+
 -- | Reference Agent specific @sources@ entry @configuration@ field.
-sourceConfiguration :: Aeson.Value
+sourceConfiguration :: J.Value
 sourceConfiguration =
   [yaml|
     value: {}

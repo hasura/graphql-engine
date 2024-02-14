@@ -4,7 +4,7 @@
 -- Please avoid editing this file manually.
 module Test.PortedFromPytest.TestGraphQLQueryBasicCitus (spec) where
 
-import Data.Aeson qualified as Yaml
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -18,7 +18,7 @@ import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
 -- original file: queries/graphql_query/citus/schema_setup_citus.yaml
-schema_setup_Citus :: Yaml.Value
+schema_setup_Citus :: J.Value
 schema_setup_Citus =
   [interpolateYaml|
     type: bulk
@@ -124,7 +124,7 @@ schema_setup_Citus =
   |]
 
 -- original file: queries/graphql_query/citus/setup_citus.yaml
-setup_metadata_Citus :: Yaml.Value
+setup_metadata_Citus :: J.Value
 setup_metadata_Citus =
   [interpolateYaml|
     type: bulk
@@ -303,16 +303,13 @@ fixture_Citus =
 spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runSingleSetup (NE.fromList [fixture_Citus]) tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Yaml.Value -> Yaml.Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "test_nested_select_with_foreign_key_alter" do
     -- from: queries/graphql_query/citus/nested_select_with_foreign_key_alter_citus.yaml [0]
     it "Alter foreign key constraint on article table" \testEnvironment -> do
-      void $
-        GraphqlEngine.postV2Query
+      void
+        $ GraphqlEngine.postV2Query
           200
           testEnvironment
           [interpolateYaml|
@@ -328,7 +325,7 @@ tests opts = do
 
     -- from: queries/graphql_query/citus/nested_select_with_foreign_key_alter_citus.yaml [1]
     it "Nested select on article" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -354,7 +351,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -373,11 +370,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [0]
     it "A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Array relationship" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -399,7 +396,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -417,11 +414,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [1]
     it "A distributed table can have foreign keys if it is referencing another colocated hash distributed table. Object relationship" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -444,7 +441,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -460,11 +457,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_distributed.yaml [2]
     it "A distributed table can have foreign keys if it is referencing a reference table" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -478,7 +475,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -494,11 +491,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [0]
     it "Reference tables and local tables can only have foreign keys to reference tables and local tables. Array relationship" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -512,7 +509,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -528,11 +525,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [1]
     it "Reference tables and local tables can only have foreign keys to reference tables and local tables. Object relationship" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -552,7 +549,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -568,11 +565,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_relationships_reference.yaml [2]
     it "Reference tables and local tables cannot have foreign keys references to distributed tables" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -582,11 +579,10 @@ tests opts = do
                     arguments:
                     - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
                     error:
-                      description: There exist a reference table in the outer part of the outer
-                        join
+                      description: null
                       exec_status: FatalError
-                      hint:
-                      message: cannot pushdown the subquery
+                      hint: null
+                      message: cannot perform a lateral outer join when a distributed subquery references a reference table
                       status_code: 0A000
                     prepared: true
                     statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT\
@@ -604,7 +600,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -620,11 +616,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [0]
     it "Querying a tracked SQL function will succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -633,7 +629,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -646,11 +642,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [1]
     it "Querying a tracked PL/PGSQL function will succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -659,7 +655,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -672,11 +668,11 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     -- from: queries/graphql_query/citus/select_query_disaster_functions.yaml [2]
     it "However, trying to use a relationship will result in an error" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -687,11 +683,10 @@ tests opts = do
                     - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
                     - (Oid 25,Just ("sarga",Binary))
                     error:
-                      description: Complex subqueries, CTEs and local tables cannot be in the outer
-                        part of an outer join with a distributed table
+                      description: null
                       exec_status: FatalError
-                      hint:
-                      message: cannot pushdown the subquery
+                      hint: null
+                      message: cannot perform a lateral outer join when a distributed subquery references complex subqueries, CTEs or local tables
                       status_code: 0A000
                     prepared: true
                     statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT\
@@ -711,7 +706,7 @@ tests opts = do
 
             |]
 
-          actual :: IO Yaml.Value
+          actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -727,4 +722,4 @@ tests opts = do
 
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

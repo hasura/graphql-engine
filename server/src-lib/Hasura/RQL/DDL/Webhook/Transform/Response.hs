@@ -14,7 +14,7 @@ where
 -------------------------------------------------------------------------------
 
 import Control.Arrow (left)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions as KFunc
 import Data.ByteString (ByteString)
 import Data.Validation (Validation, fromEither)
@@ -33,11 +33,12 @@ import Hasura.Session (SessionVariables)
 
 -- | Common context that is made available to all response transformations.
 data ResponseTransformCtx = ResponseTransformCtx
-  { responseTransformBody :: Aeson.Value,
+  { responseTransformBody :: J.Value,
     -- NOTE: This is a @Nothing@ if you have a Response Transform but no Request Transform:
-    responseTransformReqCtx :: Aeson.Value,
+    responseTransformReqCtx :: J.Value,
     responseSessionVariables :: Maybe SessionVariables,
-    responseTransformEngine :: TemplatingEngine
+    responseTransformEngine :: TemplatingEngine,
+    responseStatusCode :: Int
   }
 
 -------------------------------------------------------------------------------
@@ -51,13 +52,13 @@ data ResponseTransformCtx = ResponseTransformCtx
 runResponseTemplateTransform ::
   Template ->
   ResponseTransformCtx ->
-  Either TransformErrorBundle Aeson.Value
+  Either TransformErrorBundle J.Value
 runResponseTemplateTransform template ResponseTransformCtx {responseTransformEngine = Kriti, ..} =
-  let context = [("$body", responseTransformBody), ("$request", Aeson.toJSON responseTransformReqCtx)]
+  let context = [("$body", responseTransformBody), ("$request", J.toJSON responseTransformReqCtx), ("$response", J.object (["status" J..= responseStatusCode])), ("$session_variables", J.toJSON responseSessionVariables)]
       customFunctions = KFunc.sessionFunctions responseSessionVariables
       eResult = KFunc.runKritiWith (unTemplate $ template) context customFunctions
    in eResult & left \kritiErr ->
-        let renderedErr = Aeson.toJSON kritiErr
+        let renderedErr = J.toJSON kritiErr
          in TransformErrorBundle [renderedErr]
 
 -- | Run an 'UnescapedTemplate' with a 'ResponseTransformCtx'.
@@ -75,5 +76,5 @@ runUnescapedResponseTemplateTransform' ::
   UnescapedTemplate ->
   Validation TransformErrorBundle ByteString
 runUnescapedResponseTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedResponseTemplateTransform context unescapedTemplate
+  fromEither
+    $ runUnescapedResponseTemplateTransform context unescapedTemplate

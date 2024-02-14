@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { getScalarType, getTypeName } from '../../../GraphQLUtils';
-import { GraphQLType } from 'graphql';
+import { GraphQLType, buildClientSchema, isObjectType } from 'graphql';
 import { GDCTable } from '..';
 import {
   exportMetadata,
@@ -11,6 +11,7 @@ import { GetTableColumnsProps, TableColumn } from '../../types';
 import { adaptAgentDataType } from './utils';
 import { GetTableInfoResponse } from './types';
 import { areTablesEqual } from '../../../hasura-metadata-api';
+import { getTableDisplayName } from '../../../DatabaseRelationships';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;
@@ -42,6 +43,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
       introspectionResult.data.__schema.types.find(
         (t: any) => t.name === queryRoot
       )?.fields ?? [];
+    const schema = buildClientSchema(introspectionResult.data);
 
     const scalarTypes = graphQLFields
       .map(({ name, type }: { name: string; type: GraphQLType }) => {
@@ -65,6 +67,9 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
     });
 
     const primaryKeys = tableInfo?.primary_key ? tableInfo.primary_key : [];
+    const tableName = getTableDisplayName(tableInfo.name);
+    const type = schema.getType(tableName);
+    const fields = isObjectType(type) ? type.getFields() : {};
 
     return tableInfo.columns.map<TableColumn>(column => {
       const graphqlFieldName =
@@ -75,7 +80,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
         scalarTypes.find(
           ({ name }: { name: string }) => name === graphqlFieldName
         ) ?? null;
-
+      const field = fields[graphqlFieldName];
       return {
         name: column.name,
         dataType: adaptAgentDataType(column.type),
@@ -88,7 +93,9 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
         graphQLProperties: {
           name: graphqlFieldName,
           scalarType: scalarType?.type ?? null,
+          graphQLType: field?.type,
         },
+        value_generated: column.value_generated,
       };
     });
   } catch (error) {

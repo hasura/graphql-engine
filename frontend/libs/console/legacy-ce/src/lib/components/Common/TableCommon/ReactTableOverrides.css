@@ -20,6 +20,10 @@
   z-index: 1;
 }
 
+.table-browse-rows-container .ReactTable .pagination-top {
+  top: -20px;
+}
+
 .ReactTable .rt-noData {
   padding: 0;
   top: 105px;
@@ -52,6 +56,10 @@
   min-height: 32px;
   position: sticky;
   z-index: 1;
+}
+
+.table-browse-rows-container .ReactTable .rt-thead.-header {
+  top: 38px;
 }
 
 .ReactTable .-pagination {

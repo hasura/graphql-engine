@@ -1,0 +1,519 @@
+---
+description: Examples for managing access control with Hasura
+keywords:
+  - hasura
+  - docs
+  - authorization
+  - access control
+  - examples
+sidebar_position: 110
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Permissions Examples
+
+## Introduction
+
+This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended that
+you first check out [Roles & Session variables](/auth/authorization/roles-variables.mdx) and other pages in
+[configuring permission rules](/auth/authorization/permissions/index.mdx) which will be referred to throughout this
+guide.
+
+Here are some examples of common use cases.
+
+## Unauthorized users {#unauthorized-users-example}
+
+Unauthorized users are those which are
+[unauthenticated or not logged in](/auth/authentication/unauthenticated-access.mdx) and thus default to the defined
+unauthorized role. Requests from these users will typically have no officially identifiable session variables.
+Follow these steps in order to create permission rules for an anonymous user.
+
+- Create a role called `anonymous` (this name is up to you, you could call the role `public` or anything else).
+- We'll be adding `select` permissions. Generally, for security, you wouldn't be adding `insert`, `update`, or
+  `delete` permissions.
+- For the `select` permission condition, create a valid condition depending on your data model. For example,
+  `is_published: {_eq: true}` or if you don't have a condition, then just set the permission to `Without any checks`,
+  which is represented by an empty set of braces `{}`.
+- Choose the right set of columns that will get exposed in the GraphQL schema as fields. Ensure that sensitive columns
+  are not exposed.
+
+### Example
+
+Here's an example of allowing the defined unauthorized role, named in this case: `anonymous`, to query the `products`
+table for only rows where the `is_published` column is set to `true`.
+
+<Thumbnail
+  src="/img/auth/anonymous-role-example__permissions_2.16.1.png"
+  alt="Access control for an anonymous role"
+/>
+
+We are also limiting the columns which can be returned by the query. If we wanted to allow the `anonymous` role to
+be able to query the `products` table for all rows, we would simply set the "Row select permissions" to "Without any
+checks".
+
+See [Unauthenticated / Public access](/auth/authentication/unauthenticated-access.mdx) for steps to configure the
+unauthorized user role in Hasura.
+
+## Logged-in users
+
+- Create a role called `user`.
+- Permissions in this case make use of a `user_id` or a `owner_id` column.
+- Set up a permission for an `insert/select/update/delete` operation that uses said column. E.g.:
+  `user_id: {_eq: "X-Hasura-User-Id"}` for a profile or shopping carts table.
+- Note that the `X-Hasura-User-Id` is a [dynamic session variable](/auth/authorization/roles-variables.mdx) that is
+  set and returned from your [auth service](/auth/authentication/index.mdx), or as a request header.
+
+### Example
+
+Here's an example of creating a permission which allows only users to access their own shopping carts. The `user_id`
+column is a column in the `carts` table which stores the `id` of the user who created it. We are restricting
+access to rows of this table to requests which contain the same user id in the `X-Hasura-User-Id` session variable.
+
+<Thumbnail
+  src="/img/auth/set-user-permissions_step-1_permissions_2.16.1.png"
+  alt="Access control for a logged-in user"
+/>
+
+Now we can test out a query to see that when posing as that user, we can access only their carts and not those of
+other users.
+
+<Thumbnail
+  src="/img/auth/set-user-permissions_step-2_permissions_2.16.1.png"
+  alt="API testing for a logged-in user"
+/>
+
+
+:::info Posing as a user in testing
+
+In development, if you're testing your logged-in users' access and aren't utilizing authenticated tokens, you must
+include the `X-Hasura-Admin-Secret` header. You can
+[learn more about this here](/auth/authentication/admin-secret-access.mdx).
+
+:::
+
+## Same table ownership information
+
+Suppose you have a multi-tenant application where a manager of a particular organization should be able to see all the
+data that belongs to that particular organization. In this case, the particular table might have an id column
+which denotes the organization.
+
+Let's say we have an online store where each vendor on the store has its own products. We want to allow the manager
+of a vendor to be able to see all the products that belong to that vendor and the indentifying `vendor_id` is saved
+on the `products` table itself.
+
+- Create a role called `manager`.
+- Create a permission for `select` in the products table, which has the condition: `vendor_id: {_eq:
+"X-Hasura-Vendor-Id"}`.
+- `X-Hasura-Vendor-Id` is a [session variable](/auth/authorization/roles-variables.mdx) which is set and returned by
+your [auth service](/auth/authentication/index.mdx) for an incoming request.
+
+<Thumbnail
+  src="/img/auth/same-table-ownership_step-1_permissions_2.16.1.png"
+  alt="Access control for a manager of an vendor"
+/>
+
+<Thumbnail
+  src="/img/auth/same-table-ownership_step-2_permissions_2.16.1.png"
+  alt="GraphQL query for a manager of an vendor"
+/>
+
+## Related table ownership information
+
+Let's say the ownership or visibility information for a data model (table) is not present as a column in the table,
+but in a different related table.
+
+For example, suppose that in a products table we have a `added_by_user_id` column which stores the `id` of the user who
+added the product but no `vendor_id` column on the table itself.
+
+However, we want to allow other members of the vendor to be able to access the product too. We have another related
+table `users_in_vendors` which associates users with vendors. The relationship from the `product` to the
+`users_in_vendors` table is named `userInVendorByUserId` and is configured as: `products.added_by_user_id  →
+users_in_vendors.user_id`.
+
+We can use this relationship to check that the `X-Hasura-Vendor-Id` on the incoming request session variable matches
+the vendor which the user that added the product is a member of and therefore allow other members of the vendor
+organization to access the product.
+
+- Create a relationship called `userInVendorByUserId` from the product table.
+  - Object relationship (product has only a single user which added it): `products.added_by_user_id  →
+  users_in_vendors.user_id`.
+- Create a role called `manager`.
+- Create a select permission on the `products` table, which has the condition:
+  `{"userInVendorByUserId":{"vendor_id":{"_eq":"X-Hasura-Vendor-Id"}}}`.
+  - This reads as: Allow the role `manager` to select if `users_in_vendors.vendor_id` has a `vendor_id` equal to
+    that of `X-Hasura-Vendor-Id` session variable on the incoming request.
+
+<Thumbnail
+  src="/img/auth/different-table-ownership_step-1_permissions_2.16.1.png"
+  alt="Different table ownership permissions"
+/>
+
+<Thumbnail
+  src="/img/auth/different-table-ownership_step-2_permissions_2.16.1.png"
+  alt="Different table ownership permissions"
+/>
+
+<!--
+
+.. Role-based schemas
+  ------------------
+
+  For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the
+  right queries, fields, and mutations that are available to that role.
+
+  Case 1: Logged-in users and anonymous users can access the same GraphQL fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  In simple use-cases, logged-in users and anonymous users might be able to fetch different rows (let's say because
+  of a ``is_public`` flag), but have access to the same fields.
+
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition.
+
+    - This reads: Allow anyone to access rows that are marked public.
+
+  - ``user`` role has a ``_or: [{is_public: {_eq: true}}, {owner_id: {_eq: "X-Hasura-User-Id"}}]``.
+
+    - This reads: Allow users to access any rows that are public, or that are owned by them.
+
+  Case 2: Logged-in users and anonymous users have access to different fields
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  In this case, anonymous users might have access only to a subset of fields while logged-in users can access all the
+  fields for data that they own.
+
+  - ``anonymous`` role has a ``{is_public: {_eq: true}}`` select condition, and only the right columns are allowed to
+    be selected.
+
+    - This reads: Allow anyone to access rows that are marked public.
+
+  - ``user`` role has a ``{owner_id: {_eq: "X-Hasura-User-Id"}}`` and all the columns are marked as selected.
+
+    - This reads: Allow users to that are owned by them.
+
+-->
+
+[//]: # (TODO)
+## Multiple roles per user {#nested-object-permissions-example}
+
+Sometimes your data model requires that:
+
+- Users can have multiple roles.
+- Each role has access to different parts of your database schema.
+
+If you have the information about roles and how they map to your data in the same database as the one configured with
+the Hasura Engine, you can leverage relationships to define permissions that effectively control access to data and the
+operations each role is allowed to perform.
+
+To understand how this works, let's model the roles and corresponding permissions in the context of a blog app with the
+following roles:
+
+- `author`: Users with this role can **submit their own articles**.
+- `reviewer`: Users with this role can **review articles assigned to them** and add a review comment to each
+  article. A mapping of articles to reviewers is maintained in the `reviewers` table.
+- `editor`: Users with this role can edit and **publish any article**. They can also **leave a private rating for each
+  article**. However, they **cannot overwrite a reviewer's notes**. A list of editors is maintained in the `editors`
+  table.
+
+### Database Schema
+
+The following is a reference database schema for our example:
+
+<Thumbnail
+  src="/img/auth/multirole-example-db-schema.png"
+  alt="Database schema example for multiple roles per user"
+  width="1300px"
+/>
+
+Based on the above schema, we'll create the following tables:
+
+```sql
+-- user information from your auth system
+
+users (
+  id INT PRIMARY KEY,
+  name TEXT,
+  profile JSONB, -- some profile information like display_name, etc.
+  registered_at TIMESTAMP -- the time when this user registered
+)
+
+-- information about articles
+
+articles (
+  id INTEGER PRIMARY KEY,
+  title TEXT,
+  author_id INT REFERENCES users(id), -- Foreign key to users :: id
+  is_reviewed BOOLEAN DEFAULT FALSE,
+  review_comment TEXT,
+  is_published BOOLEAN DEFAULT FALSE,
+  editor_rating INTEGER
+)
+
+-- mapping of reviewers to articles
+
+reviewers (
+  id INTEGER PRIMARY KEY,
+  article_id INTEGER REFERENCES articles(id), -- Foreign key to articles :: id
+  reviewer_id INTEGER REFERENCES users(id) -- Foreign key to users :: id
+)
+
+-- a  list of editors
+
+editors (
+  editor_id INTEGER PRIMARY KEY REFERENCES users(id) -- Foreign key to users :: id
+)
+```
+
+### Relationships
+
+Create an array relationship named `reviewers` based on the foreign key constraint `reviewers` :: `article_id` →
+`articles` :: `id`:
+
+<Thumbnail
+  src="/img/auth/multirole-example-reviewers-array-relationship.png"
+  alt="Create an array relationship"
+  width="700px"
+  className="no-shadow"
+/>
+
+### Permissions
+
+The following is an example summary of the access control requirements for the `articles` table based on the above
+schema:
+
+<table>
+  <thead>
+    <tr>
+      <th width="30%" rowspan="2" colspan="1">
+        Client Name
+      </th>
+      <th width="25%" rowspan="1" colspan="2">
+        author
+      </th>
+      <th width="25%" rowspan="1" colspan="2">
+        reviewer
+      </th>
+      <th width="25%" rowspan="1" colspan="2">
+        editor
+      </th>
+    </tr>
+    <tr>
+      <th>insert</th>
+      <th>select</th>
+      <th>update</th>
+      <th>select</th>
+      <th>update</th>
+      <th>select</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>id</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>title</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>author_id</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>is_reviewed</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>review_comment</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>is_published</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+    </tr>
+    <tr>
+      <td>editor_rating</td>
+      <td>✖</td>
+      <td>✖</td>
+      <td>✖</td>
+      <td>✖</td>
+      <td>✔</td>
+      <td>✔</td>
+    </tr>
+  </tbody>
+</table>
+
+_Additional restrictions are required to ensure that a user with the role_ `author` _can submit only their own article
+i.e._ `author_id` _should be the same as the user's id_.
+
+We'll create permission rules for the roles and Actions listed above (_you can easily extend them for the Actions not
+documented here_) .
+
+#### Permissions for role `author`
+
+- **Allow users with the role** `author` **to insert only their own articles**
+
+  For this permission rule, we'll make use of two features of the GraphQL Engine's permissions system:
+
+  - [Column-level permissions](/auth/authorization/permissions/column-level-permissions.mdx): Restrict access to
+    certain columns only.
+  - [Column presets](/schema/postgres/default-values/column-presets.mdx): Session-variable-based column preset for the
+    `author_id` column to automatically insert the user's ID i.e. the `X-Hasura-User-Id` session-variable's value. It
+    also helps us avoid explicitly passing the user's ID in the insert mutation.
+
+<Thumbnail src="/img/auth/multirole-example-author-insert.png" alt="Permissions for the role author" />
+
+Notice how we don't need to have an explicit row-level permission (_a custom check_) as only authenticated users with
+the role `author` can perform this action. As we have a column preset for the `author_id` column that automatically
+takes the author's ID (_and the_ `id` _column is an auto-increment integer field_), we only need to allow access to the
+`title` column.
+
+- **Allow users with the role** `author` **to select certain columns only**
+
+Again, we'll use **column-level** permissions to restrict access to certain columns. Additionally, we need to define
+row-level permissions (_a custom check_) to restrict access to only those articles authored by the current user:
+
+<Thumbnail src="/img/auth/multirole-example-author-select.png" alt="Column access for the role author" />
+
+The row-level permission rule shown here translates to "_if the value in the_ `author_id` _column of this row is equal
+to the user's ID i.e. the\* `X-Hasura-User-Id` \_session-variable's value, allow access to it_".
+
+#### Permissions for role `reviewer`
+
+- **Allow users with the role** `reviewer` **to update articles assigned to them for reviews**
+
+  For this use-case, we'll use
+  [relationship or nested-object permissions](/auth/authorization/permissions/row-level-permissions.mdx#relationships-in-permissions)
+  based on the array relationship `reviewers` to restrict access to assigned articles only.
+
+<Thumbnail src="/img/auth/multirole-example-reviewer-update.png" alt="Permissions for the role reviewer" />
+
+The array-relationship based permission rule in the above image reads as "_if the ID of any reviewer assigned to
+this article is equal to the user's ID i.e. the* `X-Hasura-User-Id` *session-variable's value, allow access to it_".
+The columns' access is restricted using the column-level permissions highlighted above.
+
+- **Allow users with the role** `reviewer` **to select articles assigned to them for reviews**
+
+  This permission rule is pretty much the same as the one for update, the only difference being the column-level
+  permissions.
+
+<Thumbnail src="/img/auth/multirole-example-reviewer-select.png" alt="Column access for the role reviewer" />
+
+#### Permissions for role `editor`
+
+- **Allow editors to select any article's data**
+
+  This is a straightforward rule - there's no need for any row-level permissions since editors have access to all rows
+  and they can _read_ all columns.
+
+<Thumbnail src="/img/auth/multirole-example-editor-select.png" alt="Permissions for the role editor" />
+
+- **Allow editors to update an article**
+
+  There's no need for row-level permissions in this case either but we need to restrict access to certain columns only:
+
+<Thumbnail src="/img/auth/multirole-example-editor-update.png" alt="Column access for the role editor" />
+
+## Multiple Permissions for the Same Role
+
+In some cases we might want to allow access to certain columns for a role only if a condition is met, while
+allowing access to other columns based on a different condition.
+
+Currently, it is not possible to define multiple column & row permission combinations for the same role. However, we
+can work around this limitation by using [views](/schema/postgres/views.mdx).
+
+**Example**
+
+Let's say for privacy reasons we only want users to be able to access their own `email`, `phone` and `address` but
+allow all users to access each others `name` and `city` information.
+
+We have a table called `user_profile` with columns `(id, name, city, email, phone, address)` and we want the role
+`user` to be able to access:
+- all columns only if the `id` column is the requesting user's id, i.e. the current user is the "owner" of the row.
+- only the `id`, `name` and `city` columns for all other users.
+
+We can achieve this via the following steps:
+
+### Step 1: Create a view
+
+[Create a view](/schema/postgres/views.mdx#pg-create-views) called `user_profile_private` with columns
+`(user_id, email, phone, address)`:
+
+```sql
+CREATE VIEW user_profile_private AS
+  SELECT id AS user_id, email, phone, address
+    FROM user_profile;
+```
+
+<Thumbnail src='/img/auth/multiple-permissions-per-role_step-1_create-a-view_2.16.1.png' alt='Create a view' />
+
+### Step 2: Create a relationship
+
+For the table `user_profile`,
+[create a manual object relationship](/schema/postgres/table-relationships/create.mdx#pg-create-manual-relationships)
+called `user_profile_private` using `user_profile.id -> user_profile_private.user_id`:
+
+<Thumbnail src='/img/auth/multiple-permissions-per-role_step-2_create-a-relationship_2.16.1.png'
+           alt='Create a manual object relationship' />
+
+### Step 3: Define permissions
+
+On the `user_profile` table for the role `user`, create the following permissions for `select`:
+
+- allow access to `id`, `name` and `city` without any row conditions.
+
+<Thumbnail
+  src='/img/auth/multiple-permissions-per-role_step-3_define-public-permissions_2_16_1.png'
+  alt='Column access for the role user' />
+
+- On the `user_profile_private` view allow access to `id`, `phone`, `email` and `address` if the `user-id` passed
+in the session variable is equal to the row's `user_id`.
+
+<Thumbnail
+  src='/img/auth/multiple-permissions-per-role_step-4_define-private-permissions_2.16.1.png'
+  alt='Column access for the role user based on row level permissions'
+/>
+
+### Step 4: Query with appropriate access control
+
+Now we can fetch the required data with the appropriate access control by using the relationship.
+
+If the `X-Hasura-Role` and the `X-Hasura-User-Id` session variables are set to `user` and `2` respectively (and the
+`X-Hasura-Admin-Secret` value is set to allow us to pose as the user), we'll get the following result:
+
+<Thumbnail
+  src='/img/auth/multiple-permissions-per-role_step-5_query-the-api_2.16.1.png'
+  alt='Column access for the role user based on row level permissions'
+/>
+
+Observe that the `user_profile_private` field is returned as `null` for all rows without the appropriate access.

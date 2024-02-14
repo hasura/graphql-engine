@@ -1,5 +1,5 @@
 ---
-description: Set up GraphQL subscriptions with Apollo Client
+description: Subscriptions with Apollo Client
 keywords:
   - hasura
   - docs
@@ -8,149 +8,134 @@ keywords:
   - apollo
   - apollo-client
 sidebar_position: 5
-sidebar_label: Subscriptions using Apollo Client
+sidebar_label: Subscriptions with Apollo Client
 ---
 
-# Setting up GraphQL Subscriptions Using Apollo Client
+# Setting up GraphQL Subscriptions Using Apollo Client for React
 
 ## Setup
 
-This guide assumes you have the basic Apollo Client working as per
-[https://www.apollographql.com/docs/react/get-started/](https://www.apollographql.com/docs/react/get-started/) and now
-you want to enable subscriptions.
+This guide demonstrates how to set up GraphQL subscriptions using Apollo Client for React applications. It assumes you
+already have a basic Apollo Client setup according to the
+[Apollo docs](https://www.apollographql.com/docs/react/get-started/) and now want to enable subscriptions.
 
-### Install packages
+## Prerequisites
+[Basic Apollo Client setup](https://www.apollographql.com/docs/react/get-started/)
+
+## Installation
+
+1. Install the necessary packages:
 
 ```bash
-npm install --save apollo-client apollo-link-ws apollo-link-http apollo-link apollo-utilities apollo-cache-inmemory subscriptions-transport-ws
+npm install --save @apollo/client graphql-ws
 ```
 
-Once these packages are installed, import them as follows in the file where you have currently initialized your client
-(usually your `App.js` file).
+2. Import the required modules in the file where you initialized your client (usually your `App.js` file):
 
 ```javascript
-// Remove the apollo-boost import and change to this:
-import ApolloClient from 'apollo-client';
-// Setup the network "links"
-import { WebSocketLink } from 'apollo-link-ws';
-import { HttpLink } from 'apollo-link-http';
-import { split } from 'apollo-link';
-import { getMainDefinition } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, HttpLink, InMemoryCache, split } from '@apollo/client';
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
+import { getMainDefinition } from '@apollo/client/utilities';
 ```
 
-Below these imports initialize your client to fetch subscriptions along with query and mutation.
+3. Initialize the client with the following configuration:
 
 ```javascript
 const httpLink = new HttpLink({
-  uri: 'http://<your-app>/v1/graphql', // use https for secure endpoint
+  uri: 'https://<YOUR-HASURA-INSTANCE-URL>/v1/graphql'
 });
 
-// Create a WebSocket link:
-const wsLink = new WebSocketLink({
-  uri: 'ws://<your-app>/v1/graphql', // use wss for a secure endpoint
-  options: {
-    reconnect: true,
-  },
-});
+const wsLink = new GraphQLWsLink(createClient({
+  url: 'wss://<YOUR-HASURA-INSTANCE-URL>/v1/graphql',
+}));
 
-// using the ability to split links, you can send data to each link
-// depending on what kind of operation is being sent
-const link = split(
-  // split based on operation type
+const splitLink = split(
   ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    return kind === 'OperationDefinition' && operation === 'subscription';
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
   },
   wsLink,
   httpLink
 );
 
-// Instantiate client
 const client = new ApolloClient({
-  link,
+  link: splitLink,
   cache: new InMemoryCache(),
 });
 ```
+This setup allows you to use queries and mutations over the defined `httpLink` and subscriptions over the `wsLink` through
+the split function provided by the Apollo library. The split function takes a test function and two different links to
+determine which link should be used to send the request.
 
-## Write your subscription
+This split link is then passed to the Apollo Client instance, which is then passed to the `ApolloProvider` component
+as per the basic Apollo setup.
 
-Most likely, when switching from `<Query>` to `<subscription>` there are few things that you might miss out on.
+## Creating subscriptions
 
-Below is an example where you can convert a query to subscription and see what changes need to be made when doing so.
+Switching to a subscription in Apollo Client is as simple as changing the `useQuery` to `useSubscription` hook and
+switching the keyword in the graphql query from `query` to `subscription`.
 
-```javascript
-<Query
-  query = {
-    gql`
-      query fetchTodos($user_id: Int!) {
-          todos (
-            where: { user_id: {_eq: $user_id }, is_completed: { _eq: false }},
-            order_by: id_desc
-          ) {
-            id
-            data
-            is_completed
-            created_at
-            updated_at
-          }
-       }
-    `
+For example, change the following query:
+
+```graphql
+query GetProducts {
+  products {
+    id
+    name
+    price
   }
->
-
-//when written as subscription
-
-<subscription
-  subscription = {
-    gql`
-      subscription fetchTodos($user_id: Int!) {
-          todos (
-            where: { user_id: {_eq: $user_id }, is_completed: { _eq: false }},
-            order_by: id_desc
-          ) {
-            id
-            data
-            is_completed
-            created_at
-            updated_at
-          }
-       }
-    `
-  }
->
+}
 ```
 
-We can see that there are in total 3 places where the word `query` is changed to `subscription` and has to be taken care
-of when switching to subscriptions.
+to this subscription:
 
-```none
-<Query                                    <subscription
-  query = {gql`          ->                 subscription = {gql`
-      query {                                 subscription {
-        ...                                     ...
+```graphql
+subscription GetProducts {
+  products {
+    id
+    name
+    price
+  }
+}
 ```
 
-:::info Caveat
+:::info Usage with Next.js
 
-If all the 3 changes are not made, **it works like a query instead of a subscription** since the code that sets up
-apollo-link doesn't work.
+When using this setup with Next.js, you will need to make sure that the `wsLink` is only initialized on the
+client and not while rendering on the server. To achieve this, you can test that you're in the browser with `typeof
+window !== 'undefined'`
+
+The `wsLink` can be created as follows:
 
 ```javascript
-const link = split(
-  // split based on operation type
+const wsLink = typeof window !== "undefined" ? new GraphQLWsLink(createClient({
+  url: 'ws://vast-fawn-54.hasura.app/v1/graphql',
+})) : null;
+```
+
+and the `splitLink` with a ternary as follows:
+
+```javascript
+const link = typeof window !== "undefined" && wsLink != null
+? split(
   ({ query }) => {
-    const { kind, operation } = getMainDefinition(query);
-    console.log({ query: query, kind: kind, operation: operation });
-    return kind === 'OperationDefinition' && operation === 'subscription';
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === 'OperationDefinition' &&
+      definition.operation === 'subscription'
+    );
   },
   wsLink,
   httpLink
-);
+) : httpLink;
 ```
 
 :::
 
-## Related Blog
+## Further Reading
 
-[Moving from Apollo Boost to GraphQL Subscriptions with Apollo Client](https://hasura.io/blog/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0/).
+[Subscriptions in Hasura](/subscriptions/overview.mdx).

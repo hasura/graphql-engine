@@ -6,10 +6,6 @@ import {
   Analytics,
   REDACT_EVERYTHING,
 } from '../../../../../features/Analytics';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../../../features/FeatureFlags';
 import { FaFileCode, FaMagic, FaTable } from 'react-icons/fa';
 import { DropdownButton } from '../../../../../new-components/DropdownButton';
 import { Badge } from '../../../../../new-components/Badge';
@@ -91,10 +87,6 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 
   const [isTypesGeneratorOpen, setIsTypesGeneratorOpen] = React.useState(false);
   const [isImportTypesOpen, setIsImportTypesOpen] = React.useState(false);
-
-  const { enabled: isImportFromOASEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.importActionFromOpenApiId
-  );
 
   return (
     <>

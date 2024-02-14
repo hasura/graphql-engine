@@ -1,0 +1,144 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Extensions Error 6",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Elias Meire",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3002"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/user": {
+      "get": {
+        "description": "Return a user.",
+        "responses": {
+          "202": {
+            "description": "A user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/user"
+                }
+              }
+            },
+            "links": {
+              "group": {
+                "$ref": "#/components/links/Group"
+              },
+              "group2": {
+                "$ref": "#/components/links/Group2"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/group/{groupId}": {
+      "get": {
+        "description": "Return a group.",
+        "operationId": "getGroupById",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A group.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/group"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "user": {
+        "type": "object",
+        "description": "A user represents a natural person",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          },
+          "groupId": {
+            "type": "string"
+          }
+        }
+      },
+      "group": {
+        "type": "object",
+        "description": "A group represents a group of people",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of a group"
+          }
+        }
+      }
+    },
+    "links": {
+      "Group": {
+        "operationId": "getGroupById",
+        "parameters": {
+          "groupId": "$response.body.groupId"
+        },
+        "description": "Link from User to Group"
+      },
+      "Group2": {
+        "operationId": "getGroupById",
+        "x-graphql-field-name": "group",
+        "parameters": {
+          "groupId": "$response.body.groupId"
+        },
+        "description": "Link from User to Group2"
+      }
+    }
+  },
+  "security": []
+}

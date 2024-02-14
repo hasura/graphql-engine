@@ -8,9 +8,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
@@ -27,7 +27,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (_webhookServer, _)) ->
                 [ Postgres.setupTablesAction (schema "authors" "articles") testEnvironment,
                   Fixture.SetupAction
@@ -80,15 +80,11 @@ articlesTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  setTriggerForReplication opts
-
-setTriggerForReplication :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-setTriggerForReplication opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "verify trigger status when logical replication is used" do
-    it "verify trigger is enabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is enabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "True"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -118,12 +114,12 @@ setTriggerForReplication opts =
                     - A
               |]
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForEnablingTriggers
 
-    it "verify trigger is disabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is disabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "False"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -153,7 +149,7 @@ setTriggerForReplication opts =
                     - O
               |]
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForDisablingTriggers
 
@@ -166,8 +162,8 @@ postgresSetupWithEventTriggers testEnvironment webhookServer triggerOnReplicatio
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: pg_create_event_trigger
       args:
         name: author_trigger
@@ -187,8 +183,8 @@ postgresSetupWithEventTriggers testEnvironment webhookServer triggerOnReplicatio
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: pg_delete_event_trigger
       args:
         name: author_trigger

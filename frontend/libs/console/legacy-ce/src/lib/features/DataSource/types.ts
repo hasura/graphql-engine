@@ -1,3 +1,4 @@
+import { GraphQLType } from 'graphql';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
@@ -10,10 +11,11 @@ import {
   SourceToSourceRelationship,
   SupportedDrivers,
   Table,
+  QualifiedFunction,
 } from '../hasura-metadata-types';
 
 import type { NetworkArgs } from './api';
-import { SchemaTable } from './utils';
+import { ColumnValueGenerationStrategy } from '@hasura/dc-api-types';
 
 export type { BigQueryTable } from './bigquery';
 export type { NetworkArgs };
@@ -63,17 +65,19 @@ export type TableColumn = {
   /**
    * dataType of the column as defined in the DB
    */
-  dataType: string;
+  dataType: string | { type: string; name: string };
   /**
    * console data type: the dataType property is group into one of these types and console uses this internally
    */
-  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean';
+  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean' | 'float';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {
     name: string;
     scalarType: string;
+    graphQLType?: GraphQLType | undefined;
   };
+  value_generated?: ColumnValueGenerationStrategy;
 };
 
 export type GetTrackableTablesProps = {
@@ -110,10 +114,13 @@ export type GetTablesListAsTreeProps = {
 
 export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
-export type DriverInfoResponse = {
+export type DriverInfo = {
   name: SupportedDrivers;
   displayName: string;
   release: ReleaseType;
+  native?: boolean;
+  available?: boolean;
+  enterprise?: boolean;
 };
 
 export type GetTableRowsProps = {
@@ -154,6 +161,8 @@ export type Operator = {
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
 
+export type Version = string;
+export type GetVersionProps = { dataSourceName: string } & NetworkArgs;
 export type InsertRowArgs = {
   dataSourceName: string;
   httpClient: NetworkArgs['httpClient'];
@@ -165,3 +174,34 @@ export type GetDefaultQueryRootProps = {
   dataSourceName: string;
   table: Table;
 };
+
+export type GetTrackableFunctionProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type IntrospectedFunction = {
+  name: string;
+  qualifiedFunction: QualifiedFunction;
+  isVolatile: boolean;
+};
+export type GetDatabaseSchemaProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type ChangeDatabaseSchemaProps = {
+  dataSourceName: string;
+  schemaName: string;
+} & NetworkArgs;
+export type GetIsTableViewProps = {
+  dataSourceName: string;
+  table: Table;
+  httpClient: NetworkArgs['httpClient'];
+};
+export type GetSupportedScalarsProps = {
+  dataSourceKind: string;
+} & NetworkArgs;
+
+export type StoredProcedure = unknown;
+export type GetStoredProceduresProps = {
+  dataSourceName: string;
+} & NetworkArgs;

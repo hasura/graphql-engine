@@ -17,12 +17,12 @@ SELECT ISNULL(
                                             referenced_table.name AS joined_referenced_table_name,
                                             referenced_column.name AS joined_referenced_column_name,
                                             JSON_QUERY([schema].json) AS [joined_referenced_sys_schema]
-                                     FROM sys.foreign_key_columns [fk],
-                                          sys.objects AS referenced_table,
-                                          sys.columns AS referenced_column
+                                     FROM sys.foreign_key_columns AS [fk],
+                                          sys.columns AS referenced_column,
+                                          sys.objects AS referenced_table
                                      CROSS APPLY (SELECT [schema].name, [schema].schema_id
                                                   FROM sys.schemas [schema]
-                                                  WHERE [schema].schema_id = object.schema_id
+                                                  WHERE [schema].schema_id = [referenced_table].schema_id
                                                   FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
                                        AS [schema](json)
                                      WHERE [object].object_id = fk.parent_object_id

@@ -3,9 +3,9 @@ module Test.Regression.AggregateBoolExpConflictSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
@@ -76,8 +76,8 @@ schema =
 
 serialInt :: Schema.ScalarType
 serialInt =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstCitus = Just "INT",
         Schema.bstPostgres = Just "INT",
         Schema.bstCockroach = Just "INT4"
@@ -86,8 +86,8 @@ serialInt =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _ =
+tests :: SpecWith TestEnvironment
+tests =
   -- All of the testing is done during setup.
   -- If setup succeeds and we have no conflicts, and this test will pass.
   it "Creates a schema without conflicts" \_ -> pure @IO ()

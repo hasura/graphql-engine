@@ -7,7 +7,9 @@
 
   @mixin custom-footer-wrapper__vertical() {
     flex-direction: column;
-    .logo-wrapper, .copyright, .footerSocialIconsWrapper {
+    .logo-wrapper,
+    .copyright,
+    .footerSocialIconsWrapper {
       padding: 0.5rem 0;
     }
   }
@@ -32,7 +34,7 @@
   .dark-theme-logo {
     display: none;
   }
-  
+
   .footerSocialIconsWrapper {
     display: flex;
     align-items: center;
@@ -51,6 +53,36 @@
     }
   }
 }
+
+.contribution-pointer {
+  opacity: 0;
+  z-index: -10;
+  position: absolute;
+  top: 30px;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+  transition: all var(--ifm-transition-fast) ease-in-out;
+  .contribution-pointer__text {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+}
+
+.contribution-pointer__text {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.contribution-hover {
+  opacity: 1;
+  z-index: 10;
+}
+
 html[data-theme='dark'] {
   .custom-footer-wrapper {
     .dark-theme-logo {

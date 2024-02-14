@@ -1,0 +1,55 @@
+name:                ekg-json
+version:             0.1.0.7
+synopsis:            JSON encoding of ekg metrics
+description:
+  Encodes ekg metrics as JSON, using the same encoding as used by the
+  ekg package, thus allowing ekg metrics to be served by other HTTP
+  servers than the one used by the ekg package.
+homepage:            https://github.com/hasura/graphql-engine
+bug-reports:         https://github.com/hasura/graphql-engine/issues
+license:             BSD3
+license-file:        LICENSE
+author:              Johan Tibell
+maintainer:          Johan Tibell <johan.tibell@gmail.com>,
+                     Mikhail Glushenkov <mikhail.glushenkov@gmail.com>
+category:            Distribution
+extra-source-files:  CHANGES.md
+build-type:          Simple
+cabal-version:       >=1.10
+tested-with:         GHC == 8.10.1, GHC == 8.8.3, GHC == 8.6.5,
+                     GHC == 8.4.4,  GHC == 8.2.2, GHC == 8.0.2,
+                     GHC == 7.10.3, GHC == 7.8.4, GHC == 7.6.3
+
+library
+  exposed-modules:
+    System.Metrics.Json
+  build-depends:
+    aeson >= 0.4 && < 1.6 || >= 2.0.0.0 && < 2.2,
+    base >= 4.6 && < 4.17,
+    ekg-core >= 0.1 && < 0.2,
+    text < 1.3,
+    unordered-containers < 0.3,
+    vector >= 0.12.2.0 && < 0.13
+  ghc-options:
+    -Wall
+    -Wcompat
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wredundant-constraints
+  default-language: Haskell2010
+
+test-suite ekg-json-tests
+  type:
+    exitcode-stdio-1.0
+  hs-source-dirs:
+    test
+  main-is:
+    Main.hs
+  build-depends:
+    aeson,
+    base,
+    ekg-core,
+    ekg-json,
+    hspec,
+    text,
+    unordered-containers

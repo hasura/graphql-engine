@@ -1,0 +1,62 @@
+---
+sidebar_label: Docker
+sidebar_position: 2
+description: Hasura with Docker for ClickHouse
+keywords:
+  - hasura
+  - docs
+  - databases
+  - clickhouse
+  - docker
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Docker (Hasura & ClickHouse)
+
+Testing is currently underway on the ClickHouse connector for use in self-hosted environments. Our suggested
+installation method is to use Docker Compose to deploy a working instance of Hasura with the ClickHouse Connector
+enabled.
+
+In order to do this, follow the instructions for
+[Hasura Enterprise Edition](/enterprise/getting-started/quickstart-docker.mdx), but change out the Docker Compose files
+listed in that documentation to these values:
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/clickhouse/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/clickhouse/docker-compose.yaml -o docker-compose.yml
+```
+
+When you use these to launch the services, you'll see three containers running instead of two. The third container is
+the ClickHouse GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the ClickHouse
+data source as a type that can now be added to your Hasura GraphQL Service instance.
+
+You can check the health of the connector using the `/health` endpoint. The connector is available at the following
+endpoint:
+
+```bash
+http://localhost:8080/health
+```
+
+You can follow the instructions from
+[this step](/databases/clickhouse/getting-started/cloud.mdx#step-22-next-choose-the-clickhouse-driver) onward to connect
+to your ClickHouse instance and begin using it with Hasura.
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries, relationships, and permissions on ClickHouse. Column comparison operators
+are not supported with permissions on ClickHouse.
+
+:::
+
+Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
+Metadata in JSON/YAML directly.
+
+If you'd like to stay informed about the status of ClickHouse support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

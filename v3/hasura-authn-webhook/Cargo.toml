@@ -1,0 +1,27 @@
+[package]
+name = "hasura-authn-webhook"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0"
+serde = "1.0.183"
+serde_json = "1.0.104"
+serde_with = "2.2.0"
+jsonwebtoken = "8.3.0"
+reqwest = { version = "0.11.8",  features = ["json"] }
+axum = "0.6.9"
+lazy_static = "1.4.0"
+open-dds = { path = "../open-dds" }
+hasura-authn-core = { path = "../hasura-authn-core" }
+lang-graphql = { path = "../lang-graphql" }
+schemars = { version = "0.8.12", features = ["smol_str", "url"] }
+tracing-util = { path = "../tracing-util" }
+
+[dev-dependencies]
+pretty_assertions = "1.3.0"
+mockito = {version = "1.1.0", default-features = false, features = []}
+tokio = "1.29.0"
+rand = "0.8.5"

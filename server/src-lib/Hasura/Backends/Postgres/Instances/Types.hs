@@ -14,6 +14,7 @@ import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Kind (Type)
+import Data.Text.Extended (toTxt)
 import Data.Typeable
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Backends.Postgres.Connection.VersionCheck (runCockroachVersionCheck)
@@ -22,6 +23,7 @@ import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
+import Hasura.Backends.Postgres.Types.Aggregates qualified as Postgres
 import Hasura.Backends.Postgres.Types.BoolExp qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
 import Hasura.Backends.Postgres.Types.ComputedField qualified as Postgres
@@ -29,14 +31,18 @@ import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Insert qualified as Postgres (BackendInsert)
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
+import Hasura.NativeQuery.Types (getNativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..), ModelType (..))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName, TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
+import Hasura.RQL.Types.Relationships.Local
+import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
 -- PostgresBackend
@@ -57,20 +63,20 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
-  versionCheckImpl :: Env.Environment -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
-  versionCheckImpl = const $ const (pure $ Right ())
+  versionCheckImpl :: Env.Environment -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl _ _ _ = pure (Right ())
 
   runPingSourceImpl :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
   runPingSourceImpl _ _ _ _ = pure ()
 
 instance PostgresBackend 'Vanilla where
-  type PgExtraTableMetadata 'Vanilla = ()
+  type PgExtraTableMetadata 'Vanilla = Postgres.PGExtraTableMetadata
 
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
 
 instance PostgresBackend 'Cockroach where
-  type PgExtraTableMetadata 'Cockroach = ()
+  type PgExtraTableMetadata 'Cockroach = Postgres.PGExtraTableMetadata
   versionCheckImpl = runCockroachVersionCheck
   runPingSourceImpl = runCockroachDBPing
 
@@ -95,8 +101,9 @@ instance
   type ConstraintName ('Postgres pgKind) = Postgres.ConstraintName
   type BasicOrderType ('Postgres pgKind) = Postgres.OrderType
   type NullsOrderType ('Postgres pgKind) = Postgres.NullsOrder
-  type CountType ('Postgres pgKind) = Postgres.CountType
+  type CountType ('Postgres pgKind) = Postgres.CountAggregate pgKind
   type Column ('Postgres pgKind) = Postgres.PGCol
+  type ColumnPath ('Postgres pgKind) = Postgres.PGCol
   type ScalarValue ('Postgres pgKind) = Postgres.PGScalarValue
   type ScalarType ('Postgres pgKind) = Postgres.PGScalarType
   type BooleanOperators ('Postgres pgKind) = Postgres.BooleanOperators
@@ -121,24 +128,26 @@ instance
   type XEventTriggers ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
+  type XGroupBy ('Postgres pgKind) = XEnable
 
   type ResolvedConnectionTemplate ('Postgres pgKind) = Maybe Postgres.PostgresResolvedConnectionTemplate -- 'Nothing' represents no connection template configured
   type ConnectionTemplateRequestContext ('Postgres pgKind) = Postgres.RequestContext
 
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
   healthCheckImplementation =
-    Just $
-      HealthCheckImplementation
+    Just
+      $ HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
           _hciTestCodec = codec
         }
 
+  supportsAggregateComputedFields = True
   versionCheckImplementation = versionCheckImpl @pgKind
   runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
   textToScalarValue = Postgres.textToScalarValue
-  parseScalarValue ty val = runAesonParser (Postgres.parsePGValue ty) val
+  parseScalarValue () ty val = runAesonParser (Postgres.parsePGValue ty) val
   scalarValueToJSON = Postgres.pgScalarValueToJson
   functionToTable = fmap (Postgres.TableName . Postgres.getFunctionTxt)
   tableToFunction = fmap (Postgres.FunctionName . Postgres.getTableTxt)
@@ -155,11 +164,23 @@ instance
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
 
-  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecRunAction (Postgres._pscExecCtx sourceConfig)) (Postgres.ResizePoolMode serverReplicas)
+  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)) serverReplicas
 
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
 
   resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate
+  getAggregationPredicatesModels sourceName modelSourceType aggregationFields = do
+    let relInfo = Agg.aggRelation aggregationFields
+    let target = riTarget relInfo
+    case target of
+      RelTargetTable table -> modify $ (++) [ModelNameInfo (toTxt table, ModelTypeTable, sourceName, modelSourceType)]
+      RelTargetNativeQuery q -> modify $ (++) [ModelNameInfo (G.unName $ getNativeQueryName q, ModelTypeNativeQuery, sourceName, modelSourceType)]
+
+  getColVals = Postgres.getPGColValues
+
+  getColumnPathColumn = id
+
+  tryColumnPathToColumn = Just
 
 instance
   ( HasTag ('Postgres pgKind)
@@ -168,3 +189,11 @@ instance
   where
   type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+  sourceConfigNumReadReplicas = Postgres.sourceConfigNumReadReplicas
+  sourceConfigConnectonTemplate = Postgres.sourceConfigConnectonTemplate
+  sourceSupportsColumnRedaction = const True
+  sourceConfigBackendSourceKind _sourceConfig =
+    case backendTag @('Postgres pgKind) of
+      PostgresVanillaTag -> PostgresVanillaKind
+      PostgresCitusTag -> PostgresCitusKind
+      PostgresCockroachTag -> PostgresCockroachKind

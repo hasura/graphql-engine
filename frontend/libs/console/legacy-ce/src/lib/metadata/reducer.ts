@@ -1,4 +1,4 @@
-import { MetadataActions } from './actions';
+import { ExportMetadataSuccess, MetadataActions } from './actions';
 import {
   HasuraMetadataV3,
   CollectionName,
@@ -99,30 +99,37 @@ const renameSourceAttributes = (sources: HasuraMetadataV3['sources']) =>
     return { ...s, tables };
   });
 
+const updateMetadata = (
+  action: ExportMetadataSuccess,
+  state: MetadataState
+) => {
+  const metadata =
+    'metadata' in action.data ? action.data.metadata : action.data;
+  return {
+    ...state,
+    metadataObject: {
+      ...metadata,
+      sources: renameSourceAttributes(metadata.sources),
+    },
+    resourceVersion:
+      'resource_version' in action.data ? action.data.resource_version : 1,
+    allowedQueries: setAllowedQueries(
+      metadata?.query_collections,
+      metadata?.allowlist
+    ),
+    inheritedRoles: metadata?.inherited_roles,
+    loading: false,
+    error: null,
+  };
+};
+
 export const metadataReducer = (
   state = defaultState,
   action: MetadataActions
 ): MetadataState => {
   switch (action.type) {
     case 'Metadata/EXPORT_METADATA_SUCCESS':
-      const metadata =
-        'metadata' in action.data ? action.data.metadata : action.data;
-      return {
-        ...state,
-        metadataObject: {
-          ...metadata,
-          sources: renameSourceAttributes(metadata.sources),
-        },
-        resourceVersion:
-          'resource_version' in action.data ? action.data.resource_version : 1,
-        allowedQueries: setAllowedQueries(
-          metadata?.query_collections,
-          metadata?.allowlist
-        ),
-        inheritedRoles: metadata?.inherited_roles,
-        loading: false,
-        error: null,
-      };
+      return updateMetadata(action, state);
     case 'Metadata/EXPORT_METADATA_REQUEST':
       return {
         ...state,
@@ -210,20 +217,22 @@ export const metadataReducer = (
     case 'Metadata/ADD_INHERITED_ROLE':
       return {
         ...state,
-        inheritedRoles: [...state.inheritedRoles, action.data],
+        inheritedRoles: [...(state.inheritedRoles ?? []), action.data],
       };
     case 'Metadata/DELETE_INHERITED_ROLE':
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.filter(ir => ir.role_name !== action.data),
+          ...(state.inheritedRoles ?? []).filter(
+            ir => ir.role_name !== action.data
+          ),
         ],
       };
     case 'Metadata/UPDATE_INHERITED_ROLE':
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.map(ir =>
+          ...(state.inheritedRoles ?? []).map(ir =>
             ir.role_name === action.data.role_name ? action.data : ir
           ),
         ],

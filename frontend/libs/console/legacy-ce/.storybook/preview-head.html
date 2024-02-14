@@ -43,3 +43,19 @@
     padding-left: 0.5rem;
   }
 </style>
+
+<script language="JavaScript">
+  window.preventJsonWebTokenLoad = true;
+
+  // initialize the window.__env object
+  window.__env = {
+    dataApiUrl: 'http://localhost:8080',
+    apiHost: 'http://localhost',
+    apiPort: '8080',
+    nodeEnv: 'development',
+    consoleType: 'oss',
+    adminSecretSet: false,
+    adminSecret: null,
+    tenantID: null,
+  };
+</script>

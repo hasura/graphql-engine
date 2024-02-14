@@ -486,7 +486,14 @@ const getRemoteQueries = (queryUrl, cb, dispatch) => {
 };
 
 const processResponseDetails =
-  (responseTime, responseSize, isResponseCached, responseTrackingId) =>
+  (
+    responseTime,
+    responseSize,
+    isResponseCached,
+    responseTrackingId,
+    cacheWarning,
+    isRequestCachable
+  ) =>
   dispatch => {
     dispatch({
       type: TRACK_RESPONSE_DETAILS,
@@ -495,6 +502,8 @@ const processResponseDetails =
         responseSize,
         isResponseCached,
         responseTrackingId,
+        cacheWarning,
+        isRequestCachable,
       },
     });
   };
@@ -725,6 +734,8 @@ const apiExplorerReducer = (state = defaultState, action) => {
             responseSize: action.data.responseSize,
             isResponseCached: action.data.isResponseCached,
             responseTrackingId: action.data.responseTrackingId,
+            cacheWarning: action.data.cacheWarning,
+            isRequestCachable: action.data.isRequestCachable,
           },
         },
       };

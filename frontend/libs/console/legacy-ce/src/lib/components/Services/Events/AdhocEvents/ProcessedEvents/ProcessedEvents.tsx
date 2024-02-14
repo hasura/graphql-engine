@@ -22,15 +22,17 @@ const ProcessedEvents: React.FC<Props> = props => {
     setFilterState,
     runQuery
   ) => (
-    <EventsTable
-      rows={rows}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
-      identifier="adhoc-events-processed"
-      triggerType="one_off"
-    />
+    <div className="bootstrap-jail">
+      <EventsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
+        identifier="adhoc-events-processed"
+        triggerType="one_off"
+      />
+    </div>
   );
 
   return (

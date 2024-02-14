@@ -2,9 +2,8 @@ import { Table } from '../../../../hasura-metadata-types';
 import {
   addConstraintName,
   filterTableRelationships,
-  removeExistingRelationships,
 } from './useSuggestedRelationships';
-import { LocalRelationship, SuggestedRelationship } from '../../../types';
+import { SuggestedRelationship } from '../../../types';
 
 describe('filterTableRelationships', () => {
   it('filters relationships', () => {
@@ -40,69 +39,6 @@ describe('filterTableRelationships', () => {
   });
 });
 
-describe('removeExistingRelationships', () => {
-  it('removes existing relationships', () => {
-    const relationships: SuggestedRelationship[] = [
-      {
-        type: 'object',
-        from: {
-          table: ['Album'],
-          columns: ['ArtistId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['ArtistId'],
-        },
-      },
-      {
-        type: 'object',
-        from: {
-          table: ['Genre'],
-          columns: ['GenreId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['GenreId'],
-        },
-      },
-    ];
-    const existingRelationships: LocalRelationship[] = [
-      {
-        type: 'localRelationship',
-        relationshipType: 'Object',
-        definition: {
-          toTable: ['Artist'],
-          mapping: {
-            GenreId: 'GenreId',
-          },
-        },
-        fromSource: 'dataSource',
-        fromTable: ['Genre'],
-        name: 'aName',
-      },
-    ];
-
-    expect(
-      removeExistingRelationships({
-        relationships,
-        existingRelationships,
-      })
-    ).toEqual([
-      {
-        type: 'object',
-        from: {
-          table: ['Album'],
-          columns: ['ArtistId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['ArtistId'],
-        },
-      },
-    ]);
-  });
-});
-
 describe('addConstraintName', () => {
   describe('when the naming convention is hasura-default', () => {
     it('adds the constraint name', () => {
@@ -134,11 +70,11 @@ describe('addConstraintName', () => {
       const expected = [
         {
           ...relationships[0],
-          constraintName: 'Album_Artist',
+          constraintName: 'Artist',
         },
         {
           ...relationships[1],
-          constraintName: 'Genre_Artists',
+          constraintName: 'Artists',
         },
       ];
 
@@ -178,11 +114,11 @@ describe('addConstraintName', () => {
       const expected = [
         {
           ...relationships[0],
-          constraintName: 'albumArtist',
+          constraintName: 'artist',
         },
         {
           ...relationships[1],
-          constraintName: 'genreArtists',
+          constraintName: 'artists',
         },
       ];
 

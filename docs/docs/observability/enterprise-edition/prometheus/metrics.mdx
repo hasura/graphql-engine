@@ -1,0 +1,521 @@
+---
+sidebar_label: Available Metrics
+description: Metrics via Prometheus for Hasura Enterprise Edition
+title: 'Enterprise Edition: Metrics via Prometheus'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+sidebar_position: 4
+toc_max_heading_level: 4
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Metrics exported via Prometheus
+
+<ProductBadge self />
+
+## Metrics exported
+
+The following metrics are exported by Hasura GraphQL Engine:
+
+### GraphQL request metrics
+
+#### Hasura GraphQL execution time seconds
+
+Execution time of successful GraphQL requests (excluding subscriptions). If more requests are falling in the higher
+buckets, you should consider [tuning the performance](/deployment/performance-tuning.mdx).
+
+|        |                                                              |
+| ------ | ------------------------------------------------------------ |
+| Name   | `hasura_graphql_execution_time_seconds`                      |
+| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
+| Labels | `operation_type`: query \| mutation                          |
+
+:::info GraphQL request execution time
+
+- Uses wall-clock time, so it includes time spent waiting on I/O.
+- Includes authorization, parsing, validation, planning, and execution (calls to databases, Remote Schemas).
+
+:::
+
+#### Hasura GraphQL requests total
+
+Number of GraphQL requests received, representing the GraphQL query/mutation traffic on the server.
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_graphql_requests_total`                                |
+| Type   | Counter                                                        |
+| Labels | `operation_type`: query \| mutation \| subscription \| unknown |
+
+The `unknown` operation type will be returned for queries that fail authorization, parsing, or certain validations. The
+`response_status` label will be `success` for successful requests and `failed` for failed requests.
+
+
+### Hasura Event Triggers metrics
+
+See more details on Event trigger observability [here](/event-triggers/observability-and-performance.mdx).
+
+#### Event fetch time per batch
+
+Hasura fetches the events in batches (by default 100) from the Hasura Event tables in the database. This metric
+represents the time taken to fetch a batch of events from the database.
+
+A higher metric indicates slower polling of events from the database, you should consider looking into the performance
+of your database.
+
+|        |                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------ |
+| Name   | `hasura_event_fetch_time_per_batch_seconds`                                                |
+| Type   | Histogram<br /><br />Buckets: 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
+| Labels | none                                                                                       |
+
+#### Event invocations total
+
+This metric represents the number of HTTP requests that have been made to the webhook server for delivering events.
+
+|        |                                                            |
+| ------ | ---------------------------------------------------------- |
+| Name   | `hasura_event_invocations_total`                           |
+| Type   | Counter                                                    |
+| Labels | `status`: success \| failed, `trigger_name`, `source_name` |
+
+#### Event processed total
+
+Total number of events processed. Represents the Event Trigger egress.
+
+|        |                                                            |
+| ------ | ---------------------------------------------------------- |
+| Name   | `hasura_event_processed_total`                             |
+| Type   | Counter                                                    |
+| Labels | `status`: success \| failed, `trigger_name`, `source_name` |
+
+#### Event processing time
+
+Time taken for an event to be processed.
+
+|        |                                                                       |
+| ------ | --------------------------------------------------------------------- |
+| Name   | `hasura_event_processing_time_seconds`                                |
+| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
+| Labels | `trigger_name`, `source_name`                                         |
+
+The processing of an event involves the following steps:
+
+1.  Hasura Engine fetching the event from Hasura Event tables in the database and adding it to the Hasura Events queue
+2.  An HTTP worker picking up the event from the Hasura Events queue
+3.  An HTTP worker delivering the event to the webhook
+
+:::info Event delivery failure
+
+Note, if the delivery of the event fails - the delivery of the event is retried based on its `next_retry_at`
+configuration.
+
+:::
+
+This metric represents the time taken for an event to be delivered since it was created (if the first attempt) or retried
+(after the first attempt). **This metric can be considered as the end-to-end processing time for an event.**
+
+For e.g., say an event was created at `2021-01-01 10:00:30` and it has a `next_retry_at` configuration which says if the
+event delivery fails, the event should be retried after 30 seconds.
+
+At `2021-01-01 10:01:30`: the event was fetched from the Hasura Event tables, picked up by the HTTP worker, and the
+delivery was attempted. The delivery failed and the `next_retry_at` of `2021-01-01 10:02:00` was set for the event.
+
+Now at `2021-01-01 10:02:00`: the event was fetched again from the Hasura Event tables, picked up by the HTTP worker,
+and the delivery was attempted at `2021-01-01 10:03: 30`. This time, the delivery was successful.
+
+The processing time for the second delivery try would be:
+
+Processing Time = event delivery time - event next retried time
+
+Processing Time = `2021-01-01 10:03:30` - `2021-01-01 10:02:00` = `90 seconds`
+
+#### Event queue time
+
+Hasura fetches the events from the Hasura Event tables in the database and adds it to the Hasura Events queue. The event
+queue time represents the time taken for an event to be picked up by the HTTP worker after it has been added to the
+"Events Queue".
+
+Higher value of this metric implies slow event processing. In this case, you can consider increasing the
+[HTTP pool size](/deployment/graphql-engine-flags/reference.mdx/#events-http-pool-size) or optimizing the webhook
+server.
+
+|        |                                                                       |
+| ------ | --------------------------------------------------------------------- |
+| Name   | `hasura_event_queue_time_seconds`                                     |
+| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
+| Labels | `trigger_name`, `source_name`                                         |
+
+#### Event Triggers HTTP Workers
+
+Current number of active Event Trigger HTTP workers. Compare this number to the
+[HTTP pool size](/deployment/graphql-engine-flags/reference.mdx/#events-http-pool-size). Consider increasing it if the
+metric is near the current configured value.
+
+|        |                                     |
+| ------ | ----------------------------------- |
+| Name   | `hasura_event_trigger_http_workers` |
+| Type   | Gauge                               |
+| Labels | none                                |
+
+#### Event webhook processing time
+
+The time between when an HTTP worker picks an event for delivery to the time it sends the event payload to the webhook.
+
+A higher processing time indicates slow webhook, you should try to optimize the event webhook.
+
+|        |                                                              |
+| ------ | ------------------------------------------------------------ |
+| Name   | `hasura_event_webhook_processing_time_seconds`               |
+| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
+| Labels | `trigger_name`, `source_name`                                |
+
+#### Events fetched per batch
+
+Number of events fetched from the Hasura Event tables in the database per batch. This number should be equal or less
+than the [events fetch batch size](/deployment/graphql-engine-flags/reference.mdx/#events-fetch-batch-size).
+
+|        |                                   |
+| ------ | --------------------------------- |
+| Name   | `hasura_events_fetched_per_batch` |
+| Type   | Gauge                             |
+| Labels | none                              |
+
+Since polling the database to continuously check if there are any pending events is an expensive operation, Hasura only
+polls the database if there are any pending events. This metric can be used to understand if there are any pending
+events in the Hasura Event Tables.
+
+:::info Dependent on pending events
+
+Note that Hasura only fetches events from the Hasura Event tables if there are any pending events. If there are no
+pending events, this metric will be 0.
+
+:::
+
+### Subscription metrics
+
+See more details on subscriptions observability [here](/subscriptions/observability-and-performance.mdx).
+
+#### Active Subscriptions
+
+Current number of active subscriptions, representing the subscription load on the server.
+
+|        |                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------ |
+| Name   | `hasura_active_subscriptions`                                                              |
+| Type   | Gauge                                                                                      |
+| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+
+#### Active Subscription Pollers
+
+Current number of active subscription pollers. A subscription poller
+[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
+similar subscriptions together. The value of this metric should be proportional to the number of uniquely parameterized
+subscriptions (i.e., subscriptions with the same selection set, but with different input arguments and session variables
+are multiplexed on the same poller). If this metric is high then it may be an indication that there are too many
+uniquely parameterized subscriptions which could be optimized for better performance.
+
+|        |                                              |
+| ------ | -------------------------------------------- |
+| Name   | `hasura_active_subscription_pollers`         |
+| Type   | Gauge                                        |
+| Labels | `subscription_kind`: streaming \| live-query |
+
+#### Active Subscription Pollers in Error State
+
+Current number of active subscription pollers that are in the error state. A subscription poller
+[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
+similar subscriptions together. A non-zero value of this metric indicates that there are runtime errors in atleast one
+of the subscription pollers that are running in Hasura. In most of the cases, runtime errors in subscriptions are caused
+due to the changes at the data model layer and fixing the issue at the data model layer should automatically fix the
+runtime errors.
+
+|        |                                                     |
+| ------ | --------------------------------------------------- |
+| Name   | `hasura_active_subscription_pollers_in_error_state` |
+| Type   | Gauge                                               |
+| Labels | `subscription_kind`: streaming \| live-query        |
+
+#### Subscription Total Time
+
+The time taken to complete running of one subscription poller.
+
+A subscription poller
+[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
+similar subscriptions together. This subscription poller runs every 1 second by default and queries the database with
+the multiplexed query to fetch the latest data. In a polling instance, the poller not only queries the database but does
+other operations like splitting similar queries into batches (by default 100) before fetching their data from the
+database, etc. **This metric is the total time taken to complete all the operations in a single poll.**
+
+In a single poll, the subscription poller splits the different variables for the multiplexed query into batches (by
+default 100) and executes the batches. We use the `hasura_subscription_db_execution_time_seconds` metric to observe the
+time taken for each batch to execute on the database. This means for a single poll there can be multiple values for
+`hasura_subscription_db_execution_time_seconds` metric.
+
+Let's look at an example to understand these metrics better:
+
+Say we have 650 subscriptions with the same selection set but different input arguments. These 650 subscriptions will be
+grouped to form one multiplexed query. A single poller would be created to run this multiplexed query. This poller will
+run every 1 second.
+
+The default batch size in hasura is 100, so the 650 subscriptions will be split into 7 batches for execution during a
+single poll.
+
+During a single poll:
+
+- Batch 1: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
+- Batch 2: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
+- Batch 3: `hasura_subscription_db_execution_time_seconds` = 0.003 seconds
+- Batch 4: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
+- Batch 5: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
+- Batch 6: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
+- Batch 7: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
+
+The `hasura_subscription_total_time_seconds` would be sum of all the database execution times shown in the batches, plus
+some extra process time for other tasks the poller does during a single poll. In this case, it would be approximately
+0.013 seconds.
+
+|        |                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------ |
+| Name   | `hasura_subscription_total_time_seconds`                                                   |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
+| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+
+#### Subscription Database Execution Time
+
+The time taken to run the subscription's multiplexed query in the database for a single batch.
+
+A subscription poller
+[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
+similar subscriptions together. During every run (every 1 second by default), the poller splits the different variables
+for the multiplexed query into batches (by default 100) and execute the batches. This metric observes the time taken for
+each batch to execute on the database.
+
+If this metric is high, then it may be an indication that the database is not performing as expected, you should
+consider investigating the subscription query and see if indexes can help improve performance.
+
+|        |                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------ |
+| Name   | `hasura_subscription_db_execution_time_seconds`                                            |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
+| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+
+#### WebSocket Egress
+
+The total size of WebSocket messages sent in bytes.
+
+|        |                                              |
+| ------ | -------------------------------------------- |
+| Name   | `hasura_websocket_messages_sent_bytes_total` |
+| Type   | Counter                                      |
+| Labels | `operation_name`, `parameterized_query_hash` |
+
+#### WebSocket Ingress
+
+The total size of WebSocket messages received in bytes.
+
+|        |                                                  |
+| ------ | ------------------------------------------------ |
+| Name   | `hasura_websocket_messages_received_bytes_total` |
+| Type   | Counter                                          |
+| Labels | none                                             |
+
+#### Websocket Message Queue Time
+
+The time for which a websocket message remains queued in the GraphQL engine's websocket queue.
+
+|        |                                                                                   |
+| ------ | --------------------------------------------------------------------------------- |
+| Name   | `hasura_websocket_message_queue_time`                                             |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100 |
+| Labels | none                                                                              |
+
+#### Websocket Message Write Time
+
+The time taken to write a websocket message into the TCP send buffer.
+
+|        |                                                                                   |
+| ------ | --------------------------------------------------------------------------------- |
+| Name   | `hasura_websocket_message_write_time`                                             |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100 |
+| Labels | none                                                                              |
+
+### Cache metrics
+
+See more details on caching metrics [here](/caching/caching-metrics.mdx)
+
+#### Hasura cache request count
+
+Tracks cache hit and miss requests, which helps in monitoring and optimizing cache utilization.
+
+|        |                              |
+| ------ | ---------------------------- |
+| Name   | `hasura_cache_request_count` |
+| Type   | Counter                      |
+| Labels | `status`: hit \| miss        |
+
+### Cron trigger metrics
+
+#### Hasura cron events invocation total
+
+Total number of cron events invoked, representing the number of invocations made for cron events.
+
+|        |                                       |
+| ------ | ------------------------------------- |
+| Name   | `hasura_cron_events_invocation_total` |
+| Type   | Counter                               |
+| Labels | `status`: success \| failed           |
+
+#### Hasura cron events processed total
+
+Total number of cron events processed, representing the number of invocations made for cron events. Compare this to
+`hasura_cron_events_invocation_total`. A high difference between the two metrics indicates high failure rate of the cron
+webhook.
+
+|        |                                      |
+| ------ | ------------------------------------ |
+| Name   | `hasura_cron_events_processed_total` |
+| Type   | Counter                              |
+| Labels | `status`: success \| failed          |
+
+
+### One-off Scheduled events metrics
+
+#### Hasura one-off events invocation total
+
+Total number of one-off events invoked, representing the number of invocations made for one-off events.
+
+|        |                                         |
+| ------ | --------------------------------------- |
+| Name   | `hasura_oneoff_events_invocation_total` |
+| Type   | Counter                                 |
+| Labels | `status`: success \| failed             |
+
+#### Hasura one-off events processed total
+
+Total number of one-off events processed, representing the number of invocations made for one-off events. Compare this
+to `hasura_oneoff_events_invocation_total`. A high difference between the two metrics indicates high failure rate of the
+one-off webhook.
+
+|        |                                        |
+| ------ | -------------------------------------- |
+| Name   | `hasura_oneoff_events_processed_total` |
+| Type   | Counter                                |
+| Labels | `status`: success \| failed            |
+
+
+### Hasura HTTP connections
+
+Current number of active HTTP connections (excluding WebSocket connections), representing the HTTP load on the server.
+
+|        |                           |
+| ------ | ------------------------- |
+| Name   | `hasura_http_connections` |
+| Type   | Gauge                     |
+| Labels | none                      |
+
+### Hasura WebSocket connections
+
+Current number of active WebSocket connections, representing the WebSocket load on the server.
+
+|        |                                |
+| ------ | ------------------------------ |
+| Name   | `hasura_websocket_connections` |
+| Type   | Gauge                          |
+| Labels | none                           |
+
+
+### Hasura Postgres connections
+
+Current number of active PostgreSQL connections. Compare this to
+[pool settings](/api-reference/syntax-defs.mdx/#pgpoolsettings).
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_connections`                                                                                                                                                     |
+| Type   | Gauge                                                                                                                                                                             |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
+### Hasura Postgres Connection Initialization Time
+
+The time taken to establish and initialize a PostgreSQL connection.
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_connection_init_time`                                                                                                                                            |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
+### Hasura Postgres Pool Wait Time
+
+The time taken to acquire a connection from the pool.
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_pool_wait_time`                                                                                                                                                  |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
+### Hasura source health
+
+Health check status of a particular data source, corresponding to the output of `/healthz/sources`, with possible values
+0 through 3 indicating, respectively: OK, TIMEOUT, FAILED, ERROR. See the
+[Source Health Check API Reference](/api-reference/source-health.mdx) for details.
+
+|        |                                     |
+| ------ | ----------------------------------- |
+| Name   | `hasura_source_health`              |
+| Type   | Gauge                               |
+| Labels | `source_name`: name of the database |
+
+### HTTP Egress
+
+Total size of HTTP response bodies sent via the HTTP server excluding responses from requests to `/healthz`
+and `/v1/version` endpoints or any other undefined resource/endpoint (for example `/foobar`).
+
+|        |                                    |
+| ------ | ---------------------------------- |
+| Name   | `hasura_http_response_bytes_total` |
+| Type   | Counter                            |
+| Labels | none                               |
+
+### HTTP Ingress
+
+Total size of HTTP request bodies received via the HTTP server excluding requests to `/healthz` and
+`/v1/version` endpoints or any other undefined resource/endpoint (for example `/foobar`).
+
+|        |                                   |
+| ------ | --------------------------------- |
+| Name   | `hasura_http_request_bytes_total` |
+| Type   | Counter                           |
+| Labels | none                              |
+
+### OpenTelemetry OTLP Export Metrics
+
+These metrics allow for monitoring the reliability and performance of OTLP
+exports of telemetry data.
+
+#### Hasura OTLP Sent Spans
+
+Total number of successfully exported trace spans.
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_otel_sent_spans`                                       |
+| Type   | Counter                                                        |
+| Labels | none                                                           |
+
+#### Hasura OTLP Dropped Spans
+
+Total number of trace spans dropped due to either high trace volume that filled
+the buffer, or errors during send (e.g. a timeout or error response from the
+collector).
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_otel_dropped_spans`                                    |
+| Type   | Counter                                                        |
+| Labels | `reason`: buffer_full \| send_failed                           |

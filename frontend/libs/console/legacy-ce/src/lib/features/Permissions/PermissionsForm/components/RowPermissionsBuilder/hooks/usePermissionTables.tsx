@@ -1,59 +1,46 @@
-import {
-  areTablesEqual,
-  MetadataSelectors,
-  useMetadata,
-} from '../../../../../hasura-metadata-api';
-import { MetadataTable } from '../../../../../hasura-metadata-types';
-import { columnsFromSchema } from '../components/utils/columnsFromSchema';
-import { getTableDisplayName } from '../../../../../DatabaseRelationships';
-import { useIntrospectSchema } from '.';
-import { tableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
-import { useTables } from '../../../../../Data/TrackTables/hooks/useTables';
-import { useTablesFkConstraints } from './useTablesFkConstraints';
-
-const getTableName = (table: MetadataTable) => {
-  // Table name. Replace . with _ because GraphQL doesn't allow . in field names
-  if (table?.configuration?.custom_name)
-    return table.configuration.custom_name.replace(/\./g, '_');
-  return getTableDisplayName(table.table).replace(/\./g, '_');
-};
+import { getAllTableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
+import { useTablesWithColumns } from './useTablesWithColumns';
+import { useSources } from '../../../../../MetadataAPI';
+import { TableToLoad, Tables } from '../components';
+import { useAllSuggestedRelationships } from '../../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 
 export const usePermissionTables = ({
   dataSourceName,
+  tablesToLoad,
 }: {
   dataSourceName: string;
-}) => {
-  const { data: metadataTables, isLoading: isLoadingMetadataTables } =
-    useMetadata(MetadataSelectors.getTables(dataSourceName));
-  const { data: schema } = useIntrospectSchema();
-  const { data: tables, isLoading: isLoadingTables } = useTables({
-    dataSourceName,
+  tablesToLoad: TableToLoad;
+}): { isLoading: boolean; tables: Tables | null } => {
+  const { data: sources, isLoading: isLoadingSources } = useSources();
+  const { data: tables, isLoading: isLoadingTables } = useTablesWithColumns({
+    tablesToLoad,
   });
-  const { data: fkConstraints, isLoading: isDALIntrospectionLoading } =
-    useTablesFkConstraints({ dataSourceName, tables });
-  if (isLoadingMetadataTables || isLoadingTables || isDALIntrospectionLoading)
-    return [];
-  const allColumns = columnsFromSchema(schema);
-  return (
-    metadataTables?.map(metadataTable => {
-      const tableName = getTableName(metadataTable);
-      const table = tables?.find(t =>
-        areTablesEqual(metadataTable.table, t.table)
-      );
-      const relationships = fkConstraints?.find(({ table }) =>
-        areTablesEqual(table, metadataTable.table)
-      )?.relationships;
-      return {
-        table: metadataTable.table,
-        dataSource: dataSourceName,
-        relationships: tableRelationships(
-          metadataTable,
-          table?.table,
-          dataSourceName,
-          relationships
-        ),
-        columns: allColumns[tableName] ?? [],
-      };
-    }) ?? []
-  );
+
+  const { suggestedRelationships, isLoadingSuggestedRelationships } =
+    useAllSuggestedRelationships({
+      dataSourceName,
+      isEnabled: true,
+      omitTracked: false,
+    });
+
+  if (isLoadingTables || isLoadingSuggestedRelationships || isLoadingSources)
+    return { isLoading: true, tables: [] };
+
+  return {
+    isLoading: false,
+    tables:
+      tables?.map(({ metadataTable, columns, sourceName }) => {
+        return {
+          table: metadataTable.table,
+          dataSource: sources?.find(source => source.name === sourceName),
+          relationships: getAllTableRelationships(
+            metadataTable,
+            dataSourceName,
+            suggestedRelationships
+          ),
+          columns,
+          computedFields: metadataTable.computed_fields ?? [],
+        };
+      }) ?? [],
+  };
 };

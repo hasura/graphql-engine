@@ -53,8 +53,10 @@ export const Feedback = ({ metadata }: { metadata: any }) => {
         .catch(error => console.error('error', error));
     };
 
-    if (window.location.hostname === 'localhost') {
-      alert('Testing feedback (not) sent!');
+    if (!window.location.hostname.includes('hasura.io')) {
+      alert(
+        'Hey! We like that you like our docs and chose to use them 🎉\n\nHowever, you might want to remove the feedback component or modify the route you hit, lest you want us reading what people think of your site ✌️'
+      );
       setRating(null);
       setNotes(null);
       setIsSubmitSuccess(true);
@@ -119,11 +121,28 @@ export const Feedback = ({ metadata }: { metadata: any }) => {
       <div className={styles.form}>
         <div className={styles.topSection}>
           <h3>What did you think of this doc?</h3>
-
           {isSubmitSuccess ? (
             <div className={styles.successMessage}>
               <p>Thanks for your feedback.</p>
-              <p>Feel free to review as many docs pages as you like!</p>
+              {rating >= 3 ? (
+                <p>Feel free to review as many docs pages as you like!</p>
+              ) : (
+                <p>
+                  If you need help with the issue that led to this low score, you can create a{' '}
+                  <a
+                    href="https://github.com/hasura/graphql-engine/issues/new/choose"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    GitHub issue
+                  </a>{' '}
+                  if you think this is a bug, or check out our{' '}
+                  <a href="https://hasura.io/discord" target="_blank" rel="noopener noreferrer">
+                    Discord server
+                  </a>
+                  , where Hasurians and community users are ready to engage.
+                </p>
+              )}
             </div>
           ) : (
             <div className={styles.numberRow}>

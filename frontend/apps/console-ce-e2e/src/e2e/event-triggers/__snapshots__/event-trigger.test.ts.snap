@@ -1,0 +1,46 @@
+exports[`Create event trigger with shortest possible path > When the users create, modify and delete an Event trigger, everything should work #0`] =
+{
+  "definition": {
+    "enable_manual": false,
+    "insert": {
+      "columns": "*"
+    },
+    "update": {
+      "columns": [
+        "id"
+      ]
+    }
+  },
+  "headers": [
+    {
+      "name": "x-hasura-user-id",
+      "value": "1234"
+    }
+  ],
+  "name": "event_trigger_test",
+  "request_transform": {
+    "body": {
+      "action": "transform",
+      "template": "{\n  \"table\": {\n    \"name\": {{$body.table.name}},\n    \"schema\": {{$body.table.schema}}\n  }\n}"
+    },
+    "method": "GET",
+    "query_params": {
+      "x-hasura-user-id": "my-user-id"
+    },
+    "request_headers": {
+      "add_headers": {},
+      "remove_headers": [
+        "content-type"
+      ]
+    },
+    "template_engine": "Kriti",
+    "url": "{{$base_url}}/transformUrl",
+    "version": 2
+  },
+  "retry_conf": {
+    "interval_sec": 5,
+    "num_retries": 10,
+    "timeout_sec": 70
+  },
+  "webhook": "http://httpbin.org/post"
+};

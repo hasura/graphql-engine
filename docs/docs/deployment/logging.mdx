@@ -28,7 +28,7 @@ Based on your deployment method, the Hasura GraphQL Engine logs can be accessed 
 :::info Detailed Logging in Hasura Cloud
 
 If you’re looking for more in-depth logging information, along with a Console for browsing logs, please see
-[Observability with Hasura Cloud](/observability/index.mdx).
+[Observability with Hasura Cloud](/observability/overview.mdx).
 
 :::
 
@@ -42,44 +42,73 @@ the websocket layer are called `websocket-log`, logs from the Event Trigger syst
 
 You can configure the GraphQL Engine to enable/disable certain log-types using the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
-[GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
+[GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx#log-level)
 
-Default enabled log-types are: `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+The default enabled **Community Edition** log-types are:
+`startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+
+The default enabled **Enterprise Edition** log-types are: `api-limit-log`
 
 ### Configurable log-types
 
-All the log-types that can be enabled/disabled are:
+The Community Edition log-types that can be enabled/disabled are:
 
-| Log type          | Description                                                                                                                                                                                                                       | Log Level          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `startup`         | Information that is logged during startup                                                                                                                                                                                         | `info`             |
-| `query-log`       | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), the operation name (if provided in the GraphQL request) | `info`             |
-| `http-log`        | Http access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                        | `info` and `error` |
-| `websocket-log`   | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
-| `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
-| `jwk-refresh-log` | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
+| Log type               | Description                                                                                                                                                                                                                          | Log Level          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
+| `startup`              | Information that is logged during startup                                                                                                                                                                                            | `info`             |
+| `query-log`            | Logs the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), and the operation name (if provided in the GraphQL request) | `info`             |
+| `execution-log`        | Logs data-source-specific information generated during the request                                                                                                                                                                   | `info`             |
+| `http-log`             | HTTP access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                           | `info` and `error` |
+| `websocket-log`        | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                            | `info` and `error` |
+| `webhook-log`          | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                                  | `info` and `error` |
+| `livequery-poller-log` | Logs information for active subscriptions (poller-id, generated SQL, polling time, parameterized query hash, subscription kind, etc.)                                                                                                | `info`             |
+| `action-handler-log`   | Logs information and errors about Action webhook handlers                                                                                                                                                                            | `info`             |
+| `data-connector-log`   | Logs debugging information communicated by data connectors                                                                                                                                                                           | `debug`            |
+| `jwk-refresh-log`      | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                         | `info` and `error` |
+| `validate-input-log`   | Logs information and errors about input validation                                                                                                                                                                                   | `info` and `error` |
+
+The Enterprise Edition log-types that can be enabled/disabled are:
+
+| Log type               | Description                                                                                                                   | Log Level                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `http-response-log`    | Logs information about HTTP response                                                                                          | `info`                      |
+| `api-limit-log`        | Logs errors in [API limit](/security/api-limits.mdx)                                                                          | `error`                     |
+| `livequery-poller-log` | Logs information for active subscriptions (poller-id, generated sql, polling time, subscriber count, subscription kind, etc.) | `info`                      |
+| `response-caching-log` | Logs response information and errors from [query caching](/caching/overview.mdx)                                              | `info`, `error` and `debug` |
+| `tracing-log`          | Logs information about [tracing spans](/observability/cloud-monitoring/tracing.mdx)                                           | `info`                      |
+| `metrics`              | Logs tenant metrics information                                                                                               | `info`                      |
+| `health-check-log`     | Logs source Health Check events which includes health status of a data source                                                 | `info` and `warn`           |
+
+:::info Note
+
+Hasura Enterprise Edition supports all Community Edition log-types. However, the Enterprise Edition logs may contain
+more information.
+
+:::
 
 ### Internal log-types
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
-| Log type                       | Description                                                                                         | Log Level          |
-| ------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------ |
-| `pg-client`                    | Logs from the postgres client library                                                               | `warn`             |
-| `metadata`                     | Logs inconsistent Metadata items                                                                    | `warn`             |
-| `telemetry-log`                | Logs error (if any) while sending out telemetry data                                                | `info`             |
-| `event-trigger`                | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
-| `ws-server`                    | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
-| `schema-sync-thread`           | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
-| `health-check-log`             | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
-| `event-trigger-process`        | Logs the statistics of events fetched from database for each source                                 | `info` and `warn`  |
-| `scheduled-trigger-process`    | Logs the statistics of scheduled and cron events fetched from metadata storage                      | `info` and `warn`  |
-| `cron-event-generator-process` | Logs the cron triggers fetched from metadata storage for events generation                          | `info` and `warn`  |
+| Log type                       | Description                                                                                                    | Log Level                   |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `pg-client`                    | Logs from the postgres client library                                                                          | `warn`                      |
+| `metadata`                     | Logs inconsistent Metadata items                                                                               | `warn`                      |
+| `telemetry-log`                | Logs error (if any) while sending out telemetry data                                                           | `info`                      |
+| `event-trigger`                | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                                      | `info` and `error`          |
+| `ws-server`                    | Debug logs from the websocket server, mostly used internally for debugging                                     | `debug`                     |
+| `schema-sync`                  | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema            | `info` and `error`          |
+| `event-trigger-process`        | Logs the statistics of events fetched from database for each source                                            | `info` and `warn`           |
+| `scheduled-trigger-process`    | Logs the statistics of scheduled and cron events fetched from metadata storage                                 | `info` and `warn`           |
+| `cron-event-generator-process` | Logs the cron triggers fetched from metadata storage for events generation                                     | `info` and `warn`           |
+| `unstructured`                 | Other important logs from various features in GraphQL Engine like Event Triggers, Subscriptions, Actions, etc. | `info`, `error` and `debug` |
+| `scheduled-trigger`            | Logs HTTP responses from the webhook, HTTP exceptions and internal errors for scheduled and cron events        | `info` and `error`          |
+| `source-catalog-migration`     | Logs the information and errors about the blocking queries in a Postgres source during source migration        | `info` and `error`          |
 
 ## Logging levels
 
 You can set the desired logging level on the server using the `log-level` flag or the `HASURA_GRAPHQL_LOG_LEVEL` env
-var. See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx).
+var. See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx#log-level).
 
 The default log-level is `info`.
 
@@ -154,6 +183,37 @@ This log contains 4 important fields:
   of the connection template resolution.
 
 (\*) - Supported only in Cloud and Enterprise editions only
+
+### **execution-log** structure
+
+On enabling verbose logging, i.e. enabling `execution-log`, GraphQL Engine may also log statistics about the request
+once it has completed.
+
+```json
+{
+  "detail": {
+    "request_id": "ff8d2809-8afb-4d6e-a6c3-0fb61ac813e7",
+    "statistics": {
+      "job": {
+        "id": "1230123-sd2fsdjs23djj24s57dfj",
+        "location": "europe-west2",
+        "state": "DONE"
+      }
+    }
+  },
+  "level": "info",
+  "timestamp": "2023-03-15T10:29:08.928+0000",
+  "type": "execution-log"
+}
+```
+
+This log contains 2 important fields:
+
+- `request_id`: A unique ID for each request. If the client sends a `x-request-id` header then that is respected,
+  otherwise a UUID is generated for each request. This is useful to correlate between `execution-log` and `query-log`.
+- `statistics`: Statistics about the completed request. These will differ depending on the backend used for the request.
+  For instance, BigQuery returns details about the [job](https://cloud.google.com/bigquery/docs/jobs-overview) it
+  created.
 
 ### **http-log** structure {#http-log-structure}
 
@@ -865,4 +925,4 @@ The `subscription_options` field is an object with the following properties:
 You can integrate the logs emitted by the Hasura Engine with external monitoring tools for better visibility as per your
 convenience.
 
-For some examples, see [Guides: Integrating with monitoring frameworks](/observability/integrations/index.mdx)
+For some examples, see [Guides: Integrating with monitoring frameworks](/observability/cloud/index.mdx)

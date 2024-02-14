@@ -36,8 +36,6 @@ class Editor extends React.Component {
     const {
       readOnlyMode = false,
       isCollapsable,
-      service,
-      property,
       collapseButtonText,
       expandButtonText,
     } = this.props;
@@ -47,14 +45,16 @@ class Editor extends React.Component {
       return null;
     }
 
+    const { dataTest } = this.props;
+
     return (
       <Button
         mode="default"
         size="sm"
         className="mr-sm"
-        data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
+        data-test={dataTest}
       >
         {isEditing ? collapseButtonText || 'Close' : expandButtonText || 'Edit'}
       </Button>

@@ -2,6 +2,7 @@
 # collect some additional metrics:
 extended_hasura_checks: true
 headers:
+  X-Hasura-Admin-Secret: my-secret
   Accept-Encoding: gzip
 
 # Anchors to help us DRY below; settings here may be overridden selectively

@@ -1,0 +1,6 @@
+query MyQuery {
+  AuthorWithGlobalId: AuthorMany {
+    id
+    first_name
+  }
+}

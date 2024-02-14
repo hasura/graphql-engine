@@ -1,0 +1,59 @@
+---
+description: Information about Hasura Data Connectors
+sidebar_label: Data Connectors
+keywords:
+  - hasura
+  - docs
+  - databases
+  - data connectors
+sidebar_position: 1
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Hasura Data Connectors
+
+## Introduction
+
+Hasura Data Connectors provide an easy way to build connections to any data source and instantly obtain GraphQL APIs on
+that data.
+
+Currently, Hasura natively supports Postgres, MS SQL Server, and BigQuery databases. Data Connectors allow you to
+connect Hasura to **_any_** other data source. Hasura has built Data Connectors for MySQL, Oracle, Snowflake, Amazon
+Athena, MariaDB, and MongoDB, with more sources in the pipeline, but you can also use them to connect to
+your data sources. Think Microsoft Excel, SQLite, CSV, AirTable and more.
+
+For more information on databases, check out the [Hasura Databases documentation](/docs/databases/overview.mdx) or to
+jump right into integrating a native database, [check out the Quickstart](/docs/databases/quickstart.mdx).
+
+This documentation will guide you through understanding Hasura Data Connectors concepts and how to use them.
+
+:::warning Active Development
+
+Data Connectors are currently in active development and are likely to change considerably. We are working hard to make
+them as stable as possible soon, but please be aware that breaking changes may occur.
+
+:::
+
+## Hasura GraphQL Data Connector Agent
+
+The Hasura GraphQL Data Connector Agent is a service that acts as an intermediary middleware abstraction between a data
+source and the Hasura GraphQL Engine via a REST API. It allows developers to implement Hasura's powerful GraphQL
+experience on any data source they use. Further information about the design and implementation of the Agent service
+can be found in the
+[README.md of the Data Connector Agent repository](https://github.com/hasura/graphql-engine/blob/master/dc-agents/README.md).
+
+<Thumbnail
+  src="/img/databases/data-connector/data-connectors-agent-diagram.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+
+In addition, an Agent can directly support new functionality without any other database upstream. The purpose of Data
+Connector Agents is to quickly and easily allow developers to author new Agents to support a wide variety of new data
+sources and use-cases.
+
+## More with Data Connectors
+
+- [Add a Data Connector to Hasura](/databases/data-connectors/adding-data-connectors.mdx)
+- [Build a Data Connector for Hasura](/databases/data-connectors/data-connector-sdk.mdx)
+- [Deploy custom code to Hasura Cloud with Jupyter Notebooks](/ai/integrations/jupyter-notebooks.mdx)

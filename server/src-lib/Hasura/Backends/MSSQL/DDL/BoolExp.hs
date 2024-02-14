@@ -15,9 +15,9 @@ import Hasura.Backends.MSSQL.Types.Internal hiding (ColumnType)
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 parseBoolExpOperations ::
@@ -37,11 +37,11 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
     parseOperations :: ColumnType 'MSSQL -> J.Value -> m [OpExpG 'MSSQL v]
     parseOperations columnType = \case
       J.Object o -> mapM (parseOperation columnType . first K.toText) $ KM.toList o
-      v -> pure . AEQ False <$> parseWithTy columnType v
+      v -> pure . AEQ NullableComparison <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'MSSQL -> (Text, J.Value) -> m (OpExpG 'MSSQL v)
-    parseOperation columnType (opStr, val) = withPathK opStr $
-      case opStr of
+    parseOperation columnType (opStr, val) = withPathK opStr
+      $ case opStr of
         "_eq" -> parseEq
         "$eq" -> parseEq
         "_neq" -> parseNeq
@@ -62,6 +62,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         "_like" -> parseLike
         "$nlike" -> parseNlike
         "_nlike" -> parseNlike
+        "$is_null" -> parseIsNull
+        "_is_null" -> parseIsNull
         "_st_contains" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
         "$st_contains" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTContains
         "_st_equals" -> ABackendSpecific <$> parseGeometryOrGeographyOp ASTEquals
@@ -83,8 +85,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
-        parseEq = AEQ False <$> parseOne
-        parseNeq = ANE False <$> parseOne
+        parseEq = AEQ NullableComparison <$> parseOne
+        parseNeq = ANE NullableComparison <$> parseOne
         parseIn = AIN <$> parseManyWithType colTy
         parseNin = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
@@ -93,6 +95,7 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseLte = ALTE <$> parseOne
         parseLike = guardType stringTypes >> ALIKE <$> parseOne
         parseNlike = guardType stringTypes >> ANLIKE <$> parseOne
+        parseIsNull = bool ANISNOTNULL ANISNULL <$> parseVal
 
         parseGeometryOp f =
           guardType [GeometryType] >> f <$> parseOneNoSess colTy val
@@ -101,12 +104,16 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
         guardType validTys =
-          unless (isScalarColumnWhere (`elem` validTys) colTy) $
-            throwError $
-              buildMsg colTy validTys
+          unless (isScalarColumnWhere (`elem` validTys) colTy)
+            $ throwError
+            $ buildMsg colTy validTys
 
         buildMsg ty expTys =
-          err400 UnexpectedPayload $
-            " is of type "
-              <> ty <<> "; this operator works only on columns of type "
-              <> T.intercalate "/" (map dquote expTys)
+          err400 UnexpectedPayload
+            $ " is of type "
+            <> ty
+            <<> "; this operator works only on columns of type "
+            <> T.intercalate "/" (map dquote expTys)
+
+        parseVal :: (J.FromJSON a) => m a
+        parseVal = decodeValue val

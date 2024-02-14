@@ -39,15 +39,15 @@ data MetadataDTO = V1 MetadataV1 | V2 MetadataV2 | V3 MetadataV3
 -- of allowed schemas.
 instance HasCodec MetadataDTO where
   codec =
-    named "Metadata" $
-      dimapCodec decode encode $
-        disjointEitherCodec
-          (codec @MetadataV1)
-          ( disjointEitherCodec
-              (codec @MetadataV2)
-              (codec @MetadataV3)
-          )
-          <?> "configuration format for the Hasura GraphQL Engine"
+    named "Metadata"
+      $ dimapCodec decode encode
+      $ disjointEitherCodec
+        (codec @MetadataV1)
+        ( disjointEitherCodec
+            (codec @MetadataV2)
+            (codec @MetadataV3)
+        )
+      <?> "configuration format for the Hasura GraphQL Engine"
     where
       decode = either V1 $ either V2 V3
       encode = \case

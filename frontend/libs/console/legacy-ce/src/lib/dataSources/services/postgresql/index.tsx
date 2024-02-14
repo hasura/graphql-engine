@@ -77,7 +77,6 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsQuery,
   getDatabaseTableNames,
 } from './sqlUtils';
 import globals from '../../../Globals';
@@ -380,21 +379,23 @@ const parseColumnsInfoResult = (data: string[][]) => {
 };
 
 const columnDataTypes = {
-  INTEGER: 'integer',
-  SERIAL: 'serial',
+  ARRAY: 'ARRAY',
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
-  UUID: 'uuid',
-  JSONDTYPE: 'json',
-  JSONB: 'jsonb',
-  TIMESTAMP: 'timestamp with time zone',
-  TIME: 'time with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIMETZ: 'timetz',
   BOOLEAN: 'boolean',
+  BOOL: 'bool',
+  DATE: 'date',
+  DATETIME: 'datetime',
+  INTEGER: 'integer',
+  JSONB: 'jsonb',
+  JSONDTYPE: 'json',
+  NUMERIC: 'numeric',
+  SERIAL: 'serial',
   TEXT: 'text',
-  ARRAY: 'ARRAY',
+  TIME: 'time with time zone',
+  TIMESTAMP: 'timestamp with time zone',
+  TIMETZ: 'timetz',
+  UUID: 'uuid',
 };
 
 const commonDataTypes = [
@@ -516,6 +517,8 @@ const operators = [
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+export const isColTypeArray = (colType: string) => colType.includes('[]');
+
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
 const createSQLRegex =
@@ -567,7 +570,7 @@ const getReferenceOption = (opt: string) => {
 };
 
 const permissionColumnDataTypes = {
-  boolean: ['boolean'],
+  boolean: ['boolean', 'bool'],
   character: ['character', 'character varying', 'text', 'citext'],
   dateTime: [
     'timestamp',
@@ -640,6 +643,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       frequentlyUsedColumns: true,
       columnTypeSelector: true,
+      arrayTypes: true,
     },
     browse: {
       enabled: true,
@@ -763,7 +767,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     ssl_certificates:
       globals.consoleType === 'cloud' ||
       globals.consoleType === 'pro' ||
-      globals.consoleType === 'pro-lite',
+      globals.consoleType === 'pro-lite', // TODO: should be enabled only when license is active
   },
 };
 
@@ -887,6 +891,5 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsQuery,
   getDatabaseTableNames,
 };

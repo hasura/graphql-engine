@@ -14,9 +14,10 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Get Started with Docker (Hasura & Snowflake)
 
-Testing is currently underway on the Snowflake connector for use in self-hosted environments. Our suggested
-installation method is to use Docker Compose to deploy a working deployment of Hasura with the Snowflake Connector
-enabled.
+## Introduction
+
+Testing is currently underway on the Snowflake connector for use in self-hosted environments. Our suggested installation
+method is to use Docker Compose to deploy a working deployment of Hasura with the Snowflake Connector enabled.
 
 In order to do this, follow the instructions for
 [Hasura Enterprise Edition](/enterprise/getting-started/quickstart-docker.mdx), but change out the Docker Compose files
@@ -33,6 +34,54 @@ When you use these to launch the services, you'll see three containers running i
 the Snowflake GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the Snowflake
 data source as a type that can now be added to your Hasura GraphQL Service instance.
 
+You can check the health of the connector using the `/health` endpoint. The connector is available at the following
+endpoint:
+
+```bash
+http://localhost:8081/api/v1/snowflake/health
+```
+
+:::info Data connector
+
+This data source utilizes the `hasura/graphql-data-connector` to connect your data source to the GraphQL engine.
+
+:::
+
+### Snowflake Connector Configuration
+
+You can directly add your JDBC connection string to the Snowflake Connector agent in the Hasura Console, or you can add
+it as an environment variable to your project.
+
+:::info Setting the connection string as an environment variable
+
+It's generally accepted that setting the connection string as an environment variable is a better practice as it's more
+secure and prevents any secrets from being exposed in your instance's metadata.
+
+An example would be to create a new
+[environment variable](/deployment/graphql-engine-flags/index.mdx#using-environment-variables) called
+`SNOWFLAKE_JDBC_URL` and set it equal to your JDBC connection string.
+
+Then, export the metadata - in JSON form - using the Console's `Settings` page or by making a call using the
+[metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) and add the following key-value
+pair to the `metadata.json`'s `configuration` object:
+
+```json
+"template": "{\"fully_qualify_all_names\": false, \"jdbc_url\": \"{{getEnvironmentVariable(\"SNOWFLAKE_JDBC_URL\")}}\"}"
+```
+
+You can then apply the metadata to your instance by either using the Console's `Settings` page or by making a call using
+the [metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-apply-metadata).
+
+:::
+
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
 ## Keep up to date
 
 :::info Note
@@ -44,8 +93,7 @@ Currently, Hasura supports read-only queries, relationships, and permissions on 
 Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
 Metadata in JSON/YAML directly.
 
-If you'd like to stay informed about the status of Snowflake support, subscribe to our newsletter and join our
-discord!
+If you'd like to stay informed about the status of Snowflake support, subscribe to our newsletter and join our discord!
 
 - [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
 - [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

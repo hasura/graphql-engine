@@ -1,26 +1,20 @@
-import isEqual from 'lodash.isequal';
-import { GraphQLSchema } from 'graphql';
+import isEqual from 'lodash/isEqual';
 import { TableColumn } from '../../../../../../DataSource';
 
 import type {
   DeletePermissionDefinition,
   InsertPermissionDefinition,
-  MetadataTable,
   Permission,
   SelectPermissionDefinition,
-  Source,
   UpdatePermissionDefinition,
 } from '../../../../../../hasura-metadata-types';
 
-import {
-  isPermission,
-  keyToPermission,
-  permissionToKey,
-} from '../../../../../utils';
+import { permissionToKey } from '../../../../../utils';
 import { createDefaultValues } from '../../../../components/RowPermissionsBuilder';
 
 import type { QueryType } from '../../../../../types';
 import {
+  ComputedField,
   MetadataDataSource,
   TableEntry,
 } from '../../../../../../../metadata/types';
@@ -90,58 +84,15 @@ const getColumns = (
   }, {});
 };
 
-export const getAllRowChecks = (
-  currentQuery: QueryType,
-  allChecks: Array<{ queryType: QueryType; value: any }> = []
+const getComputedFields = (
+  permissionComputedFields: string[],
+  tableComputedFields: ComputedField[]
 ) => {
-  return allChecks
-    .filter(({ queryType }) => queryType !== currentQuery)
-    .map(({ queryType, value }) => {
-      if (['insert', 'update'].includes(queryType)) {
-        return { queryType, value: JSON.stringify(value.check || {}) };
-      }
-
-      return {
-        queryType,
-        value: JSON.stringify(value.filter || {}),
-      };
-    });
-};
-
-export interface UseDefaultValuesArgs {
-  dataSourceName: string;
-  table: unknown;
-  roleName: string;
-  queryType: QueryType;
-}
-
-export const getRowPermissionsForAllOtherQueriesMatchingSelectedRole = (
-  selectedQuery: QueryType,
-  selectedRole: string,
-  table?: TableEntry
-) => {
-  const res = Object.entries(table || {}).reduce<
-    Array<{ queryType: QueryType; value: any }>
-  >((acc, [key, value]) => {
-    const props = { key, value };
-
-    // check object key of metadata is a permission
-    if (isPermission(props)) {
-      // add each role from each permission to the set
-      props.value.forEach(permission => {
-        if (permission.role === selectedRole) {
-          acc.push({
-            queryType: keyToPermission[props.key],
-            value: permission.permission,
-          });
-        }
-      });
-    }
-
+  return tableComputedFields.reduce<Record<string, boolean>>((acc, each) => {
+    const computedFieldIncluded = permissionComputedFields?.includes(each.name);
+    acc[each.name] = !!computedFieldIncluded;
     return acc;
-  }, []);
-
-  return getAllRowChecks(selectedQuery, res);
+  }, {});
 };
 
 export const createPermission = {
@@ -165,11 +116,13 @@ export const createPermission = {
       presets,
       columns,
       backendOnly,
+      comment: permission.comment ?? '',
     };
   },
   select: (
     permission: SelectPermissionDefinition,
     tableColumns: TableColumn[],
+    tableComputedFields: ComputedField[],
     tableName: string,
     metadataSource: MetadataDataSource | undefined
   ) => {
@@ -183,6 +136,10 @@ export const createPermission = {
     const filterType = getCheckType(permission?.filter);
 
     const columns = getColumns(permission?.columns || [], tableColumns);
+    const computed_fields = getComputedFields(
+      permission?.computed_fields || [],
+      tableComputedFields
+    );
 
     const rowCount = getRowCount({
       currentQueryPermissions: permission,
@@ -195,11 +152,13 @@ export const createPermission = {
       filter,
       filterType,
       columns,
+      computed_fields,
       rowCount,
       aggregationEnabled,
       operators: ops,
       query_root_fields: permission.query_root_fields || null,
       subscription_root_fields: permission.subscription_root_fields || null,
+      comment: permission.comment ?? '',
     };
 
     if (rowCount) {
@@ -234,6 +193,7 @@ export const createPermission = {
       presets,
       columns,
       rowCount,
+      comment: permission.comment ?? '',
     };
   },
   delete: (permission: DeletePermissionDefinition) => {
@@ -279,7 +239,10 @@ export const getCurrentPermission = ({
   if (currentPermissionsForSelectedRole) {
     return {
       queryType,
-      permission: currentPermissionsForSelectedRole?.permission,
+      permission: {
+        ...currentPermissionsForSelectedRole?.permission,
+        comment: currentPermissionsForSelectedRole?.comment,
+      },
     };
   }
 
@@ -293,6 +256,7 @@ interface ObjArgs {
   queryType: QueryType;
   selectedTable: TableEntry;
   tableColumns: TableColumn[];
+  tableComputedFields: ComputedField[];
   roleName: string;
   tableName: string;
   metadataSource: MetadataDataSource | undefined;
@@ -302,6 +266,7 @@ export const createPermissionsObject = ({
   queryType,
   selectedTable,
   tableColumns,
+  tableComputedFields,
   roleName,
   tableName,
   metadataSource,
@@ -322,6 +287,7 @@ export const createPermissionsObject = ({
       return createPermission.select(
         selectedPermission.permission as SelectPermissionDefinition,
         tableColumns,
+        tableComputedFields,
         tableName,
         // selectedTable.configuration,
         metadataSource

@@ -11,7 +11,6 @@ interface ManyTablesParams {
 }
 
 export const generateQueryKeys = {
-  metadata: () => ['export_metadata'],
   fkConstraints: (params: BaseParams) =>
     [
       'dal-introspection',

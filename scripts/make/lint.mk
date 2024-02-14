@@ -1,7 +1,8 @@
-# skip contrib with its generated .hs file because it doesn't
-# come with a cabal file, which can trigger a bug in ormolu
-HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -v '^contrib/')
-CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$' | grep -v '^contrib/')
+# skip server/forks because it contains forks of other projects, and
+# we want to keep the diff between the fork and the original library as small
+# as possible
+HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -E -v '^server/forks/')
+CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$' | grep -E -v '^server/forks/')
 
 NIX_FILES = $(shell git ls-files '*.nix' 'nix/*.nix')
 
@@ -83,30 +84,66 @@ check-format-nix:
 		echo "$(NIX_FMT) is not installed; skipping"; \
 	fi
 
+.PHONY: format-frontend
+## format-frontend: auto-format all frontend code
+format-frontend: frontend/node_modules
+	@echo 'running nx format:write'
+	cd frontend && yarn format:write:all
+
+.PHONY: format-frontend-changed
+## format-frontend-changed: auto-format all frontend code (changed files only)
+format-frontend-changed: frontend/node_modules
+	@echo 'running nx format:write'
+	cd frontend && yarn format:write
+
+.PHONY: check-format-frontend
+## check-format-frontend: check frontend code
+check-format-frontend: frontend/node_modules
+	@echo 'running nx format:check'
+	cd frontend && yarn nx format:check --base=origin/main
+
+.PHONY: check-format-frontend-changed
+## check-format-frontend-changed: check frontend code (changed files only)
+check-format-frontend-changed: frontend/node_modules
+	@echo 'running nx format:check'
+	cd frontend && yarn nx format:check --base=origin/main
+
 .PHONY: format
-format: format-hs format-nix
+format: format-hs format-nix format-frontend
 
 .PHONY: format-changed
-format-changed: format-hs-changed format-nix
+format-changed: format-hs-changed format-nix format-frontend-changed
 
 .PHONY: check-format
-check-format: check-format-hs check-format-nix
+check-format: check-format-hs check-format-nix check-format-frontend
 
 .PHONY: check-format-changed
-check-format-changed: check-format-hs-changed check-format-nix
+check-format-changed: check-format-hs-changed check-format-nix check-format-frontend-changed
 
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
 lint-hs: check-hlint-version
 	@echo running hlint
-	@$(HLINT) $(HS_FILES)
+	@output=$$(mktemp); \
+	trap 'rm $$output' EXIT; \
+	$(HLINT) --no-exit-code $(HS_FILES) | tee "$$output"; \
+	if grep -E '^[^ ]+: (Error|Warning):' "$$output" > /dev/null; then \
+		echo 'Errors or warnings found.'; \
+		exit 1; \
+	fi
 
 .PHONY: lint-hs-changed
 ## lint-hs-changed: lint Haskell code using `hlint` (changed files only)
 lint-hs-changed: check-hlint-version
 	@echo running hlint
-	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
-		$(HLINT) $(CHANGED_HS_FILES); \
+	@if [[ -n "$(CHANGED_HS_FILES)" ]]; then \
+		output=$$(mktemp); \
+		trap 'rm $$output' EXIT; \
+		$(HLINT) --no-exit-code $(CHANGED_HS_FILES) | tee "$$output"; \
+		if grep -E '^[^ ]+: (Error|Warning):' "$$output" > /dev/null; then \
+			echo 'Errors or warnings found.'; \
+			exit 1; \
+		fi; \
 	fi
 
 .PHONY: lint-hs-fix
@@ -135,8 +172,22 @@ lint-shell-changed:
 		$(SHELLCHECK) $(CHANGED_SHELL_FILES); \
 	fi
 
+.PHONY: lint-frontend
+## lint-frontend: lint all frontend code
+lint-frontend: frontend/node_modules
+	@echo 'running nx lint'
+	cd frontend && yarn lint
+
+.PHONY: lint-frontend-changed
+## lint-frontend-changed: lint all frontend code
+lint-frontend-changed: frontend/node_modules
+	@echo 'running nx lint'
+	cd frontend && yarn nx affected --target=lint --fix --parallel=3 --base=origin/main
+
 .PHONY: lint
-lint: lint-hs lint-shell check-format
+## lint: run all lint commands, and check formatting
+lint: lint-hs lint-shell lint-frontend check-format
 
 .PHONY: lint-changed
-lint-changed: lint-hs-changed lint-shell-changed check-format-changed
+## lint: run all lint commands, and check formatting (changed files only)
+lint-changed: lint-hs-changed lint-shell-changed lint-frontend-changed check-format-changed

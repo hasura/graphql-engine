@@ -1,14 +1,31 @@
 import { getKeyFromLS } from '../components/Login/localStorage';
 
-import { getAuthorizeUrl, modifyRedirectUrl } from '../components/Login/utils';
+import {
+  getCurrentSsoIdentityProvider,
+  getHasuraSsoIdentityProvider,
+  getOAuthAuthorizeUrl,
+  modifyRedirectUrl,
+} from '../components/Login/utils';
 
 import { parseQueryString } from '../helpers/parseQueryString';
 
 const initiateOAuthRequest = (parsed, auto_login) => {
+  const idp = getCurrentSsoIdentityProvider() || getHasuraSsoIdentityProvider();
+
+  if (!idp) {
+    return false;
+  }
+
+  const authorizeUrl = getOAuthAuthorizeUrl(
+    idp.authorization_url,
+    idp.client_id,
+    idp.scope
+  );
+
   if (auto_login) {
     modifyRedirectUrl('/');
-    window.location.href = getAuthorizeUrl();
-    return;
+    window.location.href = authorizeUrl;
+    return true;
   }
   const redirectUrl = decodeURIComponent(parsed.redirect_url);
   if (redirectUrl && redirectUrl !== 'undefined') {
@@ -16,7 +33,8 @@ const initiateOAuthRequest = (parsed, auto_login) => {
   } else {
     modifyRedirectUrl('/');
   }
-  window.location.href = getAuthorizeUrl();
+  window.location.href = authorizeUrl;
+  return true;
 };
 
 const preLoginHook = (nextState, replaceState, cb) => {
@@ -33,14 +51,12 @@ const preLoginHook = (nextState, replaceState, cb) => {
       (parsed.auto_login || parsed.auto_login === 'true')) ||
     false;
 
-  if (hasOauthLoggedIn) {
-    initiateOAuthRequest(parsed, isAutoLogin);
-  } else if (isAutoLogin) {
-    initiateOAuthRequest(parsed, isAutoLogin);
-    return;
-  } else {
-    cb();
+  if (hasOauthLoggedIn || isAutoLogin) {
+    // fallback to the login page if the Hasura OAuth client isn't set
+    return initiateOAuthRequest(parsed, isAutoLogin) || cb();
   }
+
+  cb();
 };
 
 export default preLoginHook;

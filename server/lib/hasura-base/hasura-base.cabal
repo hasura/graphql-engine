@@ -1,0 +1,74 @@
+cabal-version: 3.6
+name: hasura-base
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -foptimal-applicative-do
+    -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
+    -fmax-simplifier-iterations=2
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- try and mitigate damage from missed inlining opportunities from this
+    -- code being it's own package
+    -fexpose-all-unfoldings
+    -fspecialise-aggressively
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
+
+  build-depends:
+    , aeson
+    , arrows-extra
+    , autodocodec
+    , base
+    , bytestring
+    , cron
+    , hasura-prelude
+    , hasura-extras
+    , http-types
+    , kriti-lang
+    , lens
+    , odbc
+    , openapi3
+    , pg-client
+    , regex-tdfa
+    , dependent-sum
+    , template-haskell
+    , text
+    , th-lift
+    , time
+
+  default-extensions:
+    BlockArguments
+    LambdaCase
+    NoImplicitPrelude
+    OverloadedStrings
+    PackageImports
+
+  exposed-modules:
+    Hasura.Base.Error
+    Hasura.Base.Instances
