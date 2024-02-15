@@ -40,6 +40,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Database.Redis.Core as Core
 import qualified Database.Redis.Connection as Connection
 import qualified Database.Redis.ProtocolPipelining as PP
+import GHC.Conc
 import Database.Redis.Protocol (Reply(..), renderRequest)
 import Database.Redis.Types
 
@@ -489,7 +490,9 @@ removeChannelsAndWait ctrl remChans remPChans = do
 -- This is the only thread which ever receives data from the underlying
 -- connection.
 listenThread :: PubSubController -> PP.Connection -> IO ()
-listenThread ctrl rawConn = forever $ do
+listenThread ctrl rawConn = do
+  labelMe "Redis listenThread"
+  forever $ do
     msg <- PP.recv rawConn
     case decodeMsg msg of
         Msg (Message channel msgCt) -> do
@@ -511,7 +514,9 @@ listenThread ctrl rawConn = forever $ do
 -- This is the only thread which ever sends data on the underlying
 -- connection.
 sendThread :: PubSubController -> PP.Connection -> IO ()
-sendThread ctrl rawConn = forever $ do
+sendThread ctrl rawConn = do
+  labelMe "Redis sendThread"
+  forever $ do
     PubSub{..} <- atomically $ readTBQueue (sendChanges ctrl)
     rawSendCmd rawConn subs
     rawSendCmd rawConn unsubs
@@ -637,3 +642,6 @@ errMsg r = error $ "Hedis: expected pub/sub-message but got: " ++ show r
 -- of the public API) are shared, so functions or types in one of the following sections cannot
 -- be used for the other.  In particular, be aware that they use different utility functions to subscribe
 -- and unsubscribe to channels.
+
+labelMe :: MonadIO m=> String -> m ()
+labelMe l = liftIO (myThreadId >>= flip labelThread l)

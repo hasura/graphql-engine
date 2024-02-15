@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Session
     mkSessionVariable,
     mkSessionVariablesText,
     isSessionVariable,
+    isSessionVariableCI,
     UserAdminSecret (..),
     BackendOnlyFieldAccess (..),
     UserInfo (..),
@@ -44,13 +45,21 @@ sessionVariablePrefix :: Text
 sessionVariablePrefix = "x-hasura-"
 
 isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
+{-# INLINE isSessionVariable #-} -- hope any redundant conversions vis a vis SessionVariable are eliminated
+isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toCaseFold
+
+-- | A more efficient form of 'isSessionVariable', where applicable
+isSessionVariableCI :: CI.CI Text -> Bool
+{-# INLINE isSessionVariableCI #-}
+isSessionVariableCI = T.isPrefixOf sessionVariablePrefix . CI.foldedCase
 
 parseSessionVariable :: Text -> Parser SessionVariable
 parseSessionVariable t =
-  if isSessionVariable t
-    then pure $ mkSessionVariable t
-    else fail $ show t <> " is not a Hasura session variable"
+  -- for performance we avoid isSessionVariable, doing just one case conversion
+  let sessionVar_dirty = mkSessionVariable t
+   in if sessionVariablePrefix `T.isPrefixOf` CI.foldedCase (unSessionVariable sessionVar_dirty)
+        then pure sessionVar_dirty
+        else fail $ show t <> " is not a Hasura session variable"
 
 instance FromJSON SessionVariable where
   parseJSON = withText "String" parseSessionVariable
@@ -58,8 +67,9 @@ instance FromJSON SessionVariable where
 instance FromJSONKey SessionVariable where
   fromJSONKey = FromJSONKeyTextParser parseSessionVariable
 
+-- | in normalized, lower-case form
 sessionVariableToText :: SessionVariable -> Text
-sessionVariableToText = T.toLower . CI.original . unSessionVariable
+sessionVariableToText = CI.foldedCase . unSessionVariable
 
 mkSessionVariable :: Text -> SessionVariable
 mkSessionVariable = SessionVariable . CI.mk

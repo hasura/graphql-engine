@@ -32,7 +32,7 @@ import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName, roleNameToTxt)
-import Hasura.RQL.Types.Session (BackendOnlyFieldAccess (..), ExtraUserInfo (..), SessionVariable (..), SessionVariableValue, SessionVariables (..), UserInfo (..), UserInfoM (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesText, sessionVariableToText)
+import Hasura.RQL.Types.Session (BackendOnlyFieldAccess (..), ExtraUserInfo (..), SessionVariable (..), SessionVariableValue, SessionVariables (..), UserInfo (..), UserInfoM (..), UserRoleBuild (..), isSessionVariableCI, mkSessionVariable, mkSessionVariablesText, sessionVariableToText)
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -55,8 +55,14 @@ mkSessionVariablesHeaders =
   SessionVariables
     . HashMap.fromList
     . map (first SessionVariable)
-    . filter (isSessionVariable . CI.original . fst) -- Only x-hasura-* headers
+    . filter (isSessionVariableCI . fst) -- Only x-hasura-* headers
     . map (CI.map bsToTxt *** bsToTxt)
+
+---- Something like this a little faster, but I expect some test failures
+--   . map (lowerToTxt *** bsToTxt)
+--   where
+--     -- NOTE: this throws away the original, vs 'CI.map bsToTxt'
+--     lowerToTxt = CI.unsafeMk . bsToTxt . CI.foldedCase
 
 sessionVariablesToHeaders :: SessionVariables -> [HTTP.Header]
 sessionVariablesToHeaders =

@@ -330,6 +330,7 @@ getNewWSTimer timeout = do
   void
     $ forkIO
     $ do
+      labelMe "getNewWSTimer"
       sleep (seconds timeout)
       atomically $ do
         runTimerState <- readTVar timerState
