@@ -40,11 +40,11 @@ gcloud config set project <PROJECT_ID>
 
 ## Step 2: Enable Required Google Cloud Services
 
-Enable Cloud Run, Cloud SQL, Cloud SQL Admin, and the Service Networking APIs:
+Enable Cloud Run, Cloud SQL, Cloud SQL Admin, Secret Manager, and the Service Networking APIs:
 
 
 ```bash
-gcloud services enable run.googleapis.com sqladmin.googleapis.com servicenetworking.googleapis.com
+gcloud services enable run.googleapis.com sqladmin.googleapis.com servicenetworking.googleapis.com secretmanager.googleapis.com
 ```
 
 :::caution Requires IAM permissions
@@ -79,6 +79,25 @@ Replace `<DATABASE_NAME>` with your database name:
 gcloud sql databases create <DATABASE_NAME> --instance=hasura-postgres
 ```
 
+:::info Don't have a `default` network?
+
+The `default` network is normally created inside a Google Cloud Platform Project, however in some cases the `default` network might have been deleted or the project may have been set up with a specific network configuration without a default network.
+
+To see the networks you have available you can run:
+
+```bash
+gcloud compute networks list
+```
+
+If you find you do not have an appropriate network for your deployment, you can create a new VPC network by running the following command to create a network named `default`:
+
+```bash
+gcloud compute networks create default --subnet-mode=auto
+```
+
+:::
+
+
 ## Step 4: Configure Service Networking for Private Connectivity
 
 1. **Allocate an IP range** for Google services in your VPC:
@@ -109,7 +128,7 @@ gcloud services vpc-peerings connect \
 gcloud sql instances patch hasura-postgres --network=default
 ```
 
-## Step 5: Deploy Hasura GraphQL Engine to Cloud Run
+## Step 5: Create your connection string
 
 1. **Find your Cloud SQL instance's connection name:**
 
@@ -119,14 +138,53 @@ gcloud sql instances describe hasura-postgres
 
 :::info Note
 
-Take note of the `connectionName` field in the output of the above `describe` command. You will use the `connectionName` in the following command to deploy GraphQL Engine to Cloud Run.
+Take note of the `connectionName` field in the output of the above `describe` command. You will use the `connectionName` to deploy the GraphQL Engine to Cloud Run.
 
 :::
 
-2. **Deploy Hasura to Cloud Run:**
+2. **Construct your connection string**
 
-Replace `<CONNECTION_NAME>`, `<PASSWORD>`, and `<DATABASE_NAME>` with your actual connectionName, database password, and
+You can create the connection string by filling in the following template string. Replace `<CONNECTION_NAME>`, `<PASSWORD>`, and `<DATABASE_NAME>` with your actual connectionName, database password, and
 database name.
+
+```
+postgres://postgres:<PASSWORD>@/<DATABASE_NAME>?host=/cloudsql/<CONNECTION_NAME>
+```
+
+## Step 6: Store your connection string in the Secret Manager
+
+While you can put the connection string directly into the environment variables, it is recommended that you store it and any secrets or credentials inside of [Google's Secret Manager](https://cloud.google.com/security/products/secret-manager) for maximum security. This prevents secrets from being visible to administrators and from being accessible in other parts of the control/operations plane.
+
+1. **Store the constructed connection string as a secret** replacing `<CONNECTION_STRING>` with your actual connection string.
+
+```bash
+echo -n "<CONNECTION_STRING>" | gcloud secrets create hasura-db-connection-string --data-file=-
+```
+
+:::info Not using the `default` service account?
+
+The following steps assume that you are running the `gcloud deploy` command via the default service account used by compute engine. If you are not using the default service account, you will need to grant the service account you are using the `roles/secretmanager.secretAccessor` role.
+
+:::
+
+
+2. **To get the `<PROJECT_NUMBER>` associated with the default service account:**
+
+```bash
+echo "$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+```
+
+3. **Run the following command to grant the default service acount access to the secrets**, replacing `<PROJECT_NUMBER>` with your project number from the previous command: 
+
+ ```bash
+ gcloud projects add-iam-policy-binding <PROJECT_NUMBER> \
+    --member='serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com' \
+    --role='roles/secretmanager.secretAccessor'
+ ```
+
+## Step 7: Deploy Hasura to Cloud Run:
+
+1. **Run the following command** and replace `<CONNECTION_NAME>`, with your actual connectionName. 
 
 For additional information on configuring the Hasura GraphQL engine, please see the [Server configuration reference](https://hasura.io/docs/latest/deployment/graphql-engine-flags/reference/).
 
@@ -134,7 +192,8 @@ For additional information on configuring the Hasura GraphQL engine, please see 
 gcloud run deploy hasura-graphql-engine \
     --image=hasura/graphql-engine:latest \
     --add-cloudsql-instances=<CONNECTION_NAME> \
-    --update-env-vars='HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:<PASSWORD>@/<DATABASE_NAME>?host=/cloudsql/<CONNECTION_NAME>,HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-env-vars='HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-secrets=HASURA_GRAPHQL_DATABASE_URL=hasura-db-connection-string:latest \
     --region=us-central1 \
     --cpu=1 \
     --min-instances=1 \
@@ -144,7 +203,7 @@ gcloud run deploy hasura-graphql-engine \
 ```
 
 
-## Step 6: Adding a VPC-Connector (Optional)
+## Step 8: Adding a VPC-Connector (Optional)
 
 To further enhance the connectivity and security of your Hasura GraphQL Engine deployment on Google Cloud Run,
 especially when connecting to other services within your Virtual Private Cloud (VPC), you might consider adding a
@@ -181,7 +240,8 @@ flag:
 gcloud run deploy hasura-graphql-engine \
     --image=hasura/graphql-engine:latest \
     --add-cloudsql-instances=<CONNECTION_NAME> \
-    --update-env-vars='HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:<PASSWORD>@/<DATABASE_NAME>?host=/cloudsql/<CONNECTION_NAME>,HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-env-vars='HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-secrets=HASURA_GRAPHQL_DATABASE_URL=hasura-db-connection-string:latest \
     --vpc-connector=hasura-connector \
     --region=us-central1 \
     --cpu=1 \
@@ -216,9 +276,10 @@ To avoid incurring charges, delete the resources once you're done:
 gcloud sql instances delete hasura-postgres
 gcloud run services delete hasura-graphql-engine
 gcloud compute addresses delete google-managed-services-default --global
+gcloud secrets delete hasura-db-connection-string
 ```
 
-If you performed the optional Step 6, you should also delete the VPC-connector resource:
+If you performed the optional Step 8, you should also delete the VPC-connector resource:
 
 ```bash
 gcloud compute networks vpc-access connectors delete hasura-connector --region=us-central1
