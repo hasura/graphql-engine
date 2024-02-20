@@ -296,6 +296,21 @@ When you use array operators such as `_in` in the permissions builder in the Has
 an array for your values. If your session variable value is already an array, you can click the `[X-Hasura-Allowed-Ids]`
 suggestion to remove the brackets and set your session variable in its place.
 
+Here is an example of an array-based session variable:
+
+```bash
+X-Hasura-Allowed-Ids: {1,2,3}
+```
+
+And the related permission configuration:
+
+```yaml
+permission:
+  filter:
+    user_id:
+      _in: X-Hasura-Allowed-Ids
+```
+
 :::
 
 ## Permissions with relationships or nested objects {#relationships-in-permissions}
