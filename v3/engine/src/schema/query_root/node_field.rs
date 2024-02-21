@@ -55,7 +55,7 @@ pub(crate) fn relay_node_field(
         HashMap<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
     > = HashMap::new();
     for model in gds.metadata.models.values() {
-        if model.global_id_source {
+        if let Some(global_id_source) = &model.global_id_source {
             let output_typename = get_custom_output_type(gds, builder, &model.data_type)?;
 
             let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
@@ -74,6 +74,7 @@ pub(crate) fn relay_node_field(
                     NodeFieldTypeNameMapping {
                         type_name: model.data_type.clone(),
                         model_source: model.source.clone(),
+                        global_id_fields_ndc_mapping: global_id_source.ndc_mapping.clone(),
                     },
                 )
                 .is_some()

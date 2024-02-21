@@ -56,11 +56,12 @@ impl DataConnectorLinkV1 {
               "schema": {
                 "version": "v0.1",
                 "capabilities": {
-                  "versions": "*",
+                  "version": "0.1.0" ,
                   "capabilities": {
                     "query": {
                       "variables": {}
-                    }
+                    },
+                    "mutation": {}
                   }
                 },
                 "schema": {

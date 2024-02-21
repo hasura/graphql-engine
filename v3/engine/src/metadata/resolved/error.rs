@@ -14,6 +14,8 @@ use open_dds::{
     types::{CustomTypeName, FieldName, TypeReference},
 };
 
+use super::ndc_validation::NDCValidationError;
+
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("the following data connector is defined more than once: {name:}")]
@@ -170,6 +172,31 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
+    #[error("no equality operator has been defined in the data connector for field {field_name:} of model {model_name:} used in {comparison_location}")]
+    NoEqualOperatorForComparedField {
+        comparison_location: String,
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+    #[error("multiple equality operators have been defined in the data connector for field {field_name:} of model {model_name:} used in {comparison_location}")]
+    MultipleEqualOperatorsForComparedField {
+        comparison_location: String,
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+    #[error("no field mapping was found for field {field_name:} of model {model_name:} used in {comparison_location}")]
+    NoFieldMappingForComparedField {
+        comparison_location: String,
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+    #[error("comparison for array field {field_name:} of model {model_name:} used in {comparison_location} is unsupported")]
+    UncomparableArrayFieldType {
+        comparison_location: String,
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+
     #[error("invalid type represented for model {model_name:}: {type_representation:}")]
     InvalidTypeRepresentation {
         model_name: Qualified<ModelName>,
@@ -525,6 +552,8 @@ pub enum TypeMappingValidationError {
         ndc_field_name: String,
         unknown_ndc_field_type_name: String,
     },
+    #[error("ndc validation error: {0}")]
+    NDCValidationError(NDCValidationError),
 }
 
 fn comma_separate_field_names(argument_names: &[FieldName]) -> String {

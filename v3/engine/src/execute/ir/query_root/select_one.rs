@@ -48,20 +48,6 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     session_variables: &SessionVariables,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectOne<'n, 's>, error::Error> {
-    let field_mappings = model_source
-        .type_mappings
-        .get(data_type)
-        .and_then(|type_mapping| {
-            if let resolved::types::TypeMapping::Object { field_mappings } = type_mapping {
-                Some(field_mappings)
-            } else {
-                None
-            }
-        })
-        .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-            description: format!("type '{:}' not found in source type_mappings", data_type),
-        })?;
-
     let mut filter_clause_expressions = vec![];
     let mut model_argument_fields = Vec::new();
     for argument in field_call.arguments.values() {
@@ -72,20 +58,15 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelArgument { .. } => {
                     model_argument_fields.push(argument);
                 }
-                ModelInputAnnotation::ModelUniqueIdentifierArgument { field_name } => {
-                    let field_mapping = &field_mappings.get(field_name).ok_or_else(|| {
-                        error::InternalEngineError::InternalGeneric {
-                            description: format!(
-                                "invalid unique identifier field in annotation: {field_name:}"
-                            ),
-                        }
-                    })?;
+                ModelInputAnnotation::ModelUniqueIdentifierArgument { ndc_column } => {
+                    let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
+                        description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
                     let ndc_expression = ndc::models::Expression::BinaryComparisonOperator {
                         column: ndc::models::ComparisonTarget::Column {
-                            name: field_mapping.column.clone(),
+                            name: ndc_column.column.clone(),
                             path: vec![],
                         },
-                        operator: ndc::models::BinaryComparisonOperator::Equal,
+                        operator: ndc_column.equal_operator.clone(),
                         value: ndc::models::ComparisonValue::Scalar {
                             value: argument.value.as_json(),
                         },

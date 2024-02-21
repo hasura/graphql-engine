@@ -12,6 +12,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use thiserror::Error;
 
+use super::ndc_validation::NDCValidationError;
+
 #[derive(Error, Debug)]
 pub enum ArgumentMappingError {
     #[error(
@@ -40,6 +42,8 @@ pub enum ArgumentMappingError {
         type_name: Qualified<CustomTypeName>,
         unknown_ndc_type: String,
     },
+    #[error("ndc validation error: {0}")]
+    NDCValidationError(NDCValidationError),
 }
 
 fn comma_separate_argument_names(argument_names: &[ArgumentName]) -> String {
@@ -93,7 +97,8 @@ pub fn get_argument_mappings<'a>(
             data_type: custom_type_name.clone(),
         })? {
             let underlying_ndc_argument_named_type =
-                ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type);
+                ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
+                    .map_err(ArgumentMappingError::NDCValidationError)?;
             let ndc_argument_object_type = ndc_object_types
                 .get(underlying_ndc_argument_named_type)
                 .ok_or_else(|| ArgumentMappingError::UnknownNdcType {

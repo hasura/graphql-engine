@@ -87,6 +87,10 @@
                                 },
                                 "target_field": {
                                   "fieldName": "article_id"
+                                },
+                                "target_ndc_column": {
+                                  "column": "id",
+                                  "equal_operator": "_eq"
                                 }
                               }
                             ]
@@ -187,6 +191,10 @@
                                       },
                                       "target_field": {
                                         "fieldName": "author_id"
+                                      },
+                                      "target_ndc_column": {
+                                        "column": "id",
+                                        "equal_operator": "_eq"
                                       }
                                     }
                                   ]
@@ -287,6 +295,10 @@
                                             },
                                             "target_field": {
                                               "fieldName": "author_id"
+                                            },
+                                            "target_ndc_column": {
+                                              "column": "author_id",
+                                              "equal_operator": "_eq"
                                             }
                                           }
                                         ]
@@ -634,6 +646,10 @@
                                               },
                                               "target_field": {
                                                 "fieldName": "author_id"
+                                              },
+                                              "target_ndc_column": {
+                                                "column": "author_id",
+                                                "equal_operator": "_eq"
                                               }
                                             }
                                           ]
@@ -754,6 +770,10 @@
                                     },
                                     "target_field": {
                                       "fieldName": "author_id"
+                                    },
+                                    "target_ndc_column": {
+                                      "column": "id",
+                                      "equal_operator": "_eq"
                                     }
                                   }
                                 ]
@@ -874,6 +894,10 @@
                           },
                           "target_field": {
                             "fieldName": "article_id"
+                          },
+                          "target_ndc_column": {
+                            "column": "id",
+                            "equal_operator": "_eq"
                           }
                         }
                       ]

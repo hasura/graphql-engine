@@ -44,16 +44,24 @@
                         }
                       }
                     },
-                    "comparison_operators": {}
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
                   },
                   "String": {
                     "aggregate_functions": {},
                     "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "like": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   }
@@ -500,18 +508,19 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
                 "capabilities": {
                   "query": {
+                    "explain": {},
                     "aggregates": {},
                     "variables": {}
                   },
-                  "explain": {},
+                  "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
                   }
-                }
+                },
+                "version": "0.1.0" 
               }
             }
           }

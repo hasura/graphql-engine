@@ -1,3 +1,4 @@
+pub mod async_map;
 pub mod json_ext;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};

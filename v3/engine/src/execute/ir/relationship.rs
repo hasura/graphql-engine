@@ -83,7 +83,7 @@ pub(crate) struct RemoteCommandRelationshipInfo<'s> {
 }
 
 pub type SourceField = (FieldName, resolved::types::FieldMapping);
-pub type TargetField = (FieldName, resolved::types::FieldMapping);
+pub type TargetField = (FieldName, resolved::types::NdcColumnForComparison);
 
 pub(crate) fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
@@ -95,15 +95,15 @@ pub(crate) fn process_model_relationship_definition(
         source_data_connector,
         source_type_mappings,
         target_source,
-
-        target_type,
+        target_type: _,
         mappings,
     } = relationship_info;
 
     let mut column_mapping = BTreeMap::new();
     for resolved::relationship::RelationshipModelMapping {
         source_field: source_field_path,
-        target_field: target_field_path,
+        target_field: _,
+        target_ndc_column,
     } in mappings.iter()
     {
         if !matches!(
@@ -116,21 +116,21 @@ pub(crate) fn process_model_relationship_definition(
         ) {
             Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
         } else {
+            let target_column = target_ndc_column.as_ref().ok_or_else(|| {
+                error::InternalEngineError::InternalGeneric {
+                    description: format!(
+                        "No column mapping for relationship {relationship_name} on {source_type}"
+                    ),
+                }
+            })?;
             let source_column = get_field_mapping_of_field_name(
                 source_type_mappings,
                 source_type,
                 relationship_name,
                 &source_field_path.field_name,
             )?;
-            let target_column = get_field_mapping_of_field_name(
-                &target_source.model.type_mappings,
-                target_type,
-                relationship_name,
-                &target_field_path.field_name,
-            )?;
-
             if column_mapping
-                .insert(source_column.column, target_column.column)
+                .insert(source_column.column, target_column.column.clone())
                 .is_some()
             {
                 Err(error::InternalEngineError::MappingExistsInRelationship {
@@ -476,6 +476,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     for resolved::relationship::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: target_field_path,
+        target_ndc_column,
     } in annotation.mappings.iter()
     {
         let source_column = get_field_mapping_of_field_name(
@@ -484,15 +485,17 @@ pub(crate) fn build_remote_relationship<'n, 's>(
             &annotation.relationship_name,
             &source_field_path.field_name,
         )?;
-        let target_column = get_field_mapping_of_field_name(
-            &target_source.model.type_mappings,
-            &annotation.target_type,
-            &annotation.relationship_name,
-            &target_field_path.field_name,
-        )?;
+        let target_column = target_ndc_column.as_ref().ok_or_else(|| {
+            error::InternalEngineError::InternalGeneric {
+                description: format!(
+                    "No column mapping for relationship {} on {}",
+                    annotation.relationship_name, annotation.source_type
+                ),
+            }
+        })?;
 
         let source_field = (source_field_path.field_name.clone(), source_column);
-        let target_field = (target_field_path.field_name.clone(), target_column);
+        let target_field = (target_field_path.field_name.clone(), target_column.clone());
         join_mapping.push((source_field, target_field));
     }
     let mut remote_relationships_ir = model_selection_ir(
@@ -510,14 +513,14 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     )?;
 
     // modify `ModelSelection` to include the join condition in `where` with a variable
-    for (_source, (_field_name, field)) in &join_mapping {
-        let target_value_variable = format!("${}", &field.column);
+    for (_source, (_field_name, target_column)) in &join_mapping {
+        let target_value_variable = format!("${}", &target_column.column);
         let comparison_exp = ndc::models::Expression::BinaryComparisonOperator {
             column: ndc::models::ComparisonTarget::Column {
-                name: field.column.clone(),
+                name: target_column.column.clone(),
                 path: vec![],
             },
-            operator: ndc::models::BinaryComparisonOperator::Equal,
+            operator: target_column.equal_operator.clone(),
             value: ndc::models::ComparisonValue::Variable {
                 name: target_value_variable,
             },

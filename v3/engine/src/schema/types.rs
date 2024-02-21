@@ -16,6 +16,7 @@ use crate::{
         self,
         data_connector::DataConnectorLink,
         subgraph::{Qualified, QualifiedTypeReference},
+        types::NdcColumnForComparison,
     },
     schema::types::resolved::{
         subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap},
@@ -53,7 +54,10 @@ pub struct GlobalID {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
+    // `model_source` is are optional because we allow building schema without specifying a data source
+    // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<resolved::model::ModelSource>,
+    pub global_id_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -179,7 +183,8 @@ pub enum ModelInputAnnotation {
     ModelLimitArgument,
     ModelOffsetArgument,
     ModelUniqueIdentifierArgument {
-        field_name: types::FieldName,
+        // Optional because we allow building schema without specifying a data source
+        ndc_column: Option<NdcColumnForComparison>,
     },
 }
 

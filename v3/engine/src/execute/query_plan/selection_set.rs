@@ -36,6 +36,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 ndc_fields.insert(
                     alias.to_string(),
                     ndc::models::Field::Column {
+                        fields: None,
                         column: column.clone(),
                     },
                 );
@@ -115,6 +116,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_fields.insert(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
+                            fields: None,
                             column: src_field.column.clone(),
                         },
                     );
@@ -157,6 +159,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_fields.insert(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
+                            fields: None,
                             column: src_field.column.clone(),
                         },
                     );

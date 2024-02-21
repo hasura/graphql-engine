@@ -123,6 +123,8 @@ pub enum NDCValidationError {
     QueryCapabilityUnsupported,
     #[error("data connector does not support mutations")]
     MutationCapabilityUnsupported,
+    #[error("Using predicate types as field or argument types is currently unsupported")]
+    PredicateTypeUnsupported,
 }
 
 // Get the underlying type name by resolving Array and Nullable container types
@@ -310,7 +312,7 @@ pub fn validate_ndc_command(
 
     // Validate if the result type of function/procedure exists in the schema types(scalar + object)
     let command_source_ndc_result_type_name =
-        get_underlying_named_type(command_source_ndc_result_type);
+        get_underlying_named_type(command_source_ndc_result_type)?;
     if !(schema
         .scalar_types
         .contains_key(command_source_ndc_result_type_name)
@@ -374,12 +376,17 @@ pub fn validate_ndc_command(
     Ok(())
 }
 
-pub fn get_underlying_named_type(result_type: &ndc_client::models::Type) -> &str {
+pub fn get_underlying_named_type(
+    result_type: &ndc_client::models::Type,
+) -> Result<&str, NDCValidationError> {
     match result_type {
-        ndc_client::models::Type::Named { name } => name,
+        ndc_client::models::Type::Named { name } => Ok(name),
         ndc_client::models::Type::Array { element_type } => get_underlying_named_type(element_type),
         ndc_client::models::Type::Nullable { underlying_type } => {
             get_underlying_named_type(underlying_type)
         }
+        ndc_client::models::Type::Predicate {
+            object_type_name: _,
+        } => Err(NDCValidationError::PredicateTypeUnsupported),
     }
 }

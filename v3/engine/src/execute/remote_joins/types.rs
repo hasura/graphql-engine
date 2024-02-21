@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::query_plan::ProcessResponseAs;
 use crate::metadata::resolved;
-use crate::metadata::resolved::types::FieldMapping;
+use crate::metadata::resolved::types::NdcColumnForComparison;
 use crate::utils::json_ext::ValueExt;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -121,7 +121,7 @@ pub type SourceFieldAlias = String;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetField {
-    ModelField((FieldName, FieldMapping)),
+    ModelField((FieldName, NdcColumnForComparison)),
     CommandField(ArgumentName),
 }
 

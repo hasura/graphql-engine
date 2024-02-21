@@ -157,7 +157,7 @@ pub(crate) fn process_model_predicate<'s>(
 fn make_permission_binary_boolean_expression(
     ndc_column: String,
     argument_type: &QualifiedTypeReference,
-    operator: &ndc_client::models::BinaryComparisonOperator,
+    operator: &str,
     value_expression: &ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
@@ -170,7 +170,7 @@ fn make_permission_binary_boolean_expression(
             name: ndc_column,
             path: path_elements,
         },
-        operator: operator.clone(),
+        operator: operator.to_owned(),
         value: ndc_expression_value,
     })
 }

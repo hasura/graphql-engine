@@ -99,9 +99,7 @@
                     "name": "id",
                     "path": []
                   },
-                  "operator": {
-                    "type": "equal"
-                  },
+                  "operator": "_eq",
                   "value": {
                     "type": "scalar",
                     "value": 1

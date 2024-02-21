@@ -6,26 +6,32 @@
         "type": "modelSelect",
         "value": {
           "modelName": "AuthorMany",
-          "queryRequest": {
-            "collection": "authors",
-            "query": {
-              "fields": {
-                "author_id": {
-                  "type": "column",
-                  "column": "id"
-                },
-                "first_name": {
-                  "type": "column",
-                  "column": "first_name"
-                },
-                "__hasura_phantom_field__id": {
-                  "type": "column",
-                  "column": "id"
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "authors",
+              "query": {
+                "fields": {
+                  "author_id": {
+                    "type": "column",
+                    "column": "id",
+                    "fields": null
+                  },
+                  "first_name": {
+                    "type": "column",
+                    "column": "first_name",
+                    "fields": null
+                  },
+                  "__hasura_phantom_field__id": {
+                    "type": "column",
+                    "column": "id",
+                    "fields": null
+                  }
                 }
-              }
-            },
-            "arguments": {},
-            "collection_relationships": {}
+              },
+              "arguments": {},
+              "collection_relationships": {}
+            }
           },
           "ndcExplain": {
             "type": "response",
@@ -43,34 +49,36 @@
           "type": "modelSelect",
           "value": {
             "modelName": "Articles",
-            "queryRequest": {
-              "collection": "articles",
-              "query": {
-                "fields": {
-                  "title": {
-                    "type": "column",
-                    "column": "title"
+            "ndcRequest": {
+              "type": "query",
+              "value": {
+                "collection": "articles",
+                "query": {
+                  "fields": {
+                    "title": {
+                      "type": "column",
+                      "column": "title",
+                      "fields": null
+                    }
+                  },
+                  "predicate": {
+                    "type": "binary_comparison_operator",
+                    "column": {
+                      "type": "column",
+                      "name": "author_id",
+                      "path": []
+                    },
+                    "operator": "_eq",
+                    "value": {
+                      "type": "variable",
+                      "name": "$author_id"
+                    }
                   }
                 },
-                "where": {
-                  "type": "binary_comparison_operator",
-                  "column": {
-                    "type": "column",
-                    "name": "author_id",
-                    "path": []
-                  },
-                  "operator": {
-                    "type": "equal"
-                  },
-                  "value": {
-                    "type": "variable",
-                    "name": "$author_id"
-                  }
-                }
-              },
-              "arguments": {},
-              "collection_relationships": {},
-              "variables": []
+                "arguments": {},
+                "collection_relationships": {},
+                "variables": []
+              }
             },
             "ndcExplain": {
               "type": "response",

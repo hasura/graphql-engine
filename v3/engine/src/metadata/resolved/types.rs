@@ -43,18 +43,48 @@ pub struct ObjectTypeRepresentation {
     // TODO: add graphql_output_type_kind if we support creating interfaces.
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
+pub struct NdcColumnForComparison {
+    pub column: String,
+    pub equal_operator: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
+pub struct ComparisonOperators {
+    pub equal_operators: Vec<String>,
+    pub in_operators: Vec<String>,
+}
+
 pub struct ScalarTypeInfo<'a> {
     pub scalar_type: &'a ndc::models::ScalarType,
     pub representation: Option<TypeName>,
     pub comparison_expression_name: Option<ast::TypeName>,
+    pub comparison_operators: ComparisonOperators,
 }
 
 impl<'a> ScalarTypeInfo<'a> {
     pub(crate) fn new(source_scalar: &'a ndc::models::ScalarType) -> Self {
+        let mut comparison_operators = ComparisonOperators::default();
+        for (operator_name, operator_definition) in &source_scalar.comparison_operators {
+            match operator_definition {
+                ndc::models::ComparisonOperatorDefinition::Equal => {
+                    comparison_operators
+                        .equal_operators
+                        .push(operator_name.clone());
+                }
+                ndc::models::ComparisonOperatorDefinition::In => {
+                    comparison_operators
+                        .in_operators
+                        .push(operator_name.clone());
+                }
+                ndc::models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
+            };
+        }
         ScalarTypeInfo {
             scalar_type: source_scalar,
             representation: None,
             comparison_expression_name: None,
+            comparison_operators,
         }
     }
 }
@@ -337,7 +367,8 @@ fn resolve_type_mapping(
                     },
                 )?
         {
-            let underlying_ndc_field_named_type = get_underlying_named_type(ndc_field_type);
+            let underlying_ndc_field_named_type = get_underlying_named_type(ndc_field_type)
+                .map_err(TypeMappingValidationError::NDCValidationError)?;
             let ndc_field_object_type = ndc_object_types
                 .get(underlying_ndc_field_named_type)
                 .ok_or_else(|| TypeMappingValidationError::UnknownNdcFieldType {

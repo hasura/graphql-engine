@@ -28,7 +28,7 @@ services:
       timeout: 10s
       retries: 20
   reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.13
+    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.18
     ports:
       - 8102:8100
   auth_hook:
@@ -54,7 +54,7 @@ services:
       COLLECTOR_OTLP_ENABLED: 'true'
       COLLECTOR_ZIPKIN_HOST_PORT: '9411'
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main-dd4172889
+    image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
     ports:
       - 8100:8100
     volumes:

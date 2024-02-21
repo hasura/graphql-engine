@@ -151,7 +151,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                     arguments: BTreeMap::new(),
                     // 'AND' predicate indicates that the column can be accessed
                     // by joining all the relationships paths provided
-                    predicate: Box::new(gdc::models::Expression::And {
+                    predicate: Some(Box::new(gdc::models::Expression::And {
                         // TODO(naveen): Add expressions here, when we support sorting with predicates.
                         //
                         // There are two types of sorting:
@@ -167,7 +167,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                         //
                         // Currently we only support the 1st type of sort. Hence we don't have any expressions/predicate.
                         expressions: Vec::new(),
-                    }),
+                    })),
                 })
             }
 

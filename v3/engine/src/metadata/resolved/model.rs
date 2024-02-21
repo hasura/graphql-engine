@@ -19,6 +19,7 @@ use crate::schema::types::output_type::relationship::{
 };
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};
+use ndc::models::ComparisonOperatorDefinition;
 use ndc_client as ndc;
 use open_dds::permissions::{NullableModelPredicate, RelationshipPredicate};
 use open_dds::{
@@ -36,12 +37,18 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::iter;
 
 use super::relationship::RelationshipTarget;
-use super::types::ObjectTypeRepresentation;
+use super::types::{NdcColumnForComparison, ObjectTypeRepresentation};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct UniqueIdentifierField {
+    pub field_type: QualifiedTypeReference,
+    pub ndc_column: Option<NdcColumnForComparison>,
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct SelectUniqueGraphQlDefinition {
     pub query_root_field: ast::Name,
-    pub unique_identifier: IndexMap<FieldName, QualifiedTypeReference>,
+    pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
     pub description: Option<String>,
 }
 
@@ -149,7 +156,7 @@ pub enum ModelPredicate {
     BinaryFieldComparison {
         field: FieldName,
         ndc_column: String,
-        operator: ndc_client::models::BinaryComparisonOperator,
+        operator: String,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,
     },
@@ -173,9 +180,14 @@ pub struct Model {
     pub graphql_api: ModelGraphQlApi,
     pub source: Option<ModelSource>,
     pub select_permissions: Option<HashMap<Role, SelectPermission>>,
-    pub global_id_source: bool,
+    pub global_id_source: Option<GlobalIdSource>,
     pub filterable_fields: Vec<FilterableField>,
     pub orderable_fields: Vec<OrderableField>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct GlobalIdSource {
+    pub ndc_mapping: HashMap<FieldName, NdcColumnForComparison>,
 }
 
 fn resolve_filterable_fields(
@@ -254,6 +266,7 @@ pub fn resolve_model(
         &qualified_object_type_name,
         &qualified_model_name,
     )?;
+    let mut global_id_source = None;
     if model.global_id_source {
         // Check if there are any global fields present in the related
         // object type, if the model is marked as a global source.
@@ -282,6 +295,9 @@ pub fn resolve_model(
                 model_names.push(qualified_model_name.clone());
             }
         }
+        global_id_source = Some(GlobalIdSource {
+            ndc_mapping: HashMap::new(),
+        });
     };
 
     let mut arguments = IndexMap::new();
@@ -312,7 +328,7 @@ pub fn resolve_model(
         graphql_api: ModelGraphQlApi::default(),
         source: None,
         select_permissions: None,
-        global_id_source: model.global_id_source,
+        global_id_source,
         filterable_fields: resolve_filterable_fields(model, &object_type_representation.fields)?,
         orderable_fields: resolve_orderable_fields(model, &object_type_representation.fields)?,
     })
@@ -324,6 +340,7 @@ fn resolve_ndc_type(
     source_type: &ndc::models::Type,
     scalars: &HashMap<&str, ScalarTypeInfo>,
     subgraph: &str,
+    model_name: &Qualified<ModelName>,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
         ndc::models::Type::Named { name } => {
@@ -348,22 +365,31 @@ fn resolve_ndc_type(
                     nullable: false,
                 })
         }
-        ndc::models::Type::Nullable { underlying_type } => {
-            resolve_ndc_type(data_connector, underlying_type, scalars, subgraph).map(|ty| {
-                QualifiedTypeReference {
-                    underlying_type: ty.underlying_type,
-                    nullable: true,
-                }
-            })
-        }
+        ndc::models::Type::Nullable { underlying_type } => resolve_ndc_type(
+            data_connector,
+            underlying_type,
+            scalars,
+            subgraph,
+            model_name,
+        )
+        .map(|ty| QualifiedTypeReference {
+            underlying_type: ty.underlying_type,
+            nullable: true,
+        }),
         ndc::models::Type::Array { element_type } => {
-            resolve_ndc_type(data_connector, element_type, scalars, subgraph).map(|ty| {
-                QualifiedTypeReference {
+            resolve_ndc_type(data_connector, element_type, scalars, subgraph, model_name).map(
+                |ty| QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::List(Box::new(ty)),
                     nullable: false,
-                }
-            })
+                },
+            )
         }
+        ndc::models::Type::Predicate { .. } => Err(Error::ModelTypeMappingValidationError {
+            model_name: model_name.clone(),
+            error: super::error::TypeMappingValidationError::NDCValidationError(
+                ndc_validation::NDCValidationError::PredicateTypeUnsupported,
+            ),
+        }),
     }
 }
 
@@ -377,42 +403,38 @@ fn resolve_binary_operator(
     scalars: &HashMap<&str, ScalarTypeInfo>,
     ndc_scalar_type: &ndc_client::models::ScalarType,
     subgraph: &str,
-) -> Result<
-    (
-        ndc_client::models::BinaryComparisonOperator,
-        QualifiedTypeReference,
-    ),
-    Error,
-> {
-    match operator.0.as_str() {
-        "_eq" => {
-            let field_definition = fields.get(field_name).ok_or_else(|| {
-                Error::UnknownFieldInSelectPermissionsDefinition {
-                    field_name: field_name.clone(),
-                    model_name: model_name.clone(),
-                }
+) -> Result<(String, QualifiedTypeReference), Error> {
+    let field_definition =
+        fields
+            .get(field_name)
+            .ok_or_else(|| Error::UnknownFieldInSelectPermissionsDefinition {
+                field_name: field_name.clone(),
+                model_name: model_name.clone(),
             })?;
-            Ok((
-                ndc_client::models::BinaryComparisonOperator::Equal,
-                field_definition.field_type.clone(),
-            ))
+    let comparison_operator_definition = &ndc_scalar_type
+        .comparison_operators
+        .get(&operator.0)
+        .ok_or_else(|| Error::InvalidOperator {
+            model_name: model_name.clone(),
+            operator_name: operator.clone(),
+        })?;
+    match comparison_operator_definition {
+        ComparisonOperatorDefinition::Equal => {
+            Ok((operator.0.clone(), field_definition.field_type.clone()))
         }
-        _ => {
-            let argument_ndc_type = &ndc_scalar_type
-                .comparison_operators
-                .get(&operator.0)
-                .ok_or_else(|| Error::InvalidOperator {
-                    model_name: model_name.clone(),
-                    operator_name: operator.clone(),
-                })?
-                .argument_type;
-            Ok((
-                ndc_client::models::BinaryComparisonOperator::Other {
-                    name: operator.0.clone(),
-                },
-                resolve_ndc_type(data_connector, argument_ndc_type, scalars, subgraph)?,
-            ))
-        }
+        ComparisonOperatorDefinition::In => Ok((
+            operator.0.clone(),
+            QualifiedTypeReference {
+                underlying_type: QualifiedBaseType::List(Box::new(
+                    field_definition.field_type.clone(),
+                )),
+                nullable: true,
+            },
+        )),
+        ComparisonOperatorDefinition::Custom { argument_type } => Ok((
+            operator.0.clone(),
+            resolve_ndc_type(data_connector, argument_type, scalars, subgraph, model_name)?,
+        )),
     }
 }
 
@@ -713,6 +735,86 @@ pub fn resolve_model_select_permissions(
     Ok(validated_permissions)
 }
 
+pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
+    model_name: &Qualified<ModelName>,
+    model_data_type: &Qualified<CustomTypeName>,
+    model_source: &ModelSource,
+    field: &FieldName,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    comparison_location: F,
+) -> Result<NdcColumnForComparison, Error> {
+    // Get field mappings of model data type
+    let TypeMapping::Object { field_mappings } = model_source
+        .type_mappings
+        .get(model_data_type)
+        .ok_or(Error::TypeMappingRequired {
+            model_name: model_name.clone(),
+            type_name: model_data_type.clone(),
+            data_connector: model_source.data_connector.name.clone(),
+        })?;
+    // Determine field_mapping for the given field
+    let field_mapping =
+        field_mappings
+            .get(field)
+            .ok_or_else(|| Error::NoFieldMappingForComparedField {
+                comparison_location: comparison_location(),
+                field_name: field.clone(),
+                model_name: model_name.clone(),
+            })?;
+    // Determine ndc type of the field
+    let field_ndc_type = &field_mapping.column_type;
+    // Determine whether the ndc type is a simple scalar
+    let field_ndc_type_scalar = get_simple_scalar(field_ndc_type.clone()).ok_or_else(|| {
+        Error::UncomparableArrayFieldType {
+            comparison_location: comparison_location(),
+            field_name: field.clone(),
+            model_name: model_name.clone(),
+        }
+    })?;
+    // Get available scalars defined in the data connector
+    let scalars = &data_connectors
+        .get(&model_source.data_connector.name)
+        .ok_or(Error::UnknownModelDataConnector {
+            model_name: model_name.clone(),
+            data_connector: model_source.data_connector.name.clone(),
+        })?
+        .scalars;
+    // Get scalar type info from the data connector
+    let scalar_type_info = scalars.get(field_ndc_type_scalar.as_str()).ok_or_else(|| {
+        Error::UnknownScalarTypeInDataConnector {
+            scalar_type: field_ndc_type_scalar.clone(),
+            data_connector: model_source.data_connector.name.clone(),
+        }
+    })?;
+
+    let equal_operator = match scalar_type_info
+        .comparison_operators
+        .equal_operators
+        .as_slice()
+    {
+        [] => {
+            return Err(Error::NoEqualOperatorForComparedField {
+                comparison_location: comparison_location(),
+                field_name: field.clone(),
+                model_name: model_name.clone(),
+            });
+        }
+        [equal_operator] => equal_operator,
+        _ => {
+            return Err(Error::MultipleEqualOperatorsForComparedField {
+                comparison_location: comparison_location(),
+                field_name: field.clone(),
+                model_name: model_name.clone(),
+            });
+        }
+    };
+
+    Ok(NdcColumnForComparison {
+        column: field_mapping.column.clone(),
+        equal_operator: equal_operator.clone(),
+    })
+}
+
 pub fn resolve_model_graphql_api(
     model_graphql_definition: &ModelGraphQlDefinition,
     model: &mut Model,
@@ -734,8 +836,26 @@ pub fn resolve_model_graphql_api(
                     field_name: field_name.clone(),
                 })?
                 .field_type;
+            let ndc_column = model
+                .source
+                .as_ref()
+                .map(|model_source| {
+                    get_ndc_column_for_comparison(
+                        &model.name,
+                        &model.data_type,
+                        model_source,
+                        field_name,
+                        data_connectors,
+                        || "the unique identifier for select unique".to_string(),
+                    )
+                })
+                .transpose()?;
+            let unique_identifier_field = UniqueIdentifierField {
+                field_type: field_type.clone(),
+                ndc_column,
+            };
             if unique_identifier_fields
-                .insert(field_name.clone(), field_type.clone())
+                .insert(field_name.clone(), unique_identifier_field)
                 .is_some()
             {
                 return Err(Error::DuplicateFieldInUniqueIdentifier {
@@ -883,36 +1003,16 @@ pub fn resolve_model_graphql_api(
                                             op_name.clone(),
                                             resolve_ndc_type(
                                                 &model_source.data_connector.name,
-                                                &op_definition.argument_type,
+                                                &get_argument_type(
+                                                    op_definition,
+                                                    &field_mapping.column_type,
+                                                ),
                                                 scalar_types,
                                                 subgraph,
+                                                model_name,
                                             )?,
                                         );
                                     }
-                                    // equal operator
-                                    let eq_scalar_type_name = scalar_type_info
-                                        .representation
-                                        .as_ref()
-                                        .ok_or(Error::DataConnectorScalarRepresentationRequired {
-                                            data_connector: model_source
-                                                .data_connector
-                                                .name
-                                                .clone(),
-                                            scalar_type: scalar_type_name.clone(),
-                                        })?
-                                        .clone();
-                                    operators.insert(
-                                        "_eq".to_string(),
-                                        QualifiedTypeReference {
-                                            underlying_type: QualifiedBaseType::Named(
-                                                mk_qualified_type_name(
-                                                    &eq_scalar_type_name,
-                                                    subgraph,
-                                                ),
-                                            ),
-                                            nullable: false,
-                                        },
-                                    );
                                     // Register scalar comparison field only if it contains non-zero operators.
                                     if !operators.is_empty() {
                                         scalar_fields.insert(
@@ -1026,6 +1126,27 @@ pub fn resolve_model_graphql_api(
     Ok(())
 }
 
+fn unwrap_nullable(field_type: &ndc::models::Type) -> &ndc::models::Type {
+    if let ndc::models::Type::Nullable { underlying_type } = field_type {
+        unwrap_nullable(underlying_type)
+    } else {
+        field_type
+    }
+}
+
+fn get_argument_type(
+    op_definition: &ComparisonOperatorDefinition,
+    field_type: &ndc::models::Type,
+) -> ndc::models::Type {
+    match op_definition {
+        ComparisonOperatorDefinition::Equal => unwrap_nullable(field_type).clone(),
+        ComparisonOperatorDefinition::In => ndc::models::Type::Array {
+            element_type: Box::new(unwrap_nullable(field_type).clone()),
+        },
+        ComparisonOperatorDefinition::Custom { argument_type } => argument_type.clone(),
+    }
+}
+
 pub fn resolve_model_source(
     model_source: &models::ModelSource,
     model: &mut Model,
@@ -1117,7 +1238,7 @@ pub fn resolve_model_source(
         },
     )?;
 
-    model.source = Some(ModelSource {
+    let resolved_model_source = ModelSource {
         data_connector: DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context.url.clone(),
@@ -1126,9 +1247,30 @@ pub fn resolve_model_source(
         collection: model_source.collection.clone(),
         type_mappings,
         argument_mappings,
-    });
+    };
 
+    let model_object_type =
+        get_model_object_type_representation(types, &model.data_type, &model.name)?;
+
+    if let Some(global_id_source) = &mut model.global_id_source {
+        for global_id_field in &model_object_type.global_id_fields {
+            global_id_source.ndc_mapping.insert(
+                global_id_field.clone(),
+                get_ndc_column_for_comparison(
+                    &model.name,
+                    &model.data_type,
+                    &resolved_model_source,
+                    global_id_field,
+                    data_connectors,
+                    || format!("the global ID fields of type {}", model.data_type),
+                )?,
+            );
+        }
+    }
+
+    model.source = Some(resolved_model_source);
     ndc_validation::validate_ndc(&model.name, model, data_connector_context.schema)?;
+
     Ok(())
 }
 

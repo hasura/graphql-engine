@@ -28,91 +28,109 @@
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_like": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_ilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nlike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_regex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_iregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_niregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_similar": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nsimilar": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
                       }
                     },
                     "update_operators": {}
@@ -143,31 +161,39 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
                       }
                     },
                     "update_operators": {}
@@ -198,31 +224,39 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
                       }
                     },
                     "update_operators": {}
@@ -702,18 +736,19 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
                 "capabilities": {
                   "query": {
                     "aggregates": {},
-                    "variables": {}
+                    "variables": {},
+                    "explain": {}
                   },
-                  "explain": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
-                  }
-                }
+                  },
+                  "mutation": {}
+                },
+                "version": "0.1.0" 
               }
             }
           },

@@ -22,6 +22,8 @@ use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
+use super::error::TypeMappingValidationError;
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandGraphQlApi {
     pub root_field_kind: GraphQlRootFieldKind,
@@ -230,7 +232,12 @@ pub fn resolve_command_source(
         .map(|custom_type_name| {
             // Get the corresponding object_type (data_connector.object_type) associated with the result_type for the source
             let source_result_type_name =
-                ndc_validation::get_underlying_named_type(source_result_type);
+                ndc_validation::get_underlying_named_type(source_result_type).map_err(|e| {
+                    Error::CommandTypeMappingValidationError {
+                        command_name: command.name.clone(),
+                        error: TypeMappingValidationError::NDCValidationError(e),
+                    }
+                })?;
             let source_result_object_type = data_connector_context
                 .schema
                 .object_types

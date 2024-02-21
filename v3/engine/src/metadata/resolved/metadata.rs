@@ -232,7 +232,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
     {
         let mut resolved_model =
             resolve_model(subgraph, model, &types, &mut global_id_enabled_types)?;
-        if resolved_model.global_id_source {
+        if resolved_model.global_id_source.is_some() {
             match global_id_models.insert(
                 resolved_model.data_type.clone(),
                 resolved_model.name.clone(),

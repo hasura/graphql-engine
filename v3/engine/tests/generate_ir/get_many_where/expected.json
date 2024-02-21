@@ -101,10 +101,7 @@
                     "name": "title",
                     "path": []
                   },
-                  "operator": {
-                    "type": "other",
-                    "name": "_like"
-                  },
+                  "operator": "_like",
                   "value": {
                     "type": "scalar",
                     "value": "random"

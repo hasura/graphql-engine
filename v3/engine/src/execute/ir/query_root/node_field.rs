@@ -111,33 +111,25 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 },
             )?;
 
-            let field_mappings = model_source
-                .type_mappings
-                .get(&typename_mapping.type_name)
-                .map(|type_mapping| match type_mapping {
-                    resolved::types::TypeMapping::Object { field_mappings } => field_mappings,
-                })
-                .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-                    description: format!(
-                        "type '{}' not found in model source type_mappings",
-                        typename_mapping.type_name
-                    ),
-                })?;
             let filter_clause_expressions = global_id
                 .id
                 .iter()
                 .map(|(field_name, val)| {
-                    let field_mapping = &field_mappings.get(field_name).ok_or_else(|| {
-                        error::InternalEngineError::InternalGeneric {
-                            description: format!("invalid field in annotation: {field_name:}"),
-                        }
-                    })?;
+                    let field_mapping = typename_mapping
+                        .global_id_fields_ndc_mapping
+                        .get(field_name)
+                        .ok_or_else(|| error::InternalEngineError::InternalGeneric {
+                            description: format!(
+                                "Global ID field mapping for type {} missing field {}",
+                                global_id.typename, field_name
+                            ),
+                        })?;
                     Ok(ndc::models::Expression::BinaryComparisonOperator {
                         column: ndc::models::ComparisonTarget::Column {
                             name: field_mapping.column.clone(),
                             path: vec![],
                         },
-                        operator: ndc::models::BinaryComparisonOperator::Equal,
+                        operator: field_mapping.equal_operator.clone(),
                         value: ndc::models::ComparisonValue::Scalar { value: val.clone() },
                     })
                 })

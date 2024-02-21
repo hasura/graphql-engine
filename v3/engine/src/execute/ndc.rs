@@ -7,7 +7,7 @@ use lang_graphql::ast::common as ast;
 use ndc_client as ndc;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
-use super::process_response::process_command_rows;
+use super::process_response::process_command_mutation_response;
 use super::query_plan::ProcessResponseAs;
 use super::{error, ProjectId};
 use crate::metadata::resolved;
@@ -140,24 +140,20 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                         })?;
                     match process_response_as {
                         ProcessResponseAs::CommandResponse {
-                            command_name,
+                            command_name: _,
                             type_container,
-                        } => {
-                            let result = process_command_rows(
-                                command_name,
-                                mutation_results.returning,
-                                selection_set,
-                                type_container,
-                            )?;
-                            Ok(json::to_value(result).map_err(error::Error::from))
-                        }
+                        } => process_command_mutation_response(
+                            mutation_results,
+                            selection_set,
+                            type_container,
+                        ),
                         _ => Err(error::Error::from(
                             error::InternalEngineError::InternalGeneric {
                                 description: "mutations without commands are not supported yet"
                                     .into(),
                             },
                         )),
-                    }?
+                    }
                 })
             })
         })

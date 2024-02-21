@@ -25,7 +25,7 @@ services:
       timeout: 10s
       retries: 20
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main-dd4172889
+    image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
     volumes:
       - ./engine/tests/pg_ndc_config.json:/config.json
     depends_on:

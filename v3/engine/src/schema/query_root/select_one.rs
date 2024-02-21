@@ -34,17 +34,17 @@ pub(crate) fn select_one_field(
     let query_root_field = select_unique.query_root_field.clone();
 
     let mut arguments = HashMap::new();
-    for (field_name, field_type) in select_unique.unique_identifier.iter() {
+    for (field_name, field) in select_unique.unique_identifier.iter() {
         let graphql_field_name = mk_name(field_name.0.as_str())?;
         let argument = gql_schema::InputField::new(
             graphql_field_name,
             None,
             Annotation::Input(types::InputAnnotation::Model(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument {
-                    field_name: field_name.clone(),
+                    ndc_column: field.ndc_column.clone(),
                 },
             )),
-            get_input_type(gds, builder, field_type)?,
+            get_input_type(gds, builder, &field.field_type)?,
             None,
             gql_schema::DeprecationStatus::NotDeprecated,
         );

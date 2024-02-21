@@ -39,7 +39,11 @@
                                                 }
                                             }
                                         },
-                                        "comparison_operators": {},
+                                        "comparison_operators": {
+                                            "_eq": {
+                                                "type": "equal"
+                                            }
+                                        },
                                         "update_operators": {}
                                     },
                                     "String": {
@@ -49,7 +53,11 @@
                                                 "argument_type": {
                                                     "type": "named",
                                                     "name": "String"
-                                                }
+                                                },
+                                                "type": "custom"
+                                            },
+                                            "_eq": {
+                                                "type": "equal"
                                             }
                                         },
                                         "update_operators": {}
@@ -201,18 +209,19 @@
                                 ]
                             },
                             "capabilities": {
-                                "versions": "*",
                                 "capabilities": {
                                     "query": {
                                         "aggregates": {},
-                                        "variables": {}
+                                        "variables": {},
+                                        "explain": {}
                                     },
-                                    "explain": {},
                                     "relationships": {
                                         "relation_comparisons": {},
                                         "order_by_aggregate": {}
-                                    }
-                                }
+                                    },
+                                    "mutation": {}
+                                },
+                                "version": "0.1.0" 
                             }
                         }
                     }

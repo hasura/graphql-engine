@@ -162,10 +162,14 @@ async fn get_metrics(State(state): State<Arc<Mutex<AppState>>>) -> Result<String
 // ANCHOR: capabilities
 async fn get_capabilities() -> Json<models::CapabilitiesResponse> {
     Json(models::CapabilitiesResponse {
-        versions: "^0.1.0".into(),
+        version: "0.1.0".into(),
         capabilities: models::Capabilities {
-            explain: None,
+            mutation: models::MutationCapabilities {
+                transactional: None,
+                explain: None,
+            },
             query: models::QueryCapabilities {
+                explain: None,
                 aggregates: Some(models::LeafCapability {}),
                 variables: Some(models::LeafCapability {}),
             },
@@ -188,7 +192,7 @@ async fn get_schema() -> Json<models::SchemaResponse> {
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::from_iter([(
                     "like".into(),
-                    models::ComparisonOperatorDefinition {
+                    models::ComparisonOperatorDefinition::Custom {
                         argument_type: models::Type::Named {
                             name: "String".into(),
                         },
@@ -1573,6 +1577,7 @@ fn execute_query(
                 // from a function, and we need to handle it differently.
                 if item.contains_key("__value") {
                     let value_field = models::Field::Column {
+                        fields: None,
                         column: String::from("__value"),
                     };
                     let mut row = IndexMap::new();
@@ -1955,7 +1960,7 @@ fn eval_path_element(
     arguments: &BTreeMap<String, models::RelationshipArgument>,
     source: &[Row],
     query: Option<&Query>,
-    predicate: &models::Expression,
+    predicate: &Option<Box<models::Expression>>,
 ) -> Result<Vec<Row>> {
     let mut matching_rows: Vec<Row> = vec![];
 
@@ -2037,16 +2042,20 @@ fn eval_path_element(
         )?;
 
         for tgt_row in target.iter() {
-            if eval_column_mapping(relationship, src_row, tgt_row)?
-                && eval_expression(
-                    collection_relationships,
-                    variables,
-                    state,
-                    predicate,
-                    tgt_row,
-                    tgt_row,
-                )?
-            {
+            if let Some(predicate) = predicate {
+                if eval_column_mapping(relationship, src_row, tgt_row)?
+                    && eval_expression(
+                        collection_relationships,
+                        variables,
+                        state,
+                        predicate,
+                        tgt_row,
+                        tgt_row,
+                    )?
+                {
+                    matching_rows.push(tgt_row.clone());
+                }
+            } else if eval_column_mapping(relationship, src_row, tgt_row)? {
                 matching_rows.push(tgt_row.clone());
             }
         }
@@ -2164,8 +2173,8 @@ fn eval_expression(
             column,
             operator,
             value,
-        } => match operator {
-            models::BinaryComparisonOperator::Equal => {
+        } => match operator.as_str() {
+            "_eq" => {
                 let left_vals = eval_comparison_target(
                     collection_relationships,
                     variables,
@@ -2192,76 +2201,8 @@ fn eval_expression(
 
                 Ok(false)
             }
-            // ANCHOR_END: eval_expression_binary_operators
-            // ANCHOR: eval_expression_custom_binary_operators
-            models::BinaryComparisonOperator::Other { name } => match name.as_str() {
-                "like" => {
-                    let column_vals = eval_comparison_target(
-                        collection_relationships,
-                        variables,
-                        state,
-                        column,
-                        root,
-                        item,
-                    )?;
-                    let regex_vals = eval_comparison_value(
-                        collection_relationships,
-                        variables,
-                        state,
-                        value,
-                        root,
-                        item,
-                    )?;
-                    for column_val in column_vals.iter() {
-                        for regex_val in regex_vals.iter() {
-                            let column_str = column_val.as_str().ok_or((
-                                StatusCode::BAD_REQUEST,
-                                Json(models::ErrorResponse {
-                                    message: "column is not a string".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            ))?;
-                            let regex_str = regex_val.as_str().ok_or((
-                                StatusCode::BAD_REQUEST,
-                                Json(models::ErrorResponse {
-                                    message: " ".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            ))?;
-                            let regex = Regex::new(regex_str).map_err(|_| {
-                                (
-                                    StatusCode::BAD_REQUEST,
-                                    Json(models::ErrorResponse {
-                                        message: "invalid regular expression".into(),
-                                        details: serde_json::Value::Null,
-                                    }),
-                                )
-                            })?;
-                            if regex.is_match(column_str) {
-                                return Ok(true);
-                            }
-                        }
-                    }
-                    Ok(false)
-                }
-                _ => Err((
-                    StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
-                        message: " ".into(),
-                        details: serde_json::Value::Null,
-                    }),
-                )),
-            },
-            // ANCHOR_END: eval_expression_custom_binary_operators
-        },
-        // ANCHOR: eval_expression_binary_array_operators
-        models::Expression::BinaryArrayComparisonOperator {
-            column,
-            operator,
-            values,
-        } => match operator {
-            models::BinaryArrayComparisonOperator::In => {
-                let left_vals = eval_comparison_target(
+            "like" => {
+                let column_vals = eval_comparison_target(
                     collection_relationships,
                     variables,
                     state,
@@ -2269,29 +2210,54 @@ fn eval_expression(
                     root,
                     item,
                 )?;
-
-                for comparison_value in values.iter() {
-                    let right_vals = eval_comparison_value(
-                        collection_relationships,
-                        variables,
-                        state,
-                        comparison_value,
-                        root,
-                        item,
-                    )?;
-                    for left_val in left_vals.iter() {
-                        for right_val in right_vals.iter() {
-                            if left_val == right_val {
-                                return Ok(true);
-                            }
+                let regex_vals = eval_comparison_value(
+                    collection_relationships,
+                    variables,
+                    state,
+                    value,
+                    root,
+                    item,
+                )?;
+                for column_val in column_vals.iter() {
+                    for regex_val in regex_vals.iter() {
+                        let column_str = column_val.as_str().ok_or((
+                            StatusCode::BAD_REQUEST,
+                            Json(models::ErrorResponse {
+                                message: "column is not a string".into(),
+                                details: serde_json::Value::Null,
+                            }),
+                        ))?;
+                        let regex_str = regex_val.as_str().ok_or((
+                            StatusCode::BAD_REQUEST,
+                            Json(models::ErrorResponse {
+                                message: " ".into(),
+                                details: serde_json::Value::Null,
+                            }),
+                        ))?;
+                        let regex = Regex::new(regex_str).map_err(|_| {
+                            (
+                                StatusCode::BAD_REQUEST,
+                                Json(models::ErrorResponse {
+                                    message: "invalid regular expression".into(),
+                                    details: serde_json::Value::Null,
+                                }),
+                            )
+                        })?;
+                        if regex.is_match(column_str) {
+                            return Ok(true);
                         }
                     }
                 }
                 Ok(false)
             }
+            _op => Err((
+                StatusCode::BAD_REQUEST,
+                Json(models::ErrorResponse {
+                    message: format!("operator '{_op}' not supported"),
+                    details: serde_json::Value::Null,
+                }),
+            )),
         },
-        // ANCHOR_END: eval_expression_binary_array_operators
-        // ANCHOR: eval_expression_exists
         models::Expression::Exists {
             in_collection,
             predicate,
@@ -2302,7 +2268,7 @@ fn eval_expression(
                 limit: None,
                 offset: None,
                 order_by: None,
-                predicate: Some(*predicate.clone()),
+                predicate: predicate.clone().map(|exp| *exp),
             };
             let collection = eval_in_collection(
                 collection_relationships,
@@ -2327,7 +2293,7 @@ fn eval_expression(
                 }),
             ))?;
             Ok(!rows.is_empty())
-        } // ANCHOR_END: eval_expression_exists
+        }
     }
 }
 // ANCHOR_END: eval_expression
@@ -2360,9 +2326,9 @@ fn eval_in_collection(
                 arguments,
                 &source,
                 None,
-                &models::Expression::And {
+                &Some(Box::new(models::Expression::And {
                     expressions: vec![],
-                },
+                })),
             )
         }
         models::ExistsInCollection::Unrelated {
@@ -2467,6 +2433,93 @@ fn eval_comparison_value(
     }
 }
 // ANCHOR_END: eval_comparison_value
+// ANCHOR: eval_nested_field
+fn eval_nested_field(
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, serde_json::Value>,
+    state: &AppState,
+    value: serde_json::Value,
+    nested_field: &models::NestedField,
+) -> Result<models::RowFieldValue> {
+    match nested_field {
+        models::NestedField::Object(nested_object) => {
+            let full_row: Row = serde_json::from_value(value).map_err(|_| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    Json(models::ErrorResponse {
+                        message: "Expected object".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                )
+            })?;
+            let row = eval_row(
+                &nested_object.fields,
+                collection_relationships,
+                variables,
+                state,
+                &full_row,
+            )?;
+            Ok(models::RowFieldValue(serde_json::to_value(row).map_err(
+                |_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(models::ErrorResponse {
+                            message: "Cannot encode rowset".into(),
+                            details: serde_json::Value::Null,
+                        }),
+                    )
+                },
+            )?))
+        }
+        models::NestedField::Array(models::NestedArray { fields }) => {
+            let array: Vec<serde_json::Value> = serde_json::from_value(value).map_err(|_| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    Json(models::ErrorResponse {
+                        message: "Expected array".into(),
+                        details: serde_json::Value::Null,
+                    }),
+                )
+            })?;
+            let result_array = array
+                .into_iter()
+                .map(|value| {
+                    eval_nested_field(collection_relationships, variables, state, value, fields)
+                })
+                .collect::<Result<Vec<_>>>()?;
+            Ok(models::RowFieldValue(
+                serde_json::to_value(result_array).map_err(|_| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(models::ErrorResponse {
+                            message: "Cannot encode rowset".into(),
+                            details: serde_json::Value::Null,
+                        }),
+                    )
+                })?,
+            ))
+        }
+    }
+}
+// ANCHOR_END: eval_nested_field
+// ANCHOR: eval_row
+fn eval_row(
+    fields: &IndexMap<String, models::Field>,
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, serde_json::Value>,
+    state: &AppState,
+    item: &BTreeMap<String, serde_json::Value>,
+) -> Result<IndexMap<String, models::RowFieldValue>> {
+    let mut row = IndexMap::new();
+    for (field_name, field) in fields.iter() {
+        row.insert(
+            field_name.clone(),
+            eval_field(collection_relationships, variables, state, field, item)?,
+        );
+    }
+    Ok(row)
+}
+// ANCHOR_END: eval_row
 // ANCHOR: eval_field
 fn eval_field(
     collection_relationships: &BTreeMap<String, models::Relationship>,
@@ -2500,9 +2553,9 @@ fn eval_field(
                 arguments,
                 &source,
                 Some(query),
-                &models::Expression::And {
+                &Some(Box::new(models::Expression::And {
                     expressions: vec![],
-                },
+                })),
             )?;
             let rows = execute_query(
                 collection_relationships,
@@ -2605,31 +2658,9 @@ async fn execute_mutation_operation(
                 let new_row =
                     BTreeMap::from_iter(actor_obj.iter().map(|(k, v)| (k.clone(), v.clone())));
                 let old_row = state.actors.insert(id_int, new_row);
-                let returning = old_row
-                    .map(|old_row| {
-                        let mut row = IndexMap::new();
-                        for fields in fields.iter() {
-                            for (field_name, field) in fields.iter() {
-                                row.insert(
-                                    field_name.clone(),
-                                    eval_field(
-                                        collection_relationships,
-                                        &BTreeMap::new(),
-                                        &state,
-                                        field,
-                                        &old_row,
-                                    )?,
-                                );
-                            }
-                        }
-                        Ok(row)
-                    })
-                    .transpose()?;
-                Ok(models::MutationOperationResults {
-                    affected_rows: 1,
-                    returning: Some(vec![IndexMap::from_iter([(
-                        "__value".into(),
-                        models::RowFieldValue(serde_json::to_value(returning).map_err(|_| {
+                Ok(models::MutationOperationResults::Procedure {
+                    result: old_row.map_or(Ok(serde_json::Value::Null), |old_row| {
+                        let old_row_value = serde_json::to_value(old_row).map_err(|_| {
                             (
                                 StatusCode::INTERNAL_SERVER_ERROR,
                                 Json(models::ErrorResponse {
@@ -2637,8 +2668,21 @@ async fn execute_mutation_operation(
                                     details: serde_json::Value::Null,
                                 }),
                             )
-                        })?),
-                    )])]),
+                        })?;
+
+                        let old_row_fields = match fields {
+                            None => Ok(models::RowFieldValue(old_row_value)),
+                            Some(nested_field) => eval_nested_field(
+                                collection_relationships,
+                                &BTreeMap::new(),
+                                &state,
+                                old_row_value,
+                                nested_field,
+                            ),
+                        }?;
+
+                        Ok(old_row_fields.0)
+                    })?,
                 })
             }
             "update_actor_name_by_id" => {
@@ -2674,47 +2718,39 @@ async fn execute_mutation_operation(
                         new_row.insert("name".into(), name.clone());
                         state.actors.insert(id_int, new_row);
                         let output_row = state.actors.get(&id_int);
-                        let returning = output_row
-                            .map(|new_row| {
-                                let mut row = IndexMap::new();
-                                for fields in fields.iter() {
-                                    for (field_name, field) in fields.iter() {
-                                        row.insert(
-                                            field_name.clone(),
-                                            eval_field(
-                                                collection_relationships,
-                                                &BTreeMap::new(),
-                                                &state,
-                                                field,
-                                                new_row,
-                                            )?,
-                                        );
-                                    }
-                                }
-                                Ok(row)
-                            })
-                            .transpose()?;
-                        Ok(models::MutationOperationResults {
-                            affected_rows: 1,
-                            returning: Some(vec![IndexMap::from_iter([(
-                                "__value".into(),
-                                models::RowFieldValue(serde_json::to_value(returning).map_err(
-                                    |_| {
-                                        (
-                                            StatusCode::INTERNAL_SERVER_ERROR,
-                                            Json(models::ErrorResponse {
-                                                message: "cannot encode response".into(),
-                                                details: serde_json::Value::Null,
-                                            }),
-                                        )
-                                    },
-                                )?),
-                            )])]),
+                        Ok(models::MutationOperationResults::Procedure {
+                            result: output_row.map_or(
+                                Ok(serde_json::Value::Null),
+                                |output_row| {
+                                    let output_row_value = serde_json::to_value(output_row)
+                                        .map_err(|_| {
+                                            (
+                                                StatusCode::INTERNAL_SERVER_ERROR,
+                                                Json(models::ErrorResponse {
+                                                    message: "cannot encode response".into(),
+                                                    details: serde_json::Value::Null,
+                                                }),
+                                            )
+                                        })?;
+
+                                    let output_row_fields = match fields {
+                                        None => Ok(models::RowFieldValue(output_row_value)),
+                                        Some(nested_field) => eval_nested_field(
+                                            collection_relationships,
+                                            &BTreeMap::new(),
+                                            &state,
+                                            output_row_value,
+                                            nested_field,
+                                        ),
+                                    }?;
+
+                                    Ok(output_row_fields.0)
+                                },
+                            )?,
                         })
                     }
-                    None => Ok(models::MutationOperationResults {
-                        affected_rows: 0,
-                        returning: None,
+                    None => Ok(models::MutationOperationResults::Procedure {
+                        result: serde_json::Value::Null,
                     }),
                 }
             }
@@ -2759,33 +2795,11 @@ async fn execute_mutation_operation(
                         );
                         new_row.insert("name".into(), actor_name_uppercase_value.clone());
                         state.actors.insert(id_int, new_row);
-                        let output_row = state.actors.get(&id_int);
-                        let returning = output_row
-                            .map(|new_row| {
-                                let mut row = IndexMap::new();
-                                for fields in fields.iter() {
-                                    for (field_name, field) in fields.iter() {
-                                        row.insert(
-                                            field_name.clone(),
-                                            eval_field(
-                                                collection_relationships,
-                                                &BTreeMap::new(),
-                                                &state,
-                                                field,
-                                                new_row,
-                                            )?,
-                                        );
-                                    }
-                                }
-                                Ok(row)
-                            })
-                            .transpose()?;
-                        Ok(models::MutationOperationResults {
-                            affected_rows: 1,
-                            returning: Some(vec![IndexMap::from_iter([(
-                                "__value".into(),
-                                models::RowFieldValue(serde_json::to_value(returning).map_err(
-                                    |_| {
+                        let old_row = state.actors.get(&id_int);
+                        Ok(models::MutationOperationResults::Procedure {
+                            result: old_row.map_or(Ok(serde_json::Value::Null), |old_row| {
+                                let old_row_value =
+                                    serde_json::to_value(old_row).map_err(|_| {
                                         (
                                             StatusCode::INTERNAL_SERVER_ERROR,
                                             Json(models::ErrorResponse {
@@ -2793,14 +2807,25 @@ async fn execute_mutation_operation(
                                                 details: serde_json::Value::Null,
                                             }),
                                         )
-                                    },
-                                )?),
-                            )])]),
+                                    })?;
+
+                                let old_row_fields = match fields {
+                                    None => Ok(models::RowFieldValue(old_row_value)),
+                                    Some(nested_field) => eval_nested_field(
+                                        collection_relationships,
+                                        &BTreeMap::new(),
+                                        &state,
+                                        old_row_value,
+                                        nested_field,
+                                    ),
+                                }?;
+
+                                Ok(old_row_fields.0)
+                            })?,
                         })
                     }
-                    None => Ok(models::MutationOperationResults {
-                        affected_rows: 0,
-                        returning: None,
+                    None => Ok(models::MutationOperationResults::Procedure {
+                        result: serde_json::Value::Null,
                     }),
                 }
             }
@@ -2833,52 +2858,35 @@ async fn execute_mutation_operation(
                     new_row.insert("name".into(), actor_name_uppercase_value.clone());
                     state.actors.insert(id_int, new_row);
                     let output_row = state.actors.get(actor_id);
-                    let returning = output_row
-                        .map(|new_row| {
-                            let mut row = IndexMap::new();
-                            for fields in fields.iter() {
-                                for (field_name, field) in fields.iter() {
-                                    row.insert(
-                                        field_name.clone(),
-                                        eval_field(
-                                            collection_relationships,
-                                            &BTreeMap::new(),
-                                            &state,
-                                            field,
-                                            new_row,
-                                        )?,
-                                    );
-                                }
-                            }
-                            Ok(row)
-                        })
-                        .transpose()?;
-                    let returning_value = serde_json::to_value(returning).map_err(|_| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(models::ErrorResponse {
-                                message: "cannot encode response".into(),
-                                details: serde_json::Value::Null,
-                            }),
-                        )
-                    })?;
+                    let returning_value =
+                        output_row.map_or(Ok(serde_json::Value::Null), |returning| {
+                            let returning_value =
+                                serde_json::to_value(returning).map_err(|_| {
+                                    (
+                                        StatusCode::INTERNAL_SERVER_ERROR,
+                                        Json(models::ErrorResponse {
+                                            message: "cannot encode response".into(),
+                                            details: serde_json::Value::Null,
+                                        }),
+                                    )
+                                })?;
+                            let returning_fields = match fields {
+                                None => Ok(models::RowFieldValue(returning_value)),
+                                Some(nested_field) => eval_nested_field(
+                                    collection_relationships,
+                                    &BTreeMap::new(),
+                                    &state,
+                                    returning_value,
+                                    nested_field,
+                                ),
+                            }?;
+
+                            Ok(returning_fields.0)
+                        })?;
                     actors_list.push(returning_value);
                 }
-                let affected_row_count = actors_list.len();
-                Ok(models::MutationOperationResults {
-                    affected_rows: affected_row_count as u32,
-                    returning: Some(vec![IndexMap::from_iter([(
-                        "__value".into(),
-                        models::RowFieldValue(serde_json::to_value(actors_list).map_err(|_| {
-                            (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(models::ErrorResponse {
-                                    message: "cannot encode response".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            )
-                        })?),
-                    )])]),
+                Ok(models::MutationOperationResults::Procedure {
+                    result: serde_json::Value::Array(actors_list),
                 })
             }
             "uppercase_all_actor_names_return_names_list" => {
@@ -2910,8 +2918,8 @@ async fn execute_mutation_operation(
                     new_row.insert("name".into(), actor_name_uppercase_value.clone());
                     state.actors.insert(id_int, new_row);
                     let output_row = state.actors.get(actor_id);
-                    let returning = output_row
-                        .map(|new_row| {
+                    let returning_value =
+                        output_row.map_or(Ok(serde_json::Value::Null), |new_row| {
                             let name = new_row.get("name").ok_or((
                                 StatusCode::INTERNAL_SERVER_ERROR,
                                 Json(models::ErrorResponse {
@@ -2919,53 +2927,16 @@ async fn execute_mutation_operation(
                                     details: serde_json::Value::Null,
                                 }),
                             ))?;
-                            Ok(name)
-                        })
-                        .transpose()?;
-                    let returning_value = serde_json::to_value(returning).map_err(|_| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(models::ErrorResponse {
-                                message: "cannot encode response".into(),
-                                details: serde_json::Value::Null,
-                            }),
-                        )
-                    })?;
+                            Ok(name.clone())
+                        })?;
                     actors_list.push(returning_value);
                 }
-                let affected_row_count = actors_list.len();
-                Ok(models::MutationOperationResults {
-                    affected_rows: affected_row_count as u32,
-                    returning: Some(vec![IndexMap::from_iter([(
-                        "__value".into(),
-                        models::RowFieldValue(serde_json::to_value(actors_list).map_err(|_| {
-                            (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(models::ErrorResponse {
-                                    message: "cannot encode response".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            )
-                        })?),
-                    )])]),
+                Ok(models::MutationOperationResults::Procedure {
+                    result: serde_json::Value::Array(actors_list),
                 })
             }
-            "noop_procedure" => Ok(models::MutationOperationResults {
-                affected_rows: 1,
-                returning: Some(vec![IndexMap::from_iter([(
-                    "__value".into(),
-                    models::RowFieldValue(serde_json::to_value("Noop Procedure").map_err(
-                        |_| {
-                            (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(models::ErrorResponse {
-                                    message: "cannot encode response".into(),
-                                    details: serde_json::Value::Null,
-                                }),
-                            )
-                        },
-                    )?),
-                )])]),
+            "noop_procedure" => Ok(models::MutationOperationResults::Procedure {
+                result: serde_json::Value::String("Noop Procedure".to_string()),
             }),
             _ => Err((
                 StatusCode::BAD_REQUEST,

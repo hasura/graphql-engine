@@ -91,7 +91,9 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
     let mutation_operation = ndc::models::MutationOperation::Procedure {
         name: procedure_name.to_string(),
         arguments: ir.command_info.arguments.clone(),
-        fields: Some(ndc_fields),
+        fields: Some(ndc::models::NestedField::Object(
+            ndc::models::NestedObject { fields: ndc_fields },
+        )),
     };
     let mut collection_relationships = BTreeMap::new();
     selection_set::collect_relationships(

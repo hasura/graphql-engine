@@ -223,6 +223,9 @@ pub fn get_simple_scalar(t: ndc::models::Type) -> Option<String> {
         ndc::models::Type::Named { name } => Some(name),
         ndc::models::Type::Nullable { underlying_type } => get_simple_scalar(*underlying_type),
         ndc::models::Type::Array { element_type: _ } => None,
+        ndc::models::Type::Predicate {
+            object_type_name: _,
+        } => None,
     }
 }
 
@@ -267,7 +270,7 @@ mod tests {
                 "url": { "singleUrl": { "value": "http://test.com" } },
                 "schema": {
                     "version": "v0.1",
-                    "capabilities": { "versions": "1", "capabilities": { "query": {} }},
+                    "capabilities": { "version": "1", "capabilities": { "query": {}, "mutation": {} }},
                     "schema": {
                         "scalar_types": {},
                         "object_types": {},
@@ -281,9 +284,10 @@ mod tests {
         )
         .unwrap();
 
-        let explicit_capabilities: CapabilitiesResponse =
-            serde_json::from_str(r#" { "versions": "1", "capabilities": { "query": {} } }"#)
-                .unwrap();
+        let explicit_capabilities: CapabilitiesResponse = serde_json::from_str(
+            r#" { "version": "1", "capabilities": { "query": {}, "mutation": {} } }"#,
+        )
+        .unwrap();
 
         // With explicit capabilities specified, we should use them
         assert_eq!(
