@@ -11,6 +11,9 @@ A few full `parse()` cases were also added from
 [graphql-js tests](https://github.com/graphql/graphql-js/blob/main/src/language/__tests__/parser-test.ts)
 although they were not numerous or very interesting. They are added starting at `ok/1111_*`
 
+Test cases from fuzzing are added into the `err/6xxx_` namespace. In these
+cases a test failure is a panic.
+
 Some `ok` cases that are only valid for the 2021 spec were renamed to `*.2021` and ignored.
 
 # TODO
