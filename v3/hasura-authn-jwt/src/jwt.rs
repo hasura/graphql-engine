@@ -382,7 +382,7 @@ pub struct JWTKeyConfig {
     /// The algorithm used to decode the JWT.
     pub algorithm: jwt::Algorithm,
     /// The key to use for decoding the JWT.
-    pub key: open_dds::SecretValue,
+    pub key: open_dds::EnvironmentValue,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

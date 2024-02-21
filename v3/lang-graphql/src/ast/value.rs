@@ -1,9 +1,8 @@
 use super::{common::*, spanning::Spanning};
 use serde::{Deserialize, Serialize};
 
-/// Represents a float literal
-/// [Reference] https://spec.graphql.org/draft/#sec-Float-Value
-
+// Represents a float literal
+// [Reference](https://spec.graphql.org/October2021/#sec-Float-Value)
 // #[derive(Clone, Debug, PartialEq, Eq)]
 // pub struct FloatLiteral {
 //     pub integer: BigInt,

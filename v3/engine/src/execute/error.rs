@@ -5,7 +5,7 @@ use open_dds::{
     session_variables::SessionVariable,
     types::{CustomTypeName, FieldName},
 };
-use reqwest::StatusCode;
+use reqwest::{header::InvalidHeaderValue, StatusCode};
 use serde_json as json;
 use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
@@ -163,6 +163,8 @@ pub enum Error {
     InternalError(#[from] InternalError),
     #[error("explain error: {0}")]
     ExplainError(String),
+    #[error("invalid header value characters in project_id: {0}")]
+    ProjectIdConversionError(InvalidHeaderValue),
 }
 
 impl Error {

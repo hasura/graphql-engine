@@ -4,6 +4,11 @@ version: 1.0.0
 build-type: Simple
 copyright: Hasura Inc.
 
+flag profiling
+  description: Configures the project to be profiling-compatible
+  default: False
+  manual: True
+
 library
   hs-source-dirs: src
   default-language: GHC2021
@@ -40,6 +45,11 @@ library
     -Wno-redundant-bang-patterns
     -Wno-unused-type-patterns
 
+  if !flag(profiling)
+    -- ghc-heap-view can't be built with profiling
+    build-depends:     ghc-heap-view
+  else
+    cpp-options: -DPROFILING
   build-depends:
     , QuickCheck
     , aeson
@@ -57,7 +67,6 @@ library
     , data-default-class
     , deepseq
     , exceptions
-    , ghc-heap-view
     , graphql-parser
     , hashable
     , hasura-prelude
@@ -96,6 +105,8 @@ library
     , x509-store
     , x509-system
     , x509-validation
+    , vector
+    , extra
 
 
   default-extensions:
@@ -151,3 +162,5 @@ library
     Net.IPv6
 
     System.Monitor.Heartbeat
+
+    Kriti.Extended

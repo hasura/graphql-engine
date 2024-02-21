@@ -6,8 +6,10 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common::OperationType;
 use ndc_client as ndc;
 use open_dds::{
-    data_connector::{self, DataConnectorName, DataConnectorUrl, ReadWriteUrls},
-    SecretValue,
+    data_connector::{
+        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
+    },
+    EnvironmentValue,
 };
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::{
@@ -17,39 +19,18 @@ use serde::{
 };
 use std::{collections::HashMap, str::FromStr};
 
-lazy_static::lazy_static! {
-    // For backwards compatibility, before NDC capabilities were used, we fallback to these capabilities,
-    // if they are not specified in the metadata. This only supports capabilities we actually used in the
-    // engine at the time we introduced capabilities. All future features should expect explicit capabilities
-    // in the metadata.
-    static ref FALLACK_CAPABILITIES: ndc::models::CapabilitiesResponse = ndc::models::CapabilitiesResponse {
-        versions: "*".to_string(),
-        capabilities: ndc::models::Capabilities {
-            explain: None,
-            query: ndc::models::QueryCapabilities {
-                aggregates: None,
-                variables: Some(ndc::models::LeafCapability {}),
-            },
-            relationships: Some(ndc::models::RelationshipCapabilities {
-                relation_comparisons: None,
-                order_by_aggregate: None,
-            }),
-        },
-    };
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct DataConnector {
+pub struct DataConnectorLink {
     pub name: Qualified<DataConnectorName>,
     pub url: ResolvedDataConnectorUrl,
     pub headers: SerializableHeaderMap,
 }
 
-impl DataConnector {
+impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,
         url: DataConnectorUrl,
-        headers: &IndexMap<String, SecretValue>,
+        headers: &IndexMap<String, EnvironmentValue>,
     ) -> Result<Self, Error> {
         let url = match url {
             DataConnectorUrl::SingleUrl(url) => ResolvedDataConnectorUrl::SingleUrl(
@@ -158,7 +139,7 @@ pub enum HeaderError {
 }
 
 impl SerializableHeaderMap {
-    fn new(headers: &IndexMap<String, SecretValue>) -> Result<Self, HeaderError> {
+    fn new(headers: &IndexMap<String, EnvironmentValue>) -> Result<Self, HeaderError> {
         let header_map = headers
             .iter()
             .map(|(k, v)| {
@@ -212,36 +193,21 @@ impl<'de> Deserialize<'de> for SerializableHeaderMap {
 
 pub struct DataConnectorContext<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
-    pub headers: &'a IndexMap<String, open_dds::SecretValue>,
-    pub schema: &'a ndc::models::SchemaResponse,
+    pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
+    pub schema: &'a ndc_client::models::SchemaResponse,
     pub capabilities: &'a ndc::models::CapabilitiesResponse,
     pub scalars: HashMap<&'a str, ScalarTypeInfo<'a>>,
 }
 
 impl<'a> DataConnectorContext<'a> {
-    pub fn new(
-        name: &Qualified<DataConnectorName>,
-        data_connector: &'a data_connector::DataConnectorV2,
-        flags: &open_dds::flags::Flags,
-    ) -> Result<Self, Error> {
-        let capabilities = {
-            if let Some(specified_capabilities) = &data_connector.capabilities {
-                &specified_capabilities.0
-            } else if flags.require_ndc_capabilities {
-                return Err(Error::MissingDataConnectorCapabilities {
-                    data_connector: name.clone(),
-                });
-            } else {
-                &FALLACK_CAPABILITIES
-            }
-        };
-
+    pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
+        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
         Ok(DataConnectorContext {
             url: &data_connector.url,
             headers: &data_connector.headers,
-            schema: &data_connector.schema,
-            capabilities,
-            scalars: data_connector
+            schema: &schema_and_capabilities.schema,
+            capabilities: &schema_and_capabilities.capabilities,
+            scalars: schema_and_capabilities
                 .schema
                 .scalar_types
                 .iter()
@@ -264,12 +230,7 @@ pub fn get_simple_scalar(t: ndc::models::Type) -> Option<String> {
 mod tests {
 
     use ndc_client::models::CapabilitiesResponse;
-    use open_dds::{
-        data_connector::{CapabilitiesResponseWithSchema, DataConnectorName, DataConnectorV2},
-        flags::Flags,
-    };
-
-    use crate::metadata::resolved::{data_connector::FALLACK_CAPABILITIES, subgraph::Qualified};
+    use open_dds::data_connector::DataConnectorLinkV1;
 
     use super::DataConnectorContext;
 
@@ -299,61 +260,36 @@ mod tests {
 
     #[test]
     fn test_data_connector_context_capablities() {
-        let data_connector_without_capabilities: DataConnectorV2 = serde_json::from_str(
+        let data_connector_with_capabilities: DataConnectorLinkV1 = serde_json::from_str(
             r#"
             {
                 "name": "foo",
-                "url": { "singleUrl": { "value": "http://test.com" } }
+                "url": { "singleUrl": { "value": "http://test.com" } },
+                "schema": {
+                    "version": "v0.1",
+                    "capabilities": { "versions": "1", "capabilities": { "query": {} }},
+                    "schema": {
+                        "scalar_types": {},
+                        "object_types": {},
+                        "collections": [],
+                        "functions": [],
+                        "procedures": []
+                    }
+                }
             }
         "#,
         )
         .unwrap();
 
-        let data_connector_name = Qualified::new("test".into(), DataConnectorName("test".into()));
-
-        // Without flags, we should fallback to the default capabilities
-        assert_eq!(
-            DataConnectorContext::new(
-                &data_connector_name,
-                &data_connector_without_capabilities,
-                &Flags::default()
-            )
-            .unwrap()
-            .capabilities,
-            &FALLACK_CAPABILITIES.clone()
-        );
-
-        let flags_requiring_ndc_capabilities = Flags {
-            require_ndc_capabilities: true,
-        };
-
-        // With explicit capabilities required, we should error on missing capabilities
-        assert!(matches!(
-            DataConnectorContext::new(
-                &data_connector_name,
-                &data_connector_without_capabilities,
-                &flags_requiring_ndc_capabilities
-            ),
-            Err(super::Error::MissingDataConnectorCapabilities { .. })
-        ));
-
         let explicit_capabilities: CapabilitiesResponse =
             serde_json::from_str(r#" { "versions": "1", "capabilities": { "query": {} } }"#)
                 .unwrap();
-        let mut data_connector_with_capabilities = data_connector_without_capabilities.clone();
-        data_connector_with_capabilities.capabilities = Some(CapabilitiesResponseWithSchema(
-            explicit_capabilities.clone(),
-        ));
 
         // With explicit capabilities specified, we should use them
         assert_eq!(
-            DataConnectorContext::new(
-                &data_connector_name,
-                &data_connector_with_capabilities,
-                &Flags::default()
-            )
-            .unwrap()
-            .capabilities,
+            DataConnectorContext::new(&data_connector_with_capabilities)
+                .unwrap()
+                .capabilities,
             &explicit_capabilities
         );
     }

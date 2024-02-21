@@ -14,7 +14,7 @@ For local development, we use the reference agent implementation that is a part 
 
 To start the reference agent only, you can do:
 ```sh
-docker-compose up reference_agent
+docker compose up reference_agent
 ```
 and point the host name `reference_agent` to localhost in your `/etc/hosts` file.
 

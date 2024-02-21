@@ -5,51 +5,59 @@
       {
         "type": "modelSelect",
         "value": {
-          "modelName": "cities",
+          "modelName": "Album",
           "queryRequest": {
-            "collection": "city",
+            "collection": "Album",
             "query": {
               "fields": {
-                "code": {
+                "AlbumId": {
                   "type": "column",
-                  "column": "code"
+                  "column": "AlbumId"
                 },
-                "name": {
+                "ArtistId": {
                   "type": "column",
-                  "column": "name"
+                  "column": "ArtistId"
                 },
-                "__hasura_phantom_field__code": {
+                "__hasura_phantom_field__ArtistId": {
                   "type": "column",
-                  "column": "code"
+                  "column": "ArtistId"
                 },
-                "state": {
+                "Tracks": {
                   "type": "relationship",
                   "query": {
                     "fields": {
-                      "name": {
+                      "TrackId": {
                         "type": "column",
-                        "column": "name"
+                        "column": "TrackId"
                       },
-                      "__hasura_phantom_field__code": {
+                      "__hasura_phantom_field__AlbumId": {
                         "type": "column",
-                        "column": "code"
+                        "column": "AlbumId"
                       }
                     }
                   },
-                  "relationship": "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]",
+                  "relationship": "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]",
                   "arguments": {}
                 }
               }
             },
             "arguments": {},
             "collection_relationships": {
-              "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]": {
+              "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]": {
                 "column_mapping": {
-                  "state_code": "code"
+                  "AlbumId": "AlbumId"
                 },
-                "relationship_type": "object",
-                "target_collection": "states",
+                "relationship_type": "array",
+                "target_collection": "Track",
                 "arguments": {}
+              }
+            }
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
               }
             }
           }
@@ -63,21 +71,21 @@
             "value": {
               "type": "modelSelect",
               "value": {
-                "modelName": "weather",
+                "modelName": "Artist",
                 "queryRequest": {
-                  "collection": "weather",
+                  "collection": "Artist",
                   "query": {
                     "fields": {
-                      "forecast": {
+                      "ArtistId": {
                         "type": "column",
-                        "column": "forecast"
+                        "column": "ArtistId"
                       }
                     },
                     "where": {
                       "type": "binary_comparison_operator",
                       "column": {
                         "type": "column",
-                        "name": "code",
+                        "name": "ArtistId",
                         "path": []
                       },
                       "operator": {
@@ -85,13 +93,21 @@
                       },
                       "value": {
                         "type": "variable",
-                        "name": "$code"
+                        "name": "$ArtistId"
                       }
                     }
                   },
                   "arguments": {},
                   "collection_relationships": {},
                   "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
                 }
               }
             }
@@ -104,21 +120,21 @@
                 "value": {
                   "type": "modelSelect",
                   "value": {
-                    "modelName": "weather",
+                    "modelName": "Album",
                     "queryRequest": {
-                      "collection": "weather",
+                      "collection": "Album",
                       "query": {
                         "fields": {
-                          "forecast": {
+                          "AlbumId": {
                             "type": "column",
-                            "column": "forecast"
+                            "column": "AlbumId"
                           }
                         },
                         "where": {
                           "type": "binary_comparison_operator",
                           "column": {
                             "type": "column",
-                            "name": "code",
+                            "name": "AlbumId",
                             "path": []
                           },
                           "operator": {
@@ -126,13 +142,21 @@
                           },
                           "value": {
                             "type": "variable",
-                            "name": "$code"
+                            "name": "$AlbumId"
                           }
                         }
                       },
                       "arguments": {},
                       "collection_relationships": {},
                       "variables": []
+                    },
+                    "ndcExplain": {
+                      "type": "response",
+                      "value": {
+                        "details": {
+                          "explain": "<redacted>"
+                        }
+                      }
                     }
                   }
                 }

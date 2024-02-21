@@ -1,3 +1,7 @@
+mod commands;
+mod model_selection;
+pub(crate) mod selection_set;
+
 use gql::normalized_ast;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -8,13 +12,13 @@ use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
 use super::error;
-use super::ir::commands;
-use super::ir::model_selection::{self, ModelSelection};
+use super::ir::model_selection::ModelSelection;
 use super::ir::root_field;
 use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
 use super::remote_joins::types::{JoinId, JoinLocations, Location, MonotonicCounter, RemoteJoin};
+use super::ProjectId;
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
@@ -48,7 +52,7 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCQueryExecution<'s, 'ir> {
-    pub execution_tree: ExecutionTree<'s>,
+    pub execution_tree: ExecutionTree<'s, 'ir>,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -61,8 +65,8 @@ pub struct NDCQueryExecution<'s, 'ir> {
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub query: ndc_client::models::MutationRequest,
-    pub join_locations: JoinLocations<(RemoteJoin<'s>, JoinId)>,
-    pub data_connector: &'s resolved::data_connector::DataConnector,
+    pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -70,15 +74,15 @@ pub struct NDCMutationExecution<'n, 's, 'ir> {
 }
 
 #[derive(Debug)]
-pub struct ExecutionTree<'s> {
+pub struct ExecutionTree<'s, 'ir> {
     pub root_node: ExecutionNode<'s>,
-    pub remote_executions: JoinLocations<(RemoteJoin<'s>, JoinId)>,
+    pub remote_executions: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
 }
 
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
     pub query: ndc_client::models::QueryRequest,
-    pub data_connector: &'s resolved::data_connector::DataConnector,
+    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -129,7 +133,7 @@ fn plan_mutation<'n, 's, 'ir>(
         root_field::MutationRootField::ProcedureBasedCommand { ir, selection_set } => {
             let mut join_id_counter = MonotonicCounter::new();
             let (ndc_ir, join_locations) =
-                commands::ir_to_ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
+                commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             NodeQueryPlan::NDCMutationExecution(NDCMutationExecution {
                 query: ndc_ir,
@@ -215,7 +219,7 @@ fn plan_query<'n, 's, 'ir>(
             None => NodeQueryPlan::RelayNodeSelect(None),
         },
         root_field::QueryRootField::FunctionBasedCommand { ir, selection_set } => {
-            let (ndc_ir, join_locations) = commands::ir_to_ndc_query_ir(ir, &mut counter)?;
+            let (ndc_ir, join_locations) = commands::ndc_query_ir(ir, &mut counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
             let execution_tree = ExecutionTree {
                 root_node: ExecutionNode {
@@ -239,9 +243,11 @@ fn plan_query<'n, 's, 'ir>(
     Ok(query_plan)
 }
 
-fn generate_execution_tree<'s>(ir: &ModelSelection<'s>) -> Result<ExecutionTree<'s>, error::Error> {
+fn generate_execution_tree<'s, 'ir>(
+    ir: &'ir ModelSelection<'s>,
+) -> Result<ExecutionTree<'s, 'ir>, error::Error> {
     let mut counter = MonotonicCounter::new();
-    let (ndc_ir, join_locations) = model_selection::ir_to_ndc_ir(ir, &mut counter)?;
+    let (ndc_ir, join_locations) = model_selection::ndc_ir(ir, &mut counter)?;
     let join_locations_with_ids = assign_with_join_ids(join_locations)?;
     Ok(ExecutionTree {
         root_node: ExecutionNode {
@@ -252,18 +258,18 @@ fn generate_execution_tree<'s>(ir: &ModelSelection<'s>) -> Result<ExecutionTree<
     })
 }
 
-fn assign_with_join_ids(
-    join_locations: JoinLocations<RemoteJoin<'_>>,
-) -> Result<JoinLocations<(RemoteJoin<'_>, JoinId)>, error::Error> {
+fn assign_with_join_ids<'s, 'ir>(
+    join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
+) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
     let mut state = RemoteJoinCounter::new();
     let join_ids = assign_join_ids(&join_locations, &mut state);
     zip_with_join_ids(join_locations, join_ids)
 }
 
-fn zip_with_join_ids(
-    join_locations: JoinLocations<RemoteJoin<'_>>,
+fn zip_with_join_ids<'s, 'ir>(
+    join_locations: JoinLocations<RemoteJoin<'s, 'ir>>,
     mut join_ids: JoinLocations<JoinId>,
-) -> Result<JoinLocations<(RemoteJoin<'_>, JoinId)>, error::Error> {
+) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
     let mut new_locations = IndexMap::new();
     for (key, location) in join_locations.locations {
         let join_id_location =
@@ -294,9 +300,9 @@ fn zip_with_join_ids(
 /// Once `JoinLocations<RemoteJoin>` is generated, traverse the tree and assign
 /// join ids. All the join nodes (`RemoteJoin`) that are equal, are assigned the
 /// same join id.
-fn assign_join_ids<'s>(
-    join_locations: &'s JoinLocations<RemoteJoin<'s>>,
-    state: &mut RemoteJoinCounter<'s>,
+fn assign_join_ids<'s, 'ir>(
+    join_locations: &'s JoinLocations<RemoteJoin<'s, 'ir>>,
+    state: &mut RemoteJoinCounter<'s, 'ir>,
 ) -> JoinLocations<JoinId> {
     let new_locations = join_locations
         .locations
@@ -321,7 +327,10 @@ fn assign_join_ids<'s>(
 /// We use an associative list and check for equality of `RemoteJoin` to
 /// generate it's `JoinId`. This is because `Hash` trait is not implemented for
 /// `ndc::models::QueryRequest`
-fn assign_join_id<'s>(join_node: &'s RemoteJoin<'s>, state: &mut RemoteJoinCounter<'s>) -> JoinId {
+fn assign_join_id<'s, 'ir>(
+    join_node: &'s RemoteJoin<'s, 'ir>,
+    state: &mut RemoteJoinCounter<'s, 'ir>,
+) -> JoinId {
     let found = state.remote_joins.iter().find(|(rj, _id)| rj == &join_node);
 
     match found {
@@ -334,13 +343,13 @@ fn assign_join_id<'s>(join_node: &'s RemoteJoin<'s>, state: &mut RemoteJoinCount
     }
 }
 
-struct RemoteJoinCounter<'s> {
-    remote_joins: Vec<(&'s RemoteJoin<'s>, JoinId)>,
+struct RemoteJoinCounter<'s, 'ir> {
+    remote_joins: Vec<(&'s RemoteJoin<'s, 'ir>, JoinId)>,
     counter: MonotonicCounter,
 }
 
-impl<'s> RemoteJoinCounter<'s> {
-    pub fn new() -> RemoteJoinCounter<'s> {
+impl<'s, 'ir> RemoteJoinCounter<'s, 'ir> {
+    pub fn new() -> RemoteJoinCounter<'s, 'ir> {
         RemoteJoinCounter {
             remote_joins: Vec::new(),
             counter: MonotonicCounter::new(),
@@ -406,6 +415,7 @@ impl ExecuteQueryResult {
 async fn execute_field_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     field_plan: NodeQueryPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -459,17 +469,19 @@ async fn execute_field_plan<'n, 's, 'ir>(
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_query_execution(http_client, ndc_query).await,
+                            resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
                         ),
                         NodeQueryPlan::NDCMutationExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_mutation_execution(http_client, ndc_query).await,
+                            resolve_ndc_mutation_execution(http_client, ndc_query, project_id)
+                                .await,
                         ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_relay_node_select(http_client, optional_query).await,
+                            resolve_relay_node_select(http_client, optional_query, project_id)
+                                .await,
                         ),
                     }
                 })
@@ -481,6 +493,7 @@ async fn execute_field_plan<'n, 's, 'ir>(
 pub async fn execute_query_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query_plan: QueryPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
 
@@ -489,7 +502,12 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
     for (alias, field_plan) in query_plan.into_iter() {
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
-        let task = async { (alias, execute_field_plan(http_client, field_plan).await) };
+        let task = async {
+            (
+                alias,
+                execute_field_plan(http_client, field_plan, project_id.clone()).await,
+            )
+        };
 
         tasks.push(task);
     }
@@ -540,6 +558,7 @@ fn resolve_schema_field(
 async fn resolve_ndc_query_execution(
     http_client: &reqwest::Client,
     ndc_query: NDCQueryExecution<'_, '_>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCQueryExecution {
         execution_tree,
@@ -554,6 +573,7 @@ async fn resolve_ndc_query_execution(
         execution_tree.root_node.data_connector,
         execution_span_attribute.clone(),
         field_span_attribute.clone(),
+        project_id.clone(),
     )
     .await?;
     // TODO: Failures in remote joins should result in partial response
@@ -565,6 +585,7 @@ async fn resolve_ndc_query_execution(
         &mut response,
         &process_response_as,
         execution_tree.remote_executions,
+        project_id,
     )
     .await?;
     let result = process_response(selection_set, response, process_response_as)?;
@@ -574,6 +595,7 @@ async fn resolve_ndc_query_execution(
 async fn resolve_ndc_mutation_execution(
     http_client: &reqwest::Client,
     ndc_query: NDCMutationExecution<'_, '_, '_>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCMutationExecution {
         query,
@@ -593,6 +615,7 @@ async fn resolve_ndc_mutation_execution(
         execution_span_attribute,
         field_span_attribute,
         process_response_as,
+        project_id,
     )
     .await?;
     Ok(json::to_value(response)?)
@@ -601,9 +624,10 @@ async fn resolve_ndc_mutation_execution(
 async fn resolve_relay_node_select(
     http_client: &reqwest::Client,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
+    project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     match optional_query {
         None => Ok(json::Value::Null),
-        Some(ndc_query) => resolve_ndc_query_execution(http_client, ndc_query).await,
+        Some(ndc_query) => resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
     }
 }

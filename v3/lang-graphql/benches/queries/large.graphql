@@ -31,7 +31,7 @@ query GetUser($gameID: smallint!, $id: Int, $link: String, $steamID: Int) {
     lastActivity: last_activity
     createdAt: created_at
     friendsCount: friends_count
-    friends(where: {state: {_eq: "ACCEPTED"}}, order_by: {date: desc}, limit: 5) {
+    friends(where: {state: {_eq: "ACCEPTED"}}, order_by: [{date: desc}], limit: 5) {
       ...Friend
       __typename
     }
@@ -66,7 +66,7 @@ query GetUser($gameID: smallint!, $id: Int, $link: String, $steamID: Int) {
         type
         readiness_passed
         game_status
-        teams(order_by: {id: asc}) {
+        teams(order_by: [{id: asc}]) {
           size
           score
           __typename
@@ -74,7 +74,7 @@ query GetUser($gameID: smallint!, $id: Int, $link: String, $steamID: Int) {
         created_at
         started_at
         best_of
-        maps(order_by: {number: asc}) {
+        maps(order_by: [{number: asc}]) {
           map {
             id
             name
@@ -173,7 +173,7 @@ fragment UserStats on users {
 fragment UserBan on users {
   bans(
     where: {active: {_eq: true}, game_id: {_eq: $gameID}}
-    order_by: {until: desc}
+    order_by: [{until: desc}]
   ) {
     id
     since
@@ -224,7 +224,7 @@ fragment Friend on friends {
 fragment UserLastActiveBan on users {
   bans(
     where: {active: {_eq: true}, game_id: {_eq: $gameID}}
-    order_by: {length_minutes: desc}
+    order_by: [{length_minutes: desc}]
     limit: 1
   ) {
     id

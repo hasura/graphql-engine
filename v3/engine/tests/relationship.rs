@@ -36,7 +36,12 @@ fn test_local_relationships_model_to_model_multi_mapping() {
 fn test_local_relationships_model_to_model_array() {
     let test_path_string = "execute/relationships/array";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    let common_metadata_graphql_config =
+        "execute/relationships/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, common_metadata_graphql_config],
+    );
 }
 
 #[test]
@@ -47,10 +52,34 @@ fn test_local_relationships_model_to_model_array_with_arguments() {
 }
 
 #[test]
+fn test_relationships_array_with_arguments_with_graphql_config() {
+    let test_path_string = "execute/relationships/array/arguments/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_graphql_config =
+        "execute/relationships/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, common_metadata_graphql_config],
+    );
+}
+
+#[test]
 fn test_local_relationships_command_to_model() {
     let test_path_string = "execute/relationships/command_to_model";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_relationships_command_to_model_with_graphql_config() {
+    let test_path_string = "execute/relationships/command_to_model/with_graphql_config";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_metadata_graphql_config =
+        "execute/relationships/common_metadata/graphql_config.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[common_metadata_path_string, common_metadata_graphql_config],
+    );
 }
 
 #[test]

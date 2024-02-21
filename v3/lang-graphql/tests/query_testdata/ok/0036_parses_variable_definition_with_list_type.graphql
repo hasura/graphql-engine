@@ -1,0 +1,4 @@
+query ($height: [Int]) {
+    id
+    trees(height: $height)
+}

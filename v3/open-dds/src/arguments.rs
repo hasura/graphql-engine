@@ -16,4 +16,5 @@ pub struct ArgumentDefinition {
     pub name: ArgumentName,
     #[serde(rename = "type")]
     pub argument_type: TypeReference,
+    pub description: Option<String>,
 }

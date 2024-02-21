@@ -1,0 +1,16 @@
+enum Direction @example {
+    """
+    description
+    """
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}
+
+uasdf21230jkdw
+
+{
+    pet
+    faveSnack
+}

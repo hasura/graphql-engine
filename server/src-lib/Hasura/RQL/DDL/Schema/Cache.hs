@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Top-level functions concerned specifically with operations on the schema cache, such as
 -- rebuilding it from the catalog and incorporating schema changes. See the module documentation for

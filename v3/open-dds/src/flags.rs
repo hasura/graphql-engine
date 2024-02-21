@@ -5,5 +5,5 @@ use serde::{Deserialize, Serialize};
 #[schemars(rename = "OpenDdFlags")]
 pub struct Flags {
     #[serde(default)]
-    pub require_ndc_capabilities: bool,
+    pub require_graphql_config: bool,
 }

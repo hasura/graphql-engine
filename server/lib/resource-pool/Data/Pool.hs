@@ -34,6 +34,7 @@ module Data.Pool
     createPool,
     createPool',
     resizePool,
+    getMaxResources,
     tryTrimLocalPool,
     tryTrimPool,
     withResource,
@@ -230,6 +231,9 @@ resizePool Pool {..} maxResources' = do
     modError "pool " $
       "invalid maximum resource count " ++ show maxResources'
   atomically $ writeTVar maxResources maxResources'
+
+getMaxResources :: Pool a -> IO Int
+getMaxResources Pool {..} = readTVarIO maxResources
 
 -- | Attempt to reduce resource allocation below maximum by dropping some unused
 -- resources

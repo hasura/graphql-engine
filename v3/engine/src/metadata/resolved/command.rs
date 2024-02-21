@@ -1,10 +1,10 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::data_connector::{DataConnector, DataConnectorContext};
+use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_reference, serialize_qualified_btreemap,
-    Qualified, QualifiedTypeReference,
+    ArgumentInfo, Qualified, QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::{
     get_underlying_object_type, resolve_type_mappings, TypeMappingToResolve, TypeRepresentation,
@@ -30,7 +30,7 @@ pub struct CommandGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandSource {
-    pub data_connector: DataConnector,
+    pub data_connector: DataConnectorLink,
     pub source: DataConnectorCommand,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
@@ -44,12 +44,13 @@ pub struct CommandSource {
 pub struct Command {
     pub name: Qualified<CommandName>,
     pub output_type: QualifiedTypeReference,
-    pub arguments: IndexMap<ArgumentName, QualifiedTypeReference>,
+    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
     pub source: Option<CommandSource>,
     pub permissions: Option<HashMap<Role, CommandPermission>>,
     /// The underlying object type name, if exists for the output_type
     pub underlying_object_typename: Option<Qualified<CustomTypeName>>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -80,13 +81,20 @@ pub fn resolve_command(
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
+    let command_description = command.description.clone();
     // duplicate command arguments should not be allowed
     for argument in &command.arguments {
         if is_valid_type(&argument.argument_type, subgraph, types) {
             if arguments
                 .insert(
                     argument.name.clone(),
-                    mk_qualified_type_reference(&argument.argument_type, subgraph),
+                    ArgumentInfo {
+                        argument_type: mk_qualified_type_reference(
+                            &argument.argument_type,
+                            subgraph,
+                        ),
+                        description: argument.description.clone(),
+                    },
                 )
                 .is_some()
             {
@@ -124,6 +132,7 @@ pub fn resolve_command(
         source: None,
         permissions: None,
         underlying_object_typename: None,
+        description: command_description,
     })
 }
 
@@ -274,7 +283,7 @@ pub fn resolve_command_source(
         command_source.data_connector_name.clone(),
     );
     command.source = Some(CommandSource {
-        data_connector: DataConnector::new(
+        data_connector: DataConnectorLink::new(
             data_connector_name,
             data_connector_context.url.clone(),
             data_connector_context.headers,

@@ -1,6 +1,8 @@
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
 -- stored in the @hdb_catalog@ schema in Postgres.

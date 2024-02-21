@@ -254,6 +254,27 @@ export const mockSourceKinds = {
         kind: 'mysql8',
         release_name: 'Alpha',
       },
+      {
+        available: true,
+        builtin: false,
+        display_name: 'ClickHouse',
+        kind: 'ClickHouse',
+        release_name: '2.35.2',
+      },
+      {
+        available: true,
+        builtin: false,
+        display_name: 'MongoDB',
+        kind: 'mongo',
+        release_name: 'GA',
+      },
+      {
+        available: true,
+        builtin: false,
+        display_name: 'Trino',
+        kind: 'Trino',
+        release_name: 'Beta',
+      },
     ],
   },
   agentsAddedSuperConnectorNotAvailable: {

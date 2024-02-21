@@ -79,13 +79,17 @@ impl Traceable for ExecuteOrExplainResponse {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct ProjectId(pub String);
+
 pub async fn execute_query(
     http_client: &reqwest::Client,
     schema: &Schema<GDS>,
     session: &Session,
     request: RawRequest,
+    project_id: Option<ProjectId>,
 ) -> GraphQLResponse {
-    execute_query_internal(http_client, schema, session, request)
+    execute_query_internal(http_client, schema, session, request, project_id)
         .await
         .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error(None))))
 }
@@ -115,6 +119,7 @@ pub async fn execute_query_internal(
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
     raw_request: gql::http::RawRequest,
+    project_id: Option<ProjectId>,
 ) -> Result<GraphQLResponse, error::Error> {
     let query_response = execute_request_internal(
         http_client,
@@ -122,6 +127,7 @@ pub async fn execute_query_internal(
         session,
         raw_request,
         explain::types::RequestMode::Execute,
+        project_id,
     )
     .await?;
     match query_response {
@@ -141,6 +147,7 @@ pub async fn execute_request_internal(
     session: &Session,
     raw_request: gql::http::RawRequest,
     request_mode: explain::types::RequestMode,
+    project_id: Option<ProjectId>,
 ) -> Result<ExecuteOrExplainResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     let mode_query_span_name = match request_mode {
@@ -217,9 +224,12 @@ pub async fn execute_request_internal(
                                 );
 
                                 Box::pin(async {
-                                    let execute_query_result =
-                                        query_plan::execute_query_plan(http_client, query_plan)
-                                            .await;
+                                    let execute_query_result = query_plan::execute_query_plan(
+                                        http_client,
+                                        query_plan,
+                                        project_id,
+                                    )
+                                    .await;
                                     ExecuteOrExplainResponse::Execute(GraphQLResponse(
                                         execute_query_result.to_graphql_response(),
                                     ))
@@ -228,18 +238,27 @@ pub async fn execute_request_internal(
                             .await
                     }
                     RequestMode::Explain => {
-                        tracer.in_span("explain", SpanVisibility::Internal, || {
-                            // convert the query plan to explain step
-                            let explain_response =
-                                match crate::execute::explain::explain_query_plan(query_plan) {
-                                    Ok(step) => step.to_explain_response(),
-                                    Err(e) => explain::types::ExplainResponse::error(
-                                        e.to_graphql_error(None),
-                                    ),
-                                };
+                        tracer
+                            .in_span_async("explain", SpanVisibility::Internal, || {
+                                Box::pin(async {
+                                    // convert the query plan to explain step
+                                    let explain_response =
+                                        match crate::execute::explain::explain_query_plan(
+                                            http_client,
+                                            query_plan,
+                                        )
+                                        .await
+                                        {
+                                            Ok(step) => step.make_explain_response(),
+                                            Err(e) => explain::types::ExplainResponse::error(
+                                                e.to_graphql_error(None),
+                                            ),
+                                        };
 
-                            ExecuteOrExplainResponse::Explain(explain_response)
-                        })
+                                    ExecuteOrExplainResponse::Explain(explain_response)
+                                })
+                            })
+                            .await
                     }
                 };
                 Ok(response)

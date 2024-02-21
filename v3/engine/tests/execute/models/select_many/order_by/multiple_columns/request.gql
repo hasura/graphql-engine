@@ -1,6 +1,6 @@
 query MyQuery {
   Track(
-    order_by: {AlbumId: Asc, TrackId: Desc}
+    order_by: [{AlbumId: Asc}, {TrackId: Desc}]
     where: {_or: [{AlbumId: {_eq: 1}}, {AlbumId: {_eq: 4}}]}
   ) {
     Name

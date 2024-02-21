@@ -1,14 +1,14 @@
 {
-  cities {
-    code
-    name
-    weather {
-      forecast
+  Album {
+    AlbumId
+    ArtistId
+    Artist {
+      ArtistId
     }
-    state {
-      name
-      weather {
-        forecast
+    Tracks {
+      TrackId
+      Album {
+        AlbumId
       }
     }
   }

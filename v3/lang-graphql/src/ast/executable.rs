@@ -21,6 +21,8 @@ pub enum ExecutableDefinition {
 /// The operations of a GraphQL document.
 ///
 /// There is either one anonymous operation or many named operations.
+/// FIXME: I think we should use this? Then move the
+///        lang-graphql/tests/query_testdata/ok/0001_empty test from 'ok' to 'err
 // #[derive(Debug, Clone)]
 // pub enum DocumentOperations {
 //     /// The document contains a single anonymous operation.

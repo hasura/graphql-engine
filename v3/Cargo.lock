@@ -391,6 +391,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-data"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aed3884e2cab7c973c8fd2d150314b6a932df7fdc830edcaf1e8e7c4ae9db3c0"
+dependencies = [
+ "chrono",
+ "safe-lock",
+ "safe-regex",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -544,17 +555,6 @@ name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acbf1af155f9b9ef647e42cdc158db4b64a1b61f743629225fde6f3e0be2a7c7"
-
-[[package]]
-name = "colored"
-version = "2.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2674ec482fbc38012cf31e6c42ba0177b431a0cb6f15fe40efa5aab1bda516f6"
-dependencies = [
- "is-terminal",
- "lazy_static",
- "windows-sys 0.48.0",
-]
 
 [[package]]
 name = "combine"
@@ -870,6 +870,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dissimilar"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86e3bdc80eee6e16b2b6b0f87fbc98c04bee3455e35174c0de1a125d0688c632"
+
+[[package]]
 name = "dyn-clone"
 version = "1.0.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -939,6 +945,7 @@ dependencies = [
  "axum",
  "base64 0.21.5",
  "bincode",
+ "build-data",
  "clap 4.4.10",
  "criterion",
  "derive_more",
@@ -997,6 +1004,16 @@ checksum = "a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "expect-test"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30d9eafeadd538e68fb28016364c9732d78e420b9ff8853fa5e4058861e9f8d3"
+dependencies = [
+ "dissimilar",
+ "once_cell",
 ]
 
 [[package]]
@@ -1557,17 +1574,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f518f335dce6725a761382244631d86cf0ccb2863413590b31338feb467f9c3"
 
 [[package]]
-name = "is-terminal"
-version = "0.4.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb0889898416213fab133e1d33a0e5858a48177452750691bde3666d0fdbaf8b"
-dependencies = [
- "hermit-abi 0.3.3",
- "rustix",
- "windows-sys 0.48.0",
-]
-
-[[package]]
 name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1657,6 +1663,7 @@ dependencies = [
  "bson",
  "criterion",
  "diffy",
+ "expect-test",
  "graphql-parser",
  "http",
  "human_bytes",
@@ -1866,7 +1873,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8d3038e23466858569c2d30a537f691fa0d53b51626630ae08262943e3bbb8b"
 dependencies = [
  "assert-json-diff",
- "colored",
  "futures",
  "hyper",
  "log",
@@ -2657,6 +2663,59 @@ name = "ryu"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+
+[[package]]
+name = "safe-lock"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "077d73db7973cccf63eb4aff1e5a34dc2459baa867512088269ea5f2f4253c90"
+
+[[package]]
+name = "safe-proc-macro2"
+version = "1.0.67"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fd85be67db87168aa3c13fd0da99f48f2ab005dccad5af5626138dc1df20eb6"
+dependencies = [
+ "unicode-ident",
+]
+
+[[package]]
+name = "safe-quote"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77e530f7831f3feafcd5f1aae406ac205dd998436b4007c8e80f03eca78a88f7"
+dependencies = [
+ "safe-proc-macro2",
+]
+
+[[package]]
+name = "safe-regex"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a15289bf322e0673d52756a18194167f2378ec1a15fe884af6e2d2cb934822b0"
+dependencies = [
+ "safe-regex-macro",
+]
+
+[[package]]
+name = "safe-regex-compiler"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fba76fae590a2aa665279deb1f57b5098cbace01a0c5e60e262fcf55f7c51542"
+dependencies = [
+ "safe-proc-macro2",
+ "safe-quote",
+]
+
+[[package]]
+name = "safe-regex-macro"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96c2e96b5c03f158d1b16ba79af515137795f4ad4e8de3f790518aae91f1d127"
+dependencies = [
+ "safe-proc-macro2",
+ "safe-regex-compiler",
+]
 
 [[package]]
 name = "same-file"

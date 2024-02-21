@@ -153,6 +153,11 @@ fromOp =
     NotInOp -> "NOT IN"
     LikeOp -> "LIKE"
     NotLikeOp -> "NOT LIKE"
+    -- BigQuery doesn't have case-insensitive versions of this operator, but
+    -- that's ok: by this point, we'll have built a version of the query that
+    -- works case insensitively.
+    ILikeOp -> "LIKE"
+    NotILikeOp -> "NOT LIKE"
 
 fromPath :: JsonPath -> Printer
 fromPath path =

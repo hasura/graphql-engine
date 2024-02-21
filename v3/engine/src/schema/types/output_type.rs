@@ -115,10 +115,11 @@ pub fn get_custom_output_type(
                     .clone(),
             }))
         }
-        TypeRepresentation::ScalarType { graphql_type_name } => {
+        TypeRepresentation::ScalarType(scalar_type_representation) => {
             Ok(builder.register_type(super::TypeId::ScalarType {
                 gds_type_name: gds_type.clone(),
-                graphql_type_name: graphql_type_name
+                graphql_type_name: scalar_type_representation
+                    .graphql_type_name
                     .as_ref()
                     .ok_or_else(|| Error::NoGraphQlTypeNameForScalar {
                         type_name: gds_type.clone(),
@@ -142,7 +143,7 @@ fn object_type_fields(
             let graphql_field_name = mk_name(field_name.0.as_str())?;
             let field = gql_schema::Field::<GDS>::new(
                 graphql_field_name.clone(),
-                None,
+                field_definition.description.clone(),
                 Annotation::Output(super::OutputAnnotation::Field {
                     name: field_name.clone(),
                 }),
@@ -209,7 +210,7 @@ fn object_type_fields(
                         builder.conditional_namespaced(
                             gql_schema::Field::<GDS>::new(
                                 graphql_field_name.clone(),
-                                None,
+                                relationship.description.clone(),
                                 Annotation::Output(super::OutputAnnotation::RelationshipToCommand(
                                     CommandRelationshipAnnotation {
                                         source_type: relationship.source.clone(),
@@ -285,7 +286,7 @@ fn object_type_fields(
                         builder.conditional_namespaced(
                             gql_schema::Field::<GDS>::new(
                                 graphql_field_name.clone(),
-                                None,
+                                relationship.description.clone(),
                                 Annotation::Output(super::OutputAnnotation::RelationshipToModel(
                                     ModelRelationshipAnnotation {
                                         source_type: relationship.source.clone(),
@@ -342,7 +343,7 @@ pub fn output_type_schema(
                 Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
                     builder,
                     graphql_type_name,
-                    None,
+                    object_type_representation.description.clone(),
                     object_type_fields,
                     HashMap::new(),
                 )))
@@ -353,7 +354,7 @@ pub fn output_type_schema(
                 let global_id_field_name = lang_graphql::mk_name!("id");
                 let global_id_field = gql_schema::Field::<GDS>::new(
                     global_id_field_name.clone(),
-                    None,
+                    object_type_representation.description.clone(),
                     Annotation::Output(super::OutputAnnotation::GlobalIDField {
                         global_id_fields: object_type_representation.global_id_fields.to_vec(),
                     }),
@@ -387,7 +388,7 @@ pub fn output_type_schema(
                 Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
                     builder,
                     graphql_type_name,
-                    None,
+                    object_type_representation.description.clone(),
                     object_type_fields,
                     interfaces,
                 )))

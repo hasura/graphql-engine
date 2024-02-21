@@ -1,4 +1,4 @@
-//! Schema of the relay according to https://relay.dev/graphql/objectidentification.htm
+//! Schema of the relay according to <https://relay.dev/graphql/objectidentification.htm>
 
 use lang_graphql::schema as gql_schema;
 use std::collections::HashMap;

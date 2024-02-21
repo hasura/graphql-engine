@@ -73,11 +73,11 @@ impl gql_schema::SchemaContext for GDS {
         type_id: &Self::TypeId,
     ) -> std::result::Result<gql_schema::TypeInfo<Self>, Error> {
         match type_id {
-            types::TypeId::QueryRoot => Ok(gql_schema::TypeInfo::Object(
-                query_root::query_root_schema(builder, self)?,
+            types::TypeId::QueryRoot { graphql_type_name } => Ok(gql_schema::TypeInfo::Object(
+                query_root::query_root_schema(builder, self, graphql_type_name)?,
             )),
-            types::TypeId::MutationRoot => Ok(gql_schema::TypeInfo::Object(
-                mutation_root::mutation_root_schema(builder, self)?,
+            types::TypeId::MutationRoot { graphql_type_name } => Ok(gql_schema::TypeInfo::Object(
+                mutation_root::mutation_root_schema(builder, self, graphql_type_name)?,
             )),
             types::TypeId::OutputType {
                 gds_type_name,
@@ -89,11 +89,10 @@ impl gql_schema::SchemaContext for GDS {
                 graphql_type_name,
             ),
             types::TypeId::ScalarType {
-                graphql_type_name, ..
-            } => Ok(gql_schema::TypeInfo::Scalar(gql_schema::Scalar {
-                name: graphql_type_name.clone(),
-                description: None,
-            })),
+                gds_type_name,
+                graphql_type_name,
+                ..
+            } => types::scalar_type::scalar_type_schema(self, gds_type_name, graphql_type_name),
             types::TypeId::InputObjectType {
                 gds_type_name,
                 graphql_type_name,
@@ -125,11 +124,13 @@ impl gql_schema::SchemaContext for GDS {
                 scalar_type_name: _,
                 graphql_type_name,
                 operators,
+                is_null_operator_name,
             } => model_filter::build_scalar_comparison_input(
                 self,
                 builder,
                 graphql_type_name,
                 operators,
+                is_null_operator_name,
             ),
             types::TypeId::ModelOrderByExpression {
                 model_name,
@@ -140,16 +141,20 @@ impl gql_schema::SchemaContext for GDS {
                 graphql_type_name,
                 model_name,
             ),
-            types::TypeId::OrderByEnumType => {
-                model_order_by::build_order_by_enum_type_schema(builder)
+            types::TypeId::OrderByEnumType { graphql_type_name } => {
+                model_order_by::build_order_by_enum_type_schema(self, builder, graphql_type_name)
             }
         }
     }
 
     fn get_schema_entry_point(&self) -> gql_schema::EntryPoint<Self> {
         gql_schema::EntryPoint {
-            query: types::TypeId::QueryRoot,
-            mutation: Some(types::TypeId::MutationRoot),
+            query: types::TypeId::QueryRoot {
+                graphql_type_name: self.metadata.graphql_config.query_root_type_name.clone(),
+            },
+            mutation: Some(types::TypeId::MutationRoot {
+                graphql_type_name: self.metadata.graphql_config.mutation_root_type_name.clone(),
+            }),
             subscription: None,
         }
     }
@@ -185,6 +190,10 @@ pub enum Error {
     #[error("internal error while building schema, model not found: {model_name}")]
     InternalModelNotFound { model_name: Qualified<ModelName> },
     #[error(
+        "internal error while building schema, filter_expression for model not found: {model_name}"
+    )]
+    InternalModelFilterExpressionNotFound { model_name: Qualified<ModelName> },
+    #[error(
         "Conflicting argument names {argument_name} for field {field_name} of type {type_name}"
     )]
     GraphQlArgumentConflict {
@@ -213,9 +222,9 @@ pub enum Error {
     #[error("\"{name:}\" is not a valid GraphQL name.")]
     InvalidGraphQlName { name: String },
     #[error(
-        "Cannot generate arguments for model {model_name} since argumentsInputType isn't defined"
+        "Cannot generate arguments for model {model_name} since argumentsInputType and it's corresponding graphql config argumentsInput isn't defined"
     )]
-    NoArgumentsInputTypeForSelectMany { model_name: Qualified<ModelName> },
+    NoArgumentsInputConfigForSelectMany { model_name: Qualified<ModelName> },
     #[error("Internal error: Relationship capabilities are missing for {relationship} on type {type_name}")]
     InternalMissingRelationshipCapabilities {
         type_name: Qualified<CustomTypeName>,
@@ -225,6 +234,12 @@ pub enum Error {
     ExpectedTypeToBeObject {
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("internal error: Cannot generate select_many API for model {model_name} since the order_by_input GraphqlConfig is not defined")]
+    InternalNoOrderByGraphqlConfig { model_name: Qualified<ModelName> },
+    #[error("internal error: Cannot generate order_by enum type for type {type_name} since the order_by_input GraphqlConfig is not defined")]
+    InternalNoOrderByGraphqlConfigOrderByEnumType { type_name: ast::TypeName },
+    #[error("duplicate field name {field_name} generated while building query root")]
+    DuplicateFieldInQueryRoot { field_name: ast::Name },
     #[error("Cannot have a function based command backed by a procedure or vice versa. Found for command {command_name:}")]
     IncorrectCommandBacking {
         command_name: Qualified<CommandName>,

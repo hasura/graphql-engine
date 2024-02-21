@@ -1,9 +1,9 @@
 {
-  cities {
-    code
-    name
-    state {
-      name
+  AuthorMany {
+    author_id
+    first_name
+    Articles {
+      title
     }
   }
 }

@@ -36,10 +36,10 @@ impl<'a> Parser<'a> {
                 }
                 _ => Err(Positioned::new(
                     &token.start,
-                    super::Error::new(
-                        EXPECTED_TOKENS,
-                        super::TokenFound::Token(token.item.clone()),
-                    ),
+                    super::Error::TokenError {
+                        expected_tokens: EXPECTED_TOKENS,
+                        found: super::TokenFound::Token(token.item.clone()),
+                    },
                 )),
             },
         }
@@ -88,7 +88,7 @@ impl<'a> Parser<'a> {
     pub fn parse_variable_definitions(
         &mut self,
     ) -> super::Result<Option<Spanning<Vec<Spanning<VariableDefinition>>>>> {
-        self.parse_optional_delimited_list(
+        self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
             |s| s.parse_variable_definition(),
@@ -129,19 +129,19 @@ impl<'a> Parser<'a> {
                     } else {
                         Err(Positioned::new(
                             &token.start,
-                            super::Error::new(
-                                EXPECTED_TOKENS,
-                                super::TokenFound::Token(lexer::Token::Name(token.item)),
-                            ),
+                            super::Error::TokenError {
+                                expected_tokens: EXPECTED_TOKENS,
+                                found: super::TokenFound::Token(lexer::Token::Name(token.item)),
+                            },
                         ))
                     }
                 }
                 _ => Err(Positioned::new(
                     &token.start,
-                    super::Error::new(
-                        EXPECTED_TOKENS,
-                        super::TokenFound::Token(token.item.clone()),
-                    ),
+                    super::Error::TokenError {
+                        expected_tokens: EXPECTED_TOKENS,
+                        found: super::TokenFound::Token(token.item.clone()),
+                    },
                 )),
             },
         }
@@ -162,10 +162,10 @@ impl<'a> Parser<'a> {
                 lexer::Token::Punctuation(lexer::Punctuation::BraceL) => Ok(None),
                 _ => Err(Positioned::new(
                     &token.start,
-                    super::Error::new(
-                        EXPECTED_TOKENS,
-                        super::TokenFound::Token(token.item.clone()),
-                    ),
+                    super::Error::TokenError {
+                        expected_tokens: EXPECTED_TOKENS,
+                        found: super::TokenFound::Token(token.item.clone()),
+                    },
                 )),
             },
         }?;
@@ -208,6 +208,7 @@ impl<'a> Parser<'a> {
             ))
         }
     }
+    // https://spec.graphql.org/October2021/#sec-Executable-Definitions
     pub fn parse_executable_definition(&mut self) -> super::Result<Spanning<ExecutableDefinition>> {
         static EXPECTED_TOKENS: &[super::ExpectedToken] = &[
             super::ExpectedToken::Keyword(super::Keyword::Query),
@@ -232,14 +233,15 @@ impl<'a> Parser<'a> {
                 }
                 _ => Err(Positioned::new(
                     &token.start,
-                    super::Error::new(
-                        EXPECTED_TOKENS,
-                        super::TokenFound::Token(token.item.clone()),
-                    ),
+                    super::Error::TokenError {
+                        expected_tokens: EXPECTED_TOKENS,
+                        found: super::TokenFound::Token(token.item.clone()),
+                    },
                 )),
             },
         }
     }
+    /// The top-level parser for a graphql request
     pub fn parse_executable_document(&mut self) -> super::Result<ExecutableDocument> {
         let mut items = vec![];
         while self.peek().is_some() {

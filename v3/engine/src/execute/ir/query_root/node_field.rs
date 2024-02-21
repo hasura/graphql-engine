@@ -1,4 +1,4 @@
-//! IR of the relay according to https://relay.dev/graphql/objectidentification.htm
+//! IR of the relay according to <https://relay.dev/graphql/objectidentification.htm>
 
 use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
@@ -10,6 +10,7 @@ use serde::Serialize;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::error;
+use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
@@ -122,7 +123,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                         typename_mapping.type_name
                     ),
                 })?;
-            let filter_clauses = global_id
+            let filter_clause_expressions = global_id
                 .id
                 .iter()
                 .map(|(field_name, val)| {
@@ -147,6 +148,11 @@ pub(crate) fn relay_node_ir<'n, 's>(
                 .filter_field_calls_by_typename(global_id.typename);
 
             let mut usage_counts = UsagesCounts::new();
+
+            let filter_clauses = ResolvedFilterExpression {
+                expressions: filter_clause_expressions,
+                relationships: BTreeMap::new(),
+            };
 
             let model_selection = model_selection::model_selection_ir(
                 &new_selection_set,

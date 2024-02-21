@@ -1,0 +1,5 @@
+schema {
+  query: MyQueryRootType
+  mutation: MyMutationRootType,
+  subscription: MySubscriptionRootType
+}

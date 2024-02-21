@@ -1,5 +1,5 @@
 # See https://github.com/LukeMathWalker/cargo-chef
-FROM rust:1.72.0 as chef
+FROM rust:1.75.0 as chef
 
 WORKDIR app
 
@@ -17,7 +17,8 @@ RUN rustup component add rustfmt
 # needed for coverage reporting
 RUN rustup component add llvm-tools-preview
 
-RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
+# Building with build.rs require git context to be available across directories
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 ###
 # Plan recipe
@@ -27,7 +28,7 @@ ENV CARGO_HOME=/app/.cargo
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 
 COPY . .
-RUN --mount=type=ssh cargo chef prepare --recipe-path recipe.json
+RUN cargo chef prepare --recipe-path recipe.json
 
 ###
 # Build recipe
@@ -42,8 +43,8 @@ COPY --from=planner /app/recipe.json recipe.json
 COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
 
 # Build dependencies - this is the caching Docker layer!
-RUN --mount=type=ssh cargo chef cook --release --all-targets --recipe-path recipe.json
-RUN --mount=type=ssh cargo chef cook --all-targets --recipe-path recipe.json
+RUN cargo chef cook --release --all-targets --recipe-path recipe.json
+RUN cargo chef cook --all-targets --recipe-path recipe.json
 
 # Copies the source after building dependencies to allow caching
 COPY . .

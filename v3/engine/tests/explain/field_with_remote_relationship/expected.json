@@ -5,27 +5,35 @@
       {
         "type": "modelSelect",
         "value": {
-          "modelName": "cities",
+          "modelName": "AuthorMany",
           "queryRequest": {
-            "collection": "city",
+            "collection": "authors",
             "query": {
               "fields": {
-                "code": {
+                "author_id": {
                   "type": "column",
-                  "column": "code"
+                  "column": "id"
                 },
-                "name": {
+                "first_name": {
                   "type": "column",
-                  "column": "name"
+                  "column": "first_name"
                 },
-                "__hasura_phantom_field__code": {
+                "__hasura_phantom_field__id": {
                   "type": "column",
-                  "column": "code"
+                  "column": "id"
                 }
               }
             },
             "arguments": {},
             "collection_relationships": {}
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
           }
         }
       },
@@ -34,21 +42,21 @@
         "value": {
           "type": "modelSelect",
           "value": {
-            "modelName": "weather",
+            "modelName": "Articles",
             "queryRequest": {
-              "collection": "weather",
+              "collection": "articles",
               "query": {
                 "fields": {
-                  "forecast": {
+                  "title": {
                     "type": "column",
-                    "column": "forecast"
+                    "column": "title"
                   }
                 },
                 "where": {
                   "type": "binary_comparison_operator",
                   "column": {
                     "type": "column",
-                    "name": "code",
+                    "name": "author_id",
                     "path": []
                   },
                   "operator": {
@@ -56,13 +64,21 @@
                   },
                   "value": {
                     "type": "variable",
-                    "name": "$code"
+                    "name": "$author_id"
                   }
                 }
               },
               "arguments": {},
               "collection_relationships": {},
               "variables": []
+            },
+            "ndcExplain": {
+              "type": "response",
+              "value": {
+                "details": {
+                  "explain": "<redacted>"
+                }
+              }
             }
           }
         }

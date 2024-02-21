@@ -1,5 +1,5 @@
 use crate::metadata::resolved::ndc_validation;
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 use crate::metadata::resolved::types::{
     get_underlying_object_type_or_unknown_type, TypeMappingToResolve, TypeRepresentation,
 };
@@ -47,7 +47,7 @@ fn comma_separate_argument_names(argument_names: &[ArgumentName]) -> String {
 }
 
 pub fn get_argument_mappings<'a>(
-    arguments: &'a IndexMap<ArgumentName, QualifiedTypeReference>,
+    arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &HashMap<ArgumentName, String>,
     ndc_arguments: &'a BTreeMap<String, ndc::models::ArgumentInfo>,
     ndc_object_types: &'a BTreeMap<String, ndc::models::ObjectType>,
@@ -84,13 +84,14 @@ pub fn get_argument_mappings<'a>(
             });
         }
 
-        if let Some(object_type_name) =
-            get_underlying_object_type_or_unknown_type(argument_type, all_type_representations)
-                .map_err(|custom_type_name| ArgumentMappingError::UnknownType {
-                    argument_name: argument_name.clone(),
-                    data_type: custom_type_name.clone(),
-                })?
-        {
+        if let Some(object_type_name) = get_underlying_object_type_or_unknown_type(
+            &argument_type.argument_type,
+            all_type_representations,
+        )
+        .map_err(|custom_type_name| ArgumentMappingError::UnknownType {
+            argument_name: argument_name.clone(),
+            data_type: custom_type_name.clone(),
+        })? {
             let underlying_ndc_argument_named_type =
                 ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type);
             let ndc_argument_object_type = ndc_object_types

@@ -27,12 +27,16 @@ use crate::metadata::resolved::types::{
     TypeRepresentation,
 };
 
+use super::types::ScalarTypeRepresentation;
+use crate::metadata::resolved::graphql_config::{GlobalGraphqlConfig, GraphqlConfig};
+
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
     pub types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, Command>,
+    pub graphql_config: GlobalGraphqlConfig,
 }
 
 /*******************
@@ -53,11 +57,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         if data_connectors
             .insert(
                 qualified_data_connector_name.clone(),
-                DataConnectorContext::new(
-                    &qualified_data_connector_name,
-                    data_connector,
-                    &metadata_accessor.flags,
-                )?,
+                DataConnectorContext::new(data_connector)?,
             )
             .is_some()
         {
@@ -115,9 +115,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         if types
             .insert(
                 qualified_scalar_type_name.clone(),
-                TypeRepresentation::ScalarType {
+                TypeRepresentation::ScalarType(ScalarTypeRepresentation {
                     graphql_type_name: graphql_type_name.clone(),
-                },
+                    description: scalar_type.description.clone(),
+                }),
             )
             .is_some()
         {
@@ -221,6 +222,8 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
 
     let mut models = IndexMap::new();
     let mut global_id_models = HashMap::new();
+    let graphql_config =
+        GraphqlConfig::new(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -244,6 +247,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 }
             }
         }
+
         if let Some(model_source) = &model.source {
             resolve_model_source(
                 model_source,
@@ -260,6 +264,8 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 subgraph,
                 &mut existing_graphql_types,
                 &data_connectors,
+                &model.description,
+                &graphql_config,
             )?;
         }
         let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
@@ -376,24 +382,37 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         }
     }
 
+    // Note: Model permissions's predicate can include the relationship field,
+    // hence Model permissions should be resolved after the relationships of a
+    // model is resolved.
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: permissions,
     } in &metadata_accessor.model_permissions
     {
         let model_name = Qualified::new(subgraph.to_string(), permissions.model_name.clone());
-        let model = models.get_mut(&model_name).ok_or_else(|| {
-            Error::UnknownModelInModelSelectPermissions {
-                model_name: model_name.clone(),
-            }
-        })?;
+        let model =
+            models
+                .get(&model_name)
+                .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {
+                    model_name: model_name.clone(),
+                })?;
         if model.select_permissions.is_none() {
-            model.select_permissions = Some(resolve_model_select_permissions(
+            let select_permissions = Some(resolve_model_select_permissions(
                 model,
                 subgraph,
                 permissions,
                 &data_connectors,
+                &types,
+                &models, // This is required to get the model for the relationship target
             )?);
+
+            let model = models.get_mut(&model_name).ok_or_else(|| {
+                Error::UnknownModelInModelSelectPermissions {
+                    model_name: model_name.clone(),
+                }
+            })?;
+            model.select_permissions = select_permissions;
         } else {
             return Err(Error::DuplicateModelSelectPermission {
                 model_name: model_name.clone(),
@@ -405,5 +424,6 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         types,
         models,
         commands,
+        graphql_config: graphql_config.global.clone(),
     })
 }

@@ -62,6 +62,9 @@ pub struct ModelV1 {
     pub orderable_fields: Vec<OrderableField>,
     /// Configuration for how this model should appear in the GraphQL schema.
     pub graphql: Option<ModelGraphQlDefinition>,
+    /// The description of the model.
+    /// Gets added to the description of the model in the graphql schema.
+    pub description: Option<String>,
 }
 
 impl ModelV1 {
@@ -70,6 +73,7 @@ impl ModelV1 {
             r#"
             {
               "name": "Articles",
+              "description": "Description for the model Articles",
               "objectType": "article",
               "globalIdSource": true,
               "source": {
@@ -137,11 +141,13 @@ impl ModelV1 {
                     "queryRootField": "ArticleByID",
                     "uniqueIdentifier": [
                       "article_id"
-                    ]
+                    ],
+                    "description": "Description for the select unique ArticleByID"
                   }
                 ],
                 "selectMany": {
-                  "queryRootField": "ArticleMany"
+                  "queryRootField": "ArticleMany",
+                  "description": "Description for the select many ArticleMany"
                 },
                 "filterExpressionType": "Article_Where_Exp",
                 "orderByExpressionType": "Article_Order_By"
@@ -236,11 +242,13 @@ impl ModelGraphQlDefinition {
                   "queryRootField": "ArticleByID",
                   "uniqueIdentifier": [
                     "article_id"
-                  ]
+                  ],
+                  "description": "Description for the select unique ArticleByID"
                 }
               ],
               "selectMany": {
-                "queryRootField": "ArticleMany"
+                "queryRootField": "ArticleMany",
+                "description": "Description for the select many ArticleMany"
               },
               "filterExpressionType": "Article_Where_Exp",
               "orderByExpressionType": "Article_Order_By"
@@ -261,6 +269,9 @@ pub struct SelectUniqueGraphQlDefinition {
     pub query_root_field: GraphQlFieldName,
     /// A set of fields which can uniquely identify a row/object in the model.
     pub unique_identifier: Vec<FieldName>,
+    /// The description of the select unique graphql definition of the model.
+    /// Gets added to the description of the select unique root field of the model in the graphql schema.
+    pub description: Option<String>,
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
@@ -271,6 +282,9 @@ pub struct SelectUniqueGraphQlDefinition {
 pub struct SelectManyGraphQlDefinition {
     /// The name of the query root field for this API.
     pub query_root_field: GraphQlFieldName,
+    /// The description of the select many graphql definition of the model.
+    /// Gets added to the description of the select many root field of the model in the graphql schema.
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]

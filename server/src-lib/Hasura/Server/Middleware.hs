@@ -1,12 +1,15 @@
 module Hasura.Server.Middleware
   ( corsMiddleware,
+    dateHeaderMiddleware,
   )
 where
 
 import Control.Applicative
 import Data.ByteString qualified as B
 import Data.CaseInsensitive qualified as CI
+import Data.IORef
 import Data.Text.Encoding qualified as TE
+import Hasura.CachedTime
 import Hasura.Prelude
 import Hasura.Server.Cors
 import Hasura.Server.Utils
@@ -73,3 +76,9 @@ corsMiddleware getPolicy app req sendResp = do
     cacheExposedHeaders = ["X-Hasura-Query-Cache-Key", "X-Hasura-Query-Family-Cache-Key", "Warning"]
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
     mkRespHdrs = map (\(k, v) -> (CI.mk k, v))
+
+-- bypass warp's use of 'auto-update'. See #10662
+dateHeaderMiddleware :: Middleware
+dateHeaderMiddleware app req respond = do
+  (_, _, nowRFC7231) <- liftIO $ readIORef cachedRecentFormattedTimeAndZone
+  app req $ respond . mapResponseHeaders (("Date", nowRFC7231) :)

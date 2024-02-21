@@ -6,10 +6,12 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use tracing_util::SpanVisibility;
 
+use crate::schema::types::Annotation;
+use crate::schema::GDS;
+
 use super::{commands, root_field};
 use crate::execute::error;
-use crate::schema::types::{Annotation, OutputAnnotation, RootFieldAnnotation};
-use crate::schema::GDS;
+use crate::schema::types::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'
 pub fn generate_ir<'n, 's>(

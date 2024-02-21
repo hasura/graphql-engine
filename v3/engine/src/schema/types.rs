@@ -14,7 +14,7 @@ use open_dds::{arguments::ArgumentName, commands, models, types};
 use crate::{
     metadata::resolved::{
         self,
-        data_connector::DataConnector,
+        data_connector::DataConnectorLink,
         subgraph::{Qualified, QualifiedTypeReference},
     },
     schema::types::resolved::{
@@ -25,9 +25,14 @@ use crate::{
 };
 use strum_macros::Display;
 
+use self::output_type::relationship::{
+    FilterRelationshipAnnotation, OrderByRelationshipAnnotation,
+};
+
 pub mod inbuilt_type;
 pub mod input_type;
 pub mod output_type;
+pub mod scalar_type;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct GlobalID {
@@ -63,6 +68,7 @@ pub enum ModelFilterArgument {
     OrOp,
     NotOp,
     Field { ndc_column: String },
+    RelationshipField(FilterRelationshipAnnotation),
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -74,7 +80,7 @@ pub enum ModelOrderByDirection {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 /// Common details to generate a command annotation.
 pub struct CommandSourceDetail {
-    pub data_connector: DataConnector,
+    pub data_connector: DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -157,11 +163,16 @@ pub enum ModelInputAnnotation {
     ModelFilterArgument {
         field: ModelFilterArgument,
     },
-    ModelFilterScalarExpression,
+    ComparisonOperation {
+        operator: String,
+    },
+    IsNullOperation,
     ModelOrderByExpression,
     ModelOrderByArgument {
         ndc_column: String,
     },
+    ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
+
     ModelOrderByDirection {
         direction: ModelOrderByDirection,
     },
@@ -217,8 +228,12 @@ pub enum NamespaceAnnotation {
 
 #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum TypeId {
-    QueryRoot,
-    MutationRoot,
+    QueryRoot {
+        graphql_type_name: ast::TypeName,
+    },
+    MutationRoot {
+        graphql_type_name: ast::TypeName,
+    },
     OutputType {
         gds_type_name: Qualified<types::CustomTypeName>,
         graphql_type_name: ast::TypeName,
@@ -248,8 +263,11 @@ pub enum TypeId {
         scalar_type_name: String,
         graphql_type_name: ast::TypeName,
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
+        is_null_operator_name: ast::Name,
     },
-    OrderByEnumType,
+    OrderByEnumType {
+        graphql_type_name: ast::TypeName,
+    },
 }
 
 impl Display for TypeId {
@@ -261,8 +279,8 @@ impl Display for TypeId {
 impl TypeId {
     pub fn to_type_name(&self) -> ast::TypeName {
         match self {
-            TypeId::QueryRoot => ast::TypeName(mk_name!("Query")),
-            TypeId::MutationRoot => ast::TypeName(mk_name!("Mutation")),
+            TypeId::QueryRoot { graphql_type_name } => graphql_type_name.clone(),
+            TypeId::MutationRoot { graphql_type_name } => graphql_type_name.clone(),
             TypeId::OutputType {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
@@ -283,7 +301,9 @@ impl TypeId {
             TypeId::ModelOrderByExpression {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
-            TypeId::OrderByEnumType => ast::TypeName(mk_name!("order_by")),
+            TypeId::OrderByEnumType {
+                graphql_type_name, ..
+            } => graphql_type_name.clone(),
         }
     }
 }

@@ -201,6 +201,9 @@ pub struct RelationshipV1 {
     pub target: RelationshipTarget,
     /// The mapping configuration of source to target for the relationship.
     pub mapping: Vec<RelationshipMapping>,
+    /// The description of the relationship.  
+    /// Gets added to the description of the relationship in the graphql schema.
+    pub description: Option<String>,
 }
 
 impl RelationshipV1 {
@@ -210,6 +213,7 @@ impl RelationshipV1 {
             {
                 "source": "author",
                 "name": "Articles",
+                "description": "Articles written by an author",
                 "target": {
                   "model": {
                     "name": "Articles",

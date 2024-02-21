@@ -114,8 +114,9 @@ pubKeyToJwk pubKey = do
         return $ fromKeyMaterial $ OKPKeyMaterial (Ed25519Key pubKeyEd Nothing)
       X509.PubKeyEC pubKeyEc ->
         case ecParametersFromX509 pubKeyEc of
-          Nothing -> Left "Error getting EC parameters from the public key"
-          Just ecKeyParameters ->
+          -- TODO: do we want to log or expose this possibly sensitive Error?:
+          Left (_ :: Error) -> Left "Error getting EC parameters from the public key"
+          Right ecKeyParameters ->
             return $ fromKeyMaterial $ ECKeyMaterial ecKeyParameters
       _ -> Left "This key type is not supported"
     rsaKeyParams n e =

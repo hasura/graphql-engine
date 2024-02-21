@@ -5,27 +5,35 @@
       {
         "type": "modelSelect",
         "value": {
-          "modelName": "cities",
+          "modelName": "Album",
           "queryRequest": {
-            "collection": "city",
+            "collection": "Album",
             "query": {
               "fields": {
-                "code": {
+                "ArtistId": {
                   "type": "column",
-                  "column": "code"
+                  "column": "ArtistId"
                 },
-                "name": {
+                "__hasura_phantom_field__ArtistId": {
                   "type": "column",
-                  "column": "name"
+                  "column": "ArtistId"
                 },
-                "__hasura_phantom_field__code": {
+                "__hasura_phantom_field__AlbumId": {
                   "type": "column",
-                  "column": "code"
+                  "column": "AlbumId"
                 }
               }
             },
             "arguments": {},
             "collection_relationships": {}
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
           }
         }
       },
@@ -37,21 +45,25 @@
             "value": {
               "type": "modelSelect",
               "value": {
-                "modelName": "weather",
+                "modelName": "Artist",
                 "queryRequest": {
-                  "collection": "weather",
+                  "collection": "Artist",
                   "query": {
                     "fields": {
-                      "forecast": {
+                      "ArtistId": {
                         "type": "column",
-                        "column": "forecast"
+                        "column": "ArtistId"
+                      },
+                      "Name": {
+                        "type": "column",
+                        "column": "Name"
                       }
                     },
                     "where": {
                       "type": "binary_comparison_operator",
                       "column": {
                         "type": "column",
-                        "name": "code",
+                        "name": "ArtistId",
                         "path": []
                       },
                       "operator": {
@@ -59,13 +71,21 @@
                       },
                       "value": {
                         "type": "variable",
-                        "name": "$code"
+                        "name": "$ArtistId"
                       }
                     }
                   },
                   "arguments": {},
                   "collection_relationships": {},
                   "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
                 }
               }
             }
@@ -75,21 +95,21 @@
             "value": {
               "type": "modelSelect",
               "value": {
-                "modelName": "census",
+                "modelName": "Tracks",
                 "queryRequest": {
-                  "collection": "census",
+                  "collection": "Track",
                   "query": {
                     "fields": {
-                      "data": {
+                      "TrackId": {
                         "type": "column",
-                        "column": "data"
+                        "column": "TrackId"
                       }
                     },
                     "where": {
                       "type": "binary_comparison_operator",
                       "column": {
                         "type": "column",
-                        "name": "city_code",
+                        "name": "AlbumId",
                         "path": []
                       },
                       "operator": {
@@ -97,13 +117,21 @@
                       },
                       "value": {
                         "type": "variable",
-                        "name": "$city_code"
+                        "name": "$AlbumId"
                       }
                     }
                   },
                   "arguments": {},
                   "collection_relationships": {},
                   "variables": []
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
                 }
               }
             }

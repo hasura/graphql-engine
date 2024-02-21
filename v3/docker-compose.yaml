@@ -54,7 +54,7 @@ services:
       COLLECTOR_OTLP_ENABLED: 'true'
       COLLECTOR_ZIPKIN_HOST_PORT: '9411'
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main-5aec135c1
+    image: ghcr.io/hasura/ndc-postgres:dev-main-dd4172889
     ports:
       - 8100:8100
     volumes:
@@ -80,8 +80,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     depends_on:
       - reference_agent
       - jaeger
@@ -96,8 +94,6 @@ services:
     build:
       context: .
       target: builder
-      ssh:
-        - default
     depends_on:
       - jaeger
       - auth_hook

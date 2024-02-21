@@ -1,0 +1,5 @@
+type Obj implements A & { field: Int }
+
+type Obj implements A B { field: Int }
+
+type Obj implements A && B { field: Int }

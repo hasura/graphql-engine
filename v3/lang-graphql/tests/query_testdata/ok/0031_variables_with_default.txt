@@ -1,0 +1,220 @@
+Ok(
+    ExecutableDocument {
+        items: [
+            Spanning {
+                item: Operation(
+                    OperationDefinition {
+                        ty: Query,
+                        name: Some(
+                            Spanning {
+                                item: Name(
+                                    "getOutput",
+                                ),
+                                start: SourcePosition {
+                                    line: 1,
+                                    col: 7,
+                                },
+                                end: SourcePosition {
+                                    line: 1,
+                                    col: 15,
+                                },
+                            },
+                        ),
+                        variable_definitions: Some(
+                            Spanning {
+                                item: [
+                                    Spanning {
+                                        item: VariableDefinition {
+                                            name: Spanning {
+                                                item: Name(
+                                                    "input",
+                                                ),
+                                                start: SourcePosition {
+                                                    line: 1,
+                                                    col: 18,
+                                                },
+                                                end: SourcePosition {
+                                                    line: 1,
+                                                    col: 22,
+                                                },
+                                            },
+                                            var_type: Spanning {
+                                                item: TypeContainer {
+                                                    base: Named(
+                                                        TypeName(
+                                                            Name(
+                                                                "Int",
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    nullable: true,
+                                                },
+                                                start: SourcePosition {
+                                                    line: 1,
+                                                    col: 25,
+                                                },
+                                                end: SourcePosition {
+                                                    line: 1,
+                                                    col: 27,
+                                                },
+                                            },
+                                            default_value: Some(
+                                                Spanning {
+                                                    item: SimpleValue(
+                                                        Integer(
+                                                            5,
+                                                        ),
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 1,
+                                                        col: 31,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 1,
+                                                        col: 31,
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                        start: SourcePosition {
+                                            line: 1,
+                                            col: 17,
+                                        },
+                                        end: SourcePosition {
+                                            line: 1,
+                                            col: 31,
+                                        },
+                                    },
+                                    Spanning {
+                                        item: VariableDefinition {
+                                            name: Spanning {
+                                                item: Name(
+                                                    "config",
+                                                ),
+                                                start: SourcePosition {
+                                                    line: 1,
+                                                    col: 34,
+                                                },
+                                                end: SourcePosition {
+                                                    line: 1,
+                                                    col: 39,
+                                                },
+                                            },
+                                            var_type: Spanning {
+                                                item: TypeContainer {
+                                                    base: Named(
+                                                        TypeName(
+                                                            Name(
+                                                                "String",
+                                                            ),
+                                                        ),
+                                                    ),
+                                                    nullable: true,
+                                                },
+                                                start: SourcePosition {
+                                                    line: 1,
+                                                    col: 42,
+                                                },
+                                                end: SourcePosition {
+                                                    line: 1,
+                                                    col: 47,
+                                                },
+                                            },
+                                            default_value: Some(
+                                                Spanning {
+                                                    item: SimpleValue(
+                                                        String(
+                                                            "Config",
+                                                        ),
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 1,
+                                                        col: 51,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 1,
+                                                        col: 58,
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                        start: SourcePosition {
+                                            line: 1,
+                                            col: 33,
+                                        },
+                                        end: SourcePosition {
+                                            line: 1,
+                                            col: 58,
+                                        },
+                                    },
+                                ],
+                                start: SourcePosition {
+                                    line: 1,
+                                    col: 16,
+                                },
+                                end: SourcePosition {
+                                    line: 1,
+                                    col: 59,
+                                },
+                            },
+                        ),
+                        directives: [],
+                        selection_set: Spanning {
+                            item: SelectionSet {
+                                items: [
+                                    Spanning {
+                                        item: Field(
+                                            Field {
+                                                alias: None,
+                                                name: Spanning {
+                                                    item: Name(
+                                                        "animal",
+                                                    ),
+                                                    start: SourcePosition {
+                                                        line: 2,
+                                                        col: 5,
+                                                    },
+                                                    end: SourcePosition {
+                                                        line: 2,
+                                                        col: 10,
+                                                    },
+                                                },
+                                                arguments: None,
+                                                directives: [],
+                                                selection_set: None,
+                                            },
+                                        ),
+                                        start: SourcePosition {
+                                            line: 2,
+                                            col: 5,
+                                        },
+                                        end: SourcePosition {
+                                            line: 2,
+                                            col: 10,
+                                        },
+                                    },
+                                ],
+                            },
+                            start: SourcePosition {
+                                line: 1,
+                                col: 61,
+                            },
+                            end: SourcePosition {
+                                line: 3,
+                                col: 1,
+                            },
+                        },
+                    },
+                ),
+                start: SourcePosition {
+                    line: 1,
+                    col: 1,
+                },
+                end: SourcePosition {
+                    line: 3,
+                    col: 1,
+                },
+            },
+        ],
+    },
+)

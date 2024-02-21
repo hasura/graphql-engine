@@ -34,7 +34,7 @@ pub enum Error {
     #[error("the data type {data_type:} for model {model_name:} has not been defined")]
     UnknownModelDataType {
         model_name: Qualified<ModelName>,
-        data_type: CustomTypeName,
+        data_type: Qualified<CustomTypeName>,
     },
     #[error(
         "the following argument in model {model_name:} is defined more than once: {argument_name:}"
@@ -198,6 +198,20 @@ pub enum Error {
         "model source is required for model '{model_name:}' to resolve select permission predicate"
     )]
     ModelSourceRequiredForPredicate { model_name: Qualified<ModelName> },
+    #[error(
+        "both model source for model '{source_model_name:}' and target source for model '{target_model_name}' are required  to resolve select permission predicate with relationships"
+    )]
+    ModelAndTargetSourceRequiredForRelationshipPredicate {
+        source_model_name: Qualified<ModelName>,
+        target_model_name: Qualified<ModelName>,
+    },
+    #[error(
+        "no relationship predicate is defined for relationship '{relationship_name:}' in model '{model_name:}'"
+    )]
+    NoPredicateDefinedForRelationshipPredicate {
+        model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
+    },
     #[error("unknown field '{field_name:}' used in select permissions of model '{model_name:}'")]
     UnknownFieldInSelectPermissionsDefinition {
         field_name: FieldName,
@@ -207,6 +221,18 @@ pub enum Error {
     UnsupportedFieldInSelectPermissionsPredicate {
         field_name: FieldName,
         model_name: Qualified<ModelName>,
+    },
+    #[error("relationship '{relationship_name:}' used in select permissions of model '{model_name:}' does not exist on type {type_name:}")]
+    UnknownRelationshipInSelectPermissionsPredicate {
+        relationship_name: RelationshipName,
+        model_name: Qualified<ModelName>,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in select permissions of model '{model_name:}' is not defined")]
+    UnknownModelUsedInRelationshipSelectPermissionsPredicate {
+        model_name: Qualified<ModelName>,
+        target_model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
     },
     #[error(
         "Invalid operator used in model '{model_name:}' select permission: '{operator_name:}'"
@@ -379,18 +405,20 @@ pub enum Error {
         argument_name: ArgumentName,
         relationship_name: RelationshipName,
     },
-    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} does not support the foreach capability")]
+    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} does not support the variables capability")]
     RelationshipTargetDoesNotSupportForEach {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} has not defined any capabilities")]
+    NoRelationshipCapabilitiesDefined {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         data_connector_name: Qualified<DataConnectorName>,
     },
     #[error("model {model_name:} with arguments is unsupported as a global ID source")]
     ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
-    #[error("capabilities for the data connector {data_connector:} have not been defined")]
-    MissingDataConnectorCapabilities {
-        data_connector: Qualified<DataConnectorName>,
-    },
     #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
     ModelCollectionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,
@@ -417,6 +445,29 @@ pub enum Error {
         data_connector_name: Qualified<DataConnectorName>,
         error: url::ParseError,
     },
+    // ---------------- Graphql Configuration Errors ----------------
+    #[error("graphql configuration is not defined in supergraph")]
+    MissingGraphqlConfig,
+    #[error("graphql configuration should be defined only once in supergraph")]
+    MultipleGraphqlConfigDefinition,
+    #[error("the fieldName for limitInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    MissingLimitFieldInGraphqlConfig,
+    #[error("the fieldName for offsetInput need to be defined in GraphqlConfig, when models have selectMany graphql API")]
+    MissingOffsetFieldInGraphqlConfig,
+    #[error("the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType")]
+    MissingFilterInputFieldInGraphqlConfig,
+    #[error("the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    MissingOrderByInputFieldInGraphqlConfig,
+    #[error("the orderByInput.enumTypeNames need to be defined in GraphqlConfig, when models have orderByExpressionType")]
+    MissingOrderByEnumTypeNamesInGraphqlConfig,
+    #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
+    MultipleOrderByEnumTypeNamesInGraphqlConfig,
+    #[error(
+            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
+        )]
+    InvalidOrderByDirection { directions: String },
+    #[error("the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType")]
+    MissingArgumentsInputFieldInGraphqlConfig,
 }
 
 #[derive(Error, Debug)]

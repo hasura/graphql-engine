@@ -1,0 +1,5 @@
+fragment friendFields on User @example {
+    id
+    name
+    profilePic(size: 50)
+}

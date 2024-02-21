@@ -1,6 +1,6 @@
 use super::command::Command;
-use super::data_connector::DataConnector;
 use super::data_connector::DataConnectorContext;
+use super::data_connector::DataConnectorLink;
 use super::error::Error;
 use super::model::Model;
 use super::subgraph::Qualified;
@@ -58,10 +58,14 @@ pub struct RelationshipCommandMapping {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Relationship {
     pub name: RelationshipName,
+    // `ast::Name` representation of `RelationshipName`. This is used to avoid
+    // the recurring conversion between `RelationshipName` to `ast::Name` during
+    // relationship IR generation
     pub field_name: ast::Name,
     pub source: Qualified<CustomTypeName>,
     pub target: RelationshipTarget,
     pub target_capabilities: Option<RelationshipCapabilities>,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -70,6 +74,34 @@ pub struct RelationshipCapabilities {
     // Change this to a bool, when we support that
     pub foreach: (),
     pub relationships: bool,
+}
+
+pub enum RelationshipExecutionCategory {
+    // Push down relationship definition to the data connector
+    Local,
+    // Use foreach in the data connector to fetch related rows for multiple objects in a single request
+    RemoteForEach,
+}
+
+#[allow(clippy::match_single_binding)]
+pub fn relationship_execution_category(
+    source_connector: &DataConnectorLink,
+    target_connector: &DataConnectorLink,
+    target_source_relationship_capabilities: &RelationshipCapabilities,
+) -> RelationshipExecutionCategory {
+    // It's a local relationship if the source and target connectors are the same and
+    // the connector supports relationships.
+    if target_connector.name == source_connector.name
+        && target_source_relationship_capabilities.relationships
+    {
+        RelationshipExecutionCategory::Local
+    } else {
+        match target_source_relationship_capabilities.foreach {
+            // TODO: When we support naive relationships for connectors not implementing foreach,
+            // add another match arm / return enum variant
+            () => RelationshipExecutionCategory::RemoteForEach,
+        }
+    }
 }
 
 fn resolve_relationship_source_mapping<'a>(
@@ -260,7 +292,7 @@ fn resolve_relationship_mappings_command(
 fn get_relationship_capabilities(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    source_data_connector: &Option<DataConnector>,
+    source_data_connector: &Option<DataConnectorLink>,
     target_name: &RelationshipTargetName,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext<'_>>,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
@@ -404,5 +436,6 @@ pub fn resolve_relationship(
         source: source_type_name,
         target: relationship_target,
         target_capabilities,
+        description: relationship.description.clone(),
     })
 }

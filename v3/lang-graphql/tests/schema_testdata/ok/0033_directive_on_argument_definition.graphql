@@ -1,0 +1,3 @@
+type Mutation {
+  login(userId: String @deprecated(reason: "Use username instead")): User
+}

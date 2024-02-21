@@ -282,9 +282,17 @@
                   "name": "order_by",
                   "description": null,
                   "type": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "Authors_order_by",
-                    "ofType": null
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "Authors_order_by",
+                        "ofType": null
+                      }
+                    }
                   },
                   "defaultValue": null
                 },

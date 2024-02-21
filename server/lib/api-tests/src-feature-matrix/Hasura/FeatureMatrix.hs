@@ -1,6 +1,7 @@
 module Hasura.FeatureMatrix (render, parseLogs, extractFeatures, renderFeatureMatrix) where
 
 import Control.Applicative
+import Control.Monad (unless, void)
 import Control.Monad.Except
 import Control.Monad.State
 import Data.Aeson

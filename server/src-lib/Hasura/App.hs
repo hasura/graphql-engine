@@ -982,7 +982,8 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
       setForkIOWithMetrics = Warp.setFork \f -> do
         void
           $ C.forkIOWithUnmask
-            ( \unmask ->
+            ( \unmask -> do
+                labelMe "runHGEServer_warp_fork"
                 bracket_
                   ( do
                       EKG.Gauge.inc (smWarpThreads appEnvServerMetrics)

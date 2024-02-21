@@ -37,7 +37,7 @@ pub fn bench_parser(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("hasura", query_name),
             &query,
-            |b, query| b.iter(|| Parser::new(query).parse_executable_document()),
+            |b, query| b.iter(|| Parser::new(query).parse_executable_document().unwrap()),
         );
     }
     group.finish();

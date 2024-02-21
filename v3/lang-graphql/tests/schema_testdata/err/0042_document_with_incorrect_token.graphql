@@ -1,0 +1,13 @@
+@
+# comment
+{
+    pet
+    faveSnack
+}
+
+# comment
+}
+
+type Query {
+    name: String
+}

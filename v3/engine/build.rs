@@ -1,10 +1,12 @@
-use std::process::Command;
-
 fn main() {
-    let output = Command::new("git")
-        .args(["rev-parse", "HEAD"])
-        .output()
-        .unwrap();
-    let git_hash = String::from_utf8(output.stdout).unwrap();
-    println!("cargo:rustc-env=GIT_HASH={}", git_hash);
+    // Cargo sets the PROFILE environment variable
+    let profile = std::env::var("PROFILE").unwrap();
+    if profile == "release" {
+        // For release builds (cargo build --release ...), set the version to the git commit short
+        let commit_short = build_data::get_git_commit_short().unwrap();
+        println!("cargo:rustc-env=CARGO_V3_ENGINE_VERSION={}", commit_short);
+    } else {
+        // For non-release builds, set the version to 'dev'
+        println!("cargo:rustc-env=CARGO_V3_ENGINE_VERSION=dev");
+    }
 }

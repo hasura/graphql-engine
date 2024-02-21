@@ -25,6 +25,12 @@ pub struct QualifiedTypeReference {
     pub nullable: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ArgumentInfo {
+    pub argument_type: QualifiedTypeReference,
+    pub description: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
 pub enum QualifiedBaseType {
     Named(QualifiedTypeName),
@@ -35,6 +41,21 @@ pub enum QualifiedBaseType {
 pub enum QualifiedTypeName {
     Inbuilt(InbuiltType),
     Custom(Qualified<CustomTypeName>),
+}
+
+pub fn serialize_optional_qualified_btreemap<T, V, S>(
+    optional_map: &Option<BTreeMap<Qualified<T>, V>>,
+    s: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+    V: Serialize,
+    T: Display + Serialize,
+{
+    match optional_map {
+        Some(map) => serialize_qualified_btreemap(map, s),
+        None => s.serialize_none(),
+    }
 }
 
 pub fn serialize_qualified_btreemap<T, V, S>(

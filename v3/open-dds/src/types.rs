@@ -55,8 +55,8 @@ impl<'de> Deserialize<'de> for CustomTypeName {
 
 #[derive(Hash, Clone, Debug, PartialEq, Eq)]
 /// Reference to an Open DD type including nullable values and arrays.
-/// Suffix '!' to indicate a non-nullable reference, and wrap in '[]' to indicate an array.
-/// Eg: '[String!]!' is a non-nullable array of non-nullable strings.
+/// Suffix `!` to indicate a non-nullable reference, and wrap in `[]` to indicate an array.
+/// Eg: `[String!]!` is a non-nullable array of non-nullable strings.
 pub struct TypeReference {
     pub underlying_type: BaseType,
     pub nullable: bool,
@@ -252,6 +252,9 @@ pub struct ObjectTypeV1 {
 
     /// Configuration for how this object type should appear in the GraphQL schema.
     pub graphql: Option<ObjectTypeGraphQLConfiguration>,
+    /// The description of the object.  
+    /// Gets added to the description of the object's definition in the graphql schema.
+    pub description: Option<String>,
 }
 
 impl ObjectTypeV1 {
@@ -260,18 +263,22 @@ impl ObjectTypeV1 {
             r#"
             {
                 "name": "Author",
+                "description": "An author of a book",
                 "fields": [
                     {
                         "name": "author_id",
-                        "type": "Int!"
+                        "type": "Int!",
+                        "description": "The id of the author"
                     },
                     {
                         "name": "first_name",
-                        "type": "String"
+                        "type": "String",
+                        "description": "The first name of the author"
                     },
                     {
                         "name": "last_name",
-                        "type": "String"
+                        "type": "String",
+                        "description": "The last name of the author"
                     }
                 ],
                 "globalIdFields": [
@@ -316,6 +323,9 @@ pub struct FieldDefinition {
     /// to one of the inbuilt OpenDd types or another user-defined type.
     #[serde(rename = "type")]
     pub field_type: TypeReference,
+    /// The description of this field.
+    /// Gets added to the description of the field's definition in the graphql schema.
+    pub description: Option<String>,
 }
 
 /// GraphQL configuration of an Open DD scalar type
@@ -360,6 +370,9 @@ pub struct ScalarTypeV1 {
     pub name: CustomTypeName,
     /// Configuration for how this scalar type should appear in the GraphQL schema.
     pub graphql: Option<ScalarTypeGraphQLConfiguration>,
+    /// The description of this scalar.  
+    /// Gets added to the description of the scalar's definition in the graphql schema.
+    pub description: Option<String>,
 }
 
 impl ScalarTypeV1 {
@@ -368,6 +381,7 @@ impl ScalarTypeV1 {
             r#"
             {
                 "name": "CustomString",
+                "description": "A custom string type",
                 "graphql": {
                     "typeName": "CustomString"
                 }

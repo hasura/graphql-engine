@@ -1,9 +1,9 @@
 {
-  cities {
-    code
-    name
-    weather {
-      forecast
+  AuthorMany {
+    author_id
+    first_name
+    Articles {
+      title
     }
   }
 }

@@ -28,6 +28,6 @@ lang-graphql = { path = "../lang-graphql" }
 pretty_assertions = "1.3.0"
 tokio = { version = "1.29.0", features = ["macros"] }
 jsonwebkey = { version = "0.3.5", features = ["generate", "jsonwebtoken","pkcs-convert"] }
-mockito = "1.1.0"
+mockito = {version = "1.1.0", default-features = false, features = []}
 indoc = "2"
 openssl = "0.10.60"

@@ -1,0 +1,28 @@
+Err(
+    Positioned {
+        item: TokenError {
+            expected_tokens: [
+                Keyword(
+                    Query,
+                ),
+                Keyword(
+                    Mutation,
+                ),
+                Keyword(
+                    Subscription,
+                ),
+            ],
+            found: Token(
+                Name(
+                    Name(
+                        "extend",
+                    ),
+                ),
+            ),
+        },
+        position: SourcePosition {
+            line: 1,
+            col: 1,
+        },
+    },
+)

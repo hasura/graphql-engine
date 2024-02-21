@@ -1,0 +1,5 @@
+directive @delegateField(name: String!) repeatable on OBJECT | INTERFACE
+
+type Book @delegateField(name: "\ errronous string \""){
+  id: ID!
+}

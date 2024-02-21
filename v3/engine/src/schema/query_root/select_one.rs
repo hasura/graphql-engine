@@ -75,7 +75,7 @@ pub(crate) fn select_one_field(
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             query_root_field.clone(),
-            None,
+            select_unique.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
                     data_type: model.data_type.clone(),

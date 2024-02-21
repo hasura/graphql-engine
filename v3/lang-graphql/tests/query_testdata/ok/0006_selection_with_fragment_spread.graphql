@@ -1,0 +1,15 @@
+{
+  pet
+  ...snackSelection
+  ... on Nap {
+    cozyLocation
+    durationOfNap
+  }
+  ...snackSelection @deprecated
+  ... on Nap @provides(duration: "2 hours") {
+    cozyLocation
+  }
+  ... @J(N: 0) {
+    a
+  }
+}

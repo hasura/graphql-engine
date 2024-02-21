@@ -82,7 +82,10 @@
                     "author_id"
                   ]
                 }
-              ]
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              }
             },
             "filterableFields": [
               {
@@ -244,6 +247,20 @@
                   }
                 }
               }
+            },
+            "graphql" :{
+              "selectUniques": [
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": [
+                    "article_id"
+                  ]
+                }
+              ],
+              "selectMany" :{
+                "queryRootField": "Articles"              
+              },
+              "filterExpressionType": "Article_Where_Exp"
             },
             "filterableFields": [
               {

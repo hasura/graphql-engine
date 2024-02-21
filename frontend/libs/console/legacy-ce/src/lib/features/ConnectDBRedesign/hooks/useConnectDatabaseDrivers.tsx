@@ -1,9 +1,9 @@
 import { sortBy, uniqBy } from 'lodash'; // eslint-disable-line @typescript-eslint/no-restricted-imports
 import { useAvailableDrivers } from '../../ConnectDB/hooks';
 import { DriverInfo } from '../../DataSource';
-import { DatabaseLogo } from '../components';
-import dbLogos from '../graphics/db-logos';
 import { SuperConnectorDrivers as SuperDrivers } from '../../hasura-metadata-types';
+import { DatabaseLogo } from '../components';
+import { resolveDbLogo } from '../graphics/db-logos';
 
 type useDatabaseConnectDriversProps = {
   onFirstSuccess?: (data: DriverInfo[]) => void;
@@ -96,7 +96,7 @@ export const useDatabaseConnectDrivers = ({
         <DatabaseLogo
           title={d.displayName}
           noConnection={d.available === false}
-          image={dbLogos[d.name] || dbLogos.default}
+          image={resolveDbLogo(d.name)}
           releaseName={d.release}
         />
       ),

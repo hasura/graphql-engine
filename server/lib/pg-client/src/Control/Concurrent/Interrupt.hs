@@ -13,9 +13,9 @@ import Control.Exception
     SomeException,
     mask,
     throwIO,
-    throwTo,
     try,
   )
+import GHC.Conc
 import Prelude
 
 -------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ import Prelude
 -- provide some cancelling escape hatch.
 interruptOnAsyncException :: IO () -> IO a -> IO a
 interruptOnAsyncException interrupt action = mask $ \restore -> do
-  x <- async action
+  x <- async (labelMe "interruptOnAsyncException" >> action)
 
   -- By using 'try' with 'waitCatch', we can distinguish between asynchronous
   -- exceptions received from the outside, and those thrown by the wrapped action.
@@ -70,3 +70,6 @@ interruptOnAsyncException interrupt action = mask $ \restore -> do
       throwIO e
     Right (Right r) ->
       pure r
+
+labelMe :: String -> IO ()
+labelMe l = myThreadId >>= flip labelThread l

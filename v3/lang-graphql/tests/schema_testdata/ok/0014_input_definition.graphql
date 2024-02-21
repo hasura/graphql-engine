@@ -1,0 +1,4 @@
+input ExampleInputObject {
+    a: String
+    b: Int!
+}

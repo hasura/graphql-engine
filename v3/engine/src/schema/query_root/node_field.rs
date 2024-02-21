@@ -1,4 +1,4 @@
-//! Schema of the relay node field according to https://relay.dev/graphql/objectidentification.htm
+//! Schema of the relay node field according to <https://relay.dev/graphql/objectidentification.htm>
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::{CustomTypeName, FieldName};

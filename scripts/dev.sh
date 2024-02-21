@@ -107,9 +107,10 @@ case "${1-}" in
     if [ "$EDITION_NAME" = "graphql-engine-pro" ];then
       EDITION_ABBREV=ee
       if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY-}" ]; then
-          echo_error "You need to have the HASURA_GRAPHQL_EE_LICENSE_KEY environment variable defined." 
-          echo_error "Ask a pro developer for the dev key."
-          exit 1
+          echo_warn "You don't have the HASURA_GRAPHQL_EE_LICENSE_KEY environment variable defined." 
+          echo_warn "Ask a pro developer for the dev key."
+          echo_warn "    Or: Press enter to continue with the pro binary in non-pro mode [will proceed in 15s]"
+          read -r -t15 || true
       fi
       # This is required for pro with EE license available:
       if [ -z "${HASURA_GRAPHQL_ADMIN_SECRET-}" ]; then

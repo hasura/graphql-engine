@@ -17,8 +17,8 @@
     "OpenDdSubgraphObject": {
       "oneOf": [
         {
-          "$id": "https://hasura.io/jsonschemas/metadata/DataConnector",
-          "title": "DataConnector",
+          "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorLink",
+          "title": "DataConnectorLink",
           "description": "Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.",
           "oneOf": [
             {
@@ -32,7 +32,7 @@
                 "kind": {
                   "type": "string",
                   "enum": [
-                    "DataConnector"
+                    "DataConnectorLink"
                   ]
                 },
                 "version": {
@@ -42,33 +42,7 @@
                   ]
                 },
                 "definition": {
-                  "$ref": "#/definitions/DataConnectorV1"
-                }
-              },
-              "additionalProperties": false
-            },
-            {
-              "type": "object",
-              "required": [
-                "definition",
-                "kind",
-                "version"
-              ],
-              "properties": {
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "DataConnector"
-                  ]
-                },
-                "version": {
-                  "type": "string",
-                  "enum": [
-                    "v2"
-                  ]
-                },
-                "definition": {
-                  "$ref": "#/definitions/DataConnectorV2"
+                  "$ref": "#/definitions/DataConnectorLinkV1"
                 }
               },
               "additionalProperties": false
@@ -374,29 +348,34 @@
         }
       ]
     },
-    "DataConnectorV1": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorV1",
-      "title": "DataConnectorV1",
+    "DataConnectorLinkV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorLinkV1",
+      "title": "DataConnectorLinkV1",
       "description": "Definition of a data connector - version 1.",
       "examples": [
         {
           "name": "data_connector",
           "url": {
-            "singleUrl": "http://data_connector:8100"
+            "singleUrl": {
+              "value": "http://data_connector:8100"
+            }
           },
           "headers": {},
           "schema": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
-          "capabilities": {
-            "versions": "*",
+            "version": "v0.1",
+            "schema": {
+              "scalar_types": {},
+              "object_types": {},
+              "collections": [],
+              "functions": [],
+              "procedures": []
+            },
             "capabilities": {
-              "query": {
-                "variables": {}
+              "versions": "*",
+              "capabilities": {
+                "query": {
+                  "variables": {}
+                }
               }
             }
           }
@@ -405,6 +384,7 @@
       "type": "object",
       "required": [
         "name",
+        "schema",
         "url"
       ],
       "properties": {
@@ -429,32 +409,14 @@
           "default": {},
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/SecretValue"
+            "$ref": "#/definitions/EnvironmentValue"
           }
         },
         "schema": {
           "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
-          "default": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
           "allOf": [
             {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
-            }
-          ]
-        },
-        "capabilities": {
-          "description": "The capabilities of the data connector. This field is required, and is marked optional only for temporary backwards compatibility.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CapabilitiesResponse"
-            },
-            {
-              "type": "null"
+              "$ref": "#/definitions/VersionedSchemaAndCapabilities"
             }
           ]
         }
@@ -476,7 +438,7 @@
           ],
           "properties": {
             "singleUrl": {
-              "type": "string"
+              "$ref": "#/definitions/EnvironmentValue"
             }
           },
           "additionalProperties": false
@@ -488,34 +450,16 @@
           ],
           "properties": {
             "readWriteUrls": {
-              "$ref": "#/definitions/ReadWriteUrlsV1"
+              "$ref": "#/definitions/ReadWriteUrls"
             }
           },
           "additionalProperties": false
         }
       ]
     },
-    "ReadWriteUrlsV1": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrlsV1",
-      "title": "ReadWriteUrlsV1",
-      "type": "object",
-      "required": [
-        "read",
-        "write"
-      ],
-      "properties": {
-        "read": {
-          "type": "string"
-        },
-        "write": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "SecretValue": {
-      "$id": "https://hasura.io/jsonschemas/SecretValue",
-      "title": "SecretValue",
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
       "description": "Either a literal string or a reference to a Hasura secret",
       "oneOf": [
         {
@@ -533,10 +477,10 @@
         {
           "type": "object",
           "required": [
-            "stringValueFromSecret"
+            "valueFromEnv"
           ],
           "properties": {
-            "stringValueFromSecret": {
+            "valueFromEnv": {
               "type": "string"
             }
           },
@@ -544,131 +488,9 @@
         }
       ]
     },
-    "CapabilitiesResponse": {
-      "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
-    },
-    "DataConnectorV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorV2",
-      "title": "DataConnectorV2",
-      "description": "Definition of a data connector - version 2.",
-      "examples": [
-        {
-          "name": "data_connector",
-          "url": {
-            "singleUrl": {
-              "value": "http://data_connector:8100"
-            }
-          },
-          "headers": {},
-          "schema": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
-          "capabilities": {
-            "versions": "*",
-            "capabilities": {
-              "query": {
-                "variables": {}
-              }
-            }
-          }
-        }
-      ],
-      "type": "object",
-      "required": [
-        "name",
-        "url"
-      ],
-      "properties": {
-        "name": {
-          "description": "The name of the data connector.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DataConnectorName"
-            }
-          ]
-        },
-        "url": {
-          "description": "The url(s) to access the data connector.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/DataConnectorUrlV2"
-            }
-          ]
-        },
-        "headers": {
-          "description": "Key value map of HTTP headers to be sent with each request to the data connector.",
-          "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/SecretValue"
-          }
-        },
-        "schema": {
-          "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
-          "default": {
-            "scalar_types": {},
-            "object_types": {},
-            "collections": [],
-            "functions": [],
-            "procedures": []
-          },
-          "allOf": [
-            {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
-            }
-          ]
-        },
-        "capabilities": {
-          "description": "The capabilities of the data connector. This field is required, and is marked optional only for temporary backwards compatibility.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/CapabilitiesResponse"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "DataConnectorUrlV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorUrlV2",
-      "title": "DataConnectorUrlV2",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "singleUrl"
-          ],
-          "properties": {
-            "singleUrl": {
-              "$ref": "#/definitions/SecretValue"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "readWriteUrls"
-          ],
-          "properties": {
-            "readWriteUrls": {
-              "$ref": "#/definitions/ReadWriteUrlsV2"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "ReadWriteUrlsV2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrlsV2",
-      "title": "ReadWriteUrlsV2",
+    "ReadWriteUrls": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ReadWriteUrls",
+      "title": "ReadWriteUrls",
       "type": "object",
       "required": [
         "read",
@@ -676,13 +498,43 @@
       ],
       "properties": {
         "read": {
-          "$ref": "#/definitions/SecretValue"
+          "$ref": "#/definitions/EnvironmentValue"
         },
         "write": {
-          "$ref": "#/definitions/SecretValue"
+          "$ref": "#/definitions/EnvironmentValue"
         }
       },
       "additionalProperties": false
+    },
+    "VersionedSchemaAndCapabilities": {
+      "$id": "https://hasura.io/jsonschemas/metadata/VersionedSchemaAndCapabilities",
+      "title": "VersionedSchemaAndCapabilities",
+      "oneOf": [
+        {
+          "title": "SchemaAndCapabilitiesV01",
+          "type": "object",
+          "required": [
+            "capabilities",
+            "schema",
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v0.1"
+              ]
+            },
+            "schema": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
+            },
+            "capabilities": {
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "ObjectTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeV1",
@@ -694,15 +546,18 @@
           "fields": [
             {
               "name": "author_id",
-              "type": "Int!"
+              "type": "Int!",
+              "description": "The id of the author"
             },
             {
               "name": "first_name",
-              "type": "String"
+              "type": "String",
+              "description": "The first name of the author"
             },
             {
               "name": "last_name",
-              "type": "String"
+              "type": "String",
+              "description": "The last name of the author"
             }
           ],
           "globalIdFields": [
@@ -711,7 +566,8 @@
           "graphql": {
             "typeName": "Author",
             "inputTypeName": null
-          }
+          },
+          "description": "An author of a book"
         }
       ],
       "type": "object",
@@ -755,6 +611,13 @@
               "type": "null"
             }
           ]
+        },
+        "description": {
+          "description": "The description of the object. Gets added to the description of the object's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -787,6 +650,13 @@
             {
               "$ref": "#/definitions/TypeReference"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of this field. Gets added to the description of the field's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -845,7 +715,8 @@
           "name": "CustomString",
           "graphql": {
             "typeName": "CustomString"
-          }
+          },
+          "description": "A custom string type"
         }
       ],
       "type": "object",
@@ -870,6 +741,13 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of this scalar. Gets added to the description of the scalar's definition in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1068,16 +946,19 @@
                 "queryRootField": "ArticleByID",
                 "uniqueIdentifier": [
                   "article_id"
-                ]
+                ],
+                "description": "Description for the select unique ArticleByID"
               }
             ],
             "selectMany": {
-              "queryRootField": "ArticleMany"
+              "queryRootField": "ArticleMany",
+              "description": "Description for the select many ArticleMany"
             },
             "argumentsInputType": null,
             "filterExpressionType": "Article_Where_Exp",
             "orderByExpressionType": "Article_Order_By"
-          }
+          },
+          "description": "Description for the model Articles"
         }
       ],
       "type": "object",
@@ -1152,6 +1033,13 @@
               "type": "null"
             }
           ]
+        },
+        "description": {
+          "description": "The description of the model. Gets added to the description of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1175,6 +1063,12 @@
         },
         "type": {
           "$ref": "#/definitions/TypeReference"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1400,11 +1294,13 @@
               "queryRootField": "ArticleByID",
               "uniqueIdentifier": [
                 "article_id"
-              ]
+              ],
+              "description": "Description for the select unique ArticleByID"
             }
           ],
           "selectMany": {
-            "queryRootField": "ArticleMany"
+            "queryRootField": "ArticleMany",
+            "description": "Description for the select many ArticleMany"
           },
           "argumentsInputType": null,
           "filterExpressionType": "Article_Where_Exp",
@@ -1494,6 +1390,13 @@
           "items": {
             "$ref": "#/definitions/FieldName"
           }
+        },
+        "description": {
+          "description": "The description of the select unique graphql definition of the model. Gets added to the description of the select unique root field of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -1517,6 +1420,13 @@
             {
               "$ref": "#/definitions/GraphQlFieldName"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of the select many graphql definition of the model. Gets added to the description of the select many root field of the model in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1550,7 +1460,8 @@
           "graphql": {
             "rootFieldName": "getLatestArticle",
             "rootFieldKind": "Query"
-          }
+          },
+          "description": "Get the latest article"
         }
       ],
       "type": "object",
@@ -1603,6 +1514,13 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "description": {
+          "description": "The description of the command. Gets added to the description of the command's root field in the graphql schema.",
+          "type": [
+            "string",
+            "null"
           ]
         }
       },
@@ -1784,7 +1702,8 @@
                 ]
               }
             }
-          ]
+          ],
+          "description": "Articles written by an author"
         }
       ],
       "type": "object",
@@ -1825,6 +1744,13 @@
           "items": {
             "$ref": "#/definitions/RelationshipMapping"
           }
+        },
+        "description": {
+          "description": "The description of the relationship. Gets added to the description of the relationship in the graphql schema.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": false
@@ -2427,6 +2353,27 @@
           "additionalProperties": false
         },
         {
+          "type": "object",
+          "required": [
+            "fieldIsNull"
+          ],
+          "properties": {
+            "fieldIsNull": {
+              "type": "object",
+              "required": [
+                "field"
+              ],
+              "properties": {
+                "field": {
+                  "$ref": "#/definitions/FieldName"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
           "description": "Filters objects based on the relationship of a model.",
           "type": "object",
           "required": [
@@ -2496,7 +2443,8 @@
       "type": "object",
       "required": [
         "field",
-        "operator"
+        "operator",
+        "value"
       ],
       "properties": {
         "field": {
@@ -2517,12 +2465,9 @@
         },
         "value": {
           "description": "The value expression to compare against.",
-          "anyOf": [
+          "allOf": [
             {
               "$ref": "#/definitions/ValueExpression"
-            },
-            {
-              "type": "null"
             }
           ]
         }
@@ -2657,7 +2602,7 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false
+                "require_graphql_config": false
               },
               "allOf": [
                 {
@@ -2698,7 +2643,7 @@
             },
             "flags": {
               "default": {
-                "require_ndc_capabilities": false
+                "require_graphql_config": false
               },
               "allOf": [
                 {
@@ -2731,7 +2676,7 @@
     "OpenDdFlags": {
       "type": "object",
       "properties": {
-        "require_ndc_capabilities": {
+        "require_graphql_config": {
           "default": false,
           "type": "boolean"
         }
@@ -2750,8 +2695,295 @@
       }
     },
     "OpenDdSupergraphObject": {
+      "oneOf": [
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
+          "title": "GraphqlConfig",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "GraphqlConfig"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/GraphqlConfigV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      ]
+    },
+    "GraphqlConfigV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfigV1",
+      "title": "GraphqlConfigV1",
+      "type": "object",
+      "required": [
+        "mutation",
+        "query"
+      ],
+      "properties": {
+        "query": {
+          "$ref": "#/definitions/QueryGraphqlConfig"
+        },
+        "mutation": {
+          "$ref": "#/definitions/MutationGraphqlConfig"
+        }
+      },
+      "additionalProperties": false
+    },
+    "QueryGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/QueryGraphqlConfig",
+      "title": "QueryGraphqlConfig",
+      "type": "object",
+      "required": [
+        "rootOperationTypeName"
+      ],
+      "properties": {
+        "rootOperationTypeName": {
+          "type": "string"
+        },
+        "argumentsInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ArgumentsInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limitInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LimitInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offsetInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OffsetInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "filterInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FilterInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "orderByInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OrderByInputGraphqlConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ArgumentsInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentsInputGraphqlConfig",
+      "title": "ArgumentsInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LimitInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/LimitInputGraphqlConfig",
+      "title": "LimitInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OffsetInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OffsetInputGraphqlConfig",
+      "title": "OffsetInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FilterInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FilterInputGraphqlConfig",
+      "title": "FilterInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "operatorNames"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        },
+        "operatorNames": {
+          "$ref": "#/definitions/FilterInputOperatorNames"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FilterInputOperatorNames": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FilterInputOperatorNames",
+      "title": "FilterInputOperatorNames",
+      "type": "object",
+      "required": [
+        "and",
+        "isNull",
+        "not",
+        "or"
+      ],
+      "properties": {
+        "and": {
+          "type": "string"
+        },
+        "or": {
+          "type": "string"
+        },
+        "not": {
+          "type": "string"
+        },
+        "isNull": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByInputGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByInputGraphqlConfig",
+      "title": "OrderByInputGraphqlConfig",
+      "type": "object",
+      "required": [
+        "enumDirectionValues",
+        "enumTypeNames",
+        "fieldName"
+      ],
+      "properties": {
+        "fieldName": {
+          "type": "string"
+        },
+        "enumDirectionValues": {
+          "$ref": "#/definitions/OrderByDirectionValues"
+        },
+        "enumTypeNames": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByEnumTypeName"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByDirectionValues": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirectionValues",
+      "title": "OrderByDirectionValues",
+      "type": "object",
+      "required": [
+        "asc",
+        "desc"
+      ],
+      "properties": {
+        "asc": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByEnumTypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByEnumTypeName",
+      "title": "OrderByEnumTypeName",
+      "type": "object",
+      "required": [
+        "directions",
+        "typeName"
+      ],
+      "properties": {
+        "directions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrderByDirection2"
+          }
+        },
+        "typeName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OrderByDirection2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirection2",
+      "title": "OrderByDirection",
       "type": "string",
-      "enum": []
+      "enum": [
+        "Asc",
+        "Desc"
+      ]
+    },
+    "MutationGraphqlConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/MutationGraphqlConfig",
+      "title": "MutationGraphqlConfig",
+      "type": "object",
+      "required": [
+        "rootOperationTypeName"
+      ],
+      "properties": {
+        "rootOperationTypeName": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     "OpenDdSubgraph": {
       "type": "object",

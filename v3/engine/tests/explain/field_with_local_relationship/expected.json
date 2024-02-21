@@ -2,43 +2,51 @@
   "explain": {
     "type": "modelSelect",
     "value": {
-      "modelName": "cities",
+      "modelName": "AuthorMany",
       "queryRequest": {
-        "collection": "city",
+        "collection": "authors",
         "query": {
           "fields": {
-            "code": {
+            "author_id": {
               "type": "column",
-              "column": "code"
+              "column": "id"
             },
-            "name": {
+            "first_name": {
               "type": "column",
-              "column": "name"
+              "column": "first_name"
             },
-            "state": {
+            "Articles": {
               "type": "relationship",
               "query": {
                 "fields": {
-                  "name": {
+                  "title": {
                     "type": "column",
-                    "column": "name"
+                    "column": "title"
                   }
                 }
               },
-              "relationship": "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]",
+              "relationship": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
               "arguments": {}
             }
           }
         },
         "arguments": {},
         "collection_relationships": {
-          "[{\"subgraph\":\"default\",\"name\":\"city\"},\"state\"]": {
+          "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]": {
             "column_mapping": {
-              "state_code": "code"
+              "id": "author_id"
             },
-            "relationship_type": "object",
-            "target_collection": "states",
+            "relationship_type": "array",
+            "target_collection": "articles",
             "arguments": {}
+          }
+        }
+      },
+      "ndcExplain": {
+        "type": "response",
+        "value": {
+          "details": {
+            "explain": "<redacted>"
           }
         }
       }

@@ -90,41 +90,44 @@
             },
             "collection": "articles",
             "arguments": {},
-            "filter_clause": [
-              {
-                "type": "and",
-                "expressions": [
-                  {
-                    "type": "binary_comparison_operator",
-                    "column": {
-                      "type": "column",
-                      "name": "title",
-                      "path": []
-                    },
-                    "operator": {
-                      "type": "other",
-                      "name": "_like"
-                    },
-                    "value": {
-                      "type": "scalar",
-                      "value": "%Functional%"
-                    }
-                  },
-                  {
-                    "type": "not",
-                    "expression": {
-                      "type": "unary_comparison_operator",
+            "filter_clause": {
+              "expressions": [
+                {
+                  "type": "and",
+                  "expressions": [
+                    {
+                      "type": "binary_comparison_operator",
                       "column": {
                         "type": "column",
-                        "name": "author_id",
+                        "name": "title",
                         "path": []
                       },
-                      "operator": "is_null"
+                      "operator": {
+                        "type": "other",
+                        "name": "_like"
+                      },
+                      "value": {
+                        "type": "scalar",
+                        "value": "%Functional%"
+                      }
+                    },
+                    {
+                      "type": "not",
+                      "expression": {
+                        "type": "unary_comparison_operator",
+                        "column": {
+                          "type": "column",
+                          "name": "author_id",
+                          "path": []
+                        },
+                        "operator": "is_null"
+                      }
                     }
-                  }
-                ]
-              }
-            ],
+                  ]
+                }
+              ],
+              "relationships": {}
+            },
             "limit": null,
             "offset": null,
             "order_by": null,
