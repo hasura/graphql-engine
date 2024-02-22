@@ -363,7 +363,7 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
               \response -> makeActionResponseNoRelations annFields outputType HashMap.empty False <$> decodeValue response
           IR.AsyncId -> pure $ AO.String $ actionIdToText actionId
           IR.AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
-          IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON $ mkQErrFromErrorValue _alrErrors
+          IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON $ mkQErrFromErrorValue <$> _alrErrors
       pure $ encJFromOrderedValue $ AO.object resolvedFields
     IR.ASISource sourceName sourceConfig ->
       let jsonAggSelect = mkJsonAggSelect outputType
@@ -413,12 +413,12 @@ resolveAsyncActionQuery userInfo annAction responseErrorsConfig =
                   tablePermissions = RS.TablePerm annBoolExpTrue Nothing
                in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics Nothing
   where
-    mkQErrFromErrorValue :: Maybe J.Value -> QErr
+    mkQErrFromErrorValue :: J.Value -> QErr
     mkQErrFromErrorValue actionLogResponseError =
-      let internal = ExtraInternal <$> (actionLogResponseError >>= (^? key "internal"))
+      let internal = ExtraInternal <$> (actionLogResponseError ^? key "internal")
           internal' = if shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig then internal else Nothing
-          errorMessageText = fromMaybe "internal: error in parsing the action log" $ actionLogResponseError >>= (^? key "error" . _String)
-          codeMaybe = actionLogResponseError >>= (^? key "code" . _String)
+          errorMessageText = fromMaybe "internal: error in parsing the action log" $ actionLogResponseError ^? key "error" . _String
+          codeMaybe = actionLogResponseError ^? key "code" . _String
           code = maybe Unexpected ActionWebhookCode codeMaybe
        in QErr [] HTTP.status500 errorMessageText code internal'
     IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
