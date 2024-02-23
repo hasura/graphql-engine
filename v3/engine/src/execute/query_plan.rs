@@ -1,5 +1,6 @@
 mod commands;
 mod model_selection;
+mod relationships;
 pub(crate) mod selection_set;
 
 use gql::normalized_ast;

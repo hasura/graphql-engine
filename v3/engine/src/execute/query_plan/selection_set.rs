@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::commands;
 use super::model_selection;
+use super::relationships;
 use super::ProcessResponseAs;
 use crate::execute::error;
 use crate::execute::ir::relationship;
@@ -202,7 +203,7 @@ fn make_hasura_phantom_field(field_name: &str) -> String {
 
 /// From the fields in `ResultSelectionSet`, collect relationships recursively
 /// and create NDC relationship definitions
-pub(crate) fn collect_relationships(
+pub(crate) fn collect_relationships_from_selection(
     selection: &ResultSelectionSet,
     relationships: &mut BTreeMap<String, ndc::models::Relationship>,
 ) -> Result<(), error::Error> {
@@ -218,7 +219,7 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_model_relationship_definition(relationship_info)?,
                 );
-                collect_relationships(&query.selection, relationships)?;
+                relationships::collect_relationships(query, relationships)?;
             }
             FieldSelection::CommandRelationshipLocal {
                 ir,
@@ -229,7 +230,7 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_command_relationship_definition(relationship_info)?,
                 );
-                collect_relationships(&ir.command_info.selection, relationships)?;
+                collect_relationships_from_selection(&ir.command_info.selection, relationships)?;
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector

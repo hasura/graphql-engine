@@ -61,7 +61,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
 
     let (query, jl) = ndc_query(&ir.command_info, join_id_counter)?;
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(
+    selection_set::collect_relationships_from_selection(
         &ir.command_info.selection,
         &mut collection_relationships,
     )?;
@@ -96,7 +96,7 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         )),
     };
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(
+    selection_set::collect_relationships_from_selection(
         &ir.command_info.selection,
         &mut collection_relationships,
     )?;

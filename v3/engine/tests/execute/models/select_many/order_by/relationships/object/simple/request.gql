@@ -5,6 +5,9 @@ query MyQuery {
       Title
     }
   }
+  TrackOrderByWithoutRelationshipField: Track(order_by: [{Album: {ArtistId: Desc}}, {Name: Asc}], limit: 3) {
+    Name
+  }
   TrackOrderByWithFilter: Track(
     order_by: [{Album: {ArtistId: Asc}}, {TrackId: Desc}]
     where: {Album: {Artist: {ArtistId: {_eq: 2}}}}
