@@ -371,7 +371,7 @@ fn resolve_type_mapping(
                 .map_err(TypeMappingValidationError::NDCValidationError)?;
             let ndc_field_object_type = ndc_object_types
                 .get(underlying_ndc_field_named_type)
-                .ok_or_else(|| TypeMappingValidationError::UnknownNdcFieldType {
+                .ok_or_else(|| TypeMappingValidationError::UnknownNdcFieldObjectType {
                     type_name: mapping_to_resolve.type_name.clone(),
                     field_name: field_name.clone(),
                     ndc_type_name: mapping_to_resolve.ndc_object_type_name.into(),

@@ -1,3 +1,5 @@
+use engine::metadata::resolved::error::Error::ModelTypeMappingValidationError;
+use engine::schema::Error::ResolveError;
 use engine::schema::GDS;
 use std::{fs, path::PathBuf};
 
@@ -225,4 +227,21 @@ fn test_global_if_fields_present_in_object_type_but_no_model_has_global_id_sourc
         GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: 'globalIdFields' for type actor (in subgraph default) found, but no model found with 'globalIdSource: true' for type actor (in subgraph default)"
     );
+}
+
+#[test]
+// Remove this test (and add an execution test instead) if we ever support this use case
+fn test_disallow_object_mapped_to_scalar() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/metadata_with_opendd_object_mapped_to_ndc_scalar.json",
+    );
+    let metadata =
+        GDS::new(serde_json::from_str(&fs::read_to_string(metadata_path).unwrap()).unwrap());
+    println!("{metadata:?}");
+    assert!(matches!(
+        metadata,
+        Err(ResolveError {
+            error: ModelTypeMappingValidationError { .. }
+        })
+    ));
 }

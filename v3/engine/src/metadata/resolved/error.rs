@@ -545,7 +545,7 @@ pub enum TypeMappingValidationError {
     #[error(
         "the type {unknown_ndc_field_type_name:} is not defined as an object type in the connector's schema. This type is referenced by the field {ndc_field_name:} in the connector's schema type {ndc_type_name:}, which is mapped to the field {field_name:} in the type {type_name:}"
     )]
-    UnknownNdcFieldType {
+    UnknownNdcFieldObjectType {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         ndc_type_name: String,
