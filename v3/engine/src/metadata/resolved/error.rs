@@ -190,8 +190,8 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-    #[error("comparison for array field {field_name:} of model {model_name:} used in {comparison_location} is unsupported")]
-    UncomparableArrayFieldType {
+    #[error("comparison for non-scalar field {field_name:} of model {model_name:} used in {comparison_location} is unsupported")]
+    UncomparableNonScalarFieldType {
         comparison_location: String,
         model_name: Qualified<ModelName>,
         field_name: FieldName,

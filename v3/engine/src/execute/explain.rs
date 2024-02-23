@@ -1,4 +1,4 @@
-use super::remote_joins::types::RemoteJoinType;
+use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
 use crate::execute::query_plan::{NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
@@ -182,7 +182,7 @@ async fn get_join_steps(
     let mut parallel_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
-        if let Some((remote_join, _join_id)) = location.join_node {
+        if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
             let mut query_request = remote_join.target_ndc_ir;
             query_request.variables = Some(vec![]);
             let ndc_request = types::NDCRequest::Query(query_request);

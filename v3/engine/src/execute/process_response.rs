@@ -113,7 +113,7 @@ where
                                 )?)
                             }
                             OutputAnnotation::Field { .. } => {
-                                let field_json_value_result =
+                                let value =
                                     row.remove(field.alias.0.as_str()).ok_or_else(|| {
                                         error::InternalDeveloperError::BadGDCResponse {
                                             summary: format!(
@@ -123,7 +123,11 @@ where
                                         }
                                     })?;
 
-                                Ok(field_json_value_result)
+                                if field.type_container.is_list() {
+                                    process_field_selection_as_list(value, &field.selection_set)
+                                } else {
+                                    process_field_selection_as_object(value, &field.selection_set)
+                                }
                             }
                             OutputAnnotation::RelationshipToModel { .. } => {
                                 let field_json_value_result =
@@ -235,6 +239,35 @@ pub fn process_selection_set_as_object(
         .map(|row| process_single_query_response_row(row, selection_set))
         .transpose()?;
     Ok(processed_response)
+}
+
+pub fn process_field_selection_as_list(
+    value: json::Value,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::Error> {
+    if selection_set.fields.is_empty() {
+        Ok(value)
+    } else {
+        let rows: Vec<IndexMap<String, RowFieldValue>> = json::from_value(value)?;
+        let processed_rows: Vec<IndexMap<Alias, json::Value>> = rows
+            .into_iter()
+            .map(|row| process_single_query_response_row(row, selection_set))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(json::to_value(processed_rows)?)
+    }
+}
+
+pub fn process_field_selection_as_object(
+    value: json::Value,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::Error> {
+    if selection_set.fields.is_empty() {
+        Ok(value)
+    } else {
+        let row: IndexMap<String, RowFieldValue> = json::from_value(value)?;
+        let processed_row = process_single_query_response_row(row, selection_set)?;
+        Ok(json::to_value(processed_row)?)
+    }
 }
 
 pub fn process_command_rows(

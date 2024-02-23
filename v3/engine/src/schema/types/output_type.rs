@@ -130,6 +130,28 @@ pub fn get_custom_output_type(
     }
 }
 
+fn get_type_kind(gds: &GDS, field_type: &QualifiedTypeReference) -> Result<super::TypeKind, Error> {
+    match &field_type.underlying_type {
+        QualifiedBaseType::Named(qualified_type_name) => match qualified_type_name {
+            QualifiedTypeName::Inbuilt(_) => Ok(super::TypeKind::Scalar), // Inbuilt types are all scalars
+            QualifiedTypeName::Custom(type_name) => {
+                let type_rep =
+                    gds.metadata
+                        .types
+                        .get(type_name)
+                        .ok_or(Error::InternalTypeNotFound {
+                            type_name: type_name.to_owned(),
+                        })?;
+                match type_rep {
+                    TypeRepresentation::Object(_) => Ok(super::TypeKind::Object),
+                    TypeRepresentation::ScalarType(_) => Ok(super::TypeKind::Scalar),
+                }
+            }
+        },
+        QualifiedBaseType::List(element_type) => get_type_kind(gds, element_type),
+    }
+}
+
 /// generate graphql schema for object type fields
 fn object_type_fields(
     gds: &GDS,
@@ -146,6 +168,8 @@ fn object_type_fields(
                 field_definition.description.clone(),
                 Annotation::Output(super::OutputAnnotation::Field {
                     name: field_name.clone(),
+                    field_type: field_definition.field_type.clone(),
+                    field_base_type_kind: get_type_kind(gds, &field_definition.field_type)?,
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
                 HashMap::new(),

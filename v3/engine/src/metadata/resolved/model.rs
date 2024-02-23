@@ -476,13 +476,6 @@ fn resolve_model_predicate(
                 // Determine ndc type of the field
                 let field_ndc_type = &field_mapping.column_type;
                 // Determine whether the ndc type is a simple scalar
-                let field_ndc_type_scalar =
-                    get_simple_scalar(field_ndc_type.clone()).ok_or_else(|| {
-                        Error::UnsupportedFieldInSelectPermissionsPredicate {
-                            field_name: field.clone(),
-                            model_name: model.name.clone(),
-                        }
-                    })?;
                 // Get available scalars defined in the data connector
                 let scalars = &data_connectors
                     .get(&model_source.data_connector.name)
@@ -492,12 +485,10 @@ fn resolve_model_predicate(
                     })?
                     .scalars;
                 // Get scalar type info from the data connector
-                let scalar_type_info =
-                    scalars.get(field_ndc_type_scalar.as_str()).ok_or_else(|| {
-                        Error::UnknownScalarTypeInDataConnector {
-                            scalar_type: field_ndc_type_scalar.clone(),
-                            data_connector: model_source.data_connector.name.clone(),
-                        }
+                let (_, scalar_type_info) = get_simple_scalar(field_ndc_type.clone(), scalars)
+                    .ok_or_else(|| Error::UnsupportedFieldInSelectPermissionsPredicate {
+                        field_name: field.clone(),
+                        model_name: model.name.clone(),
                     })?;
 
                 let (resolved_operator, argument_type) = resolve_binary_operator(
@@ -763,14 +754,6 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
             })?;
     // Determine ndc type of the field
     let field_ndc_type = &field_mapping.column_type;
-    // Determine whether the ndc type is a simple scalar
-    let field_ndc_type_scalar = get_simple_scalar(field_ndc_type.clone()).ok_or_else(|| {
-        Error::UncomparableArrayFieldType {
-            comparison_location: comparison_location(),
-            field_name: field.clone(),
-            model_name: model_name.clone(),
-        }
-    })?;
     // Get available scalars defined in the data connector
     let scalars = &data_connectors
         .get(&model_source.data_connector.name)
@@ -779,13 +762,15 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
             data_connector: model_source.data_connector.name.clone(),
         })?
         .scalars;
-    // Get scalar type info from the data connector
-    let scalar_type_info = scalars.get(field_ndc_type_scalar.as_str()).ok_or_else(|| {
-        Error::UnknownScalarTypeInDataConnector {
-            scalar_type: field_ndc_type_scalar.clone(),
-            data_connector: model_source.data_connector.name.clone(),
-        }
-    })?;
+    // Determine whether the ndc type is a simple scalar and get scalar type info
+    let (_field_ndc_type_scalar, scalar_type_info) =
+        get_simple_scalar(field_ndc_type.clone(), scalars).ok_or_else(|| {
+            Error::UncomparableNonScalarFieldType {
+                comparison_location: comparison_location(),
+                field_name: field.clone(),
+                model_name: model_name.clone(),
+            }
+        })?;
 
     let equal_operator = match scalar_type_info
         .comparison_operators
@@ -982,16 +967,9 @@ pub fn resolve_model_graphql_api(
 
                         for (field_name, field_mapping) in field_mappings.iter() {
                             // Generate comparison expression for fields mapped to simple scalar type
-                            if let Some(scalar_type_name) =
-                                get_simple_scalar(field_mapping.column_type.clone())
+                            if let Some((scalar_type_name, scalar_type_info)) =
+                                get_simple_scalar(field_mapping.column_type.clone(), scalar_types)
                             {
-                                let scalar_type_info = scalar_types
-                                    .get(scalar_type_name.as_str())
-                                    .ok_or(Error::UnknownScalarTypeInDataConnector {
-                                        scalar_type: scalar_type_name.clone(),
-                                        data_connector: model_source.data_connector.name.clone(),
-                                    })?;
-
                                 if let Some(graphql_type_name) =
                                     &scalar_type_info.comparison_expression_name.clone()
                                 {

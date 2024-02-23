@@ -18,7 +18,9 @@ use super::ir::root_field;
 use super::ndc;
 use super::process_response::process_response;
 use super::remote_joins::execute_join_locations;
-use super::remote_joins::types::{JoinId, JoinLocations, Location, MonotonicCounter, RemoteJoin};
+use super::remote_joins::types::{
+    JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter, RemoteJoin,
+};
 use super::ProjectId;
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
@@ -281,9 +283,21 @@ fn zip_with_join_ids<'s, 'ir>(
                     description: "unexpected; could not find {key} in join ids tree".to_string(),
                 })?;
         let new_node = match (location.join_node, join_id_location.join_node) {
-            (Some(rj), Some(join_id)) => Some((rj, join_id)),
-            _ => None,
-        };
+            (JoinNode::Remote(rj), JoinNode::Remote(join_id)) => {
+                Ok(JoinNode::Remote((rj, join_id)))
+            }
+            (
+                JoinNode::Local(LocationKind::NestedData),
+                JoinNode::Local(LocationKind::NestedData),
+            ) => Ok(JoinNode::Local(LocationKind::NestedData)),
+            (
+                JoinNode::Local(LocationKind::LocalRelationship),
+                JoinNode::Local(LocationKind::LocalRelationship),
+            ) => Ok(JoinNode::Local(LocationKind::LocalRelationship)),
+            _ => Err(error::InternalEngineError::InternalGeneric {
+                description: "unexpected join node mismatch".to_string(),
+            }),
+        }?;
         let new_rest = zip_with_join_ids(location.rest, join_id_location.rest)?;
         new_locations.insert(
             key,
@@ -309,10 +323,12 @@ fn assign_join_ids<'s, 'ir>(
         .locations
         .iter()
         .map(|(key, location)| {
-            let new_node = location
-                .join_node
-                .as_ref()
-                .map(|join_node| assign_join_id(join_node, state));
+            let new_node = match &location.join_node {
+                JoinNode::Local(location_kind) => JoinNode::Local(*location_kind),
+                JoinNode::Remote(remote_join) => {
+                    JoinNode::Remote(assign_join_id(remote_join, state))
+                }
+            };
             let new_location = Location {
                 join_node: new_node.to_owned(),
                 rest: assign_join_ids(&location.rest, state),
@@ -329,15 +345,18 @@ fn assign_join_ids<'s, 'ir>(
 /// generate it's `JoinId`. This is because `Hash` trait is not implemented for
 /// `ndc::models::QueryRequest`
 fn assign_join_id<'s, 'ir>(
-    join_node: &'s RemoteJoin<'s, 'ir>,
+    remote_join: &'s RemoteJoin<'s, 'ir>,
     state: &mut RemoteJoinCounter<'s, 'ir>,
 ) -> JoinId {
-    let found = state.remote_joins.iter().find(|(rj, _id)| rj == &join_node);
+    let found = state
+        .remote_joins
+        .iter()
+        .find(|(rj, _id)| rj == &remote_join);
 
     match found {
         None => {
             let next_id = state.counter.get_next();
-            state.remote_joins.push((join_node, next_id));
+            state.remote_joins.push((remote_join, next_id));
             next_id
         }
         Some((_rj, id)) => *id,

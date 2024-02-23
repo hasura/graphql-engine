@@ -2,6 +2,8 @@ use std::{
     cmp::Ordering,
     collections::{BTreeMap, HashSet},
     error::Error,
+    fs::File,
+    io::{self, BufRead},
     sync::Arc,
 };
 
@@ -16,6 +18,7 @@ use indexmap::IndexMap;
 use ndc_client::models::{self, Query};
 use prometheus::{Encoder, IntCounter, IntGauge, Opts, Registry, TextEncoder};
 use regex::Regex;
+use serde_json::Value;
 use tokio::sync::Mutex;
 
 // ANCHOR: row-type
@@ -26,25 +29,28 @@ type Row = BTreeMap<String, serde_json::Value>;
 pub struct AppState {
     pub actors: BTreeMap<i64, Row>,
     pub movies: BTreeMap<i64, Row>,
+    pub institutions: BTreeMap<i64, Row>,
     pub metrics: Metrics,
 }
 // ANCHOR_END: app-state
-// ANCHOR: read_csv
-fn read_csv(path: &str) -> core::result::Result<BTreeMap<i64, Row>, Box<dyn Error>> {
-    let mut rdr = csv::Reader::from_path(path)?;
+
+// ANCHOR: read_json_lines
+fn read_json_lines(path: &str) -> core::result::Result<BTreeMap<i64, Row>, Box<dyn Error>> {
+    let file = File::open(path)?;
+    let lines = io::BufReader::new(file).lines();
     let mut records: BTreeMap<i64, Row> = BTreeMap::new();
-    for row in rdr.deserialize() {
-        let row: BTreeMap<String, serde_json::Value> = row?;
+    for line in lines {
+        let row: BTreeMap<String, serde_json::Value> = serde_json::from_str(&line?)?;
         let id = row
             .get("id")
-            .ok_or("'id' field not found in csv file")?
+            .ok_or("'id' field not found in json file")?
             .as_i64()
-            .ok_or("'id' field was not an integer in csv file")?;
+            .ok_or("'id' field was not an integer in json file")?;
         records.insert(id, row);
     }
     Ok(records)
 }
-// ANCHOR_END: read_csv
+// ANCHOR_END: read_json_lines
 
 #[derive(Debug, Clone)]
 pub struct Metrics {
@@ -101,14 +107,16 @@ async fn metrics_middleware<T>(
 // ANCHOR: init_app_state
 fn init_app_state() -> AppState {
     // Read the CSV data files
-    let actors = read_csv("./custom-connector/src/actors.csv").unwrap();
-    let movies = read_csv("./custom-connector/src/movies.csv").unwrap();
+    let actors = read_json_lines("./custom-connector/src/actors.json").unwrap();
+    let movies = read_json_lines("./custom-connector/src/movies.json").unwrap();
+    let institutions = read_json_lines("./custom-connector/src/institutions.json").unwrap();
 
     let metrics = Metrics::new().unwrap();
 
     AppState {
         actors,
         movies,
+        institutions,
         metrics,
     }
 }
@@ -330,11 +338,140 @@ async fn get_schema() -> Json<models::SchemaResponse> {
         ]),
     };
     // ANCHOR_END: schema_object_type_namequery
+    // ANCHOR: schema_object_type_institution
+    let institution_type = models::ObjectType {
+        description: Some("An institution".into()),
+        fields: BTreeMap::from_iter([
+            (
+                "id".into(),
+                models::ObjectField {
+                    description: Some("The institution's primary key".into()),
+                    r#type: models::Type::Named { name: "Int".into() },
+                },
+            ),
+            (
+                "name".into(),
+                models::ObjectField {
+                    description: Some("The institution's name".into()),
+                    r#type: models::Type::Named {
+                        name: "String".into(),
+                    },
+                },
+            ),
+            (
+                "location".into(),
+                models::ObjectField {
+                    description: Some("The institution's location".into()),
+                    r#type: models::Type::Named {
+                        name: "location".into(),
+                    },
+                },
+            ),
+            (
+                "staff".into(),
+                models::ObjectField {
+                    description: Some("The institution's staff".into()),
+                    r#type: models::Type::Array {
+                        element_type: Box::new(models::Type::Named {
+                            name: "staff_member".into(),
+                        }),
+                    },
+                },
+            ),
+            (
+                "departments".into(),
+                models::ObjectField {
+                    description: Some("The institution's departments".into()),
+                    r#type: models::Type::Array {
+                        element_type: Box::new(models::Type::Named {
+                            name: "String".into(),
+                        }),
+                    },
+                },
+            ),
+        ]),
+    };
+    // ANCHOR_END: schema_object_type_institution
+    // ANCHOR: schema_object_type_location
+    let location_type = models::ObjectType {
+        description: Some("A location".into()),
+        fields: BTreeMap::from_iter([
+            (
+                "city".into(),
+                models::ObjectField {
+                    description: Some("The location's city".into()),
+                    r#type: models::Type::Named {
+                        name: "String".into(),
+                    },
+                },
+            ),
+            (
+                "country".into(),
+                models::ObjectField {
+                    description: Some("The location's country".into()),
+                    r#type: models::Type::Named {
+                        name: "String".into(),
+                    },
+                },
+            ),
+            (
+                "campuses".into(),
+                models::ObjectField {
+                    description: Some("The location's campuses".into()),
+                    r#type: models::Type::Array {
+                        element_type: Box::new(models::Type::Named {
+                            name: "String".into(),
+                        }),
+                    },
+                },
+            ),
+        ]),
+    };
+    // ANCHOR_END: schema_object_type_location
+    // ANCHOR: schema_object_type_staff_member
+    let staff_member_type = models::ObjectType {
+        description: Some("A staff member".into()),
+        fields: BTreeMap::from_iter([
+            (
+                "first_name".into(),
+                models::ObjectField {
+                    description: Some("The staff member's first name".into()),
+                    r#type: models::Type::Named {
+                        name: "String".into(),
+                    },
+                },
+            ),
+            (
+                "last_name".into(),
+                models::ObjectField {
+                    description: Some("The staff member's last name".into()),
+                    r#type: models::Type::Named {
+                        name: "String".into(),
+                    },
+                },
+            ),
+            (
+                "specialities".into(),
+                models::ObjectField {
+                    description: Some("The staff member's specialities".into()),
+                    r#type: models::Type::Array {
+                        element_type: Box::new(models::Type::Named {
+                            name: "String".into(),
+                        }),
+                    },
+                },
+            ),
+        ]),
+    };
+    // ANCHOR_END: schema_object_type_staff_member
     // ANCHOR: schema_object_types
     let object_types = BTreeMap::from_iter([
         ("actor".into(), actor_type),
         ("movie".into(), movie_type),
         ("name_query".into(), name_query_type),
+        ("institution".into(), institution_type),
+        ("location".into(), location_type),
+        ("staff_member".into(), staff_member_type),
     ]);
     // ANCHOR_END: schema_object_types
     // ANCHOR: schema_collection_actor
@@ -367,6 +504,21 @@ async fn get_schema() -> Json<models::SchemaResponse> {
         )]),
     };
     // ANCHOR_END: schema_collection_movie
+    // ANCHOR: schema_collection_institution
+    let institutions_collection = models::CollectionInfo {
+        name: "institutions".into(),
+        description: Some("A collection of institutions".into()),
+        collection_type: "institution".into(),
+        arguments: BTreeMap::new(),
+        foreign_keys: BTreeMap::new(),
+        uniqueness_constraints: BTreeMap::from_iter([(
+            "InstitutionByID".into(),
+            models::UniquenessConstraint {
+                unique_columns: vec!["id".into()],
+            },
+        )]),
+    };
+    // ANCHOR_END: schema_collection_institution
     // ANCHOR: schema_collection_actors_by_movie
     let actors_by_movie_collection = models::CollectionInfo {
         name: "actors_by_movie".into(),
@@ -405,6 +557,7 @@ async fn get_schema() -> Json<models::SchemaResponse> {
     let collections = vec![
         actors_collection,
         movies_collection,
+        institutions_collection,
         actors_by_movie_collection,
         movies_by_actor_name_collection,
     ];
@@ -734,6 +887,7 @@ fn get_collection_by_name(
     match collection_name {
         "actors" => Ok(state.actors.values().cloned().collect()),
         "movies" => Ok(state.movies.values().cloned().collect()),
+        "institutions" => Ok(state.institutions.values().cloned().collect()),
         "actors_by_movie" => actors_by_movie_rows(arguments, state),
         "movies_by_actor_name" => movies_by_actor_name_rows(arguments, state),
         "latest_actor_id" => latest_actor_id_rows(state),
@@ -1577,8 +1731,8 @@ fn execute_query(
                 // from a function, and we need to handle it differently.
                 if item.contains_key("__value") {
                     let value_field = models::Field::Column {
-                        fields: None,
                         column: String::from("__value"),
+                        fields: None,
                     };
                     let mut row = IndexMap::new();
                     row.insert(
@@ -1593,13 +1747,7 @@ fn execute_query(
                     );
                     rows.push(row);
                 } else {
-                    let mut row = IndexMap::new();
-                    for (field_name, field) in fields.iter() {
-                        row.insert(
-                            field_name.clone(),
-                            eval_field(collection_relationships, variables, state, field, item)?,
-                        );
-                    }
+                    let row = eval_row(fields, collection_relationships, variables, state, item)?;
                     rows.push(row)
                 }
             }
@@ -1613,6 +1761,24 @@ fn execute_query(
     // ANCHOR_END: execute_query_rowset
 }
 // ANCHOR_END: execute_query
+// ANCHOR: eval_row
+fn eval_row(
+    fields: &IndexMap<String, models::Field>,
+    collection_relationships: &BTreeMap<String, models::Relationship>,
+    variables: &BTreeMap<String, Value>,
+    state: &AppState,
+    item: &BTreeMap<String, Value>,
+) -> Result<IndexMap<String, models::RowFieldValue>> {
+    let mut row = IndexMap::new();
+    for (field_name, field) in fields.iter() {
+        row.insert(
+            field_name.clone(),
+            eval_field(collection_relationships, variables, state, field, item)?,
+        );
+    }
+    Ok(row)
+}
+// ANCHOR_END: eval_row
 // ANCHOR: eval_aggregate
 fn eval_aggregate(
     aggregate: &models::Aggregate,
@@ -2502,24 +2668,6 @@ fn eval_nested_field(
     }
 }
 // ANCHOR_END: eval_nested_field
-// ANCHOR: eval_row
-fn eval_row(
-    fields: &IndexMap<String, models::Field>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
-    variables: &BTreeMap<String, serde_json::Value>,
-    state: &AppState,
-    item: &BTreeMap<String, serde_json::Value>,
-) -> Result<IndexMap<String, models::RowFieldValue>> {
-    let mut row = IndexMap::new();
-    for (field_name, field) in fields.iter() {
-        row.insert(
-            field_name.clone(),
-            eval_field(collection_relationships, variables, state, field, item)?,
-        );
-    }
-    Ok(row)
-}
-// ANCHOR_END: eval_row
 // ANCHOR: eval_field
 fn eval_field(
     collection_relationships: &BTreeMap<String, models::Relationship>,
@@ -2529,8 +2677,18 @@ fn eval_field(
     item: &Row,
 ) -> Result<models::RowFieldValue> {
     match field {
-        models::Field::Column { column, .. } => {
-            Ok(models::RowFieldValue(eval_column(item, column.as_str())?))
+        models::Field::Column { column, fields } => {
+            let col_val = eval_column(item, column.as_str())?;
+            match fields {
+                None => Ok(models::RowFieldValue(col_val)),
+                Some(nested_field) => eval_nested_field(
+                    collection_relationships,
+                    variables,
+                    state,
+                    col_val,
+                    nested_field,
+                ),
+            }
         }
         models::Field::Relationship {
             relationship,

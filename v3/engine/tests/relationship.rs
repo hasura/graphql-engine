@@ -202,6 +202,17 @@ fn test_remote_relationships_remote_in_local() {
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }
 
+// test_remote_relationships_from_nested triggers the bug described in
+// https://github.com/hasura/v3-engine/issues/318 so it is skipped until
+// that bug is fixed
+#[ignore]
+#[test]
+fn test_remote_relationships_from_nested() {
+    let test_path_string = "execute/remote_relationships/from_nested";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
 #[test]
 fn test_remote_relationships_model_to_command_remote_in_local() {
     let test_path_string = "execute/remote_relationships/command/remote_in_local";

@@ -130,12 +130,20 @@ pub enum RootFieldAnnotation {
     },
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display, Copy)]
+pub enum TypeKind {
+    Scalar,
+    Object,
+}
+
 /// Annotations of the GraphQL output fields/types.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum OutputAnnotation {
     RootField(RootFieldAnnotation),
     Field {
         name: types::FieldName,
+        field_type: QualifiedTypeReference,
+        field_base_type_kind: TypeKind,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -189,6 +197,12 @@ pub enum ModelInputAnnotation {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+/// Annotations for Relay input arguments/types.
+pub enum RelayInputAnnotation {
+    NodeFieldIdArgument,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations for GraphQL input arguments/types.
 pub enum InputAnnotation {
     Model(ModelInputAnnotation),
@@ -200,6 +214,7 @@ pub enum InputAnnotation {
         argument_type: QualifiedTypeReference,
         ndc_func_proc_argument: Option<String>,
     },
+    Relay(RelayInputAnnotation),
 }
 
 /// Contains the different possible entities that can be used to generate

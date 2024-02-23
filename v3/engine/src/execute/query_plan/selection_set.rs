@@ -8,11 +8,43 @@ use super::relationships;
 use super::ProcessResponseAs;
 use crate::execute::error;
 use crate::execute::ir::relationship;
-use crate::execute::ir::selection_set::{FieldSelection, ResultSelectionSet};
+use crate::execute::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
 use crate::execute::remote_joins::types::{
-    JoinLocations, MonotonicCounter, RemoteJoinType, TargetField,
+    JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
+
+fn process_nested_selection<'s, 'ir>(
+    nested_selection: &'ir NestedSelection<'s>,
+    join_id_counter: &mut MonotonicCounter,
+) -> Result<
+    (
+        ndc::models::NestedField,
+        Option<JoinLocations<RemoteJoin<'s, 'ir>>>,
+    ),
+    error::Error,
+> {
+    match nested_selection {
+        NestedSelection::Object(model_selection) => {
+            let (fields, join_locations) =
+                process_selection_set_ir(model_selection, join_id_counter)?;
+            Ok((
+                ndc::models::NestedField::Object(ndc::models::NestedObject { fields }),
+                Some(join_locations),
+            ))
+        }
+        NestedSelection::Array(nested_selection) => {
+            let (field, join_locations) =
+                process_nested_selection(nested_selection, join_id_counter)?;
+            Ok((
+                ndc::models::NestedField::Array(ndc::models::NestedArray {
+                    fields: Box::new(field),
+                }),
+                join_locations,
+            ))
+        }
+    }
+}
 
 /// Convert selection set IR ([ResultSelectionSet]) into NDC fields.
 ///
@@ -33,14 +65,35 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
     let mut join_locations = JoinLocations::new();
     for (alias, field) in &model_selection.fields {
         match field {
-            FieldSelection::Column { column } => {
+            FieldSelection::Column {
+                column,
+                nested_selection,
+            } => {
+                let (nested_field, nested_join_locations) = nested_selection
+                    .as_ref()
+                    .map(|nested_selection| {
+                        process_nested_selection(nested_selection, join_id_counter)
+                    })
+                    .transpose()?
+                    .unzip();
                 ndc_fields.insert(
                     alias.to_string(),
                     ndc::models::Field::Column {
-                        fields: None,
                         column: column.clone(),
+                        fields: nested_field,
                     },
                 );
+                if let Some(Some(jl)) = nested_join_locations {
+                    if !jl.locations.is_empty() {
+                        join_locations.locations.insert(
+                            alias.clone(),
+                            Location {
+                                join_node: JoinNode::Local(LocationKind::NestedData),
+                                rest: jl,
+                            },
+                        );
+                    }
+                }
             }
             FieldSelection::ModelRelationshipLocal {
                 query,
@@ -57,7 +110,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     join_locations.locations.insert(
                         alias.clone(),
                         Location {
-                            join_node: None,
+                            join_node: JoinNode::Local(LocationKind::LocalRelationship),
                             rest: jl,
                         },
                     );
@@ -96,7 +149,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     join_locations.locations.insert(
                         alias.clone(),
                         Location {
-                            join_node: None,
+                            join_node: JoinNode::Local(LocationKind::LocalRelationship),
                             rest: jl,
                         },
                     );
@@ -117,8 +170,8 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_fields.insert(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
-                            fields: None,
                             column: src_field.column.clone(),
+                            fields: None,
                         },
                     );
                     join_mapping.insert(
@@ -141,7 +194,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 join_locations.locations.insert(
                     alias.clone(),
                     Location {
-                        join_node: Some(rj_info),
+                        join_node: JoinNode::Remote(rj_info),
                         rest: sub_join_locations,
                     },
                 );
@@ -160,8 +213,8 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     ndc_fields.insert(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
-                            fields: None,
                             column: src_field.column.clone(),
+                            fields: None,
                         },
                     );
                     join_mapping.insert(
@@ -187,7 +240,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 join_locations.locations.insert(
                     alias.clone(),
                     Location {
-                        join_node: Some(rj_info),
+                        join_node: JoinNode::Remote(rj_info),
                         rest: sub_join_locations,
                     },
                 );

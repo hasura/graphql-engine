@@ -1,12 +1,13 @@
 //! Schema of the relay node field according to <https://relay.dev/graphql/objectidentification.htm>
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
-use open_dds::types::{CustomTypeName, FieldName};
+use open_dds::types::CustomTypeName;
 use std::collections::HashMap;
 
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::schema::permissions::get_node_field_namespace_permissions;
+use crate::schema::types::RelayInputAnnotation;
 use crate::schema::types::{
     self,
     input_type::get_input_type,
@@ -92,9 +93,9 @@ pub(crate) fn relay_node_field(
     let id_argument: gql_schema::InputField<GDS> = gql_schema::InputField::new(
         lang_graphql::mk_name!("id"),
         None,
-        Annotation::Output(types::OutputAnnotation::Field {
-            name: FieldName("id".to_string()),
-        }),
+        Annotation::Input(types::InputAnnotation::Relay(
+            RelayInputAnnotation::NodeFieldIdArgument,
+        )),
         get_input_type(gds, builder, &ID_TYPE_REFERENCE)?,
         None,
         gql_schema::DeprecationStatus::NotDeprecated,

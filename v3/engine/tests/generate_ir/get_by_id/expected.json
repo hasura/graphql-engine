@@ -15,7 +15,16 @@
                       "generic": {
                         "Output": {
                           "Field": {
-                            "name": "article_id"
+                            "name": "article_id",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "Int"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
                           }
                         }
                       },
@@ -48,7 +57,16 @@
                       "generic": {
                         "Output": {
                           "Field": {
-                            "name": "title"
+                            "name": "title",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "String"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
                           }
                         }
                       },
@@ -115,12 +133,14 @@
               "fields": {
                 "article_id": {
                   "Column": {
-                    "column": "id"
+                    "column": "id",
+                    "nested_selection": null
                   }
                 },
                 "title": {
                   "Column": {
-                    "column": "title"
+                    "column": "title",
+                    "nested_selection": null
                   }
                 }
               }

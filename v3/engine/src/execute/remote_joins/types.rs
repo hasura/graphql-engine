@@ -35,6 +35,27 @@ impl<T> Default for JoinLocations<T> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum LocationKind {
+    NestedData,
+    LocalRelationship,
+}
+
+#[derive(Debug, Clone)]
+pub enum JoinNode<T> {
+    Local(LocationKind),
+    Remote(T),
+}
+
+impl<T> JoinNode<T> {
+    pub fn is_local(&self) -> bool {
+        match self {
+            JoinNode::Local(_) => true,
+            JoinNode::Remote(_) => false,
+        }
+    }
+}
+
 /// Location indicates if the current node/field is a join node.
 ///
 /// If it is a join node, then there is information about the join (captured as
@@ -89,7 +110,7 @@ impl<T> Default for JoinLocations<T> {
 /// state.
 #[derive(Debug, Clone)]
 pub struct Location<T> {
-    pub join_node: Option<T>,
+    pub join_node: JoinNode<T>,
     pub rest: JoinLocations<T>,
 }
 
