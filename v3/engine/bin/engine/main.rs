@@ -125,11 +125,14 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         .layer(TraceLayer::new_for_http())
         .with_state(state.clone());
 
+    let health_route = Router::new().route("/health", get(handle_health));
+
     let app = Router::new()
         // serve graphiql at root
         .route("/", get(graphiql))
         .merge(graphql_route)
-        .merge(explain_route);
+        .merge(explain_route)
+        .merge(health_route);
 
     let addr = format!("0.0.0.0:{}", server.port.unwrap_or(3000));
 
@@ -144,6 +147,11 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         .unwrap();
 
     Ok(())
+}
+
+/// Health check endpoint
+async fn handle_health() -> reqwest::StatusCode {
+    reqwest::StatusCode::OK
 }
 
 /// Middleware to start tracing of the `/graphql` request.
