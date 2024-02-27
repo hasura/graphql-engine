@@ -24,16 +24,13 @@ variables.
 **Example:** Fetch an author by their `author_id`:
 
 <GraphiQLIDE
-  query={`query getArticles($author_id: Int!) {
+  query={`query getArticles($author_id: Int!, $title: String!) {
   articles(
-    where: { author_id: { _eq: $author_id } }
+    where: { author_id: { _eq: $author_id }, title: { _ilike: $title } }
   ) {
     id
     title
   }
-}`}
-  variables={`{
-  "author_id": 1
 }`}
   response={`{
   "data": {
@@ -48,6 +45,10 @@ variables.
       }
     ]
   }
+}`}
+  variables={`{
+  "author_id": 1,
+  "title": "%How to%"
 }`}
 />
 
