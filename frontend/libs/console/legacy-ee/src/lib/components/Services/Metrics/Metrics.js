@@ -168,7 +168,7 @@ const Metrics = props => {
         );
       }
 
-      if (isAdminSecretMode || globals.isAdminSecretSet) {
+      if (isAdminSecretMode || !globals.isAdminSecretSet) {
         return (
           <div className={styles.noAccessContainer}>
             Please{' '}
