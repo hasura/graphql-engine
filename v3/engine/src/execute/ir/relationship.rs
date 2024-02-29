@@ -432,7 +432,8 @@ pub(crate) fn build_local_command_relationship<'s>(
         &target_source.function_name,
         field,
         field_call,
-        &annotation.underlying_object_typename,
+        &annotation.target_type,
+        &annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
     )?;
@@ -570,7 +571,8 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
         &target_source.function_name,
         field,
         field_call,
-        &annotation.underlying_object_typename,
+        &annotation.target_type,
+        &annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
     )?;

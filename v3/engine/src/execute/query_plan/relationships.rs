@@ -40,10 +40,12 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_command_relationship_definition(relationship_info)?,
                 );
-                selection_set::collect_relationships_from_selection(
-                    &ir.command_info.selection,
-                    relationships,
-                )?;
+                if let Some(nested_selection) = &ir.command_info.selection {
+                    selection_set::collect_relationships_from_nested_selection(
+                        nested_selection,
+                        relationships,
+                    )?;
+                }
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector

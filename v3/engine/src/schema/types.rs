@@ -116,14 +116,16 @@ pub enum RootFieldAnnotation {
     },
     FunctionCommand {
         name: Qualified<commands::CommandName>,
-        underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
+        result_type: QualifiedTypeReference,
+        result_base_type_kind: TypeKind,
         // A command may/may not have a source
         source: Option<CommandSourceDetail>,
         function_name: Option<commands::FunctionName>,
     },
     ProcedureCommand {
         name: Qualified<commands::CommandName>,
-        underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
+        result_type: QualifiedTypeReference,
+        result_base_type_kind: TypeKind,
         // A command may/may not have a source
         source: Option<CommandSourceDetail>,
         procedure_name: Option<commands::ProcedureName>,

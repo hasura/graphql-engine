@@ -35,9 +35,10 @@ pub fn generate_ir<'n, 's>(
                     Annotation::Output(OutputAnnotation::RootField(
                         RootFieldAnnotation::ProcedureCommand {
                             name,
-                            underlying_object_typename,
                             source,
                             procedure_name,
+                            result_type,
+                            result_base_type_kind,
                         },
                     )) => {
                         let source = source.as_ref().ok_or_else(|| {
@@ -61,7 +62,8 @@ pub fn generate_ir<'n, 's>(
                                 procedure_name,
                                 field,
                                 field_call,
-                                underlying_object_typename,
+                                result_type,
+                                result_base_type_kind,
                                 source,
                                 session_variables,
                             )?,

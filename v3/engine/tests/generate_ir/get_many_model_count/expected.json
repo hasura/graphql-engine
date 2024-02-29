@@ -452,466 +452,468 @@
             },
             "arguments": {},
             "selection": {
-              "fields": {
-                "article": {
-                  "ModelRelationshipLocal": {
-                    "query": {
-                      "data_connector": {
-                        "name": {
-                          "subgraph": "default",
-                          "name": "db"
+              "Object": {
+                "fields": {
+                  "article": {
+                    "ModelRelationshipLocal": {
+                      "query": {
+                        "data_connector": {
+                          "name": {
+                            "subgraph": "default",
+                            "name": "db"
+                          },
+                          "url": {
+                            "singleUrl": "http://postgres_connector:8100/"
+                          },
+                          "headers": {
+                            "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          }
                         },
-                        "url": {
-                          "singleUrl": "http://postgres_connector:8100/"
+                        "collection": "articles",
+                        "arguments": {},
+                        "filter_clause": {
+                          "expressions": [],
+                          "relationships": {}
                         },
-                        "headers": {
-                          "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                        }
-                      },
-                      "collection": "articles",
-                      "arguments": {},
-                      "filter_clause": {
-                        "expressions": [],
-                        "relationships": {}
-                      },
-                      "limit": null,
-                      "offset": null,
-                      "order_by": null,
-                      "selection": {
-                        "fields": {
-                          "Author": {
-                            "ModelRelationshipLocal": {
-                              "query": {
-                                "data_connector": {
-                                  "name": {
-                                    "subgraph": "default",
-                                    "name": "db"
+                        "limit": null,
+                        "offset": null,
+                        "order_by": null,
+                        "selection": {
+                          "fields": {
+                            "Author": {
+                              "ModelRelationshipLocal": {
+                                "query": {
+                                  "data_connector": {
+                                    "name": {
+                                      "subgraph": "default",
+                                      "name": "db"
+                                    },
+                                    "url": {
+                                      "singleUrl": "http://postgres_connector:8100/"
+                                    },
+                                    "headers": {
+                                      "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    }
                                   },
-                                  "url": {
-                                    "singleUrl": "http://postgres_connector:8100/"
+                                  "collection": "authors",
+                                  "arguments": {},
+                                  "filter_clause": {
+                                    "expressions": [],
+                                    "relationships": {}
                                   },
-                                  "headers": {
-                                    "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                  }
-                                },
-                                "collection": "authors",
-                                "arguments": {},
-                                "filter_clause": {
-                                  "expressions": [],
-                                  "relationships": {}
-                                },
-                                "limit": null,
-                                "offset": null,
-                                "order_by": null,
-                                "selection": {
-                                  "fields": {
-                                    "Articles": {
-                                      "ModelRelationshipLocal": {
-                                        "query": {
-                                          "data_connector": {
-                                            "name": {
-                                              "subgraph": "default",
-                                              "name": "db"
-                                            },
-                                            "url": {
-                                              "singleUrl": "http://postgres_connector:8100/"
-                                            },
-                                            "headers": {
-                                              "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                            }
-                                          },
-                                          "collection": "articles",
-                                          "arguments": {},
-                                          "filter_clause": {
-                                            "expressions": [],
-                                            "relationships": {}
-                                          },
-                                          "limit": null,
-                                          "offset": null,
-                                          "order_by": null,
-                                          "selection": {
-                                            "fields": {
-                                              "hasura_global_id_col_id_article_id": {
-                                                "Column": {
-                                                  "column": "id",
-                                                  "nested_selection": null
-                                                }
+                                  "limit": null,
+                                  "offset": null,
+                                  "order_by": null,
+                                  "selection": {
+                                    "fields": {
+                                      "Articles": {
+                                        "ModelRelationshipLocal": {
+                                          "query": {
+                                            "data_connector": {
+                                              "name": {
+                                                "subgraph": "default",
+                                                "name": "db"
                                               },
-                                              "title": {
-                                                "Column": {
-                                                  "column": "title",
-                                                  "nested_selection": null
-                                                }
+                                              "url": {
+                                                "singleUrl": "http://postgres_connector:8100/"
+                                              },
+                                              "headers": {
+                                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
                                               }
-                                            }
-                                          }
-                                        },
-                                        "name": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
-                                        "relationship_info": {
-                                          "relationship_name": "Articles",
-                                          "relationship_type": "Array",
-                                          "source_type": {
-                                            "subgraph": "default",
-                                            "name": "author"
-                                          },
-                                          "source_data_connector": {
-                                            "name": {
-                                              "subgraph": "default",
-                                              "name": "db"
                                             },
-                                            "url": {
-                                              "singleUrl": "http://postgres_connector:8100/"
+                                            "collection": "articles",
+                                            "arguments": {},
+                                            "filter_clause": {
+                                              "expressions": [],
+                                              "relationships": {}
                                             },
-                                            "headers": {
-                                              "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                            }
-                                          },
-                                          "source_type_mappings": {
-                                            "{\"subgraph\":\"default\",\"name\":\"author\"}": {
-                                              "Object": {
-                                                "field_mappings": {
-                                                  "author_id": {
+                                            "limit": null,
+                                            "offset": null,
+                                            "order_by": null,
+                                            "selection": {
+                                              "fields": {
+                                                "hasura_global_id_col_id_article_id": {
+                                                  "Column": {
                                                     "column": "id",
-                                                    "column_type": {
-                                                      "type": "named",
-                                                      "name": "int8"
-                                                    }
-                                                  },
-                                                  "first_name": {
-                                                    "column": "first_name",
-                                                    "column_type": {
-                                                      "type": "named",
-                                                      "name": "varchar"
-                                                    }
-                                                  },
-                                                  "last_name": {
-                                                    "column": "last_name",
-                                                    "column_type": {
-                                                      "type": "named",
-                                                      "name": "varchar"
-                                                    }
+                                                    "nested_selection": null
+                                                  }
+                                                },
+                                                "title": {
+                                                  "Column": {
+                                                    "column": "title",
+                                                    "nested_selection": null
                                                   }
                                                 }
                                               }
                                             }
                                           },
-                                          "target_source": {
-                                            "model": {
-                                              "data_connector": {
-                                                "name": {
-                                                  "subgraph": "default",
-                                                  "name": "db"
-                                                },
-                                                "url": {
-                                                  "singleUrl": "http://postgres_connector:8100/"
-                                                },
-                                                "headers": {
-                                                  "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                                }
+                                          "name": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+                                          "relationship_info": {
+                                            "relationship_name": "Articles",
+                                            "relationship_type": "Array",
+                                            "source_type": {
+                                              "subgraph": "default",
+                                              "name": "author"
+                                            },
+                                            "source_data_connector": {
+                                              "name": {
+                                                "subgraph": "default",
+                                                "name": "db"
                                               },
-                                              "collection": "articles",
-                                              "type_mappings": {
-                                                "{\"subgraph\":\"default\",\"name\":\"article\"}": {
-                                                  "Object": {
-                                                    "field_mappings": {
-                                                      "article_id": {
-                                                        "column": "id",
-                                                        "column_type": {
-                                                          "type": "named",
-                                                          "name": "int4"
-                                                        }
-                                                      },
-                                                      "author_id": {
-                                                        "column": "author_id",
-                                                        "column_type": {
-                                                          "type": "named",
-                                                          "name": "int4"
-                                                        }
-                                                      },
-                                                      "title": {
-                                                        "column": "title",
-                                                        "column_type": {
-                                                          "type": "named",
-                                                          "name": "varchar"
-                                                        }
+                                              "url": {
+                                                "singleUrl": "http://postgres_connector:8100/"
+                                              },
+                                              "headers": {
+                                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              }
+                                            },
+                                            "source_type_mappings": {
+                                              "{\"subgraph\":\"default\",\"name\":\"author\"}": {
+                                                "Object": {
+                                                  "field_mappings": {
+                                                    "author_id": {
+                                                      "column": "id",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "int8"
+                                                      }
+                                                    },
+                                                    "first_name": {
+                                                      "column": "first_name",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "varchar"
+                                                      }
+                                                    },
+                                                    "last_name": {
+                                                      "column": "last_name",
+                                                      "column_type": {
+                                                        "type": "named",
+                                                        "name": "varchar"
                                                       }
                                                     }
                                                   }
                                                 }
-                                              },
-                                              "argument_mappings": {}
-                                            },
-                                            "capabilities": {
-                                              "foreach": null,
-                                              "relationships": true
-                                            }
-                                          },
-                                          "target_type": {
-                                            "subgraph": "default",
-                                            "name": "article"
-                                          },
-                                          "mappings": [
-                                            {
-                                              "source_field": {
-                                                "fieldName": "author_id"
-                                              },
-                                              "target_field": {
-                                                "fieldName": "author_id"
-                                              },
-                                              "target_ndc_column": {
-                                                "column": "author_id",
-                                                "equal_operator": "_eq"
                                               }
-                                            }
-                                          ]
+                                            },
+                                            "target_source": {
+                                              "model": {
+                                                "data_connector": {
+                                                  "name": {
+                                                    "subgraph": "default",
+                                                    "name": "db"
+                                                  },
+                                                  "url": {
+                                                    "singleUrl": "http://postgres_connector:8100/"
+                                                  },
+                                                  "headers": {
+                                                    "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                                  }
+                                                },
+                                                "collection": "articles",
+                                                "type_mappings": {
+                                                  "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                                    "Object": {
+                                                      "field_mappings": {
+                                                        "article_id": {
+                                                          "column": "id",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "int4"
+                                                          }
+                                                        },
+                                                        "author_id": {
+                                                          "column": "author_id",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "int4"
+                                                          }
+                                                        },
+                                                        "title": {
+                                                          "column": "title",
+                                                          "column_type": {
+                                                            "type": "named",
+                                                            "name": "varchar"
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "argument_mappings": {}
+                                              },
+                                              "capabilities": {
+                                                "foreach": null,
+                                                "relationships": true
+                                              }
+                                            },
+                                            "target_type": {
+                                              "subgraph": "default",
+                                              "name": "article"
+                                            },
+                                            "mappings": [
+                                              {
+                                                "source_field": {
+                                                  "fieldName": "author_id"
+                                                },
+                                                "target_field": {
+                                                  "fieldName": "author_id"
+                                                },
+                                                "target_ndc_column": {
+                                                  "column": "author_id",
+                                                  "equal_operator": "_eq"
+                                                }
+                                              }
+                                            ]
+                                          }
                                         }
                                       }
                                     }
                                   }
-                                }
-                              },
-                              "name": "[{\"subgraph\":\"default\",\"name\":\"article\"},\"Author\"]",
-                              "relationship_info": {
-                                "relationship_name": "Author",
-                                "relationship_type": "Object",
-                                "source_type": {
-                                  "subgraph": "default",
-                                  "name": "article"
                                 },
-                                "source_data_connector": {
-                                  "name": {
+                                "name": "[{\"subgraph\":\"default\",\"name\":\"article\"},\"Author\"]",
+                                "relationship_info": {
+                                  "relationship_name": "Author",
+                                  "relationship_type": "Object",
+                                  "source_type": {
                                     "subgraph": "default",
-                                    "name": "db"
+                                    "name": "article"
                                   },
-                                  "url": {
-                                    "singleUrl": "http://postgres_connector:8100/"
-                                  },
-                                  "headers": {
-                                    "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                  }
-                                },
-                                "source_type_mappings": {
-                                  "{\"subgraph\":\"default\",\"name\":\"article\"}": {
-                                    "Object": {
-                                      "field_mappings": {
-                                        "article_id": {
-                                          "column": "id",
-                                          "column_type": {
-                                            "type": "named",
-                                            "name": "int4"
-                                          }
-                                        },
-                                        "author_id": {
-                                          "column": "author_id",
-                                          "column_type": {
-                                            "type": "named",
-                                            "name": "int4"
-                                          }
-                                        },
-                                        "title": {
-                                          "column": "title",
-                                          "column_type": {
-                                            "type": "named",
-                                            "name": "varchar"
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                "target_source": {
-                                  "model": {
-                                    "data_connector": {
-                                      "name": {
-                                        "subgraph": "default",
-                                        "name": "db"
-                                      },
-                                      "url": {
-                                        "singleUrl": "http://postgres_connector:8100/"
-                                      },
-                                      "headers": {
-                                        "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                                      }
+                                  "source_data_connector": {
+                                    "name": {
+                                      "subgraph": "default",
+                                      "name": "db"
                                     },
-                                    "collection": "authors",
-                                    "type_mappings": {
-                                      "{\"subgraph\":\"default\",\"name\":\"author\"}": {
-                                        "Object": {
-                                          "field_mappings": {
-                                            "author_id": {
-                                              "column": "id",
-                                              "column_type": {
-                                                "type": "named",
-                                                "name": "int8"
-                                              }
-                                            },
-                                            "first_name": {
-                                              "column": "first_name",
-                                              "column_type": {
-                                                "type": "named",
-                                                "name": "varchar"
-                                              }
-                                            },
-                                            "last_name": {
-                                              "column": "last_name",
-                                              "column_type": {
-                                                "type": "named",
-                                                "name": "varchar"
-                                              }
+                                    "url": {
+                                      "singleUrl": "http://postgres_connector:8100/"
+                                    },
+                                    "headers": {
+                                      "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    }
+                                  },
+                                  "source_type_mappings": {
+                                    "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                      "Object": {
+                                        "field_mappings": {
+                                          "article_id": {
+                                            "column": "id",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "int4"
+                                            }
+                                          },
+                                          "author_id": {
+                                            "column": "author_id",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "int4"
+                                            }
+                                          },
+                                          "title": {
+                                            "column": "title",
+                                            "column_type": {
+                                              "type": "named",
+                                              "name": "varchar"
                                             }
                                           }
                                         }
                                       }
-                                    },
-                                    "argument_mappings": {}
-                                  },
-                                  "capabilities": {
-                                    "foreach": null,
-                                    "relationships": true
-                                  }
-                                },
-                                "target_type": {
-                                  "subgraph": "default",
-                                  "name": "author"
-                                },
-                                "mappings": [
-                                  {
-                                    "source_field": {
-                                      "fieldName": "author_id"
-                                    },
-                                    "target_field": {
-                                      "fieldName": "author_id"
-                                    },
-                                    "target_ndc_column": {
-                                      "column": "id",
-                                      "equal_operator": "_eq"
                                     }
-                                  }
-                                ]
+                                  },
+                                  "target_source": {
+                                    "model": {
+                                      "data_connector": {
+                                        "name": {
+                                          "subgraph": "default",
+                                          "name": "db"
+                                        },
+                                        "url": {
+                                          "singleUrl": "http://postgres_connector:8100/"
+                                        },
+                                        "headers": {
+                                          "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                        }
+                                      },
+                                      "collection": "authors",
+                                      "type_mappings": {
+                                        "{\"subgraph\":\"default\",\"name\":\"author\"}": {
+                                          "Object": {
+                                            "field_mappings": {
+                                              "author_id": {
+                                                "column": "id",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "int8"
+                                                }
+                                              },
+                                              "first_name": {
+                                                "column": "first_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                }
+                                              },
+                                              "last_name": {
+                                                "column": "last_name",
+                                                "column_type": {
+                                                  "type": "named",
+                                                  "name": "varchar"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "argument_mappings": {}
+                                    },
+                                    "capabilities": {
+                                      "foreach": null,
+                                      "relationships": true
+                                    }
+                                  },
+                                  "target_type": {
+                                    "subgraph": "default",
+                                    "name": "author"
+                                  },
+                                  "mappings": [
+                                    {
+                                      "source_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_field": {
+                                        "fieldName": "author_id"
+                                      },
+                                      "target_ndc_column": {
+                                        "column": "id",
+                                        "equal_operator": "_eq"
+                                      }
+                                    }
+                                  ]
+                                }
                               }
                             }
                           }
                         }
-                      }
-                    },
-                    "name": "[{\"subgraph\":\"default\",\"name\":\"commandArticle\"},\"article\"]",
-                    "relationship_info": {
-                      "relationship_name": "article",
-                      "relationship_type": "Object",
-                      "source_type": {
-                        "subgraph": "default",
-                        "name": "commandArticle"
                       },
-                      "source_data_connector": {
-                        "name": {
+                      "name": "[{\"subgraph\":\"default\",\"name\":\"commandArticle\"},\"article\"]",
+                      "relationship_info": {
+                        "relationship_name": "article",
+                        "relationship_type": "Object",
+                        "source_type": {
                           "subgraph": "default",
-                          "name": "db"
+                          "name": "commandArticle"
                         },
-                        "url": {
-                          "singleUrl": "http://postgres_connector:8100/"
-                        },
-                        "headers": {
-                          "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                        }
-                      },
-                      "source_type_mappings": {
-                        "{\"subgraph\":\"default\",\"name\":\"commandArticle\"}": {
-                          "Object": {
-                            "field_mappings": {
-                              "article_id": {
-                                "column": "id",
-                                "column_type": {
-                                  "type": "named",
-                                  "name": "int4"
-                                }
-                              },
-                              "author_id": {
-                                "column": "author_id",
-                                "column_type": {
-                                  "type": "named",
-                                  "name": "int4"
-                                }
-                              },
-                              "title": {
-                                "column": "title",
-                                "column_type": {
-                                  "type": "named",
-                                  "name": "varchar"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      "target_source": {
-                        "model": {
-                          "data_connector": {
-                            "name": {
-                              "subgraph": "default",
-                              "name": "db"
-                            },
-                            "url": {
-                              "singleUrl": "http://postgres_connector:8100/"
-                            },
-                            "headers": {
-                              "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
-                            }
+                        "source_data_connector": {
+                          "name": {
+                            "subgraph": "default",
+                            "name": "db"
                           },
-                          "collection": "articles",
-                          "type_mappings": {
-                            "{\"subgraph\":\"default\",\"name\":\"article\"}": {
-                              "Object": {
-                                "field_mappings": {
-                                  "article_id": {
-                                    "column": "id",
-                                    "column_type": {
-                                      "type": "named",
-                                      "name": "int4"
-                                    }
-                                  },
-                                  "author_id": {
-                                    "column": "author_id",
-                                    "column_type": {
-                                      "type": "named",
-                                      "name": "int4"
-                                    }
-                                  },
-                                  "title": {
-                                    "column": "title",
-                                    "column_type": {
-                                      "type": "named",
-                                      "name": "varchar"
-                                    }
+                          "url": {
+                            "singleUrl": "http://postgres_connector:8100/"
+                          },
+                          "headers": {
+                            "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          }
+                        },
+                        "source_type_mappings": {
+                          "{\"subgraph\":\"default\",\"name\":\"commandArticle\"}": {
+                            "Object": {
+                              "field_mappings": {
+                                "article_id": {
+                                  "column": "id",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "int4"
+                                  }
+                                },
+                                "author_id": {
+                                  "column": "author_id",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "int4"
+                                  }
+                                },
+                                "title": {
+                                  "column": "title",
+                                  "column_type": {
+                                    "type": "named",
+                                    "name": "varchar"
                                   }
                                 }
                               }
                             }
-                          },
-                          "argument_mappings": {}
-                        },
-                        "capabilities": {
-                          "foreach": null,
-                          "relationships": true
-                        }
-                      },
-                      "target_type": {
-                        "subgraph": "default",
-                        "name": "article"
-                      },
-                      "mappings": [
-                        {
-                          "source_field": {
-                            "fieldName": "article_id"
-                          },
-                          "target_field": {
-                            "fieldName": "article_id"
-                          },
-                          "target_ndc_column": {
-                            "column": "id",
-                            "equal_operator": "_eq"
                           }
-                        }
-                      ]
+                        },
+                        "target_source": {
+                          "model": {
+                            "data_connector": {
+                              "name": {
+                                "subgraph": "default",
+                                "name": "db"
+                              },
+                              "url": {
+                                "singleUrl": "http://postgres_connector:8100/"
+                              },
+                              "headers": {
+                                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                              }
+                            },
+                            "collection": "articles",
+                            "type_mappings": {
+                              "{\"subgraph\":\"default\",\"name\":\"article\"}": {
+                                "Object": {
+                                  "field_mappings": {
+                                    "article_id": {
+                                      "column": "id",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "int4"
+                                      }
+                                    },
+                                    "author_id": {
+                                      "column": "author_id",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "int4"
+                                      }
+                                    },
+                                    "title": {
+                                      "column": "title",
+                                      "column_type": {
+                                        "type": "named",
+                                        "name": "varchar"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "argument_mappings": {}
+                          },
+                          "capabilities": {
+                            "foreach": null,
+                            "relationships": true
+                          }
+                        },
+                        "target_type": {
+                          "subgraph": "default",
+                          "name": "article"
+                        },
+                        "mappings": [
+                          {
+                            "source_field": {
+                              "fieldName": "article_id"
+                            },
+                            "target_field": {
+                              "fieldName": "article_id"
+                            },
+                            "target_ndc_column": {
+                              "column": "id",
+                              "equal_operator": "_eq"
+                            }
+                          }
+                        ]
+                      }
                     }
                   }
                 }

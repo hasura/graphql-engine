@@ -133,7 +133,7 @@ fn build_global_id_fields(
     Ok(())
 }
 
-fn generate_nested_selection<'s>(
+pub(crate) fn generate_nested_selection<'s>(
     qualified_type_reference: &QualifiedTypeReference,
     field_base_type_kind: &TypeKind,
     field: &normalized_ast::Field<'s, GDS>,

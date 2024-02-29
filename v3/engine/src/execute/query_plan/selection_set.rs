@@ -14,23 +14,17 @@ use crate::execute::remote_joins::types::{
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
 
-fn process_nested_selection<'s, 'ir>(
+pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        ndc::models::NestedField,
-        Option<JoinLocations<RemoteJoin<'s, 'ir>>>,
-    ),
-    error::Error,
-> {
+) -> Result<(ndc::models::NestedField, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
                 process_selection_set_ir(model_selection, join_id_counter)?;
             Ok((
                 ndc::models::NestedField::Object(ndc::models::NestedObject { fields }),
-                Some(join_locations),
+                join_locations,
             ))
         }
         NestedSelection::Array(nested_selection) => {
@@ -83,7 +77,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         fields: nested_field,
                     },
                 );
-                if let Some(Some(jl)) = nested_join_locations {
+                if let Some(jl) = nested_join_locations {
                     if !jl.locations.is_empty() {
                         join_locations.locations.insert(
                             alias.clone(),
@@ -254,6 +248,20 @@ fn make_hasura_phantom_field(field_name: &str) -> String {
     format!("__hasura_phantom_field__{}", field_name)
 }
 
+pub(crate) fn collect_relationships_from_nested_selection(
+    selection: &NestedSelection,
+    relationships: &mut BTreeMap<String, ndc::models::Relationship>,
+) -> Result<(), error::Error> {
+    match selection {
+        NestedSelection::Object(selection_set) => {
+            collect_relationships_from_selection(selection_set, relationships)
+        }
+        NestedSelection::Array(nested_selection) => {
+            collect_relationships_from_nested_selection(nested_selection, relationships)
+        }
+    }
+}
+
 /// From the fields in `ResultSelectionSet`, collect relationships recursively
 /// and create NDC relationship definitions
 pub(crate) fn collect_relationships_from_selection(
@@ -262,7 +270,13 @@ pub(crate) fn collect_relationships_from_selection(
 ) -> Result<(), error::Error> {
     for field in selection.fields.values() {
         match field {
-            FieldSelection::Column { .. } => (),
+            FieldSelection::Column {
+                nested_selection, ..
+            } => {
+                if let Some(nested_selection) = nested_selection {
+                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
+                }
+            }
             FieldSelection::ModelRelationshipLocal {
                 query,
                 name,
@@ -283,7 +297,9 @@ pub(crate) fn collect_relationships_from_selection(
                     name.to_string(),
                     relationship::process_command_relationship_definition(relationship_info)?,
                 );
-                collect_relationships_from_selection(&ir.command_info.selection, relationships)?;
+                if let Some(nested_selection) = &ir.command_info.selection {
+                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
+                }
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector

@@ -50,8 +50,6 @@ pub struct Command {
     pub graphql_api: Option<CommandGraphQlApi>,
     pub source: Option<CommandSource>,
     pub permissions: Option<HashMap<Role, CommandPermission>>,
-    /// The underlying object type name, if exists for the output_type
-    pub underlying_object_typename: Option<Qualified<CustomTypeName>>,
     pub description: Option<String>,
 }
 
@@ -133,7 +131,6 @@ pub fn resolve_command(
         graphql_api,
         source: None,
         permissions: None,
-        underlying_object_typename: None,
         description: command_description,
     })
 }
@@ -196,8 +193,6 @@ pub fn resolve_command_source(
         }
     };
 
-    command.underlying_object_typename = get_underlying_object_type(&command.output_type, types)?;
-
     // Get the mappings of arguments and any type mappings that need resolving from the arguments
     let (argument_mappings, argument_type_mappings_to_resolve) = get_argument_mappings(
         &command.arguments,
@@ -225,9 +220,10 @@ pub fn resolve_command_source(
         }
     })?;
 
+    let command_result_base_object_type_name =
+        get_underlying_object_type(&command.output_type, types)?;
     // Get the type mapping to resolve for the result type
-    let source_result_type_mapping_to_resolve = command
-        .underlying_object_typename
+    let source_result_type_mapping_to_resolve = command_result_base_object_type_name
         .as_ref()
         .map(|custom_type_name| {
             // Get the corresponding object_type (data_connector.object_type) associated with the result_type for the source

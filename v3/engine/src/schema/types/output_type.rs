@@ -130,7 +130,10 @@ pub fn get_custom_output_type(
     }
 }
 
-fn get_type_kind(gds: &GDS, field_type: &QualifiedTypeReference) -> Result<super::TypeKind, Error> {
+pub(crate) fn get_type_kind(
+    gds: &GDS,
+    field_type: &QualifiedTypeReference,
+) -> Result<super::TypeKind, Error> {
     match &field_type.underlying_type {
         QualifiedBaseType::Named(qualified_type_name) => match qualified_type_name {
             QualifiedTypeName::Inbuilt(_) => Ok(super::TypeKind::Scalar), // Inbuilt types are all scalars
@@ -245,9 +248,7 @@ fn object_type_fields(
                                             relationship,
                                         )?,
                                         target_type: target_type.clone(),
-                                        underlying_object_typename: command
-                                            .underlying_object_typename
-                                            .clone(),
+                                        target_base_type_kind: get_type_kind(gds, target_type)?,
                                         mappings: mappings.clone(),
                                     },
                                 )),

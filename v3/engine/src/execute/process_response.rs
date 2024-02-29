@@ -15,6 +15,7 @@ use open_dds::types::FieldName;
 
 use super::error;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
+use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::query_plan::ProcessResponseAs;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::schema::{
@@ -308,11 +309,11 @@ fn process_command_response_row(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<json::Value, error::Error> {
-    let field_value_result = row
-        .remove(String::from("__value").as_str())
-        .ok_or_else(|| error::InternalDeveloperError::BadGDCResponse {
-            summary: format!("missing field: {}", String::from("__value").as_str()),
-        })?;
+    let field_value_result = row.remove(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
+        error::InternalDeveloperError::BadGDCResponse {
+            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
+        }
+    })?;
 
     process_command_field_value(field_value_result.0, selection_set, type_container)
 }

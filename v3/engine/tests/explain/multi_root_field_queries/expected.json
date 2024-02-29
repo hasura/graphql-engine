@@ -12,10 +12,19 @@
               "collection": "get_actor_by_id",
               "query": {
                 "fields": {
-                  "name": {
+                  "__value": {
                     "type": "column",
-                    "column": "name",
-                    "fields": null
+                    "column": "__value",
+                    "fields": {
+                      "type": "object",
+                      "fields": {
+                        "name": {
+                          "type": "column",
+                          "column": "name",
+                          "fields": null
+                        }
+                      }
+                    }
                   }
                 }
               },

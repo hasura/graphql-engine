@@ -17,7 +17,10 @@ use crate::{
             QualifiedTypeReference,
         },
     },
-    schema::{self, types::CommandSourceDetail},
+    schema::{
+        self,
+        types::{CommandSourceDetail, TypeKind},
+    },
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -125,7 +128,7 @@ pub struct CommandRelationshipAnnotation {
     pub command_name: Qualified<CommandName>,
     pub target_source: Option<CommandTargetSource>,
     pub target_type: QualifiedTypeReference,
-    pub underlying_object_typename: Option<Qualified<CustomTypeName>>,
+    pub target_base_type_kind: TypeKind,
     pub mappings: Vec<resolved::relationship::RelationshipCommandMapping>,
 }
 

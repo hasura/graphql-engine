@@ -13,6 +13,8 @@ use super::{error, ProjectId};
 use crate::metadata::resolved;
 use crate::schema::GDS;
 
+pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
+
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
     http_client: &reqwest::Client,

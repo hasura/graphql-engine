@@ -88,7 +88,7 @@ use ndc_client as ndc;
 
 use self::types::{JoinNode, LocationKind, TargetField};
 
-use super::ndc::execute_ndc_query;
+use super::ndc::{execute_ndc_query, FUNCTION_IR_VALUE_COLUMN_NAME};
 use super::query_plan::ProcessResponseAs;
 use super::{error, ProjectId};
 
@@ -435,9 +435,9 @@ fn resolve_command_response_row(
     row: &IndexMap<String, ndc::models::RowFieldValue>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<Vec<IndexMap<String, ndc::models::RowFieldValue>>, error::Error> {
-    let field_value_result = row.get(String::from("__value").as_str()).ok_or_else(|| {
+    let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::InternalDeveloperError::BadGDCResponse {
-            summary: format!("missing field: {}", String::from("__value").as_str()),
+            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
         }
     })?;
 
@@ -512,8 +512,8 @@ pub fn replace_replacement_tokens(
             for (row, token) in rows.iter_mut().zip(tokens.clone()) {
                 // TODO: have a better interface of traversing through the
                 // response tree, especially for commands
-                let __value = row.get_mut("__value");
-                match __value {
+                let command_result_value = row.get_mut(FUNCTION_IR_VALUE_COLUMN_NAME);
+                match command_result_value {
                     // it's a command response; traversing the response tree is
                     // different
                     Some(x) => match &mut x.0 {
