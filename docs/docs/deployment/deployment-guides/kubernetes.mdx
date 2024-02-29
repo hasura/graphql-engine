@@ -37,7 +37,7 @@ Edit `deployment.yaml` and set the right database url:
 
 ```yaml {2}
 env:
-  - name: HASURA_METADATA_DATABASE_URL
+  - name: HASURA_GRAPHQL_METADATA_DATABASE_URL
     value: postgres://<username>:<password>@hostname:<port>/<dbname>
 ```
 
