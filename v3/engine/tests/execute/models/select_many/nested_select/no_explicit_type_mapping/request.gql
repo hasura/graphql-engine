@@ -1,0 +1,20 @@
+query MyQuery {
+  InstitutionMany {
+    id
+    location {
+      city
+      campuses
+    }
+    location_country: location {
+      country
+    }
+    staff {
+      last_name
+      specialities
+    }
+    staff_first_name: staff {
+      first_name
+    }
+    departments
+  }
+}

@@ -94,40 +94,42 @@
                     },
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "bool"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "bool"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "bool"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "bool"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "bool"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "bool"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -196,40 +198,42 @@
                     },
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "float8"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "float8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "float8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "float8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "float8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "float8"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -310,40 +314,42 @@
                     },
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "int4"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -412,40 +418,42 @@
                     },
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "numeric"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "numeric"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "numeric"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "numeric"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "numeric"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "numeric"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -466,40 +474,42 @@
                     },
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "timestamp"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "timestamp"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "timestamp"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "timestamp"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "timestamp"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "timestamp"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -507,124 +517,140 @@
                     "aggregate_functions": {},
                     "comparison_operators": {
                       "_eq": {
-                        "argument_type": {
-                          "type": "named",
-                          "name": "varchar"
-                        }
+                        "type": "equal"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_ilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_iregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_like": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_niregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nlike": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_regex": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "st_coveredby": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "st_covers": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "st_intersects": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "st_relatematch": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "starts_with": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "ts_match_tt": {
                         "argument_type": {
                           "type": "named",
                           "name": "varchar"
-                        }
+                        },
+                        "type": "custom"
                       }
                     }
                   },
@@ -654,31 +680,39 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
+                      },
+                      "_eq": {
+                        "type": "equal"
                       }
                     },
                     "update_operators": {}
@@ -1848,13 +1882,14 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
+                "version": "0.1.0",
                 "capabilities": {
                   "query": {
                     "aggregates": {},
+                    "explain": {},
                     "variables": {}
                   },
-                  "explain": {},
+                  "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}

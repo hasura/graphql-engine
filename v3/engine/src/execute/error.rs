@@ -11,7 +11,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::{ndc_validation::NDCValidationError, subgraph::Qualified};
 
 use super::types::Annotation;
 
@@ -165,6 +165,8 @@ pub enum Error {
     ExplainError(String),
     #[error("invalid header value characters in project_id: {0}")]
     ProjectIdConversionError(InvalidHeaderValue),
+    #[error("ndc validation error: {0}")]
+    NDCValidationError(NDCValidationError),
 }
 
 impl Error {
@@ -233,6 +235,9 @@ fn render_ndc_error(error: &ndc_client::apis::Error) -> String {
             err.status, err.error_response.message,
         ),
         ndc_client::apis::Error::InvalidBaseURL => "invalid connector base URL".to_string(),
+        ndc_client::apis::Error::InvalidConnectorError(invalid_connector_err) => {
+            format!("invalid connector error: {0}", invalid_connector_err)
+        }
     }
 }
 

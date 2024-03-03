@@ -14,20 +14,31 @@ use super::relationship::{
     self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteCommandRelationshipInfo,
     RemoteModelRelationshipInfo,
 };
-use crate::execute::error;
+use crate::execute::error::{self};
+
 use crate::execute::global_id;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::subgraph::{
+    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+};
+use crate::schema::types::TypeKind;
 use crate::schema::{
     types::{Annotation, OutputAnnotation, RootFieldAnnotation},
     GDS,
 };
 
 #[derive(Debug, Serialize)]
+pub(crate) enum NestedSelection<'s> {
+    Object(ResultSelectionSet<'s>),
+    Array(Box<NestedSelection<'s>>),
+}
+
+#[derive(Debug, Serialize)]
 pub(crate) enum FieldSelection<'s> {
     Column {
         column: String,
+        nested_selection: Option<NestedSelection<'s>>,
     },
     ModelRelationshipLocal {
         query: ModelSelection<'s>,
@@ -115,10 +126,60 @@ fn build_global_id_fields(
             global_col_id_alias,
             FieldSelection::Column {
                 column: field_mapping.column.clone(),
+                nested_selection: None,
             },
         );
     }
     Ok(())
+}
+
+pub(crate) fn generate_nested_selection<'s>(
+    qualified_type_reference: &QualifiedTypeReference,
+    field_base_type_kind: &TypeKind,
+    field: &normalized_ast::Field<'s, GDS>,
+    data_connector: &'s resolved::data_connector::DataConnectorLink,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
+) -> Result<Option<NestedSelection<'s>>, error::Error> {
+    match &qualified_type_reference.underlying_type {
+        QualifiedBaseType::List(element_type) => {
+            let array_selection = generate_nested_selection(
+                element_type,
+                field_base_type_kind,
+                field,
+                data_connector,
+                type_mappings,
+                session_variables,
+                usage_counts,
+            )?;
+            Ok(array_selection.map(|a| NestedSelection::Array(Box::new(a))))
+        }
+        QualifiedBaseType::Named(qualified_type_name) => {
+            match qualified_type_name {
+                QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
+                QualifiedTypeName::Custom(data_type) => match field_base_type_kind {
+                    TypeKind::Scalar => Ok(None),
+                    TypeKind::Object => {
+                        let resolved::types::TypeMapping::Object { field_mappings } = type_mappings
+                            .get(data_type)
+                            .ok_or(error::InternalEngineError::InternalGeneric {
+                                description: format!("no type mapping found for type {data_type}"),
+                            })?;
+                        let nested_selection = generate_selection_set_ir(
+                            &field.selection_set,
+                            data_connector,
+                            type_mappings,
+                            field_mappings,
+                            session_variables,
+                            usage_counts,
+                        )?;
+                        Ok(Some(NestedSelection::Object(nested_selection)))
+                    }
+                },
+            }
+        }
+    }
 }
 
 /// Builds the IR from a normalized selection set
@@ -138,16 +199,30 @@ pub(crate) fn generate_selection_set_ir<'s>(
         let field_call = field.field_call()?;
         match field_call.info.generic {
             annotation @ Annotation::Output(annotated_field) => match annotated_field {
-                OutputAnnotation::Field { name, .. } => {
+                OutputAnnotation::Field {
+                    name,
+                    field_type,
+                    field_base_type_kind,
+                } => {
                     let field_mapping = &field_mappings.get(name).ok_or_else(|| {
                         error::InternalEngineError::InternalGeneric {
                             description: format!("invalid field in annotation: {name:}"),
                         }
                     })?;
+                    let nested_selection = generate_nested_selection(
+                        field_type,
+                        field_base_type_kind,
+                        field,
+                        data_connector,
+                        type_mappings,
+                        session_variables,
+                        usage_counts,
+                    )?;
                     fields.insert(
                         field.alias.to_string(),
                         FieldSelection::Column {
                             column: field_mapping.column.clone(),
+                            nested_selection,
                         },
                     );
                 }

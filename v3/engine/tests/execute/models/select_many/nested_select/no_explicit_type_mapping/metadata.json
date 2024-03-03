@@ -1,0 +1,272 @@
+{
+  "$schema": "../../../../../../../open-dds/metadata.jsonschema",
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "institution",
+            "fields": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "location",
+                "type": "location"
+              },
+              {
+                "name": "staff",
+                "type": "[staff_member]"
+              },
+              {
+                "name": "departments",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Institution"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "institution",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "id",
+                    "name",
+                    "location",
+                    "staff",
+                    "departments"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "location",
+            "fields": [
+              {
+                "name": "city",
+                "type": "String"
+              },
+              {
+                "name": "country",
+                "type": "String"
+              },
+              {
+                "name": "campuses",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "Location"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "location",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "city",
+                    "country",
+                    "campuses"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "staff_member",
+            "fields": [
+              {
+                "name": "first_name",
+                "type": "String"
+              },
+              {
+                "name": "last_name",
+                "type": "String"
+              },
+              {
+                "name": "specialities",
+                "type": "[String]"
+              }
+            ],
+            "graphql": {
+              "typeName": "StaffMember"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "staff_member",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "first_name",
+                    "last_name",
+                    "specialities"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "institutions",
+            "arguments": [],
+            "objectType": "institution",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "institutions",
+              "argumentMapping": {},
+              "typeMapping": {
+              }
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "InstitutionMany"
+              }
+            },
+            "filterableFields": [
+              {
+                "fieldName": "id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "location",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "staff",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "departments",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "location",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "staff",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "departments",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "institutions",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+use indexmap::IndexMap;
 use ndc_client as ndc;
 use std::collections::BTreeMap;
 
@@ -6,6 +7,7 @@ use crate::execute::error;
 use crate::execute::ir::commands::CommandInfo;
 use crate::execute::ir::commands::FunctionBasedCommand;
 use crate::execute::ir::commands::ProcedureBasedCommand;
+use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::execute::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 use open_dds::commands::ProcedureName;
 
@@ -13,16 +15,29 @@ pub(crate) fn ndc_query<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
-    let (ndc_fields, jl) = selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
+    let (ndc_nested_field, jl) = ir
+        .selection
+        .as_ref()
+        .map(|nested_selection| {
+            selection_set::process_nested_selection(nested_selection, join_id_counter)
+        })
+        .transpose()?
+        .unzip();
     let query = ndc::models::Query {
         aggregates: None,
-        fields: Some(ndc_fields),
+        fields: Some(IndexMap::from([(
+            FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
+            ndc::models::Field::Column {
+                column: FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
+                fields: ndc_nested_field,
+            },
+        )])),
         limit: None,
         offset: None,
         order_by: None,
         predicate: None,
     };
-    Ok((query, jl))
+    Ok((query, jl.unwrap_or_default()))
 }
 
 pub(crate) fn ndc_query_ir<'s, 'ir>(
@@ -61,10 +76,12 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
 
     let (query, jl) = ndc_query(&ir.command_info, join_id_counter)?;
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(
-        &ir.command_info.selection,
-        &mut collection_relationships,
-    )?;
+    if let Some(nested_selection) = &ir.command_info.selection {
+        selection_set::collect_relationships_from_nested_selection(
+            nested_selection,
+            &mut collection_relationships,
+        )?;
+    }
     let query_request = ndc::models::QueryRequest {
         query,
         collection: ir.function_name.to_string(),
@@ -86,21 +103,30 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
     ),
     error::Error,
 > {
-    let (ndc_fields, jl) =
-        selection_set::process_selection_set_ir(&ir.command_info.selection, join_id_counter)?;
+    let (ndc_nested_field, jl) = ir
+        .command_info
+        .selection
+        .as_ref()
+        .map(|nested_selection| {
+            selection_set::process_nested_selection(nested_selection, join_id_counter)
+        })
+        .transpose()?
+        .unzip();
     let mutation_operation = ndc::models::MutationOperation::Procedure {
         name: procedure_name.to_string(),
         arguments: ir.command_info.arguments.clone(),
-        fields: Some(ndc_fields),
+        fields: ndc_nested_field,
     };
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(
-        &ir.command_info.selection,
-        &mut collection_relationships,
-    )?;
+    if let Some(nested_selection) = &ir.command_info.selection {
+        selection_set::collect_relationships_from_nested_selection(
+            nested_selection,
+            &mut collection_relationships,
+        )?;
+    }
     let mutation_request = ndc::models::MutationRequest {
         operations: vec![mutation_operation],
         collection_relationships,
     };
-    Ok((mutation_request, jl))
+    Ok((mutation_request, jl.unwrap_or_default()))
 }

@@ -8,13 +8,14 @@ use base64::{engine::general_purpose, Engine};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Alias, TypeContainer, TypeName};
 use lang_graphql::normalized_ast;
-use ndc::models::{RowFieldValue, RowSet};
+use ndc::models::{MutationOperationResults, RowFieldValue, RowSet};
 use ndc_client as ndc;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
 use super::error;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
+use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::query_plan::ProcessResponseAs;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::schema::{
@@ -113,7 +114,7 @@ where
                                 )?)
                             }
                             OutputAnnotation::Field { .. } => {
-                                let field_json_value_result =
+                                let value =
                                     row.remove(field.alias.0.as_str()).ok_or_else(|| {
                                         error::InternalDeveloperError::BadGDCResponse {
                                             summary: format!(
@@ -123,7 +124,11 @@ where
                                         }
                                     })?;
 
-                                Ok(field_json_value_result)
+                                if field.type_container.is_list() {
+                                    process_field_selection_as_list(value, &field.selection_set)
+                                } else {
+                                    process_field_selection_as_object(value, &field.selection_set)
+                                }
                             }
                             OutputAnnotation::RelationshipToModel { .. } => {
                                 let field_json_value_result =
@@ -237,6 +242,35 @@ pub fn process_selection_set_as_object(
     Ok(processed_response)
 }
 
+pub fn process_field_selection_as_list(
+    value: json::Value,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::Error> {
+    if selection_set.fields.is_empty() {
+        Ok(value)
+    } else {
+        let rows: Vec<IndexMap<String, RowFieldValue>> = json::from_value(value)?;
+        let processed_rows: Vec<IndexMap<Alias, json::Value>> = rows
+            .into_iter()
+            .map(|row| process_single_query_response_row(row, selection_set))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(json::to_value(processed_rows)?)
+    }
+}
+
+pub fn process_field_selection_as_object(
+    value: json::Value,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+) -> Result<json::Value, error::Error> {
+    if selection_set.fields.is_empty() {
+        Ok(value)
+    } else {
+        let row: IndexMap<String, RowFieldValue> = json::from_value(value)?;
+        let processed_row = process_single_query_response_row(row, selection_set)?;
+        Ok(json::to_value(processed_row)?)
+    }
+}
+
 pub fn process_command_rows(
     command_name: &Qualified<CommandName>,
     rows: Option<Vec<IndexMap<String, RowFieldValue, RandomState>>>,
@@ -275,22 +309,42 @@ fn process_command_response_row(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<json::Value, error::Error> {
-    let field_value_result = row
-        .remove(String::from("__value").as_str())
-        .ok_or_else(|| error::InternalDeveloperError::BadGDCResponse {
-            summary: format!("missing field: {}", String::from("__value").as_str()),
-        })?;
+    let field_value_result = row.remove(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
+        error::InternalDeveloperError::BadGDCResponse {
+            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
+        }
+    })?;
 
+    process_command_field_value(field_value_result.0, selection_set, type_container)
+}
+
+pub fn process_command_mutation_response(
+    mutation_result: MutationOperationResults,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+    type_container: &TypeContainer<TypeName>,
+) -> Result<json::Value, error::Error> {
+    match mutation_result {
+        MutationOperationResults::Procedure { result } => {
+            process_command_field_value(result, selection_set, type_container)
+        }
+    }
+}
+
+fn process_command_field_value(
+    field_value_result: serde_json::Value,
+    selection_set: &normalized_ast::SelectionSet<'_, GDS>,
+    type_container: &TypeContainer<TypeName>,
+) -> Result<json::Value, error::Error> {
     // When no selection set for commands, return back the value from the
     // connector without any processing.
     if selection_set.fields.is_empty() {
-        Ok(field_value_result.0)
+        Ok(field_value_result)
     } else {
         // If the command has a selection set, then the structure of the
         // response should either be a `Array <Object>` or `<Object>` or null,
         // where `<Object>` is the map of the selection set field and it's
         // value.
-        match field_value_result.0 {
+        match field_value_result {
             json::Value::Null => {
                 if type_container.nullable {
                     Ok(json::Value::Null)

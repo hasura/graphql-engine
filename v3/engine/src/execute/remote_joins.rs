@@ -86,9 +86,9 @@ use tracing_util::SpanVisibility;
 
 use ndc_client as ndc;
 
-use self::types::TargetField;
+use self::types::{JoinNode, LocationKind, TargetField};
 
-use super::ndc::execute_ndc_query;
+use super::ndc::{execute_ndc_query, FUNCTION_IR_VALUE_COLUMN_NAME};
 use super::query_plan::ProcessResponseAs;
 use super::{error, ProjectId};
 
@@ -303,7 +303,7 @@ fn collect_argument_from_row<'s, 'ir>(
     replacement_token: &mut ReplacementToken,
     remote_alias: &mut String,
 ) -> Result<(), error::Error> {
-    if location.join_node.is_none() && location.rest.locations.is_empty() {
+    if location.join_node.is_local() && location.rest.locations.is_empty() {
         return Err(error::Error::from(
             error::InternalEngineError::InternalGeneric {
                 description: "unexpected: join_node and locations tree both are empty".to_string(),
@@ -311,76 +311,113 @@ fn collect_argument_from_row<'s, 'ir>(
         ));
     }
 
-    if let Some((join_node, join_id)) = &location.join_node {
-        let mut argument = BTreeMap::new();
-        for (src_alias, target_field) in join_node.join_mapping.values() {
-            match target_field {
-                TargetField::ModelField((_, field_mapping)) => {
-                    let val = get_value(src_alias, row);
-                    // use the target field name here to create the variable
-                    // name to be used in RHS
-                    let variable_name = format!("${}", &field_mapping.column);
-                    argument.insert(variable_name, ValueExt::from(val.clone()));
-                }
-                TargetField::CommandField(argument_name) => {
-                    let val = get_value(src_alias, row);
-                    // use the target field name here to create the variable
-                    // name to be used in RHS
-                    let variable_name = format!("${}", &argument_name);
-                    argument.insert(variable_name, ValueExt::from(val.clone()));
-                }
-            }
-        }
-        // de-duplicate arguments
-        let argument_id: i16;
-        if let std::collections::hash_map::Entry::Vacant(e) = arguments.entry(argument) {
-            argument_id = argument_id_counter.get_next();
-            e.insert(argument_id);
-        } else {
-            argument_id = argument_id_counter.get();
-        }
-        // inject a replacement token into the row of LHS response
-        let token = (*join_id, argument_id);
-
-        *remote_join = Some(join_node.clone());
-        *sub_tree = location.rest.clone();
-        *replacement_token = token;
-        *remote_alias = key.to_string();
-    } else {
-        let nested_val = row
-            .get(key)
-            .ok_or(error::InternalEngineError::InternalGeneric {
-                description: "invalid NDC response; could not find {key} in response".to_string(),
-            })?;
-
-        // Get the NDC response with nested selection (i.e. in case of
-        // relationships) as a RowSet
-        let row_set = nested_val
-            // TODO: remove clone -> depends on ndc-client providing an API e.g. as_mut_rowset()
-            .clone()
-            .as_rowset()
-            .ok_or(error::InternalEngineError::InternalGeneric {
-                description: "unexpected: could not find RowSet in NDC nested response".to_string(),
-            })?;
-        if let Some(mut rows) = row_set.rows {
-            for row in rows.iter_mut() {
-                for (sub_key, sub_location) in &location.rest.locations {
-                    collect_argument_from_row(
-                        row,
-                        sub_key,
-                        sub_location,
-                        arguments,
-                        argument_id_counter,
-                        remote_join,
-                        sub_tree,
-                        replacement_token,
-                        remote_alias,
-                    )?;
+    match &location.join_node {
+        JoinNode::Remote((join_node, join_id)) => {
+            let mut argument = BTreeMap::new();
+            for (src_alias, target_field) in join_node.join_mapping.values() {
+                match target_field {
+                    TargetField::ModelField((_, field_mapping)) => {
+                        let val = get_value(src_alias, row);
+                        // use the target field name here to create the variable
+                        // name to be used in RHS
+                        let variable_name = format!("${}", &field_mapping.column);
+                        argument.insert(variable_name, ValueExt::from(val.clone()));
+                    }
+                    TargetField::CommandField(argument_name) => {
+                        let val = get_value(src_alias, row);
+                        // use the target field name here to create the variable
+                        // name to be used in RHS
+                        let variable_name = format!("${}", &argument_name);
+                        argument.insert(variable_name, ValueExt::from(val.clone()));
+                    }
                 }
             }
+            // de-duplicate arguments
+            let argument_id: i16;
+            if let std::collections::hash_map::Entry::Vacant(e) = arguments.entry(argument) {
+                argument_id = argument_id_counter.get_next();
+                e.insert(argument_id);
+            } else {
+                argument_id = argument_id_counter.get();
+            }
+            // inject a replacement token into the row of LHS response
+            let token = (*join_id, argument_id);
+
+            *remote_join = Some(join_node.clone());
+            *sub_tree = location.rest.clone();
+            *replacement_token = token;
+            *remote_alias = key.to_string();
+            Ok(())
+        }
+        JoinNode::Local(location_kind) => {
+            let nested_val = row
+                .get(key)
+                .ok_or(error::InternalEngineError::InternalGeneric {
+                    description: "invalid NDC response; could not find {key} in response"
+                        .to_string(),
+                })?;
+
+            let rows = rows_from_row_field_value(location_kind, nested_val)?;
+            if let Some(mut rows) = rows {
+                for row in rows.iter_mut() {
+                    for (sub_key, sub_location) in &location.rest.locations {
+                        collect_argument_from_row(
+                            row,
+                            sub_key,
+                            sub_location,
+                            arguments,
+                            argument_id_counter,
+                            remote_join,
+                            sub_tree,
+                            replacement_token,
+                            remote_alias,
+                        )?;
+                    }
+                }
+            }
+            Ok(())
         }
     }
-    Ok(())
+}
+
+fn rows_from_row_field_value(
+    location_kind: &LocationKind,
+    nested_val: &ndc::models::RowFieldValue,
+) -> Result<Option<Vec<IndexMap<String, ndc::models::RowFieldValue>>>, error::Error> {
+    let rows: Option<Vec<IndexMap<String, ndc::models::RowFieldValue>>> = match location_kind {
+        LocationKind::NestedData => Some(
+            {
+                let this = nested_val.clone();
+                match this.0 {
+                    serde_json::Value::Array(_) => serde_json::from_value(this.0).ok(),
+                    serde_json::Value::Object(_) => {
+                        serde_json::from_value(this.0).ok().map(|v| vec![v])
+                    }
+                    _ => None,
+                }
+            }
+            .ok_or(error::InternalEngineError::InternalGeneric {
+                description: "unexpected: could not find rows in NDC nested response: ".to_string()
+                    + &nested_val.0.to_string(),
+            }),
+        )
+        .transpose(),
+        LocationKind::LocalRelationship => {
+            // Get the NDC response with nested selection (i.e. in case of
+            // relationships) as a RowSet
+            let row_set = nested_val
+                // TODO: remove clone -> depends on ndc-client providing an API e.g. as_mut_rowset()
+                .clone()
+                .as_rowset()
+                .ok_or(error::InternalEngineError::InternalGeneric {
+                    description: "unexpected: could not find RowSet in NDC nested response: "
+                        .to_string()
+                        + &nested_val.0.to_string(),
+                })?;
+            Ok(row_set.rows)
+        }
+    }?;
+    Ok(rows)
 }
 
 fn get_value<'n>(
@@ -398,9 +435,9 @@ fn resolve_command_response_row(
     row: &IndexMap<String, ndc::models::RowFieldValue>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<Vec<IndexMap<String, ndc::models::RowFieldValue>>, error::Error> {
-    let field_value_result = row.get(String::from("__value").as_str()).ok_or_else(|| {
+    let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::InternalDeveloperError::BadGDCResponse {
-            summary: format!("missing field: {}", String::from("__value").as_str()),
+            summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
         }
     })?;
 
@@ -475,8 +512,8 @@ pub fn replace_replacement_tokens(
             for (row, token) in rows.iter_mut().zip(tokens.clone()) {
                 // TODO: have a better interface of traversing through the
                 // response tree, especially for commands
-                let __value = row.get_mut("__value");
-                match __value {
+                let command_result_value = row.get_mut(FUNCTION_IR_VALUE_COLUMN_NAME);
+                match command_result_value {
                     // it's a command response; traversing the response tree is
                     // different
                     Some(x) => match &mut x.0 {
@@ -548,33 +585,87 @@ fn traverse_path_and_insert_value(
     key: String,
     value: ndc::models::RowFieldValue,
 ) -> Result<(), error::Error> {
-    if let Some(_join_node) = &location.join_node {
-        row.insert(remote_alias, value);
-    } else {
-        let row_field_val =
-            row.get_mut(&key)
-                .ok_or(error::InternalEngineError::InternalGeneric {
-                    description: "unexpected: could not find {key} in row".into(),
-                })?;
-        let mut row_set: ndc::models::RowSet = json::from_value(row_field_val.0.clone())?;
-        let mut rows = row_set
-            .rows
-            .ok_or(error::InternalEngineError::InternalGeneric {
-                description: "expected row; encountered null".into(),
-            })?;
-        for inner_row in rows.iter_mut() {
-            for (sub_key, sub_location) in &location.rest.locations {
-                traverse_path_and_insert_value(
-                    sub_location,
-                    inner_row,
-                    remote_alias.to_string(),
-                    sub_key.to_string(),
-                    value.clone(),
-                )?
-            }
+    match &location.join_node {
+        JoinNode::Remote(_) => {
+            row.insert(remote_alias, value);
+            Ok(())
         }
-        row_set.rows = Some(rows);
-        *row_field_val = ndc::models::RowFieldValue(json::to_value(row_set)?);
+        JoinNode::Local(location_kind) => {
+            let row_field_val =
+                row.get_mut(&key)
+                    .ok_or(error::InternalEngineError::InternalGeneric {
+                        description: "unexpected: could not find {key} in row".into(),
+                    })?;
+            match location_kind {
+                LocationKind::LocalRelationship => {
+                    let mut row_set: ndc::models::RowSet =
+                        json::from_value(row_field_val.0.clone())?;
+                    let mut rows =
+                        row_set
+                            .rows
+                            .ok_or(error::InternalEngineError::InternalGeneric {
+                                description: "expected row; encountered null".into(),
+                            })?;
+                    for inner_row in rows.iter_mut() {
+                        for (sub_key, sub_location) in &location.rest.locations {
+                            traverse_path_and_insert_value(
+                                sub_location,
+                                inner_row,
+                                remote_alias.to_string(),
+                                sub_key.to_string(),
+                                value.clone(),
+                            )?
+                        }
+                    }
+                    row_set.rows = Some(rows);
+                    *row_field_val = ndc::models::RowFieldValue(json::to_value(row_set)?);
+                }
+                LocationKind::NestedData => {
+                    match row_field_val.0 {
+                        serde_json::Value::Array(_) => {
+                            if let Ok(mut rows) =
+                                serde_json::from_value::<
+                                    Vec<IndexMap<String, ndc::models::RowFieldValue>>,
+                                >(row_field_val.0.clone())
+                            {
+                                for inner_row in rows.iter_mut() {
+                                    for (sub_key, sub_location) in &location.rest.locations {
+                                        traverse_path_and_insert_value(
+                                            sub_location,
+                                            inner_row,
+                                            remote_alias.to_string(),
+                                            sub_key.to_string(),
+                                            value.clone(),
+                                        )?
+                                    }
+                                }
+                                *row_field_val = ndc::models::RowFieldValue(json::to_value(rows)?);
+                            }
+                        }
+                        serde_json::Value::Object(_) => {
+                            if let Ok(mut inner_row) = serde_json::from_value::<
+                                IndexMap<String, ndc::models::RowFieldValue>,
+                            >(
+                                row_field_val.0.clone()
+                            ) {
+                                for (sub_key, sub_location) in &location.rest.locations {
+                                    traverse_path_and_insert_value(
+                                        sub_location,
+                                        &mut inner_row,
+                                        remote_alias.to_string(),
+                                        sub_key.to_string(),
+                                        value.clone(),
+                                    )?
+                                }
+                                *row_field_val =
+                                    ndc::models::RowFieldValue(json::to_value(inner_row)?);
+                            }
+                        }
+                        _ => (),
+                    };
+                }
+            }
+            Ok(())
+        }
     }
-    Ok(())
 }

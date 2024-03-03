@@ -82,7 +82,7 @@ impl Step {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ModelSelectIR {
     pub(crate) model_name: String,
-    pub(crate) query_request: ndc_client::models::QueryRequest,
+    pub(crate) ndc_request: NDCRequest,
     pub(crate) ndc_explain: NDCExplainResponse,
 }
 
@@ -90,7 +90,7 @@ pub(crate) struct ModelSelectIR {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CommandSelectIR {
     pub(crate) command_name: String,
-    pub(crate) query_request: ndc_client::models::QueryRequest,
+    pub(crate) ndc_request: NDCRequest,
     pub(crate) ndc_explain: NDCExplainResponse,
 }
 
@@ -109,6 +109,14 @@ pub(crate) enum NDCExplainResponse {
     NotSupported,
     Response(ndc_client::models::ExplainResponse),
     Error(GraphQLError),
+}
+
+#[derive(Serialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+#[serde(tag = "type", content = "value")]
+pub(crate) enum NDCRequest {
+    Query(ndc_client::models::QueryRequest),
+    Mutation(ndc_client::models::MutationRequest),
 }
 
 impl NDCExplainResponse {
@@ -160,7 +168,7 @@ fn redact_step(step: Step) -> Step {
 fn redact_model_select(model_select: ModelSelectIR) -> ModelSelectIR {
     ModelSelectIR {
         model_name: model_select.model_name,
-        query_request: model_select.query_request,
+        ndc_request: model_select.ndc_request,
         ndc_explain: redact_ndc_explain_response(model_select.ndc_explain),
     }
 }
@@ -168,7 +176,7 @@ fn redact_model_select(model_select: ModelSelectIR) -> ModelSelectIR {
 fn redact_command_select(command_select: CommandSelectIR) -> CommandSelectIR {
     CommandSelectIR {
         command_name: command_select.command_name,
-        query_request: command_select.query_request,
+        ndc_request: command_select.ndc_request,
         ndc_explain: redact_ndc_explain_response(command_select.ndc_explain),
     }
 }

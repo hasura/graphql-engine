@@ -4,14 +4,41 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::commands;
 use super::model_selection;
+use super::relationships;
 use super::ProcessResponseAs;
 use crate::execute::error;
 use crate::execute::ir::relationship;
-use crate::execute::ir::selection_set::{FieldSelection, ResultSelectionSet};
+use crate::execute::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
 use crate::execute::remote_joins::types::{
-    JoinLocations, MonotonicCounter, RemoteJoinType, TargetField,
+    JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
+
+pub(crate) fn process_nested_selection<'s, 'ir>(
+    nested_selection: &'ir NestedSelection<'s>,
+    join_id_counter: &mut MonotonicCounter,
+) -> Result<(ndc::models::NestedField, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+    match nested_selection {
+        NestedSelection::Object(model_selection) => {
+            let (fields, join_locations) =
+                process_selection_set_ir(model_selection, join_id_counter)?;
+            Ok((
+                ndc::models::NestedField::Object(ndc::models::NestedObject { fields }),
+                join_locations,
+            ))
+        }
+        NestedSelection::Array(nested_selection) => {
+            let (field, join_locations) =
+                process_nested_selection(nested_selection, join_id_counter)?;
+            Ok((
+                ndc::models::NestedField::Array(ndc::models::NestedArray {
+                    fields: Box::new(field),
+                }),
+                join_locations,
+            ))
+        }
+    }
+}
 
 /// Convert selection set IR ([ResultSelectionSet]) into NDC fields.
 ///
@@ -32,13 +59,35 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
     let mut join_locations = JoinLocations::new();
     for (alias, field) in &model_selection.fields {
         match field {
-            FieldSelection::Column { column } => {
+            FieldSelection::Column {
+                column,
+                nested_selection,
+            } => {
+                let (nested_field, nested_join_locations) = nested_selection
+                    .as_ref()
+                    .map(|nested_selection| {
+                        process_nested_selection(nested_selection, join_id_counter)
+                    })
+                    .transpose()?
+                    .unzip();
                 ndc_fields.insert(
                     alias.to_string(),
                     ndc::models::Field::Column {
                         column: column.clone(),
+                        fields: nested_field,
                     },
                 );
+                if let Some(jl) = nested_join_locations {
+                    if !jl.locations.is_empty() {
+                        join_locations.locations.insert(
+                            alias.clone(),
+                            Location {
+                                join_node: JoinNode::Local(LocationKind::NestedData),
+                                rest: jl,
+                            },
+                        );
+                    }
+                }
             }
             FieldSelection::ModelRelationshipLocal {
                 query,
@@ -55,7 +104,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     join_locations.locations.insert(
                         alias.clone(),
                         Location {
-                            join_node: None,
+                            join_node: JoinNode::Local(LocationKind::LocalRelationship),
                             rest: jl,
                         },
                     );
@@ -94,7 +143,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     join_locations.locations.insert(
                         alias.clone(),
                         Location {
-                            join_node: None,
+                            join_node: JoinNode::Local(LocationKind::LocalRelationship),
                             rest: jl,
                         },
                     );
@@ -116,6 +165,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
                             column: src_field.column.clone(),
+                            fields: None,
                         },
                     );
                     join_mapping.insert(
@@ -138,7 +188,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 join_locations.locations.insert(
                     alias.clone(),
                     Location {
-                        join_node: Some(rj_info),
+                        join_node: JoinNode::Remote(rj_info),
                         rest: sub_join_locations,
                     },
                 );
@@ -158,6 +208,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                         lhs_alias.clone(),
                         ndc::models::Field::Column {
                             column: src_field.column.clone(),
+                            fields: None,
                         },
                     );
                     join_mapping.insert(
@@ -183,7 +234,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 join_locations.locations.insert(
                     alias.clone(),
                     Location {
-                        join_node: Some(rj_info),
+                        join_node: JoinNode::Remote(rj_info),
                         rest: sub_join_locations,
                     },
                 );
@@ -197,15 +248,35 @@ fn make_hasura_phantom_field(field_name: &str) -> String {
     format!("__hasura_phantom_field__{}", field_name)
 }
 
+pub(crate) fn collect_relationships_from_nested_selection(
+    selection: &NestedSelection,
+    relationships: &mut BTreeMap<String, ndc::models::Relationship>,
+) -> Result<(), error::Error> {
+    match selection {
+        NestedSelection::Object(selection_set) => {
+            collect_relationships_from_selection(selection_set, relationships)
+        }
+        NestedSelection::Array(nested_selection) => {
+            collect_relationships_from_nested_selection(nested_selection, relationships)
+        }
+    }
+}
+
 /// From the fields in `ResultSelectionSet`, collect relationships recursively
 /// and create NDC relationship definitions
-pub(crate) fn collect_relationships(
+pub(crate) fn collect_relationships_from_selection(
     selection: &ResultSelectionSet,
     relationships: &mut BTreeMap<String, ndc::models::Relationship>,
 ) -> Result<(), error::Error> {
     for field in selection.fields.values() {
         match field {
-            FieldSelection::Column { .. } => (),
+            FieldSelection::Column {
+                nested_selection, ..
+            } => {
+                if let Some(nested_selection) = nested_selection {
+                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
+                }
+            }
             FieldSelection::ModelRelationshipLocal {
                 query,
                 name,
@@ -215,7 +286,7 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_model_relationship_definition(relationship_info)?,
                 );
-                collect_relationships(&query.selection, relationships)?;
+                relationships::collect_relationships(query, relationships)?;
             }
             FieldSelection::CommandRelationshipLocal {
                 ir,
@@ -226,7 +297,9 @@ pub(crate) fn collect_relationships(
                     name.to_string(),
                     relationship::process_command_relationship_definition(relationship_info)?,
                 );
-                collect_relationships(&ir.command_info.selection, relationships)?;
+                if let Some(nested_selection) = &ir.command_info.selection {
+                    collect_relationships_from_nested_selection(nested_selection, relationships)?;
+                }
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector

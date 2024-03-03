@@ -1,0 +1,595 @@
+[
+  {
+    "kind": "DataConnectorScalarRepresentation",
+    "version": "v1",
+    "definition": {
+      "dataConnectorName": "db",
+      "dataConnectorScalarType": "String",
+      "representation": "String",
+      "graphql": {
+        "comparisonExpressionTypeName": "String_Comparison_Exp"
+      }
+    }
+  },
+  {
+    "kind": "DataConnectorScalarRepresentation",
+    "version": "v1",
+    "definition": {
+      "dataConnectorName": "db",
+      "dataConnectorScalarType": "Int",
+      "representation": "Int"
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "artist",
+      "fields": [
+        {
+          "name": "artist_id",
+          "type": "Int!"
+        },
+        {
+          "name": "name",
+          "type": "String!"
+        }
+      ],
+      "graphql": {
+        "typeName": "Artist"
+      }
+    }
+  },
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "Artist",
+      "objectType": "artist",
+      "source": {
+        "dataConnectorName": "db",
+        "collection": "artist",
+        "typeMapping": {
+          "artist": {
+            "fieldMapping": {
+              "artist_id": {
+                "column": "ArtistId"
+              },
+              "name": {
+                "column": "Name"
+              }
+            }
+          }
+        }
+      },
+      "filterableFields": [
+        {
+          "fieldName": "artist_id",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "name",
+          "operators": {
+            "enableAll": true
+          }
+        }
+      ],
+      "orderableFields": [
+        {
+          "fieldName": "artist_id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "name",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        }
+      ],
+      "graphql": {
+        "selectUniques": [
+          {
+            "queryRootField": "ArtistById",
+            "uniqueIdentifier": [
+              "artist_id"
+            ]
+          }
+        ],
+        "selectMany": {
+          "queryRootField": "Artists"
+        }
+      }
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "artist",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": [
+              "artist_id",
+              "name"
+            ]
+          }
+        },
+        {
+          "role": "user1",
+          "output": {
+            "allowedFields": [
+              "artist_id",
+              "name"
+            ]
+          }
+        },
+        {
+          "role": "user2",
+          "output": {
+            "allowedFields": [
+              "artist_id",
+              "name"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ModelPermissions",
+    "version": "v1",
+    "definition": {
+      "modelName": "Artist",
+      "permissions": [
+        {
+          "role": "admin",
+          "select": {
+            "filter": null
+          }
+        },
+        {
+          "role": "user1",
+          "select": {
+            "filter": null
+          }
+        },
+        {
+          "role": "user2",
+          "select": {
+            "filter": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "DataConnectorScalarRepresentation",
+    "version": "v1",
+    "definition": {
+      "dataConnectorName": "custom",
+      "dataConnectorScalarType": "String",
+      "representation": "String",
+      "graphql": {
+        "comparisonExpressionTypeName": "String_Comparison_Exp_Custom"
+      }
+    }
+  },
+  {
+    "kind": "DataConnectorScalarRepresentation",
+    "version": "v1",
+    "definition": {
+      "dataConnectorName": "custom",
+      "dataConnectorScalarType": "Int",
+      "representation": "Int"
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "institution",
+      "fields": [
+        {
+          "name": "id",
+          "type": "Int!"
+        },
+        {
+          "name": "name",
+          "type": "String!"
+        },
+        {
+          "name": "location",
+          "type": "location"
+        },
+        {
+          "name": "staff",
+          "type": "[staff_member]"
+        },
+        {
+          "name": "departments",
+          "type": "[String]"
+        }
+      ],
+      "graphql": {
+        "typeName": "Institution"
+      }
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "institution",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": [
+              "id",
+              "name",
+              "location",
+              "staff",
+              "departments"
+            ]
+          }
+        },
+        {
+          "role": "user1",
+          "output": {
+            "allowedFields": [
+              "id",
+              "name",
+              "location",
+              "staff",
+              "departments"
+            ]
+          }
+        },
+        {
+          "role": "user2",
+          "output": {
+            "allowedFields": [
+              "id",
+              "name",
+              "location",
+              "staff",
+              "departments"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "location",
+      "fields": [
+        {
+          "name": "city",
+          "type": "String"
+        },
+        {
+          "name": "country",
+          "type": "String"
+        },
+        {
+          "name": "campuses",
+          "type": "[String]"
+        }
+      ],
+      "graphql": {
+        "typeName": "Location"
+      }
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "location",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": [
+              "city",
+              "country",
+              "campuses"
+            ]
+          }
+        },
+        {
+          "role": "user1",
+          "output": {
+            "allowedFields": [
+              "city",
+              "country",
+              "campuses"
+            ]
+          }
+        },
+        {
+          "role": "user2",
+          "output": {
+            "allowedFields": [
+              "city",
+              "country",
+              "campuses"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ObjectType",
+    "version": "v1",
+    "definition": {
+      "name": "staff_member",
+      "fields": [
+        {
+          "name": "first_name",
+          "type": "String"
+        },
+        {
+          "name": "last_name",
+          "type": "String"
+        },
+        {
+          "name": "specialities",
+          "type": "[String]"
+        },
+        {
+          "name": "favourite_artist_id",
+          "type": "Int"
+        }
+      ],
+      "graphql": {
+        "typeName": "StaffMember"
+      }
+    }
+  },
+  {
+    "kind": "TypePermissions",
+    "version": "v1",
+    "definition": {
+      "typeName": "staff_member",
+      "permissions": [
+        {
+          "role": "admin",
+          "output": {
+            "allowedFields": [
+              "first_name",
+              "last_name",
+              "specialities",
+              "favourite_artist_id"
+            ]
+          }
+        },
+        {
+          "role": "user1",
+          "output": {
+            "allowedFields": [
+              "first_name",
+              "last_name",
+              "specialities",
+              "favourite_artist_id"
+            ]
+          }
+        },
+        {
+          "role": "user2",
+          "output": {
+            "allowedFields": [
+              "first_name",
+              "last_name",
+              "specialities",
+              "favourite_artist_id"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Model",
+    "version": "v1",
+    "definition": {
+      "name": "institutions",
+      "arguments": [],
+      "objectType": "institution",
+      "source": {
+        "dataConnectorName": "custom",
+        "collection": "institutions",
+        "argumentMapping": {},
+        "typeMapping": {
+          "institution": {
+            "fieldMapping": {
+              "id": {
+                "column": "id"
+              },
+              "name": {
+                "column": "name"
+              },
+              "location": {
+                "column": "location"
+              },
+              "staff": {
+                "column": "staff"
+              },
+              "departments": {
+                "column": "departments"
+              }
+            }
+          },
+          "location": {
+            "fieldMapping": {
+              "city": {
+                "column": "city"
+              },
+              "country": {
+                "column": "country"
+              },
+              "campuses": {
+                "column": "campuses"
+              }
+            }
+          },
+          "staff_member": {
+            "fieldMapping": {
+              "first_name": {
+                "column": "first_name"
+              },
+              "last_name": {
+                "column": "last_name"
+              },
+              "specialities": {
+                "column": "specialities"
+              },
+              "favourite_artist_id": {
+                "column": "favourite_artist_id"
+              }
+            }
+          }
+        }
+      },
+      "graphql": {
+        "selectUniques": [],
+        "selectMany": {
+          "queryRootField": "InstitutionMany"
+        }
+      },
+      "filterableFields": [
+        {
+          "fieldName": "id",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "name",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "location",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "staff",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "departments",
+          "operators": {
+            "enableAll": true
+          }
+        }
+      ],
+      "orderableFields": [
+        {
+          "fieldName": "id",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "name",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "location",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "staff",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "departments",
+          "orderByDirections": {
+            "enableAll": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "ModelPermissions",
+    "version": "v1",
+    "definition": {
+      "modelName": "institutions",
+      "permissions": [
+        {
+          "role": "admin",
+          "select": {
+            "filter": null
+          }
+        },
+        {
+          "role": "user1",
+          "select": {
+            "filter": null
+          }
+        },
+        {
+          "role": "user2",
+          "select": {
+            "filter": null
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Relationship",
+    "version": "v1",
+    "definition": {
+      "source": "staff_member",
+      "name": "favourite_artist",
+      "target": {
+        "model": {
+          "name": "Artist",
+          "relationshipType": "Object"
+        }
+      },
+      "mapping": [
+        {
+          "source": {
+            "fieldPath": [
+              {
+                "fieldName": "favourite_artist_id"
+              }
+            ]
+          },
+          "target": {
+            "modelField": [
+              {
+                "fieldName": "artist_id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]

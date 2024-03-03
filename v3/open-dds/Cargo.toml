@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 derive_more = "0.99.17"
-ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.13" }
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.18" }
 schemars = { version = "0.8.12", features = ["smol_str", "preserve_order"] }
 serde = "1.0.152"
 serde_json = { version = "1.0.92", features = ["preserve_order"] }

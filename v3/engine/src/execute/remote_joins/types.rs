@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::query_plan::ProcessResponseAs;
 use crate::metadata::resolved;
-use crate::metadata::resolved::types::FieldMapping;
+use crate::metadata::resolved::types::NdcColumnForComparison;
 use crate::utils::json_ext::ValueExt;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -31,6 +31,27 @@ impl<T> Default for JoinLocations<T> {
     fn default() -> Self {
         JoinLocations {
             locations: IndexMap::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum LocationKind {
+    NestedData,
+    LocalRelationship,
+}
+
+#[derive(Debug, Clone)]
+pub enum JoinNode<T> {
+    Local(LocationKind),
+    Remote(T),
+}
+
+impl<T> JoinNode<T> {
+    pub fn is_local(&self) -> bool {
+        match self {
+            JoinNode::Local(_) => true,
+            JoinNode::Remote(_) => false,
         }
     }
 }
@@ -89,7 +110,7 @@ impl<T> Default for JoinLocations<T> {
 /// state.
 #[derive(Debug, Clone)]
 pub struct Location<T> {
-    pub join_node: Option<T>,
+    pub join_node: JoinNode<T>,
     pub rest: JoinLocations<T>,
 }
 
@@ -121,7 +142,7 @@ pub type SourceFieldAlias = String;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetField {
-    ModelField((FieldName, FieldMapping)),
+    ModelField((FieldName, NdcColumnForComparison)),
     CommandField(ArgumentName),
 }
 

@@ -2,10 +2,12 @@ use super::command::Command;
 use super::data_connector::DataConnectorContext;
 use super::data_connector::DataConnectorLink;
 use super::error::Error;
+use super::model::get_ndc_column_for_comparison;
 use super::model::Model;
 use super::subgraph::Qualified;
 use super::subgraph::QualifiedTypeReference;
 use super::types::mk_name;
+use super::types::NdcColumnForComparison;
 use super::types::ObjectTypeRepresentation;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -47,6 +49,8 @@ pub enum RelationshipTargetName {
 pub struct RelationshipModelMapping {
     pub source_field: FieldAccess,
     pub target_field: FieldAccess,
+    // Optional because we allow building schema without specifying a data source
+    pub target_ndc_column: Option<NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -143,6 +147,7 @@ fn resolve_relationship_mappings_model(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &ObjectTypeRepresentation,
     target_model: &Model,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext<'_>>,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut field_mapping_hashset_for_validation: HashSet<&String> = HashSet::new();
@@ -199,9 +204,29 @@ fn resolve_relationship_mappings_model(
             if field_mapping_hashset_for_validation
                 .insert(&resolved_relationship_source_mapping.field_name.0)
             {
+                let target_ndc_column = target_model
+                    .source
+                    .as_ref()
+                    .map(|target_model_source| {
+                        get_ndc_column_for_comparison(
+                            &target_model.name,
+                            &target_model.data_type,
+                            target_model_source,
+                            &resolved_relationship_target_mapping.field_name,
+                            data_connectors,
+                            || {
+                                format!(
+                                    "the mapping for relationship {} on type {}",
+                                    relationship.name, source_type_name
+                                )
+                            },
+                        )
+                    })
+                    .transpose()?;
                 Ok(RelationshipModelMapping {
                     source_field: resolved_relationship_source_mapping.clone(),
                     target_field: resolved_relationship_target_mapping.clone(),
+                    target_ndc_column,
                 })
             } else {
                 Err(Error::MappingExistsInRelationship {
@@ -376,6 +401,7 @@ pub fn resolve_relationship(
                         &source_type_name,
                         source_type,
                         resolved_target_model,
+                        data_connectors,
                     )?,
                 },
                 source_data_connector,

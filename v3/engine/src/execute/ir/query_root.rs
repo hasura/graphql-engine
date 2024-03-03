@@ -11,9 +11,11 @@ use std::collections::HashMap;
 use super::commands;
 use super::root_field;
 use crate::execute::error;
+use crate::metadata::resolved::subgraph::QualifiedTypeReference;
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::RootFieldKind;
+use crate::schema::types::TypeKind;
 use crate::schema::types::{
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
@@ -66,16 +68,18 @@ pub fn generate_ir<'n, 's>(
                         }
                         RootFieldAnnotation::FunctionCommand {
                             name,
-                            underlying_object_typename,
                             source,
                             function_name,
+                            result_type,
+                            result_base_type_kind,
                         } => {
                             let ir = generate_command_rootfield_ir(
                                 name,
                                 &type_name,
                                 function_name,
                                 source,
-                                underlying_object_typename,
+                                result_type,
+                                result_base_type_kind,
                                 field,
                                 field_call,
                                 &session.variables,
@@ -189,7 +193,8 @@ fn generate_command_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
     function_name: &'s Option<open_dds::commands::FunctionName>,
     source: &'s Option<CommandSourceDetail>,
-    underlying_object_typename: &'s Option<subgraph::Qualified<CustomTypeName>>,
+    result_type: &'s QualifiedTypeReference,
+    result_base_type_kind: &'s TypeKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session_variables: &SessionVariables,
@@ -216,7 +221,8 @@ fn generate_command_rootfield_ir<'n, 's>(
             function_name,
             field,
             field_call,
-            underlying_object_typename,
+            result_type,
+            result_base_type_kind,
             source,
             session_variables,
         )?,

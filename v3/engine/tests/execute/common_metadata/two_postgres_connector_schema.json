@@ -19,95 +19,113 @@
                   "String": {
                     "aggregate_functions": {},
                     "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_like": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_ilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nlike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_regex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_iregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_niregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_similar": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nsimilar": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -134,35 +152,43 @@
                       }
                     },
                     "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -193,31 +219,36 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -248,31 +279,36 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -752,18 +788,19 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
                 "capabilities": {
                   "query": {
+                    "explain": {},
                     "aggregates": {},
                     "variables": {}
                   },
-                  "explain": {},
+                  "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
                   }
-                }
+                },
+                "version": "0.1.0" 
               }
             }
           },
@@ -794,91 +831,106 @@
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_like": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_ilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nlike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nilike": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_regex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_iregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_niregex": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_similar": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_nsimilar": {
                         "argument_type": {
                           "type": "named",
                           "name": "String"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -905,35 +957,43 @@
                       }
                     },
                     "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "Int"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -960,35 +1020,44 @@
                       }
                     },
                     "comparison_operators": {
+
+                      "_eq": {
+                        "type": "equal"
+                      },
                       "_gt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int4"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -1019,31 +1088,36 @@
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_gte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lt": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_lte": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       },
                       "_neq": {
                         "argument_type": {
                           "type": "named",
                           "name": "int8"
-                        }
+                        },
+                        "type": "custom"
                       }
                     },
                     "update_operators": {}
@@ -1523,18 +1597,19 @@
                 ]
               },
               "capabilities": {
-                "versions": "*",
                 "capabilities": {
                   "query": {
+                    "explain": {},
                     "aggregates": {},
                     "variables": {}
                   },
-                  "explain": {},
+                  "mutation": {},
                   "relationships": {
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
                   }
-                }
+                },
+                "version": "0.1.0" 
               }
             }
           },

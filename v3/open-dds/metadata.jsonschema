@@ -371,11 +371,12 @@
               "procedures": []
             },
             "capabilities": {
-              "versions": "*",
+              "version": "0.1.0",
               "capabilities": {
                 "query": {
                   "variables": {}
-                }
+                },
+                "mutation": {}
               }
             }
           }
@@ -526,10 +527,10 @@
               ]
             },
             "schema": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/schema_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/schema_response.jsonschema"
             },
             "capabilities": {
-              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.13/ndc-client/tests/json_schema/capabilities_response.jsonschema"
+              "$ref": "https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/capabilities_response.jsonschema"
             }
           },
           "additionalProperties": false

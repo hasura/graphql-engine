@@ -23,7 +23,7 @@ pub fn node_interface_schema(
     let mut roles_implementing_global_id: HashMap<Role, Option<types::NamespaceAnnotation>> =
         HashMap::new();
     for model in gds.metadata.models.values() {
-        if model.global_id_source {
+        if model.global_id_source.is_some() {
             let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
 
             let object_typename = get_custom_output_type(gds, builder, &model.data_type)?;

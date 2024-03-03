@@ -20,7 +20,9 @@ use crate::execute::error;
 use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph;
+use crate::metadata::resolved::subgraph::QualifiedTypeReference;
 use crate::schema::types::CommandSourceDetail;
+use crate::schema::types::TypeKind;
 use crate::schema::GDS;
 
 /// IR for the 'command' operations
@@ -39,7 +41,7 @@ pub struct CommandInfo<'s> {
     pub(crate) arguments: BTreeMap<String, json::Value>,
 
     /// IR for the command result selection set
-    pub(crate) selection: selection_set::ResultSelectionSet<'s>,
+    pub(crate) selection: Option<selection_set::NestedSelection<'s>>,
 
     /// The Graphql base type for the output_type of command. Helps in deciding how
     /// the response from the NDC needs to be processed.
@@ -78,33 +80,11 @@ pub(crate) fn generate_command_info<'n, 's>(
     command_name: &subgraph::Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
-    underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: &TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<CommandInfo<'s>, error::Error> {
-    let empty_field_mappings = BTreeMap::new();
-    // No field mappings should exists if the resolved output type of command is
-    // not a custom object type
-    let field_mappings = match underlying_object_typename {
-        None => &empty_field_mappings,
-        Some(typename) => command_source
-            .type_mappings
-            .get(typename)
-            .and_then(|type_mapping| {
-                if let resolved::types::TypeMapping::Object { field_mappings } = type_mapping {
-                    Some(field_mappings)
-                } else {
-                    None
-                }
-            })
-            .ok_or_else(|| error::InternalEngineError::InternalGeneric {
-                description: format!(
-                    "type '{}' not found in command source type_mappings",
-                    typename
-                ),
-            })?,
-    };
-
     let mut command_arguments = BTreeMap::new();
     for argument in field_call.arguments.values() {
         command_arguments.extend(
@@ -121,11 +101,12 @@ pub(crate) fn generate_command_info<'n, 's>(
     let mut usage_counts = UsagesCounts::new();
     count_command(command_name.clone(), &mut usage_counts);
 
-    let selection = selection_set::generate_selection_set_ir(
-        &field.selection_set,
+    let selection = selection_set::generate_nested_selection(
+        result_type,
+        result_base_type_kind,
+        field,
         &command_source.data_connector,
         &command_source.type_mappings,
-        field_mappings,
         session_variables,
         &mut usage_counts,
     )?;
@@ -147,7 +128,8 @@ pub(crate) fn generate_function_based_command<'n, 's>(
     function_name: &'s open_dds::commands::FunctionName,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
-    underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: &TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
@@ -155,7 +137,8 @@ pub(crate) fn generate_function_based_command<'n, 's>(
         command_name,
         field,
         field_call,
-        underlying_object_typename,
+        result_type,
+        result_base_type_kind,
         command_source,
         session_variables,
     )?;
@@ -173,7 +156,8 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
     procedure_name: &'s open_dds::commands::ProcedureName,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
-    underlying_object_typename: &Option<subgraph::Qualified<open_dds::types::CustomTypeName>>,
+    result_type: &QualifiedTypeReference,
+    result_base_type_kind: &TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {
@@ -181,7 +165,8 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
         command_name,
         field,
         field_call,
-        underlying_object_typename,
+        result_type,
+        result_base_type_kind,
         command_source,
         session_variables,
     )?;

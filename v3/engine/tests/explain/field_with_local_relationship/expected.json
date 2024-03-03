@@ -3,42 +3,48 @@
     "type": "modelSelect",
     "value": {
       "modelName": "AuthorMany",
-      "queryRequest": {
-        "collection": "authors",
-        "query": {
-          "fields": {
-            "author_id": {
-              "type": "column",
-              "column": "id"
-            },
-            "first_name": {
-              "type": "column",
-              "column": "first_name"
-            },
-            "Articles": {
-              "type": "relationship",
-              "query": {
-                "fields": {
-                  "title": {
-                    "type": "column",
-                    "column": "title"
-                  }
-                }
+      "ndcRequest": {
+        "type": "query",
+        "value": {
+          "collection": "authors",
+          "query": {
+            "fields": {
+              "author_id": {
+                "type": "column",
+                "column": "id",
+                "fields": null
               },
-              "relationship": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+              "first_name": {
+                "type": "column",
+                "column": "first_name",
+                "fields": null
+              },
+              "Articles": {
+                "type": "relationship",
+                "query": {
+                  "fields": {
+                    "title": {
+                      "type": "column",
+                      "column": "title",
+                      "fields": null
+                    }
+                  }
+                },
+                "relationship": "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]",
+                "arguments": {}
+              }
+            }
+          },
+          "arguments": {},
+          "collection_relationships": {
+            "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]": {
+              "column_mapping": {
+                "id": "author_id"
+              },
+              "relationship_type": "array",
+              "target_collection": "articles",
               "arguments": {}
             }
-          }
-        },
-        "arguments": {},
-        "collection_relationships": {
-          "[{\"subgraph\":\"default\",\"name\":\"author\"},\"Articles\"]": {
-            "column_mapping": {
-              "id": "author_id"
-            },
-            "relationship_type": "array",
-            "target_collection": "articles",
-            "arguments": {}
           }
         }
       },

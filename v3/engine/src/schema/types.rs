@@ -16,6 +16,7 @@ use crate::{
         self,
         data_connector::DataConnectorLink,
         subgraph::{Qualified, QualifiedTypeReference},
+        types::NdcColumnForComparison,
     },
     schema::types::resolved::{
         subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap},
@@ -53,7 +54,10 @@ pub struct GlobalID {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
+    // `model_source` is are optional because we allow building schema without specifying a data source
+    // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<resolved::model::ModelSource>,
+    pub global_id_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -112,18 +116,26 @@ pub enum RootFieldAnnotation {
     },
     FunctionCommand {
         name: Qualified<commands::CommandName>,
-        underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
+        result_type: QualifiedTypeReference,
+        result_base_type_kind: TypeKind,
         // A command may/may not have a source
         source: Option<CommandSourceDetail>,
         function_name: Option<commands::FunctionName>,
     },
     ProcedureCommand {
         name: Qualified<commands::CommandName>,
-        underlying_object_typename: Option<Qualified<types::CustomTypeName>>,
+        result_type: QualifiedTypeReference,
+        result_base_type_kind: TypeKind,
         // A command may/may not have a source
         source: Option<CommandSourceDetail>,
         procedure_name: Option<commands::ProcedureName>,
     },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display, Copy)]
+pub enum TypeKind {
+    Scalar,
+    Object,
 }
 
 /// Annotations of the GraphQL output fields/types.
@@ -132,6 +144,8 @@ pub enum OutputAnnotation {
     RootField(RootFieldAnnotation),
     Field {
         name: types::FieldName,
+        field_type: QualifiedTypeReference,
+        field_base_type_kind: TypeKind,
     },
     GlobalIDField {
         /// The `global_id_fields` are required to calculate the
@@ -179,8 +193,15 @@ pub enum ModelInputAnnotation {
     ModelLimitArgument,
     ModelOffsetArgument,
     ModelUniqueIdentifierArgument {
-        field_name: types::FieldName,
+        // Optional because we allow building schema without specifying a data source
+        ndc_column: Option<NdcColumnForComparison>,
     },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+/// Annotations for Relay input arguments/types.
+pub enum RelayInputAnnotation {
+    NodeFieldIdArgument,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -195,6 +216,7 @@ pub enum InputAnnotation {
         argument_type: QualifiedTypeReference,
         ndc_func_proc_argument: Option<String>,
     },
+    Relay(RelayInputAnnotation),
 }
 
 /// Contains the different possible entities that can be used to generate

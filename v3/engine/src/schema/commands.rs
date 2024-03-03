@@ -16,6 +16,8 @@ use crate::schema::permissions;
 use crate::schema::types::{self, output_type::get_output_type, Annotation};
 use crate::schema::GDS;
 
+use super::types::output_type::get_type_kind;
+
 pub enum Response {
     QueryResponse {
         response: gdc::models::QueryResponse,
@@ -130,7 +132,8 @@ pub(crate) fn function_command_field(
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
         types::RootFieldAnnotation::FunctionCommand {
             name: command.name.clone(),
-            underlying_object_typename: command.underlying_object_typename.clone(),
+            result_type: command.output_type.clone(),
+            result_base_type_kind: get_type_kind(gds, &command.output_type)?,
             source: command_source_detail,
             function_name,
         },
@@ -180,7 +183,8 @@ pub(crate) fn procedure_command_field(
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
         types::RootFieldAnnotation::ProcedureCommand {
             name: command.name.clone(),
-            underlying_object_typename: command.underlying_object_typename.clone(),
+            result_type: command.output_type.clone(),
+            result_base_type_kind: get_type_kind(gds, &command.output_type)?,
             source: command_source_detail,
             procedure_name,
         },

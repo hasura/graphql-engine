@@ -140,25 +140,12 @@ pub(crate) fn build_filter_expression<'s>(
                     types::Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::ComparisonOperation { operator },
                     )) => {
-                        let expression = match operator.as_str() {
-                            "_eq" => build_binary_comparison_expression(
-                                gdc::models::BinaryComparisonOperator::Equal,
-                                column.clone(),
-                                &op_value.value,
-                                &relationship_paths,
-                            ),
-                            other => {
-                                let operator = gdc::models::BinaryComparisonOperator::Other {
-                                    name: other.to_string(),
-                                };
-                                build_binary_comparison_expression(
-                                    operator,
-                                    column.clone(),
-                                    &op_value.value,
-                                    &relationship_paths,
-                                )
-                            }
-                        };
+                        let expression = build_binary_comparison_expression(
+                            operator,
+                            column.clone(),
+                            &op_value.value,
+                            &relationship_paths,
+                        );
                         expressions.push(expression)
                     }
                     annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -232,7 +219,7 @@ pub(crate) fn build_filter_expression<'s>(
 
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression(
-    operator: gdc::models::BinaryComparisonOperator,
+    operator: &str,
     column: String,
     value: &normalized_ast::Value<'_, GDS>,
     relationship_paths: &Vec<NDCRelationshipName>,
@@ -244,7 +231,7 @@ fn build_binary_comparison_expression(
             name: column,
             path: path_elements,
         },
-        operator,
+        operator: operator.to_string(),
         value: gdc::models::ComparisonValue::Scalar {
             value: value.as_json(),
         },
@@ -290,9 +277,9 @@ pub fn build_path_elements(
             arguments: BTreeMap::new(),
             // 'AND' predicate indicates that the column can be accessed
             // by joining all the relationships paths provided
-            predicate: Box::new(gdc::models::Expression::And {
+            predicate: Some(Box::new(gdc::models::Expression::And {
                 expressions: Vec::new(),
-            }),
+            })),
         })
     }
     path_elements

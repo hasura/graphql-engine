@@ -77,6 +77,24 @@ fn test_model_select_many_filter() {
     common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
 }
 
+// Nested selection tests
+#[test]
+fn test_model_select_many_nested_select() {
+    let test_path_string = "execute/models/select_many/nested_select";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
+// Same test as above, but with no type mappings defined in the metadata.
+// Tests that the engine will correctly add default type mappings
+// When resolving the metadata.
+#[test]
+fn test_model_select_many_nested_select_no_explicit_type_mapping() {
+    let test_path_string = "execute/models/select_many/nested_select/no_explicit_type_mapping";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+}
+
 // Order By Tests
 #[test]
 fn test_model_select_many_order_by() {

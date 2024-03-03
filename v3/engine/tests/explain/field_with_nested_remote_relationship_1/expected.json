@@ -6,50 +6,58 @@
         "type": "modelSelect",
         "value": {
           "modelName": "Album",
-          "queryRequest": {
-            "collection": "Album",
-            "query": {
-              "fields": {
-                "AlbumId": {
-                  "type": "column",
-                  "column": "AlbumId"
-                },
-                "ArtistId": {
-                  "type": "column",
-                  "column": "ArtistId"
-                },
-                "__hasura_phantom_field__ArtistId": {
-                  "type": "column",
-                  "column": "ArtistId"
-                },
-                "Tracks": {
-                  "type": "relationship",
-                  "query": {
-                    "fields": {
-                      "TrackId": {
-                        "type": "column",
-                        "column": "TrackId"
-                      },
-                      "__hasura_phantom_field__AlbumId": {
-                        "type": "column",
-                        "column": "AlbumId"
-                      }
-                    }
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "Album",
+              "query": {
+                "fields": {
+                  "AlbumId": {
+                    "type": "column",
+                    "column": "AlbumId",
+                    "fields": null
                   },
-                  "relationship": "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]",
+                  "ArtistId": {
+                    "type": "column",
+                    "column": "ArtistId",
+                    "fields": null
+                  },
+                  "__hasura_phantom_field__ArtistId": {
+                    "type": "column",
+                    "column": "ArtistId",
+                    "fields": null
+                  },
+                  "Tracks": {
+                    "type": "relationship",
+                    "query": {
+                      "fields": {
+                        "TrackId": {
+                          "type": "column",
+                          "column": "TrackId",
+                          "fields": null
+                        },
+                        "__hasura_phantom_field__AlbumId": {
+                          "type": "column",
+                          "column": "AlbumId",
+                          "fields": null
+                        }
+                      }
+                    },
+                    "relationship": "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]",
+                    "arguments": {}
+                  }
+                }
+              },
+              "arguments": {},
+              "collection_relationships": {
+                "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]": {
+                  "column_mapping": {
+                    "AlbumId": "AlbumId"
+                  },
+                  "relationship_type": "array",
+                  "target_collection": "Track",
                   "arguments": {}
                 }
-              }
-            },
-            "arguments": {},
-            "collection_relationships": {
-              "[{\"subgraph\":\"connector_2\",\"name\":\"Album\"},\"Tracks\"]": {
-                "column_mapping": {
-                  "AlbumId": "AlbumId"
-                },
-                "relationship_type": "array",
-                "target_collection": "Track",
-                "arguments": {}
               }
             }
           },
@@ -72,34 +80,36 @@
               "type": "modelSelect",
               "value": {
                 "modelName": "Artist",
-                "queryRequest": {
-                  "collection": "Artist",
-                  "query": {
-                    "fields": {
-                      "ArtistId": {
-                        "type": "column",
-                        "column": "ArtistId"
+                "ndcRequest": {
+                  "type": "query",
+                  "value": {
+                    "collection": "Artist",
+                    "query": {
+                      "fields": {
+                        "ArtistId": {
+                          "type": "column",
+                          "column": "ArtistId",
+                          "fields": null
+                        }
+                      },
+                      "predicate": {
+                        "type": "binary_comparison_operator",
+                        "column": {
+                          "type": "column",
+                          "name": "ArtistId",
+                          "path": []
+                        },
+                        "operator": "_eq",
+                        "value": {
+                          "type": "variable",
+                          "name": "$ArtistId"
+                        }
                       }
                     },
-                    "where": {
-                      "type": "binary_comparison_operator",
-                      "column": {
-                        "type": "column",
-                        "name": "ArtistId",
-                        "path": []
-                      },
-                      "operator": {
-                        "type": "equal"
-                      },
-                      "value": {
-                        "type": "variable",
-                        "name": "$ArtistId"
-                      }
-                    }
-                  },
-                  "arguments": {},
-                  "collection_relationships": {},
-                  "variables": []
+                    "arguments": {},
+                    "collection_relationships": {},
+                    "variables": []
+                  }
                 },
                 "ndcExplain": {
                   "type": "response",
@@ -121,34 +131,36 @@
                   "type": "modelSelect",
                   "value": {
                     "modelName": "Album",
-                    "queryRequest": {
-                      "collection": "Album",
-                      "query": {
-                        "fields": {
-                          "AlbumId": {
-                            "type": "column",
-                            "column": "AlbumId"
+                    "ndcRequest": {
+                      "type": "query",
+                      "value": {
+                        "collection": "Album",
+                        "query": {
+                          "fields": {
+                            "AlbumId": {
+                              "type": "column",
+                              "column": "AlbumId",
+                              "fields": null
+                            }
+                          },
+                          "predicate": {
+                            "type": "binary_comparison_operator",
+                            "column": {
+                              "type": "column",
+                              "name": "AlbumId",
+                              "path": []
+                            },
+                            "operator": "_eq",
+                            "value": {
+                              "type": "variable",
+                              "name": "$AlbumId"
+                            }
                           }
                         },
-                        "where": {
-                          "type": "binary_comparison_operator",
-                          "column": {
-                            "type": "column",
-                            "name": "AlbumId",
-                            "path": []
-                          },
-                          "operator": {
-                            "type": "equal"
-                          },
-                          "value": {
-                            "type": "variable",
-                            "name": "$AlbumId"
-                          }
-                        }
-                      },
-                      "arguments": {},
-                      "collection_relationships": {},
-                      "variables": []
+                        "arguments": {},
+                        "collection_relationships": {},
+                        "variables": []
+                      }
                     },
                     "ndcExplain": {
                       "type": "response",

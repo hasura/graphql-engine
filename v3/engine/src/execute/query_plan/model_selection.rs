@@ -3,6 +3,7 @@
 use ndc_client as ndc;
 use std::collections::BTreeMap;
 
+use super::relationships;
 use super::selection_set;
 use crate::execute::error;
 use crate::execute::ir::model_selection::ModelSelection;
@@ -43,7 +44,8 @@ pub(crate) fn ndc_ir<'s, 'ir>(
     error::Error,
 > {
     let mut collection_relationships = BTreeMap::new();
-    selection_set::collect_relationships(&ir.selection, &mut collection_relationships)?;
+    relationships::collect_relationships(ir, &mut collection_relationships)?;
+
     let (query, join_locations) = ndc_query(ir, join_id_counter)?;
     let query_request = ndc::models::QueryRequest {
         query,
