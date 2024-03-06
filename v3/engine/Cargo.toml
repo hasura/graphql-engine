@@ -1,7 +1,9 @@
 [package]
 name = "engine"
-version = "3.0.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
 build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

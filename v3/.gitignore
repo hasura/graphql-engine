@@ -22,8 +22,8 @@ coverage/
 
 # direnv stuff
 .direnv
+.envrc.local
 
 # nix outputs
 /result
 /result-*
-
