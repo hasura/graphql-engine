@@ -33,9 +33,24 @@
       in
       {
         formatter = pkgs.nixpkgs-fmt;
+
         packages = {
           # a binary for whichever is the local computer
-          default = rust.callPackage ./nix/app.nix { };
+          default = rust.callPackage ./nix/app.nix {
+            version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+          };
+        };
+
+        apps = {
+          default = self.apps.${localSystem}.engine;
+          engine = flake-utils.lib.mkApp {
+            drv = self.packages.${localSystem}.default;
+            name = "engine";
+          };
+          agent = flake-utils.lib.mkApp {
+            drv = self.packages.${localSystem}.default;
+            name = "engine";
+          };
         };
 
         devShells = {

@@ -1,6 +1,7 @@
 # This is a function that returns a derivation for the compiled Rust project.
 { craneLib
 , lib
+, version
 , stdenv
 , openssl
 , libiconv
@@ -14,11 +15,13 @@ let
 
     src =
       let
-        isJsonFile = path: _type: builtins.match ".*json" path != null;
         isGraphqlFile = path: _type: builtins.match ".*graphql" path != null;
+        isHtmlFile = path: _type: builtins.match ".*html" path != null;
+        isJsonFile = path: _type: builtins.match ".*json" path != null;
         isSourceFile = path: type:
-          isJsonFile path type
-          || isGraphqlFile path type
+          isGraphqlFile path type
+          || isHtmlFile path type
+          || isJsonFile path type
           || craneLib.filterCargoSources path type;
       in
       lib.cleanSourceWith { src = craneLib.path ./..; filter = isSourceFile; };
@@ -45,4 +48,5 @@ craneLib.buildPackage
   (buildArgs // {
     inherit cargoArtifacts;
     doCheck = false;
+    RELEASE_VERSION = version;
   })

@@ -1,3 +1,7 @@
+use std::fmt::Display;
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use axum::{
     body::HttpBody,
     extract::State,
@@ -8,23 +12,22 @@ use axum::{
     Extension, Json, Router,
 };
 use clap::Parser;
-
-use ::engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
-use engine::{schema::GDS, VERSION};
-use hasura_authn_core::Session;
-use hasura_authn_jwt::auth as jwt_auth;
-use hasura_authn_jwt::jwt;
-use hasura_authn_webhook::webhook;
-use lang_graphql as gql;
-use std::path::PathBuf;
-use std::{fmt::Display, sync::Arc};
 use tower_http::trace::TraceLayer;
 use tracing_util::{
     add_event_on_active_span, set_status_on_current_span, AttributeVisibility, ErrorVisibility,
     SpanVisibility, TraceableError, TraceableHttpResponse,
 };
 
+use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
+use engine::{schema::GDS, VERSION};
+use hasura_authn_core::Session;
+use hasura_authn_jwt::auth as jwt_auth;
+use hasura_authn_jwt::jwt;
+use hasura_authn_webhook::webhook;
+use lang_graphql as gql;
+
 #[derive(Parser)]
+#[command(version = VERSION)]
 struct ServerOptions {
     #[arg(long, value_name = "METADATA_FILE", env = "METADATA_PATH")]
     metadata_path: PathBuf,
