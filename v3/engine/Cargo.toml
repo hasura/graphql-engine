@@ -44,6 +44,7 @@ clap = { version = "4", features = ["derive", "env"] }
 tokio = { version = "1.26.0", features = [
     "macros",
     "rt-multi-thread",
+    "signal",
     "parking_lot",
 ] }
 axum = { version = "0.6.20" }
