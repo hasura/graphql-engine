@@ -8,10 +8,11 @@ license.workspace = true
 
 [dependencies]
 derive_more = "0.99.17"
-opentelemetry = { version = "0.20.0", features = ["rt-tokio"] }
-opentelemetry-otlp = "0.13.0"
-opentelemetry_sdk = "0.20.0"
-opentelemetry-semantic-conventions = "0.12.0"
+opentelemetry = "0.21.0"
+opentelemetry-otlp = "0.14.0"
+opentelemetry_sdk = { version = "0.21.2", features = ["rt-tokio"] }
+opentelemetry-semantic-conventions = "0.13.0"
+opentelemetry-stdout = { version = "0.2.0", features = ["trace"] }
 strum = "0.25.0"
 http = "0.2.9"
 
