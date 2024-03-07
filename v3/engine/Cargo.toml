@@ -18,7 +18,7 @@ thiserror = "1.0"
 hasura-authn-core = { path = "../hasura-authn-core" }
 lang-graphql = { path = "../lang-graphql" }
 tracing-util = { path = "../tracing-util" }
-ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.18" }
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
 open-dds = { path = "../open-dds" }
 # util = { path = "../util" }
 serde = "1.0.152"
