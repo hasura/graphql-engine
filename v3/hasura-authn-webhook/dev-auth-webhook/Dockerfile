@@ -1,16 +1,16 @@
-# syntax=docker/dockerfile:1
-
-FROM node:18-alpine
-ENV NODE_ENV=production
+# build
+FROM rust:1.75-buster AS builder
 
 WORKDIR /app
+COPY Cargo.toml Cargo.lock .
+COPY src ./src
 
-COPY ["package.json", "package-lock.json*", "./"]
+RUN cargo build --release
 
-RUN npm install
+# copy
+FROM ubuntu:jammy
 
-COPY . .
-
-CMD ["node", "index.js"]
+COPY --from=builder /app/target/release/hasura-dev-auth-webhook /usr/bin
 
 EXPOSE 3050
+ENTRYPOINT ["/usr/bin/hasura-dev-auth-webhook"]
