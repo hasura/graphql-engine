@@ -1,13 +1,14 @@
 [package]
 name = "open-dds"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 derive_more = "0.99.17"
-ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0-rc.18" }
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
 schemars = { version = "0.8.12", features = ["smol_str", "preserve_order"] }
 serde = "1.0.152"
 serde_json = { version = "1.0.92", features = ["preserve_order"] }

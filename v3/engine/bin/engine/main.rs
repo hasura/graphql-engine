@@ -1,3 +1,7 @@
+use std::fmt::Display;
+use std::path::PathBuf;
+use std::sync::Arc;
+
 use axum::{
     body::HttpBody,
     extract::State,
@@ -8,23 +12,22 @@ use axum::{
     Extension, Json, Router,
 };
 use clap::Parser;
-
-use ::engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
-use engine::{schema::GDS, VERSION};
-use hasura_authn_core::Session;
-use hasura_authn_jwt::auth as jwt_auth;
-use hasura_authn_jwt::jwt;
-use hasura_authn_webhook::webhook;
-use lang_graphql as gql;
-use std::path::PathBuf;
-use std::{fmt::Display, sync::Arc};
 use tower_http::trace::TraceLayer;
 use tracing_util::{
     add_event_on_active_span, set_status_on_current_span, AttributeVisibility, ErrorVisibility,
     SpanVisibility, TraceableError, TraceableHttpResponse,
 };
 
+use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
+use engine::{schema::GDS, VERSION};
+use hasura_authn_core::Session;
+use hasura_authn_jwt::auth as jwt_auth;
+use hasura_authn_jwt::jwt;
+use hasura_authn_webhook::webhook;
+use lang_graphql as gql;
+
 #[derive(Parser)]
+#[command(version = VERSION)]
 struct ServerOptions {
     #[arg(long, value_name = "METADATA_FILE", env = "METADATA_PATH")]
     metadata_path: PathBuf,
@@ -63,6 +66,41 @@ async fn main() {
     }
 
     tracing_util::shutdown_tracer();
+}
+
+// Connects a signal handler for the unix SIGTERM signal. (This is the standard signal that unix
+// systems send when pressing ctrl+c or running `kill`. It is distinct from the "force kill" signal
+// which is SIGKILL.) This function produces a future that resolves when a SIGTERM is received. We
+// pass the future to axum's `with_graceful_shutdown` method to instruct axum to start a graceful
+// shutdown when the signal is received.
+//
+// Listening for SIGTERM specifically avoids a 10-second delay when stopping the process.
+//
+// Also listens for tokio's cross-platform `ctrl_c` signal polyfill.
+//
+// copied from https://github.com/davidB/axum-tracing-opentelemetry/blob/main/examples/otlp/src/main.rs
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -143,6 +181,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // run it with hyper on `addr`
     axum::Server::bind(&addr.as_str().parse().unwrap())
         .serve(app.into_make_service())
+        .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
 
