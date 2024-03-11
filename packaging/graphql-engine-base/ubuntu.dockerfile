@@ -1,6 +1,6 @@
-# DATE VERSION: 2024-02-28
+# DATE VERSION: 2024-03-11
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
-FROM ubuntu:focal-20240123
+FROM ubuntu:focal-20240216
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
