@@ -56,21 +56,56 @@ where
             }
         },
         ast::BaseType::List(wrapped_type) => {
-            let normalized_list =
+            if value.is_null() {
+                Ok(normalized::Value::SimpleValue(
+                    normalized::SimpleValue::Null,
+                ))
+            } else if value.is_list() {
                 value.fold_list(schema, namespace, context, location_type, |mut l, v| {
-                    l.push(normalize(
-                        schema,
-                        namespace,
-                        context,
-                        v,
-                        &LocationType::List {
-                            type_: wrapped_type,
-                        },
-                        type_info,
-                    )?);
-                    Ok(l)
-                })?;
-            Ok(normalized_list)
+                    // when normalizing list values, we don't want to coerce values as lists
+                    // i.e, `[1,2]` isn't a valid value for `[[Int]]` but `1` is a valid value for `[Int]`
+                    if wrapped_type.is_list() && !v.is_list() {
+                        // raise an error
+                        Err(Error::IncorrectFormat {
+                            expected_type: "LIST",
+                            actual_type: value.kind(),
+                        })
+                    } else {
+                        l.push(normalize(
+                            schema,
+                            namespace,
+                            context,
+                            v,
+                            &LocationType::List {
+                                type_: wrapped_type,
+                            },
+                            type_info,
+                        )?);
+                        Ok(l)
+                    }
+                })
+            } else {
+                // get the dimension of the list type
+                // [Int] -> 1, [[Int]] -> 2, [[[Int]]] -> 3
+                let expected_list_type_dimensions = wrapped_type.list_dimensions() + 1;
+                // coerce the value to location_type.base.underlying_type()
+                let expected_base_type = location_type.type_().underlying_type_container();
+                let normalized_value = normalize(
+                    schema,
+                    namespace,
+                    context,
+                    value,
+                    &LocationType::NoLocation {
+                        type_: expected_base_type,
+                    },
+                    type_info,
+                )?;
+                // Wrap the coerced value into a list, dimension times.
+                Ok(create_nested_vec(
+                    expected_list_type_dimensions,
+                    normalized_value,
+                ))
+            }
         }
     }?;
     if !location_type.type_().nullable && normalized_value.is_null() {
@@ -80,6 +115,17 @@ where
     } else {
         Ok(normalized_value)
     }
+}
+
+fn create_nested_vec<S: schema::SchemaContext>(
+    dimension: usize,
+    value: normalized::Value<'_, S>,
+) -> normalized::Value<'_, S> {
+    let mut current = value;
+    for _ in 0..dimension {
+        current = normalized::Value::List(vec![current]);
+    }
+    current
 }
 
 fn normalize_enum_value<'q, 's, S: schema::SchemaContext, V: ValueSource<'q, 's, S>>(
@@ -246,4 +292,269 @@ where
     //     Ok(normalized_object)
     // }
     Ok(normalized_object)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::parser::Parser;
+    use crate::schema::sdl::SDL;
+    use crate::schema::Schema;
+    use crate::validation::input::source::LocationType::List;
+    use crate::{
+        ast::{common as ast, value},
+        mk_name, normalized_ast,
+        schema::{sdl, InputType, Scalar},
+        validation::input::normalize,
+    };
+
+    fn fake_schema() -> Schema<SDL> {
+        sdl::SDL::new("type Query {foo: Int}")
+            .and_then(|v| v.build_schema())
+            .unwrap()
+    }
+
+    fn list_int() -> ast::TypeContainer<ast::TypeName> {
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        ast::TypeContainer {
+            nullable: true,
+            base: ast::BaseTypeContainer::List(Box::new(ast::TypeContainer {
+                nullable: true,
+                base: ast::BaseTypeContainer::Named(int_typename),
+            })),
+        }
+    }
+
+    fn list_list_int() -> ast::TypeContainer<ast::TypeName> {
+        ast::TypeContainer {
+            nullable: true,
+            base: ast::BaseTypeContainer::List(Box::new(list_int())),
+        }
+    }
+
+    // Test the examples from https://spec.graphql.org/October2021/#sec-List.Input-Coercion
+    #[test]
+    fn test_input_coercion_for_list_example_1() {
+        // Test if foo: [Int] = [1,2,3] is coerced to [1,2,3]
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = Parser::new("[1,2,3]").parse_const_value().unwrap().item;
+        let location_type = List { type_: &list_int() };
+        let expected_value = normalized_ast::Value::List(vec![
+            normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(1)),
+            normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(2)),
+            normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(3)),
+        ]);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_2() {
+        // Test if foo: [Int] = 1 is coerced to [1]
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = value::ConstValue::SimpleValue(value::SimpleValue::Integer(1));
+        let location_type = List { type_: &list_int() };
+        let expected_value = normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+            normalized_ast::SimpleValue::Integer(1),
+        )]);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_3() {
+        // Test if foo: [Int] = null is coerced to null
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = value::ConstValue::SimpleValue(value::SimpleValue::Null);
+        let location_type = List { type_: &list_int() };
+        let expected_value = normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Null);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_4() {
+        // Test if foo: [Int] = [1, "b", true] is not coerced
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = Parser::new("[1, \"b\", true]")
+            .parse_const_value()
+            .unwrap()
+            .item;
+        let location_type = List { type_: &list_int() };
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        );
+        assert!(normalized_value.is_err());
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_5() {
+        // Test if foo: [[Int]] = 1 is coerced to [[1]]
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = value::ConstValue::SimpleValue(value::SimpleValue::Integer(1));
+        let location_type = List {
+            type_: &list_list_int(),
+        };
+        let expected_value = normalized_ast::Value::List(vec![normalized_ast::Value::List(vec![
+            normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(1)),
+        ])]);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_6() {
+        // Test if foo: [[Int]] = [1,2,3] is not coerced
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = Parser::new("[1,2,3]").parse_const_value().unwrap().item;
+        let location_type = List {
+            type_: &list_list_int(),
+        };
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        );
+        assert!(normalized_value.is_err());
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_7() {
+        // Test if foo: [[Int]] = null is coerced to null
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = value::ConstValue::SimpleValue(value::SimpleValue::Null);
+        let location_type = List {
+            type_: &list_list_int(),
+        };
+        let expected_value = normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Null);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
+
+    #[test]
+    fn test_input_coercion_for_list_example_8() {
+        // Test if foo: [[Int]] = [[1], [2, 3]] is coerced to [[1], [2, 3]]
+        let int_typename = ast::TypeName(mk_name!("Int"));
+        let int_scalar = Scalar {
+            name: int_typename.clone(),
+            description: None,
+        };
+        let int_scalar_type_info = InputType::Scalar(&int_scalar);
+        let schema = fake_schema();
+        let value = Parser::new("[[1], [2, 3]]")
+            .parse_const_value()
+            .unwrap()
+            .item;
+        let location_type = List {
+            type_: &list_list_int(),
+        };
+        let expected_value = normalized_ast::Value::List(vec![
+            normalized_ast::Value::List(vec![normalized_ast::Value::SimpleValue(
+                normalized_ast::SimpleValue::Integer(1),
+            )]),
+            normalized_ast::Value::List(vec![
+                normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(2)),
+                normalized_ast::Value::SimpleValue(normalized_ast::SimpleValue::Integer(3)),
+            ]),
+        ]);
+        let normalized_value = normalize::normalize(
+            &schema,
+            &sdl::Namespace,
+            &(),
+            &value,
+            &location_type,
+            &int_scalar_type_info,
+        )
+        .unwrap();
+        assert_eq!(normalized_value, expected_value);
+    }
 }

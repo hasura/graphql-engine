@@ -198,6 +198,13 @@ impl<T> TypeContainer<T> {
         }
     }
 
+    pub fn underlying_type_container(&self) -> &TypeContainer<T> {
+        match &self.base {
+            BaseTypeContainer::Named(_) => self,
+            BaseTypeContainer::List(ty) => ty.underlying_type_container(),
+        }
+    }
+
     pub fn is_list(&self) -> bool {
         match &self.base {
             BaseTypeContainer::Named(_) => false,
@@ -212,6 +219,13 @@ impl<T> TypeContainer<T> {
         TypeContainer {
             base: self.base.map(f),
             nullable: self.nullable,
+        }
+    }
+
+    pub fn list_dimensions(&self) -> usize {
+        match &self.base {
+            BaseTypeContainer::Named(_) => 0,
+            BaseTypeContainer::List(ty) => 1 + ty.list_dimensions(),
         }
     }
 }

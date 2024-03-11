@@ -167,4 +167,16 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for gql::ConstValu
     ) -> Result<serde_json::Value> {
         Ok(self.to_json())
     }
+
+    fn is_list(&self) -> bool {
+        self.as_list().is_some()
+    }
+
+    fn is_null(&self) -> bool {
+        self.is_null()
+    }
+
+    fn kind(&self) -> &'static str {
+        self.kind()
+    }
 }
