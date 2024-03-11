@@ -7,4 +7,4 @@ ENV HGE_BINARY ${HGE_BINARY_NAME}
 COPY rootfs/${HGE_BINARY} /bin/
 COPY rootfs/srv/ /srv/
 
-CMD "${HGE_BINARY}" +RTS --nonmoving-gc -RTS serve
+CMD "${HGE_BINARY}" serve
