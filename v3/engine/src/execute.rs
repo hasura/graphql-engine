@@ -311,7 +311,7 @@ mod tests {
 
         let schema = fs::read_to_string(test_dir.join("schema.json")).unwrap();
 
-        let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
+        let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         for input_file in fs::read_dir(test_dir.join("generate_ir")).unwrap() {

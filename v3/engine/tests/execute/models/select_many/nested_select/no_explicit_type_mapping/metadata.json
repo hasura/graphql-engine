@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../../../../open-dds/metadata.jsonschema",
   "version": "v2",
   "subgraphs": [
     {

@@ -62,7 +62,7 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         // Ensure schema is serialized successfully.
@@ -130,7 +130,7 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         // Verify successful serialization and deserialization of the schema.
@@ -238,7 +238,7 @@ pub fn test_execute_explain(
                 .iter()
                 .map(|path| root_test_dir.join(path)),
         );
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
         let session = {
             let session_variables_raw = r#"{

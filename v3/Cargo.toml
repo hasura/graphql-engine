@@ -13,7 +13,8 @@ members = [
   "hasura-authn-core",
   "hasura-authn-webhook",
   "hasura-authn-jwt",
-  "custom-connector"
+  "custom-connector",
+  "opendds-derive"
 ]
 
 [profile.release]

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     arguments::ArgumentName,
     commands::CommandName,
+    impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
     types::{CustomTypeName, FieldName},
@@ -11,9 +12,19 @@ use crate::{
 
 /// The name of the GraphQL relationship field.
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, derive_more::Display, Hash,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    derive_more::Display,
+    Hash,
+    opendds_derive::OpenDd,
 )]
 pub struct RelationshipName(pub String);
+
+impl_JsonSchema_with_OpenDd_for!(RelationshipName);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 /// Type of the relationship.
@@ -63,7 +74,9 @@ pub struct CommandRelationshipTarget {
     pub subgraph: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "RelationshipTarget")]
@@ -100,7 +113,9 @@ pub struct FieldAccess {
     // pub arguments: HashMap<ArgumentName, ValueExpression>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "RelationshipMappingSource")]
 /// The source configuration for a relationship mapping.
@@ -119,7 +134,9 @@ pub struct ArgumentMappingTarget {
     pub argument_name: ArgumentName,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "RelationshipMappingTarget")]
 /// The target configuration for a relationship mapping.
@@ -130,10 +147,11 @@ pub enum RelationshipMappingTarget {
     ModelField(Vec<FieldAccess>),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "RelationshipMapping")]
-#[schemars(example = "RelationshipMapping::example")]
+#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(json_schema(
+    title = "RelationshipMapping",
+    example = "RelationshipMapping::example"
+))]
 /// Definition of a how a particular field in the source maps to a target field or argument.
 pub struct RelationshipMapping {
     /// The source configuration for this relationship mapping.
@@ -143,36 +161,30 @@ pub struct RelationshipMapping {
 }
 
 impl RelationshipMapping {
-    fn example() -> Self {
-        serde_json::from_str(
-            r#"
+    fn example() -> serde_json::Value {
+        serde_json::json!(
             {
                 "source": {
-                "fieldPath": [
-                    {
-                    "fieldName": "author_id"
-                    }
-                ]
+                    "fieldPath": [
+                        {
+                            "fieldName": "author_id"
+                        }
+                    ]
                 },
                 "target": {
-                "modelField": [
-                    {
-                    "fieldName": "author_id"
-                    }
-                ]
+                    "modelField": [
+                        {
+                            "fieldName": "author_id"
+                        }
+                    ]
                 }
             }
-        "#,
         )
-        .unwrap()
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(tag = "version", content = "definition")]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "Relationship")]
+#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(as_versioned_with_definition, json_schema(title = "Relationship"))]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub enum Relationship {
     V1(RelationshipV1),
@@ -186,11 +198,8 @@ impl Relationship {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "RelationshipV1")]
-#[schemars(example = "RelationshipV1::example")]
+#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "RelationshipV1", example = "RelationshipV1::example"))]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub struct RelationshipV1 {
     /// The name of the relationship.
@@ -201,46 +210,45 @@ pub struct RelationshipV1 {
     pub target: RelationshipTarget,
     /// The mapping configuration of source to target for the relationship.
     pub mapping: Vec<RelationshipMapping>,
-    /// The description of the relationship.  
+    /// The description of the relationship.
     /// Gets added to the description of the relationship in the graphql schema.
     pub description: Option<String>,
 }
 
 impl RelationshipV1 {
-    fn example() -> Self {
-        serde_json::from_str(
-            r#"
+    fn example() -> serde_json::Value {
+        serde_json::json!(
             {
-                "source": "author",
                 "name": "Articles",
-                "description": "Articles written by an author",
+                "source": "author",
                 "target": {
-                  "model": {
-                    "name": "Articles",
-                    "relationshipType": "Array"
-                  }
+                    "model": {
+                        "name": "Articles",
+                        "namespace": null,
+                        "subgraph": null,
+                        "relationshipType": "Array"
+                    }
                 },
                 "mapping": [
-                  {
-                    "source": {
-                      "fieldPath": [
-                        {
-                          "fieldName": "author_id"
+                    {
+                        "source": {
+                            "fieldPath": [
+                                {
+                                    "fieldName": "author_id"
+                                }
+                            ]
+                        },
+                        "target": {
+                            "modelField": [
+                                {
+                                    "fieldName": "author_id"
+                                }
+                            ]
                         }
-                      ]
-                    },
-                    "target": {
-                      "modelField": [
-                        {
-                          "fieldName": "author_id"
-                        }
-                      ]
                     }
-                  }
-                ]
+                ],
+                "description": "Articles written by an author"
             }
-        "#,
         )
-        .unwrap()
     }
 }

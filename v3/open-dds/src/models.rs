@@ -8,22 +8,31 @@ use crate::{
     arguments::{ArgumentDefinition, ArgumentName},
     commands::TypeMapping,
     data_connector::DataConnectorName,
+    impl_JsonSchema_with_OpenDd_for,
+    traits::{OpenDd, OpenDdDeserializeError},
     types::{CustomTypeName, FieldName, GraphQlFieldName, GraphQlTypeName},
 };
 
 /// The name of data model.
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, JsonSchema,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    derive_more::Display,
+    opendds_derive::OpenDd,
 )]
 pub struct ModelName(pub String);
 
+impl_JsonSchema_with_OpenDd_for!(ModelName);
+
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(tag = "version", content = "definition")]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "Model")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(as_versioned_with_definition, json_schema(title = "Model"))]
 pub enum Model {
     V1(ModelV1),
 }
@@ -36,11 +45,8 @@ impl Model {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "ModelV1")]
-#[schemars(example = "ModelV1::example")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "ModelV1", example = "ModelV1::example"))]
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
 pub struct ModelV1 {
@@ -48,11 +54,11 @@ pub struct ModelV1 {
     pub name: ModelName,
     /// The type of the objects of which this model is a collection.
     pub object_type: CustomTypeName,
-    #[serde(default)]
     /// Whether this model should be used as the global ID source for all objects of its type.
+    #[opendd(default)]
     pub global_id_source: bool,
-    #[serde(default)]
     /// A list of arguments accepted by this model. Defaults to no arguments.
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub arguments: Vec<ArgumentDefinition>,
     /// The source configuration for this model.
     pub source: Option<ModelSource>,
@@ -68,102 +74,97 @@ pub struct ModelV1 {
 }
 
 impl ModelV1 {
-    fn example() -> Self {
-        serde_json::from_str(
-            r#"
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+          "name": "Articles",
+          "objectType": "article",
+          "globalIdSource": true,
+          "arguments": [],
+          "source": {
+            "dataConnectorName": "data_connector",
+            "collection": "articles",
+            "typeMapping": {
+              "article": {
+                "fieldMapping": {
+                  "article_id": {
+                    "column": "id"
+                  },
+                  "title": {
+                    "column": "title"
+                  },
+                  "author_id": {
+                    "column": "author_id"
+                  }
+                }
+              }
+            },
+            "argumentMapping": {}
+          },
+          "filterableFields": [
             {
-              "name": "Articles",
-              "description": "Description for the model Articles",
-              "objectType": "article",
-              "globalIdSource": true,
-              "source": {
-                "dataConnectorName": "data_connector",
-                "collection": "articles",
-                "typeMapping": {
-                  "article": {
-                    "fieldMapping": {
-                      "article_id": {
-                        "column": "id"
-                      },
-                      "title": {
-                        "column": "title"
-                      },
-                      "author_id": {
-                        "column": "author_id"
-                      }
-                    }
-                  }
-                }
-              },
-              "filterableFields": [
-                {
-                  "fieldName": "article_id",
-                  "operators": {
-                    "enableAll": true
-                  }
-                },
-                {
-                  "fieldName": "title",
-                  "operators": {
-                    "enableAll": true
-                  }
-                },
-                {
-                  "fieldName": "author_id",
-                  "operators": {
-                    "enableAll": true
-                  }
-                }
-              ],
-              "orderableFields": [
-                {
-                  "fieldName": "article_id",
-                  "orderByDirections": {
-                    "enableAll": true
-                  }
-                },
-                {
-                  "fieldName": "title",
-                  "orderByDirections": {
-                    "enableAll": true
-                  }
-                },
-                {
-                  "fieldName": "author_id",
-                  "orderByDirections": {
-                    "enableAll": true
-                  }
-                }
-              ],
-              "graphql": {
-                "selectUniques": [
-                  {
-                    "queryRootField": "ArticleByID",
-                    "uniqueIdentifier": [
-                      "article_id"
-                    ],
-                    "description": "Description for the select unique ArticleByID"
-                  }
-                ],
-                "selectMany": {
-                  "queryRootField": "ArticleMany",
-                  "description": "Description for the select many ArticleMany"
-                },
-                "filterExpressionType": "Article_Where_Exp",
-                "orderByExpressionType": "Article_Order_By"
+              "fieldName": "article_id",
+              "operators": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "title",
+              "operators": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "author_id",
+              "operators": {
+                "enableAll": true
               }
             }
-        "#,
-        )
-        .unwrap()
+          ],
+          "orderableFields": [
+            {
+              "fieldName": "article_id",
+              "orderByDirections": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "title",
+              "orderByDirections": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "author_id",
+              "orderByDirections": {
+                "enableAll": true
+              }
+            }
+          ],
+            "graphql": {
+                "selectUniques": [
+                    {
+                        "queryRootField": "ArticleByID",
+                        "uniqueIdentifier": [
+                            "article_id"
+                        ],
+                        "description": "Description for the select unique ArticleByID"
+                    }
+                ],
+                "selectMany": {
+                    "queryRootField": "ArticleMany",
+                    "description": "Description for the select many ArticleMany"
+                },
+                "argumentsInputType": null,
+                "filterExpressionType": "Article_Where_Exp",
+                "orderByExpressionType": "Article_Order_By"
+            },
+            "description": "Description for the model Articles"
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "ModelSource")]
-#[schemars(example = "ModelSource::example")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "ModelSource", example = "ModelSource::example"))]
 /// Description of how a model maps to a particular data connector
 pub struct ModelSource {
     /// The name of the data connector backing this model.
@@ -174,18 +175,17 @@ pub struct ModelSource {
 
     /// How the various types used in this model correspond to
     /// entities in the data connector.
-    #[serde(default)]
+    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
     pub type_mapping: HashMap<CustomTypeName, TypeMapping>,
 
     // Mapping from model argument names to data connector table argument names.
-    #[serde(default)]
+    #[opendd(default)]
     pub argument_mapping: HashMap<ArgumentName, String>,
 }
 
 impl ModelSource {
-    fn example() -> Self {
-        serde_json::from_str(
-            r#"
+    fn example() -> serde_json::Value {
+        serde_json::json!(
             {
               "dataConnectorName": "data_connector",
               "collection": "articles",
@@ -203,19 +203,18 @@ impl ModelSource {
                     }
                   }
                 }
-              }
+              },
+              "argumentMapping": {}
             }
-        "#,
         )
-        .unwrap()
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "ModelGraphQlDefinition")]
-#[schemars(example = "ModelGraphQlDefinition::example")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(
+    title = "ModelGraphQlDefinition",
+    example = "ModelGraphQlDefinition::example"
+))]
 /// The definition of how a model appears in the GraphQL API.
 pub struct ModelGraphQlDefinition {
     /// For each select unique defined here, a query root field is added to the GraphQL API that
@@ -233,37 +232,31 @@ pub struct ModelGraphQlDefinition {
 }
 
 impl ModelGraphQlDefinition {
-    fn example() -> Self {
-        serde_json::from_str(
-            r#"
-            {
-              "selectUniques": [
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+            "selectUniques": [
                 {
-                  "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ],
-                  "description": "Description for the select unique ArticleByID"
+                    "queryRootField": "ArticleByID",
+                    "uniqueIdentifier": [
+                        "article_id"
+                    ],
+                    "description": "Description for the select unique ArticleByID"
                 }
-              ],
-              "selectMany": {
+            ],
+            "selectMany": {
                 "queryRootField": "ArticleMany",
                 "description": "Description for the select many ArticleMany"
-              },
-              "filterExpressionType": "Article_Where_Exp",
-              "orderByExpressionType": "Article_Order_By"
-            }
-        "#,
-        )
-        .unwrap()
+            },
+            "argumentsInputType": null,
+            "filterExpressionType": "Article_Where_Exp",
+            "orderByExpressionType": "Article_Order_By"
+        })
     }
 }
 
 /// The definition of the GraphQL API for selecting a unique row/object from a model.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "SelectUniqueGraphQlDefinition")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "SelectUniqueGraphQlDefinition"))]
 pub struct SelectUniqueGraphQlDefinition {
     /// The name of the query root field for this API.
     pub query_root_field: GraphQlFieldName,
@@ -275,10 +268,8 @@ pub struct SelectUniqueGraphQlDefinition {
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "SelectManyGraphQlDefinition")]
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "SelectManyGraphQlDefinition"))]
 pub struct SelectManyGraphQlDefinition {
     /// The name of the query root field for this API.
     pub query_root_field: GraphQlFieldName,
@@ -287,19 +278,19 @@ pub struct SelectManyGraphQlDefinition {
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "FilterableField")]
+#[opendd(json_schema(title = "FilterableField"))]
 pub struct FilterableField {
     pub field_name: FieldName,
     pub operators: EnableAllOrSpecific<OperatorName>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "OrderableField")]
+#[opendd(json_schema(title = "OrderableField"))]
 pub struct OrderableField {
     pub field_name: FieldName,
     pub order_by_directions: EnableAllOrSpecific<OrderByDirection>,
@@ -311,6 +302,27 @@ pub struct OrderableField {
 pub enum EnableAllOrSpecific<T> {
     EnableAll(bool),
     EnableSpecific(Vec<T>),
+}
+
+impl<'de, T: serde::Deserialize<'de> + JsonSchema> OpenDd for EnableAllOrSpecific<T> {
+    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+        serde_path_to_error::deserialize(json).map_err(|e| OpenDdDeserializeError {
+            path: open_dds::traits::JSONPath::from_serde_path(e.path()),
+            error: e.into_inner(),
+        })
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        <Self as ::schemars::JsonSchema>::json_schema(gen)
+    }
+
+    fn _schema_name() -> String {
+        <Self as ::schemars::JsonSchema>::schema_name()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        <Self as ::schemars::JsonSchema>::is_referenceable()
+    }
 }
 
 #[derive(

@@ -106,9 +106,9 @@ async fn shutdown_signal() {
 #[derive(thiserror::Error, Debug)]
 enum StartupError {
     #[error("could not read the auth config - {0}")]
-    ReadAuth(String),
+    ReadAuth(anyhow::Error),
     #[error("could not read the schema - {0}")]
-    ReadSchema(String),
+    ReadSchema(anyhow::Error),
 }
 
 impl TraceableError for StartupError {
@@ -377,13 +377,15 @@ async fn handle_explain_request(
     response
 }
 
-fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, String> {
-    let raw_metadata = std::fs::read_to_string(metadata_path).map_err(|e| e.to_string())?;
-    let metadata = serde_json::from_str(&raw_metadata).map_err(|e| e.to_string())?;
-    engine::build::build_schema(metadata).map_err(|e| e.to_string())
+fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
+    let raw_metadata = std::fs::read_to_string(metadata_path)?;
+    let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
+    Ok(engine::build::build_schema(metadata)?)
 }
 
-fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, String> {
-    let raw_auth_config = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
-    serde_json::from_str(&raw_auth_config).map_err(|e| e.to_string())
+fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
+    let raw_auth_config = std::fs::read_to_string(path)?;
+    Ok(open_dds::traits::OpenDd::deserialize(
+        serde_json::from_str(&raw_auth_config)?,
+    )?)
 }

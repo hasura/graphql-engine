@@ -15,6 +15,8 @@
   ],
   "definitions": {
     "OpenDdSubgraphObject": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraphObject",
+      "title": "OpenDdSubgraphObject",
       "oneOf": [
         {
           "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorLink",
@@ -425,6 +427,8 @@
       "additionalProperties": false
     },
     "DataConnectorName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorName",
+      "title": "DataConnectorName",
       "description": "The name of a data connector.",
       "type": "string"
     },
@@ -624,6 +628,8 @@
       "additionalProperties": false
     },
     "CustomTypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
+      "title": "CustomTypeName",
       "description": "The name of a user-defined type.",
       "type": "string"
     },
@@ -664,6 +670,8 @@
       "additionalProperties": false
     },
     "FieldName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldName",
+      "title": "FieldName",
       "description": "The name of a field in a user-defined object type.",
       "type": "string"
     },
@@ -705,6 +713,8 @@
       "additionalProperties": false
     },
     "GraphQlTypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphQlTypeName",
+      "title": "GraphQlTypeName",
       "type": "string"
     },
     "ScalarTypeV1": {
@@ -1046,6 +1056,8 @@
       "additionalProperties": false
     },
     "ModelName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
+      "title": "ModelName",
       "description": "The name of data model.",
       "type": "string"
     },
@@ -1075,6 +1087,8 @@
       "additionalProperties": false
     },
     "ArgumentName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
+      "title": "ArgumentName",
       "type": "string"
     },
     "ModelSource": {
@@ -1403,6 +1417,8 @@
       "additionalProperties": false
     },
     "GraphQlFieldName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphQlFieldName",
+      "title": "GraphQlFieldName",
       "description": "The name of a GraphQL object field.",
       "type": "string"
     },
@@ -1528,6 +1544,8 @@
       "additionalProperties": false
     },
     "CommandName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/CommandName",
+      "title": "CommandName",
       "description": "The name of a command.",
       "type": "string"
     },
@@ -1757,6 +1775,8 @@
       "additionalProperties": false
     },
     "RelationshipName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipName",
+      "title": "RelationshipName",
       "description": "The name of the GraphQL relationship field.",
       "type": "string"
     },
@@ -2170,6 +2190,8 @@
       "additionalProperties": false
     },
     "Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/Role",
+      "title": "Role",
       "type": "string"
     },
     "TypeOutputPermission": {
@@ -2581,8 +2603,12 @@
       "additionalProperties": false
     },
     "OpenDdMetadataWithVersion": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataWithVersion",
+      "title": "OpenDdMetadataWithVersion",
       "oneOf": [
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV1",
+          "title": "OpenDdMetadataV1",
           "type": "object",
           "required": [
             "namespaces",
@@ -2611,9 +2637,12 @@
                 }
               ]
             }
-          }
+          },
+          "additionalProperties": false
         },
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV2",
+          "title": "OpenDdMetadataV2",
           "type": "object",
           "required": [
             "version"
@@ -2652,11 +2681,14 @@
                 }
               ]
             }
-          }
+          },
+          "additionalProperties": false
         }
       ]
     },
     "NamespacedObjects": {
+      "$id": "https://hasura.io/jsonschemas/metadata/NamespacedObjects",
+      "title": "NamespacedObjects",
       "type": "object",
       "required": [
         "name",
@@ -2672,18 +2704,24 @@
             "$ref": "#/definitions/OpenDdSubgraphObject"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "OpenDdFlags": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdFlags",
+      "title": "OpenDdFlags",
       "type": "object",
       "properties": {
         "require_graphql_config": {
           "default": false,
           "type": "boolean"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "OpenDdSupergraph": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraph",
+      "title": "OpenDdSupergraph",
       "type": "object",
       "properties": {
         "objects": {
@@ -2693,9 +2731,12 @@
             "$ref": "#/definitions/OpenDdSupergraphObject"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "OpenDdSupergraphObject": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSupergraphObject",
+      "title": "OpenDdSupergraphObject",
       "oneOf": [
         {
           "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
@@ -2987,6 +3028,8 @@
       "additionalProperties": false
     },
     "OpenDdSubgraph": {
+      "$id": "https://hasura.io/jsonschemas/metadata/OpenDdSubgraph",
+      "title": "OpenDdSubgraph",
       "type": "object",
       "required": [
         "name",
@@ -3002,7 +3045,8 @@
             "$ref": "#/definitions/OpenDdSubgraphObject"
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }
