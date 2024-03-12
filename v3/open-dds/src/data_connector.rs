@@ -23,7 +23,9 @@ use crate::impl_OpenDd_default_for;
 )]
 pub struct DataConnectorName(pub String);
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "DataConnectorLink"))]
 /// Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.
 pub enum DataConnectorLink {
@@ -50,12 +52,15 @@ fn ndc_schema_response_v01_schema_reference(
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/schema_response.jsonschema".into())
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version")]
+#[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_internally_tagged,
     json_schema(title = "VersionedSchemaAndCapabilities")
 )]
 pub enum VersionedSchemaAndCapabilities {
+    #[serde(rename = "v0.1")]
     #[opendd(rename = "v0.1")]
     V01(SchemaAndCapabilitiesV01),
 }

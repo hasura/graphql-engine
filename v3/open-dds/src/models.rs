@@ -29,7 +29,9 @@ impl_JsonSchema_with_OpenDd_for!(ModelName);
 
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "Model"))]
 pub enum Model {
     V1(ModelV1),
@@ -43,7 +45,8 @@ impl Model {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ModelV1", example = "ModelV1::example"))]
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
@@ -125,7 +128,8 @@ impl ModelV1 {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ModelSource", example = "ModelSource::example"))]
 /// Description of how a model maps to a particular data connector
 pub struct ModelSource {
@@ -151,7 +155,8 @@ impl ModelSource {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "ModelGraphQlDefinition",
     example = "ModelGraphQlDefinition::example"
@@ -192,7 +197,8 @@ impl ModelGraphQlDefinition {
 }
 
 /// The definition of the GraphQL API for selecting a unique row/object from a model.
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SelectUniqueGraphQlDefinition"))]
 pub struct SelectUniqueGraphQlDefinition {
     /// The name of the query root field for this API.
@@ -205,7 +211,8 @@ pub struct SelectUniqueGraphQlDefinition {
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SelectManyGraphQlDefinition"))]
 pub struct SelectManyGraphQlDefinition {
     /// The name of the query root field for this API.

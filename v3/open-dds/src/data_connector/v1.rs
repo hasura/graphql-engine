@@ -25,7 +25,8 @@ pub enum DataConnectorUrlV1 {
     ReadWriteUrls(ReadWriteUrls),
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "DataConnectorLinkV1",
     example = "DataConnectorLinkV1::example"

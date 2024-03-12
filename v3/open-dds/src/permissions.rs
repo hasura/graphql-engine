@@ -33,7 +33,9 @@ impl Role {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "TypePermissions"))]
 /// Definition of permissions for an OpenDD type.
 pub enum TypePermissions {
@@ -48,7 +50,8 @@ impl TypePermissions {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "TypePermissionsV1", example = "TypePermissionsV1::example"))]
 /// Definition of permissions for an OpenDD type.
 pub struct TypePermissionsV1 {
@@ -89,7 +92,8 @@ impl TypePermissionsV1 {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "TypePermission", example = "TypePermission::example"))]
 /// Defines permissions for a particular role for a type.
 pub struct TypePermission {
@@ -128,7 +132,9 @@ pub struct TypeOutputPermission {
     // pub field_argument_presets: HashMap<FieldName, Vec<ParameterPreset>>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "ModelPermissions"))]
 /// Definition of permissions for an OpenDD model.
 pub enum ModelPermissions {
@@ -143,7 +149,8 @@ impl ModelPermissions {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ModelPermissionsV1", example = "ModelPermissionsV1::example"))]
 /// Definition of permissions for an OpenDD model.
 pub struct ModelPermissionsV1 {
@@ -185,7 +192,8 @@ impl ModelPermissionsV1 {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ModelPermission", example = "ModelPermission::example"))]
 /// Defines the permissions for an OpenDD model.
 pub struct ModelPermission {
@@ -217,7 +225,8 @@ impl ModelPermission {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "SelectPermission"))]
 /// Defines the permissions for selecting a model for a role.
 pub struct SelectPermission {
@@ -277,7 +286,8 @@ impl NullableModelPredicate {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "CommandPermission", example = "CommandPermission::example"))]
 /// Defines the permissions for a role for a command.
 pub struct CommandPermission {
@@ -299,7 +309,9 @@ impl CommandPermission {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
     json_schema(title = "CommandPermissions")
@@ -317,7 +329,8 @@ impl CommandPermissions {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "CommandPermissionsV1",
     example = "CommandPermissionsV1::example"

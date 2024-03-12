@@ -53,7 +53,9 @@ pub enum DataConnectorCommand {
 /// The definition of a command.
 /// A command is a user-defined operation which can take arguments and returns an output.
 /// The semantics of a command are opaque to the Open DD specification.
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "Command"))]
 pub enum Command {
     V1(CommandV1),
@@ -67,7 +69,8 @@ impl Command {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "CommandV1", example = "CommandV1::example"))]
 /// Definition of an OpenDD Command, which is a custom operation that can take arguments and
 /// returns an output. The semantics of a command are opaque to OpenDD.
@@ -110,7 +113,8 @@ impl CommandV1 {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "CommandSource", example = "CommandSource::example"))]
 /// Description of how a command maps to a particular data connector
 pub struct CommandSource {
@@ -146,7 +150,8 @@ pub enum GraphQlRootFieldKind {
     Mutation,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "CommandGraphQlDefinition",
     example = "CommandGraphQlDefinition::example"

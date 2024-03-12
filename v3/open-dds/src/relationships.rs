@@ -147,7 +147,8 @@ pub enum RelationshipMappingTarget {
     ModelField(Vec<FieldAccess>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(
     title = "RelationshipMapping",
     example = "RelationshipMapping::example"
@@ -183,7 +184,9 @@ impl RelationshipMapping {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "Relationship"))]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub enum Relationship {
@@ -198,7 +201,8 @@ impl Relationship {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "RelationshipV1", example = "RelationshipV1::example"))]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub struct RelationshipV1 {

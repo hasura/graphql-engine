@@ -66,7 +66,10 @@ enum EnvironmentValueImpl {
     ValueFromEnv(String),
 }
 
-#[derive(Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd,
+)]
+#[serde(tag = "kind")]
 #[opendd(as_kind)]
 pub enum OpenDdSubgraphObject {
     // Data connector
@@ -96,7 +99,8 @@ pub enum OpenDdSubgraphObject {
 }
 
 /// All of the metadata required to run Hasura v3 engine.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
 pub enum Metadata {
     // We didn't introduce versioning before namespaces, so we still need to handle that case as untagged.
     WithoutNamespaces(Vec<OpenDdSubgraphObject>),
@@ -182,19 +186,22 @@ impl Metadata {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", rename_all = "camelCase")]
 #[opendd(
     as_versioned_internally_tagged,
     json_schema(rename = "OpenDdMetadataWithVersion")
 )]
 pub enum MetadataWithVersion {
+    #[serde(alias = "V1")]
     #[opendd(alias = "V1")]
     V1(MetadataV1),
+    #[serde(alias = "V2")]
     #[opendd(alias = "V2")]
     V2(MetadataV2),
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV1"))]
 pub struct MetadataV1 {
     pub namespaces: Vec<NamespacedObjects>,
@@ -202,13 +209,13 @@ pub struct MetadataV1 {
     pub flags: flags::Flags,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 pub struct NamespacedObjects {
     pub name: String,
     pub objects: Vec<OpenDdSubgraphObject>,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdMetadataV2"))]
 pub struct MetadataV2 {
     #[opendd(default, json_schema(default_exp = "Supergraph::default_json()"))]
@@ -219,14 +226,17 @@ pub struct MetadataV2 {
     pub flags: flags::Flags,
 }
 
-#[derive(Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd,
+)]
+#[serde(tag = "kind")]
 #[opendd(as_kind)]
 pub enum OpenDdSupergraphObject {
     // GraphQL schema configuration
     GraphqlConfig(graphql_config::GraphqlConfig),
 }
 
-#[derive(Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Default, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSupergraph"))]
 pub struct Supergraph {
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
@@ -241,7 +251,7 @@ impl Supergraph {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSubgraph"))]
 pub struct Subgraph {
     pub name: String,

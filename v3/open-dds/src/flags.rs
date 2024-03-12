@@ -1,4 +1,6 @@
-#[derive(Clone, Debug, Default, PartialEq, opendds_derive::OpenDd)]
+use serde::Serialize;
+
+#[derive(Serialize, Clone, Debug, Default, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdFlags"))]
 pub struct Flags {
     #[opendd(default, rename = "require_graphql_config")]

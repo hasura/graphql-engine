@@ -5,21 +5,25 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(tag = "version", content = "definition")]
+#[serde(rename_all = "camelCase")]
 #[opendd(as_versioned_with_definition, json_schema(title = "GraphqlConfig"))]
 
 pub enum GraphqlConfig {
     V1(GraphqlConfigV1),
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "GraphqlConfigV1"))]
 pub struct GraphqlConfigV1 {
     pub query: QueryGraphqlConfig,
     pub mutation: MutationGraphqlConfig,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "QueryGraphqlConfig"))]
 pub struct QueryGraphqlConfig {
     pub root_operation_type_name: String,
@@ -30,32 +34,37 @@ pub struct QueryGraphqlConfig {
     pub order_by_input: Option<OrderByInputGraphqlConfig>,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "ArgumentsInputGraphqlConfig"))]
 pub struct ArgumentsInputGraphqlConfig {
     pub field_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "LimitInputGraphqlConfig"))]
 pub struct LimitInputGraphqlConfig {
     pub field_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OffsetInputGraphqlConfig"))]
 pub struct OffsetInputGraphqlConfig {
     pub field_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "FilterInputGraphqlConfig"))]
 pub struct FilterInputGraphqlConfig {
     pub field_name: String,
     pub operator_names: FilterInputOperatorNames,
 }
 
-#[derive(Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "FilterInputOperatorNames"))]
 pub struct FilterInputOperatorNames {
     pub and: String,
@@ -64,7 +73,8 @@ pub struct FilterInputOperatorNames {
     pub is_null: String,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByInputGraphqlConfig"))]
 pub struct OrderByInputGraphqlConfig {
     pub field_name: String,
@@ -72,7 +82,8 @@ pub struct OrderByInputGraphqlConfig {
     pub enum_type_names: Vec<OrderByEnumTypeName>,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByDirectionValues"))]
 pub struct OrderByDirectionValues {
     pub asc: String,
@@ -98,14 +109,16 @@ pub enum OrderByDirection {
     Desc,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "OrderByEnumTypeName"))]
 pub struct OrderByEnumTypeName {
     pub directions: Vec<OrderByDirection>,
     pub type_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "MutationGraphqlConfig"))]
 pub struct MutationGraphqlConfig {
     pub root_operation_type_name: String,
