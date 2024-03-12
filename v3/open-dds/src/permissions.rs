@@ -6,11 +6,11 @@ use serde_json::Value as JsonValue;
 
 use crate::{
     commands::CommandName,
-    models::{ModelName, OperatorName},
+    models::ModelName,
     relationships::RelationshipName,
     session_variables::SessionVariable,
     traits,
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
 
 #[derive(

@@ -41,7 +41,30 @@
             ],
             "graphql": {
               "typeName": "Actor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -127,26 +150,6 @@
               "orderByExpressionType": "AuthorOrderBy",
               "argumentsInputType": "AuthorArgs"
             },
-            "filterableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "author_id",
@@ -237,7 +240,25 @@
             ],
             "graphql": {
               "inputTypeName": "NameFilterOpaqueSurname"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "name_query",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "surname": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -256,31 +277,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_actors_by_name"
-              },
-              "typeMapping": {
-                "Actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                },
-                "NameFilterOpaqueSurname": {
-                  "fieldMapping": {
-                    "first_name": {
-                      "column": "first_name"
-                    },
-                    "surname": {
-                      "column": "last_name"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "name_filter": "name"
@@ -324,21 +320,6 @@
               "dataConnectorCommand": {
                 "function": "get_actors_by_name"
               },
-              "typeMapping": {
-                "Actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
-              },
               "argumentMapping": {
                 "name_filter": "name"
               }
@@ -369,17 +350,17 @@
             "name": "article",
             "fields": [
               {
-              "name": "article_id",
-              "type": "Int!"
-            },
+                "name": "article_id",
+                "type": "Int!"
+              },
               {
-              "name": "title",
-              "type": "String!"
-            },
+                "name": "title",
+                "type": "String!"
+              },
               {
-              "name": "author_id",
-              "type": "Int!"
-            }
+                "name": "author_id",
+                "type": "Int!"
+              }
             ],
             "graphql": {
               "typeName": "Article"
@@ -393,26 +374,25 @@
             "typeName": "article",
             "permissions": [
               {
-              "role": "admin",
-              "output": {
-                "allowedFields": [
-                  "article_id",
-                  "title",
-                  "author_id"
-                ]
-              }
-            },
+                "role": "admin",
+                "output": {
+                  "allowedFields": [
+                    "article_id",
+                    "title",
+                    "author_id"
+                  ]
+                }
+              },
               {
-              "role": "user",
-              "output": {
-                "allowedFields": [
-                  "title",
-                  "author_id",
-                  "article_id"
-                ]
+                "role": "user",
+                "output": {
+                  "allowedFields": [
+                    "title",
+                    "author_id",
+                    "article_id"
+                  ]
+                }
               }
-            }
-
             ]
           }
         },
@@ -422,45 +402,25 @@
           "definition": {
             "name": "Articles",
             "objectType": "article",
-            "filterableFields": [
-              {
-              "fieldName": "article_id",
-              "operators": {
-                "enableAll": true
-              }
-            },
-              {
-              "fieldName": "title",
-              "operators": {
-                "enableAll": true
-              }
-            },
-              {
-              "fieldName": "author_id",
-              "operators": {
-                "enableAll": true
-              }
-            }
-            ],
             "orderableFields": [
               {
-              "fieldName": "article_id",
-              "orderByDirections": {
-                "enableAll": true
-              }
-            },
+                "fieldName": "article_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
               {
-              "fieldName": "title",
-              "orderByDirections": {
-                "enableAll": true
-              }
-            },
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
               {
-              "fieldName": "author_id",
-              "orderByDirections": {
-                "enableAll": true
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
               }
-            }
             ]
           }
         },
@@ -500,21 +460,21 @@
             },
             "mapping": [
               {
-              "source": {
-                "fieldPath": [
-                  {
-                  "fieldName": "author_id"
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "author_id"
+                    }
+                  ]
                 }
-                ]
-              },
-              "target": {
-                "modelField": [
-                  {
-                  "fieldName": "author_id"
-                }
-                ]
               }
-            }
             ]
           }
         }

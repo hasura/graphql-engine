@@ -46,7 +46,30 @@
             ],
             "graphql": {
               "typeName": "CommandMovie"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -111,21 +134,6 @@
               "dataConnectorCommand": {
                 "function": "get_movie_by_id"
               },
-              "typeMapping": {
-                "commandMovie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                }
-              },
               "argumentMapping": {
                 "movie_id": "id"
               }
@@ -183,7 +191,30 @@
             ],
             "graphql": {
               "typeName": "CommandActor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -243,21 +274,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_all_actors"
-              },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
               }
             },
             "graphql": {

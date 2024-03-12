@@ -43,7 +43,55 @@
       ],
       "graphql": {
         "typeName": "MovieAnalytics"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "db",
+          "dataConnectorObjectType": "movie_analytics",
+          "fieldMapping": {
+            "analytics_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "movie_id": {
+              "column": {
+                "name": "movie_id"
+              }
+            },
+            "num_users_faved": {
+              "column": {
+                "name": "num_users_faved"
+              }
+            },
+            "num_users_watchlisted": {
+              "column": {
+                "name": "num_users_watchlisted"
+              }
+            },
+            "num_views_day": {
+              "column": {
+                "name": "num_views_day"
+              }
+            },
+            "num_votes_day": {
+              "column": {
+                "name": "num_votes_day"
+              }
+            },
+            "prev_day_scores": {
+              "column": {
+                "name": "prev_day_scores"
+              }
+            },
+            "total_votes": {
+              "column": {
+                "name": "total_votes"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -55,88 +103,8 @@
       "globalIdSource": true,
       "source": {
         "dataConnectorName": "db",
-        "collection": "movie_analytics",
-        "typeMapping": {
-          "movie_analytics": {
-            "fieldMapping": {
-              "analytics_id": {
-                "column": "id"
-              },
-              "movie_id": {
-                "column": "movie_id"
-              },
-              "num_users_faved": {
-                "column": "num_users_faved"
-              },
-              "num_users_watchlisted": {
-                "column": "num_users_watchlisted"
-              },
-              "num_views_day": {
-                "column": "num_views_day"
-              },
-              "num_votes_day": {
-                "column": "num_votes_day"
-              },
-              "prev_day_scores": {
-                "column": "prev_day_scores"
-              },
-              "total_votes": {
-                "column": "total_votes"
-              }
-            }
-          }
-        }
+        "collection": "movie_analytics"
       },
-      "filterableFields": [
-        {
-          "fieldName": "analytics_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "movie_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_faved",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_watchlisted",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_views_day",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_votes_day",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "prev_day_scores",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "total_votes",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "analytics_id",
@@ -199,7 +167,6 @@
         "selectMany": {
           "queryRootField": "Analytics"
         },
-        "filterExpressionType": "AnalyticsFilterExp",
         "orderByExpressionType": "AnalyticsOrderBy"
       }
     }
@@ -339,7 +306,30 @@
       ],
       "graphql": {
         "typeName": "CommandMovie"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "movie",
+          "fieldMapping": {
+            "movie_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "title": {
+              "column": {
+                "name": "title"
+              }
+            },
+            "rating": {
+              "column": {
+                "name": "rating"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -375,21 +365,6 @@
         "dataConnectorName": "custom",
         "dataConnectorCommand": {
           "function": "get_movie_by_id"
-        },
-        "typeMapping": {
-          "commandMovie": {
-            "fieldMapping": {
-              "movie_id": {
-                "column": "id"
-              },
-              "title": {
-                "column": "title"
-              },
-              "rating": {
-                "column": "rating"
-              }
-            }
-          }
         },
         "argumentMapping": {
           "movie_id": "movie_id"
@@ -429,21 +404,6 @@
         "dataConnectorName": "custom",
         "dataConnectorCommand": {
           "function": "get_all_movies"
-        },
-        "typeMapping": {
-          "commandMovie": {
-            "fieldMapping": {
-              "movie_id": {
-                "column": "id"
-              },
-              "title": {
-                "column": "title"
-              },
-              "rating": {
-                "column": "rating"
-              }
-            }
-          }
         },
         "argumentMapping": {}
       },

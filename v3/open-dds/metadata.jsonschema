@@ -118,6 +118,39 @@
           ]
         },
         {
+          "$id": "https://hasura.io/jsonschemas/metadata/ObjectBooleanExpressionType",
+          "title": "ObjectBooleanExpressionType",
+          "description": "Definition of a type representing a boolean expression on an Open DD object type.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "definition",
+                "kind",
+                "version"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "ObjectBooleanExpressionType"
+                  ]
+                },
+                "version": {
+                  "type": "string",
+                  "enum": [
+                    "v1"
+                  ]
+                },
+                "definition": {
+                  "$ref": "#/definitions/ObjectBooleanExpressionTypeV1"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
           "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorScalarRepresentation",
           "title": "DataConnectorScalarRepresentation",
           "description": "The representation of a data connector scalar in terms of Open DD types",
@@ -565,14 +598,26 @@
               "description": "The last name of the author"
             }
           ],
+          "description": "An author of a book",
           "globalIdFields": [
             "author_id"
           ],
           "graphql": {
-            "typeName": "Author",
-            "inputTypeName": null
+            "typeName": "Author"
           },
-          "description": "An author of a book"
+          "dataConnectorTypeMapping": [
+            {
+              "dataConnectorName": "my_db",
+              "dataConnectorObjectType": "author",
+              "fieldMapping": {
+                "author_id": {
+                  "column": {
+                    "name": "id"
+                  }
+                }
+              }
+            }
+          ]
         }
       ],
       "type": "object",
@@ -623,6 +668,14 @@
             "string",
             "null"
           ]
+        },
+        "dataConnectorTypeMapping": {
+          "description": "Mapping of this object type to corresponding object types in various data connectors.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataConnectorTypeMapping"
+          }
         }
       },
       "additionalProperties": false
@@ -717,6 +770,67 @@
       "title": "GraphQlTypeName",
       "type": "string"
     },
+    "DataConnectorTypeMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorTypeMapping",
+      "title": "DataConnectorTypeMapping",
+      "description": "This defines the mapping of the fields of an object type to the corresponding columns of an object type in a data connector.",
+      "type": "object",
+      "required": [
+        "dataConnectorName",
+        "dataConnectorObjectType"
+      ],
+      "properties": {
+        "dataConnectorName": {
+          "$ref": "#/definitions/DataConnectorName"
+        },
+        "dataConnectorObjectType": {
+          "type": "string"
+        },
+        "fieldMapping": {
+          "default": {},
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/FieldMapping"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
+      "title": "ObjectFieldMapping",
+      "oneOf": [
+        {
+          "description": "Source field directly maps to some column in the data connector.",
+          "type": "object",
+          "required": [
+            "column"
+          ],
+          "properties": {
+            "column": {
+              "$ref": "#/definitions/ColumnFieldMapping"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ColumnFieldMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ColumnFieldMapping",
+      "title": "ColumnFieldMapping",
+      "description": "The target column in a data connector object that a source field maps to.",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the target column",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
     "ScalarTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ScalarTypeV1",
       "title": "ScalarTypeV1",
@@ -775,6 +889,173 @@
       "properties": {
         "typeName": {
           "description": "The name of the GraphQl type to use for this scalar.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/GraphQlTypeName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ObjectBooleanExpressionTypeV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ObjectBooleanExpressionTypeV1",
+      "title": "ObjectBooleanExpressionTypeV1",
+      "description": "Definition of a type representing a boolean expression on an Open DD object type.",
+      "examples": [
+        {
+          "name": "AuthorBoolExp",
+          "objectType": "Author",
+          "dataConnectorName": "my_db",
+          "dataConnectorObjectType": "author",
+          "comparableFields": [
+            {
+              "fieldName": "article_id",
+              "operators": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "title",
+              "operators": {
+                "enableAll": true
+              }
+            },
+            {
+              "fieldName": "author_id",
+              "operators": {
+                "enableAll": true
+              }
+            }
+          ],
+          "graphql": {
+            "typeName": "Author_bool_exp"
+          }
+        }
+      ],
+      "type": "object",
+      "required": [
+        "comparableFields",
+        "dataConnectorName",
+        "dataConnectorObjectType",
+        "name",
+        "objectType"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name to give this object boolean expression type, used to refer to it elsewhere in the metadata. Must be unique across all types defined in this subgraph.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "objectType": {
+          "description": "The name of the object type that this boolean expression applies to.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            }
+          ]
+        },
+        "dataConnectorName": {
+          "description": "The data connector this boolean expression type is based on.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorName"
+            }
+          ]
+        },
+        "dataConnectorObjectType": {
+          "description": "The object type in the data connector's schema this boolean expression type is based on.",
+          "type": "string"
+        },
+        "comparableFields": {
+          "description": "The list of fields of the object type that can be used for comparison when evaluating this boolean expression.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ComparableField"
+          }
+        },
+        "graphql": {
+          "description": "Configuration for how this object type should appear in the GraphQL schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ObjectBooleanExpressionTypeGraphQlConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ComparableField": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ComparableField",
+      "title": "ComparableField",
+      "type": "object",
+      "required": [
+        "fieldName",
+        "operators"
+      ],
+      "properties": {
+        "fieldName": {
+          "$ref": "#/definitions/FieldName"
+        },
+        "operators": {
+          "$ref": "#/definitions/EnableAllOrSpecific_for_OperatorName"
+        }
+      },
+      "additionalProperties": false
+    },
+    "EnableAllOrSpecific_for_OperatorName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/EnableAllOrSpecific_for_OperatorName",
+      "title": "EnableAllOrSpecific",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "enableAll"
+          ],
+          "properties": {
+            "enableAll": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "enableSpecific"
+          ],
+          "properties": {
+            "enableSpecific": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OperatorName"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OperatorName": {
+      "type": "string"
+    },
+    "ObjectBooleanExpressionTypeGraphQlConfiguration": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ObjectBooleanExpressionTypeGraphQlConfiguration",
+      "title": "ObjectBooleanExpressionTypeGraphQlConfiguration",
+      "description": "GraphQL configuration of an Open DD boolean expression type.",
+      "type": "object",
+      "required": [
+        "typeName"
+      ],
+      "properties": {
+        "typeName": {
+          "description": "The name to use for the GraphQL type representation of this boolean expression type.",
           "allOf": [
             {
               "$ref": "#/definitions/GraphQlTypeName"
@@ -894,43 +1175,9 @@
           "source": {
             "dataConnectorName": "data_connector",
             "collection": "articles",
-            "typeMapping": {
-              "article": {
-                "fieldMapping": {
-                  "article_id": {
-                    "column": "id"
-                  },
-                  "title": {
-                    "column": "title"
-                  },
-                  "author_id": {
-                    "column": "author_id"
-                  }
-                }
-              }
-            },
             "argumentMapping": {}
           },
-          "filterableFields": [
-            {
-              "fieldName": "article_id",
-              "operators": {
-                "enableAll": true
-              }
-            },
-            {
-              "fieldName": "title",
-              "operators": {
-                "enableAll": true
-              }
-            },
-            {
-              "fieldName": "author_id",
-              "operators": {
-                "enableAll": true
-              }
-            }
-          ],
+          "filterExpressionType": "Article_bool_exp",
           "orderableFields": [
             {
               "fieldName": "article_id",
@@ -965,8 +1212,6 @@
               "queryRootField": "ArticleMany",
               "description": "Description for the select many ArticleMany"
             },
-            "argumentsInputType": null,
-            "filterExpressionType": "Article_Where_Exp",
             "orderByExpressionType": "Article_Order_By"
           },
           "description": "Description for the model Articles"
@@ -974,7 +1219,6 @@
       ],
       "type": "object",
       "required": [
-        "filterableFields",
         "name",
         "objectType",
         "orderableFields"
@@ -1020,12 +1264,16 @@
             }
           ]
         },
-        "filterableFields": {
-          "description": "A list of fields that can be used to filter the objects in this model.",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FilterableField"
-          }
+        "filterExpressionType": {
+          "description": "The boolean expression type that should be used to perform filtering on this model.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CustomTypeName"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "orderableFields": {
           "description": "A list of fields that can be used to order the objects in this model.",
@@ -1098,23 +1346,7 @@
       "examples": [
         {
           "dataConnectorName": "data_connector",
-          "collection": "articles",
-          "typeMapping": {
-            "article": {
-              "fieldMapping": {
-                "article_id": {
-                  "column": "id"
-                },
-                "title": {
-                  "column": "title"
-                },
-                "author_id": {
-                  "column": "author_id"
-                }
-              }
-            }
-          },
-          "argumentMapping": {}
+          "collection": "articles"
         }
       ],
       "type": "object",
@@ -1135,14 +1367,6 @@
           "description": "The collection in the data connector that backs this model.",
           "type": "string"
         },
-        "typeMapping": {
-          "description": "How the various types used in this model correspond to entities in the data connector.",
-          "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/TypeMapping"
-          }
-        },
         "argumentMapping": {
           "default": {},
           "type": "object",
@@ -1152,91 +1376,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "TypeMapping": {
-      "$id": "https://hasura.io/jsonschemas/metadata/TypeMapping",
-      "title": "TypeMapping",
-      "type": "object",
-      "required": [
-        "fieldMapping"
-      ],
-      "properties": {
-        "fieldMapping": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/FieldMapping"
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "FieldMapping": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
-      "title": "ObjectFieldMapping",
-      "type": "object",
-      "required": [
-        "column"
-      ],
-      "properties": {
-        "column": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "FilterableField": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FilterableField",
-      "title": "FilterableField",
-      "type": "object",
-      "required": [
-        "fieldName",
-        "operators"
-      ],
-      "properties": {
-        "fieldName": {
-          "$ref": "#/definitions/FieldName"
-        },
-        "operators": {
-          "$ref": "#/definitions/EnableAllOrSpecific_for_OperatorName"
-        }
-      },
-      "additionalProperties": false
-    },
-    "EnableAllOrSpecific_for_OperatorName": {
-      "$id": "https://hasura.io/jsonschemas/metadata/EnableAllOrSpecific_for_OperatorName",
-      "title": "EnableAllOrSpecific",
-      "oneOf": [
-        {
-          "type": "object",
-          "required": [
-            "enableAll"
-          ],
-          "properties": {
-            "enableAll": {
-              "type": "boolean"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "enableSpecific"
-          ],
-          "properties": {
-            "enableSpecific": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/OperatorName"
-              }
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "OperatorName": {
-      "type": "string"
     },
     "OrderableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderableField",
@@ -1317,8 +1456,6 @@
             "queryRootField": "ArticleMany",
             "description": "Description for the select many ArticleMany"
           },
-          "argumentsInputType": null,
-          "filterExpressionType": "Article_Where_Exp",
           "orderByExpressionType": "Article_Order_By"
         }
       ],
@@ -1347,17 +1484,6 @@
         },
         "argumentsInputType": {
           "description": "The type name of the input type used to hold the arguments of the model.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/GraphQlTypeName"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "filterExpressionType": {
-          "description": "The type name of the filter boolean expression input type.",
           "anyOf": [
             {
               "$ref": "#/definitions/GraphQlTypeName"
@@ -1463,15 +1589,6 @@
             "dataConnectorCommand": {
               "function": "latest_article"
             },
-            "typeMapping": {
-              "commandArticle": {
-                "fieldMapping": {
-                  "article_id": {
-                    "column": "id"
-                  }
-                }
-              }
-            },
             "argumentMapping": {}
           },
           "graphql": {
@@ -1559,7 +1676,6 @@
           "dataConnectorCommand": {
             "function": "latest_article"
           },
-          "typeMapping": {},
           "argumentMapping": {}
         }
       ],
@@ -1584,14 +1700,6 @@
               "$ref": "#/definitions/DataConnectorCommand"
             }
           ]
-        },
-        "typeMapping": {
-          "description": "How the various types used in this command correspond to entities in the data connector.",
-          "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/TypeMapping"
-          }
         },
         "argumentMapping": {
           "description": "Mapping from command argument names to data connector table argument names.",

@@ -82,7 +82,7 @@ pub(crate) fn model_selection_ir<'s>(
         .type_mappings
         .get(data_type)
         .map(|type_mapping| {
-            let resolved::types::TypeMapping::Object { field_mappings } = type_mapping;
+            let resolved::types::TypeMapping::Object { field_mappings, .. } = type_mapping;
             field_mappings
         })
         .ok_or_else(|| error::InternalEngineError::InternalGeneric {

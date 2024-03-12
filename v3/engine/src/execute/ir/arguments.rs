@@ -123,7 +123,7 @@ fn map_argument_value_to_ndc_type(
                 // If the custom type is a scalar or object but opaque on the NDC side, there won't be a mapping,
                 // in which case, pass it as-is.
                 None => Ok(value.as_json()),
-                Some(TypeMapping::Object { field_mappings }) => {
+                Some(TypeMapping::Object { field_mappings, .. }) => {
                     let object_value = value.as_object()?;
                     let mapped_fields = object_value
                 .iter()

@@ -49,43 +49,41 @@
             ],
             "graphql": {
               "typeName": "Author"
-            }
-          }
-        },
-        {
-          "kind": "Model",
-          "version": "v1",
-          "definition": {
-            "name": "Authors",
-            "objectType": "author",
-            "source": {
-              "dataConnectorName": "db",
-              "collection": "authors",
-              "typeMapping": {
-                "author": {
-                  "fieldMapping": {
-                    "author_id": {
-                      "column": "id"
-                    },
-                    "first_name": {
-                      "column": "first_name"
-                    },
-                    "last_name": {
-                      "column": "last_name"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
                     }
                   }
                 }
               }
-            },
-            "graphql": {
-              "selectUniques": [],
-              "selectMany": {
-                "queryRootField": "AuthorMany"
-              },
-              "orderByExpressionType": "Authors_order_by",
-              "filterExpressionType": "Authors_bool_exp"
-            },
-            "filterableFields": [
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "author_bool_exp",
+            "objectType": "author",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "author",
+            "comparableFields": [
               {
                 "fieldName": "author_id",
                 "operators": {
@@ -105,6 +103,29 @@
                 }
               }
             ],
+            "graphql": {
+              "typeName": "Authors_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "authors"
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              },
+              "orderByExpressionType": "Authors_order_by"
+            },
+            "filterExpressionType": "author_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "author_id",

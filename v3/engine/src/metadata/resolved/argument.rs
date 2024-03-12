@@ -1,7 +1,7 @@
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 use crate::metadata::resolved::types::{
-    get_underlying_object_type_or_unknown_type, TypeMappingToResolve, TypeRepresentation,
+    get_underlying_object_type_or_unknown_type, TypeMappingToCollect, TypeRepresentation,
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
@@ -54,13 +54,12 @@ pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &HashMap<ArgumentName, String>,
     ndc_arguments: &'a BTreeMap<String, ndc::models::ArgumentInfo>,
-    ndc_object_types: &'a BTreeMap<String, ndc::models::ObjectType>,
     all_type_representations: &'a HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToResolve<'a>>), ArgumentMappingError> {
+) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToCollect<'a>>), ArgumentMappingError> {
     let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =
         HashMap::from_iter(argument_mapping.iter());
     let mut resolved_argument_mappings = HashMap::<ArgumentName, String>::new();
-    let mut type_mappings_to_resolve = Vec::<TypeMappingToResolve>::new();
+    let mut type_mappings_to_collect = Vec::<TypeMappingToCollect>::new();
     for (argument_name, argument_type) in arguments {
         let mapped_to_ndc_argument_name = if let Some(mapped_to_ndc_argument_name) =
             unconsumed_argument_mappings.remove(&argument_name)
@@ -99,19 +98,10 @@ pub fn get_argument_mappings<'a>(
             let underlying_ndc_argument_named_type =
                 ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
                     .map_err(ArgumentMappingError::NDCValidationError)?;
-            let ndc_argument_object_type = ndc_object_types
-                .get(underlying_ndc_argument_named_type)
-                .ok_or_else(|| ArgumentMappingError::UnknownNdcType {
-                    argument_name: argument_name.clone(),
-                    ndc_argument_name: mapped_to_ndc_argument_name.clone(),
-                    type_name: object_type_name.clone(),
-                    unknown_ndc_type: underlying_ndc_argument_named_type.into(),
-                })?;
 
-            type_mappings_to_resolve.push(TypeMappingToResolve {
+            type_mappings_to_collect.push(TypeMappingToCollect {
                 type_name: object_type_name,
                 ndc_object_type_name: underlying_ndc_argument_named_type,
-                ndc_object_type: ndc_argument_object_type,
             })
         }
     }
@@ -127,5 +117,5 @@ pub fn get_argument_mappings<'a>(
         });
     }
 
-    Ok((resolved_argument_mappings, type_mappings_to_resolve))
+    Ok((resolved_argument_mappings, type_mappings_to_collect))
 }

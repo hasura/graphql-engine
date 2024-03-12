@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use derive_more::Display;
+use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{
     de::value::{StrDeserializer, StringDeserializer},
@@ -8,6 +10,7 @@ use serde::{
 
 use crate::{
     data_connector::DataConnectorName, impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
+    models::EnableAllOrSpecific,
 };
 
 #[derive(
@@ -289,6 +292,10 @@ pub struct ObjectTypeV1 {
     /// The description of the object.
     /// Gets added to the description of the object's definition in the graphql schema.
     pub description: Option<String>,
+
+    /// Mapping of this object type to corresponding object types in various data connectors.
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub data_connector_type_mapping: Vec<DataConnectorTypeMapping>,
 }
 
 impl ObjectTypeV1 {
@@ -313,17 +320,57 @@ impl ObjectTypeV1 {
                         "description": "The last name of the author"
                     }
                 ],
+                "description": "An author of a book",
                 "globalIdFields": [
                     "author_id"
                 ],
                 "graphql": {
-                    "typeName": "Author",
-                    "inputTypeName": null
+                    "typeName": "Author"
                 },
-                "description": "An author of a book"
+                "dataConnectorTypeMapping": [{
+                    "dataConnectorName": "my_db",
+                    "dataConnectorObjectType": "author",
+                    "fieldMapping": {
+                        "author_id": {
+                            "column": {
+                                "name": "id"
+                            }
+                        }
+                    }
+                }]
             }
         )
     }
+}
+
+#[derive(Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "DataConnectorTypeMapping"))]
+/// This defines the mapping of the fields of an object type to the
+/// corresponding columns of an object type in a data connector.
+pub struct DataConnectorTypeMapping {
+    pub data_connector_name: DataConnectorName,
+    pub data_connector_object_type: String,
+    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
+    pub field_mapping: IndexMap<FieldName, FieldMapping>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "ObjectFieldMapping")]
+pub enum FieldMapping {
+    /// Source field directly maps to some column in the data connector.
+    Column(ColumnFieldMapping),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[schemars(title = "ColumnFieldMapping")]
+/// The target column in a data connector object that a source field maps to.
+pub struct ColumnFieldMapping {
+    /// The name of the target column
+    pub name: String, // TODO: Map field arguments
 }
 
 /// The name of a field in a user-defined object type.
@@ -469,4 +516,105 @@ impl DataConnectorScalarRepresentationV1 {
             }
         )
     }
+}
+
+/// Definition of a type representing a boolean expression on an Open DD object type.
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "ObjectBooleanExpressionType")
+)]
+pub enum ObjectBooleanExpressionType {
+    V1(ObjectBooleanExpressionTypeV1),
+}
+
+impl ObjectBooleanExpressionType {
+    pub fn upgrade(self) -> ObjectBooleanExpressionTypeV1 {
+        match self {
+            ObjectBooleanExpressionType::V1(v1) => v1,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "ComparableField"))]
+pub struct ComparableField {
+    pub field_name: FieldName,
+    pub operators: EnableAllOrSpecific<OperatorName>,
+}
+
+#[derive(
+    Display, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema, PartialOrd, Ord, Hash,
+)]
+pub struct OperatorName(pub String);
+
+#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(
+    title = "ObjectBooleanExpressionTypeV1",
+    example = "ObjectBooleanExpressionTypeV1::example"
+))]
+/// Definition of a type representing a boolean expression on an Open DD object type.
+pub struct ObjectBooleanExpressionTypeV1 {
+    /// The name to give this object boolean expression type, used to refer to it elsewhere in the metadata.
+    /// Must be unique across all types defined in this subgraph.
+    pub name: CustomTypeName,
+
+    /// The name of the object type that this boolean expression applies to.
+    pub object_type: CustomTypeName,
+
+    /// The data connector this boolean expression type is based on.
+    pub data_connector_name: DataConnectorName,
+
+    /// The object type in the data connector's schema this boolean expression type is based on.
+    pub data_connector_object_type: String,
+
+    /// The list of fields of the object type that can be used for comparison when evaluating this boolean expression.
+    pub comparable_fields: Vec<ComparableField>,
+
+    /// Configuration for how this object type should appear in the GraphQL schema.
+    pub graphql: Option<ObjectBooleanExpressionTypeGraphQlConfiguration>,
+}
+
+impl ObjectBooleanExpressionTypeV1 {
+    fn example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "name": "AuthorBoolExp",
+                "objectType": "Author",
+                "dataConnectorName": "my_db",
+                "dataConnectorObjectType": "author",
+                "comparableFields": [
+                    {
+                        "fieldName": "article_id",
+                        "operators": {
+                            "enableAll": true
+                        }
+                    },
+                    {
+                        "fieldName": "title",
+                        "operators": {
+                            "enableAll": true
+                        }
+                    },
+                    {
+                        "fieldName": "author_id",
+                        "operators": {
+                            "enableAll": true
+                        }
+                    }
+                ],
+                "graphql": {
+                    "typeName": "Author_bool_exp"
+                }
+            }
+        )
+    }
+}
+
+/// GraphQL configuration of an Open DD boolean expression type.
+#[derive(Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
+#[opendd(json_schema(title = "ObjectBooleanExpressionTypeGraphQlConfiguration"))]
+pub struct ObjectBooleanExpressionTypeGraphQlConfiguration {
+    /// The name to use for the GraphQL type representation of this boolean expression type.
+    pub type_name: GraphQlTypeName,
 }

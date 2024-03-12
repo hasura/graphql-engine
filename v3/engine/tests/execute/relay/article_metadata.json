@@ -28,7 +28,30 @@
             ],
             "graphql": {
               "typeName": "Article"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -69,43 +92,8 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles",
-              "typeMapping": {
-                "article": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              }
+              "collection": "articles"
             },
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",
@@ -138,7 +126,6 @@
               "selectMany": {
                 "queryRootField": "ArticleMany"
               },
-              "filterExpressionType": "Article_Where_Exp",
               "orderByExpressionType": "Article_Order_By"
             }
           }

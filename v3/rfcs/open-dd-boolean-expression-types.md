@@ -48,7 +48,7 @@ definition:
       type: Int!
     - name: name
       type: String
-  dataConnectorMapping: # Optional key
+  dataConnectorTypeMapping: # Optional key
     - dataConnectorName: my_db
       dataConnectorObjectType: author
       fieldMapping:

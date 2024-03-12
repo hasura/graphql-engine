@@ -748,7 +748,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           },
@@ -770,7 +770,25 @@
             ],
             "graphql": {
               "typeName": "Artist"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -794,7 +812,30 @@
             ],
             "graphql": {
               "typeName": "Album"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -818,7 +859,30 @@
             ],
             "graphql": {
               "typeName": "Track"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -838,7 +902,25 @@
             ],
             "graphql": {
               "typeName": "ArtistBelowId"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -864,7 +946,30 @@
             ],
             "graphql": {
               "typeName": "Author"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -900,7 +1005,30 @@
             ],
             "graphql": {
               "typeName": "CommandArticle"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -966,21 +1094,6 @@
               "dataConnectorCommand": {
                 "function": "get_article_by_id"
               },
-              "typeMapping": {
-                "commandArticle": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              },
               "argumentMapping": {
                 "article_id": "id"
               }
@@ -1015,21 +1128,6 @@
               "dataConnectorName": "db",
               "dataConnectorCommand": {
                 "function": "latest_article"
-              },
-              "typeMapping": {
-                "commandArticle": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
               }
             },
             "graphql": {
@@ -1103,21 +1201,6 @@
               "dataConnectorName": "db",
               "dataConnectorCommand": {
                 "procedure": "update_article_title_by_id"
-              },
-              "typeMapping": {
-                "commandArticle": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "article_id": "id",
@@ -1196,7 +1279,30 @@
             ],
             "graphql": {
               "typeName": "Article"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1232,7 +1338,45 @@
             ],
             "graphql": {
               "typeName": "TestNullableArrayTypes"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "test_nullable_and_array",
+                "fieldMapping": {
+                  "nullable_field": {
+                    "column": {
+                      "name": "nullable_field"
+                    }
+                  },
+                  "non_nullable_field": {
+                    "column": {
+                      "name": "non_nullable_field"
+                    }
+                  },
+                  "array_field": {
+                    "column": {
+                      "name": "array_field"
+                    }
+                  },
+                  "nullable_array_field": {
+                    "column": {
+                      "name": "nullable_array_field"
+                    }
+                  },
+                  "array_nullable_field": {
+                    "column": {
+                      "name": "array_nullable_field"
+                    }
+                  },
+                  "nullable_array_nullable_field": {
+                    "column": {
+                      "name": "nullable_array_nullable_field"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1243,19 +1387,7 @@
             "objectType": "author",
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors",
-              "typeMapping": {
-                "author": {
-                  "fieldMapping": {
-                    "author_id": {
-                      "column": "id"
-                    },
-                    "first_name": {
-                      "column": "first_name"
-                    }
-                  }
-                }
-              }
+              "collection": "authors"
             },
             "graphql": {
               "selectUniques": [
@@ -1269,29 +1401,8 @@
               "selectMany": {
                 "queryRootField": "AuthorMany"
               },
-              "filterExpressionType": "Author_Where_Exp",
               "orderByExpressionType": "Author_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "author_id",
@@ -1323,43 +1434,8 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles",
-              "typeMapping": {
-                "article": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              }
+              "collection": "articles"
             },
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",
@@ -1392,7 +1468,6 @@
               "selectMany": {
                 "queryRootField": "ArticleMany"
               },
-              "filterExpressionType": "Article_Where_Exp",
               "orderByExpressionType": "Article_Order_By"
             }
           }
@@ -1411,22 +1486,7 @@
             ],
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles_by_author",
-              "typeMapping": {
-                "article": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              }
+              "collection": "articles_by_author"
             },
             "graphql": {
               "selectUniques": [
@@ -1441,29 +1501,8 @@
                 "queryRootField": "ArticlesByAuthorMany"
               },
               "orderByExpressionType": "ArticlesByAuthorOrderBy",
-              "filterExpressionType": "ArticlesByAuthorWhereExp",
               "argumentsInputType": "ArticlesByAuthorArgs"
             },
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",
@@ -1495,31 +1534,7 @@
             "globalIdSource": false,
             "source": {
               "dataConnectorName": "db",
-              "collection": "test_nullable_and_array_types",
-              "typeMapping": {
-                "test_nullable_array_types": {
-                  "fieldMapping": {
-                    "nullable_field": {
-                      "column": "nullable_field"
-                    },
-                    "non_nullable_field": {
-                      "column": "non_nullable_field"
-                    },
-                    "array_field": {
-                      "column": "array_field"
-                    },
-                    "nullable_array_field": {
-                      "column": "nullable_array_field"
-                    },
-                    "array_nullable_field": {
-                      "column": "array_nullable_field"
-                    },
-                    "nullable_array_nullable_field": {
-                      "column": "nullable_array_nullable_field"
-                    }
-                  }
-                }
-              }
+              "collection": "test_nullable_and_array_types"
             },
             "graphql": {
               "selectUniques": [
@@ -1534,47 +1549,8 @@
                     "nullable_array_nullable_field"
                   ]
                 }
-              ],
-              "filterExpressionType": "Test_Nullable_And_Array_Types_Where_Exp"
+              ]
             },
-            "filterableFields": [
-              {
-                "fieldName": "nullable_field",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "non_nullable_field",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "array_field",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "nullable_array_field",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "array_nullable_field",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "nullable_array_nullable_field",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "nullable_field",
@@ -1854,20 +1830,6 @@
           "definition": {
             "name": "TestModelForScalars",
             "objectType": "TestTypeForScalars",
-            "filterableFields": [
-              {
-                "fieldName": "id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "id",
@@ -1980,19 +1942,7 @@
             "objectType": "Artist",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Artist",
-              "typeMapping": {
-                "Artist": {
-                  "fieldMapping": {
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    }
-                  }
-                }
-              }
+              "collection": "Artist"
             },
             "graphql": {
               "selectUniques": [
@@ -2006,23 +1956,8 @@
               "selectMany": {
                 "queryRootField": "Artist"
               },
-              "filterExpressionType": "Artist_Where_Exp",
               "orderByExpressionType": "Artist_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "ArtistId",
@@ -2047,22 +1982,7 @@
             "objectType": "Album",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Album",
-              "typeMapping": {
-                "Album": {
-                  "fieldMapping": {
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    },
-                    "Title": {
-                      "column": "Title"
-                    },
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    }
-                  }
-                }
-              }
+              "collection": "Album"
             },
             "graphql": {
               "selectUniques": [
@@ -2076,29 +1996,8 @@
               "selectMany": {
                 "queryRootField": "Album"
               },
-              "filterExpressionType": "Album_Where_Exp",
               "orderByExpressionType": "Album_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "AlbumId",
@@ -2129,22 +2028,7 @@
             "objectType": "Track",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Track",
-              "typeMapping": {
-                "Track": {
-                  "fieldMapping": {
-                    "TrackId": {
-                      "column": "TrackId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    },
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    }
-                  }
-                }
-              }
+              "collection": "Track"
             },
             "graphql": {
               "selectUniques": [
@@ -2158,29 +2042,8 @@
               "selectMany": {
                 "queryRootField": "Track"
               },
-              "filterExpressionType": "Track_Where_Exp",
               "orderByExpressionType": "Track_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "TrackId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "TrackId",
@@ -2211,34 +2074,8 @@
             "objectType": "artist_below_id",
             "source": {
               "dataConnectorName": "db",
-              "collection": "artist_below_id",
-              "typeMapping": {
-                "Artist": {
-                  "fieldMapping": {
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    }
-                  }
-                }
-              }
+              "collection": "artist_below_id"
             },
-            "filterableFields": [
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "ArtistId",

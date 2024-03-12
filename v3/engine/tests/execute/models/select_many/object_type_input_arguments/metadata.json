@@ -46,7 +46,30 @@
             ],
             "graphql": {
               "typeName": "Movie"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -85,7 +108,24 @@
             ],
             "graphql": {
               "inputTypeName": "NameQuery"
-            }
+            },
+              "dataConnectorTypeMapping": [{
+                  "dataConnectorName": "custom",
+                  "dataConnectorObjectType": "name_query",
+                  "fieldMapping": {
+                      "first_name": {
+                          "column": {
+                "name": "first_name"
+                          }
+              },
+                      "surname": {
+                          "column": {
+                "name": "last_name"
+                          }
+              }
+
+                  }
+              }]
           }
         },
         {
@@ -105,67 +145,8 @@
               "collection": "movies_by_actor_name",
               "argumentMapping": {
                 "actor_name_filter": "actor_name"
-              },
-              "typeMapping": {
-                "movie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                },
-                "name_query": {
-                  "fieldMapping": {
-                    "first_name": {
-                      "column": "first_name"
-                    },
-                    "surname": {
-                      "column": "last_name"
-                    }
-                  }
-                }
               }
             },
-            "graphql": {
-              "selectUniques": [
-                {
-                  "queryRootField": "MoviesByActorNameById",
-                  "uniqueIdentifier": [
-                    "movie_id"
-                  ]
-                }
-              ],
-              "selectMany": {
-                "queryRootField": "MoviesByActorNameMany"
-              },
-              "argumentsInputType": "MoviesByActorNameArgs"
-            },
-            "filterableFields": [
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "rating",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "movie_id",
@@ -185,7 +166,21 @@
                   "enableAll": true
                 }
               }
-            ]
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "MoviesByActorNameById",
+                  "uniqueIdentifier": [
+                    "movie_id"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "MoviesByActorNameMany"
+              },
+              "argumentsInputType": "MoviesByActorNameArgs"
+            }
           }
         },
         {

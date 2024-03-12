@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +7,7 @@ use crate::{
     arguments::{ArgumentDefinition, ArgumentName},
     data_connector::DataConnectorName,
     impl_JsonSchema_with_OpenDd_for,
-    types::{CustomTypeName, FieldName, GraphQlFieldName, TypeReference},
+    types::{GraphQlFieldName, TypeReference},
 };
 
 /// The name of a command.
@@ -97,17 +96,8 @@ impl CommandV1 {
             "arguments": [],
             "source": {
                 "dataConnectorName": "data_connector",
-                    "dataConnectorCommand": {
-                        "function": "latest_article"
-                    },
-                "typeMapping": {
-                    "commandArticle": {
-                            "fieldMapping": {
-                                "article_id": {
-                                    "column": "id"
-                                }
-                            }
-                    }
+                "dataConnectorCommand": {
+                    "function": "latest_article"
                 },
                 "argumentMapping": {}
             },
@@ -130,11 +120,6 @@ pub struct CommandSource {
     /// The function/procedure in the data connector that backs this command.
     pub data_connector_command: DataConnectorCommand,
 
-    /// How the various types used in this command correspond to
-    /// entities in the data connector.
-    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
-    pub type_mapping: HashMap<CustomTypeName, TypeMapping>,
-
     /// Mapping from command argument names to data connector table argument names.
     #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
     pub argument_mapping: HashMap<ArgumentName, String>,
@@ -147,7 +132,6 @@ impl CommandSource {
             "dataConnectorCommand": {
                 "function": "latest_article"
             },
-            "typeMapping": {},
             "argumentMapping": {}
         })
     }
@@ -182,17 +166,4 @@ impl CommandGraphQlDefinition {
             "rootFieldKind": "Query"
         })
     }
-}
-
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
-#[opendd(json_schema(title = "TypeMapping"))]
-pub struct TypeMapping {
-    pub field_mapping: IndexMap<FieldName, FieldMapping>,
-}
-
-#[derive(Clone, Debug, PartialEq, opendds_derive::OpenDd)]
-#[opendd(json_schema(title = "ObjectFieldMapping"))]
-pub struct FieldMapping {
-    pub column: String,
-    // TODO: Map field arguments
 }

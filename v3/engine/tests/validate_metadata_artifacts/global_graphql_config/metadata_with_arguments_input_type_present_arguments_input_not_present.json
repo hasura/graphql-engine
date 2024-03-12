@@ -97,26 +97,6 @@
                 }
               ]
             },
-            "filterableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "author_id",
@@ -146,26 +126,6 @@
             "name": "Articles",
             "objectType": "article",
             "globalIdSource": true,
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",
@@ -221,26 +181,6 @@
               ],
               "argumentsInputType": "ArticlesByAuthorArgs"
             },
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",

@@ -48,20 +48,6 @@
                     "definition": {
                         "name": "Authors",
                         "objectType": "Author",
-                        "filterableFields": [
-                            {
-                                "fieldName": "id",
-                                "operators": {
-                                    "enableAll": true
-                                }
-                            },
-                            {
-                                "fieldName": "name",
-                                "operators": {
-                                    "enableAll": true
-                                }
-                            }
-                        ],
                         "orderableFields": [
                             {
                                 "fieldName": "id",

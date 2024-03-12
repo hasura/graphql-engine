@@ -23,7 +23,30 @@
             ],
             "graphql": {
               "typeName": "Album"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -47,7 +70,30 @@
             ],
             "graphql": {
               "typeName": "Track"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -75,27 +121,45 @@
           }
         },
         {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "album_bool_exp",
+            "objectType": "Album",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Album",
+            "comparableFields": [
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Album_Where_Exp"
+            }
+          }
+        },
+        {
           "definition": {
             "name": "Albums",
             "objectType": "Album",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Album",
-              "typeMapping": {
-                "Album": {
-                  "fieldMapping": {
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    },
-                    "Title": {
-                      "column": "Title"
-                    },
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    }
-                  }
-                }
-              }
+              "collection": "Album"
             },
             "graphql": {
               "selectUniques": [
@@ -109,29 +173,9 @@
               "selectMany": {
                 "queryRootField": "Album"
               },
-              "filterExpressionType": "Album_Where_Exp",
               "orderByExpressionType": "Album_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
+            "filterExpressionType": "album_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "AlbumId",
@@ -157,27 +201,45 @@
           "kind": "Model"
         },
         {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "track_bool_exp",
+            "objectType": "Track",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Track",
+            "comparableFields": [
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "TrackId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Track_Where_Exp"
+            }
+          }
+        },
+        {
           "definition": {
             "name": "Tracks",
             "objectType": "Track",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Track",
-              "typeMapping": {
-                "Track": {
-                  "fieldMapping": {
-                    "TrackId": {
-                      "column": "TrackId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    },
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    }
-                  }
-                }
-              }
+              "collection": "Track"
             },
             "graphql": {
               "selectUniques": [
@@ -191,29 +253,9 @@
               "selectMany": {
                 "queryRootField": "Track"
               },
-              "filterExpressionType": "Track_Where_Exp",
               "orderByExpressionType": "Track_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "TrackId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
+            "filterExpressionType": "track_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "TrackId",
@@ -449,47 +491,38 @@
             ],
             "graphql": {
               "typeName": "Artist"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
         },
         {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
           "definition": {
-            "name": "Artists",
+            "name": "artist_bool_exp",
             "objectType": "Artist",
-            "source": {
-              "dataConnectorName": "db",
-              "collection": "Artist",
-              "typeMapping": {
-                "Artist": {
-                  "fieldMapping": {
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    }
-                  }
-                }
-              }
-            },
-            "graphql": {
-              "selectUniques": [
-                {
-                  "queryRootField": "ArtistByID",
-                  "uniqueIdentifier": [
-                    "ArtistId"
-                  ]
-                }
-              ],
-              "selectMany": {
-                "queryRootField": "Artist"
-              },
-              "filterExpressionType": "Artist_Where_Exp",
-              "orderByExpressionType": "Artist_Order_By"
-            },
-            "filterableFields": [
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Artist",
+            "comparableFields": [
               {
                 "fieldName": "ArtistId",
                 "operators": {
@@ -503,6 +536,34 @@
                 }
               }
             ],
+            "graphql": {
+              "typeName": "Artist_Where_Exp"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Artists",
+            "objectType": "Artist",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Artist"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArtistByID",
+                  "uniqueIdentifier": [
+                    "ArtistId"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Artist"
+              },
+              "orderByExpressionType": "Artist_Order_By"
+            },
+            "filterExpressionType": "artist_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "ArtistId",

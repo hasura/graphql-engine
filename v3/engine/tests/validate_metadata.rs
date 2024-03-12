@@ -1,5 +1,5 @@
-use engine::metadata::resolved::error::Error::ModelTypeMappingValidationError;
-use engine::schema::Error::ResolveError;
+use engine::metadata::resolved::error::Error as ResolveError;
+use engine::schema::Error as SchemaError;
 use engine::schema::GDS;
 use std::{fs, path::PathBuf};
 
@@ -238,11 +238,90 @@ fn test_disallow_object_mapped_to_scalar() {
     let metadata = GDS::new(
         open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
     );
-    println!("{metadata:?}");
     assert!(matches!(
         metadata,
-        Err(ResolveError {
-            error: ModelTypeMappingValidationError { .. }
+        Err(SchemaError::ResolveError {
+            error: ResolveError::ModelTypeMappingCollectionError { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_without_source() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_without_source.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_object_type_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_object_type_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_data_connector_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::DifferentDataConnectorInFilterExpression { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_data_connector_object_type_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_object_type_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::DifferentDataConnectorObjectTypeInFilterExpression { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_boolean_expression_without_mapping() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/boolean_expression_without_mapping.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }
         })
     ));
 }

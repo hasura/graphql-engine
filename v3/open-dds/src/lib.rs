@@ -75,6 +75,7 @@ pub enum OpenDdSubgraphObject {
     // Types
     ObjectType(types::ObjectType),
     ScalarType(types::ScalarType),
+    ObjectBooleanExpressionType(types::ObjectBooleanExpressionType),
 
     // Data Connector Scalar Representation
     DataConnectorScalarRepresentation(types::DataConnectorScalarRepresentation),

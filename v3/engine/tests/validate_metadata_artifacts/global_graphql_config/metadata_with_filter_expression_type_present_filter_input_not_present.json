@@ -162,52 +162,43 @@
                 "type": "String!"
               }
             ],
-            "globalIdFields": [
-              "actor_id"
-            ],
             "graphql": {
               "typeName": "Actor"
-            }
-          }
-        },
-        {
-          "kind": "Model",
-          "version": "v1",
-          "definition": {
-            "name": "Actors",
-            "objectType": "actor",
-            "globalIdSource": false,
-            "source": {
-              "dataConnectorName": "db",
-              "collection": "actors",
-              "typeMapping": {
-                "actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
                     }
                   }
                 }
               }
-            },
-            "graphql": {
-              "selectUniques": [
-                {
-                  "queryRootField": "ActorByMovieId",
-                  "uniqueIdentifier": [
-                    "actor_id"
-                  ]
-                }
-              ],
-              "filterExpressionType": "Actor_Where_Exp"
-            },
-            "filterableFields": [
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "actor_bool_exp",
+            "objectType": "actor",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "actor",
+            "comparableFields": [
               {
                 "fieldName": "actor_id",
                 "operators": {
@@ -227,6 +218,33 @@
                 }
               }
             ],
+            "graphql": {
+              "typeName": "Actor_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Actors",
+            "objectType": "actor",
+            "globalIdSource": false,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "actors"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ActorByMovieId",
+                  "uniqueIdentifier": [
+                    "actor_id"
+                  ]
+                }
+              ]
+            },
+            "filterExpressionType": "actor_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "actor_id",
