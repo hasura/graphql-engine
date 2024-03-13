@@ -358,27 +358,9 @@ def generate_regression_report():
         tmp.seek(0)
         return json.load(tmp)
 
-    # Find the PR number of the nearest parent commit, to compare against.
-    # NOTE: we need a somewhat long history here, because there may be a long
-    # string of e.g. console commits which never resulted in a benchmark run in CI:
-    merge_base_candidates = (
-        local(f"utils/pr-merge-bases.sh {PR_TARGET_BRANCH} 30", hide='stdout')
-        .stdout
-        .splitlines()
-    )
-    # Find the most recent PR in merge base with some benchmark results:
-    for pr_num in merge_base_candidates:
-        if 'Contents' in s3.list_objects(Bucket=RESULTS_S3_BUCKET, Prefix=f"mono-pr-{pr_num}/"):
-            merge_base_pr = pr_num
-            break
-    try:
-      if merge_base_pr != merge_base_candidates[0]:
-          warn("Showing regression report against older PR in merge base!")
-      say(f"Comparing performance to changes from https://github.com/hasura/graphql-engine-mono/pull/{merge_base_pr}")
-    except UnboundLocalError:
-      warn(f"Could not find a commit in merge base with associated benchmarks! (among {merge_base_candidates}")
-      warn(f"Exiting")
-      raise
+    # https://github.com/hasura/graphql-engine-mono/pull/10720 
+    merge_base_pr = "10720"
+    say(f"Comparing performance to changes from https://github.com/hasura/graphql-engine-mono/pull/{merge_base_pr}")
 
     # We'll accumulate a structure like this, with all non-empty maps:
     #   :: Map BenchSetName (MemInUsePctChg, LiveBytesPctChg, [ (BenchmarkName, Map Metric PctChg) ]
@@ -525,6 +507,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     def out(s): f.write(s+"\n")
 
     out(f"## Benchmark Results (graphql-engine-pro)") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
+    out(f"## NOTE: HARD-CODED pull/10720 AS BASELINE")
     out(f"<details closed><summary>Click for detailed reports, and help docs</summary>")
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
