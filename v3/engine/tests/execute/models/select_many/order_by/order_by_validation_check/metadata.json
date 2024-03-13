@@ -47,50 +47,43 @@
             ],
             "graphql": {
               "typeName": "Track"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
         },
         {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
           "definition": {
-            "name": "Tracks",
+            "name": "track_bool_exp",
             "objectType": "Track",
-            "source": {
-              "dataConnectorName": "db",
-              "collection": "Track",
-              "typeMapping": {
-                "Track": {
-                  "fieldMapping": {
-                    "TrackId": {
-                      "column": "TrackId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    },
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    }
-                  }
-                }
-              }
-            },
-            "graphql": {
-              "selectUniques": [
-                {
-                  "queryRootField": "TrackByID",
-                  "uniqueIdentifier": [
-                    "TrackId"
-                  ]
-                }
-              ],
-              "selectMany": {
-                "queryRootField": "Track"
-              },
-              "filterExpressionType": "Track_Where_Exp",
-              "orderByExpressionType": "Track_Order_By"
-            },
-            "filterableFields": [
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Track",
+            "comparableFields": [
               {
                 "fieldName": "TrackId",
                 "operators": {
@@ -110,6 +103,20 @@
                 }
               }
             ],
+            "graphql": {
+              "typeName": "Track_Where_Exp"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Tracks",
+            "objectType": "Track",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Track"
+            },
+            "filterExpressionType": "track_bool_exp",
             "orderableFields": [
               {
                 "fieldName": "TrackId",
@@ -129,7 +136,21 @@
                   "enableAll": true
                 }
               }
-            ]
+            ],
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "TrackByID",
+                  "uniqueIdentifier": [
+                    "TrackId"
+                  ]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Track"
+              },
+              "orderByExpressionType": "Track_Order_By"
+            }
           },
           "version": "v1",
           "kind": "Model"

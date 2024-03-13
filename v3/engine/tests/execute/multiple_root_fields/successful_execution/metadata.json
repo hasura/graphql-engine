@@ -348,7 +348,30 @@
             ],
             "graphql": {
               "typeName": "Movie"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -359,22 +382,7 @@
             "objectType": "movie",
             "source": {
               "dataConnectorName": "custom",
-              "collection": "movies",
-              "typeMapping": {
-                "movie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                }
-              }
+              "collection": "movies"
             },
             "graphql": {
               "selectUniques": [],
@@ -382,26 +390,6 @@
                 "queryRootField": "MovieMany"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "rating",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "movie_id",
@@ -489,7 +477,30 @@
             ],
             "graphql": {
               "typeName": "CommandActor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -554,21 +565,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_actor_by_id"
-              },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "actor_id": "id"
@@ -1011,7 +1007,30 @@
             ],
             "graphql": {
               "typeName": "Author"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "author",
+                "fieldMapping": {
+                  "author_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -1032,19 +1051,7 @@
             "objectType": "author",
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors",
-              "typeMapping": {
-                "author": {
-                  "fieldMapping": {
-                    "author_id": {
-                      "column": "id"
-                    },
-                    "first_name": {
-                      "column": "first_name"
-                    }
-                  }
-                }
-              }
+              "collection": "authors"
             },
             "graphql": {
               "selectUniques": [
@@ -1058,29 +1065,8 @@
               "selectMany": {
                 "queryRootField": "AuthorMany"
               },
-              "filterExpressionType": "Author_Where_Exp",
               "orderByExpressionType": "Author_Order_By"
             },
-            "filterableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "first_name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "last_name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "author_id",

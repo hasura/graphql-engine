@@ -186,4 +186,16 @@ impl<'q, 's, S: schema::SchemaContext> ValueSource<'q, 's, S> for json::Value {
         }
         Ok(normalized::Value::Object(accum))
     }
+
+    fn is_list(&self) -> bool {
+        self.is_array()
+    }
+
+    fn is_null(&self) -> bool {
+        self.is_null()
+    }
+
+    fn kind(&self) -> &'static str {
+        json_kind(self)
+    }
 }

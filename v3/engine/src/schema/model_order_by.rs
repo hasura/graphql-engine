@@ -207,7 +207,6 @@ pub fn build_model_order_by_input_schema(
                                     relationship_type: relationship_type.clone(),
                                     mappings: mappings.clone(),
                                     source_data_connector: model_source.data_connector.clone(),
-
                                     source_type_mappings: model_source.type_mappings.clone(),
                                 };
 

@@ -42,6 +42,7 @@
                                 "type_mappings": {
                                   "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                     "Object": {
+                                      "ndc_object_type_name": "article",
                                       "field_mappings": {
                                         "article_id": {
                                           "column": "id",
@@ -146,6 +147,7 @@
                                       "type_mappings": {
                                         "{\"subgraph\":\"default\",\"name\":\"author\"}": {
                                           "Object": {
+                                            "ndc_object_type_name": "author",
                                             "field_mappings": {
                                               "author_id": {
                                                 "column": "id",
@@ -250,6 +252,7 @@
                                             "type_mappings": {
                                               "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                                 "Object": {
+                                                  "ndc_object_type_name": "article",
                                                   "field_mappings": {
                                                     "article_id": {
                                                       "column": "id",
@@ -570,6 +573,7 @@
                                             "source_type_mappings": {
                                               "{\"subgraph\":\"default\",\"name\":\"author\"}": {
                                                 "Object": {
+                                                  "ndc_object_type_name": "author",
                                                   "field_mappings": {
                                                     "author_id": {
                                                       "column": "id",
@@ -614,6 +618,7 @@
                                                 "type_mappings": {
                                                   "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                                     "Object": {
+                                                      "ndc_object_type_name": "article",
                                                       "field_mappings": {
                                                         "article_id": {
                                                           "column": "id",
@@ -694,6 +699,7 @@
                                   "source_type_mappings": {
                                     "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                       "Object": {
+                                        "ndc_object_type_name": "article",
                                         "field_mappings": {
                                           "article_id": {
                                             "column": "id",
@@ -738,6 +744,7 @@
                                       "type_mappings": {
                                         "{\"subgraph\":\"default\",\"name\":\"author\"}": {
                                           "Object": {
+                                            "ndc_object_type_name": "author",
                                             "field_mappings": {
                                               "author_id": {
                                                 "column": "id",
@@ -818,6 +825,7 @@
                         "source_type_mappings": {
                           "{\"subgraph\":\"default\",\"name\":\"commandArticle\"}": {
                             "Object": {
+                              "ndc_object_type_name": "article",
                               "field_mappings": {
                                 "article_id": {
                                   "column": "id",
@@ -862,6 +870,7 @@
                             "type_mappings": {
                               "{\"subgraph\":\"default\",\"name\":\"article\"}": {
                                 "Object": {
+                                  "ndc_object_type_name": "article",
                                   "field_mappings": {
                                     "article_id": {
                                       "column": "id",

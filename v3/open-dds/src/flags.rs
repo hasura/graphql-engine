@@ -1,9 +1,17 @@
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, JsonSchema)]
-#[schemars(rename = "OpenDdFlags")]
+#[derive(Serialize, Clone, Debug, Default, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(rename = "OpenDdFlags"))]
 pub struct Flags {
-    #[serde(default)]
+    #[opendd(default, rename = "require_graphql_config")]
+    // By default, OpenDd assumes camel-cased fields, rename to use snake-case
     pub require_graphql_config: bool,
+}
+
+impl Flags {
+    pub fn default_json() -> serde_json::Value {
+        serde_json::json!({
+            "require_graphql_config": false
+        })
+    }
 }

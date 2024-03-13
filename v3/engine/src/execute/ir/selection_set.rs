@@ -161,11 +161,14 @@ pub(crate) fn generate_nested_selection<'s>(
                 QualifiedTypeName::Custom(data_type) => match field_base_type_kind {
                     TypeKind::Scalar => Ok(None),
                     TypeKind::Object => {
-                        let resolved::types::TypeMapping::Object { field_mappings } = type_mappings
-                            .get(data_type)
-                            .ok_or(error::InternalEngineError::InternalGeneric {
-                                description: format!("no type mapping found for type {data_type}"),
-                            })?;
+                        let resolved::types::TypeMapping::Object { field_mappings, .. } =
+                            type_mappings.get(data_type).ok_or(
+                                error::InternalEngineError::InternalGeneric {
+                                    description: format!(
+                                        "no type mapping found for type {data_type}"
+                                    ),
+                                },
+                            )?;
                         let nested_selection = generate_selection_set_ir(
                             &field.selection_set,
                             data_connector,

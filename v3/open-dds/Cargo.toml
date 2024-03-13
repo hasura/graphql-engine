@@ -19,6 +19,8 @@ lang-graphql = { path = "../lang-graphql" }
 indexmap = { version = "2", features = ["serde"] }
 strum = { version = "^0.25.0" }
 strum_macros = { version = "^0.25.2" }
+opendds-derive = {path = "../opendds-derive"}
+serde_path_to_error = "0.1.14"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"

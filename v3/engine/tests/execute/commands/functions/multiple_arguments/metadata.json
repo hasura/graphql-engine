@@ -85,21 +85,6 @@
               "dataConnectorCommand": {
                 "function": "get_actors_by_movie_id_bounds"
               },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
-              },
               "argumentMapping": {
                 "lower_bound": "lower_bound",
                 "upper_bound": "upper_bound"

@@ -1,5 +1,4 @@
 {
-  "$schema": "../../../../../../../open-dds/metadata.jsonschema",
   "version": "v2",
   "subgraphs": [
     {
@@ -55,7 +54,40 @@
             ],
             "graphql": {
               "typeName": "Institution"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "institution",
+                "fieldMapping": {
+                  "id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "location": {
+                    "column": {
+                      "name": "location"
+                    }
+                  },
+                  "staff": {
+                    "column": {
+                      "name": "staff"
+                    }
+                  },
+                  "departments": {
+                    "column": {
+                      "name": "departments"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -100,7 +132,30 @@
             ],
             "graphql": {
               "typeName": "Location"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "location",
+                "fieldMapping": {
+                  "city": {
+                    "column": {
+                      "name": "city"
+                    }
+                  },
+                  "country": {
+                    "column": {
+                      "name": "country"
+                    }
+                  },
+                  "campuses": {
+                    "column": {
+                      "name": "campuses"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -143,7 +198,30 @@
             ],
             "graphql": {
               "typeName": "StaffMember"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "staff_member",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "last_name": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  },
+                  "specialities": {
+                    "column": {
+                      "name": "specialities"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -175,9 +253,7 @@
             "source": {
               "dataConnectorName": "custom",
               "collection": "institutions",
-              "argumentMapping": {},
-              "typeMapping": {
-              }
+              "argumentMapping": {}
             },
             "graphql": {
               "selectUniques": [],
@@ -185,38 +261,6 @@
                 "queryRootField": "InstitutionMany"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "location",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "staff",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "departments",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "id",

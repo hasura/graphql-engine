@@ -6,9 +6,7 @@ use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_reference, serialize_qualified_btreemap,
     ArgumentInfo, Qualified, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::{
-    get_underlying_object_type, resolve_type_mappings, TypeMappingToResolve, TypeRepresentation,
-};
+use crate::metadata::resolved::types::{get_underlying_object_type, TypeRepresentation};
 use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -22,7 +20,10 @@ use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
-use super::error::TypeMappingValidationError;
+use super::metadata::DataConnectorTypeMappings;
+use super::types::{
+    collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandGraphQlApi {
@@ -141,6 +142,7 @@ pub fn resolve_command_source(
     subgraph: &str,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    data_connector_type_mappings: &DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
@@ -198,7 +200,6 @@ pub fn resolve_command_source(
         &command.arguments,
         &command_source.argument_mapping,
         ndc_arguments,
-        &data_connector_context.schema.object_types,
         types,
     )
     .map_err(|err| match &command_source.data_connector_command {
@@ -222,6 +223,8 @@ pub fn resolve_command_source(
 
     let command_result_base_object_type_name =
         get_underlying_object_type(&command.output_type, types)?;
+    let mut type_mappings = BTreeMap::new();
+
     // Get the type mapping to resolve for the result type
     let source_result_type_mapping_to_resolve = command_result_base_object_type_name
         .as_ref()
@@ -229,65 +232,41 @@ pub fn resolve_command_source(
             // Get the corresponding object_type (data_connector.object_type) associated with the result_type for the source
             let source_result_type_name =
                 ndc_validation::get_underlying_named_type(source_result_type).map_err(|e| {
-                    Error::CommandTypeMappingValidationError {
+                    Error::CommandTypeMappingCollectionError {
                         command_name: command.name.clone(),
-                        error: TypeMappingValidationError::NDCValidationError(e),
+                        error: TypeMappingCollectionError::NDCValidationError(e),
                     }
                 })?;
-            let source_result_object_type = data_connector_context
-                .schema
-                .object_types
-                .get(source_result_type_name)
-                .ok_or_else(|| {
-                    ndc_validation::NDCValidationError::NoSuchType(
-                        source_result_type_name.to_string(),
-                    )
-                })?;
 
-            let source_result_type_mapping_to_resolve = TypeMappingToResolve {
+            let source_result_type_mapping_to_resolve = TypeMappingToCollect {
                 type_name: custom_type_name,
                 ndc_object_type_name: source_result_type_name,
-                ndc_object_type: source_result_object_type,
             };
 
             Ok::<_, Error>(source_result_type_mapping_to_resolve)
         })
         .transpose()?;
 
-    // Resolve all the type mappings (types from the arguments and the result type)
-    let namespaced_type_mappings = command_source
-        .type_mapping
+    for type_mapping_to_collect in source_result_type_mapping_to_resolve
         .iter()
-        .map(|(type_name, mapping)| {
-            (
-                Qualified::new(subgraph.to_string(), type_name.clone()),
-                mapping,
-            )
-        })
-        .collect();
-    let mappings_to_resolve = source_result_type_mapping_to_resolve
-        .iter()
-        .chain(argument_type_mappings_to_resolve.iter());
-    let type_mappings = resolve_type_mappings(
-        mappings_to_resolve,
-        &namespaced_type_mappings,
-        types,
-        &data_connector_context.schema.object_types,
-    )
-    .map_err(
-        |type_validation_error| Error::CommandTypeMappingValidationError {
+        .chain(argument_type_mappings_to_resolve.iter())
+    {
+        collect_type_mapping_for_source(
+            type_mapping_to_collect,
+            data_connector_type_mappings,
+            &qualified_data_connector_name,
+            types,
+            &mut type_mappings,
+        )
+        .map_err(|error| Error::CommandTypeMappingCollectionError {
             command_name: command.name.clone(),
-            error: type_validation_error,
-        },
-    )?;
+            error,
+        })?;
+    }
 
-    let data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        command_source.data_connector_name.clone(),
-    );
     command.source = Some(CommandSource {
         data_connector: DataConnectorLink::new(
-            data_connector_name,
+            qualified_data_connector_name,
             data_connector_context.url.clone(),
             data_connector_context.headers,
         )?,

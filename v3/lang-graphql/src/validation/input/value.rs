@@ -394,4 +394,21 @@ where
             }),
         }
     }
+
+    fn is_list(&self) -> bool {
+        match self {
+            gql::Value::Variable(_variable) => true,
+            gql::Value::List(_array) => true,
+            gql::Value::Object(_obj) => false,
+            gql::Value::SimpleValue(_simple_value) => false,
+        }
+    }
+
+    fn is_null(&self) -> bool {
+        matches!(self, gql::Value::SimpleValue(gql::SimpleValue::Null))
+    }
+
+    fn kind(&self) -> &'static str {
+        self.kind()
+    }
 }

@@ -24,8 +24,11 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
+
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
+    ports:
+      - "8100:8100"
     volumes:
       - ./engine/tests/pg_ndc_config.json:/config.json
     depends_on:
@@ -38,10 +41,13 @@ services:
       timeout: 10s
       retries: 20
     command: ["serve", "--configuration", "/config.json"]
+
   custom_connector:
     build:
       context: .
       target: builder
+    ports:
+      - "8101:8101"
     healthcheck:
       test: curl --fail http://localhost:8101/schema || exit 1
       start_period: 5s
@@ -49,6 +55,7 @@ services:
       timeout: 10s
       retries: 20
     command: ["sh", "-c", "cargo run --bin agent"]
+
   source_only:
     build:
       context: .
@@ -62,6 +69,7 @@ services:
       - ./hasura-authn-core:/app/hasura-authn-core
       - ./hasura-authn-webhook:/app/hasura-authn-webhook
       - ./coverage:/app/coverage
+
   test_setup:
     build:
       context: .

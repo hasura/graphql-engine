@@ -1,5 +1,5 @@
-use engine::metadata::resolved::error::Error::ModelTypeMappingValidationError;
-use engine::schema::Error::ResolveError;
+use engine::metadata::resolved::error::Error as ResolveError;
+use engine::schema::Error as SchemaError;
 use engine::schema::GDS;
 use std::{fs, path::PathBuf};
 
@@ -12,7 +12,7 @@ fn test_select_many_model_arguments_without_arguments_input_type() {
     )
         .unwrap();
 
-    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
+    let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap();
     assert_eq!(
         GDS::build_schema(&gds).unwrap_err().to_string(),
         "Cannot generate arguments for model Actors (in subgraph default) since argumentsInputType and it's corresponding graphql config argumentsInput isn't defined"
@@ -29,7 +29,7 @@ fn test_duplicate_field_path_relationship_mappings() {
     .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: Mapping for source field movie_id already exists in the relationship Movies on type actor (in subgraph default)"
     );
 }
@@ -44,7 +44,7 @@ fn test_field_path_to_argument_relationship_mapping() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: Relationship mappings to model arguments expressions are not supported yet."
     );
 }
@@ -57,7 +57,7 @@ fn test_relationship_mapping_unknown_source_field() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: source field author_id_unknown_field in field mapping for relationship author on type Article (in subgraph default) is unknown."
     );
 }
@@ -70,7 +70,7 @@ fn test_relationship_mapping_unknown_target_field() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: target field author_id in field mapping for relationship author on type Article (in subgraph default) to model Authors (in subgraph default) is unknown."
     );
 }
@@ -82,7 +82,7 @@ fn test_pre_namespace_aware_metadata() {
             .join("tests/validate_metadata_artifacts/metadata_before_namespace_aware_open_dd.json"),
     )
     .unwrap();
-    let gds = GDS::new(serde_json::from_str(&schema).unwrap());
+    let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap());
     assert!(gds.is_ok())
 }
 
@@ -92,7 +92,7 @@ fn test_pre_subgraph_terminology_metadata() {
         "tests/validate_metadata_artifacts/metadata_before_subgraph_terminology_open_dd.json",
     ))
     .unwrap();
-    let gds = GDS::new(serde_json::from_str(&schema).unwrap());
+    let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap());
     assert!(gds.is_ok())
 }
 
@@ -102,7 +102,7 @@ fn test_scalar_comparison_type_reuse() {
         "tests/validate_metadata_artifacts/metadata_with_scalar_comparison_type_reused.json",
     ))
     .unwrap();
-    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
+    let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap();
     let built_schema = gds.build_schema();
     assert!(built_schema.is_ok());
 
@@ -110,7 +110,7 @@ fn test_scalar_comparison_type_reuse() {
         "tests/validate_metadata_artifacts/metadata_with_scalar_comparison_type_reused_for_different_scalars.json",
     ))
     .unwrap();
-    let gds = GDS::new(serde_json::from_str(&schema).unwrap()).unwrap();
+    let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap();
     let built_schema = gds.build_schema();
     assert_eq!(built_schema.unwrap_err().to_string(),
         "internal error while building schema: multiple definitions of graphql type: Int_Comparison_Exp"
@@ -133,7 +133,7 @@ fn test_filter_error_filter_expression_type_present_filter_input_not_present() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: the filterInput need to be defined in GraphqlConfig, when models have filterExpressionType"
     );
 }
@@ -152,7 +152,7 @@ fn test_order_by_error_order_by_expression_type_present_order_by_input_not_prese
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: the orderByInput need to be defined in GraphqlConfig, when models have orderByExpressionType"
     );
 }
@@ -170,7 +170,7 @@ fn test_order_by_error_order_by_expression_type_present_and_only_asc_in_enum_typ
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: invalid directions: Asc defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
     );
 }
@@ -189,7 +189,7 @@ fn test_arguments_error_arguments_input_type_present_arguments_input_not_present
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType"
     );
 }
@@ -206,7 +206,7 @@ fn test_require_graphql_config_flag_no_graphql_config_present() {
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap())
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap())
             .unwrap_err()
             .to_string(),
         "metadata is not consistent: graphql configuration is not defined in supergraph"
@@ -224,7 +224,7 @@ fn test_global_if_fields_present_in_object_type_but_no_model_has_global_id_sourc
         .unwrap();
 
     assert_eq!(
-        GDS::new(serde_json::from_str(&schema).unwrap()).unwrap_err().to_string(),
+        GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap_err().to_string(),
         "metadata is not consistent: 'globalIdFields' for type actor (in subgraph default) found, but no model found with 'globalIdSource: true' for type actor (in subgraph default)"
     );
 }
@@ -235,13 +235,93 @@ fn test_disallow_object_mapped_to_scalar() {
     let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "tests/validate_metadata_artifacts/metadata_with_opendd_object_mapped_to_ndc_scalar.json",
     );
-    let metadata =
-        GDS::new(serde_json::from_str(&fs::read_to_string(metadata_path).unwrap()).unwrap());
-    println!("{metadata:?}");
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
     assert!(matches!(
         metadata,
-        Err(ResolveError {
-            error: ModelTypeMappingValidationError { .. }
+        Err(SchemaError::ResolveError {
+            error: ResolveError::ModelTypeMappingCollectionError { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_without_source() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_without_source.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::CannotUseFilterExpressionsWithoutSource { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_object_type_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_object_type_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_data_connector_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::DifferentDataConnectorInFilterExpression { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_filter_expression_with_data_connector_object_type_mismatch() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/filter_expression_with_data_connector_object_type_mismatch.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::DifferentDataConnectorObjectTypeInFilterExpression { .. }
+        })
+    ));
+}
+
+#[test]
+fn test_disallow_boolean_expression_without_mapping() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/boolean_expressions/boolean_expression_without_mapping.json",
+    );
+    let metadata = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    );
+    assert!(matches!(
+        metadata,
+        Err(SchemaError::ResolveError {
+            error: ResolveError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }
         })
     ));
 }

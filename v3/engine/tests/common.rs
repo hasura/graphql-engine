@@ -55,14 +55,22 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
         let response_path = test_path_string.to_string() + "/expected.json";
         let metadata_path = test_path.join("metadata.json");
 
-        let metadata = merge_with_common_metadata(
+        let metadata_json_value = merge_with_common_metadata(
             &metadata_path,
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+
+        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
+        assert_eq!(
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata).unwrap()).unwrap(),
+            metadata
+        );
+
+        let gds = GDS::new(metadata).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         // Ensure schema is serialized successfully.
@@ -123,14 +131,22 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
         let response_path = test_path_string.to_string() + "/expected.json";
         let metadata_path = test_path.join("metadata.json");
 
-        let metadata = merge_with_common_metadata(
+        let metadata_json_value = merge_with_common_metadata(
             &metadata_path,
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
         );
 
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+
+        // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
+        assert_eq!(
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata).unwrap()).unwrap(),
+            metadata
+        );
+
+        let gds = GDS::new(metadata).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
 
         // Verify successful serialization and deserialization of the schema.
@@ -238,7 +254,7 @@ pub fn test_execute_explain(
                 .iter()
                 .map(|path| root_test_dir.join(path)),
         );
-        let gds = GDS::new(serde_json::from_value(metadata).unwrap()).unwrap();
+        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
         let schema = GDS::build_schema(&gds).unwrap();
         let session = {
             let session_variables_raw = r#"{

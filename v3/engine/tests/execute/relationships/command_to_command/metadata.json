@@ -95,21 +95,6 @@
               "dataConnectorCommand": {
                 "function": "get_actor_by_id"
               },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
-              },
               "argumentMapping": {
                 "actor_id": "id"
               }
@@ -153,21 +138,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_movie_by_id"
-              },
-              "typeMapping": {
-                "commandMovie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "movie_id": "movie_id"

@@ -44,7 +44,30 @@
             ],
             "graphql": {
               "typeName": "Movie"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -55,22 +78,7 @@
             "objectType": "movie",
             "source": {
               "dataConnectorName": "custom",
-              "collection": "movies",
-              "typeMapping": {
-                "movie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                }
-              }
+              "collection": "movies"
             },
             "graphql": {
               "selectUniques": [],
@@ -78,26 +86,6 @@
                 "queryRootField": "MovieMany"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "rating",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "movie_id",
@@ -199,7 +187,30 @@
             ],
             "graphql": {
               "typeName": "Actor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -229,22 +240,7 @@
             "objectType": "actor",
             "source": {
               "dataConnectorName": "custom",
-              "collection": "actors",
-              "typeMapping": {
-                "actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
-              }
+              "collection": "actors"
             },
             "graphql": {
               "selectUniques": [],
@@ -252,26 +248,6 @@
                 "queryRootField": "ActorMany"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "actor_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "actor_id",
@@ -308,22 +284,7 @@
             ],
             "source": {
               "dataConnectorName": "custom",
-              "collection": "actors_by_movie",
-              "typeMapping": {
-                "actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
-              }
+              "collection": "actors_by_movie"
             },
             "graphql": {
               "selectUniques": [
@@ -339,26 +300,6 @@
               },
               "argumentsInputType": "ActorsByMovieArgs"
             },
-            "filterableFields": [
-              {
-                "fieldName": "actor_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "name",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "actor_id",
@@ -522,21 +463,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_actor_by_id"
-              },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "actor_id": "id"

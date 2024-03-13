@@ -6,17 +6,27 @@ mod v1;
 
 pub use v1::{DataConnectorLinkV1, DataConnectorUrlV1 as DataConnectorUrl, ReadWriteUrls};
 
+use crate::impl_OpenDd_default_for;
+
 /// The name of a data connector.
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, JsonSchema, derive_more::Display,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    JsonSchema,
+    derive_more::Display,
+    opendds_derive::OpenDd,
 )]
 pub struct DataConnectorName(pub String);
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "DataConnectorLink")]
+#[opendd(as_versioned_with_definition, json_schema(title = "DataConnectorLink"))]
 /// Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.
 pub enum DataConnectorLink {
     V1(DataConnectorLinkV1),
@@ -42,13 +52,16 @@ fn ndc_schema_response_v01_schema_reference(
     schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/schema_response.jsonschema".into())
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version")]
 #[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-#[schemars(title = "VersionedSchemaAndCapabilities")]
+#[opendd(
+    as_versioned_internally_tagged,
+    json_schema(title = "VersionedSchemaAndCapabilities")
+)]
 pub enum VersionedSchemaAndCapabilities {
     #[serde(rename = "v0.1")]
+    #[opendd(rename = "v0.1")]
     V01(SchemaAndCapabilitiesV01),
 }
 
@@ -63,6 +76,9 @@ pub struct SchemaAndCapabilitiesV01 {
     pub capabilities: CapabilitiesResponse,
 }
 
+// Derive OpenDd for `SchemaAdnCapabilitiesV01` by serde Deserialize and schemars JsonSchema implementations.
+impl_OpenDd_default_for!(SchemaAndCapabilitiesV01);
+
 #[cfg(test)]
 mod tests {
     use super::DataConnectorLinkV1;
@@ -70,8 +86,7 @@ mod tests {
 
     #[test]
     fn test_upgrade() {
-        let v1: DataConnectorLink = serde_json::from_str(
-            r#"
+        let v1: DataConnectorLink = crate::traits::OpenDd::deserialize(serde_json::json!(
             {
                 "version": "v1",
                 "definition": {
@@ -105,12 +120,10 @@ mod tests {
                     }
                 }
             }
-        "#,
-        )
+        ))
         .unwrap();
 
-        let upgraded: DataConnectorLinkV1 = serde_json::from_str(
-            r#"
+        let upgraded: DataConnectorLinkV1 = crate::traits::OpenDd::deserialize(serde_json::json!(
             {
                 "name": "foo",
                 "url": {
@@ -141,8 +154,7 @@ mod tests {
                     }
                 }
             }
-        "#,
-        )
+        ))
         .unwrap();
 
         assert_eq!(v1.upgrade(), upgraded);

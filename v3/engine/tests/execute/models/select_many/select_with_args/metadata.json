@@ -49,7 +49,30 @@
             ],
             "graphql": {
               "typeName": "Article"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "article",
+                "fieldMapping": {
+                  "article_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "author_id": {
+                    "column": {
+                      "name": "author_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -66,22 +89,7 @@
             ],
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles_by_author",
-              "typeMapping": {
-                "article": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              }
+              "collection": "articles_by_author"
             },
             "graphql": {
               "selectUniques": [
@@ -97,26 +105,6 @@
               },
               "argumentsInputType": "ArticlesByAuthorArguments"
             },
-            "filterableFields": [
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "author_id",
@@ -148,22 +136,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles",
-              "typeMapping": {
-                "article": {
-                  "fieldMapping": {
-                    "article_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "author_id": {
-                      "column": "author_id"
-                    }
-                  }
-                }
-              }
+              "collection": "articles"
             },
             "graphql": {
               "selectUniques": [
@@ -175,26 +148,6 @@
                 }
               ]
             },
-            "filterableFields": [
-              {
-                "fieldName": "article_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "author_id",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "article_id",

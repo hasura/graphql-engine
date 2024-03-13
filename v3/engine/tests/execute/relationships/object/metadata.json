@@ -40,7 +40,25 @@
             ],
             "graphql": {
               "typeName": "Artist"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -51,19 +69,7 @@
             "objectType": "Artist",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Artist",
-              "typeMapping": {
-                "Artist": {
-                  "fieldMapping": {
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    },
-                    "Name": {
-                      "column": "Name"
-                    }
-                  }
-                }
-              }
+              "collection": "Artist"
             },
             "graphql": {
               "selectUniques": [
@@ -78,20 +84,6 @@
                 "queryRootField": "Artist"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Name",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "ArtistId",
@@ -192,7 +184,30 @@
             ],
             "graphql": {
               "typeName": "Album"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "ObjectType"
@@ -203,22 +218,7 @@
             "objectType": "Album",
             "source": {
               "dataConnectorName": "db",
-              "collection": "Album",
-              "typeMapping": {
-                "Album": {
-                  "fieldMapping": {
-                    "AlbumId": {
-                      "column": "AlbumId"
-                    },
-                    "Title": {
-                      "column": "Title"
-                    },
-                    "ArtistId": {
-                      "column": "ArtistId"
-                    }
-                  }
-                }
-              }
+              "collection": "Album"
             },
             "graphql": {
               "selectUniques": [
@@ -233,26 +233,6 @@
                 "queryRootField": "Album"
               }
             },
-            "filterableFields": [
-              {
-                "fieldName": "AlbumId",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "Title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "ArtistId",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "AlbumId",

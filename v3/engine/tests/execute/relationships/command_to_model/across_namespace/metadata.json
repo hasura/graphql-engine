@@ -46,7 +46,30 @@
             ],
             "graphql": {
               "typeName": "Movie"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "movie",
+                "fieldMapping": {
+                  "movie_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "title": {
+                    "column": {
+                      "name": "title"
+                    }
+                  },
+                  "rating": {
+                    "column": {
+                      "name": "rating"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -57,51 +80,15 @@
             "objectType": "movie",
             "source": {
               "dataConnectorName": "custom",
-              "collection": "movies",
-              "typeMapping": {
-                "movie": {
-                  "fieldMapping": {
-                    "movie_id": {
-                      "column": "id"
-                    },
-                    "title": {
-                      "column": "title"
-                    },
-                    "rating": {
-                      "column": "rating"
-                    }
-                  }
-                }
-              }
+              "collection": "movies"
             },
             "graphql": {
               "selectUniques": [],
               "selectMany": {
                 "queryRootField": "MovieMany"
               },
-              "filterExpressionType": "MovieWhereExp",
               "orderByExpressionType": "MovieOrderBy"
             },
-            "filterableFields": [
-              {
-                "fieldName": "movie_id",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "title",
-                "operators": {
-                  "enableAll": true
-                }
-              },
-              {
-                "fieldName": "rating",
-                "operators": {
-                  "enableAll": true
-                }
-              }
-            ],
             "orderableFields": [
               {
                 "fieldName": "movie_id",
@@ -266,7 +253,30 @@
             ],
             "graphql": {
               "typeName": "CommandActor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -340,21 +350,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_all_actors"
-              },
-              "typeMapping": {
-                "commandActor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
               }
             },
             "graphql": {

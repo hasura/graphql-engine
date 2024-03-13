@@ -268,26 +268,25 @@ mod tests {
 
     #[test]
     fn test_data_connector_context_capablities() {
-        let data_connector_with_capabilities: DataConnectorLinkV1 = serde_json::from_str(
-            r#"
-            {
-                "name": "foo",
-                "url": { "singleUrl": { "value": "http://test.com" } },
-                "schema": {
-                    "version": "v0.1",
-                    "capabilities": { "version": "1", "capabilities": { "query": {}, "mutation": {} }},
+        let data_connector_with_capabilities: DataConnectorLinkV1 =
+            open_dds::traits::OpenDd::deserialize(serde_json::json!(
+                {
+                    "name": "foo",
+                    "url": { "singleUrl": { "value": "http://test.com" } },
                     "schema": {
-                        "scalar_types": {},
-                        "object_types": {},
-                        "collections": [],
-                        "functions": [],
-                        "procedures": []
+                        "version": "v0.1",
+                        "capabilities": { "version": "1", "capabilities": { "query": {}, "mutation": {} }},
+                        "schema": {
+                            "scalar_types": {},
+                            "object_types": {},
+                            "collections": [],
+                            "functions": [],
+                            "procedures": []
+                        }
                     }
                 }
-            }
-        "#,
-        )
-        .unwrap();
+            ))
+            .unwrap();
 
         let explicit_capabilities: CapabilitiesResponse = serde_json::from_str(
             r#" { "version": "1", "capabilities": { "query": {}, "mutation": {} } }"#,

@@ -61,7 +61,55 @@
       ],
       "graphql": {
         "typeName": "MovieAnalytics"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "db",
+          "dataConnectorObjectType": "movie_analytics",
+          "fieldMapping": {
+            "analytics_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "movie_id": {
+              "column": {
+                "name": "movie_id"
+              }
+            },
+            "num_users_faved": {
+              "column": {
+                "name": "num_users_faved"
+              }
+            },
+            "num_users_watchlisted": {
+              "column": {
+                "name": "num_users_watchlisted"
+              }
+            },
+            "num_views_day": {
+              "column": {
+                "name": "num_views_day"
+              }
+            },
+            "num_votes_day": {
+              "column": {
+                "name": "num_votes_day"
+              }
+            },
+            "prev_day_scores": {
+              "column": {
+                "name": "prev_day_scores"
+              }
+            },
+            "total_votes": {
+              "column": {
+                "name": "total_votes"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -72,88 +120,8 @@
       "objectType": "movie_analytics",
       "source": {
         "dataConnectorName": "db",
-        "collection": "movie_analytics",
-        "typeMapping": {
-          "movie_analytics": {
-            "fieldMapping": {
-              "analytics_id": {
-                "column": "id"
-              },
-              "movie_id": {
-                "column": "movie_id"
-              },
-              "num_users_faved": {
-                "column": "num_users_faved"
-              },
-              "num_users_watchlisted": {
-                "column": "num_users_watchlisted"
-              },
-              "num_views_day": {
-                "column": "num_views_day"
-              },
-              "num_votes_day": {
-                "column": "num_votes_day"
-              },
-              "prev_day_scores": {
-                "column": "prev_day_scores"
-              },
-              "total_votes": {
-                "column": "total_votes"
-              }
-            }
-          }
-        }
+        "collection": "movie_analytics"
       },
-      "filterableFields": [
-        {
-          "fieldName": "analytics_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "movie_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_faved",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_users_watchlisted",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_views_day",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "num_votes_day",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "prev_day_scores",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "total_votes",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "analytics_id",
@@ -207,16 +175,15 @@
       "graphql": {
         "selectUniques": [
           {
-              "queryRootField": "AnalyticsById",
-              "uniqueIdentifier": [
-                  "analytics_id"
-              ]
+            "queryRootField": "AnalyticsById",
+            "uniqueIdentifier": [
+              "analytics_id"
+            ]
           }
         ],
         "selectMany": {
           "queryRootField": "Analytics"
         },
-        "filterExpressionType": "AnalyticsFilterExp",
         "orderByExpressionType": "AnalyticsOrderBy"
       }
     }
@@ -364,7 +331,30 @@
       ],
       "graphql": {
         "typeName": "Movie"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "movie",
+          "fieldMapping": {
+            "movie_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "title": {
+              "column": {
+                "name": "title"
+              }
+            },
+            "rating": {
+              "column": {
+                "name": "rating"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -375,22 +365,7 @@
       "objectType": "movie",
       "source": {
         "dataConnectorName": "custom",
-        "collection": "movies",
-        "typeMapping": {
-          "movie": {
-            "fieldMapping": {
-              "movie_id": {
-                "column": "id"
-              },
-              "title": {
-                "column": "title"
-              },
-              "rating": {
-                "column": "rating"
-              }
-            }
-          }
-        }
+        "collection": "movies"
       },
       "graphql": {
         "selectUniques": [],
@@ -398,26 +373,6 @@
           "queryRootField": "MovieMany"
         }
       },
-      "filterableFields": [
-        {
-          "fieldName": "movie_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "title",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "rating",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "movie_id",
@@ -449,19 +404,31 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": ["movie_id", "title", "rating"]
+            "allowedFields": [
+              "movie_id",
+              "title",
+              "rating"
+            ]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": ["movie_id", "title", "rating"]
+            "allowedFields": [
+              "movie_id",
+              "title",
+              "rating"
+            ]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": ["movie_id", "title", "rating"]
+            "allowedFields": [
+              "movie_id",
+              "title",
+              "rating"
+            ]
           }
         }
       ]
@@ -557,7 +524,30 @@
       ],
       "graphql": {
         "typeName": "Actor"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "actor",
+          "fieldMapping": {
+            "actor_id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "name": {
+              "column": {
+                "name": "name"
+              }
+            },
+            "movie_id": {
+              "column": {
+                "name": "movie_id"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -569,19 +559,31 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": ["actor_id", "name", "movie_id"]
+            "allowedFields": [
+              "actor_id",
+              "name",
+              "movie_id"
+            ]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": ["actor_id", "name", "movie_id"]
+            "allowedFields": [
+              "actor_id",
+              "name",
+              "movie_id"
+            ]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": ["actor_id", "name", "movie_id"]
+            "allowedFields": [
+              "actor_id",
+              "name",
+              "movie_id"
+            ]
           }
         }
       ]
@@ -595,22 +597,7 @@
       "objectType": "actor",
       "source": {
         "dataConnectorName": "custom",
-        "collection": "actors",
-        "typeMapping": {
-          "actor": {
-            "fieldMapping": {
-              "actor_id": {
-                "column": "id"
-              },
-              "name": {
-                "column": "name"
-              },
-              "movie_id": {
-                "column": "movie_id"
-              }
-            }
-          }
-        }
+        "collection": "actors"
       },
       "graphql": {
         "selectUniques": [],
@@ -618,26 +605,6 @@
           "queryRootField": "ActorMany"
         }
       },
-      "filterableFields": [
-        {
-          "fieldName": "actor_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "name",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "movie_id",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "actor_id",

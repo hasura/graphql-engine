@@ -608,7 +608,7 @@ fn get_field_mapping_of_field_name(
         }
     })?;
     match type_mapping {
-        resolved::types::TypeMapping::Object { field_mappings } => Ok(field_mappings
+        resolved::types::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
             .get(field_name)
             .ok_or_else(
                 || error::InternalDeveloperError::FieldMappingNotFoundForRelationship {

@@ -25,7 +25,30 @@
             ],
             "graphql": {
               "typeName": "Actor"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -74,7 +97,25 @@
             ],
             "graphql": {
               "inputTypeName": "NameFilterOpaqueSurname"
-            }
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "name_query",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "surname": {
+                    "column": {
+                      "name": "last_name"
+                    }
+                  }
+                }
+              }
+            ]
           }
         },
         {
@@ -93,31 +134,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_actors_by_name"
-              },
-              "typeMapping": {
-                "Actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                },
-                "NameFilterOpaqueSurname": {
-                  "fieldMapping": {
-                    "first_name": {
-                      "column": "first_name"
-                    },
-                    "surname": {
-                      "column": "last_name"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "name_filter": "name"
@@ -158,21 +174,6 @@
               "dataConnectorName": "custom",
               "dataConnectorCommand": {
                 "function": "get_actors_by_name"
-              },
-              "typeMapping": {
-                "Actor": {
-                  "fieldMapping": {
-                    "actor_id": {
-                      "column": "id"
-                    },
-                    "name": {
-                      "column": "name"
-                    },
-                    "movie_id": {
-                      "column": "movie_id"
-                    }
-                  }
-                }
               },
               "argumentMapping": {
                 "name_filter": "name"

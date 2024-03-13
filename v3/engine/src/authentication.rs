@@ -4,7 +4,7 @@ use hasura_authn_webhook::webhook;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "AuthModeConfig")]
 /// The configuration for the authentication mode to use - webhook or JWT.
@@ -13,17 +13,18 @@ pub enum AuthModeConfig {
     Jwt(Box<jwt::JWTConfig>),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
+#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "AuthConfig")]
+#[opendd(as_versioned_with_definition)]
 /// Definition of the authentication configuration used by the API server.
 pub enum AuthConfig {
     V1(AuthConfigV1),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, JsonSchema, PartialEq)]
+#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "AuthConfigV1")]
@@ -36,8 +37,7 @@ pub struct AuthConfigV1 {
 
 impl AuthConfigV1 {
     fn example() -> Self {
-        serde_json::from_str(
-            r#"
+        open_dds::traits::OpenDd::deserialize(serde_json::json!(
             {
                 "allowRoleEmulationBy": "admin",
                 "mode": {
@@ -47,8 +47,7 @@ impl AuthConfigV1 {
                   }
                 }
             }
-        "#,
-        )
+        ))
         .unwrap()
     }
 }

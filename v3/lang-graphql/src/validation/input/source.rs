@@ -145,4 +145,10 @@ where
         self.as_json(schema, namespace, context, location_type)
             .map(|v| normalized::Value::Json(v))
     }
+
+    fn is_list(&self) -> bool;
+
+    fn is_null(&self) -> bool;
+
+    fn kind(&self) -> &'static str;
 }

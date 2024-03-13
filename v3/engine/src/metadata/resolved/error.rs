@@ -9,13 +9,14 @@ use open_dds::{
     arguments::ArgumentName,
     commands::{CommandName, FunctionName, ProcedureName},
     data_connector::DataConnectorName,
-    models::{ModelName, OperatorName},
+    models::ModelName,
     relationships::RelationshipName,
-    types::{CustomTypeName, FieldName, TypeReference},
+    types::{CustomTypeName, FieldName, OperatorName, TypeReference},
 };
 
-use super::ndc_validation::NDCValidationError;
+use super::{ndc_validation::NDCValidationError, types::TypeMappingCollectionError};
 
+// TODO: This enum really needs structuring
 #[derive(Error, Debug)]
 pub enum Error {
     #[error("the following data connector is defined more than once: {name:}")]
@@ -26,6 +27,17 @@ pub enum Error {
     DuplicateFieldDefinition {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
+    },
+    #[error("{error:} in object type {type_name:}")]
+    DataConnectorTypeMappingValidationError {
+        type_name: Qualified<CustomTypeName>,
+        error: TypeMappingValidationError,
+    },
+    #[error("Multiple mappings have been defined from type {type_name:} to object {data_connector_object_type:} of data connector {data_connector:}")]
+    DuplicateDataConnectorTypeMapping {
+        type_name: Qualified<CustomTypeName>,
+        data_connector: Qualified<DataConnectorName>,
+        data_connector_object_type: String,
     },
     #[error("the following model is defined more than once: {name:}")]
     DuplicateModelDefinition { name: Qualified<ModelName> },
@@ -58,9 +70,9 @@ pub enum Error {
     #[error("source for the following model is defined more than once: {model_name:}")]
     DuplicateModelSourceDefinition { model_name: Qualified<ModelName> },
     #[error("{error:} in model {model_name:}")]
-    ModelTypeMappingValidationError {
+    ModelTypeMappingCollectionError {
         model_name: Qualified<ModelName>,
-        error: TypeMappingValidationError,
+        error: TypeMappingCollectionError,
     },
     // ------- Errors for commands ---------
     #[error("the following command is defined more than once: {name:}")]
@@ -121,15 +133,20 @@ pub enum Error {
         function: FunctionName,
     },
     #[error("{error:} in command {command_name:}")]
-    CommandTypeMappingValidationError {
+    CommandTypeMappingCollectionError {
         command_name: Qualified<CommandName>,
-        error: TypeMappingValidationError,
+        error: TypeMappingCollectionError,
     },
     // ----------------
     #[error("the mapping for type {type_name:} in model {model_name:} is defined more than once")]
     DuplicateTypeMappingDefinitionInModelSource {
         model_name: Qualified<ModelName>,
         type_name: CustomTypeName,
+    },
+    #[error("the mapping for type {type_name:} is defined against multiple data connector objects: {ndc_object_types:?}")]
+    MultipleNDCObjectForOpenDDObjectType {
+        type_name: Qualified<CustomTypeName>,
+        ndc_object_types: Vec<String>,
     },
     #[error(
         "the source data connector {data_connector:} for model {model_name:} has not been defined"
@@ -202,7 +219,72 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         type_representation: TypeRepresentation,
     },
-
+    #[error("unknown type used in object boolean expression: {type_name:}")]
+    UnknownTypeInObjectBooleanExpressionType {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
+    UnsupportedTypeInObjectBooleanExpressionType {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {boolean_expression_type:}")]
+    UnknownDataConnectorInObjectBooleanExpressionType {
+        data_connector: Qualified<DataConnectorName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {boolean_expression_type:}")]
+    UnknownDataConnectorTypeInObjectBooleanExpressionType {
+        data_connector: Qualified<DataConnectorName>,
+        data_connector_object_type: String,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("unknown field '{field_name:}' used in object boolean expression type {boolean_expression_type:}")]
+    UnknownFieldInObjectBooleanExpressionType {
+        field_name: FieldName,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("the object type '{object_type:}' used in boolean expression type {boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
+    NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
+        object_type: Qualified<CustomTypeName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
+        data_connector_object_type: String,
+        data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("the following object boolean expression type is defined more than once: {name:}")]
+    DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
+    #[error("unknown object boolean expression type {name:} is used in model {model:}")]
+    UnknownBooleanExpressionTypeInModel {
+        name: Qualified<CustomTypeName>,
+        model: Qualified<ModelName>,
+    },
+    #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
+    BooleanExpressionTypeForInvalidObjectTypeInModel {
+        name: Qualified<CustomTypeName>,
+        boolean_expression_object_type: Qualified<CustomTypeName>,
+        model: Qualified<ModelName>,
+        model_object_type: Qualified<CustomTypeName>,
+    },
+    #[error("a source must be defined for model {model:} in order to use filter expressions")]
+    CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
+    #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
+    CannotUseFilterExpressionsWithoutGraphQlConfig {
+        model: Qualified<ModelName>,
+        filter_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("Model {model:} has source data connector {model_data_connector:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector:}")]
+    DifferentDataConnectorInFilterExpression {
+        model: Qualified<ModelName>,
+        model_data_connector: Qualified<DataConnectorName>,
+        filter_expression_type: Qualified<CustomTypeName>,
+        filter_expression_data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("Model {model:} has source data connector object type {model_data_connector_object_type:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector_object_type:}")]
+    DifferentDataConnectorObjectTypeInFilterExpression {
+        model: Qualified<ModelName>,
+        model_data_connector_object_type: String,
+        filter_expression_type: Qualified<CustomTypeName>,
+        filter_expression_data_connector_object_type: String,
+    },
     // Permission errors
     #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
     UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
@@ -472,6 +554,8 @@ pub enum Error {
         data_connector_name: Qualified<DataConnectorName>,
         error: url::ParseError,
     },
+    #[error("Predicate types in data connectors are unsupported")]
+    PredicateTypesUnsupported,
     // ---------------- Graphql Configuration Errors ----------------
     #[error("graphql configuration is not defined in supergraph")]
     MissingGraphqlConfig,
@@ -499,6 +583,11 @@ pub enum Error {
 
 #[derive(Error, Debug)]
 pub enum TypeMappingValidationError {
+    #[error("data connector {data_connector:} referenced in type mappings of type {type_name:} is not found")]
+    UnknownDataConnector {
+        data_connector: Qualified<DataConnectorName>,
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error("the type {type_name:} referenced in type mappings has not been defined")]
     UnknownSourceType {
         type_name: Qualified<CustomTypeName>,
