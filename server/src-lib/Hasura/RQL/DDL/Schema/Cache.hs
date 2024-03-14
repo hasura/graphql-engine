@@ -1593,7 +1593,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                         then do
                           recreateTriggerIfNeeded
                             -<
-                              ( dynamicConfig,
+                              ( (_cdcSQLGenCtx dynamicConfig),
                                 table,
                                 tableColumns,
                                 triggerName,
@@ -1629,7 +1629,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- computation will not be done again.
           Inc.cache
             proc
-              ( dynamicConfig,
+              ( sqlGenCtx,
                 tableName,
                 tableColumns,
                 triggerName,
@@ -1643,7 +1643,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 -< do
                   liftEitherM
                     $ createTableEventTrigger @b
-                      (_cdcSQLGenCtx dynamicConfig)
+                      sqlGenCtx
                       sourceConfig
                       tableName
                       tableColumns
