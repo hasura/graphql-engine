@@ -497,6 +497,14 @@ use an argument to specify the name of the table in a `FROM` clause.
 
 When making a query, the arguments are specified using the `args` parameter of the query root field.
 
+##### Example: `LIKE` operator
+
+A commonly used operator is the `LIKE`. When used in a `WHERE` condition, it's usually written with this syntax
+`WHERE Title LIKE '%word%'`.
+
+In order to use it with Native Query arguments, you need to use this syntax `LIKE ('%' || {{searchTitle}} || '%')`,
+where `searchTitle` is the Native Query parameter.
+
 ## Query functionality
 
 Just like tables, Native Queries generate GraphQL types with the ability to further break down the data. You can find
