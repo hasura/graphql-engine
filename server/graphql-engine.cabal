@@ -71,7 +71,7 @@ common common-all
       -fexpose-all-unfoldings
       -- Use O1 over O2, as (as of writing) it improves compile times a little, without
       -- hurting performance:
-      -O1
+      -O2
       -- This seems like a better default for us, lowering memory residency without 
       -- impacting compile times too much, though it does increase binary size:
       -funfolding-use-threshold=640
