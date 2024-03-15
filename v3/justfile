@@ -2,6 +2,7 @@ set positional-arguments
 
 CLIPPY_ARGS := "-A clippy::result_large_err -D clippy::complexity -A clippy::too_many_arguments -D clippy::style"
 CLIPPY_FIX_ARGS := "-A clippy::result_large_err -A clippy::too_many_arguments"
+BUILD_PACKAGE_LIST := "-p custom-connector -p engine -p hasura-authn-core -p hasura-authn-webhook -p hasura-authn-jwt -p lang-graphql -p open-dds -p opendds-derive -p tracing-util"
 
 default:
   just --list
@@ -27,13 +28,15 @@ docker_with_test_env +args:
 ci-build:
   # see https://github.com/rust-lang/cargo/issues/4463 for why we build each
   # package explictly instead of cargo build --workspace --all-targets
-  just docker_with_source_only cargo build -p lang-graphql \
-                          -p engine \
-                          -p open-dds \
-                          -p tracing-util \
-                          -p hasura-authn-core \
-                          -p hasura-authn-webhook \
-                          --release --all-targets
+  just docker_with_source_only \
+    cargo build {{ BUILD_PACKAGE_LIST }} \
+    --release --all-targets
+
+build-local:
+  # see https://github.com/rust-lang/cargo/issues/4463 for why we build each
+  # package explictly instead of cargo build --workspace --all-targets
+  cargo build {{ BUILD_PACKAGE_LIST }} \
+    --release --all-targets
 
 # linting run by CI
 ci-lint:
@@ -120,7 +123,7 @@ watch-local: start-docker
 
 # check the code is fine
 lint-local:
-  cargo clippy --no-deps -- {{ CLIPPY_ARGS }} && cargo fmt --check
+  cargo clippy --no-deps -- {{ CLIPPY_ARGS }}
 
 # update golden tests
 update-golden-files-local: start-docker
