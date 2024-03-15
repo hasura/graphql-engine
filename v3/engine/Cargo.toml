@@ -25,8 +25,8 @@ opendds-derive = { path = "../opendds-derive" }
 serde = "1.0.152"
 serde_json = "1.0.92"
 reqwest = { version = "^0.11", features = ["json", "multipart"] }
-opentelemetry = "0.21.0"
-opentelemetry_sdk = "0.21.2"
+opentelemetry = "0.20.0"
+opentelemetry_sdk = "0.20.0"
 schemars = { version = "0.8.12", features = ["smol_str"] }
 async-trait = "0.1.67"
 derive_more = "0.99.17"

@@ -205,17 +205,22 @@ async fn graphql_request_tracing_middleware<B: Send>(
     let path = "/graphql";
 
     Ok(tracer
-        .in_span_async(path, SpanVisibility::User, || {
-            tracing_util::set_attribute_on_active_span(
-                AttributeVisibility::Internal,
-                "version",
-                VERSION,
-            );
-            Box::pin(async move {
-                let response = next.run(request).await;
-                TraceableHttpResponse::new(response, path)
-            })
-        })
+        .in_span_async_with_parent_context(
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                tracing_util::set_attribute_on_active_span(
+                    AttributeVisibility::Internal,
+                    "version",
+                    VERSION,
+                );
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
         .await
         .response)
 }
@@ -232,12 +237,17 @@ async fn explain_request_tracing_middleware<B: Send>(
     let path = "/v1/explain";
 
     Ok(tracer
-        .in_span_async(path, SpanVisibility::User, || {
-            Box::pin(async move {
-                let response = next.run(request).await;
-                TraceableHttpResponse::new(response, path)
-            })
-        })
+        .in_span_async_with_parent_context(
+            path,
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let response = next.run(request).await;
+                    TraceableHttpResponse::new(response, path)
+                })
+            },
+        )
         .await
         .response)
 }

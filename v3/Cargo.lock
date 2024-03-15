@@ -1008,8 +1008,8 @@ dependencies = [
  "nonempty",
  "open-dds",
  "opendds-derive",
- "opentelemetry 0.21.0",
- "opentelemetry_sdk 0.21.2",
+ "opentelemetry 0.20.0",
+ "opentelemetry_sdk 0.20.0",
  "regex",
  "reqwest",
  "schemars",
@@ -2153,6 +2153,18 @@ dependencies = [
  "pin-project-lite",
  "thiserror",
  "urlencoding",
+]
+
+[[package]]
+name = "opentelemetry-http"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f51189ce8be654f9b5f7e70e49967ed894e84a06fc35c6c042e64ac1fc5399e"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "http",
+ "opentelemetry 0.21.0",
 ]
 
 [[package]]
@@ -3563,6 +3575,7 @@ dependencies = [
  "derive_more",
  "http",
  "opentelemetry 0.21.0",
+ "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry-stdout",

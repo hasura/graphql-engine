@@ -65,6 +65,9 @@ library
     , ekg-prometheus
     , hashable
     , hashtables
+    -- for our HASURA_SECRETS_BLOCKING_FORCE_REFRESH_URL hook
+    , http-client
+    , http-types
     , mmorph
     , monad-control
     , mtl

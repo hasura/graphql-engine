@@ -1,5 +1,9 @@
 set positional-arguments
 
+CLIPPY_ARGS := "-A clippy::result_large_err -D clippy::complexity -A clippy::too_many_arguments -D clippy::style"
+CLIPPY_FIX_ARGS := "-A clippy::result_large_err -A clippy::too_many_arguments"
+BUILD_PACKAGE_LIST := "-p custom-connector -p engine -p hasura-authn-core -p hasura-authn-webhook -p hasura-authn-jwt -p lang-graphql -p open-dds -p opendds-derive -p tracing-util"
+
 default:
   just --list
 
@@ -24,24 +28,26 @@ docker_with_test_env +args:
 ci-build:
   # see https://github.com/rust-lang/cargo/issues/4463 for why we build each
   # package explictly instead of cargo build --workspace --all-targets
-  just docker_with_source_only cargo build -p lang-graphql \
-                          -p engine \
-                          -p open-dds \
-                          -p tracing-util \
-                          -p hasura-authn-core \
-                          -p hasura-authn-webhook \
-                          --release --all-targets
+  just docker_with_source_only \
+    cargo build {{ BUILD_PACKAGE_LIST }} \
+    --release --all-targets
+
+build-local:
+  # see https://github.com/rust-lang/cargo/issues/4463 for why we build each
+  # package explictly instead of cargo build --workspace --all-targets
+  cargo build {{ BUILD_PACKAGE_LIST }} \
+    --release --all-targets
 
 # linting run by CI
 ci-lint:
   just docker_with_source_only sh -c \
-    "cargo clippy --no-deps -- -A clippy::result_large_err -D clippy::complexity -A clippy::too_many_arguments -D clippy::style && cargo fmt --check"
+    "cargo clippy --no-deps -- {{ CLIPPY_ARGS }}"
 
 fix:
-  just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs -- -A clippy::result_large_err -A clippy::too_many_arguments; cargo fmt"
+  just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt"
 
 fix-local:
-  cargo clippy --no-deps --fix --allow-no-vcs -- -A clippy::result_large_err -A clippy::too_many_arguments; cargo fmt
+  cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt
 
 # tests run by CI
 ci-test:
@@ -106,10 +112,20 @@ stop-docker:
 # 127.0.0.1 custom_connector
 
 # run the tests using local engine (once)
-local-test: start-docker
+test-local: start-docker
   cargo test
 
 # run a watch process that runs the tests locally
-local-watch: start-docker
-  cargo watch -x test
+watch-local: start-docker
+  cargo watch \
+   -x test \
+   -x 'clippy --no-deps -- {{ CLIPPY_ARGS }}'
+
+# check the code is fine
+lint-local:
+  cargo clippy --no-deps -- {{ CLIPPY_ARGS }}
+
+# update golden tests
+update-golden-files-local: start-docker
+  REGENERATE_GOLDENFILES=1 cargo test
 

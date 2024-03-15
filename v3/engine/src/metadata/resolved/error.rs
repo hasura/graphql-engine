@@ -14,7 +14,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName, OperatorName, TypeReference},
 };
 
-use super::{ndc_validation::NDCValidationError, types::TypeMappingCollectionError};
+use super::{ndc_validation::NDCValidationError, typecheck, types::TypeMappingCollectionError};
 
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
@@ -117,6 +117,16 @@ pub enum Error {
         "the mapping for argument {argument_name:} of command {command_name:} has been defined more than once"
     )]
     DuplicateCommandArgumentMapping {
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+    },
+    #[error("a preset argument {argument_name:} has been set for the command {command_name:} but no such argument exists for this command")]
+    CommandArgumentPresetMismatch {
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+    },
+    #[error("duplicate preset argument {argument_name:} for command {command_name:}")]
+    DuplicateCommandArgumentPreset {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
@@ -556,6 +566,14 @@ pub enum Error {
     },
     #[error("Predicate types in data connectors are unsupported")]
     PredicateTypesUnsupported,
+    #[error(
+        "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
+    )]
+    CommandArgumentPresetTypeError {
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+        type_error: typecheck::TypecheckError,
+    },
     // ---------------- Graphql Configuration Errors ----------------
     #[error("graphql configuration is not defined in supergraph")]
     MissingGraphqlConfig,

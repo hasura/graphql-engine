@@ -32,6 +32,7 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .and_then(|annotation| match annotation {
             types::NamespaceAnnotation::Filter(predicate) => Some(predicate),
             types::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
+            types::NamespaceAnnotation::ArgumentPresets(_) => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -214,7 +215,7 @@ fn make_value_from_value_expression(
 }
 
 /// Typecast a stringified session variable into a given type, but as a serde_json::Value
-fn typecast_session_variable(
+pub(crate) fn typecast_session_variable(
     session_var_value_wrapped: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, Error> {

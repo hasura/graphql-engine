@@ -510,7 +510,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             }
         })?;
         if command.permissions.is_none() {
-            command.permissions = Some(resolve_command_permissions(command_permissions)?);
+            command.permissions = Some(resolve_command_permissions(command, command_permissions)?);
         } else {
             return Err(Error::DuplicateCommandPermission {
                 command_name: qualified_command_name.clone(),

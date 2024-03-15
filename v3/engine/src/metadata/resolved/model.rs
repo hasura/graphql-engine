@@ -165,7 +165,6 @@ pub enum ModelPredicate {
         relationship_info: PredicateRelationshipAnnotation,
         predicate: Box<ModelPredicate>,
     },
-
     And(Vec<ModelPredicate>),
     Or(Vec<ModelPredicate>),
     Not(Box<ModelPredicate>),

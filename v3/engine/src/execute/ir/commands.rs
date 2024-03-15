@@ -1,15 +1,16 @@
 //! IR and execution logic for commands
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
-
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::normalized_ast;
+use open_dds::arguments::ArgumentName;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
+use open_dds::permissions::ValueExpression;
 use serde::Serialize;
 use serde_json as json;
 use std::collections::BTreeMap;
@@ -17,11 +18,13 @@ use std::collections::BTreeMap;
 use super::arguments;
 use super::selection_set;
 use crate::execute::error;
+use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph;
 use crate::metadata::resolved::subgraph::QualifiedTypeReference;
 use crate::schema::types::CommandSourceDetail;
+use crate::schema::types::NamespaceAnnotation;
 use crate::schema::types::TypeKind;
 use crate::schema::GDS;
 
@@ -86,6 +89,7 @@ pub(crate) fn generate_command_info<'n, 's>(
     session_variables: &SessionVariables,
 ) -> Result<CommandInfo<'s>, error::Error> {
     let mut command_arguments = BTreeMap::new();
+
     for argument in field_call.arguments.values() {
         command_arguments.extend(
             arguments::build_ndc_command_arguments_as_value(
@@ -95,6 +99,39 @@ pub(crate) fn generate_command_info<'n, 's>(
             )?
             .into_iter(),
         );
+    }
+
+    match field_call.info.namespaced {
+        None => {}
+        Some(NamespaceAnnotation::ArgumentPresets(preset_arguments)) => {
+            // add any preset arguments from command permissions
+            for (ArgumentName(argument_name_inner), (field_type, argument_value)) in
+                preset_arguments
+            {
+                let actual_value: serde_json::Value = match argument_value {
+                    ValueExpression::Literal(val) => Ok(val.clone()),
+                    ValueExpression::SessionVariable(session_var) => {
+                        let value = session_variables.get(session_var).ok_or_else(|| {
+                            error::InternalDeveloperError::MissingSessionVariable {
+                                session_variable: session_var.clone(),
+                            }
+                        })?;
+
+                        permissions::typecast_session_variable(value, field_type)
+                    }
+                }?;
+
+                command_arguments.insert(argument_name_inner.to_string(), actual_value);
+            }
+        }
+        Some(other_annotation) => {
+            return Err(error::Error::InternalError(error::InternalError::Engine(
+                error::InternalEngineError::UnexpectedNamespaceAnnotation {
+                    namespace_annotation: other_annotation.clone(),
+                    expected_type: "ArgumentPresets".to_string(),
+                },
+            )))
+        }
     }
 
     // Add the name of the root command

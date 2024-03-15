@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
 use crate::{
+    arguments::ArgumentName,
     commands::CommandName,
     models::ModelName,
     relationships::RelationshipName,
@@ -31,6 +32,16 @@ impl Role {
     pub fn new(str: &str) -> Role {
         Role(str.to_string())
     }
+}
+
+#[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+/// Preset value for an argument
+pub struct ArgumentPreset {
+    /// Argument name for preset
+    pub argument: ArgumentName,
+    /// Value for preset
+    pub value: ValueExpression,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
@@ -293,9 +304,11 @@ impl NullableModelPredicate {
 pub struct CommandPermission {
     /// The role for which permissions are being defined.
     pub role: Role,
-    // TODO: Implement predicates and presets
     /// Whether the command is executable by the role.
     pub allow_execution: bool,
+    /// Preset values for arguments for this role
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub argument_presets: Vec<ArgumentPreset>,
 }
 
 impl CommandPermission {
@@ -303,7 +316,13 @@ impl CommandPermission {
         serde_json::json!(
             {
                 "role": "user",
-                "allowExecution": true
+                "allowExecution": true,
+                "argumentPresets": [{
+                    "argument": "user_id",
+                    "value": {
+                        "session_variable": "x-hasura-user_id"
+                    }
+                }]
             }
         )
     }
@@ -439,7 +458,9 @@ impl ModelPredicate {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[schemars(title = "ValueExpression")]
 /// An expression which evaluates to a value that can be used in permissions.

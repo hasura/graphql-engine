@@ -261,6 +261,7 @@ pub struct Subgraph {
 #[cfg(test)]
 mod tests {
     use goldenfile::Mint;
+    use pretty_assertions::assert_eq;
     use std::{io::Write, path::PathBuf};
 
     #[test]
@@ -286,5 +287,19 @@ mod tests {
             serde_json::from_str(&metadata).unwrap(),
         )
         .unwrap();
+    }
+
+    #[test]
+    /// This test is a round trip test for the Metadata type. It reads a reference metadata file,
+    /// deserializes it into a Metadata type, serializes it back to JSON, deserializes it back into
+    /// a Metadata type, and compares the two Metadata types to ensure they are equal.
+    fn test_serialize_reference_metadata() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/reference.json");
+        let metadata =
+            open_dds::Metadata::from_json_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let metadata_json = serde_json::to_value(metadata.clone()).unwrap();
+        let metadata_from_json =
+            <super::Metadata as super::traits::OpenDd>::deserialize(metadata_json).unwrap();
+        assert_eq!(metadata, metadata_from_json);
     }
 }
