@@ -21,13 +21,13 @@ pub fn start_tracer(
                 .tonic()
                 .with_endpoint(endpoint.unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into())),
         )
-        .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
+        .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
             opentelemetry_sdk::Resource::new(vec![
                 KeyValue::new(semcov::resource::SERVICE_NAME, service_name),
                 KeyValue::new(semcov::resource::SERVICE_VERSION, service_version),
             ]),
         ))
-        .install_batch(opentelemetry::runtime::Tokio)?;
+        .install_batch(opentelemetry_sdk::runtime::Tokio)?;
     Ok(Tracer::new(BoxedTracer::new(Box::new(tracer))))
 }
 

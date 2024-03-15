@@ -1,8 +1,10 @@
+use http::HeaderMap;
 use opentelemetry::{
-    global::BoxedTracer,
+    global::{self, BoxedTracer},
     trace::{get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer},
     Key,
 };
+use opentelemetry_http::HeaderExtractor;
 use std::{future::Future, pin::Pin};
 
 use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
@@ -148,6 +150,34 @@ impl Tracer {
                 .with_context(cx)
             })
             .await
+    }
+
+    pub async fn in_span_async_with_parent_context<'a, R, F>(
+        &'a self,
+        name: &'static str,
+        visibility: SpanVisibility,
+        parent_headers: &HeaderMap<http::HeaderValue>,
+        f: F,
+    ) -> R
+    where
+        F: FnOnce() -> Pin<Box<dyn Future<Output = R> + 'a + Send>>,
+        R: Traceable,
+    {
+        let parent_context = global::get_text_map_propagator(|propagator| {
+            propagator.extract(&HeaderExtractor(parent_headers))
+        });
+
+        let parent_context_span = parent_context.span();
+        let parent_context_span_context = parent_context_span.span_context();
+
+        // if there is no parent span ID, we get something nonsensical, so we need to validate it
+        if parent_context_span_context.is_valid() {
+            self.in_span_async(name, visibility, f)
+                .with_context(parent_context)
+                .await
+        } else {
+            self.in_span_async(name, visibility, f).await
+        }
     }
 }
 
