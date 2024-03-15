@@ -122,3 +122,7 @@ watch-local: start-docker
 lint-local:
   cargo clippy --no-deps -- {{ CLIPPY_ARGS }} && cargo fmt --check
 
+# update golden tests
+update-golden-files-local: start-docker
+  REGENERATE_GOLDENFILES=1 cargo test
+
