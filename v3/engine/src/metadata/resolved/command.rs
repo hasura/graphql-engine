@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 use super::metadata::DataConnectorTypeMappings;
+use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
 };
@@ -297,9 +298,25 @@ pub fn resolve_command_permissions(
                 });
             }
 
-            // TODO: typecheck any literal values against the argument types
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
+                    // if our value is a literal, typecheck it against expected type
+                    match &argument_preset.value {
+                        ValueExpression::SessionVariable(_) => Ok(()),
+                        ValueExpression::Literal(json_value) => {
+                            typecheck::typecheck_qualified_type_reference(
+                                &argument.argument_type,
+                                json_value,
+                            )
+                        }
+                    }
+                    .map_err(|type_error| {
+                        Error::CommandArgumentPresetTypeError {
+                            command_name: command.name.clone(),
+                            argument_name: argument_preset.argument.clone(),
+                            type_error,
+                        }
+                    })?;
                     argument_presets.insert(
                         argument_preset.argument.clone(),
                         (

@@ -8,4 +8,5 @@ pub mod model;
 pub mod ndc_validation;
 pub mod relationship;
 pub mod subgraph;
+mod typecheck;
 pub mod types;

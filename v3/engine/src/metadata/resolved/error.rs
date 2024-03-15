@@ -14,7 +14,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName, OperatorName, TypeReference},
 };
 
-use super::{ndc_validation::NDCValidationError, types::TypeMappingCollectionError};
+use super::{ndc_validation::NDCValidationError, typecheck, types::TypeMappingCollectionError};
 
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
@@ -566,6 +566,14 @@ pub enum Error {
     },
     #[error("Predicate types in data connectors are unsupported")]
     PredicateTypesUnsupported,
+    #[error(
+        "Type error in preset argument {argument_name:} for command {command_name:}: {type_error:}"
+    )]
+    CommandArgumentPresetTypeError {
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+        type_error: typecheck::TypecheckError,
+    },
     // ---------------- Graphql Configuration Errors ----------------
     #[error("graphql configuration is not defined in supergraph")]
     MissingGraphqlConfig,
