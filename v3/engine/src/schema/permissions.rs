@@ -79,19 +79,24 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
     command: &resolved::command::Command,
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
     let mut permissions = HashMap::new();
     match &command.permissions {
         Some(command_permissions) => {
             for (role, permission) in command_permissions {
                 if permission.allow_execution {
-                    permissions.insert(role.clone(), None);
+                    permissions.insert(
+                        role.clone(),
+                        Some(types::NamespaceAnnotation::ArgumentPresets(
+                            permission.argument_presets.clone(),
+                        )),
+                    );
                 }
             }
         }
         None => {}
     }
-    permissions
+    Ok(permissions)
 }
 
 /// Build namespace annotation for command relationship permissions.
@@ -101,10 +106,10 @@ pub(crate) fn get_command_relationship_namespace_annotations(
     command: &resolved::command::Command,
     source_object_type_representation: &ObjectTypeRepresentation,
     mappings: &[resolved::relationship::RelationshipCommandMapping],
-) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
-    let select_permissions = get_command_namespace_annotations(command);
+) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
+    let select_permissions = get_command_namespace_annotations(command)?;
 
-    select_permissions
+    Ok(select_permissions
         .into_iter()
         .filter(|(role, _)| {
             mappings.iter().all(|mapping| {
@@ -115,7 +120,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
                 .any(|allowed_role| role == allowed_role)
             })
         })
-        .collect()
+        .collect())
 }
 
 /// Build namespace annotations for the node interface..

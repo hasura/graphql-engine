@@ -158,6 +158,7 @@ where
     let mut field_calls = HashMap::new();
     for (reachability, fields) in typed_fields.into_iter() {
         let cannonical_field = fields.head;
+
         let arguments = normalize_arguments(
             namespace,
             schema,

@@ -260,7 +260,7 @@ fn object_type_fields(
                                 command,
                                 object_type_representation,
                                 mappings,
-                            ),
+                            )?,
                         )
                     }
                     resolved::relationship::RelationshipTarget::Model {

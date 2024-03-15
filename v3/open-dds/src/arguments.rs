@@ -9,6 +9,8 @@ use crate::{impl_JsonSchema_with_OpenDd_for, types::TypeReference};
     Debug,
     PartialEq,
     Eq,
+    PartialOrd,
+    Ord,
     Hash,
     derive_more::Display,
     opendds_derive::OpenDd,

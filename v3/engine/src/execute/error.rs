@@ -13,7 +13,7 @@ use transitive::Transitive;
 
 use crate::metadata::resolved::{ndc_validation::NDCValidationError, subgraph::Qualified};
 
-use super::types::Annotation;
+use super::types::{Annotation, NamespaceAnnotation};
 
 #[derive(Error, Debug)]
 pub enum InternalDeveloperError {
@@ -87,6 +87,12 @@ pub enum InternalEngineError {
 
     #[error("unexpected annotation: {annotation}")]
     UnexpectedAnnotation { annotation: Annotation },
+
+    #[error("unexpected namespace annotation: {namespace_annotation:} found, expected type {expected_type:}")]
+    UnexpectedNamespaceAnnotation {
+        namespace_annotation: NamespaceAnnotation,
+        expected_type: String,
+    },
 
     #[error("subscription shouldn't have been validated")]
     SubscriptionsNotSupported,

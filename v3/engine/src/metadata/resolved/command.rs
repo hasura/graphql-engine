@@ -15,7 +15,7 @@ use open_dds::commands::{
     self, CommandName, CommandV1, DataConnectorCommand, GraphQlRootFieldKind,
 };
 use open_dds::data_connector::DataConnectorName;
-use open_dds::permissions::{CommandPermissionsV1, Role};
+use open_dds::permissions::{CommandPermissionsV1, Role, ValueExpression};
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -57,6 +57,7 @@ pub struct Command {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandPermission {
     pub allow_execution: bool,
+    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
 }
 
 fn is_valid_type(
@@ -281,13 +282,44 @@ pub fn resolve_command_source(
 }
 
 pub fn resolve_command_permissions(
+    command: &Command,
     permissions: &CommandPermissionsV1,
 ) -> Result<HashMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for command_permission in &permissions.permissions {
-        // TODO: Use the permission predicates/presets
+        let mut argument_presets = BTreeMap::new();
+
+        for argument_preset in &command_permission.argument_presets {
+            if argument_presets.contains_key(&argument_preset.argument) {
+                return Err(Error::DuplicateCommandArgumentPreset {
+                    command_name: command.name.clone(),
+                    argument_name: argument_preset.argument.clone(),
+                });
+            }
+
+            // TODO: typecheck any literal values against the argument types
+            match command.arguments.get(&argument_preset.argument) {
+                Some(argument) => {
+                    argument_presets.insert(
+                        argument_preset.argument.clone(),
+                        (
+                            argument.argument_type.clone(),
+                            argument_preset.value.clone(),
+                        ),
+                    );
+                }
+                None => {
+                    return Err(Error::CommandArgumentPresetMismatch {
+                        command_name: command.name.clone(),
+                        argument_name: argument_preset.argument.clone(),
+                    });
+                }
+            }
+        }
+
         let resolved_permission = CommandPermission {
             allow_execution: command_permission.allow_execution,
+            argument_presets,
         };
         validated_permissions.insert(command_permission.role.clone(), resolved_permission);
     }

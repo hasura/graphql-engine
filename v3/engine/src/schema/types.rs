@@ -239,6 +239,16 @@ pub enum Annotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum NamespaceAnnotation {
     Filter(resolved::model::FilterPermission),
+    /// any arguments that we should prefill for a command or type
+    ArgumentPresets(
+        BTreeMap<
+            ArgumentName,
+            (
+                QualifiedTypeReference,
+                open_dds::permissions::ValueExpression,
+            ),
+        >,
+    ),
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
     /// While executing the `node` field, the `id` field is supposed to be decoded and after
     /// decoding, a typename will be obtained. We need to use that typename to look up the
