@@ -72,7 +72,7 @@ import Hasura.Server.Auth (AuthMode, compareAuthMode)
 import Hasura.Server.Cors (CorsPolicy)
 import Hasura.Server.Init.Config (AllowListStatus (..), WSConnectionInitTimeout (..))
 import Hasura.Server.Prometheus
-  ( DynamicSubscriptionLabel (..),
+  ( DynamicGraphqlOperationLabel (..),
     PrometheusMetrics (..),
     recordMetricWithLabel,
   )
@@ -639,8 +639,8 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                         messageDetails = MessageDetails (SB.fromLBS msg) messageLength
                         parameterizedQueryHash = wsInfo >>= _wseiParameterizedQueryHash
                         operationName = wsInfo >>= _wseiOperationName
-                        promMetricGranularLabel = DynamicSubscriptionLabel parameterizedQueryHash operationName
-                        promMetricLabel = DynamicSubscriptionLabel Nothing Nothing
+                        promMetricGranularLabel = DynamicGraphqlOperationLabel parameterizedQueryHash operationName
+                        promMetricLabel = DynamicGraphqlOperationLabel Nothing Nothing
                         websocketBytesSentMetric = pmWebSocketBytesSent prometheusMetrics
                     granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
                     liftIO $ do

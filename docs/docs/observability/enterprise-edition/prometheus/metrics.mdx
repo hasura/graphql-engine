@@ -44,11 +44,11 @@ buckets, you should consider [tuning the performance](/deployment/performance-tu
 
 Number of GraphQL requests received, representing the GraphQL query/mutation traffic on the server.
 
-|        |                                                                |
-| ------ | -------------------------------------------------------------- |
-| Name   | `hasura_graphql_requests_total`                                |
-| Type   | Counter                                                        |
-| Labels | `operation_type`: query \| mutation \| subscription \| unknown |
+|        |                                                                                                                                                    |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_graphql_requests_total`                                                                                                                    |
+| Type   | Counter                                                                                                                                            |
+| Labels | `operation_type`: query \| mutation \| subscription \| unknown, `response_status`: success \| failed, `operation_name`, `parameterized_query_hash` |
 
 The `unknown` operation type will be returned for queries that fail authorization, parsing, or certain validations. The
 `response_status` label will be `success` for successful requests and `failed` for failed requests.
