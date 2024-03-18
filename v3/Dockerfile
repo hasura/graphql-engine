@@ -55,7 +55,7 @@ COPY . .
 # Builds the application
 FROM builder AS built
 # Build the app
-RUN cargo build --release
+RUN cargo build --release --all-targets
 
 ###
 # Ship the app in an image with `curl` and very little else
