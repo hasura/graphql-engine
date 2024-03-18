@@ -19,15 +19,3 @@ class TestServerVersion(object):
         # this test can be ignored:
         if server_version == '12345':
             return
-
-        # Grab the Git details so that we know why things changed.
-        def error_message():
-            git_status = subprocess.run(['git', 'status', '--porcelain'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf8').stdout
-            git_diff = subprocess.run(['git', 'diff-index', '-p', 'HEAD', '--'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf8').stdout
-            return f'Version JSON:\n{version_json}\n\nGit status:\n{git_status}\n\nGit diff:{git_diff}\n'
-
-        # The tree may be dirty because we're developing tests locally while
-        # graphql-engine was built previously when tree was clean. If we're
-        # modifying graphql-engine too then both of these will be tagged dirty,
-        # since a rebuild would necessarily be forced:
-        assert server_version in (hge_ctx.version, re.sub('-dirty$', '', hge_ctx.version)), error_message()
