@@ -9,8 +9,8 @@ use serde::{
 };
 
 use crate::{
-    data_connector::DataConnectorName, impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
-    models::EnableAllOrSpecific,
+    data_connector::DataConnectorName, identifier::Identifier, impl_JsonSchema_with_OpenDd_for,
+    impl_OpenDd_default_for, models::EnableAllOrSpecific,
 };
 
 #[derive(
@@ -46,25 +46,25 @@ pub enum TypeName {
     Ord,
     opendds_derive::OpenDd,
 )]
-pub struct CustomTypeName(pub String);
+pub struct CustomTypeName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(CustomTypeName);
 
 impl CustomTypeName {
     fn new(s: String) -> Result<CustomTypeName, String> {
-        // First character should be alphabetic or underscore
-        let first_char_valid =
-            matches!(s.chars().next(), Some(c) if c.is_ascii_alphabetic() || c == '_');
-        // All characters should be alphanumeric or underscore
-        let all_chars_valid = s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+        let identifier = Identifier::new(s)?;
         // Should not be an inbuilt type
-        let not_an_inbuilt_type =
-            InbuiltType::deserialize(StrDeserializer::<serde::de::value::Error>::new(s.as_str()))
-                .is_err();
-        if first_char_valid && all_chars_valid && not_an_inbuilt_type {
-            Ok(CustomTypeName(s))
+        if InbuiltType::deserialize(StrDeserializer::<serde::de::value::Error>::new(
+            identifier.0.as_str(),
+        ))
+        .is_ok()
+        {
+            Err(format!(
+                "custom types cannot have the same name as an inbuilt type: {}",
+                identifier.0
+            ))
         } else {
-            Err(format!("invalid custom type name: {s}"))
+            Ok(CustomTypeName(identifier))
         }
     }
 }
@@ -392,7 +392,7 @@ pub struct ColumnFieldMapping {
     Ord,
     opendds_derive::OpenDd,
 )]
-pub struct FieldName(pub String);
+pub struct FieldName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(FieldName);
 

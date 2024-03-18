@@ -6,7 +6,7 @@ mod v1;
 
 pub use v1::{DataConnectorLinkV1, DataConnectorUrlV1 as DataConnectorUrl, ReadWriteUrls};
 
-use crate::impl_OpenDd_default_for;
+use crate::{identifier::Identifier, impl_OpenDd_default_for};
 
 /// The name of a data connector.
 #[derive(
@@ -21,7 +21,7 @@ use crate::impl_OpenDd_default_for;
     derive_more::Display,
     opendds_derive::OpenDd,
 )]
-pub struct DataConnectorName(pub String);
+pub struct DataConnectorName(pub Identifier);
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]

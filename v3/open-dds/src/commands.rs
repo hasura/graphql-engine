@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     arguments::{ArgumentDefinition, ArgumentName},
     data_connector::DataConnectorName,
+    identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
     types::{GraphQlFieldName, TypeReference},
 };
@@ -22,7 +23,7 @@ use crate::{
     derive_more::Display,
     opendds_derive::OpenDd,
 )]
-pub struct CommandName(pub String);
+pub struct CommandName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(CommandName);
 

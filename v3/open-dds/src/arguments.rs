@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{impl_JsonSchema_with_OpenDd_for, types::TypeReference};
+use crate::{identifier::Identifier, impl_JsonSchema_with_OpenDd_for, types::TypeReference};
 
 #[derive(
     Serialize,
@@ -15,7 +15,7 @@ use crate::{impl_JsonSchema_with_OpenDd_for, types::TypeReference};
     derive_more::Display,
     opendds_derive::OpenDd,
 )]
-pub struct ArgumentName(pub String);
+pub struct ArgumentName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(ArgumentName);
 

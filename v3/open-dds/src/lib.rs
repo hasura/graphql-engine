@@ -9,6 +9,7 @@ pub mod commands;
 pub mod data_connector;
 pub mod flags;
 pub mod graphql_config;
+pub mod identifier;
 pub mod models;
 pub mod permissions;
 pub mod relationships;

@@ -158,219 +158,243 @@ pub fn count_command(command: Qualified<CommandName>, all_usage_counts: &mut Usa
     }
 }
 
-#[test]
-fn test_extend_usage_count() {
-    let model_count1 = ModelCount {
-        model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-        count: 1,
-    };
-    let model_count2 = ModelCount {
-        model: Qualified::new("subgraph".to_string(), ModelName("model2".to_string())),
-        count: 5,
-    };
-    let model_count3 = ModelCount {
-        model: Qualified::new("subgraph".to_string(), ModelName("model3".to_string())),
-        count: 2,
-    };
-    let command_count1 = CommandCount {
-        command: Qualified::new("subgraph".to_string(), CommandName("command1".to_string())),
-        count: 2,
-    };
-    let command_count2 = CommandCount {
-        command: Qualified::new("subgraph".to_string(), CommandName("command2".to_string())),
-        count: 1,
-    };
-    let command_count3 = CommandCount {
-        command: Qualified::new("subgraph".to_string(), CommandName("command3".to_string())),
-        count: 3,
-    };
-    let usage_counts = UsagesCounts {
-        models_used: vec![model_count1, model_count2.clone()],
-        commands_used: vec![command_count1, command_count2.clone()],
-    };
-    let mut aggregator = UsagesCounts {
-        models_used: vec![model_count2, model_count3],
-        commands_used: vec![command_count2, command_count3],
-    };
-    extend_usage_count(usage_counts, &mut aggregator);
-    let expected = UsagesCounts {
-        models_used: vec![
-            ModelCount {
-                model: Qualified::new("subgraph".to_string(), ModelName("model2".to_string())),
-                count: 10,
-            },
-            ModelCount {
-                model: Qualified::new("subgraph".to_string(), ModelName("model3".to_string())),
-                count: 2,
-            },
-            ModelCount {
-                model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-                count: 1,
-            },
-        ],
-        commands_used: vec![
-            CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command2".to_string()),
-                ),
-                count: 2,
-            },
-            CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command3".to_string()),
-                ),
-                count: 3,
-            },
-            CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string()),
-                ),
-                count: 2,
-            },
-        ],
-    };
-    assert_eq!(aggregator, expected);
-}
+#[cfg(test)]
+mod tests {
+    use open_dds::{commands::CommandName, identifier, models::ModelName};
 
-#[test]
-fn test_counter_functions() {
-    let mut aggregator = UsagesCounts::new();
-    count_command(
-        Qualified::new("subgraph".to_string(), CommandName("command1".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
-            models_used: Vec::new(),
-            commands_used: vec![CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string())
-                ),
-                count: 1,
-            }]
-        }
-    );
-    count_command(
-        Qualified::new("subgraph".to_string(), CommandName("command1".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
-            models_used: Vec::new(),
-            commands_used: vec![CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string())
-                ),
-                count: 2,
-            }]
-        }
-    );
-    count_model(
-        Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
-            models_used: vec![ModelCount {
-                model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-                count: 1,
-            }],
-            commands_used: vec![CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string())
-                ),
-                count: 2,
-            }]
-        }
-    );
-    count_model(
-        Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
-            models_used: vec![ModelCount {
-                model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-                count: 2,
-            }],
-            commands_used: vec![CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string())
-                ),
-                count: 2,
-            }]
-        }
-    );
-    count_model(
-        Qualified::new("subgraph".to_string(), ModelName("model2".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
+    use crate::{
+        execute::model_tracking::{
+            count_command, count_model, extend_usage_count, CommandCount, ModelCount, UsagesCounts,
+        },
+        metadata::resolved::subgraph::Qualified,
+    };
+
+    #[test]
+    fn test_extend_usage_count() {
+        let model_count1 = ModelCount {
+            model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+            count: 1,
+        };
+        let model_count2 = ModelCount {
+            model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model2"))),
+            count: 5,
+        };
+        let model_count3 = ModelCount {
+            model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model3"))),
+            count: 2,
+        };
+        let command_count1 = CommandCount {
+            command: Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
+            count: 2,
+        };
+        let command_count2 = CommandCount {
+            command: Qualified::new("subgraph".to_string(), CommandName(identifier!("command2"))),
+            count: 1,
+        };
+        let command_count3 = CommandCount {
+            command: Qualified::new("subgraph".to_string(), CommandName(identifier!("command3"))),
+            count: 3,
+        };
+        let usage_counts = UsagesCounts {
+            models_used: vec![model_count1, model_count2.clone()],
+            commands_used: vec![command_count1, command_count2.clone()],
+        };
+        let mut aggregator = UsagesCounts {
+            models_used: vec![model_count2, model_count3],
+            commands_used: vec![command_count2, command_count3],
+        };
+        extend_usage_count(usage_counts, &mut aggregator);
+        let expected = UsagesCounts {
             models_used: vec![
                 ModelCount {
-                    model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
+                    model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model2"))),
+                    count: 10,
+                },
+                ModelCount {
+                    model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model3"))),
                     count: 2,
                 },
                 ModelCount {
-                    model: Qualified::new("subgraph".to_string(), ModelName("model2".to_string())),
+                    model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
                     count: 1,
-                }
-            ],
-            commands_used: vec![CommandCount {
-                command: Qualified::new(
-                    "subgraph".to_string(),
-                    CommandName("command1".to_string())
-                ),
-                count: 2,
-            }]
-        }
-    );
-    count_command(
-        Qualified::new("subgraph".to_string(), CommandName("command2".to_string())),
-        &mut aggregator,
-    );
-    assert_eq!(
-        aggregator,
-        UsagesCounts {
-            models_used: vec![
-                ModelCount {
-                    model: Qualified::new("subgraph".to_string(), ModelName("model1".to_string())),
-                    count: 2,
                 },
-                ModelCount {
-                    model: Qualified::new("subgraph".to_string(), ModelName("model2".to_string())),
-                    count: 1,
-                }
             ],
             commands_used: vec![
                 CommandCount {
                     command: Qualified::new(
                         "subgraph".to_string(),
-                        CommandName("command1".to_string())
+                        CommandName(identifier!("command2")),
                     ),
                     count: 2,
                 },
                 CommandCount {
                     command: Qualified::new(
                         "subgraph".to_string(),
-                        CommandName("command2".to_string())
+                        CommandName(identifier!("command3")),
+                    ),
+                    count: 3,
+                },
+                CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1")),
+                    ),
+                    count: 2,
+                },
+            ],
+        };
+        assert_eq!(aggregator, expected);
+    }
+
+    #[test]
+    fn test_counter_functions() {
+        let mut aggregator = UsagesCounts::new();
+        count_command(
+            Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: Vec::new(),
+                commands_used: vec![CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1"))
                     ),
                     count: 1,
-                }
-            ]
-        }
-    );
+                }]
+            }
+        );
+        count_command(
+            Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: Vec::new(),
+                commands_used: vec![CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1"))
+                    ),
+                    count: 2,
+                }]
+            }
+        );
+        count_model(
+            Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: vec![ModelCount {
+                    model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+                    count: 1,
+                }],
+                commands_used: vec![CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1"))
+                    ),
+                    count: 2,
+                }]
+            }
+        );
+        count_model(
+            Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: vec![ModelCount {
+                    model: Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+                    count: 2,
+                }],
+                commands_used: vec![CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1"))
+                    ),
+                    count: 2,
+                }]
+            }
+        );
+        count_model(
+            Qualified::new("subgraph".to_string(), ModelName(identifier!("model2"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: vec![
+                    ModelCount {
+                        model: Qualified::new(
+                            "subgraph".to_string(),
+                            ModelName(identifier!("model1"))
+                        ),
+                        count: 2,
+                    },
+                    ModelCount {
+                        model: Qualified::new(
+                            "subgraph".to_string(),
+                            ModelName(identifier!("model2"))
+                        ),
+                        count: 1,
+                    }
+                ],
+                commands_used: vec![CommandCount {
+                    command: Qualified::new(
+                        "subgraph".to_string(),
+                        CommandName(identifier!("command1"))
+                    ),
+                    count: 2,
+                }]
+            }
+        );
+        count_command(
+            Qualified::new("subgraph".to_string(), CommandName(identifier!("command2"))),
+            &mut aggregator,
+        );
+        assert_eq!(
+            aggregator,
+            UsagesCounts {
+                models_used: vec![
+                    ModelCount {
+                        model: Qualified::new(
+                            "subgraph".to_string(),
+                            ModelName(identifier!("model1"))
+                        ),
+                        count: 2,
+                    },
+                    ModelCount {
+                        model: Qualified::new(
+                            "subgraph".to_string(),
+                            ModelName(identifier!("model2"))
+                        ),
+                        count: 1,
+                    }
+                ],
+                commands_used: vec![
+                    CommandCount {
+                        command: Qualified::new(
+                            "subgraph".to_string(),
+                            CommandName(identifier!("command1"))
+                        ),
+                        count: 2,
+                    },
+                    CommandCount {
+                        command: Qualified::new(
+                            "subgraph".to_string(),
+                            CommandName(identifier!("command2"))
+                        ),
+                        count: 1,
+                    }
+                ]
+            }
+        );
+    }
 }

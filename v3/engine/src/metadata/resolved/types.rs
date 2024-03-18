@@ -9,6 +9,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use ndc_client as ndc;
 use open_dds::data_connector::DataConnectorName;
+use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
 use open_dds::permissions::{Role, TypeOutputPermission, TypePermissionsV1};
 use open_dds::types::{
@@ -184,7 +185,7 @@ pub fn resolve_object_type(
             if !global_id_fields.is_empty() {
                 // Throw error if the object type has a field called id" and has global fields configured.
                 // Because, when the global id fields are configured, the `id` field will be auto-generated.
-                if resolved_fields.contains_key(&FieldName("id".into())) {
+                if resolved_fields.contains_key(&FieldName(identifier!("id"))) {
                     return Err(Error::IdFieldConflictingGlobalId {
                         type_name: qualified_type_name.clone(),
                     });
@@ -297,7 +298,7 @@ pub fn resolve_data_connector_type_mapping(
             } else {
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
-                field_name.0.to_owned()
+                field_name.to_string()
             };
         let source_column =
             get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;

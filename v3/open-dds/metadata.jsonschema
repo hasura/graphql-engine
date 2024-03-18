@@ -463,7 +463,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorName",
       "title": "DataConnectorName",
       "description": "The name of a data connector.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "DataConnectorUrlV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorUrlV1",
@@ -684,7 +685,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/CustomTypeName",
       "title": "CustomTypeName",
       "description": "The name of a user-defined type.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "FieldDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldDefinition",
@@ -726,7 +728,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/FieldName",
       "title": "FieldName",
       "description": "The name of a field in a user-defined object type.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "TypeReference": {
       "$id": "https://hasura.io/jsonschemas/metadata/TypeReference",
@@ -1307,7 +1310,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/ModelName",
       "title": "ModelName",
       "description": "The name of data model.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "ArgumentDefinition": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentDefinition",
@@ -1337,7 +1341,8 @@
     "ArgumentName": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentName",
       "title": "ArgumentName",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "ModelSource": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelSource",
@@ -1664,7 +1669,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/CommandName",
       "title": "CommandName",
       "description": "The name of a command.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "CommandSource": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandSource",
@@ -1886,7 +1892,8 @@
       "$id": "https://hasura.io/jsonschemas/metadata/RelationshipName",
       "title": "RelationshipName",
       "description": "The name of the GraphQL relationship field.",
-      "type": "string"
+      "type": "string",
+      "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
     },
     "RelationshipTarget": {
       "$id": "https://hasura.io/jsonschemas/metadata/RelationshipTarget",

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     arguments::ArgumentName,
     commands::CommandName,
+    identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
@@ -22,7 +23,7 @@ use crate::{
     Hash,
     opendds_derive::OpenDd,
 )]
-pub struct RelationshipName(pub String);
+pub struct RelationshipName(pub Identifier);
 
 impl_JsonSchema_with_OpenDd_for!(RelationshipName);
 

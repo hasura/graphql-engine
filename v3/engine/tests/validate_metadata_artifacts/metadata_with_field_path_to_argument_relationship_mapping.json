@@ -367,7 +367,7 @@
           },
           "target": {
             "argument": {
-              "argumentName": "dummy-argument"
+              "argumentName": "dummy_argument"
             }
           }
         }
