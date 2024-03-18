@@ -75,6 +75,7 @@ import Data.Text.Encoding (decodeUtf8, decodeUtf8With, encodeUtf8)
 import Data.Text.Encoding.Error (lenientDecode)
 import Data.Time (NominalDiffTime, UTCTime)
 import Data.Word (Word16, Word32)
+import Database.PG.Query.URL (encodeURLPassword)
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Database.PostgreSQL.Simple.Options qualified as Options
 import GHC.Generics (Generic)
@@ -122,7 +123,7 @@ readDynamicURIFile path = do
             <> Text.pack path
             <> ": "
             <> Text.pack (show e)
-  pure $ Text.strip uriDirty
+  pure $ encodeURLPassword $ Text.strip uriDirty
   where
     -- Text.readFile but explicit, ignoring locale:
     readFileUtf8 = fmap decodeUtf8 . BS.readFile
