@@ -5,11 +5,7 @@ final: prev: {
         overrides = prev.lib.composeExtensions
           (old.overrides or (_: _: { }))
           (hfinal: hprev: {
-            graphql-parser = (final.haskell.packages.${prev.ghcName}.callCabal2nix "graphql-parser" ../../server/lib/graphql-parser-hs { }).overrideScope (
-              final: prev: {
-                hedgehog = final.hedgehog_1_2;
-              }
-            );
+            graphql-parser = (final.haskell.packages.${prev.ghcName}.callCabal2nix "graphql-parser" ../../server/lib/graphql-parser { });
           });
       });
     };
