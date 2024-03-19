@@ -13,7 +13,7 @@ services:
         source: postgres
         target: /var/lib/postgresql/data
       - type: bind
-        source: ./engine/tests/db_definition.sql
+        source: ./crates/engine/tests/db_definition.sql
         target: /docker-entrypoint-initdb.d/db_definition.sql
         read_only: true
     healthcheck:
@@ -30,7 +30,7 @@ services:
     ports:
       - "8100:8100"
     volumes:
-      - ./engine/tests/pg_ndc_config.json:/config.json
+      - ./crates/engine/tests/pg_ndc_config.json:/config.json
     depends_on:
       postgres:
         condition: service_healthy

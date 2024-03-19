@@ -32,9 +32,9 @@ fn read_json_lines(path: &str) -> Result<BTreeMap<i64, Row>, Box<dyn Error>> {
 
 pub fn init_app_state() -> AppState {
     // Read the CSV data files
-    let actors = read_json_lines("./custom-connector/data/actors.json").unwrap();
-    let movies = read_json_lines("./custom-connector/data/movies.json").unwrap();
-    let institutions = read_json_lines("./custom-connector/data/institutions.json").unwrap();
+    let actors = read_json_lines("./crates/custom-connector/data/actors.json").unwrap();
+    let movies = read_json_lines("./crates/custom-connector/data/movies.json").unwrap();
+    let institutions = read_json_lines("./crates/custom-connector/data/institutions.json").unwrap();
 
     AppState {
         actors,

@@ -29,7 +29,7 @@ Following are steps to run V3 engine with a reference agent (read only, in memor
 
    ```sh
    RUST_LOG=DEBUG cargo run --release --bin engine -- \
-     --metadata-path open-dds/examples/reference.json \
+     --metadata-path crates/open-dds/examples/reference.json \
     --authn-config-path auth_config.json
    ```
 
@@ -50,7 +50,7 @@ Open <http://localhost:3000> for GraphiQL.
 Use `--port` option to start v3-engine on a different port.
 ```sh
 RUST_LOG=DEBUG cargo run --release --bin engine -- \
-     --port 8000 --metadata-path open-dds/examples/reference.json
+     --port 8000 --metadata-path crates/open-dds/examples/reference.json
 ```
 Now, open <http://localhost:8000> for GraphiQL.
 
@@ -59,7 +59,7 @@ You can also start Hasura V3 engine, reference_agent, dev Authentication webhook
 tracing (accessible at localhost:4002) using docker (without the need of using `cargo`)
 
 ```sh
-METADATA_PATH=open-dds/examples/reference.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
+METADATA_PATH=crates/open-dds/examples/reference.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
 ``` 
 
 ## Run V3 engine (with Postgres)
@@ -145,16 +145,16 @@ Next run the custom NDC locally using `docker compose up custom_connector` and p
 
 ### Testing/Development with the chinook database
 
-The `engine/tests/chinook` contains static files required to run v3-engine run with the chinook database as a data connector.
+The `crates/engine/tests/chinook` contains static files required to run v3-engine run with the chinook database as a data connector.
 
 To get this running, you can run the following command:
 
 ```bash
-METADATA_PATH=engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
 ```
 
 If you are running the v3-engine locally through cargo, then you'll need to update the value of the
-`singleUrl` present in the `engine/tests/chinook/chinook_engine_metadata.json**
+`singleUrl` present in the `crates/engine/tests/chinook/chinook_engine_metadata.json**
 from http://postgres_connector:8100 to http://localhost:8100 .
 
 ### Running tests with a single command

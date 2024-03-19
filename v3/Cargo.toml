@@ -6,15 +6,7 @@ package.edition = "2021"
 package.license = "Apache-2.0"
 
 members = [
-  "custom-connector",
-  "engine",
-  "hasura-authn-core",
-  "hasura-authn-webhook",
-  "hasura-authn-jwt",
-  "lang-graphql",
-  "open-dds",
-  "opendds-derive",
-  "tracing-util"
+  "crates/*"
 ]
 
 [profile.release]
