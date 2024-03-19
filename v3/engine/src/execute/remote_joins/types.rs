@@ -7,7 +7,7 @@ use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
 use std::collections::{BTreeMap, HashMap};
 
-use crate::execute::query_plan::ProcessResponseAs;
+use crate::execute::plan::ProcessResponseAs;
 use crate::metadata::resolved;
 use crate::metadata::resolved::types::NdcColumnForComparison;
 use crate::utils::json_ext::ValueExt;

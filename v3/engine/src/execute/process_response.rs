@@ -16,7 +16,7 @@ use open_dds::types::FieldName;
 use super::error;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use super::query_plan::ProcessResponseAs;
+use super::plan::ProcessResponseAs;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::schema::{
     types::{Annotation, GlobalID, OutputAnnotation},

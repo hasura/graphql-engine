@@ -1,8 +1,8 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
-use crate::execute::query_plan::{NodeQueryPlan, ProcessResponseAs};
+use crate::execute::plan::{NodeMutationPlan, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
-use crate::execute::{error, query_plan};
+use crate::execute::{error, plan};
 use crate::metadata::resolved;
 use crate::schema::GDS;
 use crate::utils::async_map::AsyncMap;
@@ -53,9 +53,10 @@ pub async fn execute_explain_internal(
     }
 }
 
+/// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
     http_client: &reqwest::Client,
-    query_plan: query_plan::QueryPlan<'_, '_, '_>,
+    query_plan: plan::QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, error::Error> {
     let mut parallel_root_steps = vec![];
     // Here, we are assuming that all root fields are executed in parallel.
@@ -105,18 +106,6 @@ pub(crate) async fn explain_query_plan(
                     "cannot explain relay queries with no execution plan".to_string(),
                 ));
             }
-            NodeQueryPlan::NDCMutationExecution(ndc_mutation_execution) => {
-                let sequence_steps = get_execution_steps(
-                    http_client,
-                    alias,
-                    &ndc_mutation_execution.process_response_as,
-                    ndc_mutation_execution.join_locations,
-                    types::NDCRequest::Mutation(ndc_mutation_execution.query),
-                    ndc_mutation_execution.data_connector,
-                )
-                .await;
-                parallel_root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
-            }
         }
     }
     // simplify the steps
@@ -128,6 +117,47 @@ pub(crate) async fn explain_query_plan(
         }
         None => Err(error::Error::ExplainError(
             "cannot explain query as there are no explainable root field".to_string(),
+        )),
+    }
+}
+
+/// Produce an /explain plan for a given GraphQL mutation.
+pub(crate) async fn explain_mutation_plan(
+    http_client: &reqwest::Client,
+    mutation_plan: plan::MutationPlan<'_, '_, '_>,
+) -> Result<types::Step, error::Error> {
+    let mut root_steps = vec![];
+
+    for (alias, node) in mutation_plan {
+        match node {
+            NodeMutationPlan::TypeName { .. } => {
+                return Err(error::Error::ExplainError(
+                    "cannot explain introspection queries".to_string(),
+                ));
+            }
+            NodeMutationPlan::NDCMutationExecution(ndc_mutation_execution) => {
+                let sequence_steps = get_execution_steps(
+                    http_client,
+                    alias,
+                    &ndc_mutation_execution.process_response_as,
+                    ndc_mutation_execution.join_locations,
+                    types::NDCRequest::Mutation(ndc_mutation_execution.query),
+                    ndc_mutation_execution.data_connector,
+                )
+                .await;
+                root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+            }
+        }
+    }
+
+    // simplify the steps
+    match NonEmpty::from_vec(root_steps) {
+        Some(root_steps) => {
+            let simplified_step = simplify_step(Box::new(types::Step::Sequence(root_steps)));
+            Ok(*simplified_step)
+        }
+        None => Err(error::Error::ExplainError(
+            "cannot explain mutation as there are no explainable root fields".to_string(),
         )),
     }
 }

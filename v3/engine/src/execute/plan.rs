@@ -26,7 +26,14 @@ use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
-pub type MutationPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NDCMutationExecution<'n, 's, 'ir>>;
+pub type MutationPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeMutationPlan<'n, 's, 'ir>>;
+
+// At least for now, requests are _either_ queries or mutations, and a mix of the two can be
+// treated as an invalid request. We may want to change this in the future.
+pub enum RequestPlan<'n, 's, 'ir> {
+    QueryPlan(QueryPlan<'n, 's, 'ir>),
+    MutationPlan(MutationPlan<'n, 's, 'ir>),
+}
 
 /// Query plan of individual root field or node
 #[derive(Debug)]
@@ -50,6 +57,13 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
     NDCQueryExecution(NDCQueryExecution<'s, 'ir>),
     /// NDC query for Relay 'node' to be executed
     RelayNodeSelect(Option<NDCQueryExecution<'s, 'ir>>),
+}
+
+/// Mutation plan of individual root field or node.
+/// Note that __typename exists for mutations, but __schema and __type do not.
+pub enum NodeMutationPlan<'n, 's, 'ir> {
+    /// __typename field on mutation root
+    TypeName { type_name: ast::TypeName },
     /// NDC mutation to be executed
     NDCMutationExecution(NDCMutationExecution<'n, 's, 'ir>),
 }
@@ -113,25 +127,65 @@ impl<'ir> ProcessResponseAs<'ir> {
     }
 }
 
-pub fn generate_query_plan<'n, 's, 'ir>(
+/// Build a plan to handle a given request. This plan will either be a mutation plan or a query
+/// plan, but currently can't be both. This may change when we support protocols other than
+/// GraphQL.
+pub fn generate_request_plan<'n, 's, 'ir>(
     ir: &'ir IndexMap<ast::Alias, root_field::RootField<'n, 's>>,
-) -> Result<QueryPlan<'n, 's, 'ir>, error::Error> {
-    let mut query_plan = IndexMap::new();
+) -> Result<RequestPlan<'n, 's, 'ir>, error::Error> {
+    let mut request_plan = None;
+
     for (alias, field) in ir.into_iter() {
-        let field_plan = match field {
-            root_field::RootField::QueryRootField(field_ir) => plan_query(field_ir),
-            root_field::RootField::MutationRootField(field_ir) => plan_mutation(field_ir),
-        }?;
-        query_plan.insert(alias.clone(), field_plan);
+        match field {
+            root_field::RootField::QueryRootField(field_ir) => {
+                let mut query_plan = match request_plan {
+                    Some(RequestPlan::MutationPlan(_)) => Err(error::Error::InternalError(
+                        error::InternalError::Engine(error::InternalEngineError::InternalGeneric {
+                            description:
+                                "Parsed engine request contains mixed mutation/query operations"
+                                    .to_string(),
+                        }),
+                    ))?,
+                    Some(RequestPlan::QueryPlan(query_plan)) => query_plan,
+                    None => IndexMap::new(),
+                };
+
+                query_plan.insert(alias.clone(), plan_query(field_ir)?);
+                request_plan = Some(RequestPlan::QueryPlan(query_plan));
+            }
+
+            root_field::RootField::MutationRootField(field_ir) => {
+                let mut mutation_plan = match request_plan {
+                    Some(RequestPlan::QueryPlan(_)) => Err(error::Error::InternalError(
+                        error::InternalError::Engine(error::InternalEngineError::InternalGeneric {
+                            description:
+                                "Parsed engine request contains mixed mutation/query operations"
+                                    .to_string(),
+                        }),
+                    ))?,
+                    Some(RequestPlan::MutationPlan(mutation_plan)) => mutation_plan,
+                    None => IndexMap::new(),
+                };
+
+                mutation_plan.insert(alias.clone(), plan_mutation(field_ir)?);
+                request_plan = Some(RequestPlan::MutationPlan(mutation_plan));
+            }
+        }
     }
-    Ok(query_plan)
+
+    request_plan.ok_or(error::Error::InternalError(error::InternalError::Engine(
+        error::InternalEngineError::InternalGeneric {
+            description: "Parsed an empty request".to_string(),
+        },
+    )))
 }
 
+// Given a singular root field of a mutation, plan the execution of that root field.
 fn plan_mutation<'n, 's, 'ir>(
     ir: &'ir root_field::MutationRootField<'n, 's>,
-) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
+) -> Result<NodeMutationPlan<'n, 's, 'ir>, error::Error> {
     let plan = match ir {
-        root_field::MutationRootField::TypeName { type_name } => NodeQueryPlan::TypeName {
+        root_field::MutationRootField::TypeName { type_name } => NodeMutationPlan::TypeName {
             type_name: type_name.clone(),
         },
         root_field::MutationRootField::ProcedureBasedCommand { ir, selection_set } => {
@@ -139,7 +193,7 @@ fn plan_mutation<'n, 's, 'ir>(
             let (ndc_ir, join_locations) =
                 commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
             let join_locations_ids = assign_with_join_ids(join_locations)?;
-            NodeQueryPlan::NDCMutationExecution(NDCMutationExecution {
+            NodeMutationPlan::NDCMutationExecution(NDCMutationExecution {
                 query: ndc_ir,
                 join_locations: join_locations_ids,
                 data_connector: ir.command_info.data_connector,
@@ -156,6 +210,7 @@ fn plan_mutation<'n, 's, 'ir>(
     Ok(plan)
 }
 
+// Given a singular root field of a query, plan the execution of that root field.
 fn plan_query<'n, 's, 'ir>(
     ir: &'ir root_field::QueryRootField<'n, 's>,
 ) -> Result<NodeQueryPlan<'n, 's, 'ir>, error::Error> {
@@ -433,19 +488,20 @@ impl ExecuteQueryResult {
     }
 }
 
-async fn execute_field_plan<'n, 's, 'ir>(
+/// Execute a single root field's query plan to produce a result.
+async fn execute_query_field_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
-    field_plan: NodeQueryPlan<'n, 's, 'ir>,
+    query_plan: NodeQueryPlan<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
-            "execute_field_plan",
+            "execute_query_field_plan",
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
-                    match field_plan {
+                    match query_plan {
                         NodeQueryPlan::TypeName { type_name } => {
                             set_attribute_on_active_span(
                                 AttributeVisibility::Default,
@@ -492,11 +548,6 @@ async fn execute_field_plan<'n, 's, 'ir>(
                             &ndc_query.process_response_as.is_nullable(),
                             resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
                         ),
-                        NodeQueryPlan::NDCMutationExecution(ndc_query) => RootFieldResult::new(
-                            &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_mutation_execution(http_client, ndc_query, project_id)
-                                .await,
-                        ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
                                 ndc_query.process_response_as.is_nullable()
@@ -511,27 +562,77 @@ async fn execute_field_plan<'n, 's, 'ir>(
         .await
 }
 
-/// Extract the mutations from a query plan, so that we can run them sequentially.
-pub fn separate_mutations<'n, 's, 'ir>(
-    query_plan: QueryPlan<'n, 's, 'ir>,
-) -> (QueryPlan<'n, 's, 'ir>, MutationPlan<'n, 's, 'ir>) {
-    let mut mutations = IndexMap::new();
-    let mut queries = IndexMap::new();
-
-    for (alias, field_plan) in query_plan.into_iter() {
-        match field_plan {
-            NodeQueryPlan::NDCMutationExecution(ndc_mutation_execution) => {
-                mutations.insert(alias, ndc_mutation_execution);
-            }
-            otherwise => {
-                queries.insert(alias, otherwise);
-            }
-        };
-    }
-
-    (queries, mutations)
+/// Execute a single root field's mutation plan to produce a result.
+async fn execute_mutation_field_plan<'n, 's, 'ir>(
+    http_client: &reqwest::Client,
+    mutation_plan: NodeMutationPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
+) -> RootFieldResult {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "execute_mutation_field_plan",
+            tracing_util::SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    match mutation_plan {
+                        NodeMutationPlan::TypeName { type_name } => {
+                            set_attribute_on_active_span(
+                                AttributeVisibility::Default,
+                                "field",
+                                "__typename",
+                            );
+                            RootFieldResult::new(
+                                &false, // __typename: String! ; the __typename field is not nullable
+                                resolve_type_name(type_name),
+                            )
+                        }
+                        NodeMutationPlan::NDCMutationExecution(ndc_mutation) => {
+                            RootFieldResult::new(
+                                &ndc_mutation.process_response_as.is_nullable(),
+                                resolve_ndc_mutation_execution(
+                                    http_client,
+                                    ndc_mutation,
+                                    project_id,
+                                )
+                                .await,
+                            )
+                        }
+                    }
+                })
+            },
+        )
+        .await
 }
 
+/// Given an entire plan for a mutation, produce a result. We do this by executing the singular
+/// root fields of the mutation sequentially rather than concurrently, in the order defined by the
+/// `IndexMap`'s keys.
+pub async fn execute_mutation_plan<'n, 's, 'ir>(
+    http_client: &reqwest::Client,
+    mutation_plan: MutationPlan<'n, 's, 'ir>,
+    project_id: Option<ProjectId>,
+) -> ExecuteQueryResult {
+    let mut root_fields = IndexMap::new();
+    let mut executed_root_fields = Vec::new();
+
+    for (alias, field_plan) in mutation_plan.into_iter() {
+        executed_root_fields.push((
+            alias,
+            execute_mutation_field_plan(http_client, field_plan, project_id.clone()).await,
+        ));
+    }
+
+    for executed_root_field in executed_root_fields.into_iter() {
+        let (alias, root_field) = executed_root_field;
+        root_fields.insert(alias, root_field);
+    }
+
+    ExecuteQueryResult { root_fields }
+}
+
+/// Given an entire plan for a query, produce a result. We do this by executing all the singular
+/// root fields of the query in parallel, and joining the results back together.
 pub async fn execute_query_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
     query_plan: QueryPlan<'n, 's, 'ir>,
@@ -541,36 +642,20 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
 
     let mut tasks: Vec<_> = Vec::with_capacity(query_plan.capacity());
 
-    let (queries, mutations) = separate_mutations(query_plan);
-
-    let mut executed_root_fields = Vec::new();
-
-    for (alias, field_plan) in mutations.into_iter() {
-        executed_root_fields.push((
-            alias,
-            execute_field_plan(
-                http_client,
-                NodeQueryPlan::NDCMutationExecution(field_plan),
-                project_id.clone(),
-            )
-            .await,
-        ));
-    }
-
-    for (alias, field_plan) in queries.into_iter() {
+    for (alias, field_plan) in query_plan.into_iter() {
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
         let task = async {
             (
                 alias,
-                execute_field_plan(http_client, field_plan, project_id.clone()).await,
+                execute_query_field_plan(http_client, field_plan, project_id.clone()).await,
             )
         };
 
         tasks.push(task);
     }
 
-    executed_root_fields.extend(futures::future::join_all(tasks).await);
+    let executed_root_fields = futures::future::join_all(tasks).await;
 
     for executed_root_field in executed_root_fields.into_iter() {
         let (alias, root_field) = executed_root_field;

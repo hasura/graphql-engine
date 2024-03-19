@@ -24,8 +24,8 @@ pub mod global_id;
 pub mod ir;
 pub mod model_tracking;
 pub mod ndc;
+pub mod plan;
 pub mod process_response;
-pub mod query_plan;
 pub mod remote_joins;
 
 #[derive(Debug)]
@@ -203,9 +203,9 @@ pub async fn execute_request_internal(
                     generate_ir(schema, session, &normalized_request)
                 })?;
 
-                // construct a query plan
-                let query_plan = tracer.in_span("plan", SpanVisibility::Internal, || {
-                    query_plan::generate_query_plan(&ir)
+                // construct a plan to execute the request
+                let request_plan = tracer.in_span("plan", SpanVisibility::Internal, || {
+                    plan::generate_request_plan(&ir)
                 })?;
 
                 // execute/explain the query plan
@@ -224,12 +224,25 @@ pub async fn execute_request_internal(
                                 );
 
                                 Box::pin(async {
-                                    let execute_query_result = query_plan::execute_query_plan(
-                                        http_client,
-                                        query_plan,
-                                        project_id,
-                                    )
-                                    .await;
+                                    let execute_query_result = match request_plan {
+                                        plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                            plan::execute_mutation_plan(
+                                                http_client,
+                                                mutation_plan,
+                                                project_id,
+                                            )
+                                            .await
+                                        }
+                                        plan::RequestPlan::QueryPlan(query_plan) => {
+                                            plan::execute_query_plan(
+                                                http_client,
+                                                query_plan,
+                                                project_id,
+                                            )
+                                            .await
+                                        }
+                                    };
+
                                     ExecuteOrExplainResponse::Execute(GraphQLResponse(
                                         execute_query_result.to_graphql_response(),
                                     ))
@@ -241,19 +254,30 @@ pub async fn execute_request_internal(
                         tracer
                             .in_span_async("explain", SpanVisibility::Internal, || {
                                 Box::pin(async {
+                                    let request_result = match request_plan {
+                                        plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                            crate::execute::explain::explain_mutation_plan(
+                                                http_client,
+                                                mutation_plan,
+                                            )
+                                            .await
+                                        }
+                                        plan::RequestPlan::QueryPlan(query_plan) => {
+                                            crate::execute::explain::explain_query_plan(
+                                                http_client,
+                                                query_plan,
+                                            )
+                                            .await
+                                        }
+                                    };
+
                                     // convert the query plan to explain step
-                                    let explain_response =
-                                        match crate::execute::explain::explain_query_plan(
-                                            http_client,
-                                            query_plan,
-                                        )
-                                        .await
-                                        {
-                                            Ok(step) => step.make_explain_response(),
-                                            Err(e) => explain::types::ExplainResponse::error(
-                                                e.to_graphql_error(None),
-                                            ),
-                                        };
+                                    let explain_response = match request_result {
+                                        Ok(step) => step.make_explain_response(),
+                                        Err(e) => explain::types::ExplainResponse::error(
+                                            e.to_graphql_error(None),
+                                        ),
+                                    };
 
                                     ExecuteOrExplainResponse::Explain(explain_response)
                                 })

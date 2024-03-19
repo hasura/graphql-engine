@@ -71,7 +71,7 @@
 //!
 //! 5. Perform join on LHS response and RHS response
 //!
-//! [process_selection_set_ir]: crate::execute::query_plan::selection_set::process_selection_set_ir
+//! [process_selection_set_ir]: crate::execute::plan::selection_set::process_selection_set_ir
 //! [generate_selection_set_ir]: crate::execute::ir::selection_set::generate_selection_set_ir
 //! [build_remote_relationship]: crate::execute::ir::relationship::build_remote_relationship
 //! [build_remote_command_relationship]: crate::execute::ir::relationship::build_remote_command_relationship
@@ -89,7 +89,7 @@ use ndc_client as ndc;
 use self::types::{JoinNode, LocationKind, TargetField};
 
 use super::ndc::{execute_ndc_query, FUNCTION_IR_VALUE_COLUMN_NAME};
-use super::query_plan::ProcessResponseAs;
+use super::plan::ProcessResponseAs;
 use super::{error, ProjectId};
 
 use types::{

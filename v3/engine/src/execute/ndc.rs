@@ -7,8 +7,8 @@ use lang_graphql::ast::common as ast;
 use ndc_client as ndc;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
+use super::plan::ProcessResponseAs;
 use super::process_response::process_command_mutation_response;
-use super::query_plan::ProcessResponseAs;
 use super::{error, ProjectId};
 use crate::metadata::resolved;
 use crate::schema::GDS;

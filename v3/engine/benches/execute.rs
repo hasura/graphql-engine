@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use engine::execute::query_plan::{execute_query_plan, generate_query_plan};
+use engine::execute::plan::{execute_mutation_plan, execute_query_plan, generate_request_plan};
 use engine::execute::{execute_query_internal, generate_ir};
 use engine::schema::GDS;
 use hasura_authn_core::Identity;
@@ -120,7 +120,7 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime)
-                .iter(|| async { generate_query_plan(&ir).unwrap() })
+                .iter(|| async { generate_request_plan(&ir).unwrap() })
         },
     );
 
@@ -130,7 +130,14 @@ pub fn bench_execute(
         &(&runtime),
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
-                execute_query_plan(&http_client, generate_query_plan(&ir).unwrap(), None).await
+                match generate_request_plan(&ir).unwrap() {
+                    engine::execute::plan::RequestPlan::QueryPlan(query_plan) => {
+                        execute_query_plan(&http_client, query_plan, None).await
+                    }
+                    engine::execute::plan::RequestPlan::MutationPlan(mutation_plan) => {
+                        execute_mutation_plan(&http_client, mutation_plan, None).await
+                    }
+                }
             })
         },
     );
