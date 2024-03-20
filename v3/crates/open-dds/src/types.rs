@@ -646,7 +646,7 @@ pub struct ObjectBooleanExpressionTypeGraphQlConfiguration {
 /// OpenDd configuration to indicate whether an object type field, relationship, model
 /// root field or command root field is deprecated.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[schemars(title = "Deprecated")]
 pub struct Deprecated {
     /// The reason for deprecation.

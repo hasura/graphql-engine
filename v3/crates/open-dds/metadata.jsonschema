@@ -761,7 +761,8 @@
             "null"
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "ObjectTypeGraphQLConfiguration": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeGraphQLConfiguration",

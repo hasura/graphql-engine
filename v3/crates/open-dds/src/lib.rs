@@ -261,17 +261,18 @@ pub struct Subgraph {
 
 #[cfg(test)]
 mod tests {
+    use crate::traits::gen_root_schema_for;
     use goldenfile::Mint;
     use pretty_assertions::assert_eq;
+    use schemars::schema::Schema;
     use std::{io::Write, path::PathBuf};
 
     #[test]
     fn test_metadata_schema() {
         let mut mint = Mint::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
         let mut expected = mint.new_goldenfile("metadata.jsonschema").unwrap();
-        let schema = crate::traits::gen_root_schema_for::<super::Metadata>(
-            &mut schemars::gen::SchemaGenerator::default(),
-        );
+        let schema =
+            gen_root_schema_for::<super::Metadata>(&mut schemars::gen::SchemaGenerator::default());
         write!(
             expected,
             "{}",
@@ -302,5 +303,55 @@ mod tests {
         let metadata_from_json =
             <super::Metadata as super::traits::OpenDd>::deserialize(metadata_json).unwrap();
         assert_eq!(metadata, metadata_from_json);
+    }
+
+    #[test]
+    /// Always ensure the presence of `additionalProperties: false` in all subschema definitions of `Metadata` json schema.
+    fn no_arbitrary_additional_properties_in_schema() {
+        check_no_arbitrary_additional_properties_in_schema(gen_root_schema_for::<super::Metadata>(
+            &mut schemars::gen::SchemaGenerator::default(),
+        ));
+    }
+
+    // Helper functions for the `no_arbitrary_additional_properties_in_schema` test
+    fn check_no_arbitrary_additional_properties_in_schema(
+        root_schema: schemars::schema::RootSchema,
+    ) {
+        check_no_arbitrary_additional_properties(&Schema::Object(root_schema.schema));
+        for (_, schema) in &root_schema.definitions {
+            check_no_arbitrary_additional_properties(schema);
+        }
+    }
+
+    fn check_no_arbitrary_additional_properties(schema: &Schema) {
+        if let Schema::Object(schema_object) = schema {
+            if let Some(object) = &schema_object.object {
+                let has_arbitrary_additional_properties: bool =
+                    object.additional_properties.is_none()
+                        || object
+                            .additional_properties
+                            .as_ref()
+                            .is_some_and(|property_schema| {
+                                matches!(**property_schema, Schema::Bool(true))
+                            });
+
+                if has_arbitrary_additional_properties {
+                    println!("{}", serde_json::to_string_pretty(schema).unwrap());
+                    panic!("Schema has arbitrary additional properties")
+                }
+
+                for (_, property_schema) in &object.properties {
+                    check_no_arbitrary_additional_properties(property_schema);
+                }
+            }
+            if let Some(subschemas) = &schema_object.subschemas {
+                for subschema in subschemas.one_of.iter().flatten() {
+                    check_no_arbitrary_additional_properties(subschema);
+                }
+                for subschema in subschemas.any_of.iter().flatten() {
+                    check_no_arbitrary_additional_properties(subschema);
+                }
+            }
+        }
     }
 }
