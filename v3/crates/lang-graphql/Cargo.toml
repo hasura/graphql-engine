@@ -29,7 +29,7 @@ async-graphql-parser = "5.0"
 pretty_assertions = "1.3.0"
 rmp-serde = "1.1.1"
 postcard = { version = "1.0.4", features = ["use-std"] }
-bson = "2.6.0"
+bson = "2.9.0"
 bincode = "1.3.3"
 human_bytes = "0.4.1"
 diffy = "0.3.0"
