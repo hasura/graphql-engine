@@ -42,3 +42,13 @@ fn test_introspect_model_with_preset_arguments_select_one() {
         ],
     );
 }
+
+#[test]
+fn test_graphql_deprecated() {
+    let common_custom_connector_path_string =
+        "execute/common_metadata/custom_connector_schema.json";
+    common::test_introspection_expectation(
+        "execute/deprecated",
+        &[common_custom_connector_path_string],
+    );
+}

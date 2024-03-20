@@ -413,6 +413,10 @@ pub struct FieldDefinition {
     /// The description of this field.
     /// Gets added to the description of the field's definition in the graphql schema.
     pub description: Option<String>,
+
+    /// Whether this field is deprecated.
+    /// If set, the deprecation status is added to the field's graphql schema.
+    pub deprecated: Option<Deprecated>,
 }
 
 /// GraphQL configuration of an Open DD scalar type
@@ -638,3 +642,15 @@ pub struct ObjectBooleanExpressionTypeGraphQlConfiguration {
     /// The name to use for the GraphQL type representation of this boolean expression type.
     pub type_name: GraphQlTypeName,
 }
+
+/// OpenDd configuration to indicate whether an object type field, relationship, model
+/// root field or command root field is deprecated.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[schemars(title = "Deprecated")]
+pub struct Deprecated {
+    /// The reason for deprecation.
+    pub reason: Option<String>,
+}
+
+impl_OpenDd_default_for!(Deprecated);

@@ -8,7 +8,7 @@ use crate::{
     impl_JsonSchema_with_OpenDd_for,
     models::ModelName,
     permissions::ValueExpression,
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, Deprecated, FieldName},
 };
 
 /// The name of the GraphQL relationship field.
@@ -218,6 +218,9 @@ pub struct RelationshipV1 {
     /// The description of the relationship.
     /// Gets added to the description of the relationship in the graphql schema.
     pub description: Option<String>,
+    /// Whether this relationship is deprecated.
+    /// If set, the deprecation status is added to the relationship field's graphql schema.
+    pub deprecated: Option<Deprecated>,
 }
 
 impl RelationshipV1 {
@@ -252,7 +255,8 @@ impl RelationshipV1 {
                         }
                     }
                 ],
-                "description": "Articles written by an author"
+                "description": "Articles written by an author",
+                "deprecated": {}
             }
         )
     }

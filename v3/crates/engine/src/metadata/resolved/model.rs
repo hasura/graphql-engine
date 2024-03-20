@@ -20,6 +20,7 @@ use lang_graphql::ast::common::{self as ast, Name};
 use ndc::models::ComparisonOperatorDefinition;
 use ndc_client as ndc;
 use open_dds::permissions::{NullableModelPredicate, RelationshipPredicate};
+use open_dds::types::Deprecated;
 use open_dds::{
     arguments::ArgumentName,
     data_connector::DataConnectorName,
@@ -52,12 +53,14 @@ pub struct SelectUniqueGraphQlDefinition {
     pub query_root_field: ast::Name,
     pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
     pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct SelectManyGraphQlDefinition {
     pub query_root_field: ast::Name,
     pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -926,6 +929,7 @@ pub fn resolve_model_graphql_api(
                 query_root_field: select_unique_field_name,
                 unique_identifier: unique_identifier_fields,
                 description: select_unique_description,
+                deprecated: select_unique.deprecated.clone(),
             });
     }
 
@@ -1105,6 +1109,7 @@ pub fn resolve_model_graphql_api(
             Some(SelectManyGraphQlDefinition {
                 query_root_field: f,
                 description: select_many_description,
+                deprecated: gql_definition.deprecated.clone(),
             })
         }),
     }?;

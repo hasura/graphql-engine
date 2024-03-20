@@ -9,7 +9,7 @@ use crate::{
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
     traits::{OpenDd, OpenDdDeserializeError},
-    types::{CustomTypeName, FieldName, GraphQlFieldName, GraphQlTypeName},
+    types::{CustomTypeName, Deprecated, FieldName, GraphQlFieldName, GraphQlTypeName},
 };
 
 /// The name of data model.
@@ -209,6 +209,9 @@ pub struct SelectUniqueGraphQlDefinition {
     /// The description of the select unique graphql definition of the model.
     /// Gets added to the description of the select unique root field of the model in the graphql schema.
     pub description: Option<String>,
+    /// Whether this select unique query field is deprecated.
+    /// If set, the deprecation status is added to the select unique root field's graphql schema.
+    pub deprecated: Option<Deprecated>,
 }
 
 /// The definition of the GraphQL API for selecting rows from a model.
@@ -221,6 +224,9 @@ pub struct SelectManyGraphQlDefinition {
     /// The description of the select many graphql definition of the model.
     /// Gets added to the description of the select many root field of the model in the graphql schema.
     pub description: Option<String>,
+    /// Whether this select many query field is deprecated.
+    /// If set, the deprecation status is added to the select many root field's graphql schema.
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

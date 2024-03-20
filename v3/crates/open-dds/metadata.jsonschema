@@ -720,6 +720,17 @@
             "string",
             "null"
           ]
+        },
+        "deprecated": {
+          "description": "Whether this field is deprecated. If set, the deprecation status is added to the field's graphql schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -736,6 +747,21 @@
       "title": "TypeReference",
       "description": "A reference to an Open DD type including nullable values and arrays.\nSuffix '!' to indicate a non-nullable reference, and wrap in '[]' to indicate an array.\nEg: '[String!]!' is a non-nullable array of non-nullable strings.",
       "type": "string"
+    },
+    "Deprecated": {
+      "$id": "https://hasura.io/jsonschemas/metadata/Deprecated",
+      "title": "Deprecated",
+      "description": "OpenDd configuration to indicate whether an object type field, relationship, model root field or command root field is deprecated.",
+      "type": "object",
+      "properties": {
+        "reason": {
+          "description": "The reason for deprecation.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     },
     "ObjectTypeGraphQLConfiguration": {
       "$id": "https://hasura.io/jsonschemas/metadata/ObjectTypeGraphQLConfiguration",
@@ -1543,6 +1569,17 @@
             "string",
             "null"
           ]
+        },
+        "deprecated": {
+          "description": "Whether this select unique query field is deprecated. If set, the deprecation status is added to the select unique root field's graphql schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -1575,6 +1612,17 @@
           "type": [
             "string",
             "null"
+          ]
+        },
+        "deprecated": {
+          "description": "Whether this select many query field is deprecated. If set, the deprecation status is added to the select many root field's graphql schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       },
@@ -1765,7 +1813,10 @@
       "examples": [
         {
           "rootFieldName": "getLatestArticle",
-          "rootFieldKind": "Query"
+          "rootFieldKind": "Query",
+          "deprecated": {
+            "reason": "Use getLatestArticleV2 instead"
+          }
         }
       ],
       "type": "object",
@@ -1787,6 +1838,17 @@
           "allOf": [
             {
               "$ref": "#/definitions/GraphQlRootFieldKind"
+            }
+          ]
+        },
+        "deprecated": {
+          "description": "Whether this command root field is deprecated. If set, this will be added to the graphql schema as a deprecated field.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
             }
           ]
         }
@@ -1836,7 +1898,8 @@
               }
             }
           ],
-          "description": "Articles written by an author"
+          "description": "Articles written by an author",
+          "deprecated": {}
         }
       ],
       "type": "object",
@@ -1883,6 +1946,17 @@
           "type": [
             "string",
             "null"
+          ]
+        },
+        "deprecated": {
+          "description": "Whether this relationship is deprecated. If set, the deprecation status is added to the relationship field's graphql schema.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Deprecated"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       },

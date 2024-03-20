@@ -54,8 +54,15 @@ pub fn query_root_schema(
                 GraphQlRootFieldKind::Query
             ) {
                 let command_field_name = command_graphql_api.root_field_name.clone();
-                let (field_name, field) =
-                    commands::function_command_field(gds, builder, command, command_field_name)?;
+                let deprecation_status =
+                    super::mk_deprecation_status(&command_graphql_api.deprecated);
+                let (field_name, field) = commands::function_command_field(
+                    gds,
+                    builder,
+                    command,
+                    command_field_name,
+                    deprecation_status,
+                )?;
 
                 fields.insert(field_name, field);
             }

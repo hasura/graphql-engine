@@ -16,7 +16,7 @@ use open_dds::commands::{
 };
 use open_dds::data_connector::DataConnectorName;
 use open_dds::permissions::{CommandPermissionsV1, Role, ValueExpression};
-use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
+use open_dds::types::{BaseType, CustomTypeName, Deprecated, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -30,6 +30,7 @@ use super::types::{
 pub struct CommandGraphQlApi {
     pub root_field_kind: GraphQlRootFieldKind,
     pub root_field_name: ast::Name,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -122,6 +123,7 @@ pub fn resolve_command(
                 Some(CommandGraphQlApi {
                     root_field_kind: graphql_definition.root_field_kind.clone(),
                     root_field_name: f,
+                    deprecated: graphql_definition.deprecated.clone(),
                 })
             })
         }

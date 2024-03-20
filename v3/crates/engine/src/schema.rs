@@ -1,8 +1,11 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::{
-    commands::CommandName, models::ModelName, permissions::Role, relationships::RelationshipName,
-    types::CustomTypeName,
+    commands::CommandName,
+    models::ModelName,
+    permissions::Role,
+    relationships::RelationshipName,
+    types::{CustomTypeName, Deprecated},
 };
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -272,5 +275,16 @@ pub fn mk_typename(name: &str) -> Result<ast::TypeName, Error> {
         Err(_) => Err(Error::InvalidGraphQlName {
             name: name.to_string(),
         }),
+    }
+}
+
+pub(crate) fn mk_deprecation_status(
+    deprecated: &Option<Deprecated>,
+) -> gql_schema::DeprecationStatus {
+    match deprecated {
+        Some(Deprecated { reason }) => gql_schema::DeprecationStatus::Deprecated {
+            reason: reason.clone(),
+        },
+        None => gql_schema::DeprecationStatus::NotDeprecated,
     }
 }

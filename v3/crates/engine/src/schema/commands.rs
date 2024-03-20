@@ -86,6 +86,7 @@ pub(crate) fn command_field(
     command: &resolved::command::Command,
     command_field_name: ast::Name,
     command_annotation: Annotation,
+    deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
     (
         ast::Name,
@@ -102,7 +103,6 @@ pub(crate) fn command_field(
             generate_command_argument(gds, builder, command, argument_name, argument_type)?;
         arguments.insert(field_name, input_field);
     }
-
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             command_field_name.clone(),
@@ -110,7 +110,7 @@ pub(crate) fn command_field(
             command_annotation,
             output_typename,
             arguments,
-            gql_schema::DeprecationStatus::NotDeprecated,
+            deprecation_status,
         ),
         permissions::get_command_namespace_annotations(command)?,
     );
@@ -122,6 +122,7 @@ pub(crate) fn function_command_field(
     builder: &mut gql_schema::Builder<GDS>,
     command: &resolved::command::Command,
     command_field_name: ast::Name,
+    deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
     (
         ast::Name,
@@ -165,6 +166,7 @@ pub(crate) fn function_command_field(
         command,
         command_field_name,
         command_annotation,
+        deprecation_status,
     )
 }
 
@@ -173,6 +175,7 @@ pub(crate) fn procedure_command_field(
     builder: &mut gql_schema::Builder<GDS>,
     command: &resolved::command::Command,
     command_field_name: ast::Name,
+    deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
     (
         ast::Name,
@@ -216,5 +219,6 @@ pub(crate) fn procedure_command_field(
         command,
         command_field_name,
         command_annotation,
+        deprecation_status,
     )
 }

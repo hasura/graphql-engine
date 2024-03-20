@@ -13,8 +13,8 @@ use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
 use open_dds::permissions::{Role, TypeOutputPermission, TypePermissionsV1};
 use open_dds::types::{
-    self, CustomTypeName, DataConnectorTypeMapping, FieldName, ObjectBooleanExpressionTypeV1,
-    ObjectTypeV1, TypeName,
+    self, CustomTypeName, DataConnectorTypeMapping, Deprecated, FieldName,
+    ObjectBooleanExpressionTypeV1, ObjectTypeV1, TypeName,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -101,6 +101,7 @@ impl<'a> ScalarTypeInfo<'a> {
 pub struct FieldDefinition {
     pub field_type: QualifiedTypeReference,
     pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -153,6 +154,7 @@ pub fn resolve_field(
     Ok(FieldDefinition {
         field_type: mk_qualified_type_reference(&field.field_type, subgraph),
         description: field.description.clone(),
+        deprecated: field.deprecated.clone(),
     })
 }
 

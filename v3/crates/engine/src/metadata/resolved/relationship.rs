@@ -19,6 +19,7 @@ use open_dds::relationships::{
     self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
 };
 use open_dds::types::CustomTypeName;
+use open_dds::types::Deprecated;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -70,6 +71,7 @@ pub struct Relationship {
     pub target: RelationshipTarget,
     pub target_capabilities: Option<RelationshipCapabilities>,
     pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -463,5 +465,6 @@ pub fn resolve_relationship(
         target: relationship_target,
         target_capabilities,
         description: relationship.description.clone(),
+        deprecated: relationship.deprecated.clone(),
     })
 }

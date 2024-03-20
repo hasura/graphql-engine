@@ -8,7 +8,7 @@ use crate::{
     data_connector::DataConnectorName,
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
-    types::{GraphQlFieldName, TypeReference},
+    types::{Deprecated, GraphQlFieldName, TypeReference},
 };
 
 /// The name of a command.
@@ -163,13 +163,19 @@ pub struct CommandGraphQlDefinition {
     pub root_field_name: GraphQlFieldName,
     /// Whether to put this command in the Query or Mutation root of the GraphQL API.
     pub root_field_kind: GraphQlRootFieldKind,
+    /// Whether this command root field is deprecated.
+    /// If set, this will be added to the graphql schema as a deprecated field.
+    pub deprecated: Option<Deprecated>,
 }
 
 impl CommandGraphQlDefinition {
     fn example() -> serde_json::Value {
         serde_json::json!({
             "rootFieldName": "getLatestArticle",
-            "rootFieldKind": "Query"
+            "rootFieldKind": "Query",
+            "deprecated": {
+                "reason": "Use getLatestArticleV2 instead"
+            }
         })
     }
 }

@@ -22,8 +22,8 @@ use crate::metadata::resolved::{
     types::{mk_name, TypeRepresentation},
 };
 use crate::schema::commands::generate_command_argument;
-use crate::schema::permissions;
 use crate::schema::query_root::select_many::generate_select_many_arguments;
+use crate::schema::{mk_deprecation_status, permissions};
 use crate::schema::{Role, GDS};
 
 type Error = crate::schema::Error;
@@ -176,7 +176,7 @@ fn object_type_fields(
                 }),
                 get_output_type(gds, builder, &field_definition.field_type)?,
                 HashMap::new(),
-                gql_schema::DeprecationStatus::NotDeprecated,
+                mk_deprecation_status(&field_definition.deprecated),
             );
             // if output permissions are defined for this type, we conditionally
             // include fields
@@ -198,6 +198,7 @@ fn object_type_fields(
         .map(
             |(relationship_field_name, relationship)| -> Result<_, Error> {
                 let graphql_field_name = relationship_field_name.clone();
+                let deprecation_status = mk_deprecation_status(&relationship.deprecated);
 
                 let relationship_field = match &relationship.target {
                     resolved::relationship::RelationshipTarget::Command {
@@ -254,7 +255,7 @@ fn object_type_fields(
                                 )),
                                 relationship_output_type,
                                 arguments,
-                                gql_schema::DeprecationStatus::NotDeprecated,
+                                deprecation_status,
                             ),
                             permissions::get_command_relationship_namespace_annotations(
                                 command,
@@ -325,7 +326,7 @@ fn object_type_fields(
                                 )),
                                 relationship_output_type,
                                 arguments,
-                                gql_schema::DeprecationStatus::NotDeprecated,
+                                deprecation_status,
                             ),
                             permissions::get_model_relationship_namespace_annotations(
                                 model,

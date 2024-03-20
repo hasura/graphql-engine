@@ -23,8 +23,15 @@ pub fn mutation_root_schema(
                 open_dds::commands::GraphQlRootFieldKind::Mutation
             ) {
                 let command_field_name: ast::Name = command_graphql_api.root_field_name.clone();
-                let (field_name, field) =
-                    commands::procedure_command_field(gds, builder, command, command_field_name)?;
+                let deprecation_status =
+                    super::mk_deprecation_status(&command_graphql_api.deprecated);
+                let (field_name, field) = commands::procedure_command_field(
+                    gds,
+                    builder,
+                    command,
+                    command_field_name,
+                    deprecation_status,
+                )?;
                 fields.insert(field_name, field);
             }
         }

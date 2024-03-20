@@ -8,6 +8,7 @@ use lang_graphql::schema as gql_schema;
 use std::collections::HashMap;
 
 use crate::metadata::resolved;
+use crate::schema::mk_deprecation_status;
 use crate::schema::{
     model_arguments,
     model_filter::get_where_expression_input_field,
@@ -143,7 +144,7 @@ pub(crate) fn select_many_field(
             )),
             field_type,
             arguments,
-            gql_schema::DeprecationStatus::NotDeprecated,
+            mk_deprecation_status(&select_many.deprecated),
         ),
         permissions::get_select_permissions_namespace_annotations(model),
     );
