@@ -30,9 +30,9 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .namespaced
         .as_ref()
         .and_then(|annotation| match annotation {
-            types::NamespaceAnnotation::Filter(predicate) => Some(predicate),
+            types::NamespaceAnnotation::Model { filter, .. } => Some(filter),
             types::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
-            types::NamespaceAnnotation::ArgumentPresets(_) => None,
+            types::NamespaceAnnotation::Command(_) => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -42,6 +42,35 @@ pub(crate) fn get_select_filter_predicate<'s>(
                 namespace_annotation_type: "Filter".to_string(),
             },
         )))
+}
+
+/// Fetch argument presets from the namespace annotation
+/// of the field call. If there are no annotations, this is fine,
+/// but if unexpected ones are found an error will be thrown.
+pub(crate) fn get_argument_presets(
+    namespaced_info: &'_ Option<types::NamespaceAnnotation>,
+) -> Result<Option<&'_ types::ArgumentPresets>, Error> {
+    match namespaced_info.as_ref() {
+        None => Ok(None), // no annotation is fine...
+        Some(annotation) => match annotation {
+            types::NamespaceAnnotation::Command(argument_presets) => Ok(Some(argument_presets)),
+            types::NamespaceAnnotation::Model {
+                argument_presets, ..
+            } => Ok(Some(argument_presets)),
+            other_namespace_annotation =>
+            // If we're hitting this case, it means that the caller of this
+            // function expects an annotation containing argument presets, but it was not annotated
+            // when the V3 engine metadata was built
+            {
+                Err(Error::InternalError(InternalError::Engine(
+                    InternalEngineError::UnexpectedNamespaceAnnotation {
+                        namespace_annotation: other_namespace_annotation.clone(),
+                        expected_type: "ArgumentPresets".to_string(),
+                    },
+                )))
+            }
+        },
+    }
 }
 
 pub(crate) fn process_model_predicate<'s>(
@@ -172,7 +201,9 @@ fn make_permission_binary_boolean_expression(
             path: path_elements,
         },
         operator: operator.to_owned(),
-        value: ndc_expression_value,
+        value: gdc::models::ComparisonValue::Scalar {
+            value: ndc_expression_value,
+        },
     })
 }
 
@@ -191,15 +222,13 @@ fn make_permission_unary_boolean_expression(
     })
 }
 
-fn make_value_from_value_expression(
+pub(crate) fn make_value_from_value_expression(
     val_expr: &ValueExpression,
-    field_type: &QualifiedTypeReference,
+    value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
-) -> Result<gdc::models::ComparisonValue, Error> {
+) -> Result<serde_json::Value, Error> {
     match val_expr {
-        ValueExpression::Literal(val) => {
-            Ok(gdc::models::ComparisonValue::Scalar { value: val.clone() })
-        }
+        ValueExpression::Literal(val) => Ok(val.clone()),
         ValueExpression::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
                 InternalDeveloperError::MissingSessionVariable {
@@ -207,15 +236,13 @@ fn make_value_from_value_expression(
                 }
             })?;
 
-            Ok(gdc::models::ComparisonValue::Scalar {
-                value: typecast_session_variable(value, field_type)?,
-            })
+            typecast_session_variable(value, value_type)
         }
     }
 }
 
 /// Typecast a stringified session variable into a given type, but as a serde_json::Value
-pub(crate) fn typecast_session_variable(
+fn typecast_session_variable(
     session_var_value_wrapped: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
 ) -> Result<serde_json::Value, Error> {

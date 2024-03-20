@@ -82,11 +82,33 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
             })?,
         }
     }
-    let model_arguments = arguments::build_ndc_model_arguments(
+    let mut model_arguments = arguments::build_ndc_model_arguments(
         &field_call.name,
         model_argument_fields.into_iter(),
         &model_source.type_mappings,
     )?;
+
+    if let Some(types::ArgumentPresets { argument_presets }) =
+        permissions::get_argument_presets(field_call.info.namespaced)?
+    {
+        // add any preset arguments from model permissions
+        for (
+            open_dds::arguments::ArgumentName(argument_name_inner),
+            (field_type, argument_value),
+        ) in argument_presets
+        {
+            model_arguments.insert(
+                argument_name_inner.to_string(),
+                ndc_client::models::Argument::Literal {
+                    value: permissions::make_value_from_value_expression(
+                        argument_value,
+                        field_type,
+                        session_variables,
+                    )?,
+                },
+            );
+        }
+    }
 
     // Add the name of the root model
     let mut usage_counts = UsagesCounts::new();

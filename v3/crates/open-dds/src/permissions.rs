@@ -229,8 +229,15 @@ impl ModelPermission {
                                 "sessionVariable": "x-hasura-user-id"
                             }
                         }
+                    },
+                "argument_presets": [
+                {
+                    "field": "likes_dogs",
+                    "value": {
+                        "literal": true
                     }
-                }
+                }]
+                },
             }
         )
     }
@@ -244,9 +251,9 @@ pub struct SelectPermission {
     /// Filter expression when selecting rows for this model.
     /// Null filter implies all rows are selectable.
     pub filter: NullableModelPredicate,
-    //TODO: Implement the following when aggregate queries are introduced
-    // #[serde(default)]
-    // pub allow_aggregations: bool,
+    /// Preset values for arguments for this role
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub argument_presets: Vec<ArgumentPreset>,
 }
 
 // We use this instead of an Option, so that we can make the filter field in

@@ -736,12 +736,44 @@ fn test_command_procedures_multiple_arguments() {
 }
 
 // Tests a mutation command with preset arguments:
-// arguments: 1 arguments (taken as id and new name for an actor and returns the updated commandActor row )
+// arguments: 2 arguments (lower_bound, upper_bound) - one provided by presets in permissions
 // output: object (commandActor) output type
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
-fn test_command_functions_preset_arguments() {
-    let test_path_string = "execute/commands/functions/preset_arguments";
+fn test_command_argument_presets() {
+    let test_path_string = "execute/commands/functions/command_argument_presets";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}
+
+// Tests a select many query command with preset arguments on the model:
+// permission: different permissions and preset arguments for roles: admin, user_1, user_2
+#[test]
+fn test_model_argument_presets_select_many() {
+    let test_path_string = "execute/commands/functions/model_argument_presets_select_many";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    );
+}
+
+// Tests a select one query command with preset arguments on the model:
+// permission: different permissions and preset arguments for roles: admin, user_1, user_2
+#[test]
+fn test_model_argument_presets_select_one() {
+    let test_path_string = "execute/commands/functions/model_argument_presets_select_one";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
     common::test_execution_expectation(

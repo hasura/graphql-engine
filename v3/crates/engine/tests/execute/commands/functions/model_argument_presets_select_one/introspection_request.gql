@@ -1,0 +1,12 @@
+query {
+  __type(name: "Query") {
+      name
+      kind
+      fields {
+        name
+        args {
+          name
+        }
+      }
+  }
+}

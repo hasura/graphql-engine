@@ -60,29 +60,48 @@ pub fn build_model_argument_fields(
         .map(|(argument_name, argument_type)| {
             let field_name = ast::Name::new(argument_name.0.as_str())?;
             let input_type = get_input_type(gds, builder, &argument_type.argument_type)?;
-            let input_field = builder.allow_all_namespaced(
-                gql_schema::InputField::new(
-                    field_name.clone(),
-                    argument_type.description.clone(),
-                    Annotation::Input(InputAnnotation::Model(
-                        ModelInputAnnotation::ModelArgument {
-                            argument_type: argument_type.argument_type.clone(),
-                            ndc_table_argument: model
-                                .source
-                                .as_ref()
-                                .and_then(|model_source| {
-                                    model_source.argument_mappings.get(argument_name)
-                                })
-                                .cloned(),
-                        },
-                    )),
-                    input_type,
-                    None,
-                    gql_schema::DeprecationStatus::NotDeprecated,
-                ),
+
+            let input_field = gql_schema::InputField::new(
+                field_name.clone(),
+                argument_type.description.clone(),
+                Annotation::Input(InputAnnotation::Model(
+                    ModelInputAnnotation::ModelArgument {
+                        argument_type: argument_type.argument_type.clone(),
+                        ndc_table_argument: model
+                            .source
+                            .as_ref()
+                            .and_then(|model_source| {
+                                model_source.argument_mappings.get(argument_name)
+                            })
+                            .cloned(),
+                    },
+                )),
+                input_type,
                 None,
+                gql_schema::DeprecationStatus::NotDeprecated,
             );
-            Ok((field_name, input_field))
+
+            // if we have select_permissions, then work out which arguments to include in the schema
+            match &model.select_permissions {
+                // if no permissions apply, allow the argument through
+                None => Ok((field_name, builder.allow_all_namespaced(input_field, None))),
+                Some(permissions_by_namespace) => {
+                    let mut namespaced_annotations = HashMap::new();
+
+                    for (namespace, permission) in permissions_by_namespace {
+                        // if there is a preset for this argument, remove it from the schema
+                        // so the user cannot provide one
+                        if permission.argument_presets.get(argument_name).is_none() {
+                            namespaced_annotations.insert(namespace.clone(), None);
+                        }
+                    }
+
+                    Ok((
+                        field_name,
+                        builder.conditional_namespaced(input_field, namespaced_annotations),
+                    ))
+                }
+            }
         })
         .collect()
 }

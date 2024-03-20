@@ -1,0 +1,41 @@
+[
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": []
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": []
+      }
+    }
+  },
+  {
+    "data": {
+      "__type": {
+        "name": "ActorsByMovieArgs",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "movie_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+]

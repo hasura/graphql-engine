@@ -35,6 +35,7 @@ use std::iter;
 
 use super::metadata::DataConnectorTypeMappings;
 use super::relationship::RelationshipTarget;
+use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
     ObjectTypeRepresentation, TypeMappingToCollect,
@@ -145,6 +146,7 @@ pub enum FilterPermission {
 pub struct SelectPermission {
     pub filter: FilterPermission,
     // pub allow_aggregations: bool,
+    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -725,8 +727,57 @@ pub fn resolve_model_select_permissions(
                 .map(FilterPermission::Filter)?,
                 NullableModelPredicate::Null(()) => FilterPermission::AllowAll,
             };
+
+            let mut argument_presets = BTreeMap::new();
+
+            for argument_preset in &select.argument_presets {
+                if argument_presets.contains_key(&argument_preset.argument) {
+                    return Err(Error::DuplicateModelArgumentPreset {
+                        model_name: model.name.clone(),
+                        argument_name: argument_preset.argument.clone(),
+                    });
+                }
+
+                match model.arguments.get(&argument_preset.argument) {
+                    Some(argument) => {
+                        // if our value is a literal, typecheck it against expected type
+                        match &argument_preset.value {
+                            ValueExpression::SessionVariable(_) => Ok(()),
+                            ValueExpression::Literal(json_value) => {
+                                typecheck::typecheck_qualified_type_reference(
+                                    &argument.argument_type,
+                                    json_value,
+                                )
+                            }
+                        }
+                        .map_err(|type_error| {
+                            Error::ModelArgumentPresetTypeError {
+                                model_name: model.name.clone(),
+                                argument_name: argument_preset.argument.clone(),
+                                type_error,
+                            }
+                        })?;
+
+                        argument_presets.insert(
+                            argument_preset.argument.clone(),
+                            (
+                                argument.argument_type.clone(),
+                                argument_preset.value.clone(),
+                            ),
+                        );
+                    }
+                    None => {
+                        return Err(Error::ModelArgumentPresetMismatch {
+                            model_name: model.name.clone(),
+                            argument_name: argument_preset.argument.clone(),
+                        });
+                    }
+                }
+            }
+
             let resolved_permission = SelectPermission {
                 filter: resolved_predicate.clone(),
+                argument_presets,
             };
             validated_permissions.insert(model_permission.role.clone(), resolved_permission);
         }

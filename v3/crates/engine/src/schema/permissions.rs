@@ -19,9 +19,12 @@ pub(crate) fn get_select_permissions_namespace_annotations(
                 .map(|(role, select_permission)| {
                     (
                         role.clone(),
-                        Some(types::NamespaceAnnotation::Filter(
-                            select_permission.filter.clone(),
-                        )),
+                        Some(types::NamespaceAnnotation::Model {
+                            filter: select_permission.filter.clone(),
+                            argument_presets: types::ArgumentPresets {
+                                argument_presets: select_permission.argument_presets.clone(),
+                            },
+                        }),
                     )
                 })
                 .collect()
@@ -87,8 +90,10 @@ pub(crate) fn get_command_namespace_annotations(
                 if permission.allow_execution {
                     permissions.insert(
                         role.clone(),
-                        Some(types::NamespaceAnnotation::ArgumentPresets(
-                            permission.argument_presets.clone(),
+                        Some(types::NamespaceAnnotation::Command(
+                            types::ArgumentPresets {
+                                argument_presets: permission.argument_presets.clone(),
+                            },
                         )),
                     );
                 }

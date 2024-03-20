@@ -125,11 +125,22 @@ pub enum Error {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
+    #[error("a preset argument {argument_name:} has been set for the model {model_name:} but no such argument exists for this model")]
+    ModelArgumentPresetMismatch {
+        model_name: Qualified<ModelName>,
+        argument_name: ArgumentName,
+    },
     #[error("duplicate preset argument {argument_name:} for command {command_name:}")]
     DuplicateCommandArgumentPreset {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
+    #[error("duplicate preset argument {argument_name:} for model {model_name:}")]
+    DuplicateModelArgumentPreset {
+        model_name: Qualified<ModelName>,
+        argument_name: ArgumentName,
+    },
+
     #[error("the procedure {procedure:} in the data connector {data_connector:} for command {command_name:} has not been defined")]
     UnknownCommandProcedure {
         command_name: Qualified<CommandName>,
@@ -571,6 +582,14 @@ pub enum Error {
     )]
     CommandArgumentPresetTypeError {
         command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+        type_error: typecheck::TypecheckError,
+    },
+    #[error(
+        "Type error in preset argument {argument_name:} for model {model_name:}: {type_error:}"
+    )]
+    ModelArgumentPresetTypeError {
+        model_name: Qualified<ModelName>,
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
     },

@@ -236,19 +236,33 @@ pub enum Annotation {
     Input(InputAnnotation),
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+/// Preset arguments for models or commands
+pub struct ArgumentPresets {
+    pub argument_presets: BTreeMap<
+        ArgumentName,
+        (
+            QualifiedTypeReference,
+            open_dds::permissions::ValueExpression,
+        ),
+    >,
+}
+
+impl Display for ArgumentPresets {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&self.argument_presets, f)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 pub enum NamespaceAnnotation {
-    Filter(resolved::model::FilterPermission),
     /// any arguments that we should prefill for a command or type
-    ArgumentPresets(
-        BTreeMap<
-            ArgumentName,
-            (
-                QualifiedTypeReference,
-                open_dds::permissions::ValueExpression,
-            ),
-        >,
-    ),
+    Command(ArgumentPresets),
+    /// any filter and arguments for selecting from a model
+    Model {
+        filter: resolved::model::FilterPermission,
+        argument_presets: ArgumentPresets,
+    },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
     /// While executing the `node` field, the `id` field is supposed to be decoded and after
     /// decoding, a typename will be obtained. We need to use that typename to look up the

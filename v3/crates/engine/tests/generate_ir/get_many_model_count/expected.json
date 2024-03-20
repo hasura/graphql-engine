@@ -99,7 +99,12 @@
                         }
                       },
                       "namespaced": {
-                        "Filter": "AllowAll"
+                        "Model": {
+                          "filter": "AllowAll",
+                          "argument_presets": {
+                            "argument_presets": {}
+                          }
+                        }
                       }
                     },
                     "arguments": {},
@@ -204,7 +209,12 @@
                               }
                             },
                             "namespaced": {
-                              "Filter": "AllowAll"
+                              "Model": {
+                                "filter": "AllowAll",
+                                "argument_presets": {
+                                  "argument_presets": {}
+                                }
+                              }
                             }
                           },
                           "arguments": {},
@@ -309,7 +319,12 @@
                                     }
                                   },
                                   "namespaced": {
-                                    "Filter": "AllowAll"
+                                    "Model": {
+                                      "filter": "AllowAll",
+                                      "argument_presets": {
+                                        "argument_presets": {}
+                                      }
+                                    }
                                   }
                                 },
                                 "arguments": {},

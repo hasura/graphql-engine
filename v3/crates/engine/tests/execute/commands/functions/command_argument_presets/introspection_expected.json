@@ -1,0 +1,98 @@
+[
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByMovieIdBounds",
+              "args": [
+                {
+                  "name": "upper_bound",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByMovieIdBounds",
+              "args": [
+                {
+                  "name": "upper_bound",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByMovieIdBounds",
+              "args": [
+                {
+                  "name": "lower_bound",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                },
+                {
+                  "name": "upper_bound",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "Int"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+]

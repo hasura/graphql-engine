@@ -111,6 +111,31 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
         }
     }
 
+    // the first and only argument seemingly being "args"
+    if let Some((_, field_call_argument)) = &field_call.arguments.first() {
+        if let Some(types::ArgumentPresets { argument_presets }) =
+            permissions::get_argument_presets(field_call_argument.info.namespaced)?
+        {
+            // add any preset arguments from model permissions
+            for (
+                open_dds::arguments::ArgumentName(argument_name_inner),
+                (field_type, argument_value),
+            ) in argument_presets
+            {
+                model_arguments.insert(
+                    argument_name_inner.to_string(),
+                    ndc_client::models::Argument::Literal {
+                        value: permissions::make_value_from_value_expression(
+                            argument_value,
+                            field_type,
+                            session_variables,
+                        )?,
+                    },
+                );
+            }
+        }
+    }
+
     let model_selection = model_selection::model_selection_ir(
         &field.selection_set,
         data_type,

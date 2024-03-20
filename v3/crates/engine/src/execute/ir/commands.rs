@@ -10,7 +10,6 @@ use open_dds::arguments::ArgumentName;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
-use open_dds::permissions::ValueExpression;
 use serde::Serialize;
 use serde_json as json;
 use std::collections::BTreeMap;
@@ -23,8 +22,8 @@ use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph;
 use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+use crate::schema::types::ArgumentPresets;
 use crate::schema::types::CommandSourceDetail;
-use crate::schema::types::NamespaceAnnotation;
 use crate::schema::types::TypeKind;
 use crate::schema::GDS;
 
@@ -101,36 +100,19 @@ pub(crate) fn generate_command_info<'n, 's>(
         );
     }
 
-    match field_call.info.namespaced {
-        None => {}
-        Some(NamespaceAnnotation::ArgumentPresets(preset_arguments)) => {
-            // add any preset arguments from command permissions
-            for (ArgumentName(argument_name_inner), (field_type, argument_value)) in
-                preset_arguments
-            {
-                let actual_value: serde_json::Value = match argument_value {
-                    ValueExpression::Literal(val) => Ok(val.clone()),
-                    ValueExpression::SessionVariable(session_var) => {
-                        let value = session_variables.get(session_var).ok_or_else(|| {
-                            error::InternalDeveloperError::MissingSessionVariable {
-                                session_variable: session_var.clone(),
-                            }
-                        })?;
+    // fetch argument presets from namespace annotation
+    if let Some(ArgumentPresets { argument_presets }) =
+        permissions::get_argument_presets(field_call.info.namespaced)?
+    {
+        // add any preset arguments from command permissions
+        for (ArgumentName(argument_name_inner), (field_type, argument_value)) in argument_presets {
+            let actual_value = permissions::make_value_from_value_expression(
+                argument_value,
+                field_type,
+                session_variables,
+            )?;
 
-                        permissions::typecast_session_variable(value, field_type)
-                    }
-                }?;
-
-                command_arguments.insert(argument_name_inner.to_string(), actual_value);
-            }
-        }
-        Some(other_annotation) => {
-            return Err(error::Error::InternalError(error::InternalError::Engine(
-                error::InternalEngineError::UnexpectedNamespaceAnnotation {
-                    namespace_annotation: other_annotation.clone(),
-                    expected_type: "ArgumentPresets".to_string(),
-                },
-            )))
+            command_arguments.insert(argument_name_inner.to_string(), actual_value);
         }
     }
 

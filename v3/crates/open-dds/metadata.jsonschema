@@ -2400,7 +2400,15 @@
                   "sessionVariable": "x-hasura-user-id"
                 }
               }
-            }
+            },
+            "argument_presets": [
+              {
+                "field": "likes_dogs",
+                "value": {
+                  "literal": true
+                }
+              }
+            ]
           }
         }
       ],
@@ -2447,6 +2455,14 @@
               "$ref": "#/definitions/NullableModelPredicate"
             }
           ]
+        },
+        "argumentPresets": {
+          "description": "Preset values for arguments for this role",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArgumentPreset"
+          }
         }
       },
       "additionalProperties": false
@@ -2643,6 +2659,66 @@
       },
       "additionalProperties": false
     },
+    "ArgumentPreset": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
+      "title": "ArgumentPreset",
+      "description": "Preset value for an argument",
+      "type": "object",
+      "required": [
+        "argument",
+        "value"
+      ],
+      "properties": {
+        "argument": {
+          "description": "Argument name for preset",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ArgumentName"
+            }
+          ]
+        },
+        "value": {
+          "description": "Value for preset",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValueExpression2"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ValueExpression2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
+      "title": "ValueExpression",
+      "description": "An expression which evaluates to a value that can be used in permissions.",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": true
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SessionVariable",
+          "type": "object",
+          "required": [
+            "sessionVariable"
+          ],
+          "properties": {
+            "sessionVariable": {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "CommandPermissionsV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandPermissionsV1",
       "title": "CommandPermissionsV1",
@@ -2732,66 +2808,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "ArgumentPreset": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
-      "title": "ArgumentPreset",
-      "description": "Preset value for an argument",
-      "type": "object",
-      "required": [
-        "argument",
-        "value"
-      ],
-      "properties": {
-        "argument": {
-          "description": "Argument name for preset",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ArgumentName"
-            }
-          ]
-        },
-        "value": {
-          "description": "Value for preset",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ValueExpression2"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "ValueExpression2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
-      "title": "ValueExpression",
-      "description": "An expression which evaluates to a value that can be used in permissions.",
-      "oneOf": [
-        {
-          "title": "Literal",
-          "type": "object",
-          "required": [
-            "literal"
-          ],
-          "properties": {
-            "literal": true
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "SessionVariable",
-          "type": "object",
-          "required": [
-            "sessionVariable"
-          ],
-          "properties": {
-            "sessionVariable": {
-              "$ref": "#/definitions/OpenDdSessionVariable"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "OpenDdMetadataWithVersion": {
       "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataWithVersion",
