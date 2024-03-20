@@ -167,6 +167,21 @@ fn test_remote_mutually_recursive_relationships_to_command_across_namespace() {
 }
 
 #[test]
+fn test_remote_relationships_remote_object_in_local_array_1() {
+    let test_path_string =
+        "execute/remote_relationships/remote_in_local/local_array_remote_object/two_pg_ndc";
+    let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
+fn test_remote_relationships_remote_object_in_local_array_2() {
+    let test_path_string = "execute/remote_relationships/remote_in_local/local_array_remote_object/custom_ndc_and_pg_ndc";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+}
+
+#[test]
 fn test_remote_relationships_model_to_model_array() {
     let test_path_string = "execute/remote_relationships/array";
     let common_metadata_path_string = "execute/common_metadata/two_postgres_connector_schema.json";
@@ -202,10 +217,6 @@ fn test_remote_relationships_remote_in_local() {
     common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
 }
 
-// test_remote_relationships_from_nested triggers the bug described in
-// https://github.com/hasura/v3-engine/issues/318 so it is skipped until
-// that bug is fixed
-#[ignore]
 #[test]
 fn test_remote_relationships_from_nested() {
     let test_path_string = "execute/remote_relationships/from_nested";

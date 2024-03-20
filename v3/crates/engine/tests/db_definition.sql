@@ -13,8 +13,8 @@ COPY public.article (id, title, author_id) FROM stdin;
 1	The Next 700 Programming Languages	1
 2	Why Functional Programming Matters	2
 3	The Design And Implementation Of Programming Languages	2
-4	Peter	1
-5	Peter	2
+4	The Mechanical Evaluation of Expressions	1
+5	Generalizing monads to arrows	2
 \.
 
 CREATE TABLE author (

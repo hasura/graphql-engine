@@ -152,16 +152,18 @@ pub enum RemoteJoinType {
     ToCommand,
 }
 
+/// For assigning a unique number to each unique join
 pub type JoinId = i16;
 
-pub type Arguments = HashMap<Argument, ArgumentId>;
+/// An 'Argument' is a map of variable name to it's value.
+/// For example, `{"first_name": "John", "last_name": "Doe"}`
 pub type Argument = BTreeMap<String, ValueExt>;
-pub type ArgumentId = i16;
-pub type ReplacementToken = (JoinId, ArgumentId);
 
-// The structure is same as the structure of `Vec<RowSet>`, except
-// `RowFieldValue` in the leaf, it has `ReplacementToken`
-pub type ReplacementTokenRows = Vec<Option<Vec<ReplacementToken>>>;
+/// For assigning a unique number to each argument
+pub type ArgumentId = i16;
+
+/// A map of each argument to its argument id
+pub type Arguments = HashMap<Argument, ArgumentId>;
 
 /// Monotonically increasing counter with i16 value
 pub(crate) struct MonotonicCounter {
@@ -175,10 +177,6 @@ impl MonotonicCounter {
     /// increment the counter and get the value
     pub fn get_next(&mut self) -> i16 {
         self.id += 1;
-        self.id
-    }
-    /// get current value without incrementing the counter
-    pub fn get(&self) -> i16 {
         self.id
     }
 }

@@ -18,16 +18,12 @@
           "MultiMappingCheckAuthor": null
         },
         {
-          "title": "Peter",
+          "title": "The Mechanical Evaluation of Expressions",
           "article_id": 4,
-          "MultiMappingCheckAuthor": {
-            "first_name": "Peter",
-            "last_name": "Landin",
-            "author_id": 1
-          }
+          "MultiMappingCheckAuthor": null
         },
         {
-          "title": "Peter",
+          "title": "Generalizing monads to arrows",
           "article_id": 5,
           "MultiMappingCheckAuthor": null
         }
@@ -52,13 +48,7 @@
   },
   {
     "data": {
-      "Article": [
-        {
-          "title": "Peter",
-          "article_id": 5,
-          "MultiMappingCheckAuthor": null
-        }
-      ]
+      "Article": []
     }
   }
 ]

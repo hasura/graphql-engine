@@ -37,7 +37,25 @@
       ],
       "graphql": {
         "typeName": "Artist"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "db",
+          "dataConnectorObjectType": "artist",
+          "fieldMapping": {
+            "artist_id": {
+              "column": {
+                "name": "ArtistId"
+              }
+            },
+            "name": {
+              "column": {
+                "name": "Name"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -48,34 +66,8 @@
       "objectType": "artist",
       "source": {
         "dataConnectorName": "db",
-        "collection": "artist",
-        "typeMapping": {
-          "artist": {
-            "fieldMapping": {
-              "artist_id": {
-                "column": "ArtistId"
-              },
-              "name": {
-                "column": "Name"
-              }
-            }
-          }
-        }
+        "collection": "artist"
       },
-      "filterableFields": [
-        {
-          "fieldName": "artist_id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "name",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "artist_id",
@@ -218,7 +210,40 @@
       ],
       "graphql": {
         "typeName": "Institution"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "institution",
+          "fieldMapping": {
+            "id": {
+              "column": {
+                "name": "id"
+              }
+            },
+            "name": {
+              "column": {
+                "name": "name"
+              }
+            },
+            "location": {
+              "column": {
+                "name": "location"
+              }
+            },
+            "staff": {
+              "column": {
+                "name": "staff"
+              }
+            },
+            "departments": {
+              "column": {
+                "name": "departments"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -287,7 +312,30 @@
       ],
       "graphql": {
         "typeName": "Location"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "location",
+          "fieldMapping": {
+            "city": {
+              "column": {
+                "name": "city"
+              }
+            },
+            "country": {
+              "column": {
+                "name": "country"
+              }
+            },
+            "campuses": {
+              "column": {
+                "name": "campuses"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -354,7 +402,35 @@
       ],
       "graphql": {
         "typeName": "StaffMember"
-      }
+      },
+      "dataConnectorTypeMapping": [
+        {
+          "dataConnectorName": "custom",
+          "dataConnectorObjectType": "staff_member",
+          "fieldMapping": {
+            "first_name": {
+              "column": {
+                "name": "first_name"
+              }
+            },
+            "last_name": {
+              "column": {
+                "name": "last_name"
+              }
+            },
+            "specialities": {
+              "column": {
+                "name": "specialities"
+              }
+            },
+            "favourite_artist_id": {
+              "column": {
+                "name": "favourite_artist_id"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   {
@@ -409,57 +485,7 @@
       "source": {
         "dataConnectorName": "custom",
         "collection": "institutions",
-        "argumentMapping": {},
-        "typeMapping": {
-          "institution": {
-            "fieldMapping": {
-              "id": {
-                "column": "id"
-              },
-              "name": {
-                "column": "name"
-              },
-              "location": {
-                "column": "location"
-              },
-              "staff": {
-                "column": "staff"
-              },
-              "departments": {
-                "column": "departments"
-              }
-            }
-          },
-          "location": {
-            "fieldMapping": {
-              "city": {
-                "column": "city"
-              },
-              "country": {
-                "column": "country"
-              },
-              "campuses": {
-                "column": "campuses"
-              }
-            }
-          },
-          "staff_member": {
-            "fieldMapping": {
-              "first_name": {
-                "column": "first_name"
-              },
-              "last_name": {
-                "column": "last_name"
-              },
-              "specialities": {
-                "column": "specialities"
-              },
-              "favourite_artist_id": {
-                "column": "favourite_artist_id"
-              }
-            }
-          }
-        }
+        "argumentMapping": {}
       },
       "graphql": {
         "selectUniques": [],
@@ -467,38 +493,6 @@
           "queryRootField": "InstitutionMany"
         }
       },
-      "filterableFields": [
-        {
-          "fieldName": "id",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "name",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "location",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "staff",
-          "operators": {
-            "enableAll": true
-          }
-        },
-        {
-          "fieldName": "departments",
-          "operators": {
-            "enableAll": true
-          }
-        }
-      ],
       "orderableFields": [
         {
           "fieldName": "id",

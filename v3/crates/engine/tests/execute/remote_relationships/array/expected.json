@@ -11,7 +11,7 @@
             "title": "The Design And Implementation Of Programming Languages"
           },
           {
-            "title": "Peter"
+            "title": "Generalizing monads to arrows"
           }
         ]
       }
@@ -41,11 +41,7 @@
     "data": {
       "AuthorByID": {
         "author_id": 2,
-        "Articles": [
-          {
-            "title": "Peter"
-          }
-        ]
+        "Articles": []
       }
     }
   }

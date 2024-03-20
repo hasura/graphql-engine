@@ -32,6 +32,13 @@ pub(crate) fn definition() -> models::ObjectType {
                     r#type: models::Type::Named { name: "Int".into() },
                 },
             ),
+            (
+                "favourite_author_id".into(),
+                models::ObjectField {
+                    description: Some("The actor's favourite author ID".into()),
+                    r#type: models::Type::Named { name: "Int".into() },
+                },
+            ),
         ]),
     }
 }

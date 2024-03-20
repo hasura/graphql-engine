@@ -192,7 +192,7 @@
                           "field": "title",
                           "operator": "_like",
                           "value": {
-                            "literal": "Peter"
+                            "literal": "monads"
                           }
                         }
                       }

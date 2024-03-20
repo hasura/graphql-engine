@@ -86,15 +86,13 @@ use tracing_util::SpanVisibility;
 
 use ndc_client as ndc;
 
-use self::types::{JoinNode, LocationKind, TargetField};
-
 use super::ndc::{execute_ndc_query, FUNCTION_IR_VALUE_COLUMN_NAME};
 use super::plan::ProcessResponseAs;
 use super::{error, ProjectId};
 
 use types::{
-    ArgumentId, Arguments, JoinId, JoinLocations, Location, MonotonicCounter, RemoteJoin,
-    ReplacementToken, ReplacementTokenRows,
+    Argument, Arguments, JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter,
+    RemoteJoin, TargetField,
 };
 
 pub(crate) mod types;
@@ -102,7 +100,7 @@ pub(crate) mod types;
 /// Execute remote joins. As an entry-point it assumes the response is available
 /// for the top-level query, and executes further remote joins recursively.
 #[async_recursion]
-pub async fn execute_join_locations<'ir>(
+pub(crate) async fn execute_join_locations<'ir>(
     http_client: &reqwest::Client,
     execution_span_attribute: String,
     field_span_attribute: String,
@@ -118,29 +116,22 @@ where
     for (key, location) in join_locations.locations {
         // collect the join column arguments from the LHS response, also get
         // the replacement tokens
-        let mut arguments = Arguments::new();
         let collect_arg_res =
             tracer.in_span("collect_arguments", SpanVisibility::Internal, || {
-                collect_arguments(
-                    lhs_response,
-                    lhs_response_type,
-                    &key,
-                    &location,
-                    &mut arguments,
-                )
+                collect_arguments(lhs_response, lhs_response_type, &key, &location)
             })?;
         if let Some(CollectArgumentResult {
+            arguments,
             mut join_node,
             sub_tree,
             remote_alias,
-            replacement_tokens,
         }) = collect_arg_res
         {
             // patch the target/RHS IR with variable values
-            let (join_variables_, argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
+            let (join_variables_, _argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
             let join_variables: Vec<BTreeMap<String, json::Value>> = join_variables_
-                .into_iter()
-                .map(|bmap| bmap.into_iter().map(|(k, v)| (k, v.0)).collect())
+                .iter()
+                .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
                 .collect();
             join_node.target_ndc_ir.variables = Some(join_variables);
 
@@ -179,71 +170,54 @@ where
             }
 
             tracer.in_span("response_join", SpanVisibility::Internal, || {
-                // from `Vec<RowSet>` create `HashMap<ArgumentId, RowSet>`
-                let responses: HashMap<ArgumentId, ndc::models::RowSet> = argument_ids
-                    .iter()
-                    .zip(target_response)
-                    .map(|(arg_id, row_set)| (*arg_id, row_set))
-                    .collect();
-                // use the replacement tokens to lookup the argument id `responses`
-                // and substitute that value in `lhs_response`
-                replace_replacement_tokens(
-                    &key,
-                    &remote_alias,
-                    &location,
-                    lhs_response,
-                    replacement_tokens,
-                    responses,
-                )
+                // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
+                let rhs_response: HashMap<Argument, ndc::models::RowSet> =
+                    join_variables_.into_iter().zip(target_response).collect();
+
+                join_responses(&key, &remote_alias, &location, lhs_response, rhs_response)
             })?;
         }
     }
     Ok(())
 }
 
-pub struct CollectArgumentResult<'s, 'ir> {
+struct CollectArgumentResult<'s, 'ir> {
+    arguments: Arguments,
     join_node: RemoteJoin<'s, 'ir>,
     sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     remote_alias: String,
-    replacement_tokens: ReplacementTokenRows,
 }
 
 /// Given a LHS response and `Location`, extract the join values from the
-/// response and return it as the `Arguments` data structure. This also returns
-/// a structure of `ReplacementToken`s.
-pub fn collect_arguments<'s, 'ir>(
+/// response and return it as the `Arguments` data structure.
+fn collect_arguments<'s, 'ir>(
     lhs_response: &Vec<ndc::models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     key: &str,
     location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
-    arguments: &mut Arguments,
 ) -> Result<Option<CollectArgumentResult<'s, 'ir>>, error::Error> {
     if lhs_response.is_empty() {
         return Ok(None);
     }
+    let mut arguments = Arguments::new();
     let mut argument_id_counter = MonotonicCounter::new();
     let mut remote_join = None;
     let mut sub_tree = JoinLocations::new();
-    let mut replacement_tokens = vec![];
     let mut remote_alias = String::new();
 
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
-            let mut row_set_replacement_tokens: Vec<ReplacementToken> = vec![];
             for row in rows.iter() {
-                let mut replacement_token = (0, 0);
-
                 match lhs_response_type {
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
                         collect_argument_from_row(
                             row,
                             key,
                             location,
-                            arguments,
+                            &mut arguments,
                             &mut argument_id_counter,
                             &mut remote_join,
                             &mut sub_tree,
-                            &mut replacement_token,
                             &mut remote_alias,
                         )?;
                     }
@@ -257,22 +231,16 @@ pub fn collect_arguments<'s, 'ir>(
                                 command_row,
                                 key,
                                 location,
-                                arguments,
+                                &mut arguments,
                                 &mut argument_id_counter,
                                 &mut remote_join,
                                 &mut sub_tree,
-                                &mut replacement_token,
                                 &mut remote_alias,
                             )?;
-                            row_set_replacement_tokens.push(replacement_token);
                         }
                     }
                 }
-                row_set_replacement_tokens.push(replacement_token);
             }
-            replacement_tokens.push(Some(row_set_replacement_tokens));
-        } else {
-            replacement_tokens.push(None);
         }
     }
     match (remote_join, arguments.is_empty()) {
@@ -283,10 +251,10 @@ pub fn collect_arguments<'s, 'ir>(
             },
         )),
         (Some(remote_join), _) => Ok(Some(CollectArgumentResult {
+            arguments,
             join_node: remote_join,
             sub_tree,
             remote_alias,
-            replacement_tokens,
         })),
     }
 }
@@ -300,7 +268,6 @@ fn collect_argument_from_row<'s, 'ir>(
     argument_id_counter: &mut MonotonicCounter,
     remote_join: &mut Option<RemoteJoin<'s, 'ir>>,
     sub_tree: &mut JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
-    replacement_token: &mut ReplacementToken,
     remote_alias: &mut String,
 ) -> Result<(), error::Error> {
     if location.join_node.is_local() && location.rest.locations.is_empty() {
@@ -310,42 +277,16 @@ fn collect_argument_from_row<'s, 'ir>(
             },
         ));
     }
-
     match &location.join_node {
-        JoinNode::Remote((join_node, join_id)) => {
-            let mut argument = BTreeMap::new();
-            for (src_alias, target_field) in join_node.join_mapping.values() {
-                match target_field {
-                    TargetField::ModelField((_, field_mapping)) => {
-                        let val = get_value(src_alias, row);
-                        // use the target field name here to create the variable
-                        // name to be used in RHS
-                        let variable_name = format!("${}", &field_mapping.column);
-                        argument.insert(variable_name, ValueExt::from(val.clone()));
-                    }
-                    TargetField::CommandField(argument_name) => {
-                        let val = get_value(src_alias, row);
-                        // use the target field name here to create the variable
-                        // name to be used in RHS
-                        let variable_name = format!("${}", &argument_name);
-                        argument.insert(variable_name, ValueExt::from(val.clone()));
-                    }
-                }
-            }
+        JoinNode::Remote((join_node, _join_id)) => {
+            let argument = create_argument(join_node, row);
             // de-duplicate arguments
-            let argument_id: i16;
             if let std::collections::hash_map::Entry::Vacant(e) = arguments.entry(argument) {
-                argument_id = argument_id_counter.get_next();
+                let argument_id = argument_id_counter.get_next();
                 e.insert(argument_id);
-            } else {
-                argument_id = argument_id_counter.get();
             }
-            // inject a replacement token into the row of LHS response
-            let token = (*join_id, argument_id);
-
             *remote_join = Some(join_node.clone());
             *sub_tree = location.rest.clone();
-            *replacement_token = token;
             *remote_alias = key.to_string();
             Ok(())
         }
@@ -369,7 +310,6 @@ fn collect_argument_from_row<'s, 'ir>(
                             argument_id_counter,
                             remote_join,
                             sub_tree,
-                            replacement_token,
                             remote_alias,
                         )?;
                     }
@@ -378,6 +318,32 @@ fn collect_argument_from_row<'s, 'ir>(
             Ok(())
         }
     }
+}
+
+pub(crate) fn create_argument(
+    join_node: &RemoteJoin,
+    row: &IndexMap<String, ndc::models::RowFieldValue>,
+) -> Argument {
+    let mut argument = BTreeMap::new();
+    for (src_alias, target_field) in join_node.join_mapping.values() {
+        match target_field {
+            TargetField::ModelField((_, field_mapping)) => {
+                let val = get_value(src_alias, row);
+                // use the target field name here to create the variable
+                // name to be used in RHS
+                let variable_name = format!("${}", &field_mapping.column);
+                argument.insert(variable_name, ValueExt::from(val.clone()));
+            }
+            TargetField::CommandField(argument_name) => {
+                let val = get_value(src_alias, row);
+                // use the target field name here to create the variable
+                // name to be used in RHS
+                let variable_name = format!("${}", &argument_name);
+                argument.insert(variable_name, ValueExt::from(val.clone()));
+            }
+        }
+    }
+    argument
 }
 
 fn rows_from_row_field_value(
@@ -494,22 +460,21 @@ fn resolve_command_response_row(
     }
 }
 
-/// Given a LHS response, RHS response and replacement tokens, replace values in
-/// the LHS response from values in RHS response.
+/// Inserts values in the LHS response from values in RHS response, based on the
+/// mapping field
 ///
-/// Uses the replacement tokens to lookup the argument id RHS response and
-/// substitute that value in LHS response.
-pub fn replace_replacement_tokens(
+/// Lookup the argument in `rhs_response` and substitute that value in
+/// `lhs_response`
+fn join_responses(
     alias: &str,
     remote_alias: &str,
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     lhs_response: &mut [ndc::models::RowSet],
-    replacement_tokens: Vec<Option<Vec<ReplacementToken>>>,
-    rhs_resp: HashMap<ArgumentId, ndc::models::RowSet>,
+    rhs_response: HashMap<BTreeMap<String, ValueExt>, ndc::models::RowSet>,
 ) -> Result<(), error::Error> {
-    for (row_set, row_set_tokens) in lhs_response.iter_mut().zip(replacement_tokens) {
-        if let Some((rows, tokens)) = row_set.rows.as_mut().zip(row_set_tokens) {
-            for (row, token) in rows.iter_mut().zip(tokens.clone()) {
+    for row_set in lhs_response.iter_mut() {
+        if let Some(rows) = row_set.rows.as_mut() {
+            for row in rows.iter_mut() {
                 // TODO: have a better interface of traversing through the
                 // response tree, especially for commands
                 let command_result_value = row.get_mut(FUNCTION_IR_VALUE_COLUMN_NAME);
@@ -518,35 +483,33 @@ pub fn replace_replacement_tokens(
                     // different
                     Some(x) => match &mut x.0 {
                         json::Value::Array(ref mut arr) => {
-                            for (command_row, command_token) in arr.iter_mut().zip(tokens.clone()) {
+                            for command_row in arr.iter_mut() {
                                 let new_val = command_row.clone();
                                 let mut command_row_parsed: IndexMap<
                                     String,
                                     ndc::models::RowFieldValue,
                                 > = json::from_value(new_val)?;
-                                let rhs_val = json::to_value(rhs_resp.get(&command_token.1))?;
-                                traverse_path_and_insert_value(
+                                follow_location_and_insert_value(
                                     location,
                                     &mut command_row_parsed,
                                     remote_alias.to_owned(),
                                     alias.to_owned(),
-                                    ndc::models::RowFieldValue(rhs_val),
+                                    &rhs_response,
                                 )?;
                                 *command_row = json::to_value(command_row_parsed)?;
                             }
                         }
                         json::Value::Object(obj) => {
-                            let rhs_val = json::to_value(rhs_resp.get(&token.1))?;
                             let mut command_row = obj
                                 .into_iter()
                                 .map(|(k, v)| (k.clone(), ndc::models::RowFieldValue(v.clone())))
                                 .collect();
-                            traverse_path_and_insert_value(
+                            follow_location_and_insert_value(
                                 location,
                                 &mut command_row,
                                 remote_alias.to_owned(),
                                 alias.to_owned(),
-                                ndc::models::RowFieldValue(rhs_val),
+                                &rhs_response,
                             )?;
                             *x = ndc::models::RowFieldValue(json::to_value(command_row)?);
                         }
@@ -562,13 +525,12 @@ pub fn replace_replacement_tokens(
                         }
                     },
                     None => {
-                        let rhs_val = json::to_value(rhs_resp.get(&token.1))?;
-                        traverse_path_and_insert_value(
+                        follow_location_and_insert_value(
                             location,
                             row,
                             remote_alias.to_owned(),
                             alias.to_owned(),
-                            ndc::models::RowFieldValue(rhs_val),
+                            &rhs_response,
                         )?;
                     }
                 };
@@ -578,16 +540,20 @@ pub fn replace_replacement_tokens(
     Ok(())
 }
 
-fn traverse_path_and_insert_value(
+/// Walk the 'Location' tree and insert corresponding `rhs_response` value in
+/// the `row`
+fn follow_location_and_insert_value(
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     row: &mut IndexMap<String, ndc::models::RowFieldValue>,
     remote_alias: String,
     key: String,
-    value: ndc::models::RowFieldValue,
+    rhs_response: &HashMap<Argument, ndc::models::RowSet>,
 ) -> Result<(), error::Error> {
     match &location.join_node {
-        JoinNode::Remote(_) => {
-            row.insert(remote_alias, value);
+        JoinNode::Remote((join_node, _join_id)) => {
+            let argument = create_argument(join_node, row);
+            let rhs_value = json::to_value(rhs_response.get(&argument))?;
+            row.insert(remote_alias, ndc::models::RowFieldValue(rhs_value));
             Ok(())
         }
         JoinNode::Local(location_kind) => {
@@ -606,15 +572,16 @@ fn traverse_path_and_insert_value(
                             .ok_or(error::InternalEngineError::InternalGeneric {
                                 description: "expected row; encountered null".into(),
                             })?;
+
                     for inner_row in rows.iter_mut() {
                         for (sub_key, sub_location) in &location.rest.locations {
-                            traverse_path_and_insert_value(
+                            follow_location_and_insert_value(
                                 sub_location,
                                 inner_row,
                                 remote_alias.to_string(),
                                 sub_key.to_string(),
-                                value.clone(),
-                            )?
+                                rhs_response,
+                            )?;
                         }
                     }
                     row_set.rows = Some(rows);
@@ -630,12 +597,12 @@ fn traverse_path_and_insert_value(
                             {
                                 for inner_row in rows.iter_mut() {
                                     for (sub_key, sub_location) in &location.rest.locations {
-                                        traverse_path_and_insert_value(
+                                        follow_location_and_insert_value(
                                             sub_location,
                                             inner_row,
                                             remote_alias.to_string(),
                                             sub_key.to_string(),
-                                            value.clone(),
+                                            rhs_response,
                                         )?
                                     }
                                 }
@@ -649,12 +616,12 @@ fn traverse_path_and_insert_value(
                                 row_field_val.0.clone()
                             ) {
                                 for (sub_key, sub_location) in &location.rest.locations {
-                                    traverse_path_and_insert_value(
+                                    follow_location_and_insert_value(
                                         sub_location,
                                         &mut inner_row,
                                         remote_alias.to_string(),
                                         sub_key.to_string(),
-                                        value.clone(),
+                                        rhs_response,
                                     )?
                                 }
                                 *row_field_val =

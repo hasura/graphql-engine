@@ -79,6 +79,13 @@
                     "name": "Int"
                   }
                 },
+                "favourite_author_id": {
+                  "description": "The actor's favourite author ID",
+                  "type": {
+                    "type": "named",
+                    "name": "Int"
+                  }
+                },
                 "name": {
                   "description": "The actor's name",
                   "type": {

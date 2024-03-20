@@ -1,0 +1,173 @@
+[
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Titanic",
+          "rating": 4,
+          "Actors": [
+            {
+              "name": "Leonardo DiCaprio",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            },
+            {
+              "name": "Kate Winslet",
+              "favourite_author_id": 2,
+              "FavouriteAuthor": {
+                "author_id": 2,
+                "first_name": "John",
+                "last_name": "Hughes"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Slumdog Millionaire",
+          "rating": 5,
+          "Actors": [
+            {
+              "name": "Irfan Khan",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Godfather",
+          "rating": 4,
+          "Actors": [
+            {
+              "name": "Al Pacino",
+              "favourite_author_id": 2,
+              "FavouriteAuthor": {
+                "author_id": 2,
+                "first_name": "John",
+                "last_name": "Hughes"
+              }
+            },
+            {
+              "name": "Robert De Niro",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Shawshank Redemption",
+          "rating": 5,
+          "Actors": [
+            {
+              "name": "Morgan Freeman",
+              "favourite_author_id": 2,
+              "FavouriteAuthor": {
+                "author_id": 2,
+                "first_name": "John",
+                "last_name": "Hughes"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Schindler's List",
+          "rating": 4,
+          "Actors": [
+            {
+              "name": "Ben Kingsley",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Slumdog Millionaire",
+          "rating": 5,
+          "Actors": [
+            {
+              "name": "Irfan Khan",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Slumdog Millionaire",
+          "rating": 5,
+          "Actors": [
+            {
+              "name": "Irfan Khan",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Godfather",
+          "rating": 4,
+          "Actors": [
+            {
+              "name": "Al Pacino",
+              "favourite_author_id": 2,
+              "FavouriteAuthor": {
+                "author_id": 2,
+                "first_name": "John",
+                "last_name": "Hughes"
+              }
+            },
+            {
+              "name": "Robert De Niro",
+              "favourite_author_id": 1,
+              "FavouriteAuthor": {
+                "author_id": 1,
+                "first_name": "Peter",
+                "last_name": "Landin"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

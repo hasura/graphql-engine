@@ -21,13 +21,13 @@
           }
         },
         {
-          "title": "Peter",
+          "title": "The Mechanical Evaluation of Expressions",
           "Author": {
-            "first_name": "John"
+            "first_name": "Peter"
           }
         },
         {
-          "title": "Peter",
+          "title": "Generalizing monads to arrows",
           "Author": {
             "first_name": "John"
           }
@@ -45,7 +45,7 @@
           }
         },
         {
-          "title": "Peter",
+          "title": "The Mechanical Evaluation of Expressions",
           "Author": {
             "first_name": "Peter"
           }
@@ -71,11 +71,13 @@
           "Author": null
         },
         {
-          "title": "Peter",
-          "Author": null
+          "title": "The Mechanical Evaluation of Expressions",
+          "Author": {
+            "first_name": "Peter"
+          }
         },
         {
-          "title": "Peter",
+          "title": "Generalizing monads to arrows",
           "Author": null
         }
       ]
@@ -97,11 +99,11 @@
           "Author": null
         },
         {
-          "title": "Peter",
+          "title": "The Mechanical Evaluation of Expressions",
           "Author": null
         },
         {
-          "title": "Peter",
+          "title": "Generalizing monads to arrows",
           "Author": null
         }
       ]
