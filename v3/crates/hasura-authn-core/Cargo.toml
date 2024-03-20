@@ -12,7 +12,7 @@ lang-graphql = { path = "../lang-graphql" }
 thiserror = "1.0"
 serde = "1.0.183"
 serde_json = "1.0.105"
-serde_with = "2.2.0"
+serde_with = "3.7.0"
 lazy_static = "1.4.0"
 tower = "0.4.13"
 futures-util = "0.3.28"
