@@ -34,7 +34,7 @@ services:
   auth_hook:
     ports:
       - "3050:3050"
-    build: ./hasura-authn-webhook/dev-auth-webhook
+    build: ./crates/hasura-authn-webhook/dev-auth-webhook
   jaeger:
     image: jaegertracing/all-in-one:1.37
     restart: always
