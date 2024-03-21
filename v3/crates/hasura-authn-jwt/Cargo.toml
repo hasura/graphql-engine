@@ -12,7 +12,7 @@ hasura-authn-core = { path = "../hasura-authn-core" }
 thiserror = "1.0"
 serde = { version = "1.0.183", features = ["derive"] }
 serde_json = "1.0.92"
-serde_with = "3.7.0"
+serde_with = "2.2.0"
 jsonwebtoken = "8.3.0"
 reqwest = { version = "0.11.8",  features = ["json"] }
 schemars = { version = "0.8.12", features = ["url"] }
