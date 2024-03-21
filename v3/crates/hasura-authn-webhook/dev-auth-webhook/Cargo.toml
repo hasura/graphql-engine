@@ -8,6 +8,7 @@ license = "Apache-2.0"
 [[bin]]
 name = "hasura-dev-auth-webhook"
 path = "src/main.rs"
+bench = false
 
 [dependencies]
 anyhow = "1.0.80"

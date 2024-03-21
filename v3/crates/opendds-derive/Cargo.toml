@@ -3,12 +3,13 @@ name = "opendds-derive"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+proc-macro = true
+bench = false
+
 [dependencies]
 darling = "0.13"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["full"] }
 convert_case = "0.6.0"
-
-[lib]
-proc-macro = true

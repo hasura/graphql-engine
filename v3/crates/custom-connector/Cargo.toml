@@ -4,6 +4,14 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+bench = false
+
+[[bin]]
+name = "agent"
+path = "src/bin/agent/main.rs"
+bench = false
+
 [dependencies]
 ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
 indexmap = "2"
