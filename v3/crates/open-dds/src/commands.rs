@@ -172,10 +172,7 @@ impl CommandGraphQlDefinition {
     fn example() -> serde_json::Value {
         serde_json::json!({
             "rootFieldName": "getLatestArticle",
-            "rootFieldKind": "Query",
-            "deprecated": {
-                "reason": "Use getLatestArticleV2 instead"
-            }
+            "rootFieldKind": "Query"
         })
     }
 }

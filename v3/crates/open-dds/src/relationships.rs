@@ -255,8 +255,7 @@ impl RelationshipV1 {
                         }
                     }
                 ],
-                "description": "Articles written by an author",
-                "deprecated": {}
+                "description": "Articles written by an author"
             }
         )
     }
