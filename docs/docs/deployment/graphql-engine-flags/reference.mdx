@@ -387,17 +387,31 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
-### Header Size Limit
 
-Sets the maximum cumulative length of all headers in bytes.
+### Enable Automated Persisted Queries
 
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--max-total-header-length`              |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
-| **Accepted values** | Integer                                  |
-| **Default**         | `1024*1024` (1MB)                        |
-| **Supported in**    | CE, Enterprise Edition                   |
+Enables the [Automated Persisted Queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) feature.
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-persisted-queries`                     |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES`        |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | Enterprise Edition                               |
+
+### Set Automated Persisted Queries TTL
+
+Sets the query TTL in the cache store for Automated Persisted Queries.
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--persisted-queries-ttl`                        |
+| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL`           |
+| **Accepted values** | Integer                                          |
+| **Default**         | `5` (seconds)                                    |
+| **Supported in**    | Enterprise Edition                               |
+
 
 ### Enable Error Log Level for Trigger Errors
 
@@ -411,6 +425,7 @@ Sets the log-level as `error` for Trigger type error logs (Event Triggers, Sched
 | **Default**         | `false`                                          |
 | **Supported in**    | CE, Enterprise Edition                           |
 
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).
@@ -423,6 +438,19 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 | **Options**         | `true` or `false`                                                                  |
 | **Default**         | **CE**, **Enterprise Edition**: `false` <br />**Cloud**: Console is always enabled |
 | **Supported in**    | CE, Enterprise Edition                                                             |
+
+### Header Size Limit
+
+Sets the maximum cumulative length of all headers in bytes.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
+
 
 ### Enable High-cardinality Labels for Metrics
 
