@@ -445,15 +445,15 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.31"
+version = "0.4.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
+checksum = "8eaf5903dcbc0a39312feb77df2ff4c76387d591b9fc7b04a238dcf8bb62639a"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
  "num-traits",
  "serde",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.0",
 ]
 
 [[package]]
@@ -1275,9 +1275,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.22"
+version = "0.3.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d6250322ef6e60f93f9a2162799302cd6f68f79f6e5d85c8c16f14d1d958178"
+checksum = "4fbd2820c5e49886948654ab546d0688ff24530286bdcf8fca3cefb16d4618eb"
 dependencies = [
  "bytes",
  "fnv",
@@ -2157,29 +2157,29 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-http"
-version = "0.10.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f51189ce8be654f9b5f7e70e49967ed894e84a06fc35c6c042e64ac1fc5399e"
+checksum = "c7594ec0e11d8e33faf03530a4c49af7064ebba81c1480e01be67d90b356508b"
 dependencies = [
  "async-trait",
  "bytes",
  "http",
- "opentelemetry 0.21.0",
+ "opentelemetry_api",
 ]
 
 [[package]]
 name = "opentelemetry-otlp"
-version = "0.14.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f24cda83b20ed2433c68241f918d0f6fdec8b1d43b7a9590ab4420c5095ca930"
+checksum = "7e5e5a5c4135864099f3faafbe939eb4d7f9b80ebf68a8448da961b32a7c1275"
 dependencies = [
  "async-trait",
  "futures-core",
  "http",
- "opentelemetry 0.21.0",
  "opentelemetry-proto",
  "opentelemetry-semantic-conventions",
- "opentelemetry_sdk 0.21.2",
+ "opentelemetry_api",
+ "opentelemetry_sdk 0.20.0",
  "prost",
  "thiserror",
  "tokio",
@@ -2188,23 +2188,23 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-proto"
-version = "0.4.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2e155ce5cc812ea3d1dffbd1539aed653de4bf4882d60e6e04dcf0901d674e1"
+checksum = "b1e3f814aa9f8c905d0ee4bde026afd3b2577a97c10e1699912e3e44f0c4cbeb"
 dependencies = [
- "opentelemetry 0.21.0",
- "opentelemetry_sdk 0.21.2",
+ "opentelemetry_api",
+ "opentelemetry_sdk 0.20.0",
  "prost",
  "tonic",
 ]
 
 [[package]]
 name = "opentelemetry-semantic-conventions"
-version = "0.13.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5774f1ef1f982ef2a447f6ee04ec383981a3ab99c8e77a1a7b30182e65bbc84"
+checksum = "73c9f9340ad135068800e7f1b24e9e09ed9e7143f5bf8518ded3d3ec69789269"
 dependencies = [
- "opentelemetry 0.21.0",
+ "opentelemetry 0.20.0",
 ]
 
 [[package]]
@@ -2254,7 +2254,11 @@ dependencies = [
  "ordered-float 3.9.2",
  "percent-encoding 2.3.1",
  "rand",
+ "regex",
+ "serde_json",
  "thiserror",
+ "tokio",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -2274,8 +2278,6 @@ dependencies = [
  "percent-encoding 2.3.1",
  "rand",
  "thiserror",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]
@@ -3574,12 +3576,12 @@ dependencies = [
  "axum",
  "derive_more",
  "http",
- "opentelemetry 0.21.0",
+ "opentelemetry 0.20.0",
  "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry-stdout",
- "opentelemetry_sdk 0.21.2",
+ "opentelemetry_sdk 0.20.0",
  "strum",
 ]
 
