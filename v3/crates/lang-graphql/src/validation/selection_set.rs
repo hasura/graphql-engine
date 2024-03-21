@@ -124,6 +124,11 @@ where
     } else {
         None
     };
+
+    if normalized_fields.is_empty() {
+        Err(Error::FieldSelectionSetIsEmpty)?
+    }
+
     Ok(normalized::SelectionSet {
         fields: normalized_fields,
         type_name: type_name_response.cloned(),

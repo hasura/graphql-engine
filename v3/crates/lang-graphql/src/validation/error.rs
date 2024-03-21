@@ -178,6 +178,8 @@ pub enum Error {
         field_name: ast::Name,
         argument_name: ast::Name,
     },
+    #[error("no fields are selected")]
+    FieldSelectionSetIsEmpty,
     #[error("order_by expects a list of input objects with exactly one key-value pair per input object. Please split the input object with multiple key-value pairs into a list of single key-value pair objects.")]
     OrderByObjectShouldExactlyHaveOneKeyValuePair,
 }
