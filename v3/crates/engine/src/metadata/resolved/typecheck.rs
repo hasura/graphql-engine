@@ -72,6 +72,7 @@ fn typecheck_inbuilt_type(
         (open_dds::types::InbuiltType::Int, serde_json::Value::Number(_)) => Ok(()),
         (open_dds::types::InbuiltType::Float, serde_json::Value::Number(_)) => Ok(()),
         (open_dds::types::InbuiltType::String, serde_json::Value::String(_)) => Ok(()),
+        (open_dds::types::InbuiltType::ID, serde_json::Value::String(_)) => Ok(()),
         (open_dds::types::InbuiltType::Boolean, serde_json::Value::Bool(_)) => Ok(()),
 
         _ => Err(TypecheckError::ScalarTypeMismatch {
@@ -122,6 +123,15 @@ mod tests {
         }
     }
 
+    fn id_type() -> subgraph::QualifiedTypeReference {
+        subgraph::QualifiedTypeReference {
+            nullable: false,
+            underlying_type: subgraph::QualifiedBaseType::Named(
+                subgraph::QualifiedTypeName::Inbuilt(open_dds::types::InbuiltType::ID),
+            ),
+        }
+    }
+
     fn array_of(item: subgraph::QualifiedTypeReference) -> subgraph::QualifiedTypeReference {
         subgraph::QualifiedTypeReference {
             nullable: false,
@@ -159,6 +169,14 @@ mod tests {
     fn test_typecheck_boolean() {
         let ty = boolean_type();
         let value = json!(true);
+
+        assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
+    }
+
+    #[test]
+    fn test_typecheck_id() {
+        let ty = id_type();
+        let value = json!("12312312sdwfdsff123123");
 
         assert_eq!(typecheck_qualified_type_reference(&ty, &value), Ok(()))
     }
