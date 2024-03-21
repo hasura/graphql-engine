@@ -27,6 +27,10 @@ services:
 
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
+    command:
+      - serve
+      - --configuration
+      - /config.json
     ports:
       - "8100:8100"
     volumes:
@@ -34,27 +38,21 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: curl --fail http://localhost:8100/schema || exit 1
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-    command: ["serve", "--configuration", "/config.json"]
 
   custom_connector:
     build:
       context: .
-      target: builder
+      target: built
+    entrypoint:
+      - ./target/release/custom-connector
     ports:
       - "8101:8101"
     healthcheck:
-      test: curl --fail http://localhost:8101/schema || exit 1
+      test: curl -fsS http://localhost:8101/schema
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
-    command: ["sh", "-c", "cargo run --bin agent"]
 
   source_only:
     build:
@@ -75,9 +73,12 @@ services:
       context: .
       target: builder
     depends_on:
-      - postgres
-      - postgres_connector
-      - custom_connector
+      postgres:
+        condition: service_healthy
+      postgres_connector:
+        condition: service_started
+      custom_connector:
+        condition: service_healthy
     volumes:
       # So that updated files make their way back to the host machine
       - ./tracing-util:/app/tracing-util

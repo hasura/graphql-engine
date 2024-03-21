@@ -47,9 +47,9 @@
             drv = self.packages.${localSystem}.default;
             name = "engine";
           };
-          agent = flake-utils.lib.mkApp {
+          custom-connector = flake-utils.lib.mkApp {
             drv = self.packages.${localSystem}.default;
-            name = "engine";
+            name = "custom-connector";
           };
         };
 

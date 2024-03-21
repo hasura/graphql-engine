@@ -8,8 +8,8 @@ license.workspace = true
 bench = false
 
 [[bin]]
-name = "agent"
-path = "src/bin/agent/main.rs"
+name = "custom-connector"
+path = "src/main.rs"
 bench = false
 
 [dependencies]

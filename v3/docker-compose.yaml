@@ -27,14 +27,17 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
+
   reference_agent:
     build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.18
     ports:
       - 8102:8100
+
   auth_hook:
+    build: ./crates/hasura-authn-webhook/dev-auth-webhook
     ports:
       - "3050:3050"
-    build: ./crates/hasura-authn-webhook/dev-auth-webhook
+
   jaeger:
     image: jaegertracing/all-in-one:1.37
     restart: always
@@ -51,10 +54,17 @@ services:
       - 4318:4318 # OTLP HTTP
       - 9411:9411
     environment:
-      COLLECTOR_OTLP_ENABLED: 'true'
-      COLLECTOR_ZIPKIN_HOST_PORT: '9411'
+      COLLECTOR_OTLP_ENABLED: "true"
+      COLLECTOR_ZIPKIN_HOST_PORT: "9411"
+
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
+    command:
+      - serve
+      - --configuration
+      - /config.json
+      - "--otlp-endpoint"
+      - http://jaeger:4317
     ports:
       - 8100:8100
     volumes:
@@ -62,44 +72,47 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["serve", "--configuration", "/config.json", "--otlp-endpoint", "http://jaeger:4317"]
+
   custom_connector:
     build:
       context: .
-      target: builder
+      target: built
+    entrypoint:
+      - ./target/release/custom-connector
     ports:
       - 8101:8101
     healthcheck:
-      test: curl --fail http://localhost:8101/schema || exit 1
+      test: curl -fsS http://localhost:8101/schema
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
-    command: ["sh", "-c", "cargo run --bin agent"]
+
   engine:
     build:
       context: .
-      target: builder
-    depends_on:
-      - reference_agent
-      - jaeger
-      - auth_hook
-
-    command: ["sh", "-c", "cargo run --bin engine -- --metadata-path $METADATA_PATH --otlp-endpoint http://jaeger:4317 --authn-config-path $AUTHN_CONFIG_PATH"]
+      target: built
+    entrypoint:
+      - ./target/release/engine
+    environment:
+      - METADATA_PATH
+      - AUTHN_CONFIG_PATH
+      - OLTP_ENDPOINT=http://jaeger:4317
     ports:
       # Binding to localhost:3001 avoids conflict with dev_setup
       - 3001:3000
+    depends_on:
+      reference_agent:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
 
   dev_setup:
     build:
       context: .
       target: builder
-    depends_on:
-      - jaeger
-      - auth_hook
-      - postgres
-      - postgres_connector
-      - custom_connector
     volumes:
       - ./crates/tracing-util:/app/tracing-util
       - ./crates/lang-graphql:/app/lang-graphql
@@ -109,6 +122,17 @@ services:
       - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
     ports:
       - 3000:3000
+    depends_on:
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      postgres_connector:
+        condition: service_started
+      custom_connector:
+        condition: service_healthy
 
 volumes:
   postgres:
