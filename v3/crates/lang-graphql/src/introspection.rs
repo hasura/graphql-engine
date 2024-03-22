@@ -258,7 +258,7 @@ fn object_type<'s, S: schema::SchemaContext>(
                     None,
                     S::introspection_node(),
                     ast::TypeContainer::named_null(RegisteredTypeName::string()),
-                    std::collections::HashMap::new(),
+                    std::collections::BTreeMap::new(),
                     schema::DeprecationStatus::NotDeprecated,
                 );
                 if allowed_fields.is_empty() {

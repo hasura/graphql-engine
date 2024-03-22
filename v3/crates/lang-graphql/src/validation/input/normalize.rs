@@ -339,6 +339,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -368,6 +369,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -395,6 +397,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -420,6 +423,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -446,6 +450,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -475,6 +480,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -500,6 +506,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();
@@ -527,6 +534,7 @@ mod test {
         let int_scalar = Scalar {
             name: int_typename.clone(),
             description: None,
+            directives: vec![],
         };
         let int_scalar_type_info = InputType::Scalar(&int_scalar);
         let schema = fake_schema();

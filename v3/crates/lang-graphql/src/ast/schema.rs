@@ -33,8 +33,11 @@ pub struct ConstDirective {
     /// The name of the directive.
     pub name: Spanning<Name>,
     /// The arguments to the directive.
-    pub arguments: Option<Spanning<Vec<Spanning<InputValueDefinition>>>>,
+    pub arguments: Option<Spanning<Vec<ConstArgument>>>,
 }
+
+/// A const argument
+pub type ConstArgument = Spanning<KeyValue<ConstValue>>;
 
 /// The definition of the schema in a GraphQL service.
 ///

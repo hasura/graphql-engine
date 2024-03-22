@@ -4,7 +4,7 @@ use crate::metadata::resolved;
 use crate::schema::GDS;
 use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::types::input_type::get_input_type;
 use super::types::{Annotation, InputAnnotation, ModelInputAnnotation, TypeId};
@@ -51,7 +51,7 @@ pub fn build_model_argument_fields(
     builder: &mut gql_schema::Builder<GDS>,
     model: &resolved::model::Model,
 ) -> Result<
-    HashMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+    BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
 > {
     model
@@ -123,6 +123,7 @@ pub fn build_model_arguments_input_schema(
             type_name.clone(),
             None,
             build_model_argument_fields(gds, builder, model)?,
+            Vec::new(),
         ),
     ))
 }

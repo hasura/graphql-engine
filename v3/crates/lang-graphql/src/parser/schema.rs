@@ -100,13 +100,21 @@ impl<'a> Parser<'a> {
         ))
     }
 
-    fn parse_const_arguments(
+    fn parse_field_arguments(
         &mut self,
     ) -> super::Result<Option<Spanning<Vec<Spanning<InputValueDefinition>>>>> {
         self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
             |s| s.parse_input_value_definition(),
+        )
+    }
+
+    fn parse_const_arguments(&mut self) -> super::Result<Option<Spanning<Vec<ConstArgument>>>> {
+        self.parse_optional_nonempty_delimited_list(
+            lexer::Punctuation::ParenL,
+            lexer::Punctuation::ParenR,
+            |s| s.parse_key_value(|s| s.parse_const_value()),
         )
     }
 
@@ -143,7 +151,7 @@ impl<'a> Parser<'a> {
     fn parse_field_definition(&mut self) -> super::Result<Spanning<FieldDefinition>> {
         let description = self.parse_optional_string()?;
         let name = self.parse_name()?;
-        let arguments = self.parse_const_arguments()?;
+        let arguments = self.parse_field_arguments()?;
         self.parse_punctuation(lexer::Punctuation::Colon)?;
         let field_type = self.parse_type()?;
         let directives = self.parse_const_directives()?;

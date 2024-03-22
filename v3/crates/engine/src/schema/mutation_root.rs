@@ -2,7 +2,7 @@
 
 use lang_graphql::ast::common::{self as ast, TypeName};
 use lang_graphql::schema as gql_schema;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::schema::{commands, GDS};
 
@@ -12,7 +12,7 @@ pub fn mutation_root_schema(
     gds: &GDS,
     mutation_root_type_name: &TypeName,
 ) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
 
     // Add node field for only the commands which have a mutation root field
     // defined, that is, they are based on procedures.
@@ -42,6 +42,7 @@ pub fn mutation_root_schema(
         mutation_root_type_name.clone(),
         None,
         fields,
-        HashMap::new(),
+        BTreeMap::new(),
+        Vec::new(),
     ))
 }

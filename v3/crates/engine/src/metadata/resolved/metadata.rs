@@ -140,6 +140,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
     // later for validation, such that a type with global id field must have atleast one model with global id source
     let mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>> =
         HashMap::new();
+    let mut apollo_federation_entity_enabled_types: HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<ModelName>>,
+    > = HashMap::new();
 
     let mut data_connector_type_mappings = DataConnectorTypeMappings::new();
 
@@ -157,6 +161,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             &qualified_object_type_name,
             subgraph,
             &mut global_id_enabled_types,
+            &mut apollo_federation_entity_enabled_types,
         )?;
 
         // resolve object types' type mappings
@@ -362,6 +367,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             model,
             &types,
             &mut global_id_enabled_types,
+            &mut apollo_federation_entity_enabled_types,
             &boolean_expression_types,
         )?;
         if resolved_model.global_id_source.is_some() {
@@ -417,6 +423,15 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
     for (object_type, model_name_list) in global_id_enabled_types {
         if model_name_list.is_empty() {
             return Err(Error::GlobalIdSourceNotDefined { object_type });
+        }
+    }
+
+    // To check if apollo federation entity keys are defined in object type but no model has
+    // apollo_federation_entity_source set to true:
+    //   - Throw an error if no model with apolloFederation.entitySource:true is found for the object type.
+    for (object_type, model_name_list) in apollo_federation_entity_enabled_types {
+        if model_name_list.is_none() {
+            return Err(Error::ApolloFederationEntitySourceNotDefined { object_type });
         }
     }
 

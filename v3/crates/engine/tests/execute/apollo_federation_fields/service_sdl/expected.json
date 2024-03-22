@@ -1,0 +1,9 @@
+{
+  "data": {
+    "__typename": "Query",
+    "_service": {
+      "__typename": "_Service",
+      "sdl": "extend schema\n  @link(url: \"https://specs.apollo.dev/federation/v2.0\", import: [\"@key\", \"@extends\", \"@external\", \"@shareable\"])\n\nschema {\n  query: Query \n}\n\ntype Author@key(fields: \"author_id\") {\n  author_id: Int! \n  first_name: String! \n  last_name: String! \n}\n\nscalar Boolean\n\nscalar Float\n\nscalar ID\n\nscalar Int\n\ntype Query {\n  AuthorByID: Author \n  _entities: _Entity! \n  _service: _Service! \n}\n\nscalar String\n\nscalar _Any\n\nunion _Entity = Author\n\ntype _Service {\n  sdl: String! \n}"
+    }
+  }
+}

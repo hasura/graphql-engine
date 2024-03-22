@@ -122,7 +122,10 @@ impl ModelV1 {
                     "queryRootField": "ArticleMany",
                     "description": "Description for the select many ArticleMany"
                 },
-                "orderByExpressionType": "Article_Order_By"
+                "orderByExpressionType": "Article_Order_By",
+                "apolloFederation": {
+                  "entitySource": true
+                }
             },
             "description": "Description for the model Articles"
         })
@@ -174,6 +177,8 @@ pub struct ModelGraphQlDefinition {
     pub arguments_input_type: Option<GraphQlTypeName>,
     /// The type name of the order by expression input type.
     pub order_by_expression_type: Option<GraphQlTypeName>,
+    /// Apollo Federation configuration
+    pub apollo_federation: Option<ModelApolloFederationConfiguration>,
 }
 
 impl ModelGraphQlDefinition {
@@ -274,4 +279,13 @@ impl<'de, T: serde::Deserialize<'de> + JsonSchema> OpenDd for EnableAllOrSpecifi
 pub enum OrderByDirection {
     Asc,
     Desc,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "ModelApolloFederationConfiguration"))]
+pub struct ModelApolloFederationConfiguration {
+    /// Whether this model should be used as the source for fetching _entity for object of its type.
+    pub entity_source: bool,
 }

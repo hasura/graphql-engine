@@ -32,6 +32,7 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .and_then(|annotation| match annotation {
             types::NamespaceAnnotation::Model { filter, .. } => Some(filter),
             types::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
+            types::NamespaceAnnotation::EntityTypeMappings(_) => None,
             types::NamespaceAnnotation::Command(_) => None,
         })
         // If we're hitting this case, it means that the caller of this

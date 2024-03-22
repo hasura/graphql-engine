@@ -1,5 +1,6 @@
 pub mod ast;
 pub mod generate_graphql_schema;
+pub mod generate_sdl;
 pub mod http;
 pub mod introspection;
 pub mod lexer;

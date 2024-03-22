@@ -185,13 +185,14 @@ pub struct Model {
     pub graphql_api: ModelGraphQlApi,
     pub source: Option<ModelSource>,
     pub select_permissions: Option<HashMap<Role, SelectPermission>>,
-    pub global_id_source: Option<GlobalIdSource>,
+    pub global_id_source: Option<NDCFieldSourceMapping>,
+    pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub filter_expression_type: Option<ObjectBooleanExpressionType>,
     pub orderable_fields: Vec<OrderableField>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct GlobalIdSource {
+pub struct NDCFieldSourceMapping {
     pub ndc_mapping: HashMap<FieldName, NdcColumnForComparison>,
 }
 
@@ -271,6 +272,10 @@ pub fn resolve_model(
     model: &ModelV1,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &mut HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<ModelName>>,
+    >,
     boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<Model, Error> {
     let qualified_object_type_name =
@@ -310,10 +315,57 @@ pub fn resolve_model(
                 model_names.push(qualified_model_name.clone());
             }
         }
-        global_id_source = Some(GlobalIdSource {
+        global_id_source = Some(NDCFieldSourceMapping {
             ndc_mapping: HashMap::new(),
         });
     };
+    let mut apollo_federation_key_source = None;
+    if model
+        .graphql
+        .as_ref()
+        .and_then(|g| g.apollo_federation.as_ref().map(|a| a.entity_source))
+        .unwrap_or_default()
+    {
+        // Check if there are any apollo federation keys present in the related
+        // object type, if the model is marked as an apollo federation entity source.
+        if let Some(_apollo_federation_config) =
+            &object_type_representation.apollo_federation_config
+        {
+            if !model.arguments.is_empty() {
+                return Err(Error::ModelWithArgumentsAsApolloFederationEntitySource {
+                    model_name: qualified_model_name,
+                });
+            }
+            // model has `apollo_federation_entity_source`; insert into the hashmap of
+            // `apollo_federation_entity_enabled_types`
+            match apollo_federation_entity_enabled_types.get_mut(&qualified_object_type_name) {
+                None => {
+                    // the model's graphql configuration has `apollo_federation.entitySource` but the object type
+                    // of the model doesn't have any apollo federation keys
+                    return Err(Error::NoKeysFieldsPresentInEntitySource {
+                        type_name: qualified_object_type_name,
+                        model_name: model.name.clone(),
+                    });
+                }
+                Some(type_name) => {
+                    match type_name {
+                        None => {
+                            *type_name = Some(qualified_model_name.clone());
+                        }
+                        // Multiple models are marked as apollo federation entity source
+                        Some(_) => {
+                            return Err(Error::MultipleEntitySourcesForType {
+                                type_name: qualified_object_type_name,
+                            });
+                        }
+                    }
+                }
+            }
+            apollo_federation_key_source = Some(NDCFieldSourceMapping {
+                ndc_mapping: HashMap::new(),
+            });
+        }
+    }
 
     let mut arguments = IndexMap::new();
     for argument in &model.arguments {
@@ -351,6 +403,7 @@ pub fn resolve_model(
         source: None,
         select_permissions: None,
         global_id_source,
+        apollo_federation_key_source,
         filter_expression_type,
         orderable_fields: resolve_orderable_fields(model, &object_type_representation.fields)?,
     })
@@ -1306,6 +1359,31 @@ pub fn resolve_model_source(
                     || format!("the global ID fields of type {}", model.data_type),
                 )?,
             );
+        }
+    }
+
+    if let Some(apollo_federation_key_source) = &mut model.apollo_federation_key_source {
+        if let Some(apollo_federation_config) = &model_object_type.apollo_federation_config {
+            for key in &apollo_federation_config.keys {
+                for field in &key.fields {
+                    apollo_federation_key_source.ndc_mapping.insert(
+                        field.clone(),
+                        get_ndc_column_for_comparison(
+                            &model.name,
+                            &model.data_type,
+                            &resolved_model_source,
+                            field,
+                            data_connectors,
+                            || {
+                                format!(
+                                    "the apollo federation key fields of type {}",
+                                    model.data_type
+                                )
+                            },
+                        )?,
+                    );
+                }
+            }
         }
     }
 

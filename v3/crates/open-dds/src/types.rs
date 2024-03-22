@@ -253,6 +253,8 @@ pub struct ObjectTypeGraphQLConfiguration {
     pub type_name: Option<GraphQlTypeName>,
     /// The name to use for the GraphQL type representation of this object type when used in an input context.
     pub input_type_name: Option<GraphQlTypeName>,
+    /// Configuration for exposing apollo federation related types and directives.
+    pub apollo_federation: Option<ObjectApolloFederationConfig>,
     // TODO: Add type_kind if we want to allow making objects interfaces.
 }
 
@@ -654,3 +656,19 @@ pub struct Deprecated {
 }
 
 impl_OpenDd_default_for!(Deprecated);
+
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd, Eq)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "ObjectApolloFederationConfig"))]
+pub struct ObjectApolloFederationConfig {
+    pub keys: Vec<ApolloFederationObjectKey>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd, Eq)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "ApolloFederationObjectKey"))]
+pub struct ApolloFederationObjectKey {
+    pub fields: Vec<FieldName>,
+}

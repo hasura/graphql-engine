@@ -45,6 +45,7 @@ pub struct ObjectTypeRepresentation {
     pub relationships: IndexMap<ast::Name, Relationship>,
     pub type_permissions: HashMap<Role, TypeOutputPermission>,
     pub global_id_fields: Vec<FieldName>,
+    pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
     pub graphql_output_type_name: Option<ast::TypeName>,
     pub graphql_input_type_name: Option<ast::TypeName>,
     pub description: Option<String>,
@@ -132,6 +133,18 @@ pub struct ObjectBooleanExpressionTypeGraphQlConfiguration {
     pub type_name: ast::TypeName,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ResolvedObjectApolloFederationConfig {
+    pub keys: nonempty::NonEmpty<ResolvedApolloFederationObjectKey>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ResolvedApolloFederationObjectKey {
+    pub fields: nonempty::NonEmpty<FieldName>,
+}
+
 pub fn check_conflicting_graphql_types(
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     new_graphql_type: Option<&ast::TypeName>,
@@ -166,6 +179,10 @@ pub fn resolve_object_type(
     global_id_enabled_types: &mut HashMap<
         Qualified<CustomTypeName>,
         Vec<Qualified<open_dds::models::ModelName>>,
+    >,
+    apollo_federation_entity_enabled_types: &mut HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<open_dds::models::ModelName>>,
     >,
 ) -> Result<TypeRepresentation, Error> {
     let mut resolved_fields = IndexMap::new();
@@ -211,23 +228,70 @@ pub fn resolve_object_type(
         }
         None => {}
     }
-    let (graphql_type_name, graphql_input_type_name) = match object_type_definition.graphql.as_ref()
-    {
-        None => Ok::<_, Error>((None, None)),
-        Some(graphql) => {
-            let graphql_type_name = graphql
-                .type_name
-                .as_ref()
-                .map(|type_name| mk_name(type_name.0.as_ref()).map(ast::TypeName))
-                .transpose()?;
-            let graphql_input_type_name = graphql
-                .input_type_name
-                .as_ref()
-                .map(|input_type_name| mk_name(input_type_name.0.as_ref()).map(ast::TypeName))
-                .transpose()?;
-            Ok((graphql_type_name, graphql_input_type_name))
-        }
-    }?;
+    let (graphql_type_name, graphql_input_type_name, apollo_federation_config) =
+        match object_type_definition.graphql.as_ref() {
+            None => Ok::<_, Error>((None, None, None)),
+            Some(graphql) => {
+                let graphql_type_name = graphql
+                    .type_name
+                    .as_ref()
+                    .map(|type_name| mk_name(type_name.0.as_ref()).map(ast::TypeName))
+                    .transpose()?;
+                let graphql_input_type_name = graphql
+                    .input_type_name
+                    .as_ref()
+                    .map(|input_type_name| mk_name(input_type_name.0.as_ref()).map(ast::TypeName))
+                    .transpose()?;
+                // To check if apolloFederation.keys are defined in object type but no model has
+                // apollo_federation_entity_source set to true:
+                //   - If the object type has apolloFederation.keys configured, add the object type to the
+                //     apollo_federation_entity_enabled_types map.
+                let resolved_apollo_federation_config = match &graphql.apollo_federation {
+                    None => Ok(None),
+                    Some(apollo_federation) => {
+                        // Validate that the fields in the apollo federation keys are defined in the object type
+                        let mut resolved_keys: Vec<ResolvedApolloFederationObjectKey> = Vec::new();
+                        for key in &apollo_federation.keys {
+                            let mut resolved_key_fields = Vec::new();
+                            for field in &key.fields {
+                                if !resolved_fields.contains_key(field) {
+                                    return Err(Error::UnknownFieldInApolloFederationKey {
+                                        field_name: field.clone(),
+                                        object_type: qualified_type_name.clone(),
+                                    });
+                                }
+                                resolved_key_fields.push(field.clone());
+                            }
+                            let resolved_key =
+                                match nonempty::NonEmpty::from_vec(resolved_key_fields) {
+                                    None => {
+                                        return Err(
+                                            Error::EmptyFieldsInApolloFederationConfigForObject {
+                                                object_type: qualified_type_name.clone(),
+                                            },
+                                        )
+                                    }
+                                    Some(fields) => ResolvedApolloFederationObjectKey { fields },
+                                };
+                            resolved_keys.push(resolved_key);
+                        }
+                        apollo_federation_entity_enabled_types
+                            .insert(qualified_type_name.clone(), None);
+                        match nonempty::NonEmpty::from_vec(resolved_keys) {
+                            None => Err(Error::EmptyKeysInApolloFederationConfigForObject {
+                                object_type: qualified_type_name.clone(),
+                            }),
+                            Some(keys) => Ok(Some(ResolvedObjectApolloFederationConfig { keys })),
+                        }
+                    }
+                }?;
+                Ok((
+                    graphql_type_name,
+                    graphql_input_type_name,
+                    resolved_apollo_federation_config,
+                ))
+            }
+        }?;
     check_conflicting_graphql_types(existing_graphql_types, graphql_type_name.as_ref())?;
     check_conflicting_graphql_types(existing_graphql_types, graphql_input_type_name.as_ref())?;
 
@@ -239,6 +303,7 @@ pub fn resolve_object_type(
         graphql_output_type_name: graphql_type_name,
         graphql_input_type_name,
         description: object_type_definition.description.clone(),
+        apollo_federation_config,
     }))
 }
 

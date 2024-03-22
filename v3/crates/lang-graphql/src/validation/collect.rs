@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -27,7 +28,7 @@ use crate::schema;
 pub struct SelectableType<'s, S: schema::SchemaContext> {
     pub(super) type_name: &'s ast::TypeName,
     pub(super) possible_types: HashSet<&'s ast::TypeName>,
-    fields: Option<&'s HashMap<ast::Name, schema::Namespaced<S, schema::Field<S>>>>,
+    fields: Option<&'s BTreeMap<ast::Name, schema::Namespaced<S, schema::Field<S>>>>,
 }
 
 impl<'s, S: schema::SchemaContext> SelectableType<'s, S> {
@@ -82,7 +83,7 @@ impl<S: schema::SchemaContext> schema::Union<S> {
     fn to_selectable_type(&self) -> SelectableType<S> {
         SelectableType {
             type_name: &self.name,
-            fields: None,
+            fields: Some(self.get_fields()),
             possible_types: self.possible_types(),
         }
     }

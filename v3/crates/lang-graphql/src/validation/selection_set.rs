@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use nonempty::NonEmpty;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 
 use super::collect;
@@ -262,7 +263,7 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
     variables: &input::value::Variables<'q, 's, S>,
     type_name: &ast::TypeName,
     field_name: &ast::Name,
-    arguments_schema: &'s HashMap<ast::Name, schema::Namespaced<S, schema::InputField<S>>>,
+    arguments_schema: &'s BTreeMap<ast::Name, schema::Namespaced<S, schema::InputField<S>>>,
     arguments: &'q Option<Spanning<Vec<executable::Argument>>>,
 ) -> Result<IndexMap<ast::Name, normalized::InputField<'s, S>>> {
     let mut arguments_map = HashMap::new();

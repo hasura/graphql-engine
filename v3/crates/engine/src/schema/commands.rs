@@ -14,7 +14,7 @@ use ndc_client as gdc;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_type_kind;
 
@@ -96,7 +96,7 @@ pub(crate) fn command_field(
 > {
     let output_typename = get_output_type(gds, builder, &command.output_type)?;
 
-    let mut arguments = HashMap::new();
+    let mut arguments = BTreeMap::new();
 
     for (argument_name, argument_type) in &command.arguments {
         let (field_name, input_field) =

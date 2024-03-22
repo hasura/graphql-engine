@@ -9,7 +9,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::{CustomTypeName, FieldName};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 
@@ -108,7 +108,7 @@ fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     fields: &IndexMap<FieldName, FieldDefinition>,
-) -> Result<HashMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
+) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     fields
         .iter()
         .map(|(field_name, field_definition)| {
@@ -129,7 +129,7 @@ fn input_object_type_input_fields(
             let namespaced_input_field = builder.allow_all_namespaced(input_field, None);
             Ok((graphql_field_name, namespaced_input_field))
         })
-        .collect::<Result<HashMap<_, _>, _>>()
+        .collect::<Result<BTreeMap<_, _>, _>>()
 }
 
 pub fn input_object_type_schema(
@@ -162,6 +162,6 @@ pub fn input_object_type_schema(
         input_object_type_input_fields(gds, builder, &object_type_representation.fields)?;
 
     Ok(gql_schema::TypeInfo::InputObject(
-        gql_schema::InputObject::new(graphql_type_name, None, input_fields),
+        gql_schema::InputObject::new(graphql_type_name, None, input_fields, Vec::new()),
     ))
 }

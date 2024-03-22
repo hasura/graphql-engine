@@ -94,8 +94,9 @@ pub(crate) fn relay_node_ir<'n, 's>(
         resolved::model::FilterPermission,
     > = &get_relay_node_namespace_typename_mappings(field_call)?.0;
     let typename_mapping = typename_mappings.get(&global_id.typename).ok_or(
-        error::InternalDeveloperError::GlobalIDTypenameMappingNotFound {
+        error::InternalDeveloperError::TypenameMappingNotFound {
             type_name: global_id.typename.clone(),
+            mapping_kind: "Global ID",
         },
     )?;
     let role_model_select_permission = typename_permissions.get(&typename_mapping.type_name);

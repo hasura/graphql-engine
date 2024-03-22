@@ -36,6 +36,7 @@ pub fn scalar_type_schema(
             Ok(gql_schema::TypeInfo::Scalar(gql_schema::Scalar {
                 name: graphql_type_name,
                 description: scalar_type_representation.description.clone(),
+                directives: Vec::new(),
             }))
         }
     }

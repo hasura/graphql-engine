@@ -57,6 +57,8 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
     NDCQueryExecution(NDCQueryExecution<'s, 'ir>),
     /// NDC query for Relay 'node' to be executed
     RelayNodeSelect(Option<NDCQueryExecution<'s, 'ir>>),
+    /// Apollo Federation query to be executed
+    ApolloFederationSelect(ApolloFederationSelect<'n, 's, 'ir>),
 }
 
 /// Mutation plan of individual root field or node.
@@ -78,6 +80,16 @@ pub struct NDCQueryExecution<'s, 'ir> {
     // We use the more restrictive lifetime `'ir` here which allows us to construct this struct using the selection
     // set either from the IR or from the normalized query request.
     pub selection_set: &'ir normalized_ast::SelectionSet<'s, GDS>,
+}
+
+#[derive(Debug)]
+pub enum ApolloFederationSelect<'n, 's, 'ir> {
+    /// NDC queries for Apollo Federation '_entities' to be executed
+    EntitiesSelect(Vec<NDCQueryExecution<'s, 'ir>>),
+    ServiceField {
+        sdl: String,
+        selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
+    },
 }
 
 #[derive(Debug)]
@@ -296,6 +308,37 @@ fn plan_query<'n, 's, 'ir>(
                     command_name: &ir.command_info.command_name,
                     type_container: &ir.command_info.type_container,
                 },
+            })
+        }
+        root_field::QueryRootField::ApolloFederation(
+            root_field::ApolloFederationRootFields::EntitiesSelect(irs),
+        ) => {
+            let mut ndc_query_executions = Vec::new();
+            for ir in irs {
+                let execution_tree = generate_execution_tree(&ir.model_selection)?;
+                ndc_query_executions.push(NDCQueryExecution {
+                    execution_tree,
+                    selection_set: &ir.selection_set,
+                    execution_span_attribute: "execute_entity".into(),
+                    field_span_attribute: "entity".into(),
+                    process_response_as: ProcessResponseAs::Object { is_nullable: true },
+                });
+            }
+            NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::EntitiesSelect(
+                ndc_query_executions,
+            ))
+        }
+        root_field::QueryRootField::ApolloFederation(
+            root_field::ApolloFederationRootFields::ServiceField {
+                schema,
+                selection_set,
+                role,
+            },
+        ) => {
+            let sdl = schema.generate_sdl(role);
+            NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
+                sdl,
+                selection_set,
             })
         }
     };
@@ -552,9 +595,82 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_relay_node_select(http_client, optional_query, project_id)
+                            resolve_optional_ndc_select(http_client, optional_query, project_id)
                                 .await,
                         ),
+                        NodeQueryPlan::ApolloFederationSelect(
+                            ApolloFederationSelect::EntitiesSelect(entity_execution_plans),
+                        ) => {
+                            let mut tasks: Vec<_> =
+                                Vec::with_capacity(entity_execution_plans.capacity());
+                            for query in entity_execution_plans.into_iter() {
+                                // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
+                                // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
+                                let task = async {
+                                    (resolve_optional_ndc_select(
+                                        http_client,
+                                        Some(query),
+                                        project_id.clone(),
+                                    )
+                                    .await,)
+                                };
+
+                                tasks.push(task);
+                            }
+
+                            let executed_entities = futures::future::join_all(tasks).await;
+                            let mut entities_result = Vec::new();
+                            for result in executed_entities {
+                                match result {
+                                    (Ok(value),) => entities_result.push(value),
+                                    (Err(e),) => {
+                                        return RootFieldResult::new(&true, Err(e));
+                                    }
+                                }
+                            }
+
+                            RootFieldResult::new(&true, Ok(json::Value::Array(entities_result)))
+                        }
+                        NodeQueryPlan::ApolloFederationSelect(
+                            ApolloFederationSelect::ServiceField { sdl, selection_set },
+                        ) => {
+                            let service_result = {
+                                let mut object_fields = Vec::new();
+                                for (alias, field) in &selection_set.fields {
+                                    let field_call = match field.field_call() {
+                                        Ok(field_call) => field_call,
+                                        Err(e) => {
+                                            return RootFieldResult::new(&true, Err(e.into()))
+                                        }
+                                    };
+                                    match field_call.name.as_str() {
+                                        "sdl" => {
+                                            let extended_sdl = "extend schema\n  @link(url: \"https://specs.apollo.dev/federation/v2.0\", import: [\"@key\", \"@extends\", \"@external\", \"@shareable\"])\n\n".to_string() + &sdl;
+                                            object_fields.push((
+                                                alias.to_string(),
+                                                json::Value::String(extended_sdl),
+                                            ));
+                                        }
+                                        "__typename" => {
+                                            object_fields.push((
+                                                alias.to_string(),
+                                                json::Value::String("_Service".to_string()),
+                                            ));
+                                        }
+                                        field_name => {
+                                            return RootFieldResult::new(
+                                                &true,
+                                                Err(error::Error::FieldNotFoundInService {
+                                                    field_name: field_name.to_string(),
+                                                }),
+                                            )
+                                        }
+                                    };
+                                }
+                                Ok(json::Value::Object(object_fields.into_iter().collect()))
+                            };
+                            RootFieldResult::new(&true, service_result)
+                        }
                     }
                 })
             },
@@ -764,7 +880,7 @@ async fn resolve_ndc_mutation_execution(
     Ok(json::to_value(response)?)
 }
 
-async fn resolve_relay_node_select(
+async fn resolve_optional_ndc_select(
     http_client: &reqwest::Client,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
     project_id: Option<ProjectId>,

@@ -45,6 +45,9 @@
           },
           "mutation": {
             "rootOperationTypeName": "Mutation"
+          },
+          "apolloFederation": {
+            "enableRootFields": true
           }
         }
       }
@@ -2504,7 +2507,16 @@
             "name": "Artist",
             "graphql": {
               "typeName": "artist",
-              "inputTypeName": "artistInput"
+              "inputTypeName": "artistInput",
+              "apolloFederation": {
+                "keys": [
+                  {
+                    "fields": [
+                      "ArtistId"
+                    ]
+                  }
+                ]
+              }
             },
             "fields": [
               {
@@ -2587,7 +2599,10 @@
               "selectMany": {
                 "queryRootField": "Artist"
               },
-              "orderByExpressionType": "ArtistOrderBy"
+              "orderByExpressionType": "ArtistOrderBy",
+              "apolloFederation": {
+                "entitySource": true
+              }
             },
             "source": {
               "collection": "Artist",

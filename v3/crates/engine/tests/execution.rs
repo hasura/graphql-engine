@@ -944,3 +944,25 @@ fn test_graphql_descriptions() {
         ],
     );
 }
+
+#[test]
+fn test_apollo_federation_service_sdl() {
+    let test_path_string = "execute/apollo_federation_fields/service_sdl";
+    let common_apollo_metadata = "execute/apollo_federation_fields/common_metadata.json";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(
+        test_path_string,
+        &[common_metadata_path_string, common_apollo_metadata],
+    );
+}
+
+#[test]
+fn test_apollo_federation_entities() {
+    let test_path_string = "execute/apollo_federation_fields/entities";
+    let common_apollo_metadata = "execute/apollo_federation_fields/common_metadata.json";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation_legacy(
+        test_path_string,
+        &[common_metadata_path_string, common_apollo_metadata],
+    );
+}

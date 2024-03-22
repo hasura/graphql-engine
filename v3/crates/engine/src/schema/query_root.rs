@@ -3,7 +3,7 @@
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::schema as gql_schema;
 use open_dds::commands::GraphQlRootFieldKind;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::schema::commands;
 use crate::schema::query_root::node_field::relay_node_field;
@@ -11,6 +11,7 @@ use crate::schema::GDS;
 
 use self::node_field::RelayNodeFieldOutput;
 
+pub mod apollo_federation;
 pub mod node_field;
 pub mod select_many;
 pub mod select_one;
@@ -21,7 +22,7 @@ pub fn query_root_schema(
     gds: &GDS,
     query_root_type_name: &TypeName,
 ) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
     for model in gds.metadata.models.values() {
         for select_unique in model.graphql_api.select_uniques.iter() {
             let (field_name, field) = select_one::select_one_field(
@@ -86,11 +87,48 @@ pub fn query_root_schema(
         });
     };
 
+    // apollo federation field
+    if gds.metadata.graphql_config.enable_apollo_federation_fields {
+        let apollo_federation::ApolloFederationFieldOutput {
+            apollo_federation_entities_field,
+            apollo_federation_entities_field_permissions,
+            apollo_federation_service_field,
+        } = apollo_federation::apollo_federation_field(gds, builder)?;
+
+        if fields
+            .insert(
+                apollo_federation_entities_field.name.clone(),
+                builder.conditional_namespaced(
+                    apollo_federation_entities_field.clone(),
+                    apollo_federation_entities_field_permissions,
+                ),
+            )
+            .is_some()
+        {
+            return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+                field_name: apollo_federation_entities_field.name,
+            });
+        };
+
+        if fields
+            .insert(
+                apollo_federation_service_field.name.clone(),
+                builder.allow_all_namespaced(apollo_federation_service_field.clone(), None),
+            )
+            .is_some()
+        {
+            return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+                field_name: apollo_federation_service_field.name,
+            });
+        };
+    }
+
     Ok(gql_schema::Object::new(
         builder,
         query_root_type_name.clone(),
         None,
         fields,
-        HashMap::new(),
+        BTreeMap::new(),
+        Vec::new(),
     ))
 }

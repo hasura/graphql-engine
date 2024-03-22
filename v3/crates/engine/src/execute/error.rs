@@ -44,8 +44,11 @@ pub enum InternalDeveloperError {
     #[error("Typecasting to array is not supported.")]
     VariableArrayTypeCast,
 
-    #[error("Mapping for the Global ID typename {type_name:} not found")]
-    GlobalIDTypenameMappingNotFound { type_name: ast::TypeName },
+    #[error("Mapping for the {mapping_kind} typename {type_name:} not found")]
+    TypenameMappingNotFound {
+        type_name: ast::TypeName,
+        mapping_kind: &'static str,
+    },
 
     #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
     TypeMappingNotFoundForRelationship {
@@ -173,6 +176,10 @@ pub enum Error {
     ProjectIdConversionError(InvalidHeaderValue),
     #[error("ndc validation error: {0}")]
     NDCValidationError(NDCValidationError),
+    #[error("field '{field_name:} not found in entity representation")]
+    FieldNotFoundInEntityRepresentation { field_name: String },
+    #[error("field '{field_name:} not found in _Service")]
+    FieldNotFoundInService { field_name: String },
 }
 
 impl Error {

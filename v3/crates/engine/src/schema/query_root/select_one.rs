@@ -3,7 +3,7 @@
 //! A 'select_one' operation fetches zero or one row from a model
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::metadata::resolved;
 use crate::metadata::resolved::types::mk_name;
@@ -33,7 +33,7 @@ pub(crate) fn select_one_field(
 > {
     let query_root_field = select_unique.query_root_field.clone();
 
-    let mut arguments = HashMap::new();
+    let mut arguments = BTreeMap::new();
     for (field_name, field) in select_unique.unique_identifier.iter() {
         let graphql_field_name = mk_name(field_name.0.as_str())?;
         let argument = gql_schema::InputField::new(

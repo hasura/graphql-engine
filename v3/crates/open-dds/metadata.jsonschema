@@ -791,6 +791,17 @@
               "type": "null"
             }
           ]
+        },
+        "apolloFederation": {
+          "description": "Configuration for exposing apollo federation related types and directives.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ObjectApolloFederationConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -799,6 +810,40 @@
       "$id": "https://hasura.io/jsonschemas/metadata/GraphQlTypeName",
       "title": "GraphQlTypeName",
       "type": "string"
+    },
+    "ObjectApolloFederationConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ObjectApolloFederationConfig",
+      "title": "ObjectApolloFederationConfig",
+      "type": "object",
+      "required": [
+        "keys"
+      ],
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ApolloFederationObjectKey"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ApolloFederationObjectKey": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ApolloFederationObjectKey",
+      "title": "ApolloFederationObjectKey",
+      "type": "object",
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldName"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "DataConnectorTypeMapping": {
       "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorTypeMapping",
@@ -1242,7 +1287,10 @@
               "queryRootField": "ArticleMany",
               "description": "Description for the select many ArticleMany"
             },
-            "orderByExpressionType": "Article_Order_By"
+            "orderByExpressionType": "Article_Order_By",
+            "apolloFederation": {
+              "entitySource": true
+            }
           },
           "description": "Description for the model Articles"
         }
@@ -1535,6 +1583,17 @@
               "type": "null"
             }
           ]
+        },
+        "apolloFederation": {
+          "description": "Apollo Federation configuration",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelApolloFederationConfiguration"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -1625,6 +1684,21 @@
               "type": "null"
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ModelApolloFederationConfiguration": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelApolloFederationConfiguration",
+      "title": "ModelApolloFederationConfiguration",
+      "type": "object",
+      "required": [
+        "entitySource"
+      ],
+      "properties": {
+        "entitySource": {
+          "description": "Whether this model should be used as the source for fetching _entity for object of its type.",
+          "type": "boolean"
         }
       },
       "additionalProperties": false
@@ -3064,6 +3138,16 @@
         },
         "mutation": {
           "$ref": "#/definitions/MutationGraphqlConfig"
+        },
+        "apolloFederation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GraphqlApolloFederationConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3301,6 +3385,20 @@
       "properties": {
         "rootOperationTypeName": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GraphqlApolloFederationConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
+      "title": "GraphqlApolloFederationConfig",
+      "type": "object",
+      "required": [
+        "enableRootFields"
+      ],
+      "properties": {
+        "enableRootFields": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

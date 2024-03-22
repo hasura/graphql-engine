@@ -1,5 +1,5 @@
-use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
+use lang_graphql::{ast::common as ast, mk_name};
 use open_dds::{
     commands::CommandName,
     models::ModelName,
@@ -17,8 +17,9 @@ use crate::metadata::{
     resolved::subgraph::Qualified,
 };
 
-use self::types::RootFieldAnnotation;
+use self::types::{PossibleApolloFederationTypes, RootFieldAnnotation};
 
+pub mod apollo_federation;
 pub mod commands;
 pub mod model_arguments;
 pub mod model_filter;
@@ -147,6 +148,23 @@ impl gql_schema::SchemaContext for GDS {
             types::TypeId::OrderByEnumType { graphql_type_name } => {
                 model_order_by::build_order_by_enum_type_schema(self, builder, graphql_type_name)
             }
+            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Entity) => {
+                Ok(gql_schema::TypeInfo::Union(
+                    apollo_federation::apollo_federation_entities_schema(builder, self)?,
+                ))
+            }
+            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Any) => {
+                Ok(gql_schema::TypeInfo::Scalar(gql_schema::Scalar {
+                    name: ast::TypeName(mk_name!("_Any")),
+                    description: None,
+                    directives: Vec::new(),
+                }))
+            }
+            types::TypeId::ApolloFederationType(PossibleApolloFederationTypes::Service) => {
+                Ok(gql_schema::TypeInfo::Object(
+                    apollo_federation::apollo_federation_service_schema(builder)?,
+                ))
+            }
         }
     }
 
@@ -190,6 +208,10 @@ pub enum Error {
         "internal error: duplicate models with global id implementing the same type {type_name} are found"
     )]
     InternalErrorDuplicateGlobalIdSourceFound { type_name: ast::TypeName },
+    #[error(
+        "internal error: duplicate models with entity source for the same type {type_name} are found"
+    )]
+    InternalErrorDuplicateEntitySourceFound { type_name: ast::TypeName },
     #[error("internal error while building schema, model not found: {model_name}")]
     InternalModelNotFound { model_name: Qualified<ModelName> },
     #[error(

@@ -13,7 +13,9 @@ use super::root_field;
 use crate::execute::error;
 use crate::metadata::resolved::subgraph::QualifiedTypeReference;
 use crate::metadata::resolved::{self, subgraph};
+use crate::schema::types::ApolloFederationRootFields;
 use crate::schema::types::CommandSourceDetail;
+use crate::schema::types::EntityFieldTypeNameMapping;
 use crate::schema::types::RootFieldKind;
 use crate::schema::types::TypeKind;
 use crate::schema::types::{
@@ -21,6 +23,7 @@ use crate::schema::types::{
 };
 use crate::schema::{mk_typename, GDS};
 
+pub mod apollo_federation;
 pub mod node_field;
 pub mod select_many;
 pub mod select_one;
@@ -95,6 +98,26 @@ pub fn generate_ir<'n, 's>(
                             )?;
                             Ok(ir)
                         }
+                        RootFieldAnnotation::ApolloFederation(
+                            ApolloFederationRootFields::Entities { typename_mappings },
+                        ) => {
+                            let ir = generate_entities_ir(
+                                field,
+                                field_call,
+                                typename_mappings,
+                                session,
+                            )?;
+                            Ok(ir)
+                        }
+                        RootFieldAnnotation::ApolloFederation(
+                            ApolloFederationRootFields::Service,
+                        ) => Ok(root_field::QueryRootField::ApolloFederation(
+                            root_field::ApolloFederationRootFields::ServiceField {
+                                selection_set: &field.selection_set,
+                                schema,
+                                role: session.role.clone(),
+                            },
+                        )),
                         _ => Err(error::Error::from(
                             error::InternalEngineError::UnexpectedAnnotation {
                                 annotation: annotation.clone(),
@@ -242,5 +265,22 @@ fn generate_nodefield_ir<'n, 's>(
         typename_mappings,
         &session.variables,
     )?);
+    Ok(ir)
+}
+
+fn generate_entities_ir<'n, 's>(
+    field: &'n gql::normalized_ast::Field<'s, GDS>,
+    field_call: &'n gql::normalized_ast::FieldCall<'s, GDS>,
+    typename_mappings: &'s HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
+    session: &Session,
+) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
+    let ir = root_field::QueryRootField::ApolloFederation(
+        root_field::ApolloFederationRootFields::EntitiesSelect(apollo_federation::entities_ir(
+            field,
+            field_call,
+            typename_mappings,
+            &session.variables,
+        )?),
+    );
     Ok(ir)
 }

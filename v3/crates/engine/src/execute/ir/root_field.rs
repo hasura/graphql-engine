@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use super::{
     commands,
-    query_root::{node_field, select_many, select_one},
+    query_root::{apollo_federation, node_field, select_many, select_one},
 };
 use crate::schema::GDS;
 
@@ -53,6 +53,20 @@ pub enum QueryRootField<'n, 's> {
     FunctionBasedCommand {
         selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
         ir: commands::FunctionBasedCommand<'s>,
+    },
+    // Apollo Federation related root fields
+    ApolloFederation(ApolloFederationRootFields<'n, 's>),
+}
+
+#[derive(Serialize, Debug)]
+pub enum ApolloFederationRootFields<'n, 's> {
+    // Operation that selects entities according to the Apollo Federation spec
+    EntitiesSelect(Vec<apollo_federation::EntitySelect<'n, 's>>),
+    // Operation for the _service field (returns the schema in SDL format)
+    ServiceField {
+        selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+        schema: &'s gql::schema::Schema<GDS>,
+        role: Role,
     },
 }
 

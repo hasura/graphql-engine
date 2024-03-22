@@ -61,6 +61,15 @@ pub struct NodeFieldTypeNameMapping {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct EntityFieldTypeNameMapping {
+    pub type_name: Qualified<types::CustomTypeName>,
+    // `model_source` is are optional because we allow building schema without specifying a data source
+    // In such a case, `global_id_fields_ndc_mapping` will also be empty
+    pub model_source: Option<resolved::model::ModelSource>,
+    pub key_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum RootFieldKind {
     SelectOne,
     SelectMany,
@@ -130,6 +139,15 @@ pub enum RootFieldAnnotation {
         source: Option<CommandSourceDetail>,
         procedure_name: Option<commands::ProcedureName>,
     },
+    ApolloFederation(ApolloFederationRootFields),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+pub enum ApolloFederationRootFields {
+    Entities {
+        typename_mappings: HashMap<ast::TypeName, EntityFieldTypeNameMapping>,
+    },
+    Service,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display, Copy)]
@@ -163,6 +181,7 @@ pub enum OutputAnnotation {
     RelayNodeInterfaceID {
         typename_mappings: HashMap<ast::TypeName, Vec<types::FieldName>>,
     },
+    SDL,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -205,6 +224,12 @@ pub enum RelayInputAnnotation {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+/// Annotations for Apollo federation input arguments/types.
+pub enum ApolloFederationInputAnnotation {
+    AnyScalarInputAnnotation,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations for GraphQL input arguments/types.
 pub enum InputAnnotation {
     Model(ModelInputAnnotation),
@@ -217,6 +242,7 @@ pub enum InputAnnotation {
         ndc_func_proc_argument: Option<String>,
     },
     Relay(RelayInputAnnotation),
+    ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
 }
 
 /// Contains the different possible entities that can be used to generate
@@ -270,6 +296,12 @@ pub enum NamespaceAnnotation {
     NodeFieldTypeMappings(
         HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
     ),
+    /// `EntityTypeMappings` is similar to the `NodeFieldTypeMappings`. While executing the `_entities` field, the
+    /// `representations` argument is used, which contains typename. We need to use that typename to look up the hashmap
+    /// to get the appropriate `resolved::model::FilterPermission`.
+    EntityTypeMappings(
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
+    ),
 }
 
 #[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
@@ -314,6 +346,15 @@ pub enum TypeId {
     OrderByEnumType {
         graphql_type_name: ast::TypeName,
     },
+    ApolloFederationType(PossibleApolloFederationTypes),
+}
+
+#[derive(Serialize, Clone, Debug, Hash, PartialEq, Eq)]
+
+pub enum PossibleApolloFederationTypes {
+    Entity,
+    Any,
+    Service,
 }
 
 impl Display for TypeId {
@@ -350,6 +391,15 @@ impl TypeId {
             TypeId::OrderByEnumType {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
+            TypeId::ApolloFederationType(PossibleApolloFederationTypes::Entity) => {
+                ast::TypeName(mk_name!("_Entity"))
+            }
+            TypeId::ApolloFederationType(PossibleApolloFederationTypes::Any) => {
+                ast::TypeName(mk_name!("_Any"))
+            }
+            TypeId::ApolloFederationType(PossibleApolloFederationTypes::Service) => {
+                ast::TypeName(mk_name!("_Service"))
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 //! Schema of the relay according to <https://relay.dev/graphql/objectidentification.htm>
 
 use lang_graphql::schema as gql_schema;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::permissions;
 use crate::schema::types::{
@@ -17,8 +17,8 @@ pub fn node_interface_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
 ) -> Result<gql_schema::Interface<GDS>, crate::schema::Error> {
-    let mut fields = HashMap::new();
-    let mut implemented_by = HashMap::new();
+    let mut fields = BTreeMap::new();
+    let mut implemented_by = BTreeMap::new();
     let mut typename_global_id_mappings = HashMap::new();
     let mut roles_implementing_global_id: HashMap<Role, Option<types::NamespaceAnnotation>> =
         HashMap::new();
@@ -54,7 +54,7 @@ pub fn node_interface_schema(
             typename_mappings: typename_global_id_mappings,
         }),
         get_output_type(gds, builder, &ID_TYPE_REFERENCE)?,
-        HashMap::new(),
+        BTreeMap::new(),
         gql_schema::DeprecationStatus::NotDeprecated,
     );
     fields.insert(
@@ -67,7 +67,8 @@ pub fn node_interface_schema(
         node_typename,
         None,
         fields,
-        HashMap::new(),
+        BTreeMap::new(),
         implemented_by,
+        Vec::new(),
     ))
 }

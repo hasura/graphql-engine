@@ -4,7 +4,9 @@ use thiserror::Error;
 
 use crate::ast::common as ast;
 use crate::ast::schema as sdl;
+use crate::ast::schema::ConstDirective;
 use crate::ast::spanning::Positioned;
+use crate::ast::spanning::Spanning;
 use crate::parser;
 
 #[derive(Error, Debug, Clone)]
@@ -30,7 +32,7 @@ where
         .parse_schema_document()
         .map_err(Error::InternalParseError)?;
     let mut types = BTreeMap::new();
-    let mut introspection_root_fields = HashMap::new();
+    let mut introspection_root_fields = BTreeMap::new();
     let mut builder = Builder {
         registered_types: HashSet::new(),
         registered_namespaces: HashSet::new(),
@@ -151,14 +153,42 @@ fn convert_scalar_type_definition(definition: &sdl::ScalarTypeDefinition) -> Res
             .description
             .as_ref()
             .map(|description| description.item.clone()),
+        directives: Vec::new(),
     })
+}
+
+fn convert_directives(const_directives: &[Spanning<ConstDirective>]) -> Vec<Directive> {
+    let mut directives = Vec::new();
+    for directive in const_directives {
+        directives.push(Directive {
+            name: directive.item.name.item.clone(),
+            arguments: directive
+                .item
+                .arguments
+                .as_ref()
+                .map(|arguments| {
+                    arguments
+                        .item
+                        .iter()
+                        .map(|argument| {
+                            (
+                                argument.item.key.item.clone(),
+                                argument.item.value.item.clone(),
+                            )
+                        })
+                        .collect()
+                })
+                .unwrap_or(BTreeMap::new()),
+        });
+    }
+    directives
 }
 
 fn convert_enum_type_definition<S: SchemaContext>(
     builder: &mut Builder<S>,
     definition: &sdl::EnumTypeDefinition,
 ) -> Result<Enum<S>> {
-    let mut values = HashMap::new();
+    let mut values = BTreeMap::new();
     for enum_value_definition in &definition.values {
         let enum_value_definition = &enum_value_definition.item;
         let enum_value = &enum_value_definition.value.item;
@@ -188,6 +218,7 @@ fn convert_enum_type_definition<S: SchemaContext>(
             .as_ref()
             .map(|description| description.item.clone()),
         values,
+        directives: convert_directives(&definition.directives),
     })
 }
 
@@ -200,7 +231,7 @@ where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    let mut arguments = HashMap::new();
+    let mut arguments = BTreeMap::new();
     for field_definition in &definition.arguments {
         let argument_name = &field_definition.item.name.item;
         let normalized_argument_definition = convert_input_value_definition(
@@ -248,7 +279,7 @@ where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
     for field_definition in &definition.fields {
         let field_name = &field_definition.item.name.item;
         let normalized_field_definition =
@@ -267,7 +298,7 @@ where
         }
     }
 
-    let mut implements = HashMap::new();
+    let mut implements = BTreeMap::new();
     for interface in &definition.implements {
         if implements
             .insert(
@@ -288,6 +319,7 @@ where
             .map(|description| description.item.clone()),
         fields,
         implements,
+        convert_directives(&definition.directives),
     ))
 }
 
@@ -300,7 +332,7 @@ where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
     for field_definition in &definition.fields {
         let field_name = &field_definition.item.name.item;
         let normalized_field_definition =
@@ -318,7 +350,7 @@ where
             // TODO, throw an error
         }
     }
-    let mut implements = HashMap::new();
+    let mut implements = BTreeMap::new();
 
     for interface in &definition.implements {
         if implements
@@ -331,7 +363,7 @@ where
             // TODO throw an error
         }
     }
-    let implemented_by = HashMap::new();
+    let implemented_by = BTreeMap::new();
     Ok(Interface::new(
         builder,
         ast::TypeName(definition.name.item.clone()),
@@ -342,6 +374,7 @@ where
         fields,
         implements,
         implemented_by,
+        convert_directives(&definition.directives),
     ))
 }
 
@@ -354,7 +387,7 @@ where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    let mut members = HashMap::new();
+    let mut members = BTreeMap::new();
     for member in &definition.members {
         if members
             .insert(
@@ -374,6 +407,7 @@ where
             .as_ref()
             .map(|description| description.item.clone()),
         members,
+        convert_directives(&definition.directives),
     ))
 }
 
@@ -415,7 +449,7 @@ where
     S: SchemaContext,
     F: FnMut(&mut Builder<S>, ast::TypeName) -> RegisteredTypeName,
 {
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
     for field_definition in &definition.fields {
         let field_name = &field_definition.item.name.item;
         let normalized_field_definition = convert_input_value_definition(
@@ -443,5 +477,6 @@ where
             .as_ref()
             .map(|description| description.item.clone()),
         fields,
+        convert_directives(&definition.directives),
     ))
 }

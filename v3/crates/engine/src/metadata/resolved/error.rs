@@ -45,6 +45,10 @@ pub enum Error {
     GlobalIdSourceNotDefined {
         object_type: Qualified<CustomTypeName>,
     },
+    #[error("'apolloFederation.keys' for type {object_type:} found, but no model found with 'apolloFederation.entitySource: true' for type {object_type:}")]
+    ApolloFederationEntitySourceNotDefined {
+        object_type: Qualified<CustomTypeName>,
+    },
     #[error("the data type {data_type:} for model {model_name:} has not been defined")]
     UnknownModelDataType {
         model_name: Qualified<ModelName>,
@@ -204,6 +208,25 @@ pub enum Error {
     UnknownFieldInUniqueIdentifier {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
+    },
+    #[error("unknown field {field_name:} in apollo federation keys defined for the object type {object_type:}")]
+    UnknownFieldInApolloFederationKey {
+        field_name: FieldName,
+        object_type: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "empty keys in apollo federation configuration defined for the object type {object_type:}"
+    )]
+    EmptyKeysInApolloFederationConfigForObject {
+        object_type: Qualified<CustomTypeName>,
+    },
+    #[error("empty fields in apollo federation keys defined for the object type {object_type:}")]
+    EmptyFieldsInApolloFederationConfigForObject {
+        object_type: Qualified<CustomTypeName>,
+    },
+    #[error("multiple models are marked as entity source for the object type {type_name:}")]
+    MultipleEntitySourcesForType {
+        type_name: Qualified<CustomTypeName>,
     },
     #[error("duplicate field {field_name:} in unique identifier defined for model {model_name:}")]
     DuplicateFieldInUniqueIdentifier {
@@ -468,6 +491,11 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         model_name: ModelName,
     },
+    #[error("Model {model_name:} is marked as an Apollo Federation entity source but there are no keys fields present in the related object type {type_name:}")]
+    NoKeysFieldsPresentInEntitySource {
+        type_name: Qualified<CustomTypeName>,
+        model_name: ModelName,
+    },
     #[error("A field named `id` cannot be present in the object type {type_name} when global_id fields are non-empty.")]
     IdFieldConflictingGlobalId {
         type_name: Qualified<CustomTypeName>,
@@ -549,6 +577,10 @@ pub enum Error {
     },
     #[error("model {model_name:} with arguments is unsupported as a global ID source")]
     ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
+    #[error(
+        "model {model_name:} with arguments is unsupported as an Apollo Federation entity source"
+    )]
+    ModelWithArgumentsAsApolloFederationEntitySource { model_name: Qualified<ModelName> },
     #[error("An error occurred while mapping arguments in the model {model_name:} to the collection {collection_name:} in the data connector {data_connector_name:}: {error:}")]
     ModelCollectionArgumentMappingError {
         data_connector_name: Qualified<DataConnectorName>,

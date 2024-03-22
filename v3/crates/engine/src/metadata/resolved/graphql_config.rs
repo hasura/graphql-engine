@@ -39,7 +39,8 @@ lazy_static::lazy_static! {
         },
         mutation: graphql_config::MutationGraphqlConfig{
             root_operation_type_name: "Mutation".to_string(),
-        }
+        },
+        apollo_federation: None,
     });
 }
 
@@ -89,6 +90,7 @@ pub struct GlobalGraphqlConfig {
     pub query_root_type_name: ast::TypeName,
     pub mutation_root_type_name: ast::TypeName,
     pub order_by_input: Option<OrderByInputGraphqlConfig>,
+    pub enable_apollo_federation_fields: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -221,6 +223,12 @@ pub fn resolve_graphql_config(
                 }
             };
 
+            let enable_apollo_federation_fields = graphql_config_metadata
+                .apollo_federation
+                .as_ref()
+                .map(|federation_config| federation_config.enable_root_fields)
+                .unwrap_or_default();
+
             Ok(GraphqlConfig {
                 query: QueryGraphqlConfig {
                     arguments_field_name,
@@ -233,6 +241,7 @@ pub fn resolve_graphql_config(
                     query_root_type_name,
                     mutation_root_type_name,
                     order_by_input,
+                    enable_apollo_federation_fields,
                 },
             })
         }

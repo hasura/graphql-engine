@@ -2,7 +2,7 @@
 
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::CustomTypeName;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
@@ -35,7 +35,7 @@ pub(crate) fn relay_node_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
 ) -> Result<RelayNodeFieldOutput, crate::schema::Error> {
-    let mut arguments = HashMap::new();
+    let mut arguments = BTreeMap::new();
     let mut typename_mappings = HashMap::new();
     // The node field should only be accessible to a role, if
     // atleast one object implements the global `id` field.

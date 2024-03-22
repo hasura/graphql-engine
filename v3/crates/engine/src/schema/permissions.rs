@@ -148,6 +148,26 @@ pub(crate) fn get_node_interface_annotations(
     permissions
 }
 
+/// Build namespace annotations for the _Entity union.
+/// The key fields and the _Entity union will only be exposed
+/// for a role if the role has access (select permissions)
+/// to all the key fields.
+pub(crate) fn get_entity_union_permissions(
+    object_type_representation: &ObjectTypeRepresentation,
+) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
+    let mut permissions = HashMap::new();
+    for (role, type_output_permission) in &object_type_representation.type_permissions {
+        let is_permitted = object_type_representation
+            .global_id_fields
+            .iter()
+            .all(|field_name| type_output_permission.allowed_fields.contains(field_name));
+        if is_permitted {
+            permissions.insert(role.clone(), None);
+        }
+    }
+    permissions
+}
+
 /// Build namespace annotations for each field based on the type permissions
 pub(crate) fn get_allowed_roles_for_field<'a>(
     object_type_representation: &'a ObjectTypeRepresentation,
@@ -194,6 +214,49 @@ pub(crate) fn get_node_field_namespace_permissions(
                         }
                     }
                 };
+            }
+        }
+    }
+
+    permissions
+}
+
+/// Builds namespace annotations for the `_entities` field.
+pub(crate) fn get_entities_field_namespace_permissions(
+    object_type_representation: &ObjectTypeRepresentation,
+    model: &resolved::model::Model,
+) -> HashMap<Role, FilterPermission> {
+    let mut permissions = HashMap::new();
+
+    match &model.select_permissions {
+        // Model doesn't have any select permissions, so no `FilterPermission` can be obtained
+        None => {}
+        Some(select_permissions) => {
+            for (role, type_output_permission) in &object_type_representation.type_permissions {
+                if let Some(apollo_federation_config) =
+                    &object_type_representation.apollo_federation_config
+                {
+                    let is_all_keys_field_accessible =
+                        apollo_federation_config.keys.iter().all(|key_fields| {
+                            key_fields.fields.iter().all(|field_name| {
+                                type_output_permission.allowed_fields.contains(field_name)
+                            })
+                        });
+
+                    if is_all_keys_field_accessible {
+                        let select_permission =
+                            select_permissions.get(role).map(|s| s.filter.clone());
+
+                        match select_permission {
+                            // Select permission doesn't exist for the role, so no `FilterPermission` can
+                            // be obtained.
+                            None => {}
+                            Some(select_permission) => {
+                                permissions.insert(role.clone(), select_permission);
+                            }
+                        }
+                    };
+                }
             }
         }
     }

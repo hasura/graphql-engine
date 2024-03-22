@@ -1,6 +1,8 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
-use crate::execute::plan::{NodeMutationPlan, NodeQueryPlan, ProcessResponseAs};
+use crate::execute::plan::{
+    ApolloFederationSelect, NodeMutationPlan, NodeQueryPlan, ProcessResponseAs,
+};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
 use crate::metadata::resolved;
@@ -86,17 +88,37 @@ pub(crate) async fn explain_query_plan(
                 .await;
                 parallel_root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
             }
-            NodeQueryPlan::TypeName { .. } => {
-                return Err(error::Error::ExplainError(
-                    "cannot explain introspection queries".to_string(),
-                ));
+            NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::EntitiesSelect(
+                parallel_ndc_query_executions,
+            )) => {
+                let mut parallel_steps = Vec::new();
+                for ndc_query_execution in parallel_ndc_query_executions {
+                    let sequence_steps = get_execution_steps(
+                        http_client,
+                        alias.clone(),
+                        &ndc_query_execution.process_response_as,
+                        ndc_query_execution.execution_tree.remote_executions,
+                        types::NDCRequest::Query(
+                            ndc_query_execution.execution_tree.root_node.query,
+                        ),
+                        ndc_query_execution.execution_tree.root_node.data_connector,
+                    )
+                    .await;
+                    parallel_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+                }
+                match NonEmpty::from_vec(parallel_steps) {
+                    None => {}
+                    Some(parallel_steps) => {
+                        parallel_root_steps.push(Box::new(types::Step::Parallel(parallel_steps)));
+                    }
+                }
             }
-            NodeQueryPlan::SchemaField { .. } => {
-                return Err(error::Error::ExplainError(
-                    "cannot explain introspection queries".to_string(),
-                ));
-            }
-            NodeQueryPlan::TypeField { .. } => {
+            NodeQueryPlan::TypeName { .. }
+            | NodeQueryPlan::SchemaField { .. }
+            | NodeQueryPlan::TypeField { .. }
+            | NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
+                ..
+            }) => {
                 return Err(error::Error::ExplainError(
                     "cannot explain introspection queries".to_string(),
                 ));

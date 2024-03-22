@@ -14,7 +14,7 @@ pub mod sdl;
 
 // A simple wrapper on top of ast::TypeName so that we can track the construction
 // of TypeNames during the schema building phase.
-#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Hash)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone, Hash, PartialOrd, Ord)]
 pub struct RegisteredTypeName(pub(super) ast::TypeName);
 
 impl RegisteredTypeName {
@@ -221,12 +221,19 @@ impl DeprecationStatus {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub struct Directive {
+    pub name: ast::Name,
+    pub arguments: BTreeMap<ast::Name, gql::ConstValue>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Object<S: SchemaContext> {
     pub name: ast::TypeName,
     pub description: Option<String>,
-    pub fields: HashMap<ast::Name, Namespaced<S, Field<S>>>,
+    pub fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
     /// The set of interfaces that this object type implements
-    pub interfaces: HashMap<ast::TypeName, Namespaced<S, ()>>,
+    pub interfaces: BTreeMap<ast::TypeName, Namespaced<S, ()>>,
+    pub directives: Vec<Directive>,
 }
 
 fn build_typename_field<S: SchemaContext>(builder: &mut Builder<S>) -> Namespaced<S, Field<S>> {
@@ -239,7 +246,7 @@ fn build_typename_field<S: SchemaContext>(builder: &mut Builder<S>) -> Namespace
                 base: ast::BaseType::Named(TypeName(mk_name!("String"))),
                 nullable: false,
             },
-            arguments: HashMap::new(),
+            arguments: BTreeMap::new(),
             deprecation_status: DeprecationStatus::NotDeprecated,
         },
         S::introspection_namespace_node(),
@@ -251,8 +258,9 @@ impl<S: SchemaContext> Object<S> {
         builder: &mut Builder<S>,
         name: ast::TypeName,
         description: Option<String>,
-        fields: HashMap<ast::Name, Namespaced<S, Field<S>>>,
-        interfaces: HashMap<RegisteredTypeName, Namespaced<S, ()>>,
+        fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
+        interfaces: BTreeMap<RegisteredTypeName, Namespaced<S, ()>>,
+        directives: Vec<Directive>,
     ) -> Self {
         let interfaces = interfaces.into_iter().map(|(k, v)| (k.0, v)).collect();
         let mut definition = Object {
@@ -260,6 +268,7 @@ impl<S: SchemaContext> Object<S> {
             description,
             fields,
             interfaces,
+            directives,
         };
         let typename_field = build_typename_field(builder);
         definition
@@ -281,7 +290,7 @@ pub struct Field<S: SchemaContext> {
     pub description: Option<String>,
     pub info: S::GenericNodeInfo,
     pub field_type: ast::Type,
-    pub arguments: HashMap<ast::Name, Namespaced<S, InputField<S>>>,
+    pub arguments: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
     pub deprecation_status: DeprecationStatus,
 }
 
@@ -291,7 +300,7 @@ impl<S: SchemaContext> Field<S> {
         description: Option<String>,
         info: S::GenericNodeInfo,
         field_type: RegisteredType,
-        arguments: HashMap<ast::Name, Namespaced<S, InputField<S>>>,
+        arguments: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
         deprecation_status: DeprecationStatus,
     ) -> Self {
         Field {
@@ -309,19 +318,22 @@ impl<S: SchemaContext> Field<S> {
 pub struct InputObject<S: SchemaContext> {
     pub name: ast::TypeName,
     pub description: Option<String>,
-    pub fields: HashMap<ast::Name, Namespaced<S, InputField<S>>>,
+    pub fields: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
+    pub directives: Vec<Directive>,
 }
 
 impl<S: SchemaContext> InputObject<S> {
     pub fn new(
         name: ast::TypeName,
         description: Option<String>,
-        fields: HashMap<ast::Name, Namespaced<S, InputField<S>>>,
+        fields: BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
+        directives: Vec<Directive>,
     ) -> Self {
         InputObject {
             name,
             description,
             fields,
+            directives,
         }
     }
     // TODO: we'll probably have to pre-compute this if required
@@ -366,6 +378,7 @@ impl<S: SchemaContext> InputField<S> {
 pub struct Scalar {
     pub name: ast::TypeName,
     pub description: Option<String>,
+    pub directives: Vec<Directive>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -380,15 +393,17 @@ pub struct EnumValue<S: SchemaContext> {
 pub struct Enum<S: SchemaContext> {
     pub name: ast::TypeName,
     pub description: Option<String>,
-    pub values: HashMap<ast::Name, Namespaced<S, EnumValue<S>>>,
+    pub values: BTreeMap<ast::Name, Namespaced<S, EnumValue<S>>>,
+    pub directives: Vec<Directive>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Union<S: SchemaContext> {
     pub name: ast::TypeName,
     pub description: Option<String>,
-    fields: HashMap<ast::Name, Namespaced<S, Field<S>>>,
-    pub members: HashMap<ast::TypeName, Namespaced<S, ()>>,
+    fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
+    pub members: BTreeMap<ast::TypeName, Namespaced<S, ()>>,
+    pub directives: Vec<Directive>,
 }
 
 impl<S: SchemaContext> Union<S> {
@@ -396,14 +411,16 @@ impl<S: SchemaContext> Union<S> {
         builder: &mut Builder<S>,
         name: ast::TypeName,
         description: Option<String>,
-        members: HashMap<RegisteredTypeName, Namespaced<S, ()>>,
+        members: BTreeMap<RegisteredTypeName, Namespaced<S, ()>>,
+        directives: Vec<Directive>,
     ) -> Self {
         let typename_field = build_typename_field(builder);
         Union {
             name,
             description,
-            fields: HashMap::from_iter([(typename_field.data.name.clone(), typename_field)]),
+            fields: BTreeMap::from_iter([(typename_field.data.name.clone(), typename_field)]),
             members: members.into_iter().map(|(k, v)| (k.0, v)).collect(),
+            directives,
         }
     }
 
@@ -411,15 +428,20 @@ impl<S: SchemaContext> Union<S> {
         // Note Clone of Name is constant
         self.members.keys().collect()
     }
+
+    pub fn get_fields(&self) -> &BTreeMap<ast::Name, Namespaced<S, Field<S>>> {
+        &self.fields
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct Interface<S: SchemaContext> {
     pub name: ast::TypeName,
     pub description: Option<String>,
-    pub fields: HashMap<ast::Name, Namespaced<S, Field<S>>>,
-    pub interfaces: HashMap<ast::TypeName, Namespaced<S, ()>>,
-    pub implemented_by: HashMap<ast::TypeName, Namespaced<S, ()>>,
+    pub fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
+    pub interfaces: BTreeMap<ast::TypeName, Namespaced<S, ()>>,
+    pub implemented_by: BTreeMap<ast::TypeName, Namespaced<S, ()>>,
+    pub directives: Vec<Directive>,
 }
 
 impl<S: SchemaContext> Interface<S> {
@@ -427,9 +449,10 @@ impl<S: SchemaContext> Interface<S> {
         builder: &mut Builder<S>,
         name: ast::TypeName,
         description: Option<String>,
-        fields: HashMap<ast::Name, Namespaced<S, Field<S>>>,
-        interfaces: HashMap<RegisteredTypeName, Namespaced<S, ()>>,
-        implemented_by: HashMap<RegisteredTypeName, Namespaced<S, ()>>,
+        fields: BTreeMap<ast::Name, Namespaced<S, Field<S>>>,
+        interfaces: BTreeMap<RegisteredTypeName, Namespaced<S, ()>>,
+        implemented_by: BTreeMap<RegisteredTypeName, Namespaced<S, ()>>,
+        directives: Vec<Directive>,
     ) -> Self {
         let mut definition = Interface {
             name,
@@ -437,6 +460,7 @@ impl<S: SchemaContext> Interface<S> {
             fields,
             interfaces: interfaces.into_iter().map(|(k, v)| (k.0, v)).collect(),
             implemented_by: implemented_by.into_iter().map(|(k, v)| (k.0, v)).collect(),
+            directives,
         };
         let typename_field = build_typename_field(builder);
         definition

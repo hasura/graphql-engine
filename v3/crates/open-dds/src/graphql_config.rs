@@ -20,6 +20,7 @@ pub enum GraphqlConfig {
 pub struct GraphqlConfigV1 {
     pub query: QueryGraphqlConfig,
     pub mutation: MutationGraphqlConfig,
+    pub apollo_federation: Option<GraphqlApolloFederationConfig>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -122,4 +123,12 @@ pub struct OrderByEnumTypeName {
 #[opendd(json_schema(title = "MutationGraphqlConfig"))]
 pub struct MutationGraphqlConfig {
     pub root_operation_type_name: String,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "GraphqlApolloFederationConfig"))]
+pub struct GraphqlApolloFederationConfig {
+    pub enable_root_fields: bool,
 }

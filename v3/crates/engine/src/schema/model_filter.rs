@@ -2,7 +2,7 @@ use hasura_authn_core::Role;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema::{self as gql_schema, InputField, Namespaced};
 use open_dds::models::ModelName;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::{FilterRelationshipAnnotation, ModelTargetSource};
@@ -57,7 +57,7 @@ pub fn build_model_filter_expression_input_schema(
         }
     })?;
     if let Some(boolean_expression_info) = &model.graphql_api.filter_expression {
-        let mut input_fields = HashMap::new();
+        let mut input_fields = BTreeMap::new();
 
         // `_and`, `_or` or `_not` fields are available for all roles
         let not_field_name = &boolean_expression_info
@@ -264,7 +264,7 @@ pub fn build_model_filter_expression_input_schema(
             }
         }
         Ok(gql_schema::TypeInfo::InputObject(
-            gql_schema::InputObject::new(type_name.clone(), None, input_fields),
+            gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),
         ))
     } else {
         Err(
@@ -302,7 +302,7 @@ pub fn build_scalar_comparison_input(
     operators: &Vec<(ast::Name, QualifiedTypeReference)>,
     is_null_operator_name: &ast::Name,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let mut input_fields: HashMap<ast::Name, Namespaced<GDS, InputField<GDS>>> = HashMap::new();
+    let mut input_fields: BTreeMap<ast::Name, Namespaced<GDS, InputField<GDS>>> = BTreeMap::new();
 
     // Add is_null field
     let is_null_input_type = ast::TypeContainer {
@@ -358,6 +358,6 @@ pub fn build_scalar_comparison_input(
     }
 
     Ok(gql_schema::TypeInfo::InputObject(
-        gql_schema::InputObject::new(type_name.clone(), None, input_fields),
+        gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),
     ))
 }

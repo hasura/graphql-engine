@@ -5,7 +5,7 @@
 use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::Name;
 use lang_graphql::schema as gql_schema;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::metadata::resolved;
 use crate::schema::mk_deprecation_status;
@@ -24,10 +24,10 @@ pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
     model: &resolved::model::Model,
 ) -> Result<
-    HashMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
+    BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
 > {
-    let mut arguments = HashMap::new();
+    let mut arguments = BTreeMap::new();
 
     // insert limit argument
     if let Some(limit_field) = &model.graphql_api.limit_field {

@@ -3,7 +3,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::models::ModelName;
 use open_dds::relationships::RelationshipType;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::{ModelTargetSource, OrderByRelationshipAnnotation};
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
@@ -25,7 +25,7 @@ pub fn build_order_by_enum_type_schema(
     builder: &mut gql_schema::Builder<GDS>,
     order_by_type_name: &ast::TypeName,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let mut order_by_values = HashMap::new();
+    let mut order_by_values = BTreeMap::new();
     let order_by_input_config = gds
         .metadata
         .graphql_config
@@ -75,6 +75,7 @@ pub fn build_order_by_enum_type_schema(
         name: order_by_type_name.clone(),
         description: None,
         values: order_by_values,
+        directives: Vec::new(),
     }))
 }
 
@@ -116,7 +117,7 @@ pub fn build_model_order_by_input_schema(
 
     let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
 
-    let mut fields = HashMap::new();
+    let mut fields = BTreeMap::new();
 
     let order_by_input_config = gds
         .metadata
@@ -243,7 +244,7 @@ pub fn build_model_order_by_input_schema(
         }
 
         Ok(gql_schema::TypeInfo::InputObject(
-            gql_schema::InputObject::new(type_name.clone(), None, fields),
+            gql_schema::InputObject::new(type_name.clone(), None, fields, Vec::new()),
         ))
     } else {
         Err(Error::NoOrderByExpression {

@@ -55,6 +55,9 @@ pub fn get_all_usage_counts_in_query(ir: &IndexMap<Alias, RootField<'_, '_>>) ->
                 root_field::QueryRootField::TypeName { .. } => {}
                 root_field::QueryRootField::SchemaField { .. } => {}
                 root_field::QueryRootField::TypeField { .. } => {}
+                root_field::QueryRootField::ApolloFederation(
+                    root_field::ApolloFederationRootFields::ServiceField { .. },
+                ) => {}
                 root_field::QueryRootField::ModelSelectOne { ir, .. } => {
                     let usage_counts = ir.usage_counts.clone();
                     extend_usage_count(usage_counts, &mut all_usage_counts);
@@ -73,6 +76,14 @@ pub fn get_all_usage_counts_in_query(ir: &IndexMap<Alias, RootField<'_, '_>>) ->
                 root_field::QueryRootField::FunctionBasedCommand { ir, .. } => {
                     let usage_counts = ir.command_info.usage_counts.clone();
                     extend_usage_count(usage_counts, &mut all_usage_counts);
+                }
+                root_field::QueryRootField::ApolloFederation(
+                    root_field::ApolloFederationRootFields::EntitiesSelect(irs),
+                ) => {
+                    for ir in irs {
+                        let usage_counts = ir.usage_counts.clone();
+                        extend_usage_count(usage_counts, &mut all_usage_counts);
+                    }
                 }
             },
             root_field::RootField::MutationRootField(rf) => match rf {

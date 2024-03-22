@@ -101,8 +101,9 @@ where
                             }
                             OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
                                 let global_id_fields = typename_mappings.get(type_name).ok_or(
-                                    error::InternalDeveloperError::GlobalIDTypenameMappingNotFound {
+                                    error::InternalDeveloperError::TypenameMappingNotFound {
                                         type_name: type_name.clone(),
+                                        mapping_kind: "Global ID",
                                     },
                                 )?;
 
