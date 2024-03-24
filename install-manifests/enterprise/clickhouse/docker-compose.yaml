@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   hasura:
-    image: hasura/graphql-engine:v2.37.0
+    image: hasura/graphql-engine:v2.38.0
     restart: always
     ports:
       - 8080:8080
@@ -48,7 +48,7 @@ services:
       data-connector-agent:
         condition: service_healthy
   data-connector-agent:
-    image: hasura/clickhouse-data-connector:v2.37.0
+    image: hasura/clickhouse-data-connector:v2.38.0
     restart: always
     ports:
       - 8080:8081
