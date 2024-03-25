@@ -25,30 +25,31 @@ variables.
 **Example:** Fetch an author by their `author_id`:
 
 <GraphiQLIDE
-  query={`query getArticles($author_id: Int!) {
-  bigquery_articles(
-    where: { author_id: { _eq: $author_id } }
+  query={`query getArticles($author_id: Int!, $title: String!) {
+  articles(
+    where: { author_id: { _eq: $author_id }, title: { _ilike: $title } }
   ) {
     id
     title
   }
 }`}
-response={`{
+  response={`{
   "data": {
-    "bigquery_articles": [
+    "articles": [
       {
-        "id": "15",
+        "id": 15,
         "title": "How to climb Mount Everest"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "How to be successful on broadway"
       }
     ]
   }
 }`}
-variables={`{
-  "author_id": 1
+  variables={`{
+  "author_id": 1,
+  "title": "%How to%"
 }`}
 />
 

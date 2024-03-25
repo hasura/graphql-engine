@@ -308,7 +308,7 @@ In order to represent the structure of the data returned by the query, we first 
 :::info Permissions and Logical Models
 
 Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See the
-[Logical Model documentation](/schema/ms-sql-server/logical-models.mdx) for information on attaching permissions.
+[Logical Model documentation](/schema/snowflake/logical-models.mdx) for information on attaching permissions.
 
 :::
 
@@ -497,6 +497,14 @@ use an argument to specify the name of the table in a `FROM` clause.
 
 When making a query, the arguments are specified using the `args` parameter of the query root field.
 
+##### Example: `LIKE` operator
+
+A commonly used operator is the `LIKE`. When used in a `WHERE` condition, it's usually written with this syntax
+`WHERE Title LIKE '%word%'`.
+
+In order to use it with Native Query arguments, you need to use this syntax `LIKE ('%' || {{searchTitle}} || '%')`,
+where `searchTitle` is the Native Query parameter.
+
 ## Query functionality
 
 Just like tables, Native Queries generate GraphQL types with the ability to further break down the data. You can find
@@ -515,8 +523,7 @@ A future release will allow mutations to be specified using Native Queries.
 ## Permissions
 
 Native queries will inherit the permissions of the Logical Model that they return. See the
-[documentation on Logical Models](/schema/ms-sql-server/logical-models.mdx) for an explanation of how to add
-permissions.
+[documentation on Logical Models](/schema/snowflake/logical-models.mdx) for an explanation of how to add permissions.
 
 ## Relationships
 
@@ -530,7 +537,7 @@ Model in order to be tracked successfully.
 Currently relationships are only supported between Native Queries residing in the same source.
 
 As an example, consider the following Native Queries which implement the data model of articles and authors given in the
-section on [Logical Model references](/schema/ms-sql-server/logical-models.mdx#referencing-other-logical-models):
+section on [Logical Model references](/schema/snowflake/logical-models.mdx#referencing-other-logical-models):
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="api" label="API">

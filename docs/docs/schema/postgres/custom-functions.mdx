@@ -8,7 +8,6 @@ keywords:
   - postgres
   - schema
   - sql functions
-  - stored procedures
 ---
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
@@ -21,8 +20,7 @@ import TabItem from '@theme/TabItem';
 ## What are Custom functions?
 
 Postgres [user-defined SQL functions](https://www.postgresql.org/docs/current/sql-createfunction.html) can be used to
-either encapsulate some custom business logic or extend the built-in SQL functions and operators. SQL functions are also
-referred to as **stored procedures**.
+either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 
 Hasura GraphQL Engine lets you expose certain types of user-defined functions as top level fields in the GraphQL API to
 allow querying them with either `queries` or `subscriptions`, or for `VOLATILE` functions as `mutations`. These are

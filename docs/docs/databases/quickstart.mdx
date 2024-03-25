@@ -85,8 +85,7 @@ required to ensure connectivity to your database from Hasura Cloud if needed.
 <TabItem value="cli" label="CLI">
 
 In your `config v3` project, head to the `/metadata/databases/databases.yaml` file and add the database configuration as
-below. If you're using the `HASURA_GRAPHQL_DATABASE_URL` environment variable then the database will get automatically
-added and named default.
+below.
 
 ```yaml
 - name: <db_name>
@@ -254,8 +253,7 @@ X-Hasura-Role: admin
 When using Hasura Cloud, Metadata is stored for you in separate data storage to your connected database(s). When using
 Docker, if you want to
 [store the Hasura Metadata on a separate database](/deployment/graphql-engine-flags/reference.mdx#metadata-database-url),
-you can use the `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var to specify which database to use. By default, the Hasura
-Metadata is stored on the same database as specified in the `HASURA_GRAPHQL_DATABASE_URL` environment variable.
+you can use the `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var to specify which database to use.
 
 ## Connect different Hasura instances to the same database
 

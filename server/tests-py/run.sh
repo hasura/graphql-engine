@@ -41,6 +41,7 @@ export HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2 HASURA_GRAP
 
 echo
 echo '*** Running tests ***'
+export SQLALCHEMY_SILENCE_UBER_WARNING=1 # disable warnings about upgrading to SQLAlchemy 2.0
 pytest \
   --dist=loadscope \
   -n auto \

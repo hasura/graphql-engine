@@ -102,7 +102,7 @@ import Hasura.Server.Compression
 import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
-import Hasura.Server.Middleware (corsMiddleware)
+import Hasura.Server.Middleware
 import Hasura.Server.OpenAPI (buildOpenAPI)
 import Hasura.Server.Rest
 import Hasura.Server.Types
@@ -345,7 +345,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
 
   let getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger appEnvLoggers) appEnvManager headers acAuthMode parsedRequest)
-        authInfo <- onLeft authenticationResp (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders (ExtraUserInfo Nothing) . qErrModifier)
+        authInfo <- authenticationResp `onLeft` (logErrorAndResp Nothing requestId req (reqBody, Nothing) False Nothing origHeaders (ExtraUserInfo Nothing) . qErrModifier)
         let (userInfo, _, authHeaders, extraUserInfo) = authInfo
         appContext <- liftIO $ getAppContext appStateRef
         schemaCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
@@ -372,7 +372,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
         (queryJSON, parsedReq) <-
           runExcept (parseBody reqBody) `onLeft` \e -> do
-            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders extraUserInfo (qErrModifier e)
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal Nothing origHeaders extraUserInfo (qErrModifier e)
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
       -- in this case we parse the request _first_ and then send the request to the webhook for auth
@@ -382,7 +382,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             -- if the request fails to parse, call the webhook without a request body
             -- TODO should we signal this to the webhook somehow?
             (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
-            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False Nothing origHeaders extraUserInfo (qErrModifier e)
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo (Just parsedReq)
 
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
@@ -393,7 +393,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             -- if the request fails to parse, call the webhook without a request body
             -- TODO should we signal this to the webhook somehow?
             (userInfo, _, _, _, extraUserInfo) <- getInfo Nothing
-            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
+            logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False Nothing origHeaders extraUserInfo (qErrModifier e)
         let newReq = case parsedReq of
               EqrGQLReq reqText -> Just reqText
               -- Note: We send only `ReqsText` to the webhook in case of `ExtPersistedQueryRequest` (persisted queries),
@@ -406,6 +406,8 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
 
+    let queryTime = Just (ioWaitTime, serviceTime)
+
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes
     lift $ Tracing.attachMetadata [("enduser.role", roleNameToTxt $ _uiRole userInfo)]
 
@@ -415,10 +417,10 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
     -- log and return result
     case modResult of
       Left err ->
-        logErrorAndResp (Just userInfo) requestId req (reqBody, queryJSON) includeInternal headers extraUserInfo err
+        logErrorAndResp (Just userInfo) requestId req (reqBody, queryJSON) includeInternal queryTime headers extraUserInfo err
       Right (httpLogGraphQLInfo, res) -> do
         let httpLogMetadata = buildHttpLogMetadata @m httpLogGraphQLInfo extraUserInfo
-        logSuccessAndResp (Just userInfo) requestId req (reqBody, queryJSON) res (Just (ioWaitTime, serviceTime)) origHeaders authHeaders httpLogMetadata
+        logSuccessAndResp (Just userInfo) requestId req (reqBody, queryJSON) res queryTime origHeaders authHeaders httpLogMetadata
   where
     logErrorAndResp ::
       forall any ctx.
@@ -427,11 +429,12 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       Wai.Request ->
       (BL.ByteString, Maybe Value) ->
       Bool ->
+      Maybe (DiffTime, DiffTime) ->
       [HTTP.Header] ->
       ExtraUserInfo ->
       QErr ->
       Spock.ActionCtxT ctx m any
-    logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
+    logErrorAndResp userInfo reqId waiReq req includeInternal qTime headers extraUserInfo qErr = do
       AppEnv {..} <- lift askAppEnv
       let httpLogMetadata = buildHttpLogMetadata @m emptyHttpLogGraphQLInfo extraUserInfo
           jsonResponse = J.encodingToLazyByteString $ qErrEncoder includeInternal qErr
@@ -439,7 +442,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allHeaders = [contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
-      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata True
+      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr qTime Nothing headers httpLogMetadata True
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
       Spock.lazyBytes jsonResponse
@@ -880,6 +883,9 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
   Spock.middleware
     $ corsMiddleware (acCorsPolicy <$> getAppContext appStateRef)
 
+  -- bypass warp's use of 'auto-update'. See #10662
+  Spock.middleware dateHeaderMiddleware
+
   -- API Console and Root Dir
   serveApiConsole
 
@@ -1140,7 +1146,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       (reqId, _newHeaders) <- getRequestId headers
       -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
       -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
-      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m) False
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err Nothing Nothing headers (emptyHttpLogMetadata @m) False
 
     spockAction ::
       forall a.
@@ -1212,7 +1218,7 @@ raiseGenericApiError logger loggingSetting headers qErr = do
   (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
   -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
   -- transfer bytes for requests to undefined resources
-  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr headers (emptyHttpLogMetadata @m) False
+  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr Nothing Nothing headers (emptyHttpLogMetadata @m) False
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr

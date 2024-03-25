@@ -58,7 +58,7 @@ Example:
 docker run -p 8080:8080 \
        -v /home/me/my-project/migrations:/hasura-migrations \
        -v /home/me/my-project/metadata:/hasura-metadata \
-       -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
+       -e HASURA_METADATA_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
        hasura/graphql-engine:v1.2.0.cli-migrations-v2
 ```
 

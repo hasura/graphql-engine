@@ -71,10 +71,13 @@
     font-size: var(--ifm-small-font-size);
     font-weight: var(--ifm-font-weight-semibold);
     align-self: center;
+    display: grid;
     img {
       width: 97px;
     }
-
+    svg {
+      width: 170px;
+    }
     .hasuracon23-img {
       min-width: 159px;
       // margin-right: 42px;
@@ -216,7 +219,7 @@ html[data-theme='dark'] {
 @media (min-width: 997px) and (max-width: 1380px) {
   .hasura-con-banner {
     grid-template-columns: 1fr;
-    grid-gap: 20px;
+    grid-gap: 20px !important;
     .hasura-con-register-button {
       margin-top: 20px;
     }

@@ -713,10 +713,10 @@ instance HttpLog AppM where
 
   buildExtraHttpLogMetadata _ _ = ()
 
-  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ _ =
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr qTime cType headers _ _ =
     unLoggerTracing logger
       $ mkHttpLog
-      $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
+      $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr qTime cType headers
 
   logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) _ =
     unLoggerTracing logger

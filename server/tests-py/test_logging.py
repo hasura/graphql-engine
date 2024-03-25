@@ -45,8 +45,7 @@ class TestLogging:
         headers = {'x-request-id': 'successful-query-log-test'}
         if hge_ctx.hge_key:
             headers['x-hasura-admin-secret'] = hge_ctx.hge_key
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
-                                 headers=headers)
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q, headers=headers)
         assert resp.status_code == 200 and 'data' in resp.json()
 
         # make a query where JSON body parsing fails
@@ -54,16 +53,30 @@ class TestLogging:
         headers = {'x-request-id': 'json-parse-fail-log-test'}
         if hge_ctx.hge_key:
             headers['x-hasura-admin-secret'] = hge_ctx.hge_key
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
-                                 headers=headers)
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q, headers=headers)
         assert resp.status_code == 200 and 'errors' in resp.json()
 
         # make an unauthorized query where admin secret/access token is empty
         q = {'query': 'query { hello {code name} }'}
-        headers = {'x-request-id': 'unauthorized-query-test'}
-        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
-                                 headers=headers)
+        headers = {'x-request-id': 'unauthorized-query-log-test'}
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q, headers=headers)
         assert resp.status_code == 200 and 'errors' in resp.json()
+
+        # make a successful "run SQL" query
+        q = {'type': 'run_sql', 'args': {'source': 'default', 'sql': 'SELECT 1 AS one'}}
+        headers = {'x-request-id': 'successful-run-sql-log-test'}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v2/query', json=q, headers=headers)
+        assert resp.status_code == 200 and 'result' in resp.json()
+
+        # make a failed "run SQL" query
+        q = {'type': 'run_sql', 'args': {'source': 'default', 'sql': 'SELECT x FROM non_existent_table'}}
+        headers = {'x-request-id': 'failed-run-sql-log-test'}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        resp = hge_ctx.http.post(hge_ctx.hge_url + '/v2/query', json=q, headers=headers)
+        assert resp.status_code == 400
 
         # make an unauthorized metadata request where admin secret/access token is empty
         q = {
@@ -79,7 +92,7 @@ class TestLogging:
                 }
             }
         }
-        headers = {'x-request-id': 'unauthorized-metadata-test'}
+        headers = {'x-request-id': 'unauthorized-metadata-log-test'}
         resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/query', json=q,
                                  headers=headers)
         assert resp.status_code == 401 and 'error' in resp.json()
@@ -94,7 +107,7 @@ class TestLogging:
                 'kind' in x['detail'] and \
                 x['detail']['kind'] == 'server_configuration'
 
-        config_logs = list(filter(_get_server_config, logs_from_requests))
+        config_logs = [l for l in logs_from_requests if _get_server_config(l)]
         print(config_logs)
         assert len(config_logs) == 1
         config_log = config_logs[0]
@@ -130,7 +143,7 @@ class TestLogging:
             return x['type'] == 'http-log'
 
         print('all logs gathered', logs_from_requests)
-        http_logs = list(filter(_get_http_logs, logs_from_requests))
+        http_logs = [l for l in logs_from_requests if _get_http_logs(l)]
         print('http logs', http_logs)
         assert len(http_logs) > 0
         for http_log in http_logs:
@@ -143,8 +156,9 @@ class TestLogging:
 
             operation = http_log['detail']['operation']
             assert 'request_id' in operation
-            if operation['request_id'] == 'successful-query-log-test':
+            if operation['request_id'] in ['successful-query-log-test', 'successful-run-sql-log-test', 'failed-run-sql-log-test']:
                 assert 'query_execution_time' in operation
+            if operation['request_id'] == 'successful-query-log-test':
                 assert 'user_vars' in operation
                 # we should see the `query` field in successful operations
                 assert 'query' in operation
@@ -156,7 +170,7 @@ class TestLogging:
         def _get_query_logs(x):
             return x['type'] == 'query-log'
 
-        query_logs = list(filter(_get_query_logs, logs_from_requests))
+        query_logs = [l for l in logs_from_requests if _get_query_logs(l)]
         assert len(query_logs) > 0
         onelog = query_logs[0]['detail']
         assert 'request_id' in onelog
@@ -165,11 +179,11 @@ class TestLogging:
         assert 'generated_sql' in onelog
 
     def test_http_parse_failed_log(self, logs_from_requests):
-        def _get_parse_failed_logs(x):
+        def _get_logs(x):
             return x['type'] == 'http-log' and \
                 x['detail']['operation']['request_id'] == 'json-parse-fail-log-test'
 
-        http_logs = list(filter(_get_parse_failed_logs, logs_from_requests))
+        http_logs = [l for l in logs_from_requests if _get_logs(l)]
         print('parse failed logs', http_logs)
         assert len(http_logs) > 0
         print(http_logs[0])
@@ -177,11 +191,11 @@ class TestLogging:
         assert http_logs[0]['detail']['operation']['error']['code'] == 'parse-failed'
 
     def test_http_unauthorized_query(self, logs_from_requests):
-        def _get_failed_logs(x):
+        def _get_logs(x):
             return x['type'] == 'http-log' and \
-                x['detail']['operation']['request_id'] == 'unauthorized-query-test'
+                x['detail']['operation']['request_id'] == 'unauthorized-query-log-test'
 
-        http_logs = list(filter(_get_failed_logs, logs_from_requests))
+        http_logs = [l for l in logs_from_requests if _get_logs(l)]
         print('unauthorized failed logs', http_logs)
         assert len(http_logs) > 0
         print(http_logs[0])
@@ -190,12 +204,35 @@ class TestLogging:
         assert http_logs[0]['detail']['operation'].get('query') is None
         assert http_logs[0]['detail']['operation']['raw_query'] is not None
 
-    def test_http_unauthorized_metadata(self, logs_from_requests):
-        def _get_failed_logs(x):
+    def test_successful_run_sql(self, logs_from_requests):
+        def _get_logs(x):
             return x['type'] == 'http-log' and \
-                x['detail']['operation']['request_id'] == 'unauthorized-metadata-test'
+                x['detail']['operation']['request_id'] == 'successful-run-sql-log-test'
 
-        http_logs = list(filter(_get_failed_logs, logs_from_requests))
+        http_logs = [l for l in logs_from_requests if _get_logs(l)]
+        print('successful run SQL logs', http_logs)
+        assert len(http_logs) > 0
+        print(http_logs[0])
+        assert http_logs[0]['detail']['operation']['query']['type'] == 'run_sql'
+
+    def test_failed_run_sql(self, logs_from_requests):
+        def _get_logs(x):
+            return x['type'] == 'http-log' and \
+                x['detail']['operation']['request_id'] == 'failed-run-sql-log-test'
+
+        http_logs = [l for l in logs_from_requests if _get_logs(l)]
+        print('failed run SQL logs', http_logs)
+        assert len(http_logs) > 0
+        print(http_logs[0])
+        assert http_logs[0]['detail']['operation']['error']['code'] == 'postgres-error'
+        assert http_logs[0]['detail']['operation']['query']['type'] == 'run_sql'
+
+    def test_http_unauthorized_metadata(self, logs_from_requests):
+        def _get_logs(x):
+            return x['type'] == 'http-log' and \
+                x['detail']['operation']['request_id'] == 'unauthorized-metadata-log-test'
+
+        http_logs = [l for l in logs_from_requests if _get_logs(l)]
         print('unauthorized failed logs', http_logs)
         assert len(http_logs) > 0
         print(http_logs[0])

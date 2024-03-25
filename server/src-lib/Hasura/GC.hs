@@ -75,7 +75,7 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
               else do
                 when (areOverdue && not areIdle)
                   $ logger
-                  $ UnstructuredLog LevelWarn
+                  $ UnstructuredLog LevelInfo
                   $ "Overdue for a major GC: forcing one even though we don't appear to be idle"
                 performMajorGC
                 startTimer >>= go (gcs + 1) (major_gcs + 1) True

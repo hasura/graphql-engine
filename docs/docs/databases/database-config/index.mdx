@@ -72,9 +72,6 @@ is recommended to use environment variables for better security _(as connection 
 exposed as part of the Hasura Metadata)_ as well as to allow configuring different databases in different
 environments _(like staging or production)_ easily.
 
-A database can be connected to using the `HASURA_GRAPHQL_DATABASE_URL` environment variable as well in which case it
-gets added automatically as a database named `default`.
-
 ### Allow connections from the Hasura Cloud IP {#cloud-projects-create-allow-nat-ip}
 
 When using Hasura Cloud, you may need to adjust your connection settings of your database provider to allow
@@ -114,8 +111,6 @@ is recommended to use environment variables for better security _(as connection 
 exposed as part of the Hasura Metadata)_ as well as to allow configuring different databases in different
 environments _(like staging or production)_ easily.
 
-A database can be connected to using the `HASURA_GRAPHQL_DATABASE_URL` environment variable as well in which case it
-gets added automatically as a database named default.
 
 </TabItem>
 </Tabs>
@@ -127,8 +122,7 @@ gets added automatically as a database named default.
 <TabItem value="cli" label="CLI">
 
 In your `config v3` project, head to the `/metadata/databases/databases.yaml` file and add the database configuration as
-below. If you're using the `HASURA_GRAPHQL_DATABASE_URL` environment variable then the database will get automatically
-added and named default.
+below.
 
 ```yaml
 - name: <db_name>
@@ -198,8 +192,7 @@ Engine instance.
 When using Hasura Cloud, Metadata is stored for you in separate data storage to your connected database(s). When
 using Docker, if you want to
 [store the Hasura Metadata on a separate database](/deployment/graphql-engine-flags/reference.mdx#metadata-database-url),
-you can use the `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var to specify which database to use. By default, the
-Hasura Metadata is stored on the same database as specified in the `HASURA_GRAPHQL_DATABASE_URL` environment variable.
+you can use the `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var to specify which database to use.
 
 ## Connect different Hasura instances to the same database
 

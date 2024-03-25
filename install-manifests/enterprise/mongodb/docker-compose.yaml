@@ -30,7 +30,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongouser
       MONGO_INITDB_ROOT_PASSWORD: mongopassword
   hasura:
-    image: hasura/graphql-engine:v2.37.0
+    image: hasura/graphql-engine:v2.38.0
     restart: always
     ports:
       - 8080:8080
@@ -60,7 +60,7 @@ services:
       postgres:
         condition: service_healthy
   mongo-data-connector:
-    image: hasura/mongo-data-connector:v2.37.0
+    image: hasura/mongo-data-connector:v2.38.0
     ports:
       - 3000:3000
 volumes:

@@ -306,6 +306,10 @@ class (Monad m) => HttpLog m where
     (BL.ByteString, Maybe J.Value) ->
     -- | the error
     QErr ->
+    -- | IO/network wait time and service time (respectively) for this request, if available.
+    Maybe (DiffTime, DiffTime) ->
+    -- | possible compression type
+    Maybe CompressionType ->
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
@@ -348,7 +352,7 @@ instance (HttpLog m) => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
+  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
@@ -358,7 +362,7 @@ instance (HttpLog m) => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
+  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
@@ -368,49 +372,49 @@ instance (HttpLog m) => HttpLog (ExceptT e m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
+  logHttpError a b c d e f g h i j k l = lift $ logHttpError a b c d e f g h i j k l
 
   logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 -- | Log information about the HTTP request
 data HttpInfoLog = HttpInfoLog
-  { hlStatus :: !HTTP.Status,
-    hlMethod :: !Text,
-    hlSource :: !Wai.IpAddress,
-    hlPath :: !Text,
-    hlHttpVersion :: !HTTP.HttpVersion,
-    hlCompression :: !(Maybe CompressionType),
+  { hlStatus :: HTTP.Status,
+    hlMethod :: Text,
+    hlSource :: Wai.IpAddress,
+    hlPath :: Text,
+    hlHttpVersion :: HTTP.HttpVersion,
+    hlCompression :: Maybe CompressionType,
     -- | all the request headers
-    hlHeaders :: ![HTTP.Header]
+    hlHeaders :: [HTTP.Header]
   }
   deriving (Eq)
 
 instance J.ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv compressTypeM _) =
+  toJSON (HttpInfoLog st met src path hv compressType _) =
     J.object
       [ "status" J..= HTTP.statusCode st,
         "method" J..= met,
         "ip" J..= Wai.showIPAddress src,
         "url" J..= path,
         "http_version" J..= show hv,
-        "content_encoding" J..= (compressionTypeToTxt <$> compressTypeM)
+        "content_encoding" J..= (compressionTypeToTxt <$> compressType)
       ]
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
 data OperationLog = OperationLog
-  { olRequestId :: !RequestId,
-    olUserVars :: !(Maybe SessionVariables),
-    olResponseSize :: !(Maybe Int64),
+  { olRequestId :: RequestId,
+    olUserVars :: Maybe SessionVariables,
+    olResponseSize :: Maybe Int64,
     -- | Response size before compression
-    olUncompressedResponseSize :: !Int64,
+    olUncompressedResponseSize :: Int64,
     -- | Request IO wait time, i.e. time spent reading the full request from the socket.
-    olRequestReadTime :: !(Maybe Seconds),
+    olRequestReadTime :: Maybe Seconds,
     -- | Service time, not including request IO wait time.
-    olQueryExecutionTime :: !(Maybe Seconds),
-    olQuery :: !(Maybe J.Value),
-    olRawQuery :: !(Maybe Text),
-    olError :: !(Maybe QErr),
-    olRequestMode :: !RequestMode
+    olQueryExecutionTime :: Maybe Seconds,
+    olQuery :: Maybe J.Value,
+    olRawQuery :: Maybe Text,
+    olError :: Maybe QErr,
+    olRequestMode :: RequestMode
   }
   deriving (Eq, Generic)
 
@@ -421,9 +425,9 @@ instance J.ToJSON OperationLog where
 -- | @BatchOperationSuccessLog@ contains the information required for a single
 --   successful operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationSuccessLog@
 data BatchOperationSuccessLog = BatchOperationSuccessLog
-  { _bolQuery :: !(Maybe J.Value),
-    _bolResponseSize :: !Int64,
-    _bolQueryExecutionTime :: !Seconds
+  { _bolQuery :: Maybe J.Value,
+    _bolResponseSize :: Int64,
+    _bolQueryExecutionTime :: Seconds
   }
   deriving (Eq, Generic)
 

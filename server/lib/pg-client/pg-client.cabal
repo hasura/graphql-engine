@@ -54,6 +54,7 @@ library
     Database.PG.Query.Pool
     Database.PG.Query.PTI
     Database.PG.Query.Transaction
+    Database.PG.Query.URL
 
   build-depends:
     , aeson
@@ -65,6 +66,9 @@ library
     , ekg-prometheus
     , hashable
     , hashtables
+    -- for our HASURA_SECRETS_BLOCKING_FORCE_REFRESH_URL hook
+    , http-client
+    , http-types
     , mmorph
     , monad-control
     , mtl
@@ -94,19 +98,20 @@ test-suite pg-client-tests
     Interrupt
     Timeout
     Jsonb
+    URL
 
   build-depends:
+    , aeson
     , async
     , base
     , bytestring
     , hspec
+    , mtl
     , pg-client
+    , postgresql-libpq
     , safe-exceptions
     , time
     , transformers
-    , aeson
-    , mtl
-    , postgresql-libpq
 
 benchmark pg-client-bench
   import:         common-all
@@ -123,5 +128,4 @@ benchmark pg-client-bench
     , hasql-transaction
     , pg-client
     , tasty-bench
-    , text
     , transformers
