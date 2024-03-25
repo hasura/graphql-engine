@@ -1,5 +1,5 @@
 # build
-FROM rust:1.76-buster AS builder
+FROM rust:1.77-buster AS builder
 
 WORKDIR /app
 COPY Cargo.toml Cargo.lock .
