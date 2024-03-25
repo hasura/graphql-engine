@@ -13,9 +13,7 @@ use open_dds::{
 
 use crate::metadata::resolved::subgraph::Qualified;
 
-use crate::metadata::resolved::command::{
-    resolve_command, resolve_command_permissions, resolve_command_source, Command,
-};
+use crate::metadata::resolved::command;
 use crate::metadata::resolved::data_connector::DataConnectorContext;
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::model::{
@@ -39,7 +37,7 @@ use crate::metadata::resolved::graphql_config::{GlobalGraphqlConfig, GraphqlConf
 pub struct Metadata {
     pub types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
-    pub commands: IndexMap<Qualified<CommandName>, Command>,
+    pub commands: IndexMap<Qualified<CommandName>, command::Command>,
     pub boolean_expression_types: HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
     pub graphql_config: GlobalGraphqlConfig,
 }
@@ -113,6 +111,169 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         open_dds::accessor::MetadataAccessor::new(metadata);
 
     // resolve data connectors
+    let mut data_connectors = resolve_data_connectors(&metadata_accessor)?;
+
+    let mut types: HashMap<Qualified<CustomTypeName>, TypeRepresentation> = HashMap::new();
+    let mut existing_graphql_types: HashSet<ast::TypeName> = HashSet::new();
+
+    // we collect all the types with global id fields, and models with global id source for that field. this is used
+    // later for validation, such that a type with global id field must have atleast one model with global id source
+    let mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>> =
+        HashMap::new();
+    let mut apollo_federation_entity_enabled_types: HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<ModelName>>,
+    > = HashMap::new();
+
+    // resolve object types
+    let data_connector_type_mappings = resolve_data_connector_type_mappings(
+        &metadata_accessor,
+        &data_connectors,
+        &mut types,
+        &mut existing_graphql_types,
+        &mut global_id_enabled_types,
+        &mut apollo_federation_entity_enabled_types,
+    )?;
+
+    // resolve scalar types
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_scalar_types(&metadata_accessor, &mut types, &mut existing_graphql_types)?;
+
+    // resolve type permissions
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_type_permissions(&metadata_accessor, &mut types)?;
+
+    // resolve object boolean expression types
+    let boolean_expression_types = resolve_boolean_expression_types(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_type_mappings,
+        &mut types,
+        &mut existing_graphql_types,
+    )?;
+
+    // resolve data connector scalar representations
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_data_connector_scalar_representations(
+        &metadata_accessor,
+        &mut data_connectors,
+        &mut types,
+        &mut existing_graphql_types,
+    )?;
+
+    let graphql_config =
+        GraphqlConfig::new(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
+
+    // resolve models
+    // TODO: validate types
+    let mut models = resolve_models(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_type_mappings,
+        &mut types,
+        &mut existing_graphql_types,
+        &mut global_id_enabled_types,
+        &mut apollo_federation_entity_enabled_types,
+        &boolean_expression_types,
+        &graphql_config,
+    )?;
+
+    // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
+    //   - Throw an error if no model with globalIdSource:true is found for the object type.
+    for (object_type, model_name_list) in global_id_enabled_types {
+        if model_name_list.is_empty() {
+            return Err(Error::GlobalIdSourceNotDefined { object_type });
+        }
+    }
+
+    // To check if apollo federation entity keys are defined in object type but no model has
+    // apollo_federation_entity_source set to true:
+    //   - Throw an error if no model with apolloFederation.entitySource:true is found for the object type.
+    for (object_type, model_name_list) in apollo_federation_entity_enabled_types {
+        if model_name_list.is_none() {
+            return Err(Error::ApolloFederationEntitySourceNotDefined { object_type });
+        }
+    }
+
+    // resolve commands
+    let mut commands = resolve_commands(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_type_mappings,
+        &types,
+    )?;
+
+    // resolve relationships
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_relationships(
+        &metadata_accessor,
+        &data_connectors,
+        &mut types,
+        &models,
+        &commands,
+    )?;
+
+    // resolve command permissions
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_command_permissions(&metadata_accessor, &mut commands)?;
+
+    // resolve model permissions
+    // Note: Model permissions's predicate can include the relationship field,
+    // hence Model permissions should be resolved after the relationships of a
+    // model is resolved.
+    // TODO: make this return values rather than blindly mutating it's inputs
+    resolve_model_permissions(&metadata_accessor, &data_connectors, &types, &mut models)?;
+
+    Ok(Metadata {
+        types,
+        models,
+        commands,
+        boolean_expression_types,
+        graphql_config: graphql_config.global.clone(),
+    })
+}
+
+/// resolve commands
+fn resolve_commands(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connector_type_mappings: &DataConnectorTypeMappings,
+    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
+    let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
+    for open_dds::accessor::QualifiedObject {
+        subgraph,
+        object: command,
+    } in &metadata_accessor.commands
+    {
+        let mut resolved_command = command::resolve_command(command, subgraph, types)?;
+        if let Some(command_source) = &command.source {
+            command::resolve_command_source(
+                command_source,
+                &mut resolved_command,
+                subgraph,
+                data_connectors,
+                types,
+                data_connector_type_mappings,
+            )?;
+        }
+        let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
+        if commands
+            .insert(qualified_command_name.clone(), resolved_command)
+            .is_some()
+        {
+            return Err(Error::DuplicateCommandDefinition {
+                name: qualified_command_name,
+            });
+        }
+    }
+    Ok(commands)
+}
+
+/// resolve data connectors
+fn resolve_data_connectors(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+) -> Result<HashMap<Qualified<DataConnectorName>, DataConnectorContext>, Error> {
     let mut data_connectors = HashMap::new();
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -133,21 +294,23 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             });
         }
     }
+    Ok(data_connectors)
+}
 
-    let mut types: HashMap<Qualified<CustomTypeName>, TypeRepresentation> = HashMap::new();
-    let mut existing_graphql_types: HashSet<ast::TypeName> = HashSet::new();
-    // we collect all the types with global id fields, and models with global id source for that field. this is used
-    // later for validation, such that a type with global id field must have atleast one model with global id source
-    let mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>> =
-        HashMap::new();
-    let mut apollo_federation_entity_enabled_types: HashMap<
+/// resolve object types
+fn resolve_data_connector_type_mappings(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &mut HashMap<
         Qualified<CustomTypeName>,
-        Option<Qualified<ModelName>>,
-    > = HashMap::new();
-
+        Option<Qualified<open_dds::models::ModelName>>,
+    >,
+) -> Result<DataConnectorTypeMappings, Error> {
     let mut data_connector_type_mappings = DataConnectorTypeMappings::new();
 
-    // resolve object types
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: object_type_definition,
@@ -157,11 +320,11 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             Qualified::new(subgraph.to_string(), object_type_definition.name.clone());
         let mut resolved_type = resolve_object_type(
             object_type_definition,
-            &mut existing_graphql_types,
+            existing_graphql_types,
             &qualified_object_type_name,
             subgraph,
-            &mut global_id_enabled_types,
-            &mut apollo_federation_entity_enabled_types,
+            global_id_enabled_types,
+            apollo_federation_entity_enabled_types,
         )?;
 
         // resolve object types' type mappings
@@ -176,7 +339,7 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                     &qualified_object_type_name,
                     subgraph,
                     resolved_object_type,
-                    &data_connectors,
+                    data_connectors,
                 )
                 .map_err(|type_validation_error| {
                     Error::DataConnectorTypeMappingValidationError {
@@ -203,7 +366,17 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         }
     }
 
-    // resolve scalar types
+    Ok(data_connector_type_mappings)
+}
+
+/// resolve scalar types
+/// this currently works by mutating `types` and `existing_graphql_types`, we should try
+/// and change this to return new values here and make the caller combine them together
+fn resolve_scalar_types(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    existing_graphql_types: &mut HashSet<ast::TypeName>,
+) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: scalar_type,
@@ -231,9 +404,18 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 name: qualified_scalar_type_name,
             });
         }
-        check_conflicting_graphql_types(&mut existing_graphql_types, graphql_type_name.as_ref())?;
+        check_conflicting_graphql_types(existing_graphql_types, graphql_type_name.as_ref())?;
     }
+    Ok(())
+}
 
+/// resolve type permissions
+/// this currently works by blindly mutation `types`, let's change it to more explicitly
+/// return new values if possible
+fn resolve_type_permissions(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+) -> Result<(), Error> {
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -255,8 +437,17 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             }
         }
     }
+    Ok(())
+}
 
-    // resolve object boolean expression types
+/// resolve object boolean expression types
+fn resolve_boolean_expression_types(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connector_type_mappings: &DataConnectorTypeMappings,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    existing_graphql_types: &mut HashSet<ast::TypeName>,
+) -> Result<HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>, Error> {
     let mut boolean_expression_types = HashMap::new();
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -266,10 +457,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         let resolved_boolean_expression = resolve_object_boolean_expression_type(
             boolean_expression_type,
             subgraph,
-            &data_connectors,
-            &types,
-            &data_connector_type_mappings,
-            &mut existing_graphql_types,
+            data_connectors,
+            types,
+            data_connector_type_mappings,
+            existing_graphql_types,
         )?;
         if let Some(existing) = boolean_expression_types.insert(
             resolved_boolean_expression.name.clone(),
@@ -280,8 +471,18 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             });
         }
     }
+    Ok(boolean_expression_types)
+}
 
-    // resolve data connector scalar representations
+/// resolve data connector scalar representations
+/// this currently works by mutating `types` and `existing_graphql_types`, let's change it to
+/// return new values instead if possible
+fn resolve_data_connector_scalar_representations(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &mut HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    existing_graphql_types: &mut HashSet<ast::TypeName>,
+) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: scalar_type_representation,
@@ -349,13 +550,28 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             existing_graphql_types.insert(new_graphql_type.clone());
         };
     }
+    Ok(())
+}
 
+/// resolve models
+fn resolve_models(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connector_type_mappings: &DataConnectorTypeMappings,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &mut HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<open_dds::models::ModelName>>,
+    >,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    graphql_config: &GraphqlConfig,
+) -> Result<IndexMap<Qualified<ModelName>, Model>, Error> {
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
     let mut global_id_models = HashMap::new();
-    let graphql_config =
-        GraphqlConfig::new(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -365,10 +581,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         let mut resolved_model = resolve_model(
             subgraph,
             model,
-            &types,
-            &mut global_id_enabled_types,
-            &mut apollo_federation_entity_enabled_types,
-            &boolean_expression_types,
+            types,
+            global_id_enabled_types,
+            apollo_federation_entity_enabled_types,
+            boolean_expression_types,
         )?;
         if resolved_model.global_id_source.is_some() {
             match global_id_models.insert(
@@ -391,9 +607,9 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 model_source,
                 &mut resolved_model,
                 subgraph,
-                &data_connectors,
-                &types,
-                &data_connector_type_mappings,
+                data_connectors,
+                types,
+                data_connector_type_mappings,
             )?;
         }
         if let Some(model_graphql_definition) = &model.graphql {
@@ -401,10 +617,10 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 model_graphql_definition,
                 &mut resolved_model,
                 subgraph,
-                &mut existing_graphql_types,
-                &data_connectors,
+                existing_graphql_types,
+                data_connectors,
                 &model.description,
-                &graphql_config,
+                graphql_config,
             )?;
         }
         let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
@@ -417,54 +633,19 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             });
         }
     }
+    Ok(models)
+}
 
-    // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
-    //   - Throw an error if no model with globalIdSource:true is found for the object type.
-    for (object_type, model_name_list) in global_id_enabled_types {
-        if model_name_list.is_empty() {
-            return Err(Error::GlobalIdSourceNotDefined { object_type });
-        }
-    }
-
-    // To check if apollo federation entity keys are defined in object type but no model has
-    // apollo_federation_entity_source set to true:
-    //   - Throw an error if no model with apolloFederation.entitySource:true is found for the object type.
-    for (object_type, model_name_list) in apollo_federation_entity_enabled_types {
-        if model_name_list.is_none() {
-            return Err(Error::ApolloFederationEntitySourceNotDefined { object_type });
-        }
-    }
-
-    // resolve commands
-    let mut commands: IndexMap<Qualified<CommandName>, Command> = IndexMap::new();
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: command,
-    } in &metadata_accessor.commands
-    {
-        let mut resolved_command = resolve_command(command, subgraph, &types)?;
-        if let Some(command_source) = &command.source {
-            resolve_command_source(
-                command_source,
-                &mut resolved_command,
-                subgraph,
-                &data_connectors,
-                &types,
-                &data_connector_type_mappings,
-            )?;
-        }
-        let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
-        if commands
-            .insert(qualified_command_name.clone(), resolved_command)
-            .is_some()
-        {
-            return Err(Error::DuplicateCommandDefinition {
-                name: qualified_command_name,
-            });
-        }
-    }
-
-    // resolve relationships
+/// resolve relationships
+/// this currently works by mutating `types`, let's change it to
+/// return new values instead where possible
+fn resolve_relationships(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    models: &IndexMap<Qualified<ModelName>, Model>,
+    commands: &IndexMap<Qualified<CommandName>, command::Command>,
+) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: relationship,
@@ -484,9 +665,9 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 let resolved_relationship = resolve_relationship(
                     relationship,
                     subgraph,
-                    &models,
-                    &commands,
-                    &data_connectors,
+                    models,
+                    commands,
+                    data_connectors,
                     object_representation,
                 )?;
                 if object_representation
@@ -510,8 +691,16 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             }
         }
     }
+    Ok(())
+}
 
-    // resolve command permissions
+/// resolve command permissions
+/// this currently works by mutating `commands`, let's change it to
+/// return new values instead where possible
+fn resolve_command_permissions(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    commands: &mut IndexMap<Qualified<CommandName>, command::Command>,
+) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: command_permissions,
@@ -525,15 +714,28 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             }
         })?;
         if command.permissions.is_none() {
-            command.permissions = Some(resolve_command_permissions(command, command_permissions)?);
+            command.permissions = Some(command::resolve_command_permissions(
+                command,
+                command_permissions,
+            )?);
         } else {
             return Err(Error::DuplicateCommandPermission {
                 command_name: qualified_command_name.clone(),
             });
         }
     }
+    Ok(())
+}
 
-    // resolve model permissions
+/// resolve model permissions
+/// this currently works by mutating `models`, let's change it to
+/// return new values instead where possible
+fn resolve_model_permissions(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    models: &mut IndexMap<Qualified<ModelName>, Model>,
+) -> Result<(), Error> {
     // Note: Model permissions's predicate can include the relationship field,
     // hence Model permissions should be resolved after the relationships of a
     // model is resolved.
@@ -554,9 +756,9 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
                 model,
                 subgraph,
                 permissions,
-                &data_connectors,
-                &types,
-                &models, // This is required to get the model for the relationship target
+                data_connectors,
+                types,
+                models, // This is required to get the model for the relationship target
             )?);
 
             let model = models.get_mut(&model_name).ok_or_else(|| {
@@ -571,12 +773,5 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
             });
         }
     }
-
-    Ok(Metadata {
-        types,
-        models,
-        commands,
-        boolean_expression_types,
-        graphql_config: graphql_config.global.clone(),
-    })
+    Ok(())
 }
