@@ -1,7 +1,7 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
 use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::error::{Error, GraphqlConfigError};
 use crate::metadata::resolved::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -1024,7 +1024,10 @@ pub fn resolve_model_graphql_api(
                         }
 
                         match &graphql_config.query.order_by_field_name {
-                            None => Err(Error::MissingOrderByInputFieldInGraphqlConfig),
+                            None => Err(Error::GraphqlConfigError {
+                                graphql_config_error:
+                                    GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig,
+                            }),
                             Some(order_by_field_name) => Ok(ModelOrderByExpression {
                                 data_connector_name: model_source.data_connector.name.clone(),
                                 order_by_type_name,
@@ -1079,7 +1082,10 @@ pub fn resolve_model_graphql_api(
                     .query
                     .filter_input_config
                     .as_ref()
-                    .ok_or_else(|| Error::MissingFilterInputFieldInGraphqlConfig)?;
+                    .ok_or_else(|| Error::GraphqlConfigError {
+                        graphql_config_error:
+                            GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
+                    })?;
 
                 for (field_name, field_mapping) in field_mappings.iter() {
                     // Generate comparison expression for fields mapped to simple scalar type
@@ -1207,7 +1213,10 @@ pub fn resolve_model_graphql_api(
                 .query
                 .arguments_field_name
                 .as_ref()
-                .ok_or_else(|| Error::MissingArgumentsInputFieldInGraphqlConfig)?;
+                .ok_or_else(|| Error::GraphqlConfigError {
+                    graphql_config_error:
+                        GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig,
+                })?;
             model.graphql_api.arguments_input_config = Some(ModelGraphqlApiArgumentsConfig {
                 field_name: argument_input_field_name.clone(),
                 type_name,

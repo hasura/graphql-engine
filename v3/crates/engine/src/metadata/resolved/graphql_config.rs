@@ -1,4 +1,4 @@
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::error::{Error, GraphqlConfigError};
 use crate::metadata::resolved::types::mk_name;
 use lang_graphql::ast::common as ast;
 use open_dds::graphql_config::{self, OrderByDirection};
@@ -71,7 +71,9 @@ impl GraphqlConfig {
     ) -> Result<Self, Error> {
         if graphql_configs.is_empty() {
             if flags.require_graphql_config {
-                return Err(Error::MissingGraphqlConfig);
+                return Err(Error::GraphqlConfigError {
+                    graphql_config_error: GraphqlConfigError::MissingGraphqlConfig,
+                });
             }
             let graphql_config = resolve_graphql_config(&FALLBACK_GRAPHQL_CONFIG)?;
             Ok(graphql_config)
@@ -79,7 +81,9 @@ impl GraphqlConfig {
             match graphql_configs.as_slice() {
                 // There should only be one graphql config in supergraph
                 [graphql_config] => resolve_graphql_config(graphql_config),
-                _ => Err(Error::MultipleGraphqlConfigDefinition),
+                _ => Err(Error::GraphqlConfigError {
+                    graphql_config_error: GraphqlConfigError::MultipleGraphqlConfigDefinition,
+                }),
             }
         }
     }
@@ -187,7 +191,10 @@ pub fn resolve_graphql_config(
                 None => None,
                 Some(order_by_input) => {
                     let order_by_enum_type_name = match order_by_input.enum_type_names.as_slice() {
-                        [] => Err(Error::MissingOrderByEnumTypeNamesInGraphqlConfig),
+                        [] => Err(Error::GraphqlConfigError {
+                            graphql_config_error:
+                                GraphqlConfigError::MissingOrderByEnumTypeNamesInGraphqlConfig,
+                        }),
                         [order_by_enum_type] => Ok({
                             // TODO: Naveen: Currently we do not allow enabling a specific direction
                             // for orderableField. In future when we support this, we would like to
@@ -201,14 +208,20 @@ pub fn resolve_graphql_config(
                                     .map(|v| v.to_string())
                                     .collect::<Vec<_>>()
                                     .join(",");
-                                Err(Error::InvalidOrderByDirection {
-                                    directions: invalid_directions,
+                                Err(Error::GraphqlConfigError {
+                                    graphql_config_error:
+                                        GraphqlConfigError::InvalidOrderByDirection {
+                                            directions: invalid_directions,
+                                        },
                                 })
                             } else {
                                 mk_name(&order_by_enum_type.type_name)
                             }
                         }),
-                        _ => Err(Error::MultipleOrderByEnumTypeNamesInGraphqlConfig),
+                        _ => Err(Error::GraphqlConfigError {
+                            graphql_config_error:
+                                GraphqlConfigError::MultipleOrderByEnumTypeNamesInGraphqlConfig,
+                        }),
                     }?;
 
                     Some(OrderByInputGraphqlConfig {

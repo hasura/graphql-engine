@@ -625,7 +625,14 @@ pub enum Error {
         argument_name: ArgumentName,
         type_error: typecheck::TypecheckError,
     },
-    // ---------------- Graphql Configuration Errors ----------------
+    #[error("{graphql_config_error:}")]
+    GraphqlConfigError {
+        graphql_config_error: GraphqlConfigError,
+    },
+}
+
+#[derive(Debug, Error)]
+pub enum GraphqlConfigError {
     #[error("graphql configuration is not defined in supergraph")]
     MissingGraphqlConfig,
     #[error("graphql configuration should be defined only once in supergraph")]
