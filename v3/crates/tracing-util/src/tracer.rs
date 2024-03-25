@@ -1,13 +1,12 @@
+use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
 use http::HeaderMap;
 use opentelemetry::{
     global::{self, BoxedTracer},
     trace::{get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer},
-    Key,
+    Context, Key,
 };
 use opentelemetry_http::HeaderExtractor;
-use std::{future::Future, pin::Pin};
-
-use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
+use std::{collections::HashMap, future::Future, pin::Pin};
 
 #[derive(derive_more::Display)]
 pub enum SpanVisibility {
@@ -179,6 +178,16 @@ impl Tracer {
             self.in_span_async(name, visibility, f).await
         }
     }
+}
+
+/// Return the current trace context, useful for including it HTTP requests etc
+pub fn get_trace_context() -> HashMap<String, String> {
+    let ctx = Context::current();
+    let mut trace_headers = HashMap::new();
+    global::get_text_map_propagator(|propagator| {
+        propagator.inject_context(&ctx, &mut trace_headers);
+    });
+    trace_headers
 }
 
 /// Util for accessing the globally installed tracer

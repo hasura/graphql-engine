@@ -2156,6 +2156,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry-contrib"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4717e7a7b45ef1c0664715a85a8e91ff966b58ffaaccb4d4cc7ff8f15cffd98a"
+dependencies = [
+ "once_cell",
+ "opentelemetry 0.20.0",
+ "opentelemetry_api",
+]
+
+[[package]]
 name = "opentelemetry-http"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3577,6 +3588,7 @@ dependencies = [
  "derive_more",
  "http",
  "opentelemetry 0.20.0",
+ "opentelemetry-contrib",
  "opentelemetry-http",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
