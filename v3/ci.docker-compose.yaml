@@ -60,12 +60,12 @@ services:
       target: builder
     volumes:
       # So that updated files make their way back to the host machine
-      - ./tracing-util:/app/tracing-util
-      - ./lang-graphql:/app/lang-graphql
-      - ./open-dds:/app/open-dds
-      - ./engine:/app/engine
-      - ./hasura-authn-core:/app/hasura-authn-core
-      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./crates/tracing-util:/app/tracing-util
+      - ./crates/lang-graphql:/app/lang-graphql
+      - ./crates/open-dds:/app/open-dds
+      - ./crates/engine:/app/engine
+      - ./crates/hasura-authn-core:/app/hasura-authn-core
+      - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
       - ./coverage:/app/coverage
 
   test_setup:
@@ -81,12 +81,12 @@ services:
         condition: service_healthy
     volumes:
       # So that updated files make their way back to the host machine
-      - ./tracing-util:/app/tracing-util
-      - ./lang-graphql:/app/lang-graphql
-      - ./open-dds:/app/open-dds
-      - ./engine:/app/engine
-      - ./hasura-authn-core:/app/hasura-authn-core
-      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./crates/tracing-util:/app/tracing-util
+      - ./crates/lang-graphql:/app/lang-graphql
+      - ./crates/open-dds:/app/open-dds
+      - ./crates/engine:/app/engine
+      - ./crates/hasura-authn-core:/app/hasura-authn-core
+      - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
       - ./benchmark.sh:/app/benchmark.sh
       - ./coverage:/app/coverage
 
