@@ -126,7 +126,8 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
     > = HashMap::new();
 
     // resolve object types
-    let data_connector_type_mappings = resolve_data_connector_type_mappings(
+    // TODO: make this return more values rather than blindly mutating it's inputs
+    let data_connector_type_mappings = resolve_data_connector_type_mappings_and_objects(
         &metadata_accessor,
         &data_connectors,
         &mut types,
@@ -297,8 +298,10 @@ fn resolve_data_connectors(
     Ok(data_connectors)
 }
 
-/// resolve object types
-fn resolve_data_connector_type_mappings(
+/// resolve object types, matching them to that in the data connectors
+/// this currently works by mutating `types` and `existing_graphql_types`, we should try
+/// and change this to return new values here and make the caller combine them together
+fn resolve_data_connector_type_mappings_and_objects(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
     types: &mut HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
@@ -318,6 +321,7 @@ fn resolve_data_connector_type_mappings(
     {
         let qualified_object_type_name =
             Qualified::new(subgraph.to_string(), object_type_definition.name.clone());
+
         let mut resolved_type = resolve_object_type(
             object_type_definition,
             existing_graphql_types,
