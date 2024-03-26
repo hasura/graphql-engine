@@ -171,6 +171,7 @@ Hasuraブランドの資産（ロゴ、Hasuraマスコット、バッジなど�
 あなたが作ったアプリに"Powered by Hasura"を追加してもらえるととてもうれしいです！
 
 <div style="display: flex;">
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
 </div>
 

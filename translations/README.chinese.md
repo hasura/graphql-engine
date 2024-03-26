@@ -171,6 +171,7 @@ GraphQL Engine提供了易用，可伸缩，高性能的往后端插入自定义
 你可以在[assets/brand](../assets/brand)文件夹中找到Hasura的品牌资产（logo，Hasura吉祥物，powered-by badges等）。请随意在你的应用程序/网站等地方使用它们吧！我们将非常高兴看到在你用Hasura构建的应用里看到"Powered by Hasura"徽章。❤️
 
 <div style="display: flex;">
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
 </div>
 

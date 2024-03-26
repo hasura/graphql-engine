@@ -173,6 +173,7 @@ Coba lihat [petunjuk berkontribusi](../CONTRIBUTING.md) kami untuk detail lebih 
 Aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di direktori [_assets/brand_](../assets/brand). Jangan ragu untuk menggunakannya pada aplikasi/website Anda. Kami akan sangat senang jika Anda menambahkan lencana "_Powered by Hasura_" di aplikasi yang dibangun menggunakan Hasura. ❤️
 
 <div style="display: flex;">
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
 </div>
 

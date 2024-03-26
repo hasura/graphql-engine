@@ -174,6 +174,7 @@ GraphQL Engine предоставляет простые в обосновани
 Мы были бы рады, если бы вы добавили "Powered by Hasura" бейдж к вашим приложениям, построенным с помощью Hasura.. ❤️
 
 <div style="display: flex;">
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
 </div>
 

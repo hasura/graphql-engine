@@ -174,6 +174,7 @@ Los archivos de marca de Hasura (logotipos, la mascota de Hasura, la insignia: "
 aplicación, sitio web, etc. Estaremos encantados si agregas la insignia "Powered by Hasura" a tus aplicaciones creadas con Hasura. ❤️
 
 <div style="display: flex;">
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
 </div>
 
