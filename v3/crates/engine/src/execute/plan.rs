@@ -26,7 +26,11 @@ use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
-pub type MutationPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeMutationPlan<'n, 's, 'ir>>;
+
+pub struct MutationPlan<'n, 's, 'ir> {
+    pub nodes: IndexMap<ast::Alias, NDCMutationExecution<'n, 's, 'ir>>,
+    pub type_names: IndexMap<ast::Alias, ast::TypeName>,
+}
 
 // At least for now, requests are _either_ queries or mutations, and a mix of the two can be
 // treated as an invalid request. We may want to change this in the future.
@@ -59,15 +63,6 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
     RelayNodeSelect(Option<NDCQueryExecution<'s, 'ir>>),
     /// Apollo Federation query to be executed
     ApolloFederationSelect(ApolloFederationSelect<'n, 's, 'ir>),
-}
-
-/// Mutation plan of individual root field or node.
-/// Note that __typename exists for mutations, but __schema and __type do not.
-pub enum NodeMutationPlan<'n, 's, 'ir> {
-    /// __typename field on mutation root
-    TypeName { type_name: ast::TypeName },
-    /// NDC mutation to be executed
-    NDCMutationExecution(NDCMutationExecution<'n, 's, 'ir>),
 }
 
 #[derive(Debug)]
@@ -176,10 +171,25 @@ pub fn generate_request_plan<'n, 's, 'ir>(
                         }),
                     ))?,
                     Some(RequestPlan::MutationPlan(mutation_plan)) => mutation_plan,
-                    None => IndexMap::new(),
+                    None => MutationPlan {
+                        nodes: IndexMap::new(),
+                        type_names: IndexMap::new(),
+                    },
                 };
 
-                mutation_plan.insert(alias.clone(), plan_mutation(field_ir)?);
+                match field_ir {
+                    root_field::MutationRootField::TypeName { type_name } => {
+                        mutation_plan
+                            .type_names
+                            .insert(alias.clone(), type_name.clone());
+                    }
+                    root_field::MutationRootField::ProcedureBasedCommand { selection_set, ir } => {
+                        mutation_plan
+                            .nodes
+                            .insert(alias.clone(), plan_mutation(selection_set, ir)?);
+                    }
+                };
+
                 request_plan = Some(RequestPlan::MutationPlan(mutation_plan));
             }
         }
@@ -194,32 +204,25 @@ pub fn generate_request_plan<'n, 's, 'ir>(
 
 // Given a singular root field of a mutation, plan the execution of that root field.
 fn plan_mutation<'n, 's, 'ir>(
-    ir: &'ir root_field::MutationRootField<'n, 's>,
-) -> Result<NodeMutationPlan<'n, 's, 'ir>, error::Error> {
-    let plan = match ir {
-        root_field::MutationRootField::TypeName { type_name } => NodeMutationPlan::TypeName {
-            type_name: type_name.clone(),
+    selection_set: &'n gql::normalized_ast::SelectionSet<'s, GDS>,
+    ir: &'ir super::ir::commands::ProcedureBasedCommand<'s>,
+) -> Result<NDCMutationExecution<'n, 's, 'ir>, error::Error> {
+    let mut join_id_counter = MonotonicCounter::new();
+    let (ndc_ir, join_locations) =
+        commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
+    let join_locations_ids = assign_with_join_ids(join_locations)?;
+    Ok(NDCMutationExecution {
+        query: ndc_ir,
+        join_locations: join_locations_ids,
+        data_connector: ir.command_info.data_connector,
+        selection_set,
+        execution_span_attribute: "execute_command".into(),
+        field_span_attribute: ir.command_info.field_name.to_string(),
+        process_response_as: ProcessResponseAs::CommandResponse {
+            command_name: &ir.command_info.command_name,
+            type_container: &ir.command_info.type_container,
         },
-        root_field::MutationRootField::ProcedureBasedCommand { ir, selection_set } => {
-            let mut join_id_counter = MonotonicCounter::new();
-            let (ndc_ir, join_locations) =
-                commands::ndc_mutation_ir(ir.procedure_name, ir, &mut join_id_counter)?;
-            let join_locations_ids = assign_with_join_ids(join_locations)?;
-            NodeMutationPlan::NDCMutationExecution(NDCMutationExecution {
-                query: ndc_ir,
-                join_locations: join_locations_ids,
-                data_connector: ir.command_info.data_connector,
-                selection_set,
-                execution_span_attribute: "execute_command".into(),
-                field_span_attribute: ir.command_info.field_name.to_string(),
-                process_response_as: ProcessResponseAs::CommandResponse {
-                    command_name: &ir.command_info.command_name,
-                    type_container: &ir.command_info.type_container,
-                },
-            })
-        }
-    };
-    Ok(plan)
+    })
 }
 
 // Given a singular root field of a query, plan the execution of that root field.
@@ -681,7 +684,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
 /// Execute a single root field's mutation plan to produce a result.
 async fn execute_mutation_field_plan<'n, 's, 'ir>(
     http_client: &reqwest::Client,
-    mutation_plan: NodeMutationPlan<'n, 's, 'ir>,
+    mutation_plan: NDCMutationExecution<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
@@ -691,30 +694,11 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
-                    match mutation_plan {
-                        NodeMutationPlan::TypeName { type_name } => {
-                            set_attribute_on_active_span(
-                                AttributeVisibility::Default,
-                                "field",
-                                "__typename",
-                            );
-                            RootFieldResult::new(
-                                &false, // __typename: String! ; the __typename field is not nullable
-                                resolve_type_name(type_name),
-                            )
-                        }
-                        NodeMutationPlan::NDCMutationExecution(ndc_mutation) => {
-                            RootFieldResult::new(
-                                &ndc_mutation.process_response_as.is_nullable(),
-                                resolve_ndc_mutation_execution(
-                                    http_client,
-                                    ndc_mutation,
-                                    project_id,
-                                )
-                                .await,
-                            )
-                        }
-                    }
+                    RootFieldResult::new(
+                        &mutation_plan.process_response_as.is_nullable(),
+                        resolve_ndc_mutation_execution(http_client, mutation_plan, project_id)
+                            .await,
+                    )
                 })
             },
         )
@@ -732,7 +716,19 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
     let mut root_fields = IndexMap::new();
     let mut executed_root_fields = Vec::new();
 
-    for (alias, field_plan) in mutation_plan.into_iter() {
+    for (alias, type_name) in mutation_plan.type_names {
+        set_attribute_on_active_span(AttributeVisibility::Default, "field", "__typename");
+
+        executed_root_fields.push((
+            alias,
+            RootFieldResult::new(
+                &false, // __typename: String! ; the __typename field is not nullable
+                resolve_type_name(type_name),
+            ),
+        ));
+    }
+
+    for (alias, field_plan) in mutation_plan.nodes.into_iter() {
         executed_root_fields.push((
             alias,
             execute_mutation_field_plan(http_client, field_plan, project_id.clone()).await,

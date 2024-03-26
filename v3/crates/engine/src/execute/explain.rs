@@ -1,7 +1,7 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
 use crate::execute::plan::{
-    ApolloFederationSelect, NodeMutationPlan, NodeQueryPlan, ProcessResponseAs,
+    ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs,
 };
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
@@ -150,26 +150,23 @@ pub(crate) async fn explain_mutation_plan(
 ) -> Result<types::Step, error::Error> {
     let mut root_steps = vec![];
 
-    for (alias, node) in mutation_plan {
-        match node {
-            NodeMutationPlan::TypeName { .. } => {
-                return Err(error::Error::ExplainError(
-                    "cannot explain introspection queries".to_string(),
-                ));
-            }
-            NodeMutationPlan::NDCMutationExecution(ndc_mutation_execution) => {
-                let sequence_steps = get_execution_steps(
-                    http_client,
-                    alias,
-                    &ndc_mutation_execution.process_response_as,
-                    ndc_mutation_execution.join_locations,
-                    types::NDCRequest::Mutation(ndc_mutation_execution.query),
-                    ndc_mutation_execution.data_connector,
-                )
-                .await;
-                root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
-            }
-        }
+    if !mutation_plan.type_names.is_empty() {
+        return Err(error::Error::ExplainError(
+            "cannot explain introspection queries".to_string(),
+        ));
+    }
+
+    for (alias, ndc_mutation_execution) in mutation_plan.nodes {
+        let sequence_steps = get_execution_steps(
+            http_client,
+            alias,
+            &ndc_mutation_execution.process_response_as,
+            ndc_mutation_execution.join_locations,
+            types::NDCRequest::Mutation(ndc_mutation_execution.query),
+            ndc_mutation_execution.data_connector,
+        )
+        .await;
+        root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
     }
 
     // simplify the steps
