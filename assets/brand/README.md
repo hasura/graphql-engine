@@ -2,7 +2,7 @@
 
 All assets are available on Cloudinary CDN at `https://res.cloudinary.com/dh8fp23nd/raw/upload/v1710247546/assets/Hasura_Logos-20240312T124305Z-001_txnwf4.zip`.
 
-_Note: some logos maybe invisible depending on the page background color._
+*Note: some logos maybe invisible depending on the page background color.*
 
 | name                              | asset                                                                                        |
 | --------------------------------- | -------------------------------------------------------------------------------------------- |
