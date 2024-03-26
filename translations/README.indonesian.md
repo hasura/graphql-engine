@@ -174,7 +174,6 @@ Aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di 
 
 <div style="display: flex;">
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html

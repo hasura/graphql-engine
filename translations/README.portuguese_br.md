@@ -176,7 +176,6 @@ Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) 
 
 <div style="display: flex;">
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html

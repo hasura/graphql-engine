@@ -183,7 +183,6 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 
 <div style="display: flex;">
   <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html
