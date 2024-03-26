@@ -2738,7 +2738,7 @@
     "FieldComparisonPredicate": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldComparisonPredicate",
       "title": "FieldComparisonPredicate",
-      "description": "Field comparision predicate filters objects based on a field value.",
+      "description": "Field comparison predicate filters objects based on a field value.",
       "type": "object",
       "required": [
         "field",

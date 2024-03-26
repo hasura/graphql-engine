@@ -95,7 +95,7 @@ pub enum InternalError {
     ErrorFetchingJWKSet(reqwest::Error),
     #[error("No matching JWK found for the given kid: {kid}")]
     NoMatchingJWKFound { kid: String },
-    #[error("Recieved unsuccessful response {0} status while fetching JWK ")]
+    #[error("Received unsuccessful response {0} status while fetching JWK ")]
     UnsuccessfulJWKFetch(StatusCode),
     #[error("Algorithm not found in the JWK")]
     AlgorithmNotFoundInJWK,
@@ -311,7 +311,7 @@ pub struct JWTHeaderLocation {
 pub enum JWTTokenLocation {
     /// Get the bearer token from the `Authorization` header.
     BearerAuthorization,
-    /// Get the token from the Cookie header under the specificied cookie name.
+    /// Get the token from the Cookie header under the specified cookie name.
     Cookie(JWTCookieLocation),
     /// Custom header from where the header should be parsed from.
     Header(JWTHeaderLocation),
@@ -326,7 +326,7 @@ pub enum JWTTokenLocation {
 /// to extract the session variable claims.
 pub struct JWTConfig {
     /// Optional validation to check that the `aud` field is a member
-    /// of the `audience` recieved, otherwise will throw error.
+    /// of the `audience` received, otherwise will throw error.
     pub audience: Option<HashSet<String>>,
     /// Optional validation to check that the `iss` field is
     /// a member of the `iss` received, otherwise will throw error.

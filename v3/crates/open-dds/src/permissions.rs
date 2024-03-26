@@ -393,7 +393,7 @@ impl CommandPermissionsV1 {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "FieldComparisonPredicate")]
-/// Field comparision predicate filters objects based on a field value.
+/// Field comparison predicate filters objects based on a field value.
 pub struct FieldComparisonPredicate {
     /// The field name of the object type of the model to compare.
     pub field: FieldName,
