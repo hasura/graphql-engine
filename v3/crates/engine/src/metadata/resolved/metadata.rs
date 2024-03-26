@@ -22,7 +22,7 @@ use crate::metadata::resolved::model::{
 };
 use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::types::{
-    check_conflicting_graphql_types, mk_name, resolve_object_type, resolve_output_type_permission,
+    mk_name, resolve_object_type, resolve_output_type_permission, store_new_graphql_type,
     TypeRepresentation,
 };
 
@@ -428,7 +428,7 @@ fn resolve_scalar_types(
                 name: qualified_scalar_type_name,
             });
         }
-        check_conflicting_graphql_types(existing_graphql_types, graphql_type_name.as_ref())?;
+        store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
     }
     Ok(scalar_types)
 }

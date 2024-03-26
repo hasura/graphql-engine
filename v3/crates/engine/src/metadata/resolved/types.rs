@@ -145,7 +145,9 @@ pub struct ResolvedApolloFederationObjectKey {
     pub fields: nonempty::NonEmpty<FieldName>,
 }
 
-pub fn check_conflicting_graphql_types(
+/// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
+/// if there is a name conflict
+pub fn store_new_graphql_type(
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     new_graphql_type: Option<&ast::TypeName>,
 ) -> Result<(), Error> {
@@ -292,8 +294,8 @@ pub fn resolve_object_type(
                 ))
             }
         }?;
-    check_conflicting_graphql_types(existing_graphql_types, graphql_type_name.as_ref())?;
-    check_conflicting_graphql_types(existing_graphql_types, graphql_input_type_name.as_ref())?;
+    store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
+    store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
 
     Ok(TypeRepresentation::Object(ObjectTypeRepresentation {
         fields: resolved_fields,
@@ -598,10 +600,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 .map(|graphql_config| {
                     let graphql_type_name =
                         mk_name(graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
-                    check_conflicting_graphql_types(
-                        existing_graphql_types,
-                        Some(&graphql_type_name),
-                    )?;
+                    store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
                     Ok::<_, Error>(ObjectBooleanExpressionTypeGraphQlConfiguration {
                         type_name: graphql_type_name,
                     })

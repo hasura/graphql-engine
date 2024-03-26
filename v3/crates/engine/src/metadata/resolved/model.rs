@@ -9,7 +9,7 @@ use crate::metadata::resolved::subgraph::{
     serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
     QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::check_conflicting_graphql_types;
+use crate::metadata::resolved::types::store_new_graphql_type;
 use crate::metadata::resolved::types::{mk_name, FieldDefinition, TypeMapping};
 use crate::metadata::resolved::types::{ScalarTypeInfo, TypeRepresentation};
 use crate::schema::types::output_type::relationship::{
@@ -998,7 +998,7 @@ pub fn resolve_model_graphql_api(
                     Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
                 }?;
                 // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
-                check_conflicting_graphql_types(
+                store_new_graphql_type(
                     existing_graphql_types,
                     order_by_expression_type_name.as_ref(),
                 )?;
@@ -1203,10 +1203,7 @@ pub fn resolve_model_graphql_api(
             None => Ok(None),
             Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
         }?;
-        check_conflicting_graphql_types(
-            existing_graphql_types,
-            arguments_input_type_name.as_ref(),
-        )?;
+        store_new_graphql_type(existing_graphql_types, arguments_input_type_name.as_ref())?;
 
         if let Some(type_name) = arguments_input_type_name {
             let argument_input_field_name = graphql_config
