@@ -170,7 +170,6 @@
 
 <div style="display: flex;">
   <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html
