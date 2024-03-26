@@ -176,8 +176,8 @@ Daha fazla detay için [katkıda bulunma kuralını](../CONTRIBUTING.md) kontrol
 Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](../assets/brand) klasöründedir. Bunları uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html

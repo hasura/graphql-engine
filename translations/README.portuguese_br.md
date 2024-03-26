@@ -175,8 +175,8 @@ Confira nosso [guia de contribuição](/CONTRIBUTING.md) para mais detalhes.
 Os ativos da marca Hasura (logotipos, o mascote Hasura, powered by badges etc.) podem ser encontrados na pasta [assets/brand](../assets/brand). Sinta-se à vontade para usá-los em seu aplicativo / site, etc. Ficaríamos felizes se você adicionar o "Powered by Hasura" badge para seus aplicativos criados usando o Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html
