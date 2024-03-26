@@ -13,6 +13,7 @@ use crate::execute::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
+use crate::metadata::resolved::types::FieldMapping;
 
 pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
@@ -154,24 +155,18 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 ir,
                 relationship_info,
             } => {
-                // For all the left join fields, create an alias and inject
-                // them into the NDC IR
                 let mut join_mapping = HashMap::new();
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {
-                    let lhs_alias = make_hasura_phantom_field(&src_field.column);
-
-                    ndc_fields.insert(
-                        lhs_alias.clone(),
-                        ndc::models::Field::Column {
-                            column: src_field.column.clone(),
-                            fields: None,
-                        },
+                    let ndc_field_alias = process_remote_relationship_field_mapping(
+                        model_selection,
+                        src_field,
+                        &mut ndc_fields,
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
                         (
-                            lhs_alias.clone(),
+                            ndc_field_alias,
                             TargetField::ModelField(target_field.clone()),
                         ),
                     );
@@ -197,24 +192,18 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 ir,
                 relationship_info,
             } => {
-                // For all the left join fields, create an alias and inject
-                // them into the NDC IR
                 let mut join_mapping = HashMap::new();
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {
-                    let lhs_alias = make_hasura_phantom_field(&src_field.column);
-
-                    ndc_fields.insert(
-                        lhs_alias.clone(),
-                        ndc::models::Field::Column {
-                            column: src_field.column.clone(),
-                            fields: None,
-                        },
+                    let ndc_field_alias = process_remote_relationship_field_mapping(
+                        model_selection,
+                        src_field,
+                        &mut ndc_fields,
                     );
                     join_mapping.insert(
                         src_field_alias.clone(),
                         (
-                            lhs_alias.clone(),
+                            ndc_field_alias,
                             TargetField::CommandField(target_field.clone()),
                         ),
                     );
@@ -242,6 +231,34 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
         };
     }
     Ok((ndc_fields, join_locations))
+}
+
+/// Processes a remote relationship field mapping, and returns the alias used in
+/// the NDC IR for that field
+///
+/// - if the selection set DOES NOT contain the field, insert it into the NDC IR
+/// (with an internal alias), and return the alias
+/// - if the selection set already contains the field, do not insert the field
+/// in NDC IR, and return the existing alias
+fn process_remote_relationship_field_mapping(
+    selection: &ResultSelectionSet<'_>,
+    field: &FieldMapping,
+    ndc_fields: &mut IndexMap<String, ndc::models::Field>,
+) -> String {
+    match selection.contains(field) {
+        None => {
+            let internal_alias = make_hasura_phantom_field(&field.column);
+            ndc_fields.insert(
+                internal_alias.clone(),
+                ndc::models::Field::Column {
+                    column: field.column.clone(),
+                    fields: None,
+                },
+            );
+            internal_alias
+        }
+        Some(field_alias) => field_alias,
+    }
 }
 
 fn make_hasura_phantom_field(field_name: &str) -> String {

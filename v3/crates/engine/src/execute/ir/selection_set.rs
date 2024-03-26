@@ -22,6 +22,7 @@ use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
+use crate::metadata::resolved::types::FieldMapping;
 use crate::schema::types::TypeKind;
 use crate::schema::{
     types::{Annotation, OutputAnnotation, RootFieldAnnotation},
@@ -102,6 +103,23 @@ pub(crate) struct ResultSelectionSet<'s> {
     // be converted and sent over the wire. Serialized the map as ordered to
     // produce deterministic golden files.
     pub(crate) fields: IndexMap<String, FieldSelection<'s>>,
+}
+
+impl<'s> ResultSelectionSet<'s> {
+    /// Takes a 'FieldMapping' and returns the alias, if the field is found in
+    /// existing fields
+    pub(crate) fn contains(&self, other_field: &FieldMapping) -> Option<String> {
+        self.fields.iter().find_map(|(alias, field)| match field {
+            FieldSelection::Column { column, .. } => {
+                if *column == other_field.column {
+                    Some(alias.clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        })
+    }
 }
 
 fn build_global_id_fields(

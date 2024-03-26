@@ -17,11 +17,6 @@
                     "column": "ArtistId",
                     "fields": null
                   },
-                  "__hasura_phantom_field__ArtistId": {
-                    "type": "column",
-                    "column": "ArtistId",
-                    "fields": null
-                  },
                   "__hasura_phantom_field__AlbumId": {
                     "type": "column",
                     "column": "AlbumId",
