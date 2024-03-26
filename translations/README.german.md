@@ -182,8 +182,8 @@ Webseite, etc. benutzen. Wir würden uns sehr freuen, wenn du das "Powered by Ha
 Abzeichen deiner Hasura App hinzufügst. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html
@@ -191,7 +191,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_lightbg.svg"
   />
 </a>
 
@@ -199,7 +199,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_darkbg.svg"
   />
 </a>
 ```

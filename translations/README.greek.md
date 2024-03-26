@@ -169,19 +169,19 @@
 Τα στοιχεία μάρκας Hasura (λογότυπα, μασκότ Hasura, "powered by" εμβλήματα κ.λπ.) μπορούν να βρεθούν στον κατάλογο περιουσιακών στοιχείων / μάρκας. Είστε ελεύθεροι να τα χρησιμοποιήσετε στην εφαρμογή / ιστοσελίδα σας κτλ ... Θα χαρούμε να προσθέσετε το σήμα "Powered by Hasura" στην εφαρμογή που αναπτύξατε με την Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
 </div>
 
 ```html
 <!-- For light backgrounds -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_lightbg.svg" />
 </a>
 
 <!-- For dark backgrounds -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_darkbg.svg" />
 </a>
 ```
 
