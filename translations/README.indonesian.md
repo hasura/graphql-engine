@@ -179,12 +179,12 @@ Aset merek Hasura (logo, maskot, lencana _powered by_, dll.) dapat ditemukan di 
 ```html
 <!-- Untuk dasar berwarna terang -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_lightbg.svg" />
+  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg" />
 </a>
 
 <!-- Untuk dasar berwarna gelap -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/hasura_logo_primary_darkbg.svg" />
+  <img width="150px" src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg" />
 </a>
 ```
 
