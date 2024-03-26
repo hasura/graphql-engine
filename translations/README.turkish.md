@@ -3,6 +3,7 @@
 [![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
+
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
@@ -13,47 +14,45 @@ Hasura, Postgres tarafından desteklenen GraphQL uygulamaları yaratmanıza veya
 
 Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.hasura.io) bulabilirsiniz
 
----
+------------------
 
 ![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
----
+------------------
 
 ![Hasura GraphQL Engine Gerçek Zamanlı Demo](../assets/realtime.gif)
 
----
+-------------------
 
 ## Özellikler
 
-- **Güçlü sorgular yapın**: Dahili filtreleme, sayfalandırma, model arama, yığın ekleme, güncelleme, mutasyonları silme
-- **Gerçek zamanlı**: Abonelikleri kullanarak herhangi bir GraphQL sorgusunu canlı sorguya dönüştürme
-- **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](../remote-schemas.md).
-- **Webhooks ve sunucusuz işlevleri tetikleme**: Postgres insert/update/delete olaylarında ([daha fazla](../event-triggers.md))
-- **Mevcut, canlı veritabanlarıyla çalışır**: Kullanıma hazır bir GraphQL API'si almak için mevcut bir Postgres veritabanına yönlendirin
-- **Hassas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
-- **Yüksek performans ve az yer kaplama**: ~15mb Docker imaji; ~50MB RAM içinde saniyede 1000 sorgu; çoklu çekirdek farkındalığı
-- **Yönetici Kullanıcı Arayüzü ve Taşıma İşlemleri**: Yönetici arayüzü ve Rails'den ilham alan şema taşıma işlemleri
-- **Postgres** ❤️: Postgres türlerini (PostGIS/geo-location vb.) destekler, görünümleri grafiklere dönüştürür, depolanmış fonksiyonları veya mutasyonlu prosedürleri tetikler
+* **Güçlü sorgular yapın**: Dahili filtreleme, sayfalandırma, model arama, yığın ekleme, güncelleme, mutasyonları silme
+* **Gerçek zamanlı**: Abonelikleri kullanarak herhangi bir GraphQL sorgusunu canlı sorguya dönüştürme
+* **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](../remote-schemas.md).
+* **Webhooks ve sunucusuz işlevleri tetikleme**: Postgres insert/update/delete olaylarında ([daha fazla](../event-triggers.md))
+* **Mevcut, canlı veritabanlarıyla çalışır**: Kullanıma hazır bir GraphQL API'si almak için mevcut bir Postgres veritabanına yönlendirin
+* **Hassas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
+* **Yüksek performans ve az yer kaplama**: ~15mb Docker imaji; ~50MB RAM içinde saniyede 1000 sorgu; çoklu çekirdek farkındalığı
+* **Yönetici Kullanıcı Arayüzü ve Taşıma İşlemleri**: Yönetici arayüzü ve Rails'den ilham alan şema taşıma işlemleri
+* **Postgres** ❤️: Postgres türlerini (PostGIS/geo-location vb.) destekler, görünümleri grafiklere dönüştürür, depolanmış fonksiyonları veya mutasyonlu prosedürleri tetikler
 
 Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.hasura.io) bulabilirsiniz
 
 ## İçerikler
-
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-
 **İçerikler**
 
 - [Hızlı Başlangıç:](#hızlı-başlangıç)
-  - [Tek tıklamayla Heroku'ya deploy etme](#tek-tıklama-ile-herokuya-deploy-etme)
-  - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
+    - [Tek tıklamayla Heroku'ya deploy etme](#tek-tıklama-ile-herokuya-deploy-etme)
+    - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
 - [Yapı](#yapı)
 - [İstemci tarafı takımlar](#i̇stemci-tarafı-takımlar)
 - [İş mantığı ekleme](#i̇ş-mantığı-ekleme)
-  - [Uzak şemalar](#uzak-şemalar)
-  - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
+    - [Uzak şemalar](#uzak-şemalar)
+    - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
 - [Demolar](#demolar)
-  - [Gerçek zamanlı uygulamalar](#gerçek-zamanlı-uygulamalar)
-  - [Videolar](#videolar)
+    - [Gerçek zamanlı uygulamalar](#gerçek-zamanlı-uygulamalar)
+    - [Videolar](#videolar)
 - [Destek ve sorun giderme](#destek-ve-sorun-giderme)
 - [Katkıda bulunmak](#katkıda-bulunmak)
 - [Marka varlıkları](#marka-varlıkları)
@@ -70,11 +69,11 @@ Hasura'yı denemenin en hızlı yolu Heroku'dur.
 
 1. Ücretsiz Postgre eklentisiyle Heroku'da GraphQL Engine'i kurmak için aşağıdaki düğmeye tıklayın.
 
-   [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+    [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
 2. Hasura Console'u açın.
 
-   Yönetici konsolunu açmak için `https://<app-name>.herokuapp.com` (_\<app-name\>'i uygulama adınızla değiştirin._) adresini ziyaret edin.
+   Yönetici konsolunu açmak için `https://<app-name>.herokuapp.com` (*\<app-name\>'i uygulama adınızla değiştirin.*) adresini ziyaret edin.
 
 3. İlk GraphQL sorgunuzu yapın.
 
@@ -84,20 +83,20 @@ Hasura'yı denemenin en hızlı yolu Heroku'dur.
 
 Tek tıklamayla deploy etme seçenekleri için aşağıdaki talimatları takip edin:
 
-| **Sağlayıcı** |                                                                                                                       **Tek tıklama linki**                                                                                                                        |                                                                     **Ek bilgi**                                                                     |
-| :-----------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------: |
-| DigitalOcean  |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|     Azure     | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+| **Sağlayıcı** | **Tek tıklama linki** | **Ek bilgi** |
+|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Diğer deploy etme yöntemleri
 
 Docker tabanlı dağıtım ve gelişmiş yapılandırma seçenekleri için [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya da
+guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya da 
 [install manifests](../install-manifests) bakınız.
 
 ## Yapı
 
-Hasura GraphQL Engine, bir Postgres veritabanı örneğinin önünde durur ve istemci uygulamalarınızdan GraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrulama sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir.
+Hasura GraphQL Engine, bir Postgres veritabanı örneğinin önünde durur ve istemci uygulamalarınızdan GraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrulama sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
 
 Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'si sağlayabilirsiniz.
 
@@ -109,7 +108,7 @@ Hasura herhangi bir GraphQL istemcisi ile çalışır. [Apollo Client](https://g
 
 ## İş mantığı ekleme
 
-GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşılır, ölçeklenebilir ve yüksek performanslı yöntemler sunar:
+GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşılır, ölçeklenebilir ve yüksek performanslı yöntemler sunar: 
 
 ### Uzak Şemalar
 
@@ -118,7 +117,7 @@ Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada öze
 ### Veritabanı olaylarındaki webhooks tetikleme
 
 Veritabanı olaylarına göre tetiklenen eşzamansız iş mantığını ekleyin.
-Bildirimler, Postgres veri hatları veya asenkron işleme için idealdir - [daha fazla](../event-triggers.md).
+Bildirimler, Postgres veri  hatları veya asenkron işleme için idealdir - [daha fazla](../event-triggers.md).
 
 ### Türetilmiş veri veya veri dönüşümleri
 
@@ -131,13 +130,11 @@ Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak sorgulana
 ### Gerçek zamanlı uygulamalar
 
 - React ile oluşturulmuş grup sohbet uygulaması. Yazma belirteci, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri içerir.
-
   - [Deneyin](https://realtime-chat.demo.hasura.io/)
   - [Rehber](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [APİ'lere göz atın](https://realtime-chat.demo.hasura.io/console)
 
 - Bir harita üzerinde hareket eden mevcut GPS koordinatlarını değiştiren, çalışan bir aracı gösteren canlı konum izleme uygulaması.
-
   - [Deneyin](https://realtime-location-tracking.demo.hasura.io/)
   - [Rehber](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [APİ'lere göz ayın](https://realtime-location-tracking.demo.hasura.io/console)
@@ -149,19 +146,19 @@ Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak sorgulana
 
 ### Videolar
 
-- [Kendi kendine barındırılan bir GitLab örneğine GraphQL ekleme](https://www.youtube.com/watch?v=a2AhxKqd82Q) (_3:44 mins_)
-- [Auth0 ve GraphQL backend'iyle todo uygulaması](https://www.youtube.com/watch?v=15ITBYnccgc) (_4:00 mins_)
-- [GitLab auth ile entegre edilmiş GitLab üzerinde GraphQL](https://www.youtube.com/watch?v=m1ChRhRLq7o) (_4:05 mins_)
-- [Coğrafi konumlu 10 milyon sürüş için gösterge tablosu (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (_3:06 mins_)
+* [Kendi kendine barındırılan bir GitLab örneğine GraphQL ekleme](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
+* [Auth0 ve GraphQL backend'iyle todo uygulaması](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
+* [GitLab auth ile entegre edilmiş GitLab üzerinde GraphQL](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
+* [Coğrafi konumlu 10 milyon sürüş için gösterge tablosu (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
+
 
 ## Destek ve sorun giderme
+Belgeler ve topluluk, çoğu sorunu gidermenize yardımcı olacaktır. Bir hatayla karşılaştıysanız veya bizimle iletişime geçmeniz gerekiyorsa aşağıdaki kanallardan birini kullanarak bizimle iletişime geçebilirsiniz: 
 
-Belgeler ve topluluk, çoğu sorunu gidermenize yardımcı olacaktır. Bir hatayla karşılaştıysanız veya bizimle iletişime geçmeniz gerekiyorsa aşağıdaki kanallardan birini kullanarak bizimle iletişime geçebilirsiniz:
-
-- Destek ve geri bildirim: [Discord](https://discord.gg/vBPpJkS)
-- Sorun ve hata bildirme: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
-- Ürün güncellemelerini takip edin: [@HasuraHQ](https://twitter.com/hasurahq)
-- Bizimle konuşun: [website chat](https://hasura.io)
+* Destek ve geri bildirim: [Discord](https://discord.gg/vBPpJkS)
+* Sorun ve hata bildirme: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Ürün güncellemelerini takip edin: [@HasuraHQ](https://twitter.com/hasurahq)
+* Bizimle konuşun: [website chat](https://hasura.io)
 
 Toplulukta açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Davranış Kodu](../code-of-conduct.md) adresine bakınız
 
@@ -176,25 +173,19 @@ Daha fazla detay için [katkıda bulunma kuralını](../CONTRIBUTING.md) kontrol
 Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](../assets/brand) klasöründedir. Bunları uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- Beyaz arkaplan için -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- Siyah arkaplan için -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
 ```
 

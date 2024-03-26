@@ -11,56 +11,54 @@ Hasura è un prodotto open source che accelera lo sviluppo API di 10 volte forne
 
 Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/docs/).
 
----
+------------------
 
 ![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
----
+------------------
 
 ![Hasura GraphQL Engine Realtime Demo](../assets/realtime.gif)
 
----
+-------------------
 
 ## Features
 
-- **Crea queries potenti**: Filtri, paginazione, ricerca di pattern, e mutazioni di inserimento, aggiornamento ed eliminazione, anche in bulk
-- **Lavora con live database esistenti**: Punta a un database esistente per ottenere istantaneamente una GraphQL API pronta all'uso
-- **In tempo reale**: Converti qualsiasi query GraphQL in una query live usando le sottoscrizioni
-- **Merge di schemi remoti**: Accedi a schemi GraphQL personalizzati per la business logic tramite un singolo endpoint GraphQL Engine. [**Leggi di più**](remote-schemas.md).
-- **Estendibile con le Azioni**: Scrivi API REST per estendere lo schema di Hasura con una business logic personalizzata.
-- **Attiva webhook o funzioni serverless**: Eventi di inserimento/aggiornamento/eliminazione su Postgres ([leggi di più](event-triggers.md))
-- **Trigger programmati**: Esegui la business logic personalizzata in momenti specifici utilizzando una configurazione cron o un singolo evento.
-- **Controllo degli accessi preciso**: Controllo accessi dinamico che si integra con il tuo sistema di autenticazione (es: auth0, firebase-auth)
-- **Admin UI & Migrazioni**: Interfaccia utente di amministrazione & migrazioni degli schemi ispirate a Rails.
-- **Database Supportati**: Supporta PostgreSQL (e le sue varianti), MS SQL Server e Big Query. Supporto per altri [database](https://hasura.io/graphql/database/) in arrivo.
+* **Crea queries potenti**: Filtri, paginazione, ricerca di pattern, e mutazioni di inserimento, aggiornamento ed eliminazione, anche in bulk
+* **Lavora con live database esistenti**: Punta a un database esistente per ottenere istantaneamente una GraphQL API pronta all'uso
+* **In tempo reale**: Converti qualsiasi query GraphQL in una query live usando le sottoscrizioni
+* **Merge di schemi remoti**: Accedi a schemi GraphQL personalizzati per la business logic tramite un singolo endpoint GraphQL Engine. [**Leggi di più**](remote-schemas.md).
+* **Estendibile con le Azioni**: Scrivi API REST per estendere lo schema di Hasura con una business logic personalizzata.
+* **Attiva webhook o funzioni serverless**: Eventi di inserimento/aggiornamento/eliminazione su Postgres ([leggi di più](event-triggers.md))
+* **Trigger programmati**: Esegui la business logic personalizzata in momenti specifici utilizzando una configurazione cron o un singolo evento.
+* **Controllo degli accessi preciso**: Controllo accessi dinamico che si integra con il tuo sistema di autenticazione (es: auth0, firebase-auth)
+* **Admin UI & Migrazioni**: Interfaccia utente di amministrazione & migrazioni degli schemi ispirate a Rails.
+* **Database Supportati**: Supporta PostgreSQL (e le sue varianti), MS SQL Server e Big Query. Supporto per altri [database](https://hasura.io/graphql/database/) in arrivo.
 
 Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/docs/).
 
 ## Indice dei contenuti
-
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-
 **Sommario**
 
 - [Guida introduttiva:](#quickstart)
-  - [Deployment one-click su Hasura Cloud](#one-click-deployment-on-hasura-cloud)
-  - [Altre opzioni di deployment one-click](#other-one-click-deployment-options)
-  - [Altri metodi di deployment](#other-deployment-methods)
+    - [Deployment one-click su Hasura Cloud](#one-click-deployment-on-hasura-cloud)
+    - [Altre opzioni di deployment one-click](#other-one-click-deployment-options)
+    - [Altri metodi di deployment](#other-deployment-methods)
 - [Architettura](#architecture)
 - [Strumenti client-side](#client-side-tooling)
 - [Aggiungere la business logic](#add-business-logic)
-  - [Schemi remoti](#remote-schemas)
-  - [Invoca webhook su eventi del database](#trigger-webhooks-on-database-events)
+    - [Schemi remoti](#remote-schemas)
+    - [Invoca webhook su eventi del database](#trigger-webhooks-on-database-events)
 - [Demo](#demos)
-  - [Applicazioni in tempo reale](#realtime-applications)
-  - [Video](#videos)
+    - [Applicazioni in tempo reale](#realtime-applications)
+    - [Video](#videos)
 - [Supporto e Risoluzione dei Problemi](#support--troubleshooting)
 - [Resta aggiornato](#stay-up-to-date)
 - [Contribuire](#contributing)
 - [Asset del Marchio](#brand-assets)
 - [Licenza](#license)
 - [Traduzioni](#translations)
-
+ 
 <!-- markdown-toc end -->
 
 ## Guida introduttiva:
@@ -71,7 +69,7 @@ Il metodo più facile e veloce per provare Hasura è via [Hasura Cloud](https://
 
 1. Fare clic sul seguente pulsante per eseguire il deploy del motore GraphQL su Hasura Cloud, incluso l'add-on Postgres o utilizzando un database Postgres esistente:
 
-   [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
+    [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
 2. Apri la console di Hasura
 
@@ -85,16 +83,16 @@ Il metodo più facile e veloce per provare Hasura è via [Hasura Cloud](https://
 
 Consulta le istruzioni per le seguenti opzioni di deployment one-click:
 
-| **Fornitore dell'infrastruttura** |                                                                                                                         **Link one-click**                                                                                                                         |                                                            **Informazioni aggiuntive**                                                             |
-| :-------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------: |
-|              Heroku               |                                                       [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)                                                       |                             [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/heroku-one-click.html)                             |
-|           DigitalOcean            |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|               Azure               | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html)                    |
-|              Render               |                                                   [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql)                                                   |                             [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/render-one-click.html)                             |
+| **Fornitore dell'infrastruttura** | **Link one-click** | **Informazioni aggiuntive** |
+|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Heroku | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/heroku-one-click.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
+| Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/render-one-click.html) |
 
 ### Altri metodi di deployment
 
-Per il deployment basato su Docker e opzioni avanzate di configurazione, consulta le
+Per il deployment basato su Docker e opzioni avanzate di configurazione, consulta le 
 [guide per il deployment](https://hasura.io/docs/latest/graphql/core/getting-started/index.html) o
 i [manifesti d'installazione](install-manifests).
 
@@ -137,15 +135,13 @@ Guarda tutte le applicazioni d'esempio nella cartella [hasura/sample-apps](https
 
 ### Applicazioni in tempo reale
 
-- Applicazione di chat di gruppo realizzata con React. Include un indicatore di digitazione,
+- Applicazione di chat di gruppo realizzata con React. Include un indicatore di digitazione, 
   utenti online e notifiche per i nuovi messaggi.
-
   - [Prova](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
 
-- App di localizzazione in tempo reale che mostra un veicolo in corsa che cambia le
+- App di localizzazione in tempo reale che mostra un veicolo in corsa che cambia le 
   coordinate GPS correnti in movimento su una mappa.
-
   - [Prova](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
 
@@ -155,19 +151,19 @@ Guarda tutte le applicazioni d'esempio nella cartella [hasura/sample-apps](https
 
 ### Video
 
-- [Aggiungere GraphQL a un'istanza GitLab self-hosted](https://www.youtube.com/watch?v=a2AhxKqd82Q) (_3:44 mins_)
-- [Todo app con Auth0 e GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (_4:00 mins_)
-- [GraphQL su GitLab integrato con GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (_4:05 mins_)
-- [Dashboard per 10 millioni di percorsi con geolocalizzazione (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (_3:06 mins_)
+* [Aggiungere GraphQL a un'istanza GitLab self-hosted](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
+* [Todo app con Auth0 e GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
+* [GraphQL su GitLab integrato con GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
+* [Dashboard per 10 millioni di percorsi con geolocalizzazione (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
 ## Supporto e Risoluzione dei Problemi
 
 La documentazione e la community ti aiuteranno a risolvere la maggior parte dei problemi. Se hai riscontrato un bug o hai bisogno di metterti in contatto con noi, puoi contattarci utilizzando uno dei seguenti canali:
 
-- Supporto & feedback: [Discord](https://discord.gg/hasura)
-- Tracciamento di problemi e bug: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
-- Segui gli aggiornamenti del prodotto: [@HasuraHQ](https://twitter.com/hasurahq)
-- Parla con noi sulla [chat del sito](https://hasura.io)
+* Supporto & feedback: [Discord](https://discord.gg/hasura)
+* Tracciamento di problemi e bug: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Segui gli aggiornamenti del prodotto: [@HasuraHQ](https://twitter.com/hasurahq)
+* Parla con noi sulla [chat del sito](https://hasura.io)
 
 Ci impegniamo a promuovere nella comunity un ambiente aperto e accogliente. Per favore consulta il [Codice di Condotta](code-of-conduct.md).
 
@@ -190,25 +186,19 @@ applicazione/sito web etc. Saremmo entusiasti se aggiungessi il badge "Powered b
 alle tue applicazioni create utilizzando Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_primary_darkbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_primary_lightbg.svg" width="150px"/>
 </div>
 
 ```html
 <!-- Su sfondi chiari -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_primary_darkbg.svg" />
 </a>
 
 <!-- Su sfondi scuri -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_primary_lightbg.svg" />
 </a>
 ```
 

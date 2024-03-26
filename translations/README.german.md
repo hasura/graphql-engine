@@ -84,8 +84,8 @@ Der schnellste Weg, Hasura auszuprobieren, ist mit Heroku.
 
 Probiere die folgenden Guides für die one-click Deployment Optionen:
 
-| **Infra Anbieter** |                                                                                                                         **One-click Link**                                                                                                                         |                                                            **Zusätzliche Information**                                                             |
-| :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **Infra Anbieter** |                                                                                                                         **One-click Link**                                                                                                                         |                                                            **Zusätzliche Information**                                                            |
+| :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
 |    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 |       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html)                    |
 
@@ -182,8 +182,8 @@ Webseite, etc. benutzen. Wir würden uns sehr freuen, wenn du das "Powered by Ha
 Abzeichen deiner Hasura App hinzufügst. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -191,7 +191,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg"
   />
 </a>
 
@@ -199,7 +199,7 @@ Abzeichen deiner Hasura App hinzufügst. ❤️
 <a href="https://hasura.io">
   <img
     width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
+    src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg"
   />
 </a>
 ```

@@ -3,6 +3,7 @@
 [![Dokumenti](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
+
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
@@ -13,47 +14,45 @@ Hasura vam pomaže da napravite GraphQL aplikacije podržane Postgres-om ili pos
 
 Pročitajte više na [hasura.io](https://hasura.io) i [dokumentima](https://hasura.io/docs).
 
----
+------------------
 
 ![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
----
+------------------
 
 ![Hasura GraphQL Engine Demo u stvarnom vremenu](../assets/realtime.gif)
 
----
+-------------------
 
 ## Značajke
 
-- **Napravite snažne upite**: Ugrađeno filtriranje, prelistavanje, pretraživanje po uzorcima, grupno ubacivanje, ažuriranje, brisanje mutacija
-- **U stvarnom vremenu**: Pretvorite bilo koji GraphQL upit u živi upit koristeći pretplate
-- **Spajanje udaljenih šema**: Pristupite prilagođenim GraphQL šemama za poslovnu logiku putem jedne krajnje tačke GraphQL Engine-a. [**Pročitaj više**](../remote-schemas.md).
-- **Okinite webhook ili funkcije bez servera**: Na Postgres sačuvaj/ažuriraj/izbriši dešavanjima ([pročitaj više](../event-triggers.md))
-- **Radi s postojećim, aktivnim bazama podataka**: Usmjerite ga na postojeću Postgres bazu podataka da odmah dobijete spreman na korištenje GraphQL API
-- **Fina kontrola pristupa**: Dinamička kontrola pristupa koja se integriše na vaš sistem pristupa (npr: auth0, firebase-auth)
-- **Visoke performanse i mali tragovi**: ~15MB docker slika; ~50MB RAM @ 1000 zahtjeva/s; više jezgra
-- **Administratorsko sučelje & Migracije**: Administratorska ploča & Rails-inspirisana migracija šeme
-- **Postgres** ❤️: Podržava Postgres tipove (PostGIS/geo-location, i sl.), pretvara poglede u _grafikone_, pokreće pohranjene funkcije ili procedure s mutacijama
+* **Napravite snažne upite**: Ugrađeno filtriranje, prelistavanje, pretraživanje po uzorcima, grupno ubacivanje, ažuriranje, brisanje mutacija
+* **U stvarnom vremenu**: Pretvorite bilo koji GraphQL upit u živi upit koristeći pretplate
+* **Spajanje udaljenih šema**: Pristupite prilagođenim GraphQL šemama za poslovnu logiku putem jedne krajnje tačke GraphQL Engine-a. [**Pročitaj više**](../remote-schemas.md).
+* **Okinite webhook ili funkcije bez servera**: Na Postgres sačuvaj/ažuriraj/izbriši dešavanjima ([pročitaj više](../event-triggers.md))
+* **Radi s postojećim, aktivnim bazama podataka**: Usmjerite ga na postojeću Postgres bazu podataka da odmah dobijete spreman na korištenje GraphQL API
+* **Fina kontrola pristupa**: Dinamička kontrola pristupa koja se integriše na vaš sistem pristupa (npr: auth0, firebase-auth)
+* **Visoke performanse i mali tragovi**: ~15MB docker slika; ~50MB RAM @ 1000 zahtjeva/s; više jezgra
+* **Administratorsko sučelje & Migracije**: Administratorska ploča & Rails-inspirisana migracija šeme
+* **Postgres** ❤️: Podržava Postgres tipove (PostGIS/geo-location, i sl.), pretvara poglede u *grafikone*, pokreće pohranjene funkcije ili procedure s mutacijama
 
 Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://hasura.io/docs).
 
 ## Tabela sadržaja
-
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-
 **Tabela sadržaja**
 
 - [Brzi početak:](#brzi-početak)
-  - [Implementacija jednim klikom na Heroku](#implementacija-jednim-klikom-na-heroku)
-  - [Ostale metode implementacije](#ostale-metode-implementacije-jednim-klikom)
+    - [Implementacija jednim klikom na Heroku](#implementacija-jednim-klikom-na-heroku)
+    - [Ostale metode implementacije](#ostale-metode-implementacije-jednim-klikom)
 - [Arhitektura](#arhitektura)
 - [Klijentski alati](#alati-na-klijentskoj-strani)
 - [Dodavanje poslovne logike](#dodavanje-poslovne-logike)
-  - [Daljinske šeme](#daljinske-šeme)
-  - [Pokretanje webhook-ova na dešavanjima u bazi podataka](#pokrenite-webhook-na-dešavanja-u-bazi-podataka)
+    - [Daljinske šeme](#daljinske-šeme)
+    - [Pokretanje webhook-ova na dešavanjima u bazi podataka](#pokrenite-webhook-na-dešavanja-u-bazi-podataka)
 - [Demo](#demo)
-  - [Aplikacije u stvarnom vremenu](#stvarne-aplikacije)
-  - [Video](#video)
+    - [Aplikacije u stvarnom vremenu](#stvarne-aplikacije)
+    - [Video](#video)
 - [Podrška & Rješavanje problema](#podrška--rješavanje-problema)
 - [Doprinos](#doprinos)
 - [Brendirani sadržaj](#brendirani-sadržaj)
@@ -70,11 +69,11 @@ Najbrži način da isprobate Hasura je putem Heroku-a.
 
 1. Klikni na link ispod da postaviš GraphQL Engine na Heroku uz besplatan Postgres dodatak:
 
-   [![Postavi na Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
+    [![Postavi na Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
 2. Otvori Hasura konzolu
 
-   Posjeti `https://<app-name>.herokuapp.com` (_zamijeni \<app-name\> sa nazivom svoje aplikacije_) da otvoriš administratorsku konzolu.
+   Posjeti `https://<app-name>.herokuapp.com` (*zamijeni \<app-name\> sa nazivom svoje aplikacije*) da otvoriš administratorsku konzolu.
 
 3. Napravi prvi GraphQL upit
 
@@ -84,10 +83,10 @@ Najbrži način da isprobate Hasura je putem Heroku-a.
 
 Pogledaj instrukcije za ostale mogućnosti implementacije jednim klikom:
 
-| **Infra provajder** |                                                                                                                              **Veza**                                                                                                                              |                                                              **Dodatne informacije**                                                               |
-| :-----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------: |
-|    DigitalOcean     |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|        Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html)                    |
+| **Infra provajder** | **Veza** | **Dodatne informacije** |
+|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Ostale metode implementacije
 
@@ -132,13 +131,11 @@ Pogledajte sve primjere dostupne u
 ### Stvarne aplikacije
 
 - Aplikacija za grupno dopisivanje koja koristi React, uključuje pokazatelj tipkanja, online korisnike & obavijesti o novim porukama.
-
   - [Isprobajte odmah](https://realtime-chat.demo.hasura.io/)
   - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [Pogledaj API](https://realtime-chat.demo.hasura.io/console)
 
 - Aplikacija za praćenje lokacije vozila uživo koja prikazuje GPS koordinate dok se vozilo kreće po mapi..
-
   - [Isprobajte odmah](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorijal](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [Pogledaj API](https://realtime-location-tracking.demo.hasura.io/console)
@@ -150,19 +147,20 @@ Pogledajte sve primjere dostupne u
 
 ### Video
 
-- [Dodajte GraphQL u samostojeću GitLab instancu](https://www.youtube.com/watch?v=a2AhxKqd82Q) (_3:44 min_)
-- [Todo aplikacija sa Auth0 i GraphQL backendom](https://www.youtube.com/watch?v=15ITBYnccgc) (_4:00 min_)
-- [GraphQL na GitLab-u integrirana sa GitLab autentikacijom](https://www.youtube.com/watch?v=m1ChRhRLq7o) (_4:05 min_)
-- [Nadzorna ploča za 10 miliona vožnji sa geografskom lokacijom (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (_3:06 min_)
+* [Dodajte GraphQL u samostojeću GitLab instancu](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 min*)
+* [Todo aplikacija sa Auth0 i GraphQL backendom](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 min*)
+* [GraphQL na GitLab-u integrirana sa GitLab autentikacijom](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 min*)
+* [Nadzorna ploča za 10 miliona vožnji sa geografskom lokacijom (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 min*)
+
 
 ## Podrška & Rješavanje problema
 
 Dokumentacija i zajednica će vam pomoći da riješite mnogo problema. Ako pronađete grešku ili želite da nas kontaktirate, možete nas pronaći na kanalima ispod:
 
-- Podrška & povratne informacije: [Discord](https://discord.gg/vBPpJkS)
-- Problem & praćenje gresaka: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
-- Pratite ažuriranja o proizvodima: [@HasuraHQ](https://twitter.com/hasurahq)
-- Pričajte s nama na [nasoj web lokaciji](https://hasura.io)
+* Podrška & povratne informacije: [Discord](https://discord.gg/vBPpJkS)
+* Problem & praćenje gresaka: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Pratite ažuriranja o proizvodima: [@HasuraHQ](https://twitter.com/hasurahq)
+* Pričajte s nama na [nasoj web lokaciji](https://hasura.io)
 
 Zalažemo se za njegovanje otvorenog i dobrodošlog okruženja u zajednici. Molimo da pogledate [kodeks ponašanja](../code-of-conduct.md).
 
@@ -177,25 +175,19 @@ Pogledajte naš [vodič za doprinos](../CONTRIBUTING.md) za više detalja.
 Hasura brendirani sadržaj (logo, Hasura maskota, powered by bedževi i slično.) mogu biti pronađeni u [assets/brand](../assets/brand) mapi. Slobodno ih možete koristiti u vašoj aplikaciji/web stranici. Biti će nam drago i ako dodate "Pokreće Hasura" bedž na vašu aplikaciju koju ste napravili uz pomoć Hasura-e. ❤️
 
 <div style="display: flex;">
-  <img src="../assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
-  <img src="../assets/brand/hasura_logo_primary_darkbg.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- Za svijetle pozadine -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- Za tamne pozadine -->
 <a href="https://hasura.io">
-  <img
-    width="150px"
-    src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457033/main-web/hasura_logo_primary_darkbg_nussjm.svg"
-  />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
 ```
 
