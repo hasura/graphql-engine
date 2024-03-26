@@ -169,7 +169,7 @@
 Τα στοιχεία μάρκας Hasura (λογότυπα, μασκότ Hasura, "powered by" εμβλήματα κ.λπ.) μπορούν να βρεθούν στον κατάλογο περιουσιακών στοιχείων / μάρκας. Είστε ελεύθεροι να τα χρησιμοποιήσετε στην εφαρμογή / ιστοσελίδα σας κτλ ... Θα χαρούμε να προσθέσετε το σήμα "Powered by Hasura" στην εφαρμογή που αναπτύξατε με την Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="https://github.com/hasura/graphql-engine/blob/stable/assets/brand/hasura_logo_primary_lightbg.svg" width="150px"/>
+  <img src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1711457032/main-web/hasura_logo_primary_lightbg_n0xhz8.svg" width="150px"/>
 </div>
 
 ```html
