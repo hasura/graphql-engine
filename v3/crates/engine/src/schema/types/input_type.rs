@@ -116,7 +116,7 @@ fn input_object_type_input_fields(
 
             let input_field = gql_schema::InputField::new(
                 graphql_field_name.clone(),
-                None, // Description
+                field_definition.description.clone(),
                 types::Annotation::Input(types::InputAnnotation::InputObjectField {
                     field_name: field_name.clone(),
                     field_type: field_definition.field_type.clone(),
@@ -162,6 +162,11 @@ pub fn input_object_type_schema(
         input_object_type_input_fields(gds, builder, &object_type_representation.fields)?;
 
     Ok(gql_schema::TypeInfo::InputObject(
-        gql_schema::InputObject::new(graphql_type_name, None, input_fields, Vec::new()),
+        gql_schema::InputObject::new(
+            graphql_type_name,
+            object_type_representation.description.clone(),
+            input_fields,
+            Vec::new(),
+        ),
     ))
 }

@@ -123,16 +123,16 @@
           },
           {
             "name": "NameFilterOpaqueSurname",
-            "description": null,
+            "description": "Some description for custom input object type",
             "fields": null,
             "inputFields": [
               {
                 "name": "first_name",
-                "description": null
+                "description": "Some description of first name"
               },
               {
                 "name": "surname",
-                "description": null
+                "description": "Some description of last name"
               }
             ]
           },

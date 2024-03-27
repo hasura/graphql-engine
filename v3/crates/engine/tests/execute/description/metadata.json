@@ -228,13 +228,16 @@
           "version": "v1",
           "definition": {
             "name": "NameFilterOpaqueSurname",
+            "description": "Some description for custom input object type",
             "fields": [
               {
                 "name": "first_name",
+                "description": "Some description of first name",
                 "type": "String"
               },
               {
                 "name": "surname",
+                "description": "Some description of last name",
                 "type": "Opaque"
               }
             ],
