@@ -1947,7 +1947,6 @@
           "target": {
             "model": {
               "name": "Articles",
-              "namespace": null,
               "subgraph": null,
               "relationshipType": "Array"
             }
@@ -2048,7 +2047,6 @@
         {
           "model": {
             "name": "Articles",
-            "namespace": null,
             "subgraph": null,
             "relationshipType": "Array"
           }
@@ -2097,12 +2095,6 @@
             {
               "$ref": "#/definitions/ModelName"
             }
-          ]
-        },
-        "namespace": {
-          "type": [
-            "string",
-            "null"
           ]
         },
         "subgraph": {

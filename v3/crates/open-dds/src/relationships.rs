@@ -45,9 +45,6 @@ pub enum RelationshipType {
 pub struct ModelRelationshipTarget {
     /// The name of the data model.
     pub name: ModelName,
-    // Deprecated, this solely exits for backwards compatibility till all the
-    // tooling moves to the subgraph terminology
-    namespace: Option<String>,
     /// The subgraph of the target model. Defaults to the current subgraph.
     subgraph: Option<String>,
     /// Type of the relationship - object or array.
@@ -56,10 +53,7 @@ pub struct ModelRelationshipTarget {
 
 impl ModelRelationshipTarget {
     pub fn subgraph(&self) -> Option<&str> {
-        self.subgraph
-            .as_ref()
-            .or(self.namespace.as_ref())
-            .map(|x| x.as_str())
+        self.subgraph.as_deref()
     }
 }
 
@@ -232,7 +226,6 @@ impl RelationshipV1 {
                 "target": {
                     "model": {
                         "name": "Articles",
-                        "namespace": null,
                         "subgraph": null,
                         "relationshipType": "Array"
                     }

@@ -1,8 +1,6 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
-use crate::execute::plan::{
-    ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs,
-};
+use crate::execute::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
 use crate::metadata::resolved;
