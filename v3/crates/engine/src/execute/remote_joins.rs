@@ -77,7 +77,7 @@
 //! [build_remote_command_relationship]: crate::execute::ir::relationship::build_remote_command_relationship
 
 use async_recursion::async_recursion;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
@@ -100,7 +100,7 @@ pub(crate) async fn execute_join_locations<'ir>(
     http_client: &reqwest::Client,
     execution_span_attribute: String,
     field_span_attribute: String,
-    lhs_response: &mut Vec<ndc::models::RowSet>,
+    lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
     project_id: Option<ProjectId>,
@@ -167,7 +167,7 @@ where
 
             tracer.in_span("response_join", SpanVisibility::Internal, || {
                 // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                let rhs_response: HashMap<Argument, ndc::models::RowSet> =
+                let rhs_response: HashMap<Argument, ndc_models::RowSet> =
                     join_variables_.into_iter().zip(target_response).collect();
 
                 join::join_responses(&key, &remote_alias, &location, lhs_response, rhs_response)

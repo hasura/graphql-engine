@@ -14,7 +14,6 @@ use nonempty::NonEmpty;
 use tracing_util::SpanVisibility;
 pub mod types;
 use lang_graphql::ast::common as ast;
-use ndc_client as ndc;
 
 pub async fn execute_explain(
     http_client: &reqwest::Client,
@@ -311,7 +310,7 @@ async fn fetch_explain_from_data_connector(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let ndc_config = ndc::apis::configuration::Configuration {
+                    let ndc_config = ndc_client::apis::configuration::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
@@ -321,7 +320,7 @@ async fn fetch_explain_from_data_connector(
                     {
                         // TODO: use capabilities from the data connector context
                         let capabilities =
-                            ndc::apis::default_api::capabilities_get(&ndc_config).await?;
+                            ndc_client::apis::default_api::capabilities_get(&ndc_config).await?;
                         match ndc_request {
                             types::NDCRequest::Query(query_request) => capabilities
                                 .capabilities
@@ -329,7 +328,7 @@ async fn fetch_explain_from_data_connector(
                                 .explain
                                 .async_map(|_| {
                                     Box::pin(async move {
-                                        ndc::apis::default_api::explain_query_post(
+                                        ndc_client::apis::default_api::explain_query_post(
                                             &ndc_config,
                                             query_request,
                                         )
@@ -345,7 +344,7 @@ async fn fetch_explain_from_data_connector(
                                 .explain
                                 .async_map(|_| {
                                     Box::pin(async move {
-                                        ndc::apis::default_api::explain_mutation_post(
+                                        ndc_client::apis::default_api::explain_mutation_post(
                                             &ndc_config,
                                             mutation_request,
                                         )

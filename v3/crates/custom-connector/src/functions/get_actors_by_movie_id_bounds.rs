@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
@@ -14,28 +14,28 @@ pub(crate) fn rows(
 ) -> Result<Vec<Row>> {
     let lower_bound_value = arguments.get("lower_bound").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "missing argument movie id lower bound".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let lower_bound = lower_bound_value.as_i64().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "movie id bound must be an integer".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let upper_bound_value = arguments.get("upper_bound").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "missing argument movie id upper bound".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let upper_bound = upper_bound_value.as_i64().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "movie id bound must be an integer".into(),
             details: serde_json::Value::Null,
         }),
@@ -45,14 +45,14 @@ pub(crate) fn rows(
     for (_id, actor) in state.actors.iter() {
         let movie_id = actor.get("movie_id").ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "movie id not found".into(),
                 details: serde_json::Value::Null,
             }),
         ))?;
         let movie_id_int = movie_id.as_i64().ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "movie id not an integer".into(),
                 details: serde_json::Value::Null,
             }),
@@ -61,7 +61,7 @@ pub(crate) fn rows(
             let actor_value = serde_json::to_value(actor).map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "unable to encode value".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -75,7 +75,7 @@ pub(crate) fn rows(
         serde_json::to_value(actors_by_movie_id_bounds).map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "unable to encode value".into(),
                     details: serde_json::Value::Null,
                 }),

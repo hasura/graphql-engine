@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
@@ -20,7 +20,7 @@ pub mod latest_actor;
 pub mod latest_actor_id;
 pub mod latest_actor_name;
 
-pub(crate) fn get_functions() -> Vec<models::FunctionInfo> {
+pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
     vec![
         latest_actor_id::function_info(),
         latest_actor_name::function_info(),
@@ -54,7 +54,7 @@ pub(crate) fn get_function_by_name(
         "get_actors_by_movie_id" => get_actors_by_movie_id::rows(arguments, state),
         _ => Err((
             StatusCode::BAD_REQUEST,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "invalid collection name".into(),
                 details: serde_json::Value::Null,
             }),

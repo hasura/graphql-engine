@@ -8,7 +8,7 @@ use hasura_authn_core::Role;
 use indexmap::IndexMap;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
-use ndc_client;
+use ndc_client::models as ndc_models;
 use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
@@ -89,7 +89,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 
 #[derive(Debug)]
 pub struct NDCMutationExecution<'n, 's, 'ir> {
-    pub query: ndc_client::models::MutationRequest,
+    pub query: ndc_models::MutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub data_connector: &'s resolved::data_connector::DataConnectorLink,
     pub execution_span_attribute: String,
@@ -106,7 +106,7 @@ pub struct ExecutionTree<'s, 'ir> {
 
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
-    pub query: ndc_client::models::QueryRequest,
+    pub query: ndc_models::QueryRequest,
     pub data_connector: &'s resolved::data_connector::DataConnectorLink,
 }
 
@@ -445,7 +445,7 @@ fn assign_join_ids<'s, 'ir>(
 
 /// We use an associative list and check for equality of `RemoteJoin` to
 /// generate it's `JoinId`. This is because `Hash` trait is not implemented for
-/// `ndc::models::QueryRequest`
+/// `ndc_models::QueryRequest`
 fn assign_join_id<'s, 'ir>(
     remote_join: &'s RemoteJoin<'s, 'ir>,
     state: &mut RemoteJoinCounter<'s, 'ir>,

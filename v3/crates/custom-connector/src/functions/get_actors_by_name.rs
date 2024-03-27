@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     collections::actors::filter_actors_by_name,
@@ -10,21 +10,21 @@ use crate::{
     types::name_query::parse_name_query_object,
 };
 
-pub(crate) fn function_info() -> models::FunctionInfo {
-    models::FunctionInfo {
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
         name: "get_actors_by_name".into(),
         description: Some("Get actors by name".into()),
         arguments: BTreeMap::from_iter([(
             "name".into(),
-            models::ArgumentInfo {
+            ndc_models::ArgumentInfo {
                 description: Some("the name components to search by".into()),
-                argument_type: models::Type::Named {
+                argument_type: ndc_models::Type::Named {
                     name: "name_query".into(),
                 },
             },
         )]),
-        result_type: models::Type::Array {
-            element_type: Box::new(models::Type::Named {
+        result_type: ndc_models::Type::Array {
+            element_type: Box::new(ndc_models::Type::Named {
                 name: "actor".into(),
             }),
         },
@@ -44,7 +44,7 @@ pub(crate) fn rows(
     let actors_value = serde_json::to_value(filtered_actors).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "unable to encode value".into(),
                 details: serde_json::Value::Null,
             }),

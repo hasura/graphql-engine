@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
@@ -13,7 +13,7 @@ pub mod institutions;
 pub mod movies;
 pub mod movies_by_actor_name;
 
-pub(crate) fn get_collections() -> Vec<models::CollectionInfo> {
+pub(crate) fn get_collections() -> Vec<ndc_models::CollectionInfo> {
     vec![
         actors::collection_info(),
         movies::collection_info(),

@@ -1,7 +1,7 @@
 //! Implements the join phase of Remote Joins execution
 
 use indexmap::IndexMap;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 
@@ -20,8 +20,8 @@ pub(crate) fn join_responses(
     alias: &str,
     remote_alias: &str,
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
-    lhs_response: &mut [ndc::models::RowSet],
-    rhs_response: HashMap<BTreeMap<String, ValueExt>, ndc::models::RowSet>,
+    lhs_response: &mut [ndc_models::RowSet],
+    rhs_response: HashMap<BTreeMap<String, ValueExt>, ndc_models::RowSet>,
 ) -> Result<(), error::Error> {
     for row_set in lhs_response.iter_mut() {
         if let Some(rows) = row_set.rows.as_mut() {
@@ -38,7 +38,7 @@ pub(crate) fn join_responses(
                                 let new_val = command_row.clone();
                                 let mut command_row_parsed: IndexMap<
                                     String,
-                                    ndc::models::RowFieldValue,
+                                    ndc_models::RowFieldValue,
                                 > = json::from_value(new_val)?;
                                 follow_location_and_insert_value(
                                     location,
@@ -53,7 +53,7 @@ pub(crate) fn join_responses(
                         json::Value::Object(obj) => {
                             let mut command_row = obj
                                 .into_iter()
-                                .map(|(k, v)| (k.clone(), ndc::models::RowFieldValue(v.clone())))
+                                .map(|(k, v)| (k.clone(), ndc_models::RowFieldValue(v.clone())))
                                 .collect();
                             follow_location_and_insert_value(
                                 location,
@@ -62,7 +62,7 @@ pub(crate) fn join_responses(
                                 alias.to_owned(),
                                 &rhs_response,
                             )?;
-                            *x = ndc::models::RowFieldValue(json::to_value(command_row)?);
+                            *x = ndc_models::RowFieldValue(json::to_value(command_row)?);
                         }
                         command_json_val => {
                             return Err(error::Error::from(
@@ -95,16 +95,16 @@ pub(crate) fn join_responses(
 /// the `row`
 fn follow_location_and_insert_value(
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
-    row: &mut IndexMap<String, ndc::models::RowFieldValue>,
+    row: &mut IndexMap<String, ndc_models::RowFieldValue>,
     remote_alias: String,
     key: String,
-    rhs_response: &HashMap<Argument, ndc::models::RowSet>,
+    rhs_response: &HashMap<Argument, ndc_models::RowSet>,
 ) -> Result<(), error::Error> {
     match &location.join_node {
         JoinNode::Remote((join_node, _join_id)) => {
             let argument = collect::create_argument(join_node, row);
             let rhs_value = json::to_value(rhs_response.get(&argument))?;
-            row.insert(remote_alias, ndc::models::RowFieldValue(rhs_value));
+            row.insert(remote_alias, ndc_models::RowFieldValue(rhs_value));
             Ok(())
         }
         JoinNode::Local(location_kind) => {
@@ -115,7 +115,7 @@ fn follow_location_and_insert_value(
                     })?;
             match location_kind {
                 LocationKind::LocalRelationship => {
-                    let mut row_set: ndc::models::RowSet =
+                    let mut row_set: ndc_models::RowSet =
                         json::from_value(row_field_val.0.clone())?;
                     let mut rows =
                         row_set
@@ -136,14 +136,14 @@ fn follow_location_and_insert_value(
                         }
                     }
                     row_set.rows = Some(rows);
-                    *row_field_val = ndc::models::RowFieldValue(json::to_value(row_set)?);
+                    *row_field_val = ndc_models::RowFieldValue(json::to_value(row_set)?);
                 }
                 LocationKind::NestedData => {
                     match row_field_val.0 {
                         serde_json::Value::Array(_) => {
                             if let Ok(mut rows) =
                                 serde_json::from_value::<
-                                    Vec<IndexMap<String, ndc::models::RowFieldValue>>,
+                                    Vec<IndexMap<String, ndc_models::RowFieldValue>>,
                                 >(row_field_val.0.clone())
                             {
                                 for inner_row in rows.iter_mut() {
@@ -157,12 +157,12 @@ fn follow_location_and_insert_value(
                                         )?
                                     }
                                 }
-                                *row_field_val = ndc::models::RowFieldValue(json::to_value(rows)?);
+                                *row_field_val = ndc_models::RowFieldValue(json::to_value(rows)?);
                             }
                         }
                         serde_json::Value::Object(_) => {
                             if let Ok(mut inner_row) = serde_json::from_value::<
-                                IndexMap<String, ndc::models::RowFieldValue>,
+                                IndexMap<String, ndc_models::RowFieldValue>,
                             >(
                                 row_field_val.0.clone()
                             ) {
@@ -176,7 +176,7 @@ fn follow_location_and_insert_value(
                                     )?
                                 }
                                 *row_field_val =
-                                    ndc::models::RowFieldValue(json::to_value(inner_row)?);
+                                    ndc_models::RowFieldValue(json::to_value(inner_row)?);
                             }
                         }
                         _ => (),

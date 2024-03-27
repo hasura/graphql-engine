@@ -1,16 +1,16 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{procedures, state::AppState};
 
-type Result<A> = std::result::Result<A, (StatusCode, Json<models::ErrorResponse>)>;
+type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
 pub fn execute_mutation_request(
     state: &AppState,
-    request: models::MutationRequest,
-) -> Result<models::MutationResponse> {
+    request: ndc_models::MutationRequest,
+) -> Result<ndc_models::MutationResponse> {
     let mut operation_results = vec![];
 
     for operation in request.operations.iter() {
@@ -19,19 +19,19 @@ pub fn execute_mutation_request(
         operation_results.push(operation_result);
     }
 
-    Ok(models::MutationResponse { operation_results })
+    Ok(ndc_models::MutationResponse { operation_results })
 }
 
 fn execute_mutation_operation(
     state: &AppState,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
-    operation: &models::MutationOperation,
-) -> Result<models::MutationOperationResults> {
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    operation: &ndc_models::MutationOperation,
+) -> Result<ndc_models::MutationOperationResults> {
     // We don't actually want to mutate the app state since the connector is used in tests.
     let mut state = state.clone();
 
     match operation {
-        models::MutationOperation::Procedure {
+        ndc_models::MutationOperation::Procedure {
             name,
             arguments,
             fields,
@@ -42,6 +42,6 @@ fn execute_mutation_operation(
             collection_relationships,
             &mut state,
         )
-        .map(|result| models::MutationOperationResults::Procedure { result }),
+        .map(|result| ndc_models::MutationOperationResults::Procedure { result }),
     }
 }

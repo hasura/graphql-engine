@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::{parse_object_argument, Result},
@@ -10,16 +10,16 @@ use crate::{
 
 use super::actors::filter_actors_by_name;
 
-pub(crate) fn collection_info() -> models::CollectionInfo {
-    models::CollectionInfo {
+pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
+    ndc_models::CollectionInfo {
         name: "movies_by_actor_name".into(),
         description: Some("Movies filtered by actor name search parameters".into()),
         collection_type: "movie".into(),
         arguments: BTreeMap::from_iter([(
             "actor_name".into(),
-            models::ArgumentInfo {
+            ndc_models::ArgumentInfo {
                 description: Some("the actor name components to search by".into()),
-                argument_type: models::Type::Named {
+                argument_type: ndc_models::Type::Named {
                     name: "name_query".into(),
                 },
             },

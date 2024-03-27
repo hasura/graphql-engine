@@ -4,7 +4,7 @@ use crate::metadata::resolved::types::ScalarTypeInfo;
 use indexmap::IndexMap;
 
 use lang_graphql::ast::common::OperationType;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::{
     data_connector::{
         self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
@@ -194,8 +194,8 @@ impl<'de> Deserialize<'de> for SerializableHeaderMap {
 pub struct DataConnectorContext<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
     pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
-    pub schema: &'a ndc_client::models::SchemaResponse,
-    pub capabilities: &'a ndc::models::CapabilitiesResponse,
+    pub schema: &'a ndc_models::SchemaResponse,
+    pub capabilities: &'a ndc_models::CapabilitiesResponse,
     pub scalars: HashMap<&'a str, ScalarTypeInfo<'a>>,
 }
 
@@ -219,16 +219,16 @@ impl<'a> DataConnectorContext<'a> {
 
 // helper function to determine whether a ndc type is a simple scalar
 pub fn get_simple_scalar<'a, 'b>(
-    t: ndc::models::Type,
+    t: ndc_models::Type,
     scalars: &'a HashMap<&str, ScalarTypeInfo<'b>>,
 ) -> Option<(String, &'a ScalarTypeInfo<'b>)> {
     match t {
-        ndc::models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
-        ndc::models::Type::Nullable { underlying_type } => {
+        ndc_models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
+        ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }
-        ndc::models::Type::Array { element_type: _ } => None,
-        ndc::models::Type::Predicate {
+        ndc_models::Type::Array { element_type: _ } => None,
+        ndc_models::Type::Predicate {
             object_type_name: _,
         } => None,
     }
@@ -236,8 +236,7 @@ pub fn get_simple_scalar<'a, 'b>(
 
 #[cfg(test)]
 mod tests {
-
-    use ndc_client::models::CapabilitiesResponse;
+    use ndc_client::models as ndc_models;
     use open_dds::data_connector::DataConnectorLinkV1;
 
     use super::DataConnectorContext;
@@ -288,7 +287,7 @@ mod tests {
             ))
             .unwrap();
 
-        let explicit_capabilities: CapabilitiesResponse = serde_json::from_str(
+        let explicit_capabilities: ndc_models::CapabilitiesResponse = serde_json::from_str(
             r#" { "version": "1", "capabilities": { "query": {}, "mutation": {} } }"#,
         )
         .unwrap();

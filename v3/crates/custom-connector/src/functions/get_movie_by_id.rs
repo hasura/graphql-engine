@@ -1,26 +1,26 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
     state::{AppState, Row},
 };
 
-pub(crate) fn function_info() -> models::FunctionInfo {
-    models::FunctionInfo {
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
         name: "get_movie_by_id".into(),
         description: Some("Get movie by ID".into()),
         arguments: BTreeMap::from_iter([(
             "movie_id".into(),
-            models::ArgumentInfo {
+            ndc_models::ArgumentInfo {
                 description: Some("the id of the movie to fetch".into()),
-                argument_type: models::Type::Named { name: "Int".into() },
+                argument_type: ndc_models::Type::Named { name: "Int".into() },
             },
         )]),
-        result_type: models::Type::Nullable {
-            underlying_type: Box::new(models::Type::Named {
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
                 name: "movie".into(),
             }),
         },
@@ -33,7 +33,7 @@ pub(crate) fn rows(
 ) -> Result<Vec<Row>> {
     let id_value = arguments.get("movie_id").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "missing argument movie_id".into(),
             details: serde_json::Value::Null,
         }),
@@ -50,7 +50,7 @@ pub(crate) fn rows(
                 let movie_value = serde_json::to_value(movie).map_err(|_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "unable to encode value".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -63,7 +63,7 @@ pub(crate) fn rows(
     } else {
         Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "incorrect type for id".into(),
                 details: serde_json::Value::Null,
             }),

@@ -1,7 +1,8 @@
 //! NDC query generation from 'ModelSelection' IR
 
-use ndc_client as ndc;
 use std::collections::BTreeMap;
+
+use ndc_client::models as ndc_models;
 
 use super::relationships;
 use super::selection_set;
@@ -12,10 +13,10 @@ use crate::execute::remote_joins::types::{JoinLocations, MonotonicCounter, Remot
 pub(crate) fn ndc_query<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<(ndc_models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     let (ndc_fields, join_locations) =
         selection_set::process_selection_set_ir(&ir.selection, join_id_counter)?;
-    let ndc_query = ndc::models::Query {
+    let ndc_query = ndc_models::Query {
         aggregates: None,
         fields: Some(ndc_fields),
         limit: ir.limit,
@@ -24,7 +25,7 @@ pub(crate) fn ndc_query<'s, 'ir>(
         predicate: match ir.filter_clause.expressions.as_slice() {
             [] => None,
             [expression] => Some(expression.clone()),
-            expressions => Some(ndc::models::Expression::And {
+            expressions => Some(ndc_models::Expression::And {
                 expressions: expressions.to_vec(),
             }),
         },
@@ -36,18 +37,12 @@ pub(crate) fn ndc_query<'s, 'ir>(
 pub(crate) fn ndc_ir<'s, 'ir>(
     ir: &'ir ModelSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        ndc::models::QueryRequest,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
+) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     let mut collection_relationships = BTreeMap::new();
     relationships::collect_relationships(ir, &mut collection_relationships)?;
 
     let (query, join_locations) = ndc_query(ir, join_id_counter)?;
-    let query_request = ndc::models::QueryRequest {
+    let query_request = ndc_models::QueryRequest {
         query,
         collection: ir.collection.clone(),
         arguments: ir.arguments.clone(),

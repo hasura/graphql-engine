@@ -1,19 +1,19 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
     state::{AppState, Row},
 };
 
-pub(crate) fn function_info() -> models::FunctionInfo {
-    models::FunctionInfo {
+pub(crate) fn function_info() -> ndc_models::FunctionInfo {
+    ndc_models::FunctionInfo {
         name: "latest_actor".into(),
         description: Some("Get the most recent actor".into()),
-        result_type: models::Type::Nullable {
-            underlying_type: Box::new(models::Type::Named {
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
                 name: "actor".into(),
             }),
         },
@@ -34,7 +34,7 @@ pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
         let latest_actor_value = serde_json::to_value(latest_actor).map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "unable to encode value".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -48,7 +48,7 @@ pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
     } else {
         Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "No max ID exists".into(),
                 details: serde_json::Value::Null,
             }),

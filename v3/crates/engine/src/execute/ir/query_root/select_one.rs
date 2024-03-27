@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds;
 use serde::Serialize;
 
@@ -61,13 +61,13 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
                 ModelInputAnnotation::ModelUniqueIdentifierArgument { ndc_column } => {
                     let ndc_column = ndc_column.as_ref().ok_or_else(|| error::InternalEngineError::InternalGeneric {
                         description: format!("Missing NDC column mapping for unique identifier argument {} on field {}", argument.name, field_call.name)})?;
-                    let ndc_expression = ndc::models::Expression::BinaryComparisonOperator {
-                        column: ndc::models::ComparisonTarget::Column {
+                    let ndc_expression = ndc_models::Expression::BinaryComparisonOperator {
+                        column: ndc_models::ComparisonTarget::Column {
                             name: ndc_column.column.clone(),
                             path: vec![],
                         },
                         operator: ndc_column.equal_operator.clone(),
-                        value: ndc::models::ComparisonValue::Scalar {
+                        value: ndc_models::ComparisonValue::Scalar {
                             value: argument.value.as_json(),
                         },
                     };
@@ -99,7 +99,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
         {
             model_arguments.insert(
                 argument_name_inner.to_string(),
-                ndc_client::models::Argument::Literal {
+                ndc_models::Argument::Literal {
                     value: permissions::make_value_from_value_expression(
                         argument_value,
                         field_type,

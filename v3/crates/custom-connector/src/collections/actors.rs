@@ -1,15 +1,15 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
     state::{AppState, Row},
 };
 
-pub(crate) fn collection_info() -> models::CollectionInfo {
-    models::CollectionInfo {
+pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
+    ndc_models::CollectionInfo {
         name: "actors".into(),
         description: Some("A collection of actors".into()),
         collection_type: "actor".into(),
@@ -17,7 +17,7 @@ pub(crate) fn collection_info() -> models::CollectionInfo {
         foreign_keys: BTreeMap::new(),
         uniqueness_constraints: BTreeMap::from_iter([(
             "ActorByID".into(),
-            models::UniquenessConstraint {
+            ndc_models::UniquenessConstraint {
                 unique_columns: vec!["id".into()],
             },
         )]),
@@ -42,7 +42,7 @@ pub(crate) fn filter_actors_by_name<'a>(
                 .ok_or_else(|| {
                     (
                         StatusCode::BAD_REQUEST,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "actor missing name".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -52,7 +52,7 @@ pub(crate) fn filter_actors_by_name<'a>(
                 .ok_or_else(|| {
                     (
                         StatusCode::BAD_REQUEST,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "actor name must be a string".into(),
                             details: serde_json::Value::Null,
                         }),

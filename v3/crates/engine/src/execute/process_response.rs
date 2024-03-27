@@ -8,8 +8,7 @@ use base64::{engine::general_purpose, Engine};
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Alias, TypeContainer, TypeName};
 use lang_graphql::normalized_ast;
-use ndc::models::{MutationOperationResults, RowFieldValue, RowSet};
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
@@ -35,9 +34,9 @@ impl KeyValueResponse for IndexMap<String, json::Value> {
         self.contains_key(key)
     }
 }
-impl KeyValueResponse for IndexMap<String, RowFieldValue> {
+impl KeyValueResponse for IndexMap<String, ndc_models::RowFieldValue> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
-        // Convert a RowFieldValue to json::Value if exits
+        // Convert a ndc_models::RowFieldValue to json::Value if exits
         self.remove(key).map(|row_field| row_field.0)
     }
     fn contains_key(&self, key: &str) -> bool {
@@ -178,7 +177,7 @@ where
                                             ),
                                         }
                                     })?;
-                                let relationship_json_value_result: Option<RowSet> =
+                                let relationship_json_value_result: Option<ndc_models::RowSet> =
                                     serde_json::from_value(field_json_value_result).ok();
 
                                 match relationship_json_value_result {
@@ -217,7 +216,7 @@ where
 }
 
 pub fn process_selection_set_as_list(
-    row_set: RowSet,
+    row_set: ndc_models::RowSet,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::Error> {
     let processed_response = row_set
@@ -232,7 +231,7 @@ pub fn process_selection_set_as_list(
 }
 
 pub fn process_selection_set_as_object(
-    row_set: RowSet,
+    row_set: ndc_models::RowSet,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::Error> {
     let processed_response = row_set
@@ -250,7 +249,7 @@ pub fn process_field_selection_as_list(
     if selection_set.fields.is_empty() {
         Ok(value)
     } else {
-        let rows: Vec<IndexMap<String, RowFieldValue>> = json::from_value(value)?;
+        let rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = json::from_value(value)?;
         let processed_rows: Vec<IndexMap<Alias, json::Value>> = rows
             .into_iter()
             .map(|row| process_single_query_response_row(row, selection_set))
@@ -266,7 +265,7 @@ pub fn process_field_selection_as_object(
     if selection_set.fields.is_empty() {
         Ok(value)
     } else {
-        let row: IndexMap<String, RowFieldValue> = json::from_value(value)?;
+        let row: IndexMap<String, ndc_models::RowFieldValue> = json::from_value(value)?;
         let processed_row = process_single_query_response_row(row, selection_set)?;
         Ok(json::to_value(processed_row)?)
     }
@@ -274,7 +273,7 @@ pub fn process_field_selection_as_object(
 
 pub fn process_command_rows(
     command_name: &Qualified<CommandName>,
-    rows: Option<Vec<IndexMap<String, RowFieldValue, RandomState>>>,
+    rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue, RandomState>>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<Option<json::Value>, error::Error> {
@@ -306,7 +305,7 @@ pub fn process_command_rows(
 }
 
 fn process_command_response_row(
-    mut row: IndexMap<String, RowFieldValue>,
+    mut row: IndexMap<String, ndc_models::RowFieldValue>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<json::Value, error::Error> {
@@ -320,12 +319,12 @@ fn process_command_response_row(
 }
 
 pub fn process_command_mutation_response(
-    mutation_result: MutationOperationResults,
+    mutation_result: ndc_models::MutationOperationResults,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<json::Value, error::Error> {
     match mutation_result {
-        MutationOperationResults::Procedure { result } => {
+        ndc_models::MutationOperationResults::Procedure { result } => {
             process_command_field_value(result, selection_set, type_container)
         }
     }
@@ -396,7 +395,7 @@ fn process_command_field_value(
 
 pub fn process_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-    rows_sets: Vec<ndc::models::RowSet>,
+    rows_sets: Vec<ndc_models::RowSet>,
     process_response_as: ProcessResponseAs,
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
@@ -429,8 +428,8 @@ pub fn process_response(
 }
 
 fn get_single_rowset(
-    rows_sets: Vec<ndc::models::RowSet>,
-) -> Result<ndc::models::RowSet, error::Error> {
+    rows_sets: Vec<ndc_models::RowSet>,
+) -> Result<ndc_models::RowSet, error::Error> {
     Ok(rows_sets
         .into_iter()
         .next()

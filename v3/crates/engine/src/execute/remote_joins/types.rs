@@ -1,7 +1,7 @@
 //! Join tree and related types for remote joins.
 //!
 use indexmap::IndexMap;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
@@ -120,7 +120,7 @@ pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
     pub target_data_connector: &'s resolved::data_connector::DataConnectorLink,
     /// NDC IR to execute on a data connector
-    pub target_ndc_ir: ndc::models::QueryRequest,
+    pub target_ndc_ir: ndc_models::QueryRequest,
     /// Mapping of the fields in source to fields in target.
     /// The HashMap has the following info -
     ///   - key: is the field name in the source

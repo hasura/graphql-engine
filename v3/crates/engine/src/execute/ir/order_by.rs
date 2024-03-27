@@ -1,10 +1,7 @@
 use std::collections::BTreeMap;
 
-use gdc::models::PathElement;
-
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
-
-use ndc_client as gdc;
+use ndc_client::models as ndc_models;
 use serde::Serialize;
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
@@ -20,7 +17,7 @@ use crate::schema::GDS;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedOrderBy<'s> {
-    pub(crate) order_by: gdc::models::OrderBy,
+    pub(crate) order_by: ndc_models::OrderBy,
     // relationships that were used in the order_by expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub(crate) relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
@@ -70,7 +67,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                 }
             }
             Ok(ResolvedOrderBy {
-                order_by: gdc::models::OrderBy {
+                order_by: ndc_models::OrderBy {
                     elements: ndc_order_elements,
                 },
                 relationships,
@@ -88,16 +85,16 @@ pub(crate) fn build_ndc_order_by<'s>(
 // where, '{Album: {Artist: {ArtistId: Asc}, AlbumId: Asc}}' will be annotated as 'ModelOrderByRelationshipArgument'
 // the `OrderByElement` will be:
 //      [
-//          gdc::models::OrderByElement {
+//          ndc_models::OrderByElement {
 //              order_direction: Asc,
-//              target: gdc::models::OrderByTarget::Column {
+//              target: ndc_models::OrderByTarget::Column {
 //                  name: "ArtistId",
 //                  path: ["TrackAlbum", "AlbumArtist"]
 //              }
 //          },
-//          gdc::models::OrderByElement {
+//          ndc_models::OrderByElement {
 //              order_direction: Asc,
-//              target: gdc::models::OrderByTarget::Column {
+//              target: ndc_models::OrderByTarget::Column {
 //                  name: "AlbumId",
 //                  path: ["TrackAlbum"]
 //              }
@@ -113,7 +110,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<Vec<gdc::models::OrderByElement>, error::Error> {
+) -> Result<Vec<ndc_models::OrderByElement>, error::Error> {
     match argument.info.generic {
         // The column that we want to use for ordering. If the column happens to be
         // a relationship column, we'll have to join all the paths to specify NDC,
@@ -126,8 +123,8 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 Annotation::Input(InputAnnotation::Model(
                     ModelInputAnnotation::ModelOrderByDirection { direction },
                 )) => match &direction {
-                    types::ModelOrderByDirection::Asc => gdc::models::OrderDirection::Asc,
-                    types::ModelOrderByDirection::Desc => gdc::models::OrderDirection::Desc,
+                    types::ModelOrderByDirection::Asc => ndc_models::OrderDirection::Asc,
+                    types::ModelOrderByDirection::Desc => ndc_models::OrderDirection::Desc,
                 },
                 &annotation => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -146,12 +143,12 @@ pub(crate) fn build_ndc_order_by_element<'s>(
             // called `text`, you'll have to provide the following paths to access the `text` column:
             // ["UserPosts", "PostsComments"]
             for path in relationship_paths.iter() {
-                order_by_element_path.push(PathElement {
+                order_by_element_path.push(ndc_models::PathElement {
                     relationship: path.0.clone(),
                     arguments: BTreeMap::new(),
                     // 'AND' predicate indicates that the column can be accessed
                     // by joining all the relationships paths provided
-                    predicate: Some(Box::new(gdc::models::Expression::And {
+                    predicate: Some(Box::new(ndc_models::Expression::And {
                         // TODO(naveen): Add expressions here, when we support sorting with predicates.
                         //
                         // There are two types of sorting:
@@ -171,10 +168,10 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 })
             }
 
-            let order_element = gdc::models::OrderByElement {
+            let order_element = ndc_models::OrderByElement {
                 order_direction,
-                // TODO(naveen): When aggregates are supported, extend this to support other gdc::models::OrderByTarget
-                target: gdc::models::OrderByTarget::Column {
+                // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
+                target: ndc_models::OrderByTarget::Column {
                     name: ndc_column.clone(),
                     path: order_by_element_path,
                 },

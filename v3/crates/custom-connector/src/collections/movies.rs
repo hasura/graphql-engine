@@ -1,14 +1,14 @@
 use std::collections::BTreeMap;
 
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::Result,
     state::{AppState, Row},
 };
 
-pub(crate) fn collection_info() -> models::CollectionInfo {
-    models::CollectionInfo {
+pub(crate) fn collection_info() -> ndc_models::CollectionInfo {
+    ndc_models::CollectionInfo {
         name: "movies".into(),
         description: Some("A collection of movies".into()),
         collection_type: "movie".into(),
@@ -16,7 +16,7 @@ pub(crate) fn collection_info() -> models::CollectionInfo {
         foreign_keys: BTreeMap::new(),
         uniqueness_constraints: BTreeMap::from_iter([(
             "MovieByID".into(),
-            models::UniquenessConstraint {
+            ndc_models::UniquenessConstraint {
                 unique_columns: vec!["id".into()],
             },
         )]),

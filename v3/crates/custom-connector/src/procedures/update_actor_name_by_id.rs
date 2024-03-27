@@ -1,37 +1,37 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::{eval_nested_field, Result},
     state::AppState,
 };
 
-pub(crate) fn procedure_info() -> models::ProcedureInfo {
-    models::ProcedureInfo {
+pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
+    ndc_models::ProcedureInfo {
         name: "update_actor_name_by_id".into(),
         description: Some("Update an actor name given the ID and new name".into()),
         arguments: BTreeMap::from_iter([
             (
                 "id".into(),
-                models::ArgumentInfo {
+                ndc_models::ArgumentInfo {
                     description: Some("the id of the actor to update".into()),
-                    argument_type: models::Type::Named { name: "Int".into() },
+                    argument_type: ndc_models::Type::Named { name: "Int".into() },
                 },
             ),
             (
                 "name".into(),
-                models::ArgumentInfo {
+                ndc_models::ArgumentInfo {
                     description: Some("the new name of the actor".into()),
-                    argument_type: models::Type::Named {
+                    argument_type: ndc_models::Type::Named {
                         name: "String".into(),
                     },
                 },
             ),
         ]),
-        result_type: models::Type::Nullable {
-            underlying_type: Box::new(models::Type::Named {
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
                 name: "actor".into(),
             }),
         },
@@ -40,27 +40,27 @@ pub(crate) fn procedure_info() -> models::ProcedureInfo {
 
 pub(crate) fn execute(
     arguments: &BTreeMap<String, serde_json::Value>,
-    fields: &Option<models::NestedField>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    fields: &Option<ndc_models::NestedField>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let id = arguments.get("id").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "required argument field 'id' is missing".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let name = arguments.get("name").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "required argument field 'name' is missing".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let id_int = id.as_i64().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "argument 'id' is not an integer".into(),
             details: serde_json::Value::Null,
         }),
@@ -79,7 +79,7 @@ pub(crate) fn execute(
                 let output_row_value = serde_json::to_value(output_row).map_err(|_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "cannot encode response".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -87,7 +87,7 @@ pub(crate) fn execute(
                 })?;
 
                 let output_row_fields = match fields {
-                    None => Ok(models::RowFieldValue(output_row_value)),
+                    None => Ok(ndc_models::RowFieldValue(output_row_value)),
                     Some(nested_field) => eval_nested_field(
                         collection_relationships,
                         &BTreeMap::new(),

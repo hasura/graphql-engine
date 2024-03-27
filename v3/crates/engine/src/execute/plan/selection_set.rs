@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use std::collections::{BTreeMap, HashMap};
 
 use super::commands;
@@ -18,13 +18,13 @@ use crate::metadata::resolved::types::FieldMapping;
 pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::NestedField, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<(ndc_models::NestedField, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     match nested_selection {
         NestedSelection::Object(model_selection) => {
             let (fields, join_locations) =
                 process_selection_set_ir(model_selection, join_id_counter)?;
             Ok((
-                ndc::models::NestedField::Object(ndc::models::NestedObject { fields }),
+                ndc_models::NestedField::Object(ndc_models::NestedObject { fields }),
                 join_locations,
             ))
         }
@@ -32,7 +32,7 @@ pub(crate) fn process_nested_selection<'s, 'ir>(
             let (field, join_locations) =
                 process_nested_selection(nested_selection, join_id_counter)?;
             Ok((
-                ndc::models::NestedField::Array(ndc::models::NestedArray {
+                ndc_models::NestedField::Array(ndc_models::NestedArray {
                     fields: Box::new(field),
                 }),
                 join_locations,
@@ -51,7 +51,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        IndexMap<String, ndc::models::Field>,
+        IndexMap<String, ndc_models::Field>,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -73,7 +73,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     .unzip();
                 ndc_fields.insert(
                     alias.to_string(),
-                    ndc::models::Field::Column {
+                    ndc_models::Field::Column {
                         column: column.clone(),
                         fields: nested_field,
                     },
@@ -96,7 +96,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 relationship_info: _,
             } => {
                 let (relationship_query, jl) = model_selection::ndc_query(query, join_id_counter)?;
-                let ndc_field = ndc::models::Field::Relationship {
+                let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),
                     relationship: name.to_string(),
                     arguments: BTreeMap::new(),
@@ -127,14 +127,14 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                     .map(|(argument_name, argument_value)| {
                         (
                             argument_name.clone(),
-                            ndc::models::RelationshipArgument::Literal {
+                            ndc_models::RelationshipArgument::Literal {
                                 value: argument_value.clone(),
                             },
                         )
                     })
                     .collect();
 
-                let ndc_field = ndc::models::Field::Relationship {
+                let ndc_field = ndc_models::Field::Relationship {
                     query: Box::new(relationship_query),
                     relationship: name.to_string(),
                     arguments: relationship_arguments,
@@ -243,14 +243,14 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
 fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field: &FieldMapping,
-    ndc_fields: &mut IndexMap<String, ndc::models::Field>,
+    ndc_fields: &mut IndexMap<String, ndc_models::Field>,
 ) -> String {
     match selection.contains(field) {
         None => {
             let internal_alias = make_hasura_phantom_field(&field.column);
             ndc_fields.insert(
                 internal_alias.clone(),
-                ndc::models::Field::Column {
+                ndc_models::Field::Column {
                     column: field.column.clone(),
                     fields: None,
                 },
@@ -267,7 +267,7 @@ fn make_hasura_phantom_field(field_name: &str) -> String {
 
 pub(crate) fn collect_relationships_from_nested_selection(
     selection: &NestedSelection,
-    relationships: &mut BTreeMap<String, ndc::models::Relationship>,
+    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     match selection {
         NestedSelection::Object(selection_set) => {
@@ -283,7 +283,7 @@ pub(crate) fn collect_relationships_from_nested_selection(
 /// and create NDC relationship definitions
 pub(crate) fn collect_relationships_from_selection(
     selection: &ResultSelectionSet,
-    relationships: &mut BTreeMap<String, ndc::models::Relationship>,
+    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     for field in selection.fields.values() {
         match field {

@@ -5,7 +5,7 @@ use crate::metadata::resolved::types::{
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
@@ -53,7 +53,7 @@ fn comma_separate_argument_names(argument_names: &[ArgumentName]) -> String {
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &HashMap<ArgumentName, String>,
-    ndc_arguments: &'a BTreeMap<String, ndc::models::ArgumentInfo>,
+    ndc_arguments: &'a BTreeMap<String, ndc_models::ArgumentInfo>,
     all_type_representations: &'a HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
 ) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToCollect<'a>>), ArgumentMappingError> {
     let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =

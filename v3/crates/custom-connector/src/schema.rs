@@ -1,9 +1,9 @@
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{collections, functions, procedures, types};
 
-pub fn get_schema() -> models::SchemaResponse {
-    models::SchemaResponse {
+pub fn get_schema() -> ndc_models::SchemaResponse {
+    ndc_models::SchemaResponse {
         scalar_types: types::scalar_types(),
         object_types: types::object_types(),
         collections: collections::get_collections(),
@@ -12,22 +12,22 @@ pub fn get_schema() -> models::SchemaResponse {
     }
 }
 
-pub fn get_capabilities() -> models::CapabilitiesResponse {
-    models::CapabilitiesResponse {
+pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
+    ndc_models::CapabilitiesResponse {
         version: "0.1.0".into(),
-        capabilities: models::Capabilities {
-            mutation: models::MutationCapabilities {
+        capabilities: ndc_models::Capabilities {
+            mutation: ndc_models::MutationCapabilities {
                 transactional: None,
                 explain: None,
             },
-            query: models::QueryCapabilities {
+            query: ndc_models::QueryCapabilities {
                 explain: None,
-                aggregates: Some(models::LeafCapability {}),
-                variables: Some(models::LeafCapability {}),
+                aggregates: Some(ndc_models::LeafCapability {}),
+                variables: Some(ndc_models::LeafCapability {}),
             },
-            relationships: Some(models::RelationshipCapabilities {
-                relation_comparisons: Some(models::LeafCapability {}),
-                order_by_aggregate: Some(models::LeafCapability {}),
+            relationships: Some(ndc_models::RelationshipCapabilities {
+                relation_comparisons: Some(ndc_models::LeafCapability {}),
+                order_by_aggregate: Some(ndc_models::LeafCapability {}),
             }),
         },
     }

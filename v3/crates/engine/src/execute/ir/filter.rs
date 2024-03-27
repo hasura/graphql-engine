@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use ndc_client as gdc;
+use ndc_client::models as ndc_models;
 use serde::Serialize;
 
 use crate::execute::error;
@@ -18,7 +18,7 @@ use crate::execute::ir::selection_set::NDCRelationshipName;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedFilterExpression<'s> {
-    pub expressions: Vec<gdc::models::Expression>,
+    pub expressions: Vec<ndc_models::Expression>,
     // relationships that were used in the filter expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
@@ -54,7 +54,7 @@ pub(crate) fn build_filter_expression<'s>(
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<Vec<gdc::models::Expression>, error::Error> {
+) -> Result<Vec<ndc_models::Expression>, error::Error> {
     match field.info.generic {
         // "_and"
         types::Annotation::Input(InputAnnotation::Model(
@@ -72,7 +72,7 @@ pub(crate) fn build_filter_expression<'s>(
                 relationships.extend(resolved_filter_expression.relationships);
             }
 
-            let expression = gdc::models::Expression::And { expressions };
+            let expression = ndc_models::Expression::And { expressions };
 
             Ok(vec![expression])
         }
@@ -92,7 +92,7 @@ pub(crate) fn build_filter_expression<'s>(
                 relationships.extend(resolved_filter_expression.relationships);
             }
 
-            let expression = gdc::models::Expression::Or { expressions };
+            let expression = ndc_models::Expression::Or { expressions };
 
             Ok(vec![expression])
         }
@@ -108,8 +108,8 @@ pub(crate) fn build_filter_expression<'s>(
             let resolved_filter_expression = resolve_filter_expression(value, usage_counts)?;
             relationships.extend(resolved_filter_expression.relationships);
 
-            expressions.push(gdc::models::Expression::Not {
-                expression: Box::new(gdc::models::Expression::And {
+            expressions.push(ndc_models::Expression::Not {
+                expression: Box::new(ndc_models::Expression::And {
                     expressions: resolved_filter_expression.expressions,
                 }),
             });
@@ -223,16 +223,16 @@ fn build_binary_comparison_expression(
     column: String,
     value: &normalized_ast::Value<'_, GDS>,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> gdc::models::Expression {
+) -> ndc_models::Expression {
     let path_elements = build_path_elements(relationship_paths);
 
-    gdc::models::Expression::BinaryComparisonOperator {
-        column: gdc::models::ComparisonTarget::Column {
+    ndc_models::Expression::BinaryComparisonOperator {
+        column: ndc_models::ComparisonTarget::Column {
             name: column,
             path: path_elements,
         },
         operator: operator.to_string(),
-        value: gdc::models::ComparisonValue::Scalar {
+        value: ndc_models::ComparisonValue::Scalar {
             value: value.as_json(),
         },
     }
@@ -243,16 +243,16 @@ fn build_is_null_expression(
     column: String,
     value: &normalized_ast::Value<'_, GDS>,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Result<gdc::models::Expression, error::Error> {
+) -> Result<ndc_models::Expression, error::Error> {
     let path_elements = build_path_elements(relationship_paths);
 
     // Build an 'IsNull' unary comparison expression
-    let unary_comparison_expression = gdc::models::Expression::UnaryComparisonOperator {
-        column: gdc::models::ComparisonTarget::Column {
+    let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
+        column: ndc_models::ComparisonTarget::Column {
             name: column,
             path: path_elements,
         },
-        operator: gdc::models::UnaryComparisonOperator::IsNull,
+        operator: ndc_models::UnaryComparisonOperator::IsNull,
     };
     // Get `_is_null` input value as boolean
     let is_null = value.as_boolean()?;
@@ -261,7 +261,7 @@ fn build_is_null_expression(
         Ok(unary_comparison_expression)
     } else {
         // When _is_null: false. Return negated 'IsNull' unary comparison expression by wrapping it in 'Not'.
-        Ok(gdc::models::Expression::Not {
+        Ok(ndc_models::Expression::Not {
             expression: Box::new(unary_comparison_expression),
         })
     }
@@ -269,15 +269,15 @@ fn build_is_null_expression(
 
 pub fn build_path_elements(
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Vec<gdc::models::PathElement> {
+) -> Vec<ndc_models::PathElement> {
     let mut path_elements = Vec::new();
     for path in relationship_paths {
-        path_elements.push(gdc::models::PathElement {
+        path_elements.push(ndc_models::PathElement {
             relationship: path.0.clone(),
             arguments: BTreeMap::new(),
             // 'AND' predicate indicates that the column can be accessed
             // by joining all the relationships paths provided
-            predicate: Some(Box::new(gdc::models::Expression::And {
+            predicate: Some(Box::new(ndc_models::Expression::And {
                 expressions: Vec::new(),
             })),
         })

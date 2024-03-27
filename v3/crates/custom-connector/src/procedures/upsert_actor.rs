@@ -1,28 +1,28 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::{eval_nested_field, Result},
     state::AppState,
 };
 
-pub(crate) fn procedure_info() -> models::ProcedureInfo {
-    models::ProcedureInfo {
+pub(crate) fn procedure_info() -> ndc_models::ProcedureInfo {
+    ndc_models::ProcedureInfo {
         name: "upsert_actor".into(),
         description: Some("Insert or update an actor".into()),
         arguments: BTreeMap::from_iter([(
             "actor".into(),
-            models::ArgumentInfo {
+            ndc_models::ArgumentInfo {
                 description: Some("The actor to insert or update".into()),
-                argument_type: models::Type::Named {
+                argument_type: ndc_models::Type::Named {
                     name: "actor".into(),
                 },
             },
         )]),
-        result_type: models::Type::Nullable {
-            underlying_type: Box::new(models::Type::Named {
+        result_type: ndc_models::Type::Nullable {
+            underlying_type: Box::new(ndc_models::Type::Named {
                 name: "actor".into(),
             }),
         },
@@ -31,34 +31,34 @@ pub(crate) fn procedure_info() -> models::ProcedureInfo {
 
 pub(crate) fn execute(
     arguments: &BTreeMap<String, serde_json::Value>,
-    fields: &Option<models::NestedField>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    fields: &Option<ndc_models::NestedField>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let actor = arguments.get("actor").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: " ".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let actor_obj = actor.as_object().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: " ".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let id = actor_obj.get("id").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: " ".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let id_int = id.as_i64().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: " ".into(),
             details: serde_json::Value::Null,
         }),
@@ -69,7 +69,7 @@ pub(crate) fn execute(
         let old_row_value = serde_json::to_value(old_row).map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "cannot encode response".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -77,7 +77,7 @@ pub(crate) fn execute(
         })?;
 
         let old_row_fields = match fields {
-            None => Ok(models::RowFieldValue(old_row_value)),
+            None => Ok(ndc_models::RowFieldValue(old_row_value)),
             Some(nested_field) => eval_nested_field(
                 collection_relationships,
                 &BTreeMap::new(),

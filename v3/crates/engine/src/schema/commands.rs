@@ -10,7 +10,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
-use ndc_client as gdc;
+use ndc_client::models as ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
 
@@ -20,10 +20,10 @@ use super::types::output_type::get_type_kind;
 
 pub enum Response {
     QueryResponse {
-        response: gdc::models::QueryResponse,
+        response: ndc_models::QueryResponse,
     },
     MutationResponse {
-        response: gdc::models::MutationResponse,
+        response: ndc_models::MutationResponse,
     },
 }
 

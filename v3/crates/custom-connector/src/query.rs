@@ -5,7 +5,7 @@ use std::{
 
 use axum::{http::StatusCode, Json};
 use indexmap::IndexMap;
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 use regex::Regex;
 use serde_json::Value;
 
@@ -14,12 +14,12 @@ use crate::{
     state::{AppState, Row},
 };
 
-pub type Result<A> = std::result::Result<A, (StatusCode, Json<models::ErrorResponse>)>;
+pub type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
 pub fn execute_query_request(
     state: &AppState,
-    request: models::QueryRequest,
-) -> Result<models::QueryResponse> {
+    request: ndc_models::QueryRequest,
+) -> Result<ndc_models::QueryResponse> {
     let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
 
     let mut row_sets = vec![];
@@ -35,17 +35,17 @@ pub fn execute_query_request(
         row_sets.push(row_set);
     }
 
-    Ok(models::QueryResponse(row_sets))
+    Ok(ndc_models::QueryResponse(row_sets))
 }
 
 fn execute_query_with_variables(
     collection: &str,
-    arguments: &BTreeMap<String, models::Argument>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
-    query: &models::Query,
+    arguments: &BTreeMap<String, ndc_models::Argument>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
+    query: &ndc_models::Query,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-) -> Result<models::RowSet> {
+) -> Result<ndc_models::RowSet> {
     let mut argument_values = BTreeMap::new();
 
     for (argument_name, argument_value) in arguments.iter() {
@@ -58,7 +58,7 @@ fn execute_query_with_variables(
         {
             return Err((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "duplicate argument names".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -87,7 +87,7 @@ pub(crate) fn parse_object_argument<'a>(
         .ok_or_else(|| {
             (
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "missing argument name".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -97,7 +97,7 @@ pub(crate) fn parse_object_argument<'a>(
         .ok_or_else(|| {
             (
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "name must be an object".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -109,24 +109,24 @@ pub(crate) fn parse_object_argument<'a>(
 enum Root<'a> {
     /// References to the root collection actually
     /// refer to the current row, because the path to
-    /// the nearest enclosing [`models::Query`] does not pass
-    /// an [`models::Expression::Exists`] node.
+    /// the nearest enclosing [`ndc_models::Query`] does not pass
+    /// an [`ndc_models::Expression::Exists`] node.
     CurrentRow,
     /// References to the root collection refer to the
     /// explicitly-identified row, which is the row
     /// being evaluated in the context of the nearest enclosing
-    /// [`models::Query`].
+    /// [`ndc_models::Query`].
     ExplicitRow(&'a Row),
 }
 
 fn execute_query(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    query: &models::Query,
+    query: &ndc_models::Query,
     root: Root,
     collection: Vec<Row>,
-) -> Result<models::RowSet> {
+) -> Result<ndc_models::RowSet> {
     let sorted = sort(
         collection_relationships,
         variables,
@@ -180,7 +180,7 @@ fn execute_query(
         .fields
         .as_ref()
         .map(|fields| {
-            let mut rows: Vec<IndexMap<String, models::RowFieldValue>> = vec![];
+            let mut rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = vec![];
             for item in paginated.iter() {
                 let row = eval_row(fields, collection_relationships, variables, state, item)?;
                 rows.push(row)
@@ -189,16 +189,16 @@ fn execute_query(
         })
         .transpose()?;
 
-    Ok(models::RowSet { aggregates, rows })
+    Ok(ndc_models::RowSet { aggregates, rows })
 }
 
 fn eval_row(
-    fields: &IndexMap<String, models::Field>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    fields: &IndexMap<String, ndc_models::Field>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, Value>,
     state: &AppState,
     item: &BTreeMap<String, Value>,
-) -> Result<IndexMap<String, models::RowFieldValue>> {
+) -> Result<IndexMap<String, ndc_models::RowFieldValue>> {
     let mut row = IndexMap::new();
     for (field_name, field) in fields.iter() {
         row.insert(
@@ -210,18 +210,18 @@ fn eval_row(
 }
 
 fn eval_aggregate(
-    aggregate: &models::Aggregate,
+    aggregate: &ndc_models::Aggregate,
     paginated: &[BTreeMap<String, serde_json::Value>],
 ) -> Result<serde_json::Value> {
     match aggregate {
-        models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
-        models::Aggregate::ColumnCount { column, distinct } => {
+        ndc_models::Aggregate::StarCount {} => Ok(serde_json::Value::from(paginated.len())),
+        ndc_models::Aggregate::ColumnCount { column, distinct } => {
             let values = paginated
                 .iter()
                 .map(|row| {
                     row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "invalid column name".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -237,7 +237,7 @@ fn eval_aggregate(
                         serde_json::to_string(value).map_err(|_| {
                             (
                                 StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(models::ErrorResponse {
+                                Json(ndc_models::ErrorResponse {
                                     message: "unable to encode value".into(),
                                     details: serde_json::Value::Null,
                                 }),
@@ -252,20 +252,20 @@ fn eval_aggregate(
             serde_json::to_value(agg_value).map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: " ".into(),
                         details: serde_json::Value::Null,
                     }),
                 )
             })
         }
-        models::Aggregate::SingleColumn { column, function } => {
+        ndc_models::Aggregate::SingleColumn { column, function } => {
             let values = paginated
                 .iter()
                 .map(|row| {
                     row.get(column).ok_or((
                         StatusCode::BAD_REQUEST,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "invalid column name".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -286,7 +286,7 @@ fn eval_aggregate_function(
         .map(|value| {
             value.as_i64().ok_or((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "column is not an integer".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -298,7 +298,7 @@ fn eval_aggregate_function(
         "max" => Ok(int_values.iter().max()),
         _ => Err((
             StatusCode::BAD_REQUEST,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "invalid aggregation function".into(),
                 details: serde_json::Value::Null,
             }),
@@ -307,7 +307,7 @@ fn eval_aggregate_function(
     serde_json::to_value(agg_value).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: " ".into(),
                 details: serde_json::Value::Null,
             }),
@@ -316,11 +316,11 @@ fn eval_aggregate_function(
 }
 
 fn sort(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     collection: Vec<Row>,
-    order_by: &Option<models::OrderBy>,
+    order_by: &Option<ndc_models::OrderBy>,
 ) -> Result<Vec<Row>> {
     match order_by {
         None => Ok(collection),
@@ -362,10 +362,10 @@ fn paginate<I: Iterator<Item = Row>>(
 }
 
 fn eval_order_by(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    order_by: &models::OrderBy,
+    order_by: &ndc_models::OrderBy,
     t1: &Row,
     t2: &Row,
 ) -> Result<Ordering> {
@@ -375,8 +375,8 @@ fn eval_order_by(
         let v1 = eval_order_by_element(collection_relationships, variables, state, element, t1)?;
         let v2 = eval_order_by_element(collection_relationships, variables, state, element, t2)?;
         let x = match element.order_direction {
-            models::OrderDirection::Asc => compare(v1, v2)?,
-            models::OrderDirection::Desc => compare(v2, v1)?,
+            ndc_models::OrderDirection::Asc => compare(v1, v2)?,
+            ndc_models::OrderDirection::Desc => compare(v2, v1)?,
         };
         result = result.then(x);
     }
@@ -401,7 +401,7 @@ fn compare(v1: serde_json::Value, v2: serde_json::Value) -> Result<Ordering> {
         (serde_json::Value::String(s1), serde_json::Value::String(s2)) => Ok(s1.cmp(&s2)),
         _ => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "cannot compare values".into(),
                 details: serde_json::Value::Null,
             }),
@@ -410,17 +410,17 @@ fn compare(v1: serde_json::Value, v2: serde_json::Value) -> Result<Ordering> {
 }
 
 fn eval_order_by_element(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    element: &models::OrderByElement,
+    element: &ndc_models::OrderByElement,
     item: &Row,
 ) -> Result<serde_json::Value> {
     match element.target.clone() {
-        models::OrderByTarget::Column { name, path } => {
+        ndc_models::OrderByTarget::Column { name, path } => {
             eval_order_by_column(collection_relationships, variables, state, item, path, name)
         }
-        models::OrderByTarget::SingleColumnAggregate {
+        ndc_models::OrderByTarget::SingleColumnAggregate {
             column,
             function,
             path,
@@ -433,7 +433,7 @@ fn eval_order_by_element(
             column,
             function,
         ),
-        models::OrderByTarget::StarCountAggregate { path } => eval_order_by_star_count_aggregate(
+        ndc_models::OrderByTarget::StarCountAggregate { path } => eval_order_by_star_count_aggregate(
             collection_relationships,
             variables,
             state,
@@ -444,22 +444,22 @@ fn eval_order_by_element(
 }
 
 fn eval_order_by_star_count_aggregate(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<models::PathElement>,
+    path: Vec<ndc_models::PathElement>,
 ) -> Result<serde_json::Value> {
     let rows: Vec<Row> = eval_path(collection_relationships, variables, state, &path, item)?;
     Ok(rows.len().into())
 }
 
 fn eval_order_by_single_column_aggregate(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<models::PathElement>,
+    path: Vec<ndc_models::PathElement>,
     column: String,
     function: String,
 ) -> Result<serde_json::Value> {
@@ -469,7 +469,7 @@ fn eval_order_by_single_column_aggregate(
         .map(|row| {
             row.get(column.as_str()).ok_or((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "invalid column name".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -480,18 +480,18 @@ fn eval_order_by_single_column_aggregate(
 }
 
 fn eval_order_by_column(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<models::PathElement>,
+    path: Vec<ndc_models::PathElement>,
     name: String,
 ) -> Result<serde_json::Value> {
     let rows: Vec<Row> = eval_path(collection_relationships, variables, state, &path, item)?;
     if rows.len() > 1 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: " ".into(),
                 details: serde_json::Value::Null,
             }),
@@ -504,10 +504,10 @@ fn eval_order_by_column(
 }
 
 fn eval_path(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    path: &[models::PathElement],
+    path: &[ndc_models::PathElement],
     item: &Row,
 ) -> Result<Vec<Row>> {
     let mut result: Vec<Row> = vec![item.clone()];
@@ -516,7 +516,7 @@ fn eval_path(
         let relationship_name = path_element.relationship.as_str();
         let relationship = collection_relationships.get(relationship_name).ok_or((
             StatusCode::BAD_REQUEST,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "invalid relationship name in path".into(),
                 details: serde_json::Value::Null,
             }),
@@ -536,13 +536,13 @@ fn eval_path(
 }
 
 fn eval_path_element(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    relationship: &models::Relationship,
-    arguments: &BTreeMap<String, models::RelationshipArgument>,
+    relationship: &ndc_models::Relationship,
+    arguments: &BTreeMap<String, ndc_models::RelationshipArgument>,
     source: &[Row],
-    predicate: &Option<Box<models::Expression>>,
+    predicate: &Option<Box<ndc_models::Expression>>,
 ) -> Result<Vec<Row>> {
     let mut matching_rows: Vec<Row> = vec![];
 
@@ -576,7 +576,7 @@ fn eval_path_element(
             {
                 return Err((
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "duplicate argument names".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -594,7 +594,7 @@ fn eval_path_element(
             {
                 return Err((
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "duplicate argument names".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -633,15 +633,15 @@ fn eval_path_element(
 
 fn eval_argument(
     variables: &BTreeMap<String, serde_json::Value>,
-    argument: &models::Argument,
+    argument: &ndc_models::Argument,
 ) -> Result<serde_json::Value> {
     match argument {
-        models::Argument::Variable { name } => {
+        ndc_models::Argument::Variable { name } => {
             let value = variables
                 .get(name.as_str())
                 .ok_or((
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "invalid variable name".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -649,22 +649,22 @@ fn eval_argument(
                 .cloned()?;
             Ok(value)
         }
-        models::Argument::Literal { value } => Ok(value.clone()),
+        ndc_models::Argument::Literal { value } => Ok(value.clone()),
     }
 }
 
 fn eval_relationship_argument(
     variables: &BTreeMap<String, serde_json::Value>,
     row: &Row,
-    argument: &models::RelationshipArgument,
+    argument: &ndc_models::RelationshipArgument,
 ) -> Result<serde_json::Value> {
     match argument {
-        models::RelationshipArgument::Variable { name } => {
+        ndc_models::RelationshipArgument::Variable { name } => {
             let value = variables
                 .get(name.as_str())
                 .ok_or((
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "invalid variable name".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -672,21 +672,21 @@ fn eval_relationship_argument(
                 .cloned()?;
             Ok(value)
         }
-        models::RelationshipArgument::Literal { value } => Ok(value.clone()),
-        models::RelationshipArgument::Column { name } => eval_column(row, name),
+        ndc_models::RelationshipArgument::Literal { value } => Ok(value.clone()),
+        ndc_models::RelationshipArgument::Column { name } => eval_column(row, name),
     }
 }
 
 fn eval_expression(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    expr: &models::Expression,
+    expr: &ndc_models::Expression,
     root: &Row,
     item: &Row,
 ) -> Result<bool> {
     match expr {
-        models::Expression::And { expressions } => {
+        ndc_models::Expression::And { expressions } => {
             for expr in expressions.iter() {
                 if !eval_expression(collection_relationships, variables, state, expr, root, item)? {
                     return Ok(false);
@@ -694,7 +694,7 @@ fn eval_expression(
             }
             Ok(true)
         }
-        models::Expression::Or { expressions } => {
+        ndc_models::Expression::Or { expressions } => {
             for expr in expressions.iter() {
                 if eval_expression(collection_relationships, variables, state, expr, root, item)? {
                     return Ok(true);
@@ -702,7 +702,7 @@ fn eval_expression(
             }
             Ok(false)
         }
-        models::Expression::Not { expression } => {
+        ndc_models::Expression::Not { expression } => {
             let b = eval_expression(
                 collection_relationships,
                 variables,
@@ -714,8 +714,8 @@ fn eval_expression(
             Ok(!b)
         }
 
-        models::Expression::UnaryComparisonOperator { column, operator } => match operator {
-            models::UnaryComparisonOperator::IsNull => {
+        ndc_models::Expression::UnaryComparisonOperator { column, operator } => match operator {
+            ndc_models::UnaryComparisonOperator::IsNull => {
                 let vals = eval_comparison_target(
                     collection_relationships,
                     variables,
@@ -728,7 +728,7 @@ fn eval_expression(
             }
         },
 
-        models::Expression::BinaryComparisonOperator {
+        ndc_models::Expression::BinaryComparisonOperator {
             column,
             operator,
             value,
@@ -781,14 +781,14 @@ fn eval_expression(
                     for regex_val in regex_vals.iter() {
                         let column_str = column_val.as_str().ok_or((
                             StatusCode::BAD_REQUEST,
-                            Json(models::ErrorResponse {
+                            Json(ndc_models::ErrorResponse {
                                 message: "column is not a string".into(),
                                 details: serde_json::Value::Null,
                             }),
                         ))?;
                         let regex_str = regex_val.as_str().ok_or((
                             StatusCode::BAD_REQUEST,
-                            Json(models::ErrorResponse {
+                            Json(ndc_models::ErrorResponse {
                                 message: " ".into(),
                                 details: serde_json::Value::Null,
                             }),
@@ -796,7 +796,7 @@ fn eval_expression(
                         let regex = Regex::new(regex_str).map_err(|_| {
                             (
                                 StatusCode::BAD_REQUEST,
-                                Json(models::ErrorResponse {
+                                Json(ndc_models::ErrorResponse {
                                     message: "invalid regular expression".into(),
                                     details: serde_json::Value::Null,
                                 }),
@@ -811,17 +811,17 @@ fn eval_expression(
             }
             _op => Err((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: format!("operator '{_op}' not supported"),
                     details: serde_json::Value::Null,
                 }),
             )),
         },
-        models::Expression::Exists {
+        ndc_models::Expression::Exists {
             in_collection,
             predicate,
         } => {
-            let query = models::Query {
+            let query = ndc_models::Query {
                 aggregates: None,
                 fields: Some(IndexMap::new()),
                 limit: None,
@@ -846,7 +846,7 @@ fn eval_expression(
             )?;
             let rows: Vec<IndexMap<_, _>> = row_set.rows.ok_or((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: " ".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -857,20 +857,20 @@ fn eval_expression(
 }
 
 fn eval_in_collection(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     item: &BTreeMap<String, serde_json::Value>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    in_collection: &models::ExistsInCollection,
+    in_collection: &ndc_models::ExistsInCollection,
 ) -> Result<Vec<Row>> {
     match in_collection {
-        models::ExistsInCollection::Related {
+        ndc_models::ExistsInCollection::Related {
             relationship,
             arguments,
         } => {
             let relationship = collection_relationships.get(relationship.as_str()).ok_or((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: " ".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -883,12 +883,12 @@ fn eval_in_collection(
                 relationship,
                 arguments,
                 &source,
-                &Some(Box::new(models::Expression::And {
+                &Some(Box::new(ndc_models::Expression::And {
                     expressions: vec![],
                 })),
             )
         }
-        models::ExistsInCollection::Unrelated {
+        ndc_models::ExistsInCollection::Unrelated {
             collection,
             arguments,
         } => {
@@ -903,15 +903,15 @@ fn eval_in_collection(
 }
 
 fn eval_comparison_target(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    target: &models::ComparisonTarget,
+    target: &ndc_models::ComparisonTarget,
     root: &Row,
     item: &Row,
 ) -> Result<Vec<serde_json::Value>> {
     match target {
-        models::ComparisonTarget::Column { name, path } => {
+        ndc_models::ComparisonTarget::Column { name, path } => {
             let rows = eval_path(collection_relationships, variables, state, path, item)?;
             let mut values = vec![];
             for row in rows.iter() {
@@ -920,7 +920,7 @@ fn eval_comparison_target(
             }
             Ok(values)
         }
-        models::ComparisonTarget::RootCollectionColumn { name } => {
+        ndc_models::ComparisonTarget::RootCollectionColumn { name } => {
             let value = eval_column(root, name.as_str())?;
             Ok(vec![value])
         }
@@ -930,7 +930,7 @@ fn eval_comparison_target(
 fn eval_column(row: &Row, column_name: &str) -> Result<serde_json::Value> {
     row.get(column_name).cloned().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "invalid column name".into(),
             details: serde_json::Value::Null,
         }),
@@ -938,15 +938,15 @@ fn eval_column(row: &Row, column_name: &str) -> Result<serde_json::Value> {
 }
 
 fn eval_comparison_value(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    comparison_value: &models::ComparisonValue,
+    comparison_value: &ndc_models::ComparisonValue,
     root: &Row,
     item: &Row,
 ) -> Result<Vec<serde_json::Value>> {
     match comparison_value {
-        models::ComparisonValue::Column { column } => eval_comparison_target(
+        ndc_models::ComparisonValue::Column { column } => eval_comparison_target(
             collection_relationships,
             variables,
             state,
@@ -954,13 +954,13 @@ fn eval_comparison_value(
             root,
             item,
         ),
-        models::ComparisonValue::Scalar { value } => Ok(vec![value.clone()]),
-        models::ComparisonValue::Variable { name } => {
+        ndc_models::ComparisonValue::Scalar { value } => Ok(vec![value.clone()]),
+        ndc_models::ComparisonValue::Variable { name } => {
             let value = variables
                 .get(name.as_str())
                 .ok_or((
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "invalid variable name".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -972,21 +972,21 @@ fn eval_comparison_value(
 }
 
 pub(crate) fn eval_nested_field(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     value: serde_json::Value,
-    nested_field: &models::NestedField,
-) -> Result<models::RowFieldValue> {
+    nested_field: &ndc_models::NestedField,
+) -> Result<ndc_models::RowFieldValue> {
     if value.is_null() {
-        return Ok(models::RowFieldValue(value));
+        return Ok(ndc_models::RowFieldValue(value));
     }
     match nested_field {
-        models::NestedField::Object(nested_object) => {
+        ndc_models::NestedField::Object(nested_object) => {
             let full_row: Row = serde_json::from_value(value).map_err(|_| {
                 (
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "Expected object".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -999,11 +999,11 @@ pub(crate) fn eval_nested_field(
                 state,
                 &full_row,
             )?;
-            Ok(models::RowFieldValue(serde_json::to_value(row).map_err(
+            Ok(ndc_models::RowFieldValue(serde_json::to_value(row).map_err(
                 |_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "Cannot encode rowset".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -1011,11 +1011,11 @@ pub(crate) fn eval_nested_field(
                 },
             )?))
         }
-        models::NestedField::Array(models::NestedArray { fields }) => {
+        ndc_models::NestedField::Array(ndc_models::NestedArray { fields }) => {
             let array: Vec<serde_json::Value> = serde_json::from_value(value).map_err(|_| {
                 (
                     StatusCode::BAD_REQUEST,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "Expected array".into(),
                         details: serde_json::Value::Null,
                     }),
@@ -1027,11 +1027,11 @@ pub(crate) fn eval_nested_field(
                     eval_nested_field(collection_relationships, variables, state, value, fields)
                 })
                 .collect::<Result<Vec<_>>>()?;
-            Ok(models::RowFieldValue(
+            Ok(ndc_models::RowFieldValue(
                 serde_json::to_value(result_array).map_err(|_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "Cannot encode rowset".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -1043,17 +1043,17 @@ pub(crate) fn eval_nested_field(
 }
 
 fn eval_field(
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
-    field: &models::Field,
+    field: &ndc_models::Field,
     item: &Row,
-) -> Result<models::RowFieldValue> {
+) -> Result<ndc_models::RowFieldValue> {
     match field {
-        models::Field::Column { column, fields } => {
+        ndc_models::Field::Column { column, fields } => {
             let col_val = eval_column(item, column.as_str())?;
             match fields {
-                None => Ok(models::RowFieldValue(col_val)),
+                None => Ok(ndc_models::RowFieldValue(col_val)),
                 Some(nested_field) => eval_nested_field(
                     collection_relationships,
                     variables,
@@ -1063,14 +1063,14 @@ fn eval_field(
                 ),
             }
         }
-        models::Field::Relationship {
+        ndc_models::Field::Relationship {
             relationship,
             arguments,
             query,
         } => {
             let relationship = collection_relationships.get(relationship.as_str()).ok_or((
                 StatusCode::BAD_REQUEST,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: " ".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -1083,7 +1083,7 @@ fn eval_field(
                 relationship,
                 arguments,
                 &source,
-                &Some(Box::new(models::Expression::And {
+                &Some(Box::new(ndc_models::Expression::And {
                     expressions: vec![],
                 })),
             )?;
@@ -1098,19 +1098,19 @@ fn eval_field(
             let rows_json = serde_json::to_value(rows).map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(models::ErrorResponse {
+                    Json(ndc_models::ErrorResponse {
                         message: "cannot encode rowset".into(),
                         details: serde_json::Value::Null,
                     }),
                 )
             })?;
-            Ok(models::RowFieldValue(rows_json))
+            Ok(ndc_models::RowFieldValue(rows_json))
         }
     }
 }
 
 fn eval_column_mapping(
-    relationship: &models::Relationship,
+    relationship: &ndc_models::Relationship,
     src_row: &Row,
     tgt_row: &Row,
 ) -> Result<bool> {

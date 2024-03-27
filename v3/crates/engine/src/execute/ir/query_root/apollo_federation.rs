@@ -1,10 +1,10 @@
+use std::collections::{BTreeMap, HashMap};
+
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_client as ndc;
-
+use ndc_client::models as ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
-use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
@@ -144,13 +144,13 @@ pub(crate) fn entities_ir<'n, 's>(
                             field_name: field_name.0 .0.clone(),
                         },
                     )?;
-                    Ok(ndc::models::Expression::BinaryComparisonOperator {
-                        column: ndc::models::ComparisonTarget::Column {
+                    Ok(ndc_models::Expression::BinaryComparisonOperator {
+                        column: ndc_models::ComparisonTarget::Column {
                             name: field_mapping.column.clone(),
                             path: vec![], // We don't support nested fields in the key fields, so the path is empty
                         },
                         operator: field_mapping.equal_operator.clone(),
-                        value: ndc::models::ComparisonValue::Scalar { value: val.clone() },
+                        value: ndc_models::ComparisonValue::Scalar { value: val.clone() },
                     })
                 })
                 .collect::<Result<_, error::Error>>()?;

@@ -7,7 +7,7 @@ use crate::metadata::resolved::subgraph::{
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
@@ -65,28 +65,28 @@ pub struct ComparisonOperators {
 }
 
 pub struct ScalarTypeInfo<'a> {
-    pub scalar_type: &'a ndc::models::ScalarType,
+    pub scalar_type: &'a ndc_models::ScalarType,
     pub representation: Option<TypeName>,
     pub comparison_expression_name: Option<ast::TypeName>,
     pub comparison_operators: ComparisonOperators,
 }
 
 impl<'a> ScalarTypeInfo<'a> {
-    pub(crate) fn new(source_scalar: &'a ndc::models::ScalarType) -> Self {
+    pub(crate) fn new(source_scalar: &'a ndc_models::ScalarType) -> Self {
         let mut comparison_operators = ComparisonOperators::default();
         for (operator_name, operator_definition) in &source_scalar.comparison_operators {
             match operator_definition {
-                ndc::models::ComparisonOperatorDefinition::Equal => {
+                ndc_models::ComparisonOperatorDefinition::Equal => {
                     comparison_operators
                         .equal_operators
                         .push(operator_name.clone());
                 }
-                ndc::models::ComparisonOperatorDefinition::In => {
+                ndc_models::ComparisonOperatorDefinition::In => {
                     comparison_operators
                         .in_operators
                         .push(operator_name.clone());
                 }
-                ndc::models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
+                ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
             };
         }
         ScalarTypeInfo {
@@ -108,7 +108,7 @@ pub struct FieldDefinition {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FieldMapping {
     pub column: String,
-    pub column_type: ndc::models::Type,
+    pub column_type: ndc_models::Type,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -310,10 +310,10 @@ pub fn resolve_object_type(
 }
 
 pub fn get_column<'a>(
-    ndc_type: &'a ndc::models::ObjectType,
+    ndc_type: &'a ndc_models::ObjectType,
     field_name: &FieldName,
     column: &str,
-) -> Result<&'a ndc::models::ObjectField, TypeMappingValidationError> {
+) -> Result<&'a ndc_models::ObjectField, TypeMappingValidationError> {
     ndc_type
         .fields
         .get(column)
@@ -667,7 +667,7 @@ pub(crate) fn collect_type_mapping_for_source(
     data_connector_type_mappings: &DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
     type_representations: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-    // ndc_object_types: &BTreeMap<String, ndc::models::ObjectType>,
+    // ndc_object_types: &BTreeMap<String, ndc_models::ObjectType>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     let type_mapping = data_connector_type_mappings

@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use std::collections::BTreeMap;
 
 use super::selection_set;
@@ -14,7 +14,7 @@ use open_dds::commands::ProcedureName;
 pub(crate) fn ndc_query<'s, 'ir>(
     ir: &'ir CommandInfo<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<(ndc::models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+) -> Result<(ndc_models::Query, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
     let (ndc_nested_field, jl) = ir
         .selection
         .as_ref()
@@ -23,11 +23,11 @@ pub(crate) fn ndc_query<'s, 'ir>(
         })
         .transpose()?
         .unzip();
-    let query = ndc::models::Query {
+    let query = ndc_models::Query {
         aggregates: None,
         fields: Some(IndexMap::from([(
             FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
-            ndc::models::Field::Column {
+            ndc_models::Field::Column {
                 column: FUNCTION_IR_VALUE_COLUMN_NAME.to_string(),
                 fields: ndc_nested_field,
             },
@@ -43,21 +43,15 @@ pub(crate) fn ndc_query<'s, 'ir>(
 pub(crate) fn ndc_query_ir<'s, 'ir>(
     ir: &'ir FunctionBasedCommand<'s>,
     join_id_counter: &mut MonotonicCounter,
-) -> Result<
-    (
-        ndc::models::QueryRequest,
-        JoinLocations<RemoteJoin<'s, 'ir>>,
-    ),
-    error::Error,
-> {
-    let mut arguments: BTreeMap<String, ndc_client::models::Argument> = ir
+) -> Result<(ndc_models::QueryRequest, JoinLocations<RemoteJoin<'s, 'ir>>), error::Error> {
+    let mut arguments: BTreeMap<String, ndc_models::Argument> = ir
         .command_info
         .arguments
         .iter()
         .map(|(argument_name, argument_value)| {
             (
                 argument_name.clone(),
-                ndc_client::models::Argument::Literal {
+                ndc_models::Argument::Literal {
                     value: argument_value.clone(),
                 },
             )
@@ -68,7 +62,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
     for (variable_name, variable_argument) in ir.variable_arguments.iter() {
         arguments.insert(
             variable_name.clone(),
-            ndc_client::models::Argument::Variable {
+            ndc_models::Argument::Variable {
                 name: variable_argument.clone(),
             },
         );
@@ -82,7 +76,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
             &mut collection_relationships,
         )?;
     }
-    let query_request = ndc::models::QueryRequest {
+    let query_request = ndc_models::QueryRequest {
         query,
         collection: ir.function_name.to_string(),
         arguments,
@@ -98,7 +92,7 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
     join_id_counter: &mut MonotonicCounter,
 ) -> Result<
     (
-        ndc::models::MutationRequest,
+        ndc_models::MutationRequest,
         JoinLocations<RemoteJoin<'s, 'ir>>,
     ),
     error::Error,
@@ -112,7 +106,7 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
         })
         .transpose()?
         .unzip();
-    let mutation_operation = ndc::models::MutationOperation::Procedure {
+    let mutation_operation = ndc_models::MutationOperation::Procedure {
         name: procedure_name.to_string(),
         arguments: ir.command_info.arguments.clone(),
         fields: ndc_nested_field,
@@ -124,7 +118,7 @@ pub(crate) fn ndc_mutation_ir<'s, 'ir>(
             &mut collection_relationships,
         )?;
     }
-    let mutation_request = ndc::models::MutationRequest {
+    let mutation_request = ndc_models::MutationRequest {
         operations: vec![mutation_operation],
         collection_relationships,
     };

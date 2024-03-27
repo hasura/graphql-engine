@@ -17,8 +17,7 @@ use crate::schema::types::output_type::relationship::{
 };
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};
-use ndc::models::ComparisonOperatorDefinition;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::permissions::{NullableModelPredicate, RelationshipPredicate};
 use open_dds::types::Deprecated;
 use open_dds::{
@@ -157,7 +156,7 @@ pub enum ModelPredicate {
     UnaryFieldComparison {
         field: FieldName,
         ndc_column: String,
-        operator: ndc_client::models::UnaryComparisonOperator,
+        operator: ndc_models::UnaryComparisonOperator,
     },
     BinaryFieldComparison {
         field: FieldName,
@@ -412,12 +411,12 @@ pub fn resolve_model(
 // helper function to resolve ndc types to dds type based on scalar type representations
 fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
-    source_type: &ndc::models::Type,
+    source_type: &ndc_models::Type,
     scalars: &HashMap<&str, ScalarTypeInfo>,
     subgraph: &str,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
-        ndc::models::Type::Named { name } => {
+        ndc_models::Type::Named { name } => {
             let scalar_type =
                 scalars
                     .get(name.as_str())
@@ -439,7 +438,7 @@ fn resolve_ndc_type(
                     nullable: false,
                 })
         }
-        ndc::models::Type::Nullable { underlying_type } => {
+        ndc_models::Type::Nullable { underlying_type } => {
             resolve_ndc_type(data_connector, underlying_type, scalars, subgraph).map(|ty| {
                 QualifiedTypeReference {
                     underlying_type: ty.underlying_type,
@@ -447,7 +446,7 @@ fn resolve_ndc_type(
                 }
             })
         }
-        ndc::models::Type::Array { element_type } => {
+        ndc_models::Type::Array { element_type } => {
             resolve_ndc_type(data_connector, element_type, scalars, subgraph).map(|ty| {
                 QualifiedTypeReference {
                     underlying_type: QualifiedBaseType::List(Box::new(ty)),
@@ -455,7 +454,7 @@ fn resolve_ndc_type(
                 }
             })
         }
-        ndc::models::Type::Predicate { .. } => Err(Error::PredicateTypesUnsupported),
+        ndc_models::Type::Predicate { .. } => Err(Error::PredicateTypesUnsupported),
     }
 }
 
@@ -467,7 +466,7 @@ fn resolve_binary_operator(
     field_name: &FieldName,
     fields: &IndexMap<FieldName, FieldDefinition>,
     scalars: &HashMap<&str, ScalarTypeInfo>,
-    ndc_scalar_type: &ndc_client::models::ScalarType,
+    ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
 ) -> Result<(String, QualifiedTypeReference), Error> {
     let field_definition =
@@ -485,10 +484,10 @@ fn resolve_binary_operator(
             operator_name: operator.clone(),
         })?;
     match comparison_operator_definition {
-        ComparisonOperatorDefinition::Equal => {
+        ndc_models::ComparisonOperatorDefinition::Equal => {
             Ok((operator.0.clone(), field_definition.field_type.clone()))
         }
-        ComparisonOperatorDefinition::In => Ok((
+        ndc_models::ComparisonOperatorDefinition::In => Ok((
             operator.0.clone(),
             QualifiedTypeReference {
                 underlying_type: QualifiedBaseType::List(Box::new(
@@ -497,7 +496,7 @@ fn resolve_binary_operator(
                 nullable: true,
             },
         )),
-        ComparisonOperatorDefinition::Custom { argument_type } => Ok((
+        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
             operator.0.clone(),
             resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
         )),
@@ -521,7 +520,7 @@ fn resolve_model_predicate(
             value,
         }) => {
             // TODO: (anon) typecheck the value expression with the field
-            // TODO: resolve the "in" operator too (ndc_client::models::BinaryArrayComparisonOperator)
+            // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
             if let Some(model_source) = &model.source {
                 // Get field mappings of model data type
                 let TypeMapping::Object { field_mappings, .. } = model_source
@@ -603,7 +602,7 @@ fn resolve_model_predicate(
                 Ok(ModelPredicate::UnaryFieldComparison {
                     field: field.clone(),
                     ndc_column: field_mapping.column.clone(),
-                    operator: ndc_client::models::UnaryComparisonOperator::IsNull,
+                    operator: ndc_models::UnaryComparisonOperator::IsNull,
                 })
             } else {
                 Err(Error::ModelSourceRequiredForPredicate {
@@ -1224,8 +1223,8 @@ pub fn resolve_model_graphql_api(
     Ok(())
 }
 
-fn unwrap_nullable(field_type: &ndc::models::Type) -> &ndc::models::Type {
-    if let ndc::models::Type::Nullable { underlying_type } = field_type {
+fn unwrap_nullable(field_type: &ndc_models::Type) -> &ndc_models::Type {
+    if let ndc_models::Type::Nullable { underlying_type } = field_type {
         unwrap_nullable(underlying_type)
     } else {
         field_type
@@ -1233,15 +1232,15 @@ fn unwrap_nullable(field_type: &ndc::models::Type) -> &ndc::models::Type {
 }
 
 fn get_argument_type(
-    op_definition: &ComparisonOperatorDefinition,
-    field_type: &ndc::models::Type,
-) -> ndc::models::Type {
+    op_definition: &ndc_models::ComparisonOperatorDefinition,
+    field_type: &ndc_models::Type,
+) -> ndc_models::Type {
     match op_definition {
-        ComparisonOperatorDefinition::Equal => unwrap_nullable(field_type).clone(),
-        ComparisonOperatorDefinition::In => ndc::models::Type::Array {
+        ndc_models::ComparisonOperatorDefinition::Equal => unwrap_nullable(field_type).clone(),
+        ndc_models::ComparisonOperatorDefinition::In => ndc_models::Type::Array {
             element_type: Box::new(unwrap_nullable(field_type).clone()),
         },
-        ComparisonOperatorDefinition::Custom { argument_type } => argument_type.clone(),
+        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => argument_type.clone(),
     }
 }
 

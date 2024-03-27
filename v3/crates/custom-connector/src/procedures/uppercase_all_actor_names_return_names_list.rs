@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{query::Result, state::AppState};
 
@@ -12,14 +12,14 @@ pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
         let id_int = *actor_id;
         let actor_name = actor.get("name").ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "name not found".into(),
                 details: serde_json::Value::Null,
             }),
         ))?;
         let actor_name_str = actor_name.as_str().ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(models::ErrorResponse {
+            Json(ndc_models::ErrorResponse {
                 message: "name is not a string".into(),
                 details: serde_json::Value::Null,
             }),
@@ -35,7 +35,7 @@ pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
         let returning_value = output_row.map_or(Ok(serde_json::Value::Null), |new_row| {
             let name = new_row.get("name").ok_or((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "name not found".into(),
                     details: serde_json::Value::Null,
                 }),

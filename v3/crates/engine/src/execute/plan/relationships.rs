@@ -1,6 +1,6 @@
 //! NDC query generation from 'ModelSelection' IR for relationships.
 
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use std::collections::BTreeMap;
 
 use super::selection_set;
@@ -14,7 +14,7 @@ use crate::execute::ir::selection_set::FieldSelection;
 /// variable.
 pub(crate) fn collect_relationships(
     ir: &ModelSelection<'_>,
-    relationships: &mut BTreeMap<String, ndc::models::Relationship>,
+    relationships: &mut BTreeMap<String, ndc_models::Relationship>,
 ) -> Result<(), error::Error> {
     // from selection fields
     for field in ir.selection.fields.values() {

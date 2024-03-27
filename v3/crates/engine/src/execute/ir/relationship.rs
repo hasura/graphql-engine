@@ -8,7 +8,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use serde::Serialize;
 
 use super::permissions;
@@ -87,7 +87,7 @@ pub type TargetField = (FieldName, resolved::types::NdcColumnForComparison);
 
 pub(crate) fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
-) -> Result<ndc::models::Relationship, error::Error> {
+) -> Result<ndc_models::Relationship, error::Error> {
     let &LocalModelRelationshipInfo {
         relationship_name,
         relationship_type,
@@ -140,12 +140,12 @@ pub(crate) fn process_model_relationship_definition(
             }
         }
     }
-    let ndc_relationship = ndc_client::models::Relationship {
+    let ndc_relationship = ndc_models::Relationship {
         column_mapping,
         relationship_type: {
             match relationship_type {
-                RelationshipType::Object => ndc_client::models::RelationshipType::Object,
-                RelationshipType::Array => ndc_client::models::RelationshipType::Array,
+                RelationshipType::Object => ndc_models::RelationshipType::Object,
+                RelationshipType::Array => ndc_models::RelationshipType::Array,
             }
         },
         target_collection: target_source.model.collection.to_string(),
@@ -156,7 +156,7 @@ pub(crate) fn process_model_relationship_definition(
 
 pub(crate) fn process_command_relationship_definition(
     relationship_info: &LocalCommandRelationshipInfo,
-) -> Result<ndc::models::Relationship, error::Error> {
+) -> Result<ndc_models::Relationship, error::Error> {
     let &LocalCommandRelationshipInfo {
         annotation,
         source_data_connector,
@@ -187,7 +187,7 @@ pub(crate) fn process_command_relationship_definition(
                 &source_field_path.field_name,
             )?;
 
-            let relationship_argument = ndc::models::RelationshipArgument::Column {
+            let relationship_argument = ndc_models::RelationshipArgument::Column {
                 name: source_column.column,
             };
 
@@ -203,9 +203,9 @@ pub(crate) fn process_command_relationship_definition(
         }
     }
 
-    let ndc_relationship = ndc_client::models::Relationship {
+    let ndc_relationship = ndc_models::Relationship {
         column_mapping: BTreeMap::new(),
-        relationship_type: ndc_client::models::RelationshipType::Object,
+        relationship_type: ndc_models::RelationshipType::Object,
         target_collection: target_source.function_name.to_string(),
         arguments,
     };
@@ -516,13 +516,13 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     // modify `ModelSelection` to include the join condition in `where` with a variable
     for (_source, (_field_name, target_column)) in &join_mapping {
         let target_value_variable = format!("${}", &target_column.column);
-        let comparison_exp = ndc::models::Expression::BinaryComparisonOperator {
-            column: ndc::models::ComparisonTarget::Column {
+        let comparison_exp = ndc_models::Expression::BinaryComparisonOperator {
+            column: ndc_models::ComparisonTarget::Column {
                 name: target_column.column.clone(),
                 path: vec![],
             },
             operator: target_column.equal_operator.clone(),
-            value: ndc::models::ComparisonValue::Variable {
+            value: ndc_models::ComparisonValue::Variable {
                 name: target_value_variable,
             },
         };

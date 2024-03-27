@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
+use ndc_client::models as ndc_models;
 use open_dds::types::{CustomTypeName, InbuiltType};
 
 use crate::execute::error;
@@ -49,7 +50,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
     model_operation_field: &Name,
     arguments: TInputFieldIter,
     model_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<BTreeMap<String, ndc_client::models::Argument>, error::Error> {
+) -> Result<BTreeMap<String, ndc_models::Argument>, error::Error> {
     let mut ndc_arguments = BTreeMap::new();
     for argument in arguments {
         match argument.info.generic {
@@ -70,7 +71,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
                 )?;
                 ndc_arguments.insert(
                     ndc_table_argument,
-                    ndc_client::models::Argument::Literal {
+                    ndc_models::Argument::Literal {
                         value: mapped_argument_value,
                     },
                 );

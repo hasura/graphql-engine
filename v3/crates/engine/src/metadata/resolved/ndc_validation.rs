@@ -1,4 +1,4 @@
-use ndc_client::models::SchemaResponse;
+use ndc_client::models as ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
     data_connector::DataConnectorName,
@@ -138,7 +138,7 @@ fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedT
 pub fn validate_ndc(
     model_name: &Qualified<ModelName>,
     model: &Model,
-    schema: &SchemaResponse,
+    schema: &ndc_models::SchemaResponse,
 ) -> std::result::Result<(), NDCValidationError> {
     let model_source = match &model.source {
         Some(model_source) => model_source,
@@ -245,7 +245,7 @@ pub fn validate_ndc(
 pub fn validate_ndc_command(
     command_name: &Qualified<CommandName>,
     command: &Command,
-    schema: &SchemaResponse,
+    schema: &ndc_models::SchemaResponse,
 ) -> std::result::Result<(), NDCValidationError> {
     // Check if the command source exists for the command
     let command_source = match &command.source {
@@ -373,15 +373,15 @@ pub fn validate_ndc_command(
 }
 
 pub fn get_underlying_named_type(
-    result_type: &ndc_client::models::Type,
+    result_type: &ndc_models::Type,
 ) -> Result<&str, NDCValidationError> {
     match result_type {
-        ndc_client::models::Type::Named { name } => Ok(name),
-        ndc_client::models::Type::Array { element_type } => get_underlying_named_type(element_type),
-        ndc_client::models::Type::Nullable { underlying_type } => {
+        ndc_models::Type::Named { name } => Ok(name),
+        ndc_models::Type::Array { element_type } => get_underlying_named_type(element_type),
+        ndc_models::Type::Nullable { underlying_type } => {
             get_underlying_named_type(underlying_type)
         }
-        ndc_client::models::Type::Predicate {
+        ndc_models::Type::Predicate {
             object_type_name: _,
         } => Err(NDCValidationError::PredicateTypeUnsupported),
     }

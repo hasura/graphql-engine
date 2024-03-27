@@ -1,13 +1,13 @@
 //! IR of the relay according to <https://relay.dev/graphql/objectidentification.htm>
 
+use std::collections::{BTreeMap, HashMap};
+
 use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_client as ndc;
-
+use ndc_client::models as ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
-use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
@@ -125,13 +125,13 @@ pub(crate) fn relay_node_ir<'n, 's>(
                                 global_id.typename, field_name
                             ),
                         })?;
-                    Ok(ndc::models::Expression::BinaryComparisonOperator {
-                        column: ndc::models::ComparisonTarget::Column {
+                    Ok(ndc_models::Expression::BinaryComparisonOperator {
+                        column: ndc_models::ComparisonTarget::Column {
                             name: field_mapping.column.clone(),
                             path: vec![],
                         },
                         operator: field_mapping.equal_operator.clone(),
-                        value: ndc::models::ComparisonValue::Scalar { value: val.clone() },
+                        value: ndc_models::ComparisonValue::Scalar { value: val.clone() },
                     })
                 })
                 .collect::<Result<_, error::Error>>()?;

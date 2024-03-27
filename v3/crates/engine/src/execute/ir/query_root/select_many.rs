@@ -6,6 +6,7 @@
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
+use ndc_client::models as ndc_models;
 use open_dds;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -124,7 +125,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
             {
                 model_arguments.insert(
                     argument_name_inner.to_string(),
-                    ndc_client::models::Argument::Literal {
+                    ndc_models::Argument::Literal {
                         value: permissions::make_value_from_value_expression(
                             argument_value,
                             field_type,

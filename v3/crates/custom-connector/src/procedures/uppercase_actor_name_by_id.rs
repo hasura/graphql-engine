@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
 use crate::{
     query::{eval_nested_field, Result},
@@ -10,20 +10,20 @@ use crate::{
 
 pub(crate) fn execute(
     arguments: &BTreeMap<String, serde_json::Value>,
-    fields: &Option<models::NestedField>,
-    collection_relationships: &BTreeMap<String, models::Relationship>,
+    fields: &Option<ndc_models::NestedField>,
+    collection_relationships: &BTreeMap<String, ndc_models::Relationship>,
     state: &mut AppState,
 ) -> Result<serde_json::Value> {
     let id = arguments.get("id").ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "required argument field 'id' is missing".into(),
             details: serde_json::Value::Null,
         }),
     ))?;
     let id_int = id.as_i64().ok_or((
         StatusCode::BAD_REQUEST,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "argument 'id' is not an integer".into(),
             details: serde_json::Value::Null,
         }),
@@ -34,14 +34,14 @@ pub(crate) fn execute(
         Some(actor_obj) => {
             let actor_name = actor_obj.get("name").ok_or((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "name not found".into(),
                     details: serde_json::Value::Null,
                 }),
             ))?;
             let actor_name_str = actor_name.as_str().ok_or((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(models::ErrorResponse {
+                Json(ndc_models::ErrorResponse {
                     message: "name is not a string".into(),
                     details: serde_json::Value::Null,
                 }),
@@ -57,7 +57,7 @@ pub(crate) fn execute(
                 let old_row_value = serde_json::to_value(old_row).map_err(|_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(models::ErrorResponse {
+                        Json(ndc_models::ErrorResponse {
                             message: "cannot encode response".into(),
                             details: serde_json::Value::Null,
                         }),
@@ -65,7 +65,7 @@ pub(crate) fn execute(
                 })?;
 
                 let old_row_fields = match fields {
-                    None => Ok(models::RowFieldValue(old_row_value)),
+                    None => Ok(ndc_models::RowFieldValue(old_row_value)),
                     Some(nested_field) => eval_nested_field(
                         collection_relationships,
                         &BTreeMap::new(),

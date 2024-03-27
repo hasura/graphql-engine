@@ -4,7 +4,7 @@ use serde_json as json;
 use gql::normalized_ast;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 use super::plan::ProcessResponseAs;
@@ -18,12 +18,12 @@ pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
     http_client: &reqwest::Client,
-    query: ndc::models::QueryRequest,
+    query: ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     execution_span_attribute: String,
     field_span_attribute: String,
     project_id: Option<ProjectId>,
-) -> Result<Vec<ndc::models::RowSet>, error::Error> {
+) -> Result<Vec<ndc_models::RowSet>, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async("execute_ndc_query", SpanVisibility::User, || {
@@ -49,10 +49,10 @@ pub async fn execute_ndc_query<'n, 's>(
 
 pub(crate) async fn fetch_from_data_connector<'s>(
     http_client: &reqwest::Client,
-    query_request: ndc::models::QueryRequest,
+    query_request: ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
-) -> Result<ndc::models::QueryResponse, error::Error> {
+) -> Result<ndc_models::QueryResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -62,14 +62,14 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                 Box::pin(async {
                     let headers =
                         append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
-                    let ndc_config = ndc::apis::configuration::Configuration {
+                    let ndc_config = ndc_client::apis::configuration::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_client.clone(),
                         headers,
                     };
-                    ndc::apis::default_api::query_post(&ndc_config, query_request)
+                    ndc_client::apis::default_api::query_post(&ndc_config, query_request)
                         .await
                         .map_err(error::Error::from) // ndc_client::apis::Error -> InternalError -> Error
                 })
@@ -99,7 +99,7 @@ pub fn append_project_id_to_headers(
 /// Executes a NDC mutation
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_client: &reqwest::Client,
-    query: ndc::models::MutationRequest,
+    query: ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
@@ -164,10 +164,10 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_client: &reqwest::Client,
-    query_request: ndc::models::MutationRequest,
+    query_request: ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
-) -> Result<ndc::models::MutationResponse, error::Error> {
+) -> Result<ndc_models::MutationResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -177,14 +177,14 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                 Box::pin(async {
                     let headers =
                         append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
-                    let ndc_config = ndc::apis::configuration::Configuration {
+                    let ndc_config = ndc_client::apis::configuration::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_client.clone(),
                         headers,
                     };
-                    ndc::apis::default_api::mutation_post(&ndc_config, query_request)
+                    ndc_client::apis::default_api::mutation_post(&ndc_config, query_request)
                         .await
                         .map_err(error::Error::from) // ndc_client::apis::Error -> InternalError -> Error
                 })

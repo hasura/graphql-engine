@@ -1,4 +1,4 @@
-use ndc_client::models::{CapabilitiesResponse, SchemaResponse};
+use ndc_client::models as ndc_models;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -71,9 +71,9 @@ pub enum VersionedSchemaAndCapabilities {
 #[schemars(title = "SchemaAndCapabilitiesV01")]
 pub struct SchemaAndCapabilitiesV01 {
     #[schemars(schema_with = "ndc_schema_response_v01_schema_reference")]
-    pub schema: SchemaResponse,
+    pub schema: ndc_models::SchemaResponse,
     #[schemars(schema_with = "ndc_capabilities_response_v01_schema_reference")]
-    pub capabilities: CapabilitiesResponse,
+    pub capabilities: ndc_models::CapabilitiesResponse,
 }
 
 // Derive OpenDd for `SchemaAdnCapabilitiesV01` by serde Deserialize and schemars JsonSchema implementations.

@@ -6,7 +6,7 @@
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{TypeContainer, TypeName};
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use serde_json as json;
 use std::collections::BTreeMap;
 
@@ -30,7 +30,7 @@ pub(crate) struct CollectArgumentResult<'s, 'ir> {
 /// Given a LHS response and `Location`, extract the join values from the
 /// response and return it as the `Arguments` data structure.
 pub(crate) fn collect_arguments<'s, 'ir>(
-    lhs_response: &Vec<ndc::models::RowSet>,
+    lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     key: &str,
     location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
@@ -100,7 +100,7 @@ pub(crate) fn collect_arguments<'s, 'ir>(
 
 #[allow(clippy::too_many_arguments)]
 fn collect_argument_from_row<'s, 'ir>(
-    row: &IndexMap<String, ndc::models::RowFieldValue>,
+    row: &IndexMap<String, ndc_models::RowFieldValue>,
     key: &str,
     location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
     arguments: &mut Arguments,
@@ -161,7 +161,7 @@ fn collect_argument_from_row<'s, 'ir>(
 
 pub(crate) fn create_argument(
     join_node: &RemoteJoin,
-    row: &IndexMap<String, ndc::models::RowFieldValue>,
+    row: &IndexMap<String, ndc_models::RowFieldValue>,
 ) -> Argument {
     let mut argument = BTreeMap::new();
     for (src_alias, target_field) in join_node.join_mapping.values() {
@@ -187,9 +187,9 @@ pub(crate) fn create_argument(
 
 fn rows_from_row_field_value(
     location_kind: &LocationKind,
-    nested_val: &ndc::models::RowFieldValue,
-) -> Result<Option<Vec<IndexMap<String, ndc::models::RowFieldValue>>>, error::Error> {
-    let rows: Option<Vec<IndexMap<String, ndc::models::RowFieldValue>>> = match location_kind {
+    nested_val: &ndc_models::RowFieldValue,
+) -> Result<Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>>, error::Error> {
+    let rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>> = match location_kind {
         LocationKind::NestedData => Some(
             {
                 let this = nested_val.clone();
@@ -227,7 +227,7 @@ fn rows_from_row_field_value(
 
 pub(crate) fn get_value<'n>(
     pick_alias: &String,
-    row: &'n IndexMap<String, ndc::models::RowFieldValue>,
+    row: &'n IndexMap<String, ndc_models::RowFieldValue>,
 ) -> &'n json::Value {
     match row.get(pick_alias) {
         Some(v) => &v.0,
@@ -237,9 +237,9 @@ pub(crate) fn get_value<'n>(
 
 /// resolve/process the command response for remote join execution
 fn resolve_command_response_row(
-    row: &IndexMap<String, ndc::models::RowFieldValue>,
+    row: &IndexMap<String, ndc_models::RowFieldValue>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<Vec<IndexMap<String, ndc::models::RowFieldValue>>, error::Error> {
+) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::Error> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::InternalDeveloperError::BadGDCResponse {
             summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
@@ -271,7 +271,7 @@ fn resolve_command_response_row(
                     summary: "Unable to parse response from NDC, object value expected".into(),
                 })?
             } else {
-                let index_map: IndexMap<String, ndc::models::RowFieldValue> =
+                let index_map: IndexMap<String, ndc_models::RowFieldValue> =
                     json::from_value(json::Value::Object(result_map.clone()))?;
                 Ok(vec![index_map])
             }
@@ -285,7 +285,7 @@ fn resolve_command_response_row(
             // In case the container is not a list, we take the first object from
             // the array and use that as the value for the relationship otherwise
             // we return the array of objects.
-            let array_values: Vec<IndexMap<String, ndc::models::RowFieldValue>> =
+            let array_values: Vec<IndexMap<String, ndc_models::RowFieldValue>> =
                     json::from_value(json::Value::Array(values.to_vec()))?;
 
             if type_container.is_list(){

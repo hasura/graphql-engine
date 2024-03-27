@@ -8,9 +8,9 @@ use axum::{
 };
 
 use custom_connector::state::AppState;
-use ndc_client::models;
+use ndc_client::models as ndc_models;
 
-type Result<A> = std::result::Result<A, (StatusCode, Json<models::ErrorResponse>)>;
+type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
 #[tokio::main]
 async fn main() {
@@ -36,34 +36,34 @@ async fn get_healthz() -> StatusCode {
     StatusCode::NO_CONTENT
 }
 
-async fn get_capabilities() -> Json<models::CapabilitiesResponse> {
+async fn get_capabilities() -> Json<ndc_models::CapabilitiesResponse> {
     Json(custom_connector::schema::get_capabilities())
 }
 
-async fn get_schema() -> Json<models::SchemaResponse> {
+async fn get_schema() -> Json<ndc_models::SchemaResponse> {
     Json(custom_connector::schema::get_schema())
 }
 
 pub async fn post_query(
     State(state): State<Arc<AppState>>,
-    Json(request): Json<models::QueryRequest>,
-) -> Result<Json<models::QueryResponse>> {
+    Json(request): Json<ndc_models::QueryRequest>,
+) -> Result<Json<ndc_models::QueryResponse>> {
     custom_connector::query::execute_query_request(state.borrow(), request).map(Json)
 }
 
 async fn post_mutation(
     State(state): State<Arc<AppState>>,
-    Json(request): Json<models::MutationRequest>,
-) -> Result<Json<models::MutationResponse>> {
+    Json(request): Json<ndc_models::MutationRequest>,
+) -> Result<Json<ndc_models::MutationResponse>> {
     custom_connector::mutation::execute_mutation_request(state.borrow(), request).map(Json)
 }
 
 async fn post_explain(
-    Json(_request): Json<models::QueryRequest>,
-) -> Result<Json<models::ExplainResponse>> {
+    Json(_request): Json<ndc_models::QueryRequest>,
+) -> Result<Json<ndc_models::ExplainResponse>> {
     Err((
         StatusCode::NOT_IMPLEMENTED,
-        Json(models::ErrorResponse {
+        Json(ndc_models::ErrorResponse {
             message: "explain is not supported".into(),
             details: serde_json::Value::Null,
         }),

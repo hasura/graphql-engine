@@ -2,7 +2,7 @@
 
 use hasura_authn_core::SessionVariables;
 use lang_graphql::normalized_ast;
-use ndc_client as ndc;
+use ndc_client::models as ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
 use std::collections::BTreeMap;
@@ -27,7 +27,7 @@ pub struct ModelSelection<'s> {
     pub(crate) collection: &'s String,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<String, ndc::models::Argument>,
+    pub(crate) arguments: BTreeMap<String, ndc_models::Argument>,
 
     // The boolean expression that would fetch a single row from this model
     pub(crate) filter_clause: ResolvedFilterExpression<'s>,
@@ -51,7 +51,7 @@ pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s resolved::model::ModelSource,
-    arguments: BTreeMap<String, ndc::models::Argument>,
+    arguments: BTreeMap<String, ndc_models::Argument>,
     mut filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s resolved::model::FilterPermission,
     limit: Option<u32>,

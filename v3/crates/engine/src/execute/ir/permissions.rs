@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
-use ndc_client as gdc;
+use ndc_client::models as ndc_models;
 
 use open_dds::{permissions::ValueExpression, types::InbuiltType};
 
@@ -80,7 +80,7 @@ pub(crate) fn process_model_predicate<'s>(
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<gdc::models::Expression, Error> {
+) -> Result<ndc_models::Expression, Error> {
     match model_predicate {
         resolved::model::ModelPredicate::UnaryFieldComparison {
             field: _,
@@ -113,7 +113,7 @@ pub(crate) fn process_model_predicate<'s>(
                 relationships,
                 usage_counts,
             )?;
-            Ok(gdc::models::Expression::Not {
+            Ok(ndc_models::Expression::Not {
                 expression: Box::new(expr),
             })
         }
@@ -130,7 +130,7 @@ pub(crate) fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, Error>>()?;
-            Ok(gdc::models::Expression::And { expressions: exprs })
+            Ok(ndc_models::Expression::And { expressions: exprs })
         }
         resolved::model::ModelPredicate::Or(predicates) => {
             let exprs = predicates
@@ -145,7 +145,7 @@ pub(crate) fn process_model_predicate<'s>(
                     )
                 })
                 .collect::<Result<Vec<_>, Error>>()?;
-            Ok(gdc::models::Expression::Or { expressions: exprs })
+            Ok(ndc_models::Expression::Or { expressions: exprs })
         }
         resolved::model::ModelPredicate::Relationship {
             relationship_info,
@@ -192,17 +192,17 @@ fn make_permission_binary_boolean_expression(
     value_expression: &ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Result<gdc::models::Expression, Error> {
+) -> Result<ndc_models::Expression, Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
     let ndc_expression_value =
         make_value_from_value_expression(value_expression, argument_type, session_variables)?;
-    Ok(gdc::models::Expression::BinaryComparisonOperator {
-        column: gdc::models::ComparisonTarget::Column {
+    Ok(ndc_models::Expression::BinaryComparisonOperator {
+        column: ndc_models::ComparisonTarget::Column {
             name: ndc_column,
             path: path_elements,
         },
         operator: operator.to_owned(),
-        value: gdc::models::ComparisonValue::Scalar {
+        value: ndc_models::ComparisonValue::Scalar {
             value: ndc_expression_value,
         },
     })
@@ -210,12 +210,12 @@ fn make_permission_binary_boolean_expression(
 
 fn make_permission_unary_boolean_expression(
     ndc_column: String,
-    operator: &ndc_client::models::UnaryComparisonOperator,
+    operator: &ndc_models::UnaryComparisonOperator,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Result<gdc::models::Expression, Error> {
+) -> Result<ndc_models::Expression, Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
-    Ok(gdc::models::Expression::UnaryComparisonOperator {
-        column: gdc::models::ComparisonTarget::Column {
+    Ok(ndc_models::Expression::UnaryComparisonOperator {
+        column: ndc_models::ComparisonTarget::Column {
             name: ndc_column,
             path: path_elements,
         },

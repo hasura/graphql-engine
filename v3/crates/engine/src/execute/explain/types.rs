@@ -1,6 +1,7 @@
 use crate::execute::error;
 use crate::execute::GraphQLErrors;
 use lang_graphql::http::GraphQLError;
+use ndc_client::models as ndc_models;
 use nonempty::NonEmpty;
 use serde::Serialize;
 use serde_json::json;
@@ -107,7 +108,7 @@ pub(crate) enum ForEachStep {
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCExplainResponse {
     NotSupported,
-    Response(ndc_client::models::ExplainResponse),
+    Response(ndc_models::ExplainResponse),
     Error(GraphQLError),
 }
 
@@ -115,15 +116,15 @@ pub(crate) enum NDCExplainResponse {
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCRequest {
-    Query(ndc_client::models::QueryRequest),
-    Mutation(ndc_client::models::MutationRequest),
+    Query(ndc_models::QueryRequest),
+    Mutation(ndc_models::MutationRequest),
 }
 
 impl NDCExplainResponse {
     pub(crate) fn error(error: error::Error) -> Self {
         Self::Error(error.to_graphql_error(None))
     }
-    pub(crate) fn success(response: ndc_client::models::ExplainResponse) -> Self {
+    pub(crate) fn success(response: ndc_models::ExplainResponse) -> Self {
         Self::Response(response)
     }
     pub(crate) fn not_supported() -> Self {
@@ -188,7 +189,7 @@ fn redact_ndc_explain_response(ndc_explain: NDCExplainResponse) -> NDCExplainRes
         NDCExplainResponse::Response(_response) => {
             let mut redacted_details = BTreeMap::new();
             redacted_details.insert("explain".to_string(), "<redacted>".to_string());
-            NDCExplainResponse::Response(ndc_client::models::ExplainResponse {
+            NDCExplainResponse::Response(ndc_models::ExplainResponse {
                 details: redacted_details,
             })
         }
