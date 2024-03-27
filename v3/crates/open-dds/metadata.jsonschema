@@ -443,10 +443,11 @@
         "headers": {
           "description": "Key value map of HTTP headers to be sent with each request to the data connector.",
           "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/EnvironmentValue"
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/HttpHeaders"
+            }
+          ]
         },
         "schema": {
           "description": "The schema of the data connector. This schema is used as the source of truth when serving requests and the live schema of the data connector is not looked up.",
@@ -544,6 +545,15 @@
         }
       },
       "additionalProperties": false
+    },
+    "HttpHeaders": {
+      "$id": "https://hasura.io/jsonschemas/metadata/HttpHeaders",
+      "title": "HttpHeaders",
+      "description": "Key value map of HTTP headers to be sent with an HTTP request. The key is the header name and the value is a potential reference to an environment variable.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/EnvironmentValue"
+      }
     },
     "VersionedSchemaAndCapabilities": {
       "$id": "https://hasura.io/jsonschemas/metadata/VersionedSchemaAndCapabilities",
@@ -863,17 +873,25 @@
         },
         "fieldMapping": {
           "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/FieldMapping"
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldMappings"
+            }
+          ]
         }
       },
       "additionalProperties": false
     },
+    "FieldMappings": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldMappings",
+      "title": "FieldMappings",
+      "description": "Mapping of object fields to their source columns in the data connector.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/FieldMapping"
+      }
+    },
     "FieldMapping": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
-      "title": "ObjectFieldMapping",
       "oneOf": [
         {
           "description": "Source field directly maps to some column in the data connector.",
@@ -1448,14 +1466,25 @@
           "type": "string"
         },
         "argumentMapping": {
+          "description": "Mapping from model argument names to data connector collection argument names.",
           "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/ArgumentMapping"
+            }
+          ]
         }
       },
       "additionalProperties": false
+    },
+    "ArgumentMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ArgumentMapping",
+      "title": "ArgumentMapping",
+      "description": "Mapping of a comand or model argument name to the corresponding argument name used in the data connector. The key of this object is the argument name used in the command or model and the value is the argument name used in the data connector.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "OrderableField": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderableField",
@@ -1831,12 +1860,13 @@
           ]
         },
         "argumentMapping": {
-          "description": "Mapping from command argument names to data connector table argument names.",
+          "description": "Mapping from command argument names to data connector function or procedure argument names.",
           "default": {},
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/ArgumentMapping"
+            }
+          ]
         }
       },
       "additionalProperties": false

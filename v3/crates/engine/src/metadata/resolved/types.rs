@@ -356,7 +356,7 @@ pub fn resolve_data_connector_type_mapping(
     // use it, otherwise assume the destination column is the same name as the field.
     // At the end, if there are any mappings left over, these are invalid as they do not
     // exist in the actual ObjectType.
-    let mut unconsumed_field_mappings = data_connector_type_mapping.field_mapping.clone();
+    let mut unconsumed_field_mappings = data_connector_type_mapping.field_mapping.0.clone();
     let mut resolved_field_mappings = BTreeMap::new();
     for field_name in type_representation.fields.keys() {
         let resolved_field_mapping_column =

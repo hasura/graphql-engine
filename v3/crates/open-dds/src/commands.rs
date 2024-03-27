@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Deref};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -114,6 +114,22 @@ impl CommandV1 {
     }
 }
 
+#[derive(Default, Serialize, opendds_derive::OpenDd, Clone, Debug, PartialEq)]
+/// Mapping of a comand or model argument name to the corresponding argument name used in the data connector.
+/// The key of this object is the argument name used in the command or model and the value
+/// is the argument name used in the data connector.
+// We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
+// makes it easier to auto-generate documentation.
+pub struct ArgumentMapping(pub HashMap<ArgumentName, String>);
+
+impl Deref for ArgumentMapping {
+    type Target = HashMap<ArgumentName, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "CommandSource", example = "CommandSource::example"))]
@@ -125,9 +141,9 @@ pub struct CommandSource {
     /// The function/procedure in the data connector that backs this command.
     pub data_connector_command: DataConnectorCommand,
 
-    /// Mapping from command argument names to data connector table argument names.
-    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
-    pub argument_mapping: HashMap<ArgumentName, String>,
+    /// Mapping from command argument names to data connector function or procedure argument names.
+    #[opendd(default)]
+    pub argument_mapping: ArgumentMapping,
 }
 
 impl CommandSource {

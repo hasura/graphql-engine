@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    arguments::{ArgumentDefinition, ArgumentName},
+    arguments::ArgumentDefinition,
+    commands::ArgumentMapping,
     data_connector::DataConnectorName,
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for,
@@ -143,9 +142,9 @@ pub struct ModelSource {
     /// The collection in the data connector that backs this model.
     pub collection: String,
 
-    // Mapping from model argument names to data connector table argument names.
+    /// Mapping from model argument names to data connector collection argument names.
     #[opendd(default)]
-    pub argument_mapping: HashMap<ArgumentName, String>,
+    pub argument_mapping: ArgumentMapping,
 }
 
 impl ModelSource {

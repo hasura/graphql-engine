@@ -307,19 +307,67 @@ mod tests {
 
     #[test]
     /// Always ensure the presence of `additionalProperties: false` in all subschema definitions of `Metadata` json schema.
-    fn no_arbitrary_additional_properties_in_schema() {
-        check_no_arbitrary_additional_properties_in_schema(gen_root_schema_for::<super::Metadata>(
+    fn test_validate_json_schema() {
+        validate_root_json_schema(gen_root_schema_for::<super::Metadata>(
             &mut schemars::gen::SchemaGenerator::default(),
         ));
     }
 
-    // Helper functions for the `no_arbitrary_additional_properties_in_schema` test
-    fn check_no_arbitrary_additional_properties_in_schema(
-        root_schema: schemars::schema::RootSchema,
-    ) {
-        check_no_arbitrary_additional_properties(&Schema::Object(root_schema.schema));
+    // Helper functions for the `test_validate_json_schema` test
+    fn validate_root_json_schema(root_schema: schemars::schema::RootSchema) {
+        validate_json_schema(&Schema::Object(root_schema.schema));
         for (_, schema) in &root_schema.definitions {
-            check_no_arbitrary_additional_properties(schema);
+            validate_json_schema(schema);
+        }
+    }
+
+    fn validate_json_schema(schema: &Schema) {
+        // Run validation checks at the current level.
+        run_json_schema_validation_checks(schema);
+
+        // Recurse into all nested objects and validate them as well.
+        if let Schema::Object(schema_object) = schema {
+            if let Some(object) = &schema_object.object {
+                for (_, property_schema) in &object.properties {
+                    validate_json_schema(property_schema);
+                }
+            }
+            if let Some(subschemas) = &schema_object.subschemas {
+                for subschema in subschemas.one_of.iter().flatten() {
+                    validate_json_schema(subschema);
+                }
+                for subschema in subschemas.any_of.iter().flatten() {
+                    validate_json_schema(subschema);
+                }
+            }
+        }
+    }
+
+    fn run_json_schema_validation_checks(schema: &Schema) {
+        check_no_arbitrary_additional_properties(schema);
+        check_maps_have_titles(schema);
+    }
+
+    fn check_maps_have_titles(schema: &Schema) {
+        if let Schema::Object(schema_object) = schema {
+            let is_map = schema_object.object.as_ref().is_some_and(|object| {
+                object
+                    .additional_properties
+                    .as_ref()
+                    .is_some_and(|additional_properties| {
+                        !matches!(**additional_properties, Schema::Bool(false))
+                    })
+            });
+
+            let has_title = schema_object
+                .metadata
+                .as_ref()
+                .is_some_and(|metadata| metadata.title.is_some());
+
+            if is_map && !has_title {
+                println!("{}", serde_json::to_string_pretty(schema).unwrap());
+                panic!("Schema has a map without a title present.")
+            }
         }
     }
 
@@ -338,18 +386,6 @@ mod tests {
                 if has_arbitrary_additional_properties {
                     println!("{}", serde_json::to_string_pretty(schema).unwrap());
                     panic!("Schema has arbitrary additional properties")
-                }
-
-                for (_, property_schema) in &object.properties {
-                    check_no_arbitrary_additional_properties(property_schema);
-                }
-            }
-            if let Some(subschemas) = &schema_object.subschemas {
-                for subschema in subschemas.one_of.iter().flatten() {
-                    check_no_arbitrary_additional_properties(subschema);
-                }
-                for subschema in subschemas.any_of.iter().flatten() {
-                    check_no_arbitrary_additional_properties(subschema);
                 }
             }
         }

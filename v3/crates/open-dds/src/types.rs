@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Deref};
 
 use derive_more::Display;
 use indexmap::IndexMap;
@@ -357,14 +357,27 @@ impl ObjectTypeV1 {
 pub struct DataConnectorTypeMapping {
     pub data_connector_name: DataConnectorName,
     pub data_connector_object_type: String,
-    #[opendd(default, json_schema(default_exp = "serde_json::json!({})"))]
-    pub field_mapping: IndexMap<FieldName, FieldMapping>,
+    #[opendd(default)]
+    pub field_mapping: FieldMappings,
+}
+
+#[derive(Serialize, Default, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+/// Mapping of object fields to their source columns in the data connector.
+// We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
+// makes it easier to auto-generate documentation.
+pub struct FieldMappings(pub IndexMap<FieldName, FieldMapping>);
+
+impl Deref for FieldMappings {
+    type Target = IndexMap<FieldName, FieldMapping>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-#[schemars(title = "ObjectFieldMapping")]
 pub enum FieldMapping {
     /// Source field directly maps to some column in the data connector.
     Column(ColumnFieldMapping),
