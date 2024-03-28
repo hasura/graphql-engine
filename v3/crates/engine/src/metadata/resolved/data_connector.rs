@@ -26,6 +26,12 @@ pub struct DataConnectorLink {
     pub headers: SerializableHeaderMap,
 }
 
+impl std::hash::Hash for DataConnectorLink {
+    fn hash<H>(&self, h: &mut H) where H: std::hash::Hasher {
+        self.name.hash(h)
+    }
+}
+
 impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,

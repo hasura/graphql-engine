@@ -153,17 +153,19 @@ pub(crate) async fn explain_mutation_plan(
         ));
     }
 
-    for (alias, ndc_mutation_execution) in mutation_plan.nodes {
-        let sequence_steps = get_execution_steps(
-            http_client,
-            alias,
-            &ndc_mutation_execution.process_response_as,
-            ndc_mutation_execution.join_locations,
-            types::NDCRequest::Mutation(ndc_mutation_execution.query),
-            ndc_mutation_execution.data_connector,
-        )
-        .await;
-        root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+    for (_, mutation_group) in mutation_plan.nodes {
+        for (alias, ndc_mutation_execution) in mutation_group {
+            let sequence_steps = get_execution_steps(
+                http_client,
+                alias,
+                &ndc_mutation_execution.process_response_as,
+                ndc_mutation_execution.join_locations,
+                types::NDCRequest::Mutation(ndc_mutation_execution.query),
+                ndc_mutation_execution.data_connector,
+            )
+            .await;
+            root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+        }
     }
 
     // simplify the steps
