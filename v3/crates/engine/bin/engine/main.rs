@@ -14,8 +14,8 @@ use axum::{
 use clap::Parser;
 use tower_http::trace::TraceLayer;
 use tracing_util::{
-    add_event_on_active_span, set_status_on_current_span, AttributeVisibility, ErrorVisibility,
-    SpanVisibility, TraceableError, TraceableHttpResponse,
+    add_event_on_active_span, set_status_on_current_span, ErrorVisibility, SpanVisibility,
+    TraceableError, TraceableHttpResponse,
 };
 
 use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
@@ -201,7 +201,8 @@ async fn graphql_request_tracing_middleware<B: Send>(
     request: Request<B>,
     next: Next<B>,
 ) -> axum::response::Result<axum::response::Response> {
-    let tracer = tracing_util::global_tracer();
+    use tracing_util::*;
+    let tracer = global_tracer();
     let path = "/graphql";
 
     Ok(tracer
@@ -210,13 +211,13 @@ async fn graphql_request_tracing_middleware<B: Send>(
             SpanVisibility::User,
             &request.headers().clone(),
             || {
-                tracing_util::set_attribute_on_active_span(
-                    AttributeVisibility::Internal,
-                    "version",
-                    VERSION,
-                );
+                set_attribute_on_active_span(AttributeVisibility::Internal, "version", VERSION);
                 Box::pin(async move {
-                    let response = next.run(request).await;
+                    let mut response = next.run(request).await;
+                    TraceContextResponsePropagator::new().inject_context(
+                        &Context::current(),
+                        &mut HeaderInjector(response.headers_mut()),
+                    );
                     TraceableHttpResponse::new(response, path)
                 })
             },

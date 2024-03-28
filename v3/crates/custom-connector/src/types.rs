@@ -9,6 +9,7 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
         (
             "String".into(),
             ndc_models::ScalarType {
+                representation: Some(ndc_models::TypeRepresentation::String),
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::from_iter([(
                     "like".into(),
@@ -23,6 +24,7 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
         (
             "Int".into(),
             ndc_models::ScalarType {
+                representation: Some(ndc_models::TypeRepresentation::Integer),
                 aggregate_functions: BTreeMap::from_iter([
                     (
                         "max".into(),
@@ -51,6 +53,7 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
         (
             "Actor_Name".into(),
             ndc_models::ScalarType {
+                representation: Some(ndc_models::TypeRepresentation::String),
                 aggregate_functions: BTreeMap::new(),
                 comparison_operators: BTreeMap::new(),
             },

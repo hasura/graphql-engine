@@ -12,7 +12,7 @@ lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
 
 axum = "0.6.20"
-http = "0.2.9"
+http = "0.2"
 schemars = "0.8.12"
 serde = "1.0.183"
 

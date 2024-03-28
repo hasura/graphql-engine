@@ -13,7 +13,7 @@ opendds-derive = { path = "../opendds-derive" }
 derive_more = "0.99.17"
 indexmap = { version = "2", features = ["serde"] }
 lazy_static = "1.4.0"
-ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.1" }
 schemars = { version = "0.8.12", features = ["smol_str", "preserve_order"] }
 serde = "1.0.152"
 serde_json = { version = "1.0.92", features = ["preserve_order"] }

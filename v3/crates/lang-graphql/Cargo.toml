@@ -27,7 +27,7 @@ harness = false
 recursion_limit_macro = { path = "../recursion_limit_macro" }
 
 axum = "0.6.20"
-http = "0.2.9"
+http = "0.2"
 indexmap = { version = "2", features = ["serde"] }
 lexical-core = "0.8"
 nonempty = { version = "0.8", features = ["serialize"] }

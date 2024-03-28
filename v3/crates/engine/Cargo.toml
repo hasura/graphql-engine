@@ -39,7 +39,7 @@ indexmap = { version = "2", features = ["serde"] }
 itertools = "0.10.5"
 json_value_merge = "2.0"
 lazy_static = "1.4.0"
-ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.0" }
+ndc-client = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.1" }
 nonempty = "0.8"
 reqwest = { version = "0.11", features = ["json", "multipart"] }
 schemars = { version = "0.8.12", features = ["smol_str"] }
