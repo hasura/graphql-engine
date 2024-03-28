@@ -252,6 +252,8 @@ fn object_type<'s, S: schema::SchemaContext>(
                             })
                     })
                     .collect::<Vec<_>>();
+                // can't create dummy field inside the if-block, as it won't
+                // live long enough
                 let no_fields_accessible_name = mk_name!("_no_fields_accessible");
                 let dummy_field = schema::Field::new(
                     no_fields_accessible_name,
@@ -417,6 +419,20 @@ fn input_object_type<'s, S: schema::SchemaContext>(
                             })
                     })
                     .collect::<Vec<_>>();
+                // can't create dummy field inside the if-block, as it won't
+                // live long enough
+                let no_fields_accessible_name = mk_name!("_no_fields_accessible");
+                let dummy_field = schema::InputField::new(
+                    no_fields_accessible_name,
+                    None,
+                    S::introspection_node(),
+                    ast::TypeContainer::named_null(RegisteredTypeName::string()),
+                    None,
+                    schema::DeprecationStatus::NotDeprecated,
+                );
+                if allowed_fields.is_empty() {
+                    allowed_fields.push(&dummy_field)
+                }
                 allowed_fields.sort_by(|f1, f2| f1.name.cmp(&f2.name));
                 array_response(&allowed_fields, |input_field| {
                     input_value(schema, namespace, input_field, &field.selection_set)

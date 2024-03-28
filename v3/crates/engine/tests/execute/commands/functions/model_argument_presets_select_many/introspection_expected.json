@@ -4,7 +4,16 @@
       "__type": {
         "name": "ActorsByMovieArgs",
         "kind": "INPUT_OBJECT",
-        "inputFields": []
+        "inputFields": [
+          {
+            "name": "_no_fields_accessible",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
       }
     }
   },
@@ -13,7 +22,16 @@
       "__type": {
         "name": "ActorsByMovieArgs",
         "kind": "INPUT_OBJECT",
-        "inputFields": []
+        "inputFields": [
+          {
+            "name": "_no_fields_accessible",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            }
+          }
+        ]
       }
     }
   },
