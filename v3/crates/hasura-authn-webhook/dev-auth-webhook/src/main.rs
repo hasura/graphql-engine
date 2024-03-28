@@ -16,11 +16,40 @@ async fn main() -> anyhow::Result<()> {
         .map(|str| str.parse())
         .unwrap_or(Ok(DEFAULT_PORT))?;
     let address = (host, port).into();
+
     let server = axum::Server::bind(&address).serve(app.into_make_service());
-
-    println!("Dev webhook authentication listening at {address}");
-
-    server.await?;
+    println!(
+        "Dev webhook authentication listening at {}",
+        server.local_addr()
+    );
+    server
+        .with_graceful_shutdown(async {
+            // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
+            let sigint = async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("failed to install signal handler")
+            };
+            // wait for a SIGTERM, i.e. a normal `kill` command
+            #[cfg(unix)]
+            let sigterm = async {
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to install signal handler")
+                    .recv()
+                    .await
+            };
+            // block until either of the above happens
+            #[cfg(unix)]
+            tokio::select! {
+                _ = sigint => (),
+                _ = sigterm => (),
+            }
+            #[cfg(windows)]
+            tokio::select! {
+                _ = sigint => (),
+            }
+        })
+        .await?;
     Ok(())
 }
 

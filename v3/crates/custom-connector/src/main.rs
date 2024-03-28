@@ -28,6 +28,32 @@ async fn main() {
     // run it with hyper on localhost:8101
     axum::Server::bind(&"0.0.0.0:8101".parse().unwrap())
         .serve(app.into_make_service())
+        .with_graceful_shutdown(async {
+            // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
+            let sigint = async {
+                tokio::signal::ctrl_c()
+                    .await
+                    .expect("failed to install signal handler")
+            };
+            // wait for a SIGTERM, i.e. a normal `kill` command
+            #[cfg(unix)]
+            let sigterm = async {
+                tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                    .expect("failed to install signal handler")
+                    .recv()
+                    .await
+            };
+            // block until either of the above happens
+            #[cfg(unix)]
+            tokio::select! {
+                _ = sigint => (),
+                _ = sigterm => (),
+            }
+            #[cfg(windows)]
+            tokio::select! {
+                _ = sigint => (),
+            }
+        })
         .await
         .unwrap();
 }

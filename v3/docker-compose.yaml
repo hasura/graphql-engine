@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   postgres:
     image: postgis/postgis:16-3.4
@@ -39,7 +38,7 @@ services:
       - "3050:3050"
 
   jaeger:
-    image: jaegertracing/all-in-one:1.37
+    image: jaegertracing/all-in-one:1.55
     restart: always
     ports:
       - 5775:5775/udp

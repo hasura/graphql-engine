@@ -14,13 +14,12 @@ ENV CARGO_HOME=/app/.cargo
 
 RUN cargo install cargo-chef just grcov critcmp cargo-nextest
 
-RUN rustup component add clippy
-RUN rustup component add rustfmt
-# needed for coverage reporting
-RUN rustup component add llvm-tools-preview
-
 # Building with build.rs require git context to be available across directories
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+
+# Install standard tooling once
+COPY rust-toolchain.toml .
+RUN rustup show
 
 ###
 # Plan recipe
