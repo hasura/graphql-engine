@@ -87,19 +87,27 @@ dev:
   docker compose run --build --rm dev_setup bash
   docker compose down
 
-# start all the docker deps (not engine)
-start-docker:
+# start all the docker deps for running tests (not engine, auth_hook, jaeger)
+start-docker-test-deps:
   # start connectors and wait for health
   docker compose -f ci.docker-compose.yaml \
     up --wait postgres custom_connector
+  # start auth_hook
+  docker compose up --wait auth_hook
   # start everything else (don't wait for postgres connector, it doesn't seem
   # to work)
   docker compose -f ci.docker-compose.yaml \
     up -d
 
+# start all the docker run time deps for the engine
+start-docker-run-deps:
+  # start auth_hook and jaeger
+  docker compose up --wait auth_hook jaeger
+
 # stop all the docker deps
 stop-docker:
   docker compose -f ci.docker-compose.yaml down -v
+  docker compose down -v
 
 # local development commands
 
@@ -110,11 +118,11 @@ stop-docker:
 # 127.0.0.1 custom_connector
 
 # run the tests using local engine (once)
-test-local: start-docker
+test-local: start-docker-test-deps
   cargo test
 
 # run a watch process that runs the tests locally
-watch-local: start-docker
+watch-local: start-docker-test-deps
   cargo watch \
    -x test \
    -x 'clippy --no-deps -- {{ CLIPPY_ARGS }}'
@@ -128,6 +136,12 @@ machete:
   cargo machete --with-metadata
 
 # update golden tests
-update-golden-files-local: start-docker
+update-golden-files-local: start-docker-test-deps
   REGENERATE_GOLDENFILES=1 cargo test
 
+# run the engine using schema from tests
+run-local: start-docker-test-deps start-docker-run-deps
+  RUST_LOG=DEBUG cargo run --bin engine -- \
+  --otlp-endpoint http://localhost:4317 \
+  --authn-config-path auth_config.json \
+  --metadata-path crates/engine/tests/schema.json
