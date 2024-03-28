@@ -123,6 +123,10 @@ watch-local: start-docker
 lint-local:
   cargo clippy --no-deps -- {{ CLIPPY_ARGS }}
 
+# ensure we don't have unused dependencies:
+machete:
+  cargo machete --with-metadata
+
 # update golden tests
 update-golden-files-local: start-docker
   REGENERATE_GOLDENFILES=1 cargo test
