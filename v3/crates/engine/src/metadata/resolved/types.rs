@@ -356,23 +356,26 @@ pub fn resolve_data_connector_type_mapping(
     // use it, otherwise assume the destination column is the same name as the field.
     // At the end, if there are any mappings left over, these are invalid as they do not
     // exist in the actual ObjectType.
-    let mut unconsumed_field_mappings = data_connector_type_mapping.field_mapping.0.clone();
+    let mut unconsumed_field_mappings = data_connector_type_mapping
+        .field_mapping
+        .0
+        .iter()
+        .collect::<HashMap<_, _>>();
     let mut resolved_field_mappings = BTreeMap::new();
     for field_name in type_representation.fields.keys() {
-        let resolved_field_mapping_column =
+        let resolved_field_mapping_column: &str =
             if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
                 match field_mapping {
-                    types::FieldMapping::Column(column_mapping) => column_mapping.name,
+                    types::FieldMapping::Column(column_mapping) => &column_mapping.name,
                 }
             } else {
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
-                field_name.to_string()
+                &field_name.0 .0
             };
-        let source_column =
-            get_column(ndc_object_type, field_name, &resolved_field_mapping_column)?;
+        let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
         let resolved_field_mapping = FieldMapping {
-            column: resolved_field_mapping_column.clone(),
+            column: resolved_field_mapping_column.to_string(),
             column_type: source_column.r#type.clone(),
         };
 
@@ -386,11 +389,12 @@ pub fn resolve_data_connector_type_mapping(
         }
     }
     // If any unconsumed field mappings, these do not exist in the actual ObjectType
-    let unconsumed_field_names = unconsumed_field_mappings
-        .keys()
-        .cloned()
-        .collect::<Vec<_>>();
-    if !unconsumed_field_names.is_empty() {
+    if !unconsumed_field_mappings.is_empty() {
+        let mut unconsumed_field_names = unconsumed_field_mappings
+            .into_keys()
+            .cloned()
+            .collect::<Vec<_>>();
+        unconsumed_field_names.sort();
         return Err(TypeMappingValidationError::UnknownSourceFields {
             type_name: qualified_type_name.clone(),
             field_names: unconsumed_field_names,

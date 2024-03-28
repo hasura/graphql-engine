@@ -390,13 +390,11 @@ fn zip_with_join_ids<'s, 'ir>(
 ) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
     let mut new_locations = IndexMap::new();
     for (key, location) in join_locations.locations {
-        let join_id_location =
-            join_ids
-                .locations
-                .remove(&key)
-                .ok_or(error::InternalEngineError::InternalGeneric {
-                    description: "unexpected; could not find {key} in join ids tree".to_string(),
-                })?;
+        let join_id_location = join_ids.locations.swap_remove(&key).ok_or(
+            error::InternalEngineError::InternalGeneric {
+                description: "unexpected; could not find {key} in join ids tree".to_string(),
+            },
+        )?;
         let new_node = match (location.join_node, join_id_location.join_node) {
             (JoinNode::Remote(rj), JoinNode::Remote(join_id)) => {
                 Ok(JoinNode::Remote((rj, join_id)))

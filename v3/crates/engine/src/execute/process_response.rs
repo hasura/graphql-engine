@@ -28,7 +28,7 @@ trait KeyValueResponse {
 }
 impl KeyValueResponse for IndexMap<String, json::Value> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
-        self.remove(key)
+        self.swap_remove(key)
     }
     fn contains_key(&self, key: &str) -> bool {
         self.contains_key(key)
@@ -37,7 +37,7 @@ impl KeyValueResponse for IndexMap<String, json::Value> {
 impl KeyValueResponse for IndexMap<String, ndc_models::RowFieldValue> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         // Convert a ndc_models::RowFieldValue to json::Value if exits
-        self.remove(key).map(|row_field| row_field.0)
+        self.swap_remove(key).map(|row_field| row_field.0)
     }
     fn contains_key(&self, key: &str) -> bool {
         self.contains_key(key)
@@ -309,11 +309,11 @@ fn process_command_response_row(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
 ) -> Result<json::Value, error::Error> {
-    let field_value_result = row.remove(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
-        error::InternalDeveloperError::BadGDCResponse {
+    let field_value_result = row
+        .swap_remove(FUNCTION_IR_VALUE_COLUMN_NAME)
+        .ok_or_else(|| error::InternalDeveloperError::BadGDCResponse {
             summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
-        }
-    })?;
+        })?;
 
     process_command_field_value(field_value_result.0, selection_set, type_container)
 }
