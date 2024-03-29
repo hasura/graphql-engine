@@ -554,7 +554,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
-            "execute_query_field_plan",
+            "Execute request plan for query field",
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
@@ -701,7 +701,7 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
-            "execute_mutation_field_plan",
+            "Execute request plan for mutation field",
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {

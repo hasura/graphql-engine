@@ -26,7 +26,7 @@ pub async fn execute_ndc_query<'n, 's>(
 ) -> Result<Vec<ndc_models::RowSet>, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("execute_ndc_query", SpanVisibility::User, || {
+        .in_span_async("Execute query using data connector", SpanVisibility::User, || {
             Box::pin(async {
                 set_attribute_on_active_span(
                     AttributeVisibility::Default,
@@ -109,7 +109,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("execute_ndc_mutation", SpanVisibility::User, || {
+        .in_span_async("Execute mutation using data connector", SpanVisibility::User, || {
             Box::pin(async {
                 set_attribute_on_active_span(
                     AttributeVisibility::Default,

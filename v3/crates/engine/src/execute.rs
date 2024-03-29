@@ -151,8 +151,8 @@ pub async fn execute_request_internal(
 ) -> Result<ExecuteOrExplainResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     let mode_query_span_name = match request_mode {
-        RequestMode::Execute => "execute_query",
-        RequestMode::Explain => "explain_query",
+        RequestMode::Execute => "Execute query request",
+        RequestMode::Explain => "Execute explain request",
     };
     tracer
         .in_span_async(mode_query_span_name, SpanVisibility::User, || {
@@ -212,7 +212,7 @@ pub async fn execute_request_internal(
                 let response = match request_mode {
                     RequestMode::Execute => {
                         tracer
-                            .in_span_async("execute", SpanVisibility::User, || {
+                            .in_span_async("Execute request plan", SpanVisibility::User, || {
                                 let all_usage_counts =
                                     model_tracking::get_all_usage_counts_in_query(&ir);
                                 let serialized_data =

@@ -122,10 +122,15 @@ test-local: start-docker-test-deps
   cargo test
 
 # run a watch process that runs the tests locally
-watch-local: start-docker-test-deps
+watch-local: start-docker-test-deps start-docker-run-deps
+  RUST_LOG=DEBUG \
   cargo watch \
    -x test \
-   -x 'clippy --no-deps -- {{ CLIPPY_ARGS }}'
+   -x 'clippy --no-deps -- {{ CLIPPY_ARGS }}' \
+   -x 'run --bin engine -- \
+    --otlp-endpoint http://localhost:4317 \
+    --authn-config-path auth_config.json \
+    --metadata-path crates/engine/tests/schema.json'
 
 # check the code is fine
 lint-local:

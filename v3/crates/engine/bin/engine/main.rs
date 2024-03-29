@@ -345,7 +345,7 @@ async fn handle_request(
 ) -> gql::http::Response {
     let tracer = tracing_util::global_tracer();
     let response = tracer
-        .in_span_async("handle_request", SpanVisibility::User, || {
+        .in_span_async("Handle request", SpanVisibility::User, || {
             Box::pin(engine::execute::execute_query(
                 &state.http_client,
                 &state.schema,
@@ -373,7 +373,7 @@ async fn handle_explain_request(
 ) -> engine::execute::explain::types::ExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
-        .in_span_async("handle_explain_request", SpanVisibility::User, || {
+        .in_span_async("Handle explain request", SpanVisibility::User, || {
             Box::pin(engine::execute::explain::execute_explain(
                 &state.http_client,
                 &state.schema,
