@@ -215,19 +215,23 @@ async fn get_execution_steps<'s>(
         }
     };
     if let Some(join_steps) = get_join_steps(alias.to_string(), join_locations, http_client).await {
-        sequence_steps.push(Box::new(types::Step::Parallel(join_steps)));
+        sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
     sequence_steps
 }
 
+/// Get the join steps for a given join location. This should be used to get the join steps for a remote relationship.
+/// It also supports nested remote relationships.
+/// 
+/// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(
     _root_field_name: String,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_client: &reqwest::Client,
 ) -> Option<NonEmpty<Box<types::Step>>> {
-    let mut parallel_join_steps = vec![];
+    let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
         let mut sequence_steps = vec![];
         if let JoinNode::Remote((remote_join, _join_id)) = location.join_node {
@@ -261,14 +265,14 @@ async fn get_join_steps(
             )))
         };
         if let Some(rest_join_steps) = get_join_steps(alias, location.rest, http_client).await {
-            sequence_steps.push(Box::new(types::Step::Parallel(rest_join_steps)));
+            sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
         };
         if let Some(sequence_steps) = NonEmpty::from_vec(sequence_steps) {
-            parallel_join_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
+            sequence_join_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
         };
     }
-    NonEmpty::from_vec(parallel_join_steps)
+    NonEmpty::from_vec(sequence_join_steps)
 }
 
 fn simplify_steps(steps: NonEmpty<Box<types::Step>>) -> NonEmpty<Box<types::Step>> {

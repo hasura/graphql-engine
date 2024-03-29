@@ -67,7 +67,7 @@
         }
       },
       {
-        "type": "parallel",
+        "type": "sequence",
         "value": [
           {
             "type": "forEach",
