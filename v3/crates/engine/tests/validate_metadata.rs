@@ -325,3 +325,20 @@ fn test_disallow_boolean_expression_without_mapping() {
         })
     ));
 }
+
+#[test]
+fn test_disallow_conflicting_object_field_name_and_relationship_name() {
+    let metadata_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "tests/validate_metadata_artifacts/relationships/conflicting_object_field_name_and_relationship_name.json",
+    );
+
+    let schema = GDS::new(
+        open_dds::Metadata::from_json_str(&fs::read_to_string(metadata_path).unwrap()).unwrap(),
+    )
+    .and_then(|gds| gds.build_schema());
+
+    assert!(matches!(
+        schema,
+        Err(SchemaError::RelationshipFieldNameConflict { .. })
+    ));
+}

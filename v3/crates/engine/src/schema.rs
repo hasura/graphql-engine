@@ -204,6 +204,12 @@ pub enum Error {
         field_name: ast::Name,
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("field name for relationship {relationship_name} of type {type_name} conflicts with the existing field {field_name}")]
+    RelationshipFieldNameConflict {
+        relationship_name: RelationshipName,
+        field_name: ast::Name,
+        type_name: Qualified<CustomTypeName>,
+    },
     #[error(
         "internal error: duplicate models with global id implementing the same type {type_name} are found"
     )]
