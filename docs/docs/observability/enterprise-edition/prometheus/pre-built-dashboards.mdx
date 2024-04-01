@@ -52,15 +52,6 @@ templates for monitoring in production.
 
 ### Get Started
 
-Clone the repository to your local machine, copy the sample environment file `dotenv` to `.env`, and edit the enterprise
+Clone the [observability boilerplate](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise) to your local machine, copy the sample environment file `dotenv` to `.env`, and edit the enterprise
 license key (`HGE_EE_LICENSE_KEY`) and secrets. The demo uses [Docker Compose](https://docs.docker.com/compose/) to
 setup container services.
-
-```bash
-git clone https://github.com/hasura/ee-observability-demo.git
-cd ee-observability-demo
-cp dotenv .env
-docker-compose up -d
-```
-
-Explore Grafana Dashboards on `http://localhost:3000`.
