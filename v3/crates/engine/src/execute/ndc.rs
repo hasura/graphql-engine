@@ -13,6 +13,8 @@ use super::{error, ProjectId};
 use crate::metadata::resolved;
 use crate::schema::GDS;
 
+pub mod client;
+
 pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 
 /// Executes a NDC operation
@@ -66,16 +68,16 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                 Box::pin(async {
                     let headers =
                         append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
-                    let ndc_config = ndc_client::apis::configuration::Configuration {
+                    let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_client.clone(),
                         headers,
                     };
-                    ndc_client::apis::default_api::query_post(&ndc_config, query_request)
+                    client::query_post(&ndc_config, query_request)
                         .await
-                        .map_err(error::Error::from) // ndc_client::apis::Error -> InternalError -> Error
+                        .map_err(error::Error::from) // client::Error -> InternalError -> Error
                 })
             },
         )
@@ -185,16 +187,16 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                 Box::pin(async {
                     let headers =
                         append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
-                    let ndc_config = ndc_client::apis::configuration::Configuration {
+                    let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_client.clone(),
                         headers,
                     };
-                    ndc_client::apis::default_api::mutation_post(&ndc_config, query_request)
+                    client::mutation_post(&ndc_config, query_request)
                         .await
-                        .map_err(error::Error::from) // ndc_client::apis::Error -> InternalError -> Error
+                        .map_err(error::Error::from) // client::Error -> InternalError -> Error
                 })
             },
         )

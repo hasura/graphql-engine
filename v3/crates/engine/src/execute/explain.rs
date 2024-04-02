@@ -1,5 +1,6 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::ExecuteOrExplainResponse;
+use crate::execute::ndc::client as ndc_client;
 use crate::execute::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
@@ -316,7 +317,7 @@ async fn fetch_explain_from_data_connector(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let ndc_config = ndc_client::apis::configuration::Configuration {
+                    let ndc_config = ndc_client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
@@ -325,8 +326,7 @@ async fn fetch_explain_from_data_connector(
                     };
                     {
                         // TODO: use capabilities from the data connector context
-                        let capabilities =
-                            ndc_client::apis::default_api::capabilities_get(&ndc_config).await?;
+                        let capabilities = ndc_client::capabilities_get(&ndc_config).await?;
                         match ndc_request {
                             types::NDCRequest::Query(query_request) => capabilities
                                 .capabilities
@@ -334,12 +334,9 @@ async fn fetch_explain_from_data_connector(
                                 .explain
                                 .async_map(|_| {
                                     Box::pin(async move {
-                                        ndc_client::apis::default_api::explain_query_post(
-                                            &ndc_config,
-                                            query_request,
-                                        )
-                                        .await
-                                        .map_err(error::Error::from)
+                                        ndc_client::explain_query_post(&ndc_config, query_request)
+                                            .await
+                                            .map_err(error::Error::from)
                                     })
                                 })
                                 .await
@@ -350,7 +347,7 @@ async fn fetch_explain_from_data_connector(
                                 .explain
                                 .async_map(|_| {
                                     Box::pin(async move {
-                                        ndc_client::apis::default_api::explain_mutation_post(
+                                        ndc_client::explain_mutation_post(
                                             &ndc_config,
                                             mutation_request,
                                         )

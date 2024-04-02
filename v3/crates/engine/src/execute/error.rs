@@ -11,6 +11,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
+use crate::execute::ndc::client as ndc_client;
 use crate::metadata::resolved::{ndc_validation::NDCValidationError, subgraph::Qualified};
 
 use super::types::{Annotation, NamespaceAnnotation};
@@ -63,7 +64,7 @@ pub enum InternalDeveloperError {
     },
 
     #[error("{}", render_ndc_error(.0))]
-    GDCClientError(ndc_client::apis::Error),
+    GDCClientError(ndc_client::Error),
 
     #[error("unexpected response from data connector: {summary}")]
     BadGDCResponse { summary: String },
@@ -136,7 +137,7 @@ impl InternalError {
     fn get_details(&self) -> Option<serde_json::Value> {
         match self {
             Self::Developer(InternalDeveloperError::GDCClientError(
-                ndc_client::apis::Error::ConnectorError(ce),
+                ndc_client::Error::ConnectorError(ce),
             )) => Some(ce.error_response.details.clone()),
             _ => None,
         }
@@ -166,7 +167,7 @@ pub enum Error {
 
     #[error("ndc: {}", connector_error.error_response.message)]
     NDCExpected {
-        connector_error: ndc_client::apis::ConnectorError,
+        connector_error: ndc_client::ConnectorError,
     },
     #[error("{0}")]
     InternalError(#[from] InternalError),
@@ -211,9 +212,9 @@ impl Error {
 }
 
 // Convert NDC errors
-impl From<ndc_client::apis::Error> for Error {
-    fn from(ndc_error: ndc_client::apis::Error) -> Error {
-        if let ndc_client::apis::Error::ConnectorError(err) = &ndc_error {
+impl From<ndc_client::Error> for Error {
+    fn from(ndc_client: ndc_client::Error) -> Error {
+        if let ndc_client::Error::ConnectorError(err) = &ndc_client {
             if matches!(
                 err.status,
                 // We forward the errors with status code 200 (OK), 403(FORBIDDEN), 409(CONFLICT) and 422(UNPROCESSABLE_ENTITY)
@@ -228,27 +229,27 @@ impl From<ndc_client::apis::Error> for Error {
             }
         }
         Error::InternalError(InternalError::Developer(
-            InternalDeveloperError::GDCClientError(ndc_error),
+            InternalDeveloperError::GDCClientError(ndc_client),
         ))
     }
 }
 
-fn render_ndc_error(error: &ndc_client::apis::Error) -> String {
+fn render_ndc_error(error: &ndc_client::Error) -> String {
     match error {
-        ndc_client::apis::Error::Reqwest(err) => match err.status() {
+        ndc_client::Error::Reqwest(err) => match err.status() {
             Some(code) => format!("request to connector failed with status code {0}", code),
             None => format!("request to connector failed: {}", err),
         },
-        ndc_client::apis::Error::Serde(err) => {
+        ndc_client::Error::Serde(err) => {
             format!("unable to decode JSON response from connector: {0}", err)
         }
-        ndc_client::apis::Error::Io(_err) => "internal IO error".into(),
-        ndc_client::apis::Error::ConnectorError(err) => format!(
+        ndc_client::Error::Io(_err) => "internal IO error".into(),
+        ndc_client::Error::ConnectorError(err) => format!(
             "connector returned status code {0} with message: {1}",
             err.status, err.error_response.message,
         ),
-        ndc_client::apis::Error::InvalidBaseURL => "invalid connector base URL".to_string(),
-        ndc_client::apis::Error::InvalidConnectorError(invalid_connector_err) => {
+        ndc_client::Error::InvalidBaseURL => "invalid connector base URL".to_string(),
+        ndc_client::Error::InvalidConnectorError(invalid_connector_err) => {
             format!("invalid connector error: {0}", invalid_connector_err)
         }
     }

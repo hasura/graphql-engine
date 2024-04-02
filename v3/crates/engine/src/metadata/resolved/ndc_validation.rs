@@ -15,10 +15,6 @@ use super::{
 
 #[derive(Debug, Error)]
 pub enum NDCValidationError {
-    #[error("error fetching capabilities for data connector {0}: {1}")]
-    ErrorFetchingCapabilities(DataConnectorName, ndc_client::apis::Error),
-    #[error("error fetching schema for data connector {0}: {1}")]
-    ErrorFetchingSchema(DataConnectorName, ndc_client::apis::Error),
     #[error("collection {collection_name} is not defined in data connector {db_name}")]
     NoSuchCollection {
         db_name: Qualified<DataConnectorName>,
