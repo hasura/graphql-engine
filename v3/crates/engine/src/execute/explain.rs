@@ -223,7 +223,7 @@ async fn get_execution_steps<'s>(
 
 /// Get the join steps for a given join location. This should be used to get the join steps for a remote relationship.
 /// It also supports nested remote relationships.
-/// 
+///
 /// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(

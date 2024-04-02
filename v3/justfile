@@ -44,6 +44,10 @@ ci-lint:
 fix:
   just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt"
 
+format:
+  cargo fmt --check
+alias fmt := format
+
 fix-local:
   cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt
 

@@ -433,13 +433,15 @@ fn eval_order_by_element(
             column,
             function,
         ),
-        ndc_models::OrderByTarget::StarCountAggregate { path } => eval_order_by_star_count_aggregate(
-            collection_relationships,
-            variables,
-            state,
-            item,
-            path,
-        ),
+        ndc_models::OrderByTarget::StarCountAggregate { path } => {
+            eval_order_by_star_count_aggregate(
+                collection_relationships,
+                variables,
+                state,
+                item,
+                path,
+            )
+        }
     }
 }
 
@@ -999,8 +1001,8 @@ pub(crate) fn eval_nested_field(
                 state,
                 &full_row,
             )?;
-            Ok(ndc_models::RowFieldValue(serde_json::to_value(row).map_err(
-                |_| {
+            Ok(ndc_models::RowFieldValue(
+                serde_json::to_value(row).map_err(|_| {
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         Json(ndc_models::ErrorResponse {
@@ -1008,8 +1010,8 @@ pub(crate) fn eval_nested_field(
                             details: serde_json::Value::Null,
                         }),
                     )
-                },
-            )?))
+                })?,
+            ))
         }
         ndc_models::NestedField::Array(ndc_models::NestedArray { fields }) => {
             let array: Vec<serde_json::Value> = serde_json::from_value(value).map_err(|_| {

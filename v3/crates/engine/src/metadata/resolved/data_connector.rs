@@ -27,7 +27,10 @@ pub struct DataConnectorLink {
 }
 
 impl std::hash::Hash for DataConnectorLink {
-    fn hash<H>(&self, h: &mut H) where H: std::hash::Hasher {
+    fn hash<H>(&self, h: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
         self.name.hash(h)
     }
 }

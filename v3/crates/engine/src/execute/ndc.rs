@@ -26,24 +26,28 @@ pub async fn execute_ndc_query<'n, 's>(
 ) -> Result<Vec<ndc_models::RowSet>, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("Execute query using data connector", SpanVisibility::User, || {
-            Box::pin(async {
-                set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "operation",
-                    execution_span_attribute,
-                );
-                set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "field",
-                    field_span_attribute,
-                );
-                let connector_response =
-                    fetch_from_data_connector(http_client, query, data_connector, project_id)
-                        .await?;
-                Ok(connector_response.0)
-            })
-        })
+        .in_span_async(
+            "Execute query using data connector",
+            SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "operation",
+                        execution_span_attribute,
+                    );
+                    set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "field",
+                        field_span_attribute,
+                    );
+                    let connector_response =
+                        fetch_from_data_connector(http_client, query, data_connector, project_id)
+                            .await?;
+                    Ok(connector_response.0)
+                })
+            },
+        )
         .await
 }
 
@@ -109,56 +113,60 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("Execute mutation using data connector", SpanVisibility::User, || {
-            Box::pin(async {
-                set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "operation",
-                    execution_span_attribute,
-                );
-                set_attribute_on_active_span(
-                    AttributeVisibility::Default,
-                    "field",
-                    field_span_attribute,
-                );
-                let connector_response = fetch_from_data_connector_mutation(
-                    http_client,
-                    query,
-                    data_connector,
-                    project_id,
-                )
-                .await?;
-                // Post process the response to add the `__typename` fields
-                tracer.in_span("process_response", SpanVisibility::Internal, || {
-                    // NOTE: NDC returns a `Vec<RowSet>` (to account for
-                    // variables). We don't use variables in NDC queries yet,
-                    // hence we always pick the first `RowSet`.
-                    let mutation_results = connector_response
-                        .operation_results
-                        .into_iter()
-                        .next()
-                        .ok_or(error::InternalDeveloperError::BadGDCResponse {
-                            summary: "missing rowset".into(),
-                        })?;
-                    match process_response_as {
-                        ProcessResponseAs::CommandResponse {
-                            command_name: _,
-                            type_container,
-                        } => process_command_mutation_response(
-                            mutation_results,
-                            selection_set,
-                            type_container,
-                        ),
-                        _ => Err(error::Error::from(
-                            error::InternalEngineError::InternalGeneric {
-                                description: "mutations without commands are not supported yet"
-                                    .into(),
-                            },
-                        )),
-                    }
+        .in_span_async(
+            "Execute mutation using data connector",
+            SpanVisibility::User,
+            || {
+                Box::pin(async {
+                    set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "operation",
+                        execution_span_attribute,
+                    );
+                    set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "field",
+                        field_span_attribute,
+                    );
+                    let connector_response = fetch_from_data_connector_mutation(
+                        http_client,
+                        query,
+                        data_connector,
+                        project_id,
+                    )
+                    .await?;
+                    // Post process the response to add the `__typename` fields
+                    tracer.in_span("process_response", SpanVisibility::Internal, || {
+                        // NOTE: NDC returns a `Vec<RowSet>` (to account for
+                        // variables). We don't use variables in NDC queries yet,
+                        // hence we always pick the first `RowSet`.
+                        let mutation_results = connector_response
+                            .operation_results
+                            .into_iter()
+                            .next()
+                            .ok_or(error::InternalDeveloperError::BadGDCResponse {
+                                summary: "missing rowset".into(),
+                            })?;
+                        match process_response_as {
+                            ProcessResponseAs::CommandResponse {
+                                command_name: _,
+                                type_container,
+                            } => process_command_mutation_response(
+                                mutation_results,
+                                selection_set,
+                                type_container,
+                            ),
+                            _ => Err(error::Error::from(
+                                error::InternalEngineError::InternalGeneric {
+                                    description: "mutations without commands are not supported yet"
+                                        .into(),
+                                },
+                            )),
+                        }
+                    })
                 })
-            })
-        })
+            },
+        )
         .await
 }
 
