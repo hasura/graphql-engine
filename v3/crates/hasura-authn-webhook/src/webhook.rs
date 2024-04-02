@@ -313,7 +313,7 @@ mod tests {
     // This test emulates a successful authentication by the webhook using Get method
     async fn test_get_successful_webhook_auth() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -380,7 +380,7 @@ mod tests {
     // This test emulates a successful authentication by the webhook using Post method
     async fn test_post_webhook_successful_post_auth() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -451,7 +451,7 @@ mod tests {
     // This test emulates the scenario where the webhook may return non-hasura session variables
     async fn test_allow_non_hasura_session_variables_in_webhook_response() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -527,7 +527,7 @@ mod tests {
     // This test emulates the scenario where role emulation is allowed
     async fn test_role_emulation() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -576,7 +576,7 @@ mod tests {
     // This test emulates the scenario where role emulation is denied
     async fn test_deny_role_emulation() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -652,7 +652,7 @@ mod tests {
     /// by sending a 401 status
     async fn test_post_webhook_denies_authentication() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
@@ -692,7 +692,7 @@ mod tests {
     /// other than 200 and 401 are not recognized.
     async fn test_webhook_returning_arbitrary_status() {
         // Request a new server from the pool
-        let mut server = mockito::Server::new();
+        let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
 
