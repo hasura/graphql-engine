@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use axum::{
     body::HttpBody,
-    extract::State,
+    extract::{DefaultBodyLimit, State},
     http::{HeaderMap, Request},
     middleware::Next,
     response::{Html, IntoResponse},
@@ -168,12 +168,15 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
 
     let health_route = Router::new().route("/health", get(handle_health));
 
+    const MB: usize = 1_048_576;
+
     let app = Router::new()
         // serve graphiql at root
         .route("/", get(graphiql))
         .merge(graphql_route)
         .merge(explain_route)
-        .merge(health_route);
+        .merge(health_route)
+        .layer(DefaultBodyLimit::max(10 * MB)); // Set request payload limit to 10 MB
 
     // The "unspecified" IPv6 address will match any IPv4 or IPv6 address.
     let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
