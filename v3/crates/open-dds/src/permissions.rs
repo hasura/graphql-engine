@@ -407,6 +407,16 @@ pub struct FieldComparisonPredicate {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
+#[schemars(title = "FieldIsNullPredicate")]
+/// Predicate to check if the given field is null.
+pub struct FieldIsNullPredicate {
+    /// The name of the field that should be checked for a null value.
+    pub field: FieldName,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 #[schemars(title = "RelationshipPredicate")]
 /// Relationship predicate filters objects of a source model based on a predicate on the related model.
 pub struct RelationshipPredicate {
@@ -428,9 +438,7 @@ pub struct RelationshipPredicate {
 pub enum ModelPredicate {
     /// Filters objects based on a field value.
     FieldComparison(FieldComparisonPredicate),
-    FieldIsNull {
-        field: FieldName,
-    },
+    FieldIsNull(FieldIsNullPredicate),
     // TODO: Remote relationships are disallowed for now
     /// Filters objects based on the relationship of a model.
     Relationship(RelationshipPredicate),

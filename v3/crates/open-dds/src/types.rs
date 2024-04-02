@@ -26,6 +26,7 @@ use crate::{
     opendds_derive::OpenDd,
 )]
 #[serde(untagged)]
+#[schemars(title = "TypeName")]
 // TODO: This serde untagged causes bad error messages when the type name is invalid.
 // Either manually deserialize it or use a library to make the error messages better.
 pub enum TypeName {
@@ -349,7 +350,7 @@ impl ObjectTypeV1 {
     }
 }
 
-#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "DataConnectorTypeMapping"))]
 /// This defines the mapping of the fields of an object type to the
@@ -378,6 +379,7 @@ impl Deref for FieldMappings {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
+#[schemars(title = "FieldMapping")]
 pub enum FieldMapping {
     /// Source field directly maps to some column in the data connector.
     Column(ColumnFieldMapping),

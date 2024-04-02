@@ -310,6 +310,7 @@ pub struct JWTHeaderLocation {
 #[schemars(title = "JWTTokenLocation")]
 pub enum JWTTokenLocation {
     /// Get the bearer token from the `Authorization` header.
+    #[schemars(title = "JWTBearerAuthorizationLocation")]
     BearerAuthorization,
     /// Get the token from the Cookie header under the specified cookie name.
     Cookie(JWTCookieLocation),

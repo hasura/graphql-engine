@@ -51,3 +51,62 @@ impl AuthConfigV1 {
         .unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use goldenfile::Mint;
+    use open_dds::{
+        test_utils::{validate_root_json_schema, JsonSchemaValidationConfig},
+        traits::gen_root_schema_for,
+    };
+    use pretty_assertions::assert_eq;
+    use std::{io::Write, path::PathBuf};
+
+    #[test]
+    fn test_auth_config_schema() {
+        let mut mint = Mint::new(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
+        let mut expected = mint.new_goldenfile("tests/auth_config.jsonschema").unwrap();
+        let schema = gen_root_schema_for::<super::AuthConfig>(
+            &mut schemars::gen::SchemaGenerator::default(),
+        );
+        write!(
+            expected,
+            "{}",
+            serde_json::to_string_pretty(&schema).unwrap()
+        )
+        .unwrap();
+    }
+
+    #[test]
+    /// This test is a round trip test for the AuthConfig type. It reads a reference auth config file,
+    /// deserializes it into a AuthConfig type, serializes it back to JSON, deserializes it back into
+    /// a AuthConfig type, and compares the two AuthConfig types to ensure they are equal.
+    fn test_serialize_reference_auth_config() {
+        let path = {
+            let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            path_buf.pop();
+            path_buf.pop();
+            path_buf.join("auth_config.json")
+        };
+        let auth_config_from_json = <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap(),
+        )
+        .unwrap();
+        let auth_config_serialized = serde_json::to_value(auth_config_from_json.clone()).unwrap();
+        let auth_config_from_serialized =
+            <super::AuthConfig as open_dds::traits::OpenDd>::deserialize(auth_config_serialized)
+                .unwrap();
+        assert_eq!(auth_config_from_json, auth_config_from_serialized);
+    }
+
+    #[test]
+    /// Runs various checks on the generated JSONSchema to ensure it follows certain conventions.
+    fn test_validate_auth_config_json_schema() {
+        validate_root_json_schema(
+            gen_root_schema_for::<super::AuthConfig>(&mut schemars::gen::SchemaGenerator::default()),
+            &JsonSchemaValidationConfig {
+                schemas_with_arbitrary_additional_properties_allowed: vec!["JWTClaimsMap"],
+            },
+        );
+    }
+}

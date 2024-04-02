@@ -892,6 +892,8 @@
       }
     },
     "FieldMapping": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldMapping",
+      "title": "FieldMapping",
       "oneOf": [
         {
           "description": "Source field directly maps to some column in the data connector.",
@@ -1214,6 +1216,8 @@
       "additionalProperties": false
     },
     "TypeName": {
+      "$id": "https://hasura.io/jsonschemas/metadata/TypeName",
+      "title": "TypeName",
       "anyOf": [
         {
           "$ref": "#/definitions/InbuiltType"
@@ -2680,16 +2684,7 @@
           ],
           "properties": {
             "fieldIsNull": {
-              "type": "object",
-              "required": [
-                "field"
-              ],
-              "properties": {
-                "field": {
-                  "$ref": "#/definitions/FieldName"
-                }
-              },
-              "additionalProperties": false
+              "$ref": "#/definitions/FieldIsNullPredicate"
             }
           },
           "additionalProperties": false
@@ -2789,6 +2784,26 @@
           "allOf": [
             {
               "$ref": "#/definitions/ValueExpression"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldIsNullPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
+      "title": "FieldIsNullPredicate",
+      "description": "Predicate to check if the given field is null.",
+      "type": "object",
+      "required": [
+        "field"
+      ],
+      "properties": {
+        "field": {
+          "description": "The name of the field that should be checked for a null value.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
             }
           ]
         }

@@ -972,6 +972,7 @@ dependencies = [
  "nonempty",
  "open-dds",
  "opendds-derive",
+ "pretty_assertions",
  "reqwest",
  "schemars",
  "serde",
