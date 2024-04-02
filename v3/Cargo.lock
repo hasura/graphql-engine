@@ -1285,6 +1285,7 @@ dependencies = [
  "pretty_assertions",
  "schemars",
  "serde",
+ "thiserror",
 ]
 
 [[package]]

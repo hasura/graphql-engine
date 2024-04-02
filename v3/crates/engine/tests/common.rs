@@ -1,5 +1,5 @@
 use goldenfile::{differs::text_diff, Mint};
-use hasura_authn_core::{Identity, Role, Session, SessionVariableValue};
+use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
 use lang_graphql::{http::RawRequest, schema::Schema};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
@@ -29,22 +29,25 @@ pub fn setup(test_dir: &Path) -> GoldenTestContext {
     GoldenTestContext { http_client, mint }
 }
 
-fn resolve_session(session_variables: HashMap<SessionVariable, SessionVariableValue>) -> Session {
+fn resolve_session(
+    session_variables: HashMap<SessionVariable, SessionVariableValue>,
+) -> Result<Session, SessionError> {
     //return an arbitrary identity with role emulation enabled
     let authorization = Identity::admin(Role::new("admin"));
-
     let role = session_variables
         .get(&SESSION_VARIABLE_ROLE)
         .map(|v| Role::new(&v.0));
-    authorization
-        .get_role_authorization(role.as_ref())
-        .unwrap()
-        .build_session(session_variables)
+    let role_authorization = authorization.get_role_authorization(role.as_ref())?;
+    let session = role_authorization.build_session(session_variables);
+    Ok(session)
 }
 
 // This function is deprecated in favour of test_execution_expectation
 // TODO: Remove this function after all tests are moved to use test_execution_expectation
-pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata_paths: &[&str]) {
+pub fn test_execution_expectation_legacy(
+    test_path_string: &str,
+    common_metadata_paths: &[&str],
+) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         // Setup test context
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -60,30 +63,30 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
-        );
+        )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata).unwrap()).unwrap(),
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
             metadata
         );
 
-        let gds = GDS::new(metadata).unwrap();
-        let schema = GDS::build_schema(&gds).unwrap();
+        let gds = GDS::new(metadata)?;
+        let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.
-        serde_json::to_string(&schema).unwrap();
+        serde_json::to_string(&schema)?;
 
-        let query = fs::read_to_string(request_path).unwrap();
+        let query = fs::read_to_string(request_path)?;
 
         let session = {
             let session_vars_path = &test_path.join("session_variables.json");
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                json::from_str(fs::read_to_string(session_vars_path).unwrap().as_ref()).unwrap();
+                json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
             resolve_session(session_variables)
-        };
+        }?;
 
         let raw_request = RawRequest {
             operation_name: None,
@@ -96,35 +99,28 @@ pub fn test_execution_expectation_legacy(test_path_string: &str, common_metadata
         let response =
             execute_query(&test_ctx.http_client, &schema, &session, raw_request, None).await;
 
-        let mut expected = test_ctx
-            .mint
-            .new_goldenfile_with_differ(
-                response_path,
-                Box::new(|file1, file2| {
-                    let json1: serde_json::Value =
-                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                    let json2: serde_json::Value =
-                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                    if json1 != json2 {
-                        text_diff(file1, file2)
-                    }
-                }),
-            )
-            .unwrap();
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&response.0).unwrap()
-        )
-        .unwrap();
-    });
+        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
+            response_path,
+            Box::new(|file1, file2| {
+                let json1: serde_json::Value =
+                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                let json2: serde_json::Value =
+                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                if json1 != json2 {
+                    text_diff(file1, file2)
+                }
+            }),
+        )?;
+        write!(expected, "{}", serde_json::to_string_pretty(&response.0)?)?;
+        Ok(())
+    })
 }
 
 #[allow(dead_code)]
 pub(crate) fn test_introspection_expectation(
     test_path_string: &str,
     common_metadata_paths: &[&str],
-) {
+) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         // Setup test context
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -140,18 +136,18 @@ pub(crate) fn test_introspection_expectation(
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
-        );
+        )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata).unwrap()).unwrap(),
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
             metadata
         );
 
-        let gds = GDS::new(metadata).unwrap();
-        let schema = GDS::build_schema(&gds).unwrap();
+        let gds = GDS::new(metadata)?;
+        let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.
         // Hasura V3 relies on the serialized schema for handling requests.
@@ -168,12 +164,15 @@ pub(crate) fn test_introspection_expectation(
             "initial built metadata does not match deserialized metadata"
         );
 
-        let query = fs::read_to_string(request_path).unwrap();
+        let query = fs::read_to_string(request_path)?;
 
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-            json::from_str(fs::read_to_string(session_vars_path).unwrap().as_ref()).unwrap();
-        let sessions: Vec<Session> = sessions.into_iter().map(resolve_session).collect();
+            json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+        let sessions: Vec<Session> = sessions
+            .into_iter()
+            .map(resolve_session)
+            .collect::<Result<_, _>>()?;
 
         assert!(
             sessions.len() > 1,
@@ -200,31 +199,27 @@ pub(crate) fn test_introspection_expectation(
             responses.push(response.0);
         }
 
-        let mut expected = test_ctx
-            .mint
-            .new_goldenfile_with_differ(
-                response_path,
-                Box::new(|file1, file2| {
-                    let json1: serde_json::Value =
-                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                    let json2: serde_json::Value =
-                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                    if json1 != json2 {
-                        text_diff(file1, file2)
-                    }
-                }),
-            )
-            .unwrap();
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&responses).unwrap()
-        )
-        .unwrap();
-    });
+        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
+            response_path,
+            Box::new(|file1, file2| {
+                let json1: serde_json::Value =
+                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                let json2: serde_json::Value =
+                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                if json1 != json2 {
+                    text_diff(file1, file2)
+                }
+            }),
+        )?;
+        write!(expected, "{}", serde_json::to_string_pretty(&responses)?)?;
+        Ok(())
+    })
 }
 
-pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths: &[&str]) {
+pub fn test_execution_expectation(
+    test_path_string: &str,
+    common_metadata_paths: &[&str],
+) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         // Setup test context
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -240,18 +235,18 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
-        );
+        )?;
 
-        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value).unwrap();
+        let metadata = open_dds::traits::OpenDd::deserialize(metadata_json_value)?;
 
         // TODO: remove this assert once we have stopped manually implementing Serialize for OpenDD types.
         assert_eq!(
-            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata).unwrap()).unwrap(),
+            open_dds::Metadata::from_json_str(&serde_json::to_string(&metadata)?)?,
             metadata
         );
 
-        let gds = GDS::new(metadata).unwrap();
-        let schema = GDS::build_schema(&gds).unwrap();
+        let gds = GDS::new(metadata)?;
+        let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.
         // Hasura V3 relies on the serialized schema for handling requests.
@@ -268,12 +263,15 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
             "initial built metadata does not match deserialized metadata"
         );
 
-        let query = fs::read_to_string(request_path).unwrap();
+        let query = fs::read_to_string(request_path)?;
 
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
-            json::from_str(fs::read_to_string(session_vars_path).unwrap().as_ref()).unwrap();
-        let sessions: Vec<Session> = sessions.into_iter().map(resolve_session).collect();
+            json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
+        let sessions: Vec<Session> = sessions
+            .into_iter()
+            .map(resolve_session)
+            .collect::<Result<_, _>>()?;
 
         assert!(
             sessions.len() > 1,
@@ -300,42 +298,39 @@ pub fn test_execution_expectation(test_path_string: &str, common_metadata_paths:
             responses.push(response.0);
         }
 
-        let mut expected = test_ctx
-            .mint
-            .new_goldenfile_with_differ(
-                response_path,
-                Box::new(|file1, file2| {
-                    let json1: serde_json::Value =
-                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                    let json2: serde_json::Value =
-                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                    if json1 != json2 {
-                        text_diff(file1, file2)
-                    }
-                }),
-            )
-            .unwrap();
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&responses).unwrap()
-        )
-        .unwrap();
-    });
+        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
+            response_path,
+            Box::new(|file1, file2| {
+                let json1: serde_json::Value =
+                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                let json2: serde_json::Value =
+                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                if json1 != json2 {
+                    text_diff(file1, file2)
+                }
+            }),
+        )?;
+        write!(expected, "{}", serde_json::to_string_pretty(&responses)?)?;
+        Ok(())
+    })
 }
 
-fn read_json(path: &Path) -> Value {
-    let json_string = fs::read_to_string(path).unwrap();
-    serde_json::from_str(&json_string).unwrap()
+fn read_json(path: &Path) -> anyhow::Result<Value> {
+    let json_string = fs::read_to_string(path)?;
+    let value = serde_json::from_str(&json_string)?;
+    Ok(value)
 }
 
 pub fn merge_with_common_metadata<T: Iterator<Item = PathBuf>>(
     metadata_path: &Path,
     common_metadata_paths: T,
-) -> Value {
-    let mut metadata = read_json(metadata_path);
-    common_metadata_paths.for_each(|path| metadata.merge(&read_json(&path)));
-    metadata
+) -> anyhow::Result<Value> {
+    let mut metadata = read_json(metadata_path)?;
+    for path in common_metadata_paths {
+        let common_metadata = read_json(&path)?;
+        metadata.merge(&common_metadata);
+    }
+    Ok(metadata)
 }
 
 #[allow(dead_code)]
@@ -343,7 +338,7 @@ pub fn test_execute_explain(
     test_path_string: &str,
     test_metadata_path: &str,
     common_metadata_paths: &[&str],
-) {
+) -> anyhow::Result<()> {
     tokio_test::block_on(async {
         let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
         let mut test_ctx = setup(&root_test_dir);
@@ -357,18 +352,18 @@ pub fn test_execute_explain(
             common_metadata_paths
                 .iter()
                 .map(|path| root_test_dir.join(path)),
-        );
-        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
-        let schema = GDS::build_schema(&gds).unwrap();
+        )?;
+        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata)?)?;
+        let schema = GDS::build_schema(&gds)?;
         let session = {
             let session_variables_raw = r#"{
                 "x-hasura-role": "admin"
             }"#;
             let session_variables: HashMap<SessionVariable, SessionVariableValue> =
-                serde_json::from_str(session_variables_raw).unwrap();
+                serde_json::from_str(session_variables_raw)?;
             resolve_session(session_variables)
-        };
-        let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path)).unwrap();
+        }?;
+        let query = std::fs::read_to_string(root_test_dir.join(gql_request_file_path))?;
         let raw_request = lang_graphql::http::RawRequest {
             operation_name: None,
             query,
@@ -384,26 +379,19 @@ pub fn test_execute_explain(
 
         let response = engine::execute::explain::types::redact_ndc_explain(raw_response);
 
-        let mut expected = test_ctx
-            .mint
-            .new_goldenfile_with_differ(
-                expected_response_file,
-                Box::new(|file1, file2| {
-                    let json1: serde_json::Value =
-                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                    let json2: serde_json::Value =
-                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                    if json1 != json2 {
-                        text_diff(file1, file2)
-                    }
-                }),
-            )
-            .unwrap();
-        write!(
-            expected,
-            "{}",
-            serde_json::to_string_pretty(&response).unwrap()
-        )
-        .unwrap();
+        let mut expected = test_ctx.mint.new_goldenfile_with_differ(
+            expected_response_file,
+            Box::new(|file1, file2| {
+                let json1: serde_json::Value =
+                    serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                let json2: serde_json::Value =
+                    serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                if json1 != json2 {
+                    text_diff(file1, file2)
+                }
+            }),
+        )?;
+        write!(expected, "{}", serde_json::to_string_pretty(&response)?)?;
+        Ok(())
     })
 }

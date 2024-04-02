@@ -2,7 +2,7 @@
 mod common;
 
 #[test]
-fn test_introspect_command_with_preset_arguments() {
+fn test_introspect_command_with_preset_arguments() -> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
@@ -12,11 +12,11 @@ fn test_introspect_command_with_preset_arguments() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_introspect_model_with_preset_arguments_select_many() {
+fn test_introspect_model_with_preset_arguments_select_many() -> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
@@ -26,11 +26,11 @@ fn test_introspect_model_with_preset_arguments_select_many() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_introspect_model_with_preset_arguments_select_one() {
+fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()> {
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
 
@@ -40,15 +40,15 @@ fn test_introspect_model_with_preset_arguments_select_one() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_graphql_deprecated() {
+fn test_graphql_deprecated() -> anyhow::Result<()> {
     let common_custom_connector_path_string =
         "execute/common_metadata/custom_connector_schema.json";
     common::test_introspection_expectation(
         "execute/deprecated",
         &[common_custom_connector_path_string],
-    );
+    )
 }

@@ -136,39 +136,26 @@ impl Identity {
 }
 
 // Error when resolving a session
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum SessionError {
     // The requested role isn't allowed
+    #[error("cannot be authorized as role: {0}")]
     Unauthorized(Role),
     // Default role information is not present in allowed_roles
+    #[error("internal: RoleAuthorization of role: {0} not found")]
     InternalRoleNotFound(Role),
+    #[error("the value of the header '{header_name}' isn't a valid string: '{error}'")]
     InvalidHeaderValue { header_name: String, error: String },
 }
 
 impl IntoResponse for SessionError {
     fn into_response(self) -> axum::response::Response {
-        match self {
-            SessionError::Unauthorized(role) => Response::error_message_with_status(
-                StatusCode::UNAUTHORIZED,
-                format!("cannot be authorized as role: {}", role),
-            )
-            .into_response(),
-            SessionError::InternalRoleNotFound(role) => Response::error_message_with_status(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("internal: RoleAuthorization of role: {} not found", role),
-            )
-            .into_response(),
-            SessionError::InvalidHeaderValue { header_name, error } => {
-                Response::error_message_with_status(
-                    StatusCode::BAD_REQUEST,
-                    format!(
-                        "the value of the header '{}' isn't a valid string: '{}'",
-                        header_name, error
-                    ),
-                )
-                .into_response()
-            }
-        }
+        let code = match self {
+            SessionError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            SessionError::InternalRoleNotFound(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            SessionError::InvalidHeaderValue { .. } => StatusCode::BAD_REQUEST,
+        };
+        Response::error_message_with_status(code, self.to_string()).into_response()
     }
 }
 

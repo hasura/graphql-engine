@@ -1,65 +1,65 @@
 mod common;
 
 #[test]
-fn test_model_select_one_simple_select() {
+fn test_model_select_one_simple_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_one_with_type_permission() {
+fn test_model_select_one_with_type_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/type_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_one_simple_select_introspection() {
+fn test_model_select_one_simple_select_introspection() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select/introspection/introspection";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_one_filter() {
+fn test_model_select_one_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/simple_select/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_one_custom_scalar() {
+fn test_model_select_one_custom_scalar() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_one/custom_scalar";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Select Many Tests
 #[test]
-fn test_model_select_many_simple_select() {
+fn test_model_select_many_simple_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_simple_select_introspection() {
+fn test_model_select_many_simple_select_introspection() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select/introspection/introspection";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_simple_select_introspection_user_1() {
+fn test_model_select_many_simple_select_introspection_user_1() -> anyhow::Result<()> {
     let test_path_string =
         "execute/models/select_many/simple_select/introspection/introspection_user_1";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_simple_select_introspection_with_graphql_config() {
+fn test_model_select_many_simple_select_introspection_with_graphql_config() -> anyhow::Result<()> {
     let test_path_string =
         "execute/models/select_many/simple_select/introspection/with_graphql_config";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
@@ -67,65 +67,65 @@ fn test_model_select_many_simple_select_introspection_with_graphql_config() {
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_filter() {
+fn test_model_select_many_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/simple_select/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_empty_select() {
+fn test_model_select_many_empty_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/empty_select";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Nested selection tests
 #[test]
-fn test_model_select_many_nested_select() {
+fn test_model_select_many_nested_select() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Same test as above, but with no type mappings defined in the metadata.
 // Tests that the engine will correctly add default type mappings
 // When resolving the metadata.
 #[test]
-fn test_model_select_many_nested_select_no_explicit_type_mapping() {
+fn test_model_select_many_nested_select_no_explicit_type_mapping() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/nested_select/no_explicit_type_mapping";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Order By Tests
 #[test]
-fn test_model_select_many_order_by() {
+fn test_model_select_many_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_order_by_filter() {
+fn test_model_select_many_order_by_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_order_by_with_graphql_config() {
+fn test_model_select_many_order_by_with_graphql_config() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/with_graphql_config";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-    );
+    )
 }
 
 // What is being tested? - We are testing the order_by sorts correctly when
@@ -136,25 +136,25 @@ fn test_model_select_many_order_by_with_graphql_config() {
 // multiple rows that have the same value in `AlbumId`, it will then order these
 // rows by `TrackId`
 #[test]
-fn test_model_select_many_order_by_multiple_columns() {
+fn test_model_select_many_order_by_multiple_columns() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/multiple_columns";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_order_by_multiple_columns_validation_check() {
+fn test_model_select_many_order_by_multiple_columns_validation_check() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/order_by_validation_check";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // Type Permissions
 #[test]
-fn test_model_select_many_type_permission_order_by() {
+fn test_model_select_many_type_permission_order_by() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/type_permission/order_by";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // Relationships in order_by expressions
@@ -162,7 +162,7 @@ fn test_model_select_many_type_permission_order_by() {
 // 1. Object relationships in order_by expressions (Simple, Nested Object relationships). We also test multi column boolean expressions
 
 #[test]
-fn test_model_select_many_order_by_object_relationship_simple() {
+fn test_model_select_many_order_by_object_relationship_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/relationships/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -173,11 +173,11 @@ fn test_model_select_many_order_by_object_relationship_simple() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_order_by_object_relationship_nested() {
+fn test_model_select_many_order_by_object_relationship_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/order_by/relationships/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -188,79 +188,79 @@ fn test_model_select_many_order_by_object_relationship_nested() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_type_permission_where() {
+fn test_model_select_many_type_permission_where() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/type_permission/where";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // Where Tests
 #[test]
-fn test_model_select_many_where() {
+fn test_model_select_many_where() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_where_is_null() {
+fn test_model_select_many_where_is_null() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/is_null";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_where_filter() {
+fn test_model_select_many_where_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_where_with_grapqhl_config() {
+fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/with_graphql_config";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_select_with_args() {
+fn test_model_select_many_select_with_args() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_select_with_args_filter() {
+fn test_model_select_many_select_with_args_filter() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args/filter";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_model_select_many_select_with_args_with_graphql_config() {
+fn test_model_select_many_select_with_args_with_graphql_config() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args/with_graphql_config";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let metadata_graphql_json = "execute/models/select_many/common_metadata/graphql_config.json";
     common::test_execution_expectation(
         test_path_string,
         &[common_metadata_path_string, metadata_graphql_json],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_where_ndc_operators() {
+fn test_model_select_many_where_ndc_operators() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/ndc_operators";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 // Relationships in boolean expressions
@@ -268,7 +268,7 @@ fn test_model_select_many_where_ndc_operators() {
 // 1. Array relationships in boolean expressions (Simple, Nested array relationships). We also test multi column boolean expressions
 
 #[test]
-fn test_model_select_many_where_array_relationship_simple() {
+fn test_model_select_many_where_array_relationship_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/relationships/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -279,11 +279,11 @@ fn test_model_select_many_where_array_relationship_simple() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_where_array_relationship_nested() {
+fn test_model_select_many_where_array_relationship_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/relationships/array/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -294,12 +294,12 @@ fn test_model_select_many_where_array_relationship_nested() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Object relationships in boolean expressions (Simple, Nested object relationships). We also test multi column boolean expressions
 #[test]
-fn test_model_select_many_where_object_relationship_simple() {
+fn test_model_select_many_where_object_relationship_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/relationships/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -310,11 +310,11 @@ fn test_model_select_many_where_object_relationship_simple() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_where_object_relationship_nested() {
+fn test_model_select_many_where_object_relationship_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/where/relationships/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -325,19 +325,19 @@ fn test_model_select_many_where_object_relationship_nested() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_model_select_many_object_type_input_arguments() {
+fn test_model_select_many_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Limit Tests
 #[test]
-fn test_model_select_many_limit() {
+fn test_model_select_many_limit() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/limit_offset/limit";
     let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let common_metadata_path_string =
@@ -346,21 +346,21 @@ fn test_model_select_many_limit() {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-    );
+    )
 }
 
 // Test is_null in model select permissions
 #[test]
-fn test_model_select_many_predicate_is_null() {
+fn test_model_select_many_predicate_is_null() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/predicate/is_null";
     let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
 
-    common::test_execution_expectation(test_path_string, &[ndc_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[ndc_metadata_path_string])
 }
 
 // ---------- Offset Tests
 #[test]
-fn test_model_select_many_offset() {
+fn test_model_select_many_offset() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/limit_offset/offset";
     let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let common_metadata_path_string =
@@ -369,12 +369,12 @@ fn test_model_select_many_offset() {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-    );
+    )
 }
 
 // ---------- Limit and Offset Tests
 #[test]
-fn test_model_select_many_limit_offset() {
+fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/limit_offset/limit_offset";
     let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let common_metadata_path_string =
@@ -383,35 +383,35 @@ fn test_model_select_many_limit_offset() {
     common::test_execution_expectation(
         test_path_string,
         &[ndc_metadata_path_string, common_metadata_path_string],
-    );
+    )
 }
 
 #[test]
-fn test_relay() {
+fn test_relay() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 /// Tests the generation of the `id` field in select queries including relationships.
-fn test_relay_id_in_select() {
+fn test_relay_id_in_select() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_id_in_select";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 /// Test querying the relay global ID with a role that doesn't have access to
 /// all the global ID fields.
-fn test_relay_global_id_permission() {
+fn test_relay_global_id_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_global_id_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_relay_node_field() {
+fn test_relay_node_field() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_field";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let common_articles_metadata_path_string = "execute/relay/article_metadata.json";
@@ -421,61 +421,62 @@ fn test_relay_node_field() {
             common_metadata_path_string,
             common_articles_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_relay_node_type_permissions() {
+fn test_relay_node_type_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_type_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_relay_node_field_permission() {
+fn test_relay_node_field_permission() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_field_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 /// Tests a role should not be able to access the relay `node` field,
 /// if the Node interface doesn't implement any objects for that role.
-fn test_relay_node_interface_permissions() {
+fn test_relay_node_interface_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay_node_interface_permission";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 /// Tests the `node` root field with a role that has no model select permissions.
-fn test_relay_node_model_select_permissions_with_role_without_model_select_permission() {
+fn test_relay_node_model_select_permissions_with_role_without_model_select_permission(
+) -> anyhow::Result<()> {
     let test_path_string =
         "execute/relay/relay_node_model_select_permissions/no_select_permission_exists_for_role";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
 /// Test the `node` root field with a role that has model select permissions.
-fn test_relay_node_model_select_permissions() {
+fn test_relay_node_model_select_permissions() -> anyhow::Result<()> {
     let test_path_string =
         "execute/relay/relay_node_model_select_permissions/successful_model_select_permissions";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
 }
 
 #[test]
-fn test_typename() {
+fn test_typename() -> anyhow::Result<()> {
     let test_path_string = "execute/typename";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
-    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string]);
+    common::test_execution_expectation_legacy(test_path_string, &[common_metadata_path_string])
 }
 
 // Command Functions
 
 #[test]
-fn test_command_functions() {
+fn test_command_functions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -485,11 +486,11 @@ fn test_command_functions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_command_object_type_input_arguments() {
+fn test_command_object_type_input_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/object_type_input_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -499,11 +500,11 @@ fn test_command_object_type_input_arguments() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_command_custom_scalar_inputs() {
+fn test_command_custom_scalar_inputs() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/custom_scalar_inputs";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -513,12 +514,12 @@ fn test_command_custom_scalar_inputs() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with scalar (Int) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_functions_scalar_output_type() {
+fn test_command_functions_scalar_output_type() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/scalar_output_type";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -528,12 +529,12 @@ fn test_command_functions_scalar_output_type() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with object (commandActor) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_functions_object_output_type_command_permissions() {
+fn test_command_functions_object_output_type_command_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/object_output_type/command_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -543,13 +544,13 @@ fn test_command_functions_object_output_type_command_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with object (commandActor) output type (different object output subset field permissions for roles: admin,
 // user_1, user_2)
 #[test]
-fn test_command_functions_object_output_type_output_permissions() {
+fn test_command_functions_object_output_type_output_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/object_output_type/output_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -559,12 +560,12 @@ fn test_command_functions_object_output_type_output_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with array of scalar ([String]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_functions_scalar_array_output_type() {
+fn test_command_functions_scalar_array_output_type() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/scalar_array_output_type";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -574,12 +575,12 @@ fn test_command_functions_scalar_array_output_type() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with array of object ([commandActor]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_functions_object_array_output_type_command_permissions() {
+fn test_command_functions_object_array_output_type_command_permissions() -> anyhow::Result<()> {
     let test_path_string =
         "execute/commands/functions/object_array_output_type/command_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
@@ -590,13 +591,13 @@ fn test_command_functions_object_array_output_type_command_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with array of object ([commandActor]) output type (different object output subset field permissions for roles: admin,
 // user_1, user_2)
 #[test]
-fn test_command_functions_object_array_output_type_output_permissions() {
+fn test_command_functions_object_array_output_type_output_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/object_array_output_type/output_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -606,7 +607,7 @@ fn test_command_functions_object_array_output_type_output_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a query command with multiple arguments:
@@ -614,7 +615,7 @@ fn test_command_functions_object_array_output_type_output_permissions() {
 //  output: array of object ([commandActor]) output type
 //  permission: different command permissions for roles: admin, user_1, user_2
 #[test]
-fn test_command_functions_multiple_arguments() {
+fn test_command_functions_multiple_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/multiple_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -624,7 +625,7 @@ fn test_command_functions_multiple_arguments() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Command Procedures
@@ -632,7 +633,7 @@ fn test_command_functions_multiple_arguments() {
 // Tests a mutation command with scalar (String) output type (different command permissions for roles: admin, user_1,
 // user_2). This mutation doesn't perform any mutation on the database, it just returns a string
 #[test]
-fn test_command_procedures_scalar_output_type_command_permissions() {
+fn test_command_procedures_scalar_output_type_command_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/procedures/scalar_output_type";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -642,12 +643,12 @@ fn test_command_procedures_scalar_output_type_command_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with object (commandActor) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_procedures_object_output_type_command_permissions() {
+fn test_command_procedures_object_output_type_command_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/procedures/object_output_type/command_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -657,13 +658,13 @@ fn test_command_procedures_object_output_type_command_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with object (commandActor) output type (different object output subset field permissions for roles: admin,
 // user_1, user_2)
 #[test]
-fn test_command_procedures_object_output_type_output_permissions() {
+fn test_command_procedures_object_output_type_output_permissions() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/procedures/object_output_type/output_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -673,12 +674,12 @@ fn test_command_procedures_object_output_type_output_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with array of scalar ([String]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_procedures_scalar_array_output_type() {
+fn test_command_procedures_scalar_array_output_type() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/procedures/scalar_array_output_type";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -688,12 +689,12 @@ fn test_command_procedures_scalar_array_output_type() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with array of object ([commandActor]) output type (different command permissions for roles: admin, user_1, user_2)
 #[test]
-fn test_command_procedures_object_array_output_type_command_permissions() {
+fn test_command_procedures_object_array_output_type_command_permissions() -> anyhow::Result<()> {
     let test_path_string =
         "execute/commands/procedures/object_array_output_type/command_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
@@ -704,13 +705,13 @@ fn test_command_procedures_object_array_output_type_command_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with array of object ([commandActor]) output type (different object output subset field permissions for roles: admin,
 // user_1, user_2)
 #[test]
-fn test_command_procedures_object_array_output_type_output_permissions() {
+fn test_command_procedures_object_array_output_type_output_permissions() -> anyhow::Result<()> {
     let test_path_string =
         "execute/commands/procedures/object_array_output_type/output_permissions";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
@@ -721,7 +722,7 @@ fn test_command_procedures_object_array_output_type_output_permissions() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with multiple arguments:
@@ -729,7 +730,7 @@ fn test_command_procedures_object_array_output_type_output_permissions() {
 // output: object (commandActor) output type
 // permission: different command permissions for roles: admin, user_1, user_2
 #[test]
-fn test_command_procedures_multiple_arguments() {
+fn test_command_procedures_multiple_arguments() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/procedures/multiple_arguments";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -739,7 +740,7 @@ fn test_command_procedures_multiple_arguments() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a mutation command with preset arguments:
@@ -747,7 +748,7 @@ fn test_command_procedures_multiple_arguments() {
 // output: object (commandActor) output type
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
-fn test_command_argument_presets() {
+fn test_command_argument_presets() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/command_argument_presets";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -757,13 +758,13 @@ fn test_command_argument_presets() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a select many query command with preset arguments on the model:
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
-fn test_model_argument_presets_select_many() {
+fn test_model_argument_presets_select_many() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/model_argument_presets_select_many";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -773,13 +774,13 @@ fn test_model_argument_presets_select_many() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests a select one query command with preset arguments on the model:
 // permission: different permissions and preset arguments for roles: admin, user_1, user_2
 #[test]
-fn test_model_argument_presets_select_one() {
+fn test_model_argument_presets_select_one() -> anyhow::Result<()> {
     let test_path_string = "execute/commands/functions/model_argument_presets_select_one";
     let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
     let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
@@ -789,13 +790,13 @@ fn test_model_argument_presets_select_one() {
             common_metadata_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
 // Array relationship
 #[test]
-fn test_model_select_many_relationship_predicate_array_simple() {
+fn test_model_select_many_relationship_predicate_array_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/relationship_predicates/array/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -806,14 +807,14 @@ fn test_model_select_many_relationship_predicate_array_simple() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
 
 // Nested Array relationship
 #[test]
-fn test_model_select_many_relationship_predicate_array_nested() {
+fn test_model_select_many_relationship_predicate_array_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/relationship_predicates/array/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -824,13 +825,13 @@ fn test_model_select_many_relationship_predicate_array_nested() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
 // Object relationship
 #[test]
-fn test_model_select_many_relationship_predicate_object_simple() {
+fn test_model_select_many_relationship_predicate_object_simple() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/relationship_predicates/object/simple";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -841,13 +842,13 @@ fn test_model_select_many_relationship_predicate_object_simple() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
 // Nested bject relationship
 #[test]
-fn test_model_select_many_relationship_predicate_object_nested() {
+fn test_model_select_many_relationship_predicate_object_nested() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/relationship_predicates/object/nested";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -858,7 +859,7 @@ fn test_model_select_many_relationship_predicate_object_nested() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
@@ -889,7 +890,7 @@ fn test_model_select_many_relationship_predicate_object_nested() {
 //      Fetch all the tracks of the Albums whose `TrackId` is equal to "x-hasura-user-id" and then
 //      filter those tracks based on the "x-hasura-album-title" value.
 #[test]
-fn test_model_select_many_relationship_predicate_on_two_fields() {
+fn test_model_select_many_relationship_predicate_on_two_fields() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/relationship_predicates/on_two_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let boolean_exp_rel_metadata_path_string =
@@ -900,7 +901,7 @@ fn test_model_select_many_relationship_predicate_on_two_fields() {
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 // Tests using relationships in predicates
@@ -913,7 +914,8 @@ fn test_model_select_many_relationship_predicate_on_two_fields() {
 //    It filters only those Albums whose Tracks's Album's AlbumnId is equal to "x-hasura-user-id" and
 //    whose Tracks's Genre's GenreId is equal to "x-hasura-genre-name"
 #[test]
-fn test_model_select_many_relationship_predicate_object_two_relationship_fields() {
+fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
+) -> anyhow::Result<()> {
     let test_path_string =
         "execute/models/select_many/relationship_predicates/object/two_relationship_fields";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
@@ -925,11 +927,11 @@ fn test_model_select_many_relationship_predicate_object_two_relationship_fields(
             common_metadata_path_string,
             boolean_exp_rel_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_graphql_descriptions() {
+fn test_graphql_descriptions() -> anyhow::Result<()> {
     let test_path_string = "execute/description";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     let common_custom_connector_path_string =
@@ -942,27 +944,27 @@ fn test_graphql_descriptions() {
             common_custom_connector_path_string,
             common_command_metadata_path_string,
         ],
-    );
+    )
 }
 
 #[test]
-fn test_apollo_federation_service_sdl() {
+fn test_apollo_federation_service_sdl() -> anyhow::Result<()> {
     let test_path_string = "execute/apollo_federation_fields/service_sdl";
     let common_apollo_metadata = "execute/apollo_federation_fields/common_metadata.json";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation_legacy(
         test_path_string,
         &[common_metadata_path_string, common_apollo_metadata],
-    );
+    )
 }
 
 #[test]
-fn test_apollo_federation_entities() {
+fn test_apollo_federation_entities() -> anyhow::Result<()> {
     let test_path_string = "execute/apollo_federation_fields/entities";
     let common_apollo_metadata = "execute/apollo_federation_fields/common_metadata.json";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
     common::test_execution_expectation_legacy(
         test_path_string,
         &[common_metadata_path_string, common_apollo_metadata],
-    );
+    )
 }
