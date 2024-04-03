@@ -1,6 +1,6 @@
 use ndc_client::models as ndc_models;
 use reqwest::header::{HeaderMap, HeaderValue};
-use serde::Deserialize;
+use serde::{de::DeserializeOwned, Deserialize};
 use std::fmt;
 use thiserror::Error;
 use tracing_util::SpanVisibility;
@@ -78,29 +78,9 @@ pub async fn capabilities_get(
 
                 let uri = append_path(&configuration.base_path, &["capabilities"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::GET, uri);
+                let req_builder = client.request(reqwest::Method::GET, uri);
 
-                req_builder = inject_trace_context(req_builder);
-
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder).await
             })
         })
         .await
@@ -121,31 +101,9 @@ pub async fn explain_query_post(
 
                 let uri = append_path(&configuration.base_path, &["query", "explain"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::POST, uri);
+                let req_builder = client.request(reqwest::Method::POST, uri);
 
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                req_builder = req_builder.json(&query_request);
-
-                req_builder = inject_trace_context(req_builder);
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder.json(&query_request)).await
             })
         })
         .await
@@ -166,31 +124,9 @@ pub async fn explain_mutation_post(
 
                 let uri = append_path(&configuration.base_path, &["mutation", "explain"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::POST, uri);
+                let req_builder = client.request(reqwest::Method::POST, uri);
 
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                req_builder = req_builder.json(&mutation_request);
-
-                req_builder = inject_trace_context(req_builder);
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder.json(&mutation_request)).await
             })
         })
         .await
@@ -211,31 +147,9 @@ pub async fn mutation_post(
 
                 let uri = append_path(&configuration.base_path, &["mutation"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::POST, uri);
+                let req_builder = client.request(reqwest::Method::POST, uri);
 
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                req_builder = req_builder.json(&mutation_request);
-
-                req_builder = inject_trace_context(req_builder);
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder.json(&mutation_request)).await
             })
         })
         .await
@@ -256,31 +170,9 @@ pub async fn query_post(
 
                 let uri = append_path(&configuration.base_path, &["query"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::POST, uri);
+                let req_builder = client.request(reqwest::Method::POST, uri);
 
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                req_builder = req_builder.json(&query_request);
-
-                req_builder = inject_trace_context(req_builder);
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder.json(&query_request)).await
             })
         })
         .await
@@ -300,29 +192,9 @@ pub async fn schema_get(
 
                 let uri = append_path(&configuration.base_path, &["schema"])
                     .map_err(|_| Error::InvalidBaseURL)?;
-                let mut req_builder = client.request(reqwest::Method::GET, uri);
+                let req_builder = client.request(reqwest::Method::GET, uri);
 
-                req_builder = inject_trace_context(req_builder);
-
-                if let Some(ref user_agent) = configuration.user_agent {
-                    req_builder =
-                        req_builder.header(reqwest::header::USER_AGENT, user_agent.clone());
-                }
-
-                // Note: The headers will be merged in to any already set.
-                req_builder = req_builder.headers(configuration.headers.clone());
-
-                let req = req_builder.build()?;
-                let resp = client.execute(req).await?;
-
-                let response_status = resp.status();
-                let response_content = resp.json().await?;
-
-                if !response_status.is_client_error() && !response_status.is_server_error() {
-                    serde_json::from_value(response_content).map_err(Error::from)
-                } else {
-                    Err(construct_error(response_status, response_content))
-                }
+                execute_request(configuration, req_builder).await
             })
         })
         .await
@@ -330,21 +202,52 @@ pub async fn schema_get(
 
 // Private utility functions
 
-fn inject_trace_context(builder: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+/// Inject trace context into the request via headers
+fn inject_trace_context(mut request_builder: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
     let trace_headers = tracing_util::get_trace_context();
-    let mut req_builder = builder;
     for (key, value) in trace_headers {
-        req_builder = req_builder.header(key, value);
+        request_builder = request_builder.header(key, value);
     }
-    req_builder
+    request_builder
 }
 
+/// Append a path to a URL
 fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, ()> {
     let mut url = url.clone();
     url.path_segments_mut()?.pop_if_empty().extend(path);
     Ok(url)
 }
 
+/// Execute a request and deserialize the JSON response
+async fn execute_request<T: DeserializeOwned>(
+    configuration: &Configuration,
+    mut request_builder: reqwest::RequestBuilder,
+) -> Result<T, Error> {
+    // Inject trace context into the request
+    request_builder = inject_trace_context(request_builder);
+    // Set user agent if provided
+    if let Some(ref user_agent) = configuration.user_agent {
+        request_builder = request_builder.header(reqwest::header::USER_AGENT, user_agent);
+    }
+    // Set headers from configuration
+    // Note: The headers will be merged in to any already set.
+    request_builder = request_builder.headers(configuration.headers.clone());
+
+    // Build and execute the request
+    let request = request_builder.build()?;
+    let resp = configuration.client.execute(request).await?;
+
+    let response_status = resp.status();
+    let response_content = resp.json().await?;
+
+    if !response_status.is_client_error() && !response_status.is_server_error() {
+        serde_json::from_value(response_content).map_err(Error::from)
+    } else {
+        Err(construct_error(response_status, response_content))
+    }
+}
+
+/// Build an error from the response status and content
 fn construct_error(
     response_status: reqwest::StatusCode,
     response_content: serde_json::Value,
