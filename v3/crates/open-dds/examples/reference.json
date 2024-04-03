@@ -125,7 +125,7 @@
                                 },
                                 "collections": [
                                     {
-                                        "name": "articles",
+                                        "name": "article",
                                         "description": "A collection of articles",
                                         "arguments": {},
                                         "type": "article",
@@ -140,7 +140,7 @@
                                         "foreign_keys": {}
                                     },
                                     {
-                                        "name": "authors",
+                                        "name": "author",
                                         "description": "A collection of authors",
                                         "arguments": {},
                                         "type": "author",

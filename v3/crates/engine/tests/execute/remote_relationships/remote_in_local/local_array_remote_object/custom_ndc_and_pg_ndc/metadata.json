@@ -385,7 +385,7 @@
       "arguments": [],
       "source": {
         "dataConnectorName": "db",
-        "collection": "authors"
+        "collection": "author"
       },
       "graphql": {
         "selectUniques": [

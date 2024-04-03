@@ -153,9 +153,9 @@ To get this running, you can run the following command:
 METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up postgres_connector engine
 ```
 
-If you are running the v3-engine locally through cargo, then you'll need to update the value of the
-`singleUrl` present in the `crates/engine/tests/chinook/chinook_engine_metadata.json**
-from http://postgres_connector:8100 to http://localhost:8100 .
+If you are running the v3-engine locally through cargo, then you'll need to
+update the value of the `singleUrl` present in `crates/engine/tests/chinook/schema.json**
+from `"http://postgres_connector:8080"` to `"http://localhost:8100"`.
 
 ### Running tests with a single command
 

@@ -93,13 +93,13 @@
                 "name": "db"
               },
               "url": {
-                "singleUrl": "http://postgres_connector:8100/"
+                "singleUrl": "http://postgres_connector:8080/"
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
               }
             },
-            "collection": "articles",
+            "collection": "article",
             "arguments": {},
             "filter_clause": {
               "expressions": [],

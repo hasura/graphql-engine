@@ -136,7 +136,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles"
+              "collection": "article"
             },
             "graphql": {
               "selectUniques": [

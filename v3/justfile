@@ -53,13 +53,16 @@ fix-local:
 
 # tests run by CI
 ci-test:
-  just docker_with_test_env cargo nextest run
+  just docker_with_test_env cargo nextest run --no-fail-fast
 
-test *TESTNAME:
-  if [ -z {{TESTNAME}} ]; then \
-    just docker_with_test_env cargo nextest run -E 'all()'; \
-  else \
-    just docker_with_test_env cargo nextest run -E 'test(={{TESTNAME}})'; \
+test TESTNAME='':
+  #!/usr/bin/env bash
+  if [[ -z '{{TESTNAME}}' ]]; then
+    echo 'cargo nextest run --no-fail-fast'
+    just docker_with_test_env cargo nextest run --no-fail-fast
+  else
+    echo "cargo nextest run --no-fail-fast -E 'test(={{TESTNAME}})'"
+    just docker_with_test_env cargo nextest run --no-fail-fast -E 'test(={{TESTNAME}})'
   fi
 
 # tests using cargo test and not nextest.
@@ -91,17 +94,10 @@ dev:
   docker compose run --build --rm dev_setup bash
   docker compose down
 
-# start all the docker deps for running tests (not engine, auth_hook, jaeger)
+# start all the docker deps for running tests (not engine)
 start-docker-test-deps:
   # start connectors and wait for health
-  docker compose -f ci.docker-compose.yaml \
-    up --wait postgres custom_connector
-  # start auth_hook
-  docker compose up --wait auth_hook
-  # start everything else (don't wait for postgres connector, it doesn't seem
-  # to work)
-  docker compose -f ci.docker-compose.yaml \
-    up -d
+  docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector custom_connector
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:

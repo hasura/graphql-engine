@@ -6,7 +6,7 @@
       "ndcRequest": {
         "type": "query",
         "value": {
-          "collection": "authors",
+          "collection": "author",
           "query": {
             "fields": {
               "author_id": {
@@ -42,7 +42,7 @@
                 "id": "author_id"
               },
               "relationship_type": "array",
-              "target_collection": "articles",
+              "target_collection": "article",
               "arguments": {}
             }
           }

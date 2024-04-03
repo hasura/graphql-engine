@@ -134,7 +134,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors"
+              "collection": "author"
             },
             "graphql": {
               "selectUniques": [
@@ -263,7 +263,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles"
+              "collection": "article"
             },
             "orderableFields": [
               {

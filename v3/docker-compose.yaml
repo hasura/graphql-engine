@@ -16,7 +16,11 @@ services:
         target: /var/lib/postgresql/data
       - type: bind
         source: ./crates/engine/tests/db_definition.sql
-        target: /docker-entrypoint-initdb.d/db_definition.sql
+        target: /docker-entrypoint-initdb.d/01-db_definition.sql
+        read_only: true
+      - type: bind
+        source: ./crates/engine/tests/chinook-postgres.sql
+        target: /docker-entrypoint-initdb.d/02-chinook.sql
         read_only: true
     healthcheck:
       test:
@@ -57,17 +61,17 @@ services:
       COLLECTOR_ZIPKIN_HOST_PORT: "9411"
 
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main-0452625e7
-    command:
-      - serve
-      - --configuration
-      - /config.json
-      - "--otlp-endpoint"
-      - http://jaeger:4317
+    image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
-      - 8100:8100
+      - 8100:8080
+    environment:
+      CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OLTP_ENDPOINT: "http://jaeger:4317"
     volumes:
-      - ./crates/engine/tests/pg_ndc_config.json:/config.json
+      - type: bind
+        source: ./crates/engine/tests/ndc-postgres-configuration
+        target: /etc/connector
+        read_only: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -129,7 +133,7 @@ services:
       postgres:
         condition: service_healthy
       postgres_connector:
-        condition: service_started
+        condition: service_healthy
       custom_connector:
         condition: service_healthy
 

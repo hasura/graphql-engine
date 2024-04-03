@@ -62,7 +62,7 @@
             "name": "db",
             "url": {
               "singleUrl": {
-                "value": "http://postgres_connector:8100"
+                "value": "http://postgres_connector:8080"
               }
             },
             "headers": {
@@ -1459,7 +1459,7 @@
                 },
                 "collections": [
                   {
-                    "name": "articles",
+                    "name": "article",
                     "description": "A collection of articles",
                     "arguments": {},
                     "type": "article",
@@ -1474,7 +1474,7 @@
                     "foreign_keys": {}
                   },
                   {
-                    "name": "authors",
+                    "name": "author",
                     "description": "A collection of authors",
                     "arguments": {},
                     "type": "author",
@@ -2280,7 +2280,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles"
+              "collection": "article"
             },
             "filterExpressionType": "article_bool_exp",
             "orderableFields": [
@@ -2383,7 +2383,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors"
+              "collection": "author"
             },
             "filterExpressionType": "author_bool_exp",
             "graphql": {

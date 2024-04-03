@@ -613,7 +613,7 @@
             "name": "db",
             "url": {
               "singleUrl": {
-                "value": "http://postgres_connector:8100"
+                "value": "http://postgres_connector:8080"
               }
             },
             "headers": {},
@@ -773,7 +773,7 @@
                 },
                 "collections": [
                   {
-                    "name": "articles",
+                    "name": "article",
                     "description": "A collection of articles",
                     "arguments": {},
                     "type": "article",
@@ -788,7 +788,7 @@
                     "foreign_keys": {}
                   },
                   {
-                    "name": "authors",
+                    "name": "author",
                     "description": "A collection of authors",
                     "arguments": {},
                     "type": "author",
@@ -1020,7 +1020,7 @@
             "objectType": "author",
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors",
+              "collection": "author",
               "typeMapping": {
                 "author": {
                   "fieldMapping": {

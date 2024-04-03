@@ -9,7 +9,7 @@
             "name": "db",
             "url": {
               "singleUrl": {
-                "value": "http://postgres_connector:8100"
+                "value": "http://postgres_connector:8080"
               }
             },
             "headers": {

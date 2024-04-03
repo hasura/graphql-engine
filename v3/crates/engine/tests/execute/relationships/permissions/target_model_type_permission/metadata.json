@@ -80,7 +80,7 @@
             "objectType": "author",
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors"
+              "collection": "author"
             },
             "orderableFields": [
               {
@@ -212,7 +212,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles"
+              "collection": "article"
             },
             "graphql": {
               "selectUniques": [
