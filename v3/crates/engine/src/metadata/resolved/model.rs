@@ -26,7 +26,7 @@ use open_dds::{
     models::{
         self, EnableAllOrSpecific, ModelGraphQlDefinition, ModelName, ModelV1, OrderableField,
     },
-    permissions::{self, ModelPermissionsV1, Role, ValueExpression},
+    permissions::{self, ModelPermissionsV1, Role},
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
@@ -34,6 +34,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::iter;
 
 use super::metadata::DataConnectorTypeMappings;
+use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
 use super::typecheck;
 use super::types::{
@@ -572,7 +573,7 @@ fn resolve_model_predicate(
                     ndc_column: field_mapping.column.clone(),
                     operator: resolved_operator,
                     argument_type,
-                    value: value.clone(),
+                    value: resolve_value_expression(value.clone()),
                 })
             } else {
                 Err(Error::ModelSourceRequiredForPredicate {
@@ -797,8 +798,8 @@ pub fn resolve_model_select_permissions(
                     Some(argument) => {
                         // if our value is a literal, typecheck it against expected type
                         match &argument_preset.value {
-                            ValueExpression::SessionVariable(_) => Ok(()),
-                            ValueExpression::Literal(json_value) => {
+                            open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
+                            open_dds::permissions::ValueExpression::Literal(json_value) => {
                                 typecheck::typecheck_qualified_type_reference(
                                     &argument.argument_type,
                                     json_value,
@@ -813,12 +814,12 @@ pub fn resolve_model_select_permissions(
                             }
                         })?;
 
+                        let resolved_argument_value =
+                            resolve_value_expression(argument_preset.value.clone());
+
                         argument_presets.insert(
                             argument_preset.argument.clone(),
-                            (
-                                argument.argument_type.clone(),
-                                argument_preset.value.clone(),
-                            ),
+                            (argument.argument_type.clone(), resolved_argument_value),
                         );
                     }
                     None => {

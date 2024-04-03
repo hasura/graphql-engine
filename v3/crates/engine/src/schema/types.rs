@@ -15,6 +15,7 @@ use crate::{
     metadata::resolved::{
         self,
         data_connector::DataConnectorLink,
+        permission::ValueExpression,
         subgraph::{Qualified, QualifiedTypeReference},
         types::NdcColumnForComparison,
     },
@@ -265,13 +266,7 @@ pub enum Annotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 /// Preset arguments for models or commands
 pub struct ArgumentPresets {
-    pub argument_presets: BTreeMap<
-        ArgumentName,
-        (
-            QualifiedTypeReference,
-            open_dds::permissions::ValueExpression,
-        ),
-    >,
+    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
 }
 
 impl Display for ArgumentPresets {

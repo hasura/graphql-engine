@@ -15,12 +15,13 @@ use open_dds::commands::{
     self, CommandName, CommandV1, DataConnectorCommand, GraphQlRootFieldKind,
 };
 use open_dds::data_connector::DataConnectorName;
-use open_dds::permissions::{CommandPermissionsV1, Role, ValueExpression};
+use open_dds::permissions::{CommandPermissionsV1, Role};
 use open_dds::types::{BaseType, CustomTypeName, Deprecated, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 use super::metadata::DataConnectorTypeMappings;
+use super::permission::{resolve_value_expression, ValueExpression};
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
@@ -304,8 +305,8 @@ pub fn resolve_command_permissions(
                 Some(argument) => {
                     // if our value is a literal, typecheck it against expected type
                     match &argument_preset.value {
-                        ValueExpression::SessionVariable(_) => Ok(()),
-                        ValueExpression::Literal(json_value) => {
+                        open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
+                        open_dds::permissions::ValueExpression::Literal(json_value) => {
                             typecheck::typecheck_qualified_type_reference(
                                 &argument.argument_type,
                                 json_value,
@@ -323,7 +324,7 @@ pub fn resolve_command_permissions(
                         argument_preset.argument.clone(),
                         (
                             argument.argument_type.clone(),
-                            argument_preset.value.clone(),
+                            resolve_value_expression(argument_preset.value.clone()),
                         ),
                     );
                 }

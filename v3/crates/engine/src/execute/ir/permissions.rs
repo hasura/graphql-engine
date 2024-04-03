@@ -4,7 +4,7 @@ use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use ndc_client::models as ndc_models;
 
-use open_dds::{permissions::ValueExpression, types::InbuiltType};
+use open_dds::types::InbuiltType;
 
 use crate::execute::error::{Error, InternalDeveloperError, InternalEngineError, InternalError};
 use crate::execute::model_tracking::{count_model, UsagesCounts};
@@ -189,7 +189,7 @@ fn make_permission_binary_boolean_expression(
     ndc_column: String,
     argument_type: &QualifiedTypeReference,
     operator: &str,
-    value_expression: &ValueExpression,
+    value_expression: &resolved::permission::ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, Error> {
@@ -224,13 +224,13 @@ fn make_permission_unary_boolean_expression(
 }
 
 pub(crate) fn make_value_from_value_expression(
-    val_expr: &ValueExpression,
+    val_expr: &resolved::permission::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
 ) -> Result<serde_json::Value, Error> {
     match val_expr {
-        ValueExpression::Literal(val) => Ok(val.clone()),
-        ValueExpression::SessionVariable(session_var) => {
+        resolved::permission::ValueExpression::Literal(val) => Ok(val.clone()),
+        resolved::permission::ValueExpression::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
                 InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.clone(),

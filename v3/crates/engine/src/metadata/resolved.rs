@@ -6,6 +6,7 @@ pub mod graphql_config;
 pub mod metadata;
 pub mod model;
 pub mod ndc_validation;
+pub mod permission;
 pub mod relationship;
 pub mod subgraph;
 mod typecheck;
