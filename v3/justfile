@@ -14,7 +14,7 @@ default:
 # run commands in a rust docker environment with source code only without starting any dependencies.
 docker_with_source_only +args:
   #!/usr/bin/env sh
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --build --rm source_only "$@"
+  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --rm source_only "$@"
   exit_code=$?
   docker compose -f ci.docker-compose.yaml down
   exit $exit_code
@@ -23,7 +23,7 @@ docker_with_source_only +args:
 # while emiting the exit code of the docker command
 docker_with_test_env +args:
   #!/usr/bin/env sh
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --build --rm test_setup "$@"
+  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --rm test_setup "$@"
   exit_code=$?
   docker compose -f ci.docker-compose.yaml down
   exit $exit_code
@@ -52,7 +52,7 @@ fix-local:
   cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt
 
 # tests run by CI
-ci-test:
+ci-test: docker-refresh
   just docker_with_test_env cargo nextest run --no-fail-fast
 
 test TESTNAME='':
@@ -70,8 +70,8 @@ test TESTNAME='':
 cargo-test *args:
   just docker_with_test_env cargo test {{args}}
 
-update-golden-files:
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --build --rm -e REGENERATE_GOLDENFILES=1 test_setup cargo test
+update-golden-files: docker-refresh
+  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --rm -e REGENERATE_GOLDENFILES=1 test_setup cargo test
 
 # Benchmarks run by CI
 ci-bench:
@@ -97,12 +97,17 @@ dev:
 # start all the docker deps for running tests (not engine)
 start-docker-test-deps:
   # start connectors and wait for health
-  docker compose -f ci.docker-compose.yaml up --build --wait postgres postgres_connector custom_connector
+  docker compose -f ci.docker-compose.yaml up --wait postgres postgres_connector custom_connector
 
 # start all the docker run time deps for the engine
 start-docker-run-deps:
   # start auth_hook and jaeger
   docker compose up --wait auth_hook jaeger
+
+# pull / build all docker deps
+docker-refresh:
+  docker compose -f ci.docker-compose.yaml pull postgres_connector
+  docker compose -f ci.docker-compose.yaml build custom_connector
 
 # stop all the docker deps
 stop-docker:

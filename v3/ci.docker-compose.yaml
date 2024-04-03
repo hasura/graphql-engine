@@ -31,7 +31,7 @@ services:
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
-      - 8100:8080
+      - 8080:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
     volumes:
