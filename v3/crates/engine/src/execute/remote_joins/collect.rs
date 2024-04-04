@@ -198,6 +198,7 @@ fn rows_from_row_field_value(
                     serde_json::Value::Object(_) => {
                         serde_json::from_value(this.0).ok().map(|v| vec![v])
                     }
+                    serde_json::Value::Null => Some(vec![]),
                     _ => None,
                 }
             }

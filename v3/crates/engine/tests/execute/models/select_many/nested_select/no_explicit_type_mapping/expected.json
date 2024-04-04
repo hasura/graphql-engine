@@ -80,6 +80,17 @@
           "Physics",
           "Industrial and Materials Science"
         ]
+      },
+      {
+        "id": 3,
+        "location": null,
+        "location_country": null,
+        "staff": null,
+        "staff_first_name": null,
+        "departments": [
+          "nothing",
+          null
+        ]
       }
     ]
   }

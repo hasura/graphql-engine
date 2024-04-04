@@ -246,7 +246,9 @@ pub fn process_field_selection_as_list(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<json::Value, error::Error> {
-    if selection_set.fields.is_empty() {
+    if selection_set.fields.is_empty() || value.is_null() {
+        // If selection set is empty we return the whole value without further processing.
+        // If the value is null we have nothing to process so we return null.
         Ok(value)
     } else {
         let rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = json::from_value(value)?;
@@ -262,7 +264,9 @@ pub fn process_field_selection_as_object(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
 ) -> Result<json::Value, error::Error> {
-    if selection_set.fields.is_empty() {
+    if selection_set.fields.is_empty() || value.is_null() {
+        // If selection set is empty we return the whole value without further processing.
+        // If the value is null we have nothing to process so we return null.
         Ok(value)
     } else {
         let row: IndexMap<String, ndc_models::RowFieldValue> = json::from_value(value)?;
