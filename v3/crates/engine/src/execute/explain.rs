@@ -1,5 +1,5 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
-use super::ExecuteOrExplainResponse;
+use super::{ExecuteOrExplainResponse, HttpContext};
 use crate::execute::ndc::client as ndc_client;
 use crate::execute::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
@@ -17,25 +17,25 @@ pub mod types;
 use lang_graphql::ast::common as ast;
 
 pub async fn execute_explain(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
     request: RawRequest,
 ) -> types::ExplainResponse {
-    execute_explain_internal(http_client, schema, session, request)
+    execute_explain_internal(http_context, schema, session, request)
         .await
         .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error(None)))
 }
 
 /// Explains a GraphQL query
 pub async fn execute_explain_internal(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
     raw_request: gql::http::RawRequest,
 ) -> Result<types::ExplainResponse, error::Error> {
     let query_response = super::execute_request_internal(
-        http_client,
+        http_context,
         schema,
         session,
         raw_request,
@@ -55,7 +55,7 @@ pub async fn execute_explain_internal(
 
 /// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query_plan: plan::QueryPlan<'_, '_, '_>,
 ) -> Result<types::Step, error::Error> {
     let mut parallel_root_steps = vec![];
@@ -64,7 +64,7 @@ pub(crate) async fn explain_query_plan(
         match node {
             NodeQueryPlan::NDCQueryExecution(ndc_query_execution) => {
                 let sequence_steps = get_execution_steps(
-                    http_client,
+                    http_context,
                     alias,
                     &ndc_query_execution.process_response_as,
                     ndc_query_execution.execution_tree.remote_executions,
@@ -76,7 +76,7 @@ pub(crate) async fn explain_query_plan(
             }
             NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
                 let sequence_steps = get_execution_steps(
-                    http_client,
+                    http_context,
                     alias,
                     &ndc_query_execution.process_response_as,
                     ndc_query_execution.execution_tree.remote_executions,
@@ -92,7 +92,7 @@ pub(crate) async fn explain_query_plan(
                 let mut parallel_steps = Vec::new();
                 for ndc_query_execution in parallel_ndc_query_executions {
                     let sequence_steps = get_execution_steps(
-                        http_client,
+                        http_context,
                         alias.clone(),
                         &ndc_query_execution.process_response_as,
                         ndc_query_execution.execution_tree.remote_executions,
@@ -143,7 +143,7 @@ pub(crate) async fn explain_query_plan(
 
 /// Produce an /explain plan for a given GraphQL mutation.
 pub(crate) async fn explain_mutation_plan(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     mutation_plan: plan::MutationPlan<'_, '_, '_>,
 ) -> Result<types::Step, error::Error> {
     let mut root_steps = vec![];
@@ -157,7 +157,7 @@ pub(crate) async fn explain_mutation_plan(
     for (_, mutation_group) in mutation_plan.nodes {
         for (alias, ndc_mutation_execution) in mutation_group {
             let sequence_steps = get_execution_steps(
-                http_client,
+                http_context,
                 alias,
                 &ndc_mutation_execution.process_response_as,
                 ndc_mutation_execution.join_locations,
@@ -182,7 +182,7 @@ pub(crate) async fn explain_mutation_plan(
 }
 
 async fn get_execution_steps<'s>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     alias: gql::ast::common::Alias,
     process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
@@ -192,9 +192,12 @@ async fn get_execution_steps<'s>(
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
-            let data_connector_explain =
-                fetch_explain_from_data_connector(http_client, ndc_request.clone(), data_connector)
-                    .await;
+            let data_connector_explain = fetch_explain_from_data_connector(
+                http_context,
+                ndc_request.clone(),
+                data_connector,
+            )
+            .await;
             NonEmpty::new(Box::new(types::Step::CommandSelect(
                 types::CommandSelectIR {
                     command_name: alias.to_string(),
@@ -205,9 +208,12 @@ async fn get_execution_steps<'s>(
         }
         ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
             // A model execution node
-            let data_connector_explain =
-                fetch_explain_from_data_connector(http_client, ndc_request.clone(), data_connector)
-                    .await;
+            let data_connector_explain = fetch_explain_from_data_connector(
+                http_context,
+                ndc_request.clone(),
+                data_connector,
+            )
+            .await;
             NonEmpty::new(Box::new(types::Step::ModelSelect(types::ModelSelectIR {
                 model_name: alias.to_string(),
                 ndc_request,
@@ -215,7 +221,8 @@ async fn get_execution_steps<'s>(
             })))
         }
     };
-    if let Some(join_steps) = get_join_steps(alias.to_string(), join_locations, http_client).await {
+    if let Some(join_steps) = get_join_steps(alias.to_string(), join_locations, http_context).await
+    {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
@@ -230,7 +237,7 @@ async fn get_execution_steps<'s>(
 async fn get_join_steps(
     _root_field_name: String,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
 ) -> Option<NonEmpty<Box<types::Step>>> {
     let mut sequence_join_steps = vec![];
     for (alias, location) in join_locations.locations {
@@ -240,7 +247,7 @@ async fn get_join_steps(
             query_request.variables = Some(vec![]);
             let ndc_request = types::NDCRequest::Query(query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
-                http_client,
+                http_context,
                 ndc_request.clone(),
                 remote_join.target_data_connector,
             )
@@ -265,7 +272,7 @@ async fn get_join_steps(
                 },
             )))
         };
-        if let Some(rest_join_steps) = get_join_steps(alias, location.rest, http_client).await {
+        if let Some(rest_join_steps) = get_join_steps(alias, location.rest, http_context).await {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
         };
@@ -306,7 +313,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 }
 
 async fn fetch_explain_from_data_connector(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     ndc_request: types::NDCRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
 ) -> types::NDCExplainResponse {
@@ -321,8 +328,9 @@ async fn fetch_explain_from_data_connector(
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
-                        client: http_client.clone(),
+                        client: http_context.client.clone(),
                         headers: data_connector.headers.0.clone(),
+                        response_size_limit: http_context.ndc_response_size_limit,
                     };
                     {
                         // TODO: use capabilities from the data connector context

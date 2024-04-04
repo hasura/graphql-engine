@@ -19,7 +19,10 @@ use tracing_util::{
     TraceableError, TraceableHttpResponse,
 };
 
-use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
+use engine::{
+    authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig},
+    execute::HttpContext,
+};
 use engine::{schema::GDS, VERSION};
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
@@ -43,7 +46,7 @@ struct ServerOptions {
 }
 
 struct EngineState {
-    http_client: reqwest::Client,
+    http_context: HttpContext,
     schema: gql::schema::Schema<GDS>,
     auth_config: AuthConfig,
 }
@@ -124,8 +127,12 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
     let schema = read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
+    let http_context = HttpContext {
+        client: reqwest::Client::new(),
+        ndc_response_size_limit: None,
+    };
     let state = Arc::new(EngineState {
-        http_client: reqwest::Client::new(),
+        http_context,
         schema,
         auth_config,
     });
@@ -313,7 +320,7 @@ where
                         V1AuthConfig(auth_config) => match &auth_config.mode {
                             AuthModeConfig::Webhook(webhook_config) => {
                                 webhook::authenticate_request(
-                                    &engine_state.http_client,
+                                    &engine_state.http_context.client,
                                     webhook_config,
                                     &headers_map,
                                     auth_config.allow_role_emulation_by.clone(),
@@ -323,7 +330,7 @@ where
                             }
                             AuthModeConfig::Jwt(jwt_secret_config) => {
                                 jwt_auth::authenticate_request(
-                                    &engine_state.http_client,
+                                    &engine_state.http_context.client,
                                     *jwt_secret_config.clone(),
                                     auth_config.allow_role_emulation_by.clone(),
                                     &headers_map,
@@ -355,7 +362,7 @@ async fn handle_request(
     let response = tracer
         .in_span_async("Handle request", SpanVisibility::User, || {
             Box::pin(engine::execute::execute_query(
-                &state.http_client,
+                &state.http_context,
                 &state.schema,
                 &session,
                 request,
@@ -383,7 +390,7 @@ async fn handle_explain_request(
     let response = tracer
         .in_span_async("Handle explain request", SpanVisibility::User, || {
             Box::pin(engine::execute::explain::execute_explain(
-                &state.http_client,
+                &state.http_context,
                 &state.schema,
                 &session,
                 request,

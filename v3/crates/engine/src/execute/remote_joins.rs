@@ -84,7 +84,7 @@ use tracing_util::SpanVisibility;
 
 use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
-use super::{error, ProjectId};
+use super::{error, HttpContext, ProjectId};
 
 use self::collect::CollectArgumentResult;
 use types::{Argument, JoinId, JoinLocations, RemoteJoin};
@@ -97,7 +97,7 @@ pub(crate) mod types;
 /// for the top-level query, and executes further remote joins recursively.
 #[async_recursion]
 pub(crate) async fn execute_join_locations<'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     execution_span_attribute: String,
     field_span_attribute: String,
     lhs_response: &mut Vec<ndc_models::RowSet>,
@@ -138,7 +138,7 @@ where
                     SpanVisibility::Internal,
                     || {
                         Box::pin(execute_ndc_query(
-                            http_client,
+                            http_context,
                             join_node.target_ndc_ir,
                             join_node.target_data_connector,
                             execution_span_attribute.clone(),
@@ -153,7 +153,7 @@ where
             // will modify the `target_response` with all joins down the tree
             if !location.rest.locations.is_empty() {
                 execute_join_locations(
-                    http_client,
+                    http_context,
                     execution_span_attribute.clone(),
                     // TODO: is this field span correct?
                     field_span_attribute.clone(),

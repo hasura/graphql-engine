@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use engine::execute::plan::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use engine::execute::{execute_query_internal, generate_ir};
+use engine::execute::{execute_query_internal, generate_ir, HttpContext};
 use engine::schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
@@ -47,8 +47,10 @@ pub fn bench_execute(
 
     let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
-
-    let http_client = reqwest::Client::new();
+    let http_context = HttpContext {
+        client: reqwest::Client::new(),
+        ndc_response_size_limit: None,
+    };
     let runtime = Runtime::new().unwrap();
 
     let query = fs::read_to_string(request_path).unwrap();
@@ -132,10 +134,10 @@ pub fn bench_execute(
             b.to_async(*runtime).iter(|| async {
                 match generate_request_plan(&ir).unwrap() {
                     engine::execute::plan::RequestPlan::QueryPlan(query_plan) => {
-                        execute_query_plan(&http_client, query_plan, None).await
+                        execute_query_plan(&http_context, query_plan, None).await
                     }
                     engine::execute::plan::RequestPlan::MutationPlan(mutation_plan) => {
-                        execute_mutation_plan(&http_client, mutation_plan, None).await
+                        execute_mutation_plan(&http_context, mutation_plan, None).await
                     }
                 }
             })
@@ -148,7 +150,7 @@ pub fn bench_execute(
         &(&runtime, &schema, raw_request),
         |b, (runtime, schema, request)| {
             b.to_async(*runtime).iter(|| async {
-                execute_query_internal(&http_client, schema, &session, request.clone(), None)
+                execute_query_internal(&http_context, schema, &session, request.clone(), None)
                     .await
                     .unwrap()
             })

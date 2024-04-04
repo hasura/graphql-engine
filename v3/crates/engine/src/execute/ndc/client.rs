@@ -1,3 +1,4 @@
+use super::response::handle_response_with_size_limit;
 use ndc_client::models as ndc_models;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
@@ -13,6 +14,7 @@ pub struct Configuration {
     pub user_agent: Option<String>,
     pub client: reqwest::Client,
     pub headers: HeaderMap<HeaderValue>,
+    pub response_size_limit: Option<usize>,
 }
 
 /// Error type for the NDC API client interactions
@@ -24,6 +26,7 @@ pub enum Error {
     ConnectorError(ConnectorError),
     InvalidConnectorError(InvalidConnectorError),
     InvalidBaseURL,
+    ResponseTooLarge(String),
 }
 
 impl fmt::Display for Error {
@@ -35,6 +38,7 @@ impl fmt::Display for Error {
             Error::ConnectorError(e) => ("response", format!("status code {}", e.status)),
             Error::InvalidConnectorError(e) => ("response", format!("status code {}", e.status)),
             Error::InvalidBaseURL => ("url", "invalid base URL".into()),
+            Error::ResponseTooLarge(message) => ("response", format!("too large: {}", message)),
         };
         write!(f, "error in {}: {}", module, e)
     }
@@ -238,7 +242,11 @@ async fn execute_request<T: DeserializeOwned>(
     let resp = configuration.client.execute(request).await?;
 
     let response_status = resp.status();
-    let response_content = resp.json().await?;
+
+    let response_content = match configuration.response_size_limit {
+        None => resp.json().await?,
+        Some(size_limit) => handle_response_with_size_limit(resp, size_limit).await?,
+    };
 
     if !response_status.is_client_error() && !response_status.is_server_error() {
         serde_json::from_value(response_content).map_err(Error::from)

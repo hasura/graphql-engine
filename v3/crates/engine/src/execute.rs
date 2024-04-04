@@ -28,6 +28,14 @@ pub mod plan;
 pub mod process_response;
 pub mod remote_joins;
 
+/// Context for making HTTP requests
+pub struct HttpContext {
+    /// The HTTP client to use for making requests
+    pub client: reqwest::Client,
+    /// Response size limit for NDC requests
+    pub ndc_response_size_limit: Option<usize>,
+}
+
 #[derive(Debug)]
 /// A simple wrapper around a reference of GraphQL errors
 pub struct GraphQLErrors<'a>(pub &'a nonempty::NonEmpty<gql::http::GraphQLError>);
@@ -83,13 +91,13 @@ impl Traceable for ExecuteOrExplainResponse {
 pub struct ProjectId(pub String);
 
 pub async fn execute_query(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     schema: &Schema<GDS>,
     session: &Session,
     request: RawRequest,
     project_id: Option<ProjectId>,
 ) -> GraphQLResponse {
-    execute_query_internal(http_client, schema, session, request, project_id)
+    execute_query_internal(http_context, schema, session, request, project_id)
         .await
         .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error(None))))
 }
@@ -115,14 +123,14 @@ impl TraceableError for GraphQlValidationError {
 
 /// Executes a GraphQL query
 pub async fn execute_query_internal(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
     raw_request: gql::http::RawRequest,
     project_id: Option<ProjectId>,
 ) -> Result<GraphQLResponse, error::Error> {
     let query_response = execute_request_internal(
-        http_client,
+        http_context,
         schema,
         session,
         raw_request,
@@ -142,7 +150,7 @@ pub async fn execute_query_internal(
 
 /// Executes or explains (query plan) a GraphQL query
 pub async fn execute_request_internal(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
     raw_request: gql::http::RawRequest,
@@ -227,7 +235,7 @@ pub async fn execute_request_internal(
                                     let execute_query_result = match request_plan {
                                         plan::RequestPlan::MutationPlan(mutation_plan) => {
                                             plan::execute_mutation_plan(
-                                                http_client,
+                                                http_context,
                                                 mutation_plan,
                                                 project_id,
                                             )
@@ -235,7 +243,7 @@ pub async fn execute_request_internal(
                                         }
                                         plan::RequestPlan::QueryPlan(query_plan) => {
                                             plan::execute_query_plan(
-                                                http_client,
+                                                http_context,
                                                 query_plan,
                                                 project_id,
                                             )
@@ -257,14 +265,14 @@ pub async fn execute_request_internal(
                                     let request_result = match request_plan {
                                         plan::RequestPlan::MutationPlan(mutation_plan) => {
                                             crate::execute::explain::explain_mutation_plan(
-                                                http_client,
+                                                http_context,
                                                 mutation_plan,
                                             )
                                             .await
                                         }
                                         plan::RequestPlan::QueryPlan(query_plan) => {
                                             crate::execute::explain::explain_query_plan(
-                                                http_client,
+                                                http_context,
                                                 query_plan,
                                             )
                                             .await

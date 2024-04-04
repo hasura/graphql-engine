@@ -252,6 +252,9 @@ fn render_ndc_error(error: &ndc_client::Error) -> String {
         ndc_client::Error::InvalidConnectorError(invalid_connector_err) => {
             format!("invalid connector error: {0}", invalid_connector_err)
         }
+        ndc_client::Error::ResponseTooLarge(err) => {
+            format!("response received from connector is too large: {0}", err)
+        }
     }
 }
 

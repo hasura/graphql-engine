@@ -21,7 +21,7 @@ use super::remote_joins::execute_join_locations;
 use super::remote_joins::types::{
     JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter, RemoteJoin,
 };
-use super::ProjectId;
+use super::{HttpContext, ProjectId};
 use crate::metadata::resolved::{self, subgraph};
 use crate::schema::GDS;
 
@@ -547,7 +547,7 @@ impl ExecuteQueryResult {
 
 /// Execute a single root field's query plan to produce a result.
 async fn execute_query_field_plan<'n, 's, 'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query_plan: NodeQueryPlan<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> RootFieldResult {
@@ -603,13 +603,13 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
+                            resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
                         ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
                                 ndc_query.process_response_as.is_nullable()
                             }),
-                            resolve_optional_ndc_select(http_client, optional_query, project_id)
+                            resolve_optional_ndc_select(http_context, optional_query, project_id)
                                 .await,
                         ),
                         NodeQueryPlan::ApolloFederationSelect(
@@ -622,7 +622,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
                                 let task = async {
                                     (resolve_optional_ndc_select(
-                                        http_client,
+                                        http_context,
                                         Some(query),
                                         project_id.clone(),
                                     )
@@ -694,7 +694,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
 
 /// Execute a single root field's mutation plan to produce a result.
 async fn execute_mutation_field_plan<'n, 's, 'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     mutation_plan: NDCMutationExecution<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> RootFieldResult {
@@ -707,7 +707,7 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
                 Box::pin(async {
                     RootFieldResult::new(
                         &mutation_plan.process_response_as.is_nullable(),
-                        resolve_ndc_mutation_execution(http_client, mutation_plan, project_id)
+                        resolve_ndc_mutation_execution(http_context, mutation_plan, project_id)
                             .await,
                     )
                 })
@@ -720,7 +720,7 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
 /// root fields of the mutation sequentially rather than concurrently, in the order defined by the
 /// `IndexMap`'s keys.
 pub async fn execute_mutation_plan<'n, 's, 'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     mutation_plan: MutationPlan<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> ExecuteQueryResult {
@@ -743,7 +743,7 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
         for (alias, field_plan) in mutation_group {
             executed_root_fields.push((
                 alias,
-                execute_mutation_field_plan(http_client, field_plan, project_id.clone()).await,
+                execute_mutation_field_plan(http_context, field_plan, project_id.clone()).await,
             ));
         }
     }
@@ -759,7 +759,7 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
 /// Given an entire plan for a query, produce a result. We do this by executing all the singular
 /// root fields of the query in parallel, and joining the results back together.
 pub async fn execute_query_plan<'n, 's, 'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query_plan: QueryPlan<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> ExecuteQueryResult {
@@ -773,7 +773,7 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
         let task = async {
             (
                 alias,
-                execute_query_field_plan(http_client, field_plan, project_id.clone()).await,
+                execute_query_field_plan(http_context, field_plan, project_id.clone()).await,
             )
         };
 
@@ -824,7 +824,7 @@ fn resolve_schema_field(
 }
 
 async fn resolve_ndc_query_execution(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     ndc_query: NDCQueryExecution<'_, '_>,
     project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
@@ -836,7 +836,7 @@ async fn resolve_ndc_query_execution(
         process_response_as,
     } = ndc_query;
     let mut response = ndc::execute_ndc_query(
-        http_client,
+        http_context,
         execution_tree.root_node.query,
         execution_tree.root_node.data_connector,
         execution_span_attribute.clone(),
@@ -847,7 +847,7 @@ async fn resolve_ndc_query_execution(
     // TODO: Failures in remote joins should result in partial response
     // https://github.com/hasura/v3-engine/issues/229
     execute_join_locations(
-        http_client,
+        http_context,
         execution_span_attribute,
         field_span_attribute,
         &mut response,
@@ -861,7 +861,7 @@ async fn resolve_ndc_query_execution(
 }
 
 async fn resolve_ndc_mutation_execution(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     ndc_query: NDCMutationExecution<'_, '_, '_>,
     project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
@@ -876,7 +876,7 @@ async fn resolve_ndc_mutation_execution(
         join_locations: _,
     } = ndc_query;
     let response = ndc::execute_ndc_mutation(
-        http_client,
+        http_context,
         query,
         data_connector,
         selection_set,
@@ -890,12 +890,12 @@ async fn resolve_ndc_mutation_execution(
 }
 
 async fn resolve_optional_ndc_select(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
     project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     match optional_query {
         None => Ok(json::Value::Null),
-        Some(ndc_query) => resolve_ndc_query_execution(http_client, ndc_query, project_id).await,
+        Some(ndc_query) => resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
     }
 }

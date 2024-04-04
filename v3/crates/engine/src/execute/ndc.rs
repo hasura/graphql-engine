@@ -1,3 +1,5 @@
+pub mod response;
+
 use axum::http::HeaderMap;
 use serde_json as json;
 
@@ -9,7 +11,7 @@ use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibi
 
 use super::plan::ProcessResponseAs;
 use super::process_response::process_command_mutation_response;
-use super::{error, ProjectId};
+use super::{error, HttpContext, ProjectId};
 use crate::metadata::resolved;
 use crate::schema::GDS;
 
@@ -19,7 +21,7 @@ pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query: ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     execution_span_attribute: String,
@@ -44,7 +46,7 @@ pub async fn execute_ndc_query<'n, 's>(
                         field_span_attribute,
                     );
                     let connector_response =
-                        fetch_from_data_connector(http_client, query, data_connector, project_id)
+                        fetch_from_data_connector(http_context, query, data_connector, project_id)
                             .await?;
                     Ok(connector_response.0)
                 })
@@ -54,7 +56,7 @@ pub async fn execute_ndc_query<'n, 's>(
 }
 
 pub(crate) async fn fetch_from_data_connector<'s>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query_request: ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
@@ -72,8 +74,9 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
-                        client: http_client.clone(),
+                        client: http_context.client.clone(),
                         headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
                     };
                     client::query_post(&ndc_config, query_request)
                         .await
@@ -104,7 +107,7 @@ pub fn append_project_id_to_headers(
 
 /// Executes a NDC mutation
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query: ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
@@ -131,7 +134,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                         field_span_attribute,
                     );
                     let connector_response = fetch_from_data_connector_mutation(
-                        http_client,
+                        http_context,
                         query,
                         data_connector,
                         project_id,
@@ -173,7 +176,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 }
 
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
-    http_client: &reqwest::Client,
+    http_context: &HttpContext,
     query_request: ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
@@ -191,8 +194,9 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
-                        client: http_client.clone(),
+                        client: http_context.client.clone(),
                         headers,
+                        response_size_limit: http_context.ndc_response_size_limit,
                     };
                     client::mutation_post(&ndc_config, query_request)
                         .await

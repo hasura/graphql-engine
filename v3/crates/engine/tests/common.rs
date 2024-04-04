@@ -11,7 +11,7 @@ use std::{
     path::PathBuf,
 };
 
-use engine::execute::execute_query;
+use engine::execute::{execute_query, HttpContext};
 use engine::schema::GDS;
 
 extern crate json_value_merge;
@@ -19,14 +19,17 @@ use json_value_merge::Merge;
 use serde_json::Value;
 
 pub struct GoldenTestContext {
-    http_client: reqwest::Client,
+    http_context: HttpContext,
     mint: Mint,
 }
 
 pub fn setup(test_dir: &Path) -> GoldenTestContext {
-    let http_client = reqwest::Client::new();
+    let http_context = HttpContext {
+        client: reqwest::Client::new(),
+        ndc_response_size_limit: None,
+    };
     let mint = Mint::new(test_dir);
-    GoldenTestContext { http_client, mint }
+    GoldenTestContext { http_context, mint }
 }
 
 fn resolve_session(
@@ -97,7 +100,7 @@ pub fn test_execution_expectation_legacy(
         // Execute the test
 
         let response =
-            execute_query(&test_ctx.http_client, &schema, &session, raw_request, None).await;
+            execute_query(&test_ctx.http_context, &schema, &session, raw_request, None).await;
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             response_path,
@@ -189,7 +192,7 @@ pub(crate) fn test_introspection_expectation(
         let mut responses = Vec::new();
         for session in sessions.iter() {
             let response = execute_query(
-                &test_ctx.http_client,
+                &test_ctx.http_context,
                 &schema,
                 session,
                 raw_request.clone(),
@@ -288,7 +291,7 @@ pub fn test_execution_expectation(
         let mut responses = Vec::new();
         for session in sessions.iter() {
             let response = execute_query(
-                &test_ctx.http_client,
+                &test_ctx.http_context,
                 &schema,
                 session,
                 raw_request.clone(),
@@ -370,7 +373,7 @@ pub fn test_execute_explain(
             variables: None,
         };
         let raw_response = engine::execute::explain::execute_explain(
-            &test_ctx.http_client,
+            &test_ctx.http_context,
             &schema,
             &session,
             raw_request,
