@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::{
     query::Result,
@@ -37,13 +37,25 @@ pub(crate) fn rows(
             details: serde_json::Value::Null,
         }),
     ))?;
-    let movie_id_int = movie_id.as_i64().ok_or((
-        StatusCode::BAD_REQUEST,
-        Json(ndc_models::ErrorResponse {
-            message: "movie_id must be a integer".into(),
-            details: serde_json::Value::Null,
-        }),
-    ))?;
+    let movie_id_int: i32 = movie_id
+        .as_i64()
+        .ok_or((
+            StatusCode::BAD_REQUEST,
+            Json(ndc_models::ErrorResponse {
+                message: "movie_id must be a integer".into(),
+                details: serde_json::Value::Null,
+            }),
+        ))?
+        .try_into()
+        .map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ndc_models::ErrorResponse {
+                    message: "movie_id is out of range".into(),
+                    details: serde_json::Value::Null,
+                }),
+            )
+        })?;
 
     let mut actors_by_movie = vec![];
 

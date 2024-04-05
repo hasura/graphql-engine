@@ -1,4 +1,4 @@
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::{collections, functions, procedures, types};
 
@@ -14,7 +14,7 @@ pub fn get_schema() -> ndc_models::SchemaResponse {
 
 pub fn get_capabilities() -> ndc_models::CapabilitiesResponse {
     ndc_models::CapabilitiesResponse {
-        version: "0.1.0".into(),
+        version: "0.1.2".into(),
         capabilities: ndc_models::Capabilities {
             mutation: ndc_models::MutationCapabilities {
                 transactional: None,

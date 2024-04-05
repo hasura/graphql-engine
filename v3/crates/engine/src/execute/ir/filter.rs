@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use serde::Serialize;
 
 use crate::execute::error;

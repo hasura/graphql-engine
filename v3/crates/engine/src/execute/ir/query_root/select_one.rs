@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 // TODO: Remove once TypeMapping has more than one variant
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds;
 use serde::Serialize;
 

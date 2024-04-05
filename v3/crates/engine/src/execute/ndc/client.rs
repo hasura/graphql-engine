@@ -1,5 +1,5 @@
 use super::response::handle_response_with_size_limit;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
 use std::fmt;

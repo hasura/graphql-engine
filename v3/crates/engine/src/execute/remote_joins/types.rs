@@ -1,7 +1,7 @@
 //! Join tree and related types for remote joins.
 //!
 use indexmap::IndexMap;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;

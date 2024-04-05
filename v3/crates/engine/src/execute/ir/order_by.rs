@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use serde::Serialize;
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};

@@ -77,7 +77,7 @@
 //! [build_remote_command_relationship]: crate::execute::ir::relationship::build_remote_command_relationship
 
 use async_recursion::async_recursion;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;

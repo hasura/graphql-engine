@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::query::Result;
 

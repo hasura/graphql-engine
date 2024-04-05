@@ -1,7 +1,7 @@
 use crate::execute::error;
 use crate::execute::GraphQLErrors;
 use lang_graphql::http::GraphQLError;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use nonempty::NonEmpty;
 use serde::Serialize;
 use serde_json::json;

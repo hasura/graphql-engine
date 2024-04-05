@@ -5,7 +5,7 @@ use crate::metadata::resolved::types::{
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};

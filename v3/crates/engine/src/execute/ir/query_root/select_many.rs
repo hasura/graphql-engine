@@ -6,7 +6,7 @@
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds;
 use serde::Serialize;
 use std::collections::BTreeMap;

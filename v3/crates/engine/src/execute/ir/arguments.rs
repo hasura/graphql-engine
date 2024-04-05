@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::types::{CustomTypeName, InbuiltType};
 
 use crate::execute::error;

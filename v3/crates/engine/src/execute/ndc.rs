@@ -6,7 +6,7 @@ use serde_json as json;
 use gql::normalized_ast;
 use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
 use super::plan::ProcessResponseAs;

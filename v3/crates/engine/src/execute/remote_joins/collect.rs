@@ -6,7 +6,7 @@
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{TypeContainer, TypeName};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use serde_json as json;
 use std::collections::BTreeMap;
 

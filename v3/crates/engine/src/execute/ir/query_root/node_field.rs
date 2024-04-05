@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, HashMap};
 use base64::{engine::general_purpose, Engine};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::{ast::common as ast, normalized_ast};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
 

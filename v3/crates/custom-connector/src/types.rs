@@ -1,4 +1,4 @@
-use ndc_client::models as ndc_models;
+use ndc_models;
 use std::collections::BTreeMap;
 
 pub mod actor;
@@ -24,7 +24,7 @@ pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
         (
             "Int".into(),
             ndc_models::ScalarType {
-                representation: Some(ndc_models::TypeRepresentation::Integer),
+                representation: Some(ndc_models::TypeRepresentation::Int32),
                 aggregate_functions: BTreeMap::from_iter([
                     (
                         "max".into(),

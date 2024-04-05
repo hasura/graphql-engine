@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::{
     query::{parse_object_argument, Result},
@@ -38,7 +38,7 @@ pub(crate) fn rows(
 
     let movie_ids = filter_actors_by_name(state, filter_first_name, filter_last_name)
         .map(|result| result.and_then(get_actor_movie_id))
-        .collect::<Result<HashSet<i64>>>()?;
+        .collect::<Result<HashSet<i32>>>()?;
 
     let movies_by_actor = movie_ids
         .iter()

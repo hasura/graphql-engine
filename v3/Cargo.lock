@@ -746,7 +746,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "indexmap 2.2.6",
- "ndc-client",
+ "ndc-models",
  "regex",
  "serde_json",
  "tokio",
@@ -970,7 +970,7 @@ dependencies = [
  "lang-graphql",
  "lazy_static",
  "mockito",
- "ndc-client",
+ "ndc-models",
  "nonempty",
  "open-dds",
  "opendds-derive",
@@ -1871,20 +1871,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "ndc-client"
-version = "0.1.1"
-source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.1#17c61946cc9a3ff6dcee1d535af33141213b639a"
+name = "ndc-models"
+version = "0.1.2"
+source = "git+https://github.com/hasura/ndc-spec.git?tag=v0.1.2#6e7d12a31787d5f618099a42ddc0bea786438c00"
 dependencies = [
- "async-trait",
  "indexmap 2.2.6",
- "opentelemetry",
- "reqwest",
  "schemars",
  "serde",
- "serde_derive",
  "serde_json",
  "serde_with",
- "url",
 ]
 
 [[package]]
@@ -1986,7 +1981,7 @@ dependencies = [
  "goldenfile",
  "indexmap 2.2.6",
  "lazy_static",
- "ndc-client",
+ "ndc-models",
  "opendds-derive",
  "pretty_assertions",
  "schemars",

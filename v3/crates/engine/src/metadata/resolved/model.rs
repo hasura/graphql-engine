@@ -17,7 +17,7 @@ use crate::schema::types::output_type::relationship::{
 };
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::permissions::{FieldIsNullPredicate, NullableModelPredicate, RelationshipPredicate};
 use open_dds::types::Deprecated;
 use open_dds::{

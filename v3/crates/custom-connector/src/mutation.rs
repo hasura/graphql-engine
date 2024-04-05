@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::{procedures, state::AppState};
 

@@ -1,4 +1,4 @@
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
     data_connector::DataConnectorName,

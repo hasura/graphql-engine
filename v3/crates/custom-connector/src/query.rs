@@ -5,7 +5,7 @@ use std::{
 
 use axum::{http::StatusCode, Json};
 use indexmap::IndexMap;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use regex::Regex;
 use serde_json::Value;
 

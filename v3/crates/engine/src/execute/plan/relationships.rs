@@ -1,6 +1,6 @@
 //! NDC query generation from 'ModelSelection' IR for relationships.
 
-use ndc_client::models as ndc_models;
+use ndc_models;
 use std::collections::BTreeMap;
 
 use super::selection_set;

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use axum::{http::StatusCode, Json};
-use ndc_client::models as ndc_models;
+use ndc_models;
 
 use crate::{
     query::Result,
@@ -25,7 +25,7 @@ pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
     let latest_id = state
         .actors
         .iter()
-        .filter_map(|(_id, a)| a.get("id").and_then(|v| v.as_i64()))
+        .filter_map(|(_id, a)| a.get("id").and_then(|v| v.as_i64()?.try_into().ok()))
         .max();
 
     if let Some(id) = latest_id {

@@ -7,7 +7,7 @@ use crate::metadata::resolved::subgraph::{
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;

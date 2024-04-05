@@ -4,7 +4,7 @@ use crate::metadata::resolved::types::ScalarTypeInfo;
 use indexmap::IndexMap;
 
 use lang_graphql::ast::common::OperationType;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::{
     data_connector::{
         self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
@@ -245,7 +245,7 @@ pub fn get_simple_scalar<'a, 'b>(
 
 #[cfg(test)]
 mod tests {
-    use ndc_client::models as ndc_models;
+    use ndc_models;
     use open_dds::data_connector::DataConnectorLinkV1;
 
     use super::DataConnectorContext;

@@ -1,4 +1,4 @@
-use ndc_client::models as ndc_models;
+use ndc_models;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -43,13 +43,13 @@ impl DataConnectorLink {
 fn ndc_capabilities_response_v01_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/capabilities_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.2/ndc-models/tests/json_schema/capabilities_response.jsonschema".into())
 }
 
 fn ndc_schema_response_v01_schema_reference(
     _gen: &mut schemars::gen::SchemaGenerator,
 ) -> schemars::schema::Schema {
-    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.0-rc.18/ndc-client/tests/json_schema/schema_response.jsonschema".into())
+    schemars::schema::Schema::new_ref("https://raw.githubusercontent.com/hasura/ndc-spec/v0.1.2/ndc-models/tests/json_schema/schema_response.jsonschema".into())
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]

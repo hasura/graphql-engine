@@ -8,7 +8,6 @@ use axum::{
 };
 
 use custom_connector::state::AppState;
-use ndc_client::models as ndc_models;
 
 type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 

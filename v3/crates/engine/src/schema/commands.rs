@@ -10,7 +10,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
-use ndc_client::models as ndc_models;
+use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
 
