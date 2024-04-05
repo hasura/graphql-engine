@@ -143,7 +143,9 @@ pub(crate) fn relay_node_ir<'n, 's>(
             let mut usage_counts = UsagesCounts::new();
 
             let filter_clauses = ResolvedFilterExpression {
-                expressions: filter_clause_expressions,
+                expression: Some(ndc_models::Expression::And {
+                    expressions: filter_clause_expressions,
+                }),
                 relationships: BTreeMap::new(),
             };
 

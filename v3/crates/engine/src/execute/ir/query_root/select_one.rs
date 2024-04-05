@@ -115,7 +115,9 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     count_model(model_name.clone(), &mut usage_counts);
 
     let filter_clause = ResolvedFilterExpression {
-        expressions: filter_clause_expressions,
+        expression: Some(ndc_models::Expression::And {
+            expressions: filter_clause_expressions,
+        }),
         relationships: BTreeMap::new(),
     };
 

@@ -18,7 +18,7 @@ use crate::execute::ir::selection_set::NDCRelationshipName;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedFilterExpression<'s> {
-    pub expressions: Vec<ndc_models::Expression>,
+    pub expression: Option<ndc_models::Expression>,
     // relationships that were used in the filter expression. This is helpful
     // for collecting relatinships and sending collection_relationships
     pub relationships: BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
@@ -37,8 +37,9 @@ pub(crate) fn resolve_filter_expression<'s>(
             build_filter_expression(field, relationship_paths, &mut relationships, usage_counts)?;
         expressions.extend(expression);
     }
+    let expression = ndc_models::Expression::And { expressions };
     let resolved_filter_expression = ResolvedFilterExpression {
-        expressions,
+        expression: Some(expression),
         relationships,
     };
     Ok(resolved_filter_expression)
@@ -68,7 +69,7 @@ pub(crate) fn build_filter_expression<'s>(
             for value in values.iter() {
                 let resolved_filter_expression =
                     resolve_filter_expression(value.as_object()?, usage_counts)?;
-                expressions.extend(resolved_filter_expression.expressions);
+                expressions.extend(resolved_filter_expression.expression);
                 relationships.extend(resolved_filter_expression.relationships);
             }
 
@@ -88,7 +89,7 @@ pub(crate) fn build_filter_expression<'s>(
             for value in values.iter() {
                 let resolved_filter_expression =
                     resolve_filter_expression(value.as_object()?, usage_counts)?;
-                expressions.extend(resolved_filter_expression.expressions);
+                expressions.extend(resolved_filter_expression.expression);
                 relationships.extend(resolved_filter_expression.relationships);
             }
 
@@ -102,17 +103,17 @@ pub(crate) fn build_filter_expression<'s>(
                 field: types::ModelFilterArgument::NotOp,
             },
         )) => {
-            let mut expressions = Vec::new();
             let value = field.value.as_object()?;
 
             let resolved_filter_expression = resolve_filter_expression(value, usage_counts)?;
             relationships.extend(resolved_filter_expression.relationships);
 
-            expressions.push(ndc_models::Expression::Not {
-                expression: Box::new(ndc_models::Expression::And {
-                    expressions: resolved_filter_expression.expressions,
-                }),
-            });
+            let expressions = match resolved_filter_expression.expression {
+                Some(expression) => vec![ndc_models::Expression::Not {
+                    expression: Box::new(expression),
+                }],
+                None => Vec::new(),
+            };
             Ok(expressions)
         }
         // The column that we want to use for filtering. If the column happens

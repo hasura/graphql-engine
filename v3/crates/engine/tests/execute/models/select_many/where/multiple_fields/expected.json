@@ -1,0 +1,26 @@
+[
+  {
+    "data": {
+      "ArticleMany": [
+        {
+          "article_id": 1,
+          "title": "The Next 700 Programming Languages"
+        },
+        {
+          "article_id": 4,
+          "title": "The Mechanical Evaluation of Expressions"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "ArticleMany": [
+        {
+          "article_id": 1,
+          "title": "The Next 700 Programming Languages"
+        }
+      ]
+    }
+  }
+]

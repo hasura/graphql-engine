@@ -52,7 +52,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
     let mut limit = None;
     let mut offset = None;
     let mut filter_clause = ResolvedFilterExpression {
-        expressions: Vec::new(),
+        expression: None,
         relationships: BTreeMap::new(),
     };
     let mut order_by = None;

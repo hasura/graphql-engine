@@ -232,6 +232,13 @@ fn test_model_select_many_where_with_grapqhl_config() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_model_select_many_where_multiple_fields() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/where/multiple_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
 fn test_model_select_many_select_with_args() -> anyhow::Result<()> {
     let test_path_string = "execute/models/select_many/select_with_args";
     let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";

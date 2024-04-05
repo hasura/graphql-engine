@@ -227,7 +227,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
     let mut limit = None;
     let mut offset = None;
     let mut filter_clause = ResolvedFilterExpression {
-        expressions: Vec::new(),
+        expression: None,
         relationships: BTreeMap::new(),
     };
     let mut order_by = None;
@@ -526,10 +526,13 @@ pub(crate) fn build_remote_relationship<'n, 's>(
                 name: target_value_variable,
             },
         };
-        remote_relationships_ir
-            .filter_clause
-            .expressions
-            .push(comparison_exp);
+        remote_relationships_ir.filter_clause.expression =
+            match remote_relationships_ir.filter_clause.expression {
+                Some(existing) => Some(ndc_models::Expression::And {
+                    expressions: vec![existing, comparison_exp],
+                }),
+                None => Some(comparison_exp),
+            };
     }
     let rel_info = RemoteModelRelationshipInfo {
         annotation,

@@ -72,7 +72,12 @@ pub(crate) fn model_selection_ir<'s>(
                 &mut permissions_predicate_relationships,
                 usage_counts,
             )?;
-            filter_clauses.expressions.push(processed_model_perdicate);
+            filter_clauses.expression = match filter_clauses.expression {
+                Some(existing) => Some(ndc_models::Expression::And {
+                    expressions: vec![existing, processed_model_perdicate],
+                }),
+                None => Some(processed_model_perdicate),
+            };
             for (rel_name, rel_info) in permissions_predicate_relationships {
                 filter_clauses.relationships.insert(rel_name, rel_info);
             }

@@ -102,7 +102,7 @@
             "collection": "article",
             "arguments": {},
             "filter_clause": {
-              "expressions": [],
+              "expression": null,
               "relationships": {}
             },
             "limit": 1,

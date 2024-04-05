@@ -22,13 +22,7 @@ pub(crate) fn ndc_query<'s, 'ir>(
         limit: ir.limit,
         offset: ir.offset,
         order_by: ir.order_by.as_ref().map(|x| x.order_by.clone()),
-        predicate: match ir.filter_clause.expressions.as_slice() {
-            [] => None,
-            [expression] => Some(expression.clone()),
-            expressions => Some(ndc_models::Expression::And {
-                expressions: expressions.to_vec(),
-            }),
-        },
+        predicate: ir.filter_clause.expression.clone(),
     };
     Ok((ndc_query, join_locations))
 }

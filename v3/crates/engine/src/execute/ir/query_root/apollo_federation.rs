@@ -159,7 +159,9 @@ pub(crate) fn entities_ir<'n, 's>(
             let new_selection_set = field.selection_set.filter_field_calls_by_typename(typename);
 
             let filter_clauses = ResolvedFilterExpression {
-                expressions: filter_clause_expressions,
+                expression: Some(ndc_models::Expression::And {
+                    expressions: filter_clause_expressions,
+                }),
                 relationships: BTreeMap::new(),
             };
             let mut usage_counts = UsagesCounts::new();

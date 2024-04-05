@@ -490,7 +490,7 @@
                         "collection": "article",
                         "arguments": {},
                         "filter_clause": {
-                          "expressions": [],
+                          "expression": null,
                           "relationships": {}
                         },
                         "limit": null,
@@ -516,7 +516,7 @@
                                   "collection": "author",
                                   "arguments": {},
                                   "filter_clause": {
-                                    "expressions": [],
+                                    "expression": null,
                                     "relationships": {}
                                   },
                                   "limit": null,
@@ -542,7 +542,7 @@
                                             "collection": "article",
                                             "arguments": {},
                                             "filter_clause": {
-                                              "expressions": [],
+                                              "expression": null,
                                               "relationships": {}
                                             },
                                             "limit": null,

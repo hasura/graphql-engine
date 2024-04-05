@@ -109,38 +109,36 @@
             "collection": "article",
             "arguments": {},
             "filter_clause": {
-              "expressions": [
-                {
-                  "type": "and",
-                  "expressions": [
-                    {
-                      "type": "binary_comparison_operator",
+              "expression": {
+                "type": "and",
+                "expressions": [
+                  {
+                    "type": "binary_comparison_operator",
+                    "column": {
+                      "type": "column",
+                      "name": "title",
+                      "path": []
+                    },
+                    "operator": "_like",
+                    "value": {
+                      "type": "scalar",
+                      "value": "%Functional%"
+                    }
+                  },
+                  {
+                    "type": "not",
+                    "expression": {
+                      "type": "unary_comparison_operator",
                       "column": {
                         "type": "column",
-                        "name": "title",
+                        "name": "author_id",
                         "path": []
                       },
-                      "operator": "_like",
-                      "value": {
-                        "type": "scalar",
-                        "value": "%Functional%"
-                      }
-                    },
-                    {
-                      "type": "not",
-                      "expression": {
-                        "type": "unary_comparison_operator",
-                        "column": {
-                          "type": "column",
-                          "name": "author_id",
-                          "path": []
-                        },
-                        "operator": "is_null"
-                      }
+                      "operator": "is_null"
                     }
-                  ]
-                }
-              ],
+                  }
+                ]
+              },
               "relationships": {}
             },
             "limit": null,
