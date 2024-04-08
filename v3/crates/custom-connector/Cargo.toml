@@ -19,3 +19,6 @@ ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }
 regex = "^1.7.3"
 serde_json = "^1.0.92"
 tokio = { version = "^1.26.0", features = ["macros", "parking_lot", "rt-multi-thread"] }
+
+[lints]
+workspace = true

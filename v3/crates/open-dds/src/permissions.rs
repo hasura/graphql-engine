@@ -298,7 +298,7 @@ impl traits::OpenDd for NullableModelPredicate {
 impl NullableModelPredicate {
     pub fn as_option_ref(&self) -> Option<&ModelPredicate> {
         match self {
-            NullableModelPredicate::Null(_) => None,
+            NullableModelPredicate::Null(()) => None,
             NullableModelPredicate::NotNull(p) => Some(p),
         }
     }

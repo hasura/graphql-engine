@@ -726,7 +726,7 @@ fn eval_expression(
                     root,
                     item,
                 )?;
-                Ok(vals.iter().any(|val| val.is_null()))
+                Ok(vals.iter().any(serde_json::Value::is_null))
             }
         },
 

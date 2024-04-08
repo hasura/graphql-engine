@@ -1,4 +1,4 @@
-use quote::{quote, ToTokens};
+use quote::quote;
 
 use crate::container::*;
 use crate::helpers;
@@ -128,7 +128,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
             let default_exp = field
                 .default_exp
                 .as_ref()
-                .map(|exp| exp.to_token_stream())
+                .map(quote::ToTokens::to_token_stream)
                 .unwrap_or_else(|| {
                     quote! {
                         serde_json::json!(<#ty as Default>::default())

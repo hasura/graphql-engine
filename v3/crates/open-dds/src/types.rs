@@ -132,9 +132,9 @@ impl<'de> Deserialize<'de> for TypeReference {
     }
 }
 
-const TYPE_REFERENCE_DESCRIPTION: &str = r#"A reference to an Open DD type including nullable values and arrays.
+const TYPE_REFERENCE_DESCRIPTION: &str = r"A reference to an Open DD type including nullable values and arrays.
 Suffix '!' to indicate a non-nullable reference, and wrap in '[]' to indicate an array.
-Eg: '[String!]!' is a non-nullable array of non-nullable strings."#;
+Eg: '[String!]!' is a non-nullable array of non-nullable strings.";
 
 impl JsonSchema for TypeReference {
     fn schema_name() -> String {

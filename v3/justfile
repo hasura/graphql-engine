@@ -1,8 +1,5 @@
 set positional-arguments
 
-CLIPPY_ARGS := "-A clippy::result_large_err -D clippy::complexity -A clippy::too_many_arguments -D clippy::style"
-CLIPPY_FIX_ARGS := "-A clippy::result_large_err -A clippy::too_many_arguments"
-
 # This produces "-p engine -p lang-graphql -p ...".
 # See https://github.com/rust-lang/cargo/issues/4463 for why we build each
 # package explicitly instead of `cargo build --workspace --all-targets`.
@@ -39,17 +36,18 @@ build-local:
 # linting run by CI
 ci-lint:
   just docker_with_source_only sh -c \
-    "cargo clippy --no-deps -- {{ CLIPPY_ARGS }}"
+    "RUSTFLAGS='-D warnings' cargo clippy --no-deps"
 
 fix:
-  just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt"
+  just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs; cargo fmt"
 
 format:
   cargo fmt --check
 alias fmt := format
 
 fix-local:
-  cargo clippy --no-deps --fix --allow-no-vcs -- {{ CLIPPY_FIX_ARGS }}; cargo fmt
+  cargo clippy --no-deps --fix --allow-no-vcs
+  cargo fmt
 
 # tests run by CI
 ci-test: docker-refresh
@@ -131,7 +129,7 @@ watch-local: start-docker-test-deps start-docker-run-deps
   RUST_LOG=DEBUG \
   cargo watch \
    -x test \
-   -x 'clippy --no-deps -- {{ CLIPPY_ARGS }}' \
+   -x 'clippy --no-deps' \
    -x 'run --bin engine -- \
     --otlp-endpoint http://localhost:4317 \
     --authn-config-path auth_config.json \
@@ -139,7 +137,7 @@ watch-local: start-docker-test-deps start-docker-run-deps
 
 # check the code is fine
 lint-local:
-  cargo clippy --no-deps -- {{ CLIPPY_ARGS }}
+  cargo clippy --no-deps
 
 # ensure we don't have unused dependencies:
 machete:

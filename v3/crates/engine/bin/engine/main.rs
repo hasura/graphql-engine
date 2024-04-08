@@ -32,6 +32,8 @@ use lang_graphql as gql;
 
 const DEFAULT_PORT: u16 = 3000;
 
+const MB: usize = 1_048_576;
+
 #[derive(Parser)]
 #[command(version = VERSION)]
 struct ServerOptions {
@@ -104,8 +106,8 @@ async fn shutdown_signal() {
     let terminate = std::future::pending::<()>();
 
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        () = ctrl_c => {},
+        () = terminate => {},
     }
 }
 
@@ -174,8 +176,6 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         .with_state(state.clone());
 
     let health_route = Router::new().route("/health", get(handle_health));
-
-    const MB: usize = 1_048_576;
 
     let app = Router::new()
         // serve graphiql at root

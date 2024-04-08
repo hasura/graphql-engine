@@ -98,7 +98,7 @@ lazy_static! {
         "Connection",
         "DNT",
         "Content-Type",
-    ].map(|s| s.to_lowercase()));
+    ].map(str::to_lowercase));
 }
 
 fn serialize_url<S>(url: &Url, s: S) -> Result<S::Ok, S::Error>

@@ -24,3 +24,6 @@ axum = "0.6"
 ignored = [
   "axum", # used in doc examples
 ]
+
+[lints]
+workspace = true

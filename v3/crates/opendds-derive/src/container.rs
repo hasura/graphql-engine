@@ -163,8 +163,7 @@ impl<'a> NamedField<'a> {
         let field_name = field.ident.as_ref().unwrap();
         let renamed_field = field_opts
             .rename
-            .as_ref()
-            .cloned()
+            .clone()
             .unwrap_or_else(|| field_name.to_string().to_case(Case::Camel));
         let is_default = field_opts.default.unwrap_or(false);
         let is_optional = is_option_type(&field.ty);

@@ -495,11 +495,11 @@ mod tests {
         let foo_name = mk_name!("foo");
         assert_eq!(
             Lexer::new(
-                r#"
+                r"
 
             foo
 
-            "#
+            "
             )
             .read_next_token(),
             Some(Ok(spanned_token(
@@ -512,10 +512,10 @@ mod tests {
         );
         assert_eq!(
             Lexer::new(
-                r#"
+                r"
             #comment
             foo#comment
-            "#
+            "
             )
             .read_next_token(),
             Some(Ok(spanned_token(

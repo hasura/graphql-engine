@@ -77,3 +77,6 @@ ignored = [
   "serde_path_to_error", # used by opendds-derive
   "strum",               # used by strum_macros
 ]
+
+[lints]
+workspace = true
