@@ -1,7 +1,7 @@
 use super::command::Command;
 use super::data_connector::DataConnectorContext;
 use super::data_connector::DataConnectorLink;
-use super::error::Error;
+use super::error::{Error, RelationshipError};
 use super::model::get_ndc_column_for_comparison;
 use super::model::Model;
 use super::subgraph::Qualified;
@@ -129,10 +129,13 @@ fn resolve_relationship_source_mapping<'a>(
             }),
             [field_access] => {
                 if !source_type.fields.contains_key(&field_access.field_name) {
-                    return Err(Error::UnknownSourceFieldInRelationshipMapping {
-                        relationship_name: relationship_name.clone(),
-                        source_type: source_type_name.clone(),
-                        field_name: field_access.field_name.clone(),
+                    return Err(Error::RelationshipError {
+                        relationship_error:
+                            RelationshipError::UnknownSourceFieldInRelationshipMapping {
+                                relationship_name: relationship_name.clone(),
+                                source_type: source_type_name.clone(),
+                                field_name: field_access.field_name.clone(),
+                            },
                     });
                 };
                 Ok(field_access)
@@ -193,11 +196,13 @@ fn resolve_relationship_mappings_model(
             .type_fields
             .contains_key(&resolved_relationship_target_mapping.field_name)
         {
-            return Err(Error::UnknownTargetFieldInRelationshipMapping {
-                relationship_name: relationship.name.clone(),
-                source_type: source_type_name.clone(),
-                model_name: target_model.name.clone(),
-                field_name: resolved_relationship_source_mapping.field_name.clone(),
+            return Err(Error::RelationshipError {
+                relationship_error: RelationshipError::UnknownTargetFieldInRelationshipMapping {
+                    relationship_name: relationship.name.clone(),
+                    source_type: source_type_name.clone(),
+                    model_name: target_model.name.clone(),
+                    field_name: resolved_relationship_source_mapping.field_name.clone(),
+                },
             });
         }
 
@@ -231,10 +236,12 @@ fn resolve_relationship_mappings_model(
                     target_ndc_column,
                 })
             } else {
-                Err(Error::MappingExistsInRelationship {
-                    type_name: source_type_name.clone(),
-                    field_name: resolved_relationship_source_mapping.field_name.clone(),
-                    relationship_name: relationship.name.clone(),
+                Err(Error::RelationshipError {
+                    relationship_error: RelationshipError::MappingExistsInRelationship {
+                        type_name: source_type_name.clone(),
+                        field_name: resolved_relationship_source_mapping.field_name.clone(),
+                        relationship_name: relationship.name.clone(),
+                    },
                 })
             }
         }?;
@@ -275,21 +282,25 @@ fn resolve_relationship_mappings_command(
 
         // Check if the target argument exists in the target command.
         if !target_command.arguments.contains_key(target_argument_name) {
-            return Err(Error::UnknownTargetArgumentInRelationshipMapping {
-                relationship_name: relationship.name.clone(),
-                source_type: source_type_name.clone(),
-                command_name: target_command.name.clone(),
-                argument_name: target_argument_name.clone(),
+            return Err(Error::RelationshipError {
+                relationship_error: RelationshipError::UnknownTargetArgumentInRelationshipMapping {
+                    relationship_name: relationship.name.clone(),
+                    source_type: source_type_name.clone(),
+                    command_name: target_command.name.clone(),
+                    argument_name: target_argument_name.clone(),
+                },
             });
         }
 
         // Check if the target argument is already mapped to a field in the source type.
         if !target_command_arguments_hashset_for_validation.insert(&target_argument_name.0) {
-            return Err(Error::ArgumentMappingExistsInRelationship {
-                argument_name: target_argument_name.clone(),
-                command_name: target_command.name.clone(),
-                relationship_name: relationship.name.clone(),
-                type_name: source_type_name.clone(),
+            return Err(Error::RelationshipError {
+                relationship_error: RelationshipError::ArgumentMappingExistsInRelationship {
+                    argument_name: target_argument_name.clone(),
+                    command_name: target_command.name.clone(),
+                    relationship_name: relationship.name.clone(),
+                    type_name: source_type_name.clone(),
+                },
             });
         };
 
@@ -303,10 +314,12 @@ fn resolve_relationship_mappings_command(
                     argument_name: target_argument_name.clone(),
                 })
             } else {
-                Err(Error::MappingExistsInRelationship {
-                    type_name: source_type_name.clone(),
-                    field_name: resolved_relationship_source_mapping.field_name.clone(),
-                    relationship_name: relationship.name.clone(),
+                Err(Error::RelationshipError {
+                    relationship_error: RelationshipError::MappingExistsInRelationship {
+                        type_name: source_type_name.clone(),
+                        field_name: resolved_relationship_source_mapping.field_name.clone(),
+                        relationship_name: relationship.name.clone(),
+                    },
                 })
             }
         }?;
@@ -347,10 +360,12 @@ fn get_relationship_capabilities(
     let capabilities = &resolved_data_connector.capabilities.capabilities;
 
     if capabilities.query.variables.is_none() {
-        return Err(Error::RelationshipTargetDoesNotSupportForEach {
-            type_name: type_name.clone(),
-            relationship_name: relationship_name.clone(),
-            data_connector_name: data_connector.name.clone(),
+        return Err(Error::RelationshipError {
+            relationship_error: RelationshipError::RelationshipTargetDoesNotSupportForEach {
+                type_name: type_name.clone(),
+                relationship_name: relationship_name.clone(),
+                data_connector_name: data_connector.name.clone(),
+            },
         });
     };
 

@@ -524,57 +524,6 @@ pub enum Error {
     UnknownDataType {
         data_type: Qualified<CustomTypeName>,
     },
-    #[error("source field {field_name} in field mapping for relationship {relationship_name} on type {source_type} is unknown.")]
-    UnknownSourceFieldInRelationshipMapping {
-        source_type: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        field_name: FieldName,
-    },
-    #[error("target field {field_name} in field mapping for relationship {relationship_name} on type {source_type} to model {model_name} is unknown.")]
-    UnknownTargetFieldInRelationshipMapping {
-        source_type: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        model_name: Qualified<ModelName>,
-        field_name: FieldName,
-    },
-    #[error("target argument {argument_name} in argument mapping for relationship {relationship_name} on type {source_type} to command {command_name} is unknown.")]
-    UnknownTargetArgumentInRelationshipMapping {
-        source_type: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        command_name: Qualified<CommandName>,
-        argument_name: ArgumentName,
-    },
-    #[error("Mapping for source field {field_name} already exists in the relationship {relationship_name} on type {type_name}")]
-    MappingExistsInRelationship {
-        type_name: Qualified<CustomTypeName>,
-        field_name: FieldName,
-        relationship_name: RelationshipName,
-    },
-    #[error("Mapping for target argument {argument_name} of command {command_name} already exists in the relationship {relationship_name} on type {type_name}")]
-    ArgumentMappingExistsInRelationship {
-        argument_name: ArgumentName,
-        command_name: Qualified<CommandName>,
-        relationship_name: RelationshipName,
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("No mapping for target command argument {argument_name} in the relationship {relationship_name} on type {type_name}")]
-    MissingArgumentMappingInRelationship {
-        type_name: Qualified<CustomTypeName>,
-        argument_name: ArgumentName,
-        relationship_name: RelationshipName,
-    },
-    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} does not support the variables capability")]
-    RelationshipTargetDoesNotSupportForEach {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
-    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} has not defined any capabilities")]
-    NoRelationshipCapabilitiesDefined {
-        type_name: Qualified<CustomTypeName>,
-        relationship_name: RelationshipName,
-        data_connector_name: Qualified<DataConnectorName>,
-    },
     #[error("model {model_name:} with arguments is unsupported as a global ID source")]
     ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
     #[error(
@@ -628,6 +577,65 @@ pub enum Error {
     #[error("{graphql_config_error:}")]
     GraphqlConfigError {
         graphql_config_error: GraphqlConfigError,
+    },
+    #[error("{relationship_error:}")]
+    RelationshipError {
+        relationship_error: RelationshipError,
+    },
+}
+
+#[derive(Debug, Error)]
+pub enum RelationshipError {
+    #[error("source field {field_name} in field mapping for relationship {relationship_name} on type {source_type} is unknown.")]
+    UnknownSourceFieldInRelationshipMapping {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        field_name: FieldName,
+    },
+    #[error("target field {field_name} in field mapping for relationship {relationship_name} on type {source_type} to model {model_name} is unknown.")]
+    UnknownTargetFieldInRelationshipMapping {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        model_name: Qualified<ModelName>,
+        field_name: FieldName,
+    },
+    #[error("target argument {argument_name} in argument mapping for relationship {relationship_name} on type {source_type} to command {command_name} is unknown.")]
+    UnknownTargetArgumentInRelationshipMapping {
+        source_type: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        command_name: Qualified<CommandName>,
+        argument_name: ArgumentName,
+    },
+    #[error("Mapping for source field {field_name} already exists in the relationship {relationship_name} on type {type_name}")]
+    MappingExistsInRelationship {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+        relationship_name: RelationshipName,
+    },
+    #[error("Mapping for target argument {argument_name} of command {command_name} already exists in the relationship {relationship_name} on type {type_name}")]
+    ArgumentMappingExistsInRelationship {
+        argument_name: ArgumentName,
+        command_name: Qualified<CommandName>,
+        relationship_name: RelationshipName,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("No mapping for target command argument {argument_name} in the relationship {relationship_name} on type {type_name}")]
+    MissingArgumentMappingInRelationship {
+        type_name: Qualified<CustomTypeName>,
+        argument_name: ArgumentName,
+        relationship_name: RelationshipName,
+    },
+    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} does not support the variables capability")]
+    RelationshipTargetDoesNotSupportForEach {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<DataConnectorName>,
+    },
+    #[error("The target data connector {data_connector_name} for relationship {relationship_name} on type {type_name} has not defined any capabilities")]
+    NoRelationshipCapabilitiesDefined {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+        data_connector_name: Qualified<DataConnectorName>,
     },
 }
 

@@ -1,7 +1,7 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
 use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
-use crate::metadata::resolved::error::{Error, GraphqlConfigError};
+use crate::metadata::resolved::error::{Error, GraphqlConfigError, RelationshipError};
 use crate::metadata::resolved::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -655,13 +655,16 @@ fn resolve_model_predicate(
                                     target_model_source,
                                     relationship,
                                 )
-                                .map_err(|_| Error::NoRelationshipCapabilitiesDefined {
-                                    relationship_name: relationship.name.clone(),
-                                    type_name: model.data_type.clone(),
-                                    data_connector_name: target_model_source
-                                        .data_connector
-                                        .name
-                                        .clone(),
+                                .map_err(|_| Error::RelationshipError {
+                                    relationship_error:
+                                        RelationshipError::NoRelationshipCapabilitiesDefined {
+                                            relationship_name: relationship.name.clone(),
+                                            type_name: model.data_type.clone(),
+                                            data_connector_name: target_model_source
+                                                .data_connector
+                                                .name
+                                                .clone(),
+                                        },
                                 })?;
 
                                 let annotation = PredicateRelationshipAnnotation {
