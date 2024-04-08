@@ -173,10 +173,13 @@ const config = {
         // Optional: Algolia search parameters
         // searchParameters: {},
       },
-      // announcementBar: {
-      //   id: 'announcementBar-3', // Increment on change
-      //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
-      // },
+      announcementBar: {
+        id: 'announcementBar-1', // Increment on change
+        content: `Learn all about Hasura DDN and celebrate the launch with us at Dev Day on April 16. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/dev-day">Sign up here</a>.`,
+        // isCloseable: true,
+        // backgroundColor: '#fafbfc',
+        // textColor: '#091E42',
+      },
       // announcementBar: {
       //   id: 'announcement-bar-3',
       //   content:

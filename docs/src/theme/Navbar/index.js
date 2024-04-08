@@ -4,7 +4,7 @@ import {DDNBanner} from "@site/src/components/BannerDismissable/DDNBanner";
 export default function NavbarWrapper(props) {
   return (
     <>
-      <DDNBanner/>
+      {/*<DDNBanner/>*/}
       <Navbar {...props} />
     </>
   );
