@@ -311,7 +311,13 @@ pub(crate) fn mk_deprecation_status(
 ) -> gql_schema::DeprecationStatus {
     match deprecated {
         Some(Deprecated { reason }) => gql_schema::DeprecationStatus::Deprecated {
-            reason: reason.clone(),
+            reason: Some(
+                reason
+                    .as_ref()
+                    // Use @deprecated built-in directive default reason.
+                    // Ref: https://spec.graphql.org/October2021/#sec--deprecated
+                    .map_or_else(|| "No longer supported".to_owned(), |s| s.clone()),
+            ),
         },
         None => gql_schema::DeprecationStatus::NotDeprecated,
     }

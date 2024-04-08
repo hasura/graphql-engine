@@ -57,7 +57,7 @@
               {
                 "name": "author_id",
                 "isDeprecated": true,
-                "deprecationReason": null
+                "deprecationReason": "No longer supported"
               },
               {
                 "name": "first_name",
@@ -129,7 +129,7 @@
               {
                 "name": "AuthorMany",
                 "isDeprecated": true,
-                "deprecationReason": null
+                "deprecationReason": "No longer supported"
               },
               {
                 "name": "getActorsByNameOpaqueSurname",
@@ -420,7 +420,7 @@
               {
                 "name": "author_id",
                 "isDeprecated": true,
-                "deprecationReason": null
+                "deprecationReason": "No longer supported"
               },
               {
                 "name": "first_name",
@@ -482,7 +482,7 @@
               {
                 "name": "AuthorMany",
                 "isDeprecated": true,
-                "deprecationReason": null
+                "deprecationReason": "No longer supported"
               }
             ]
           },
