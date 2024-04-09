@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
+use engine::metadata::resolved::error::BooleanExpressionError;
 use engine::metadata::resolved::error::Error as ResolveError;
 use engine::schema::Error as SchemaError;
 use engine::schema::GDS;
@@ -267,7 +268,10 @@ fn test_disallow_filter_expression_with_object_type_mismatch() -> anyhow::Result
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                error: ResolveError::BooleanExpressionError {
+                    boolean_expression_error:
+                        BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel { .. }
+                }
             })
         ),
         "actual: {gds:?}"
@@ -323,7 +327,7 @@ fn test_disallow_boolean_expression_without_mapping() -> anyhow::Result<()> {
         matches!(
             gds,
             Err(SchemaError::ResolveError {
-                error: ResolveError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }
+                error: ResolveError::BooleanExpressionError { boolean_expression_error:BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression { .. }}
             })
         ),
         "actual: {gds:?}"

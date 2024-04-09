@@ -263,51 +263,6 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         type_representation: TypeRepresentation,
     },
-    #[error("unknown type used in object boolean expression: {type_name:}")]
-    UnknownTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
-    UnsupportedTypeInObjectBooleanExpressionType {
-        type_name: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {boolean_expression_type:}")]
-    UnknownDataConnectorInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {boolean_expression_type:}")]
-    UnknownDataConnectorTypeInObjectBooleanExpressionType {
-        data_connector: Qualified<DataConnectorName>,
-        data_connector_object_type: String,
-        boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("unknown field '{field_name:}' used in object boolean expression type {boolean_expression_type:}")]
-    UnknownFieldInObjectBooleanExpressionType {
-        field_name: FieldName,
-        boolean_expression_type: Qualified<CustomTypeName>,
-    },
-    #[error("the object type '{object_type:}' used in boolean expression type {boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
-    NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
-        object_type: Qualified<CustomTypeName>,
-        boolean_expression_type: Qualified<CustomTypeName>,
-        data_connector_object_type: String,
-        data_connector: Qualified<DataConnectorName>,
-    },
-    #[error("the following object boolean expression type is defined more than once: {name:}")]
-    DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
-    #[error("unknown object boolean expression type {name:} is used in model {model:}")]
-    UnknownBooleanExpressionTypeInModel {
-        name: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-    },
-    #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
-    BooleanExpressionTypeForInvalidObjectTypeInModel {
-        name: Qualified<CustomTypeName>,
-        boolean_expression_object_type: Qualified<CustomTypeName>,
-        model: Qualified<ModelName>,
-        model_object_type: Qualified<CustomTypeName>,
-    },
     #[error("a source must be defined for model {model:} in order to use filter expressions")]
     CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
@@ -581,6 +536,67 @@ pub enum Error {
     #[error("{relationship_error:}")]
     RelationshipError {
         relationship_error: RelationshipError,
+    },
+    #[error("{boolean_expression_error:}")]
+    BooleanExpressionError {
+        boolean_expression_error: BooleanExpressionError,
+    },
+}
+
+impl From<BooleanExpressionError> for Error {
+    fn from(val: BooleanExpressionError) -> Self {
+        Error::BooleanExpressionError {
+            boolean_expression_error: val,
+        }
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum BooleanExpressionError {
+    #[error("unknown type used in object boolean expression: {type_name:}")]
+    UnknownTypeInObjectBooleanExpressionType {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("unsupported type used in object boolean expression: {type_name:}; only object types are supported")]
+    UnsupportedTypeInObjectBooleanExpressionType {
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {boolean_expression_type:}")]
+    UnknownDataConnectorInObjectBooleanExpressionType {
+        data_connector: Qualified<DataConnectorName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {boolean_expression_type:}")]
+    UnknownDataConnectorTypeInObjectBooleanExpressionType {
+        data_connector: Qualified<DataConnectorName>,
+        data_connector_object_type: String,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("unknown field '{field_name:}' used in object boolean expression type {boolean_expression_type:}")]
+    UnknownFieldInObjectBooleanExpressionType {
+        field_name: FieldName,
+        boolean_expression_type: Qualified<CustomTypeName>,
+    },
+    #[error("the object type '{object_type:}' used in boolean expression type {boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
+    NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
+        object_type: Qualified<CustomTypeName>,
+        boolean_expression_type: Qualified<CustomTypeName>,
+        data_connector_object_type: String,
+        data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("the following object boolean expression type is defined more than once: {name:}")]
+    DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
+    #[error("unknown object boolean expression type {name:} is used in model {model:}")]
+    UnknownBooleanExpressionTypeInModel {
+        name: Qualified<CustomTypeName>,
+        model: Qualified<ModelName>,
+    },
+    #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
+    BooleanExpressionTypeForInvalidObjectTypeInModel {
+        name: Qualified<CustomTypeName>,
+        boolean_expression_object_type: Qualified<CustomTypeName>,
+        model: Qualified<ModelName>,
+        model_object_type: Qualified<CustomTypeName>,
     },
 }
 

@@ -1,4 +1,4 @@
-use crate::metadata::resolved::error::{Error, TypeMappingValidationError};
+use crate::metadata::resolved::error::{BooleanExpressionError, Error, TypeMappingValidationError};
 use crate::metadata::resolved::relationship::Relationship;
 use crate::metadata::resolved::subgraph::{
     mk_qualified_type_reference, Qualified, QualifiedBaseType, QualifiedTypeName,
@@ -504,17 +504,19 @@ pub(crate) fn resolve_object_boolean_expression_type(
         object_boolean_expression.object_type.to_owned(),
     );
     let type_representation = types.get(&qualified_object_type_name).ok_or_else(|| {
-        Error::UnknownTypeInObjectBooleanExpressionType {
-            type_name: qualified_object_type_name.clone(),
-        }
+        Error::from(
+            BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                type_name: qualified_object_type_name.clone(),
+            },
+        )
     })?;
     match type_representation {
         // validate it should only be an object type
-        TypeRepresentation::ScalarType { .. } => {
-            Err(Error::UnsupportedTypeInObjectBooleanExpressionType {
+        TypeRepresentation::ScalarType { .. } => Err(Error::from(
+            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
                 type_name: qualified_name.clone(),
-            })
-        }
+            },
+        )),
         TypeRepresentation::Object(object_type_representation) => {
             let qualified_data_connector_name = Qualified::new(
                 subgraph.to_string(),
@@ -524,12 +526,14 @@ pub(crate) fn resolve_object_boolean_expression_type(
             // validate data connector name
             let data_connector_context = data_connectors
                 .get(&qualified_data_connector_name)
-                .ok_or_else(
-                    || Error::UnknownDataConnectorInObjectBooleanExpressionType {
-                        data_connector: qualified_data_connector_name.clone(),
-                        boolean_expression_type: qualified_name.clone(),
-                    },
-                )?;
+                .ok_or_else(|| {
+                    Error::from(
+                        BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                            data_connector: qualified_data_connector_name.clone(),
+                            boolean_expression_type: qualified_name.clone(),
+                        },
+                    )
+                })?;
 
             // validate data connector object type
             if !data_connector_context
@@ -537,15 +541,15 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 .object_types
                 .contains_key(&object_boolean_expression.data_connector_object_type)
             {
-                return Err(
-                    Error::UnknownDataConnectorTypeInObjectBooleanExpressionType {
+                return Err(Error::from(
+                    BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
                         data_connector: qualified_data_connector_name.clone(),
                         boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
                             .data_connector_object_type
                             .clone(),
                     },
-                );
+                ));
             }
 
             data_connector_type_mappings
@@ -555,14 +559,14 @@ pub(crate) fn resolve_object_boolean_expression_type(
                     &object_boolean_expression.data_connector_object_type,
                 )
                 .ok_or_else(|| {
-                    Error::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
+                    Error::from(BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
                         object_type: qualified_object_type_name.clone(),
                         boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
                             .data_connector_object_type
                             .clone(),
                         data_connector: qualified_data_connector_name.clone(),
-                    }
+                    })
                 })?;
 
             // validate comparable fields
@@ -571,10 +575,13 @@ pub(crate) fn resolve_object_boolean_expression_type(
                     .fields
                     .contains_key(&comparable_field.field_name)
                 {
-                    return Err(Error::UnknownFieldInObjectBooleanExpressionType {
-                        field_name: comparable_field.field_name.clone(),
-                        boolean_expression_type: qualified_name.clone(),
-                    });
+                    return Err(
+                        BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+                            field_name: comparable_field.field_name.clone(),
+                            boolean_expression_type: qualified_name.clone(),
+                        }
+                        .into(),
+                    );
                 }
 
                 // As of now, only `"enableAll": true` is allowed for field operators

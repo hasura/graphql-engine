@@ -1,7 +1,9 @@
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
 use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
-use crate::metadata::resolved::error::{Error, GraphqlConfigError, RelationshipError};
+use crate::metadata::resolved::error::{
+    BooleanExpressionError, Error, GraphqlConfigError, RelationshipError,
+};
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::stages::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::subgraph::{
@@ -210,17 +212,23 @@ fn resolve_filter_expression_type(
                 Qualified::new(subgraph.to_string(), filter_expression_type.clone());
             let boolean_expression_type = boolean_expression_types
                 .get(&boolean_expression_type_name)
-                .ok_or_else(|| Error::UnknownBooleanExpressionTypeInModel {
-                    name: boolean_expression_type_name.clone(),
-                    model: Qualified::new(subgraph.to_string(), model.name.clone()),
+                .ok_or_else(|| {
+                    Error::from(
+                        BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
+                            name: boolean_expression_type_name.clone(),
+                            model: Qualified::new(subgraph.to_string(), model.name.clone()),
+                        },
+                    )
                 })?;
             if boolean_expression_type.object_type != *model_data_type {
-                return Err(Error::BooleanExpressionTypeForInvalidObjectTypeInModel {
-                    name: boolean_expression_type_name.clone(),
-                    boolean_expression_object_type: boolean_expression_type.object_type.clone(),
-                    model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                    model_object_type: model_data_type.clone(),
-                });
+                return Err(Error::from(
+                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
+                        name: boolean_expression_type_name.clone(),
+                        boolean_expression_object_type: boolean_expression_type.object_type.clone(),
+                        model: Qualified::new(subgraph.to_string(), model.name.clone()),
+                        model_object_type: model_data_type.clone(),
+                    },
+                ));
             }
             // This is also checked in resolve_model_graphql_api, but we want to disallow this even
             // if the model is not used in the graphql layer.

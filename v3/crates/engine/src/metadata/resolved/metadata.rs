@@ -15,7 +15,7 @@ use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::command;
 use crate::metadata::resolved::data_connector::DataConnectorContext;
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 use crate::metadata::resolved::model::{
     resolve_model, resolve_model_graphql_api, resolve_model_select_permissions,
     resolve_model_source, Model,
@@ -486,9 +486,11 @@ fn resolve_boolean_expression_types(
             resolved_boolean_expression.name.clone(),
             resolved_boolean_expression,
         ) {
-            return Err(Error::DuplicateObjectBooleanExpressionTypeDefinition {
-                name: existing.name,
-            });
+            return Err(Error::from(
+                BooleanExpressionError::DuplicateObjectBooleanExpressionTypeDefinition {
+                    name: existing.name,
+                },
+            ));
         }
     }
     Ok(boolean_expression_types)
