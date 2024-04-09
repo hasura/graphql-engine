@@ -1,3 +1,4 @@
+/// this is where we will resolve graphql configuration
 use crate::metadata::resolved::error::{Error, GraphqlConfigError};
 use crate::metadata::resolved::types::mk_name;
 use lang_graphql::ast::common as ast;
@@ -52,39 +53,37 @@ pub struct GraphqlConfig {
     pub global: GlobalGraphqlConfig,
 }
 
-impl GraphqlConfig {
-    /// Create a new graphql config object.
-    /// `GraphqlConfig` is an optional metadata object introduced in V2 metadata
-    /// that is associated with the flag `require_graphql_config`. This is done
-    /// to ensure that we still accept older metadata which did not have this
-    /// object present.
-    ///
-    /// The logic to generate a new GraphqlConfig object is as follows:
-    /// If `graphql_config` metadata object is present use that object
-    /// If it is not present,
-    ///     * check if the `require_graphql_config` flag is set (which means
-    ///       that that object is mandatory) throw an error
-    ///     * if the flag is not set, use the fallback object
-    pub fn new(
-        graphql_configs: &Vec<graphql_config::GraphqlConfig>,
-        flags: &open_dds::flags::Flags,
-    ) -> Result<Self, Error> {
-        if graphql_configs.is_empty() {
-            if flags.require_graphql_config {
-                return Err(Error::GraphqlConfigError {
-                    graphql_config_error: GraphqlConfigError::MissingGraphqlConfig,
-                });
-            }
-            let graphql_config = resolve_graphql_config(&FALLBACK_GRAPHQL_CONFIG)?;
-            Ok(graphql_config)
-        } else {
-            match graphql_configs.as_slice() {
-                // There should only be one graphql config in supergraph
-                [graphql_config] => resolve_graphql_config(graphql_config),
-                _ => Err(Error::GraphqlConfigError {
-                    graphql_config_error: GraphqlConfigError::MultipleGraphqlConfigDefinition,
-                }),
-            }
+/// Create a new graphql config object.
+/// `GraphqlConfig` is an optional metadata object introduced in V2 metadata
+/// that is associated with the flag `require_graphql_config`. This is done
+/// to ensure that we still accept older metadata which did not have this
+/// object present.
+///
+/// The logic to generate a new GraphqlConfig object is as follows:
+/// If `graphql_config` metadata object is present use that object
+/// If it is not present,
+///     * check if the `require_graphql_config` flag is set (which means
+///       that that object is mandatory) throw an error
+///     * if the flag is not set, use the fallback object
+pub fn resolve(
+    graphql_configs: &Vec<graphql_config::GraphqlConfig>,
+    flags: &open_dds::flags::Flags,
+) -> Result<GraphqlConfig, Error> {
+    if graphql_configs.is_empty() {
+        if flags.require_graphql_config {
+            return Err(Error::GraphqlConfigError {
+                graphql_config_error: GraphqlConfigError::MissingGraphqlConfig,
+            });
+        }
+        let graphql_config = resolve_graphql_config(&FALLBACK_GRAPHQL_CONFIG)?;
+        Ok(graphql_config)
+    } else {
+        match graphql_configs.as_slice() {
+            // There should only be one graphql config in supergraph
+            [graphql_config] => resolve_graphql_config(graphql_config),
+            _ => Err(Error::GraphqlConfigError {
+                graphql_config_error: GraphqlConfigError::MultipleGraphqlConfigDefinition,
+            }),
         }
     }
 }

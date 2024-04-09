@@ -12,9 +12,8 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::metadata::{
-    resolved::error::Error as ResolveMetadataError,
-    resolved::metadata::{resolve_metadata, Metadata},
-    resolved::subgraph::Qualified,
+    resolved::error::Error as ResolveMetadataError, resolved::metadata::Metadata,
+    resolved::resolve, resolved::subgraph::Qualified,
 };
 
 use self::types::{PossibleApolloFederationTypes, RootFieldAnnotation};
@@ -37,7 +36,7 @@ pub struct GDS {
 
 impl GDS {
     pub fn new(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
-        let resolved_metadata = resolve_metadata(user_metadata)?;
+        let resolved_metadata = resolve(user_metadata)?;
         Ok(GDS {
             metadata: resolved_metadata,
         })

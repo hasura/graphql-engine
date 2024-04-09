@@ -30,7 +30,7 @@ use super::types::{
     resolve_data_connector_type_mapping, resolve_object_boolean_expression_type,
     ObjectBooleanExpressionType, ScalarTypeRepresentation, TypeMapping,
 };
-use crate::metadata::resolved::graphql_config::{GlobalGraphqlConfig, GraphqlConfig};
+use crate::metadata::resolved::stages::graphql_config::{GlobalGraphqlConfig, GraphqlConfig};
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -106,10 +106,10 @@ impl DataConnectorTypeMappings {
 /*******************
     Functions to validate and resolve OpenDD spec to internal metadata
 *******************/
-pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
-    let metadata_accessor: open_dds::accessor::MetadataAccessor =
-        open_dds::accessor::MetadataAccessor::new(metadata);
-
+pub fn resolve_metadata(
+    metadata_accessor: open_dds::accessor::MetadataAccessor,
+    graphql_config: GraphqlConfig,
+) -> Result<Metadata, Error> {
     // resolve data connectors
     let mut data_connectors = resolve_data_connectors(&metadata_accessor)?;
 
@@ -157,9 +157,6 @@ pub fn resolve_metadata(metadata: open_dds::Metadata) -> Result<Metadata, Error>
         &types,
         &mut existing_graphql_types,
     )?;
-
-    let graphql_config =
-        GraphqlConfig::new(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
     // resolve models
     // TODO: validate types

@@ -2,8 +2,8 @@ use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::get_simple_scalar;
 use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
 use crate::metadata::resolved::error::{Error, GraphqlConfigError, RelationshipError};
-use crate::metadata::resolved::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::ndc_validation;
+use crate::metadata::resolved::stages::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_name, mk_qualified_type_reference,
     serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
