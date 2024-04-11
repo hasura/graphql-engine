@@ -1,3 +1,4 @@
+pub mod data_connectors;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod graphql_config;
 
@@ -14,5 +15,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     let graphql_config =
         graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 
-    resolve_metadata(metadata_accessor, graphql_config)
+    let data_connectors = data_connectors::resolve(&metadata_accessor)?;
+
+    resolve_metadata(&metadata_accessor, graphql_config, data_connectors)
 }

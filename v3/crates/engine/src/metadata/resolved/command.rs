@@ -1,5 +1,6 @@
+use super::stages::data_connectors;
 use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::data_connector::{DataConnectorContext, DataConnectorLink};
+use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -14,7 +15,7 @@ use open_dds::arguments::ArgumentName;
 use open_dds::commands::{
     self, CommandName, CommandV1, DataConnectorCommand, GraphQlRootFieldKind,
 };
-use open_dds::data_connector::DataConnectorName;
+
 use open_dds::permissions::{CommandPermissionsV1, Role};
 use open_dds::types::{BaseType, CustomTypeName, Deprecated, TypeName, TypeReference};
 use serde::{Deserialize, Serialize};
@@ -145,7 +146,7 @@ pub fn resolve_command_source(
     command_source: &commands::CommandSource,
     command: &mut Command,
     subgraph: &str,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     data_connector_type_mappings: &DataConnectorTypeMappings,
 ) -> Result<(), Error> {
@@ -160,7 +161,9 @@ pub fn resolve_command_source(
         subgraph.to_string(),
         command_source.data_connector_name.clone(),
     );
+
     let data_connector_context = data_connectors
+        .data_connectors
         .get(&qualified_data_connector_name)
         .ok_or_else(|| Error::UnknownCommandDataConnector {
             command_name: command.name.clone(),

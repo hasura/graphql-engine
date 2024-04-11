@@ -1,14 +1,12 @@
 use super::error::Error;
 use super::subgraph::Qualified;
-use crate::metadata::resolved::types::ScalarTypeInfo;
 use indexmap::IndexMap;
 
+use super::stages::data_connectors;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
 use open_dds::{
-    data_connector::{
-        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
-    },
+    data_connector::{DataConnectorName, DataConnectorUrl, ReadWriteUrls},
     EnvironmentValue,
 };
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -200,37 +198,11 @@ impl<'de> Deserialize<'de> for SerializableHeaderMap {
     }
 }
 
-pub struct DataConnectorContext<'a> {
-    pub url: &'a data_connector::DataConnectorUrl,
-    pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
-    pub schema: &'a ndc_models::SchemaResponse,
-    pub capabilities: &'a ndc_models::CapabilitiesResponse,
-    pub scalars: HashMap<&'a str, ScalarTypeInfo<'a>>,
-}
-
-impl<'a> DataConnectorContext<'a> {
-    pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
-        let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
-        Ok(DataConnectorContext {
-            url: &data_connector.url,
-            headers: &data_connector.headers,
-            schema: &schema_and_capabilities.schema,
-            capabilities: &schema_and_capabilities.capabilities,
-            scalars: schema_and_capabilities
-                .schema
-                .scalar_types
-                .iter()
-                .map(|(k, v)| (k.as_str(), ScalarTypeInfo::new(v)))
-                .collect(),
-        })
-    }
-}
-
 // helper function to determine whether a ndc type is a simple scalar
 pub fn get_simple_scalar<'a, 'b>(
     t: ndc_models::Type,
-    scalars: &'a HashMap<&str, ScalarTypeInfo<'b>>,
-) -> Option<(String, &'a ScalarTypeInfo<'b>)> {
+    scalars: &'a HashMap<&str, data_connectors::ScalarTypeInfo<'b>>,
+) -> Option<(String, &'a data_connectors::ScalarTypeInfo<'b>)> {
     match t {
         ndc_models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
         ndc_models::Type::Nullable { underlying_type } => {
@@ -248,7 +220,7 @@ mod tests {
     use ndc_models;
     use open_dds::data_connector::DataConnectorLinkV1;
 
-    use super::DataConnectorContext;
+    use crate::metadata::resolved::stages::data_connectors::types::DataConnectorContext;
 
     #[test]
     fn test_url_serialization_deserialization() {

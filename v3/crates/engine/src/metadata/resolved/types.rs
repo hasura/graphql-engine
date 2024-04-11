@@ -14,15 +14,15 @@ use open_dds::models::EnableAllOrSpecific;
 use open_dds::permissions::{Role, TypeOutputPermission, TypePermissionsV1};
 use open_dds::types::{
     self, CustomTypeName, DataConnectorTypeMapping, Deprecated, FieldName,
-    ObjectBooleanExpressionTypeV1, ObjectTypeV1, TypeName,
+    ObjectBooleanExpressionTypeV1, ObjectTypeV1,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
-use super::data_connector::DataConnectorContext;
 use super::metadata::DataConnectorTypeMappings;
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
+use super::stages::data_connectors;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 pub enum TypeRepresentation {
@@ -56,46 +56,6 @@ pub struct ObjectTypeRepresentation {
 pub struct NdcColumnForComparison {
     pub column: String,
     pub equal_operator: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
-pub struct ComparisonOperators {
-    pub equal_operators: Vec<String>,
-    pub in_operators: Vec<String>,
-}
-
-pub struct ScalarTypeInfo<'a> {
-    pub scalar_type: &'a ndc_models::ScalarType,
-    pub representation: Option<TypeName>,
-    pub comparison_expression_name: Option<ast::TypeName>,
-    pub comparison_operators: ComparisonOperators,
-}
-
-impl<'a> ScalarTypeInfo<'a> {
-    pub(crate) fn new(source_scalar: &'a ndc_models::ScalarType) -> Self {
-        let mut comparison_operators = ComparisonOperators::default();
-        for (operator_name, operator_definition) in &source_scalar.comparison_operators {
-            match operator_definition {
-                ndc_models::ComparisonOperatorDefinition::Equal => {
-                    comparison_operators
-                        .equal_operators
-                        .push(operator_name.clone());
-                }
-                ndc_models::ComparisonOperatorDefinition::In => {
-                    comparison_operators
-                        .in_operators
-                        .push(operator_name.clone());
-                }
-                ndc_models::ComparisonOperatorDefinition::Custom { argument_type: _ } => {}
-            };
-        }
-        ScalarTypeInfo {
-            scalar_type: source_scalar,
-            representation: None,
-            comparison_expression_name: None,
-            comparison_operators,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -329,13 +289,14 @@ pub fn resolve_data_connector_type_mapping(
     qualified_type_name: &Qualified<CustomTypeName>,
     subgraph: &str,
     type_representation: &ObjectTypeRepresentation,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
 ) -> Result<TypeMapping, TypeMappingValidationError> {
     let qualified_data_connector_name = Qualified::new(
         subgraph.to_string(),
         data_connector_type_mapping.data_connector_name.clone(),
     );
     let data_connector_context = data_connectors
+        .data_connectors
         .get(&qualified_data_connector_name)
         .ok_or_else(|| TypeMappingValidationError::UnknownDataConnector {
             data_connector: qualified_data_connector_name.clone(),
@@ -488,7 +449,7 @@ pub fn resolve_output_type_permission(
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -525,6 +486,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
             // validate data connector name
             let data_connector_context = data_connectors
+                .data_connectors
                 .get(&qualified_data_connector_name)
                 .ok_or_else(|| {
                     Error::from(

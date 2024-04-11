@@ -11,16 +11,15 @@ use open_dds::{
     types::{CustomTypeName, TypeName},
 };
 
-use crate::metadata::resolved::subgraph::Qualified;
-
 use crate::metadata::resolved::command;
-use crate::metadata::resolved::data_connector::DataConnectorContext;
+
 use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 use crate::metadata::resolved::model::{
     resolve_model, resolve_model_graphql_api, resolve_model_select_permissions,
     resolve_model_source, Model,
 };
 use crate::metadata::resolved::relationship::resolve_relationship;
+use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
     mk_name, resolve_object_type, resolve_output_type_permission, store_new_graphql_type,
     TypeRepresentation,
@@ -30,7 +29,7 @@ use super::types::{
     resolve_data_connector_type_mapping, resolve_object_boolean_expression_type,
     ObjectBooleanExpressionType, ScalarTypeRepresentation, TypeMapping,
 };
-use crate::metadata::resolved::stages::graphql_config::{GlobalGraphqlConfig, GraphqlConfig};
+use crate::metadata::resolved::stages::{data_connectors, graphql_config};
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -39,7 +38,7 @@ pub struct Metadata {
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, command::Command>,
     pub boolean_expression_types: HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
-    pub graphql_config: GlobalGraphqlConfig,
+    pub graphql_config: graphql_config::GlobalGraphqlConfig,
 }
 
 pub type DataConnectorTypeMappingsForObjectType =
@@ -107,12 +106,10 @@ impl DataConnectorTypeMappings {
     Functions to validate and resolve OpenDD spec to internal metadata
 *******************/
 pub fn resolve_metadata(
-    metadata_accessor: open_dds::accessor::MetadataAccessor,
-    graphql_config: GraphqlConfig,
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    graphql_config: graphql_config::GraphqlConfig,
+    mut data_connectors: data_connectors::DataConnectors,
 ) -> Result<Metadata, Error> {
-    // resolve data connectors
-    let mut data_connectors = resolve_data_connectors(&metadata_accessor)?;
-
     let mut existing_graphql_types: HashSet<ast::TypeName> = HashSet::new();
 
     // we collect all the types with global id fields, and models with global id source for that field. this is used
@@ -127,7 +124,7 @@ pub fn resolve_metadata(
 
     // resolve object types
     let (data_connector_type_mappings, types) = resolve_data_connector_type_mappings_and_objects(
-        &metadata_accessor,
+        metadata_accessor,
         &data_connectors,
         &mut existing_graphql_types,
         &mut global_id_enabled_types,
@@ -135,14 +132,14 @@ pub fn resolve_metadata(
     )?;
 
     // resolve scalar types
-    let scalar_types = resolve_scalar_types(&metadata_accessor, &mut existing_graphql_types)?;
+    let scalar_types = resolve_scalar_types(metadata_accessor, &mut existing_graphql_types)?;
 
     // resolve type permissions
-    let types = resolve_type_permissions(&metadata_accessor, extend_types(types, scalar_types)?)?;
+    let types = resolve_type_permissions(metadata_accessor, extend_types(types, scalar_types)?)?;
 
     // resolve object boolean expression types
     let boolean_expression_types = resolve_boolean_expression_types(
-        &metadata_accessor,
+        metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
         &types,
@@ -152,7 +149,7 @@ pub fn resolve_metadata(
     // resolve data connector scalar representations
     // TODO: make this return values rather than blindly mutating it's inputs
     resolve_data_connector_scalar_representations(
-        &metadata_accessor,
+        metadata_accessor,
         &mut data_connectors,
         &types,
         &mut existing_graphql_types,
@@ -161,7 +158,7 @@ pub fn resolve_metadata(
     // resolve models
     // TODO: validate types
     let mut models = resolve_models(
-        &metadata_accessor,
+        metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
         &types,
@@ -191,7 +188,7 @@ pub fn resolve_metadata(
 
     // resolve commands
     let mut commands = resolve_commands(
-        &metadata_accessor,
+        metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
         &types,
@@ -199,7 +196,7 @@ pub fn resolve_metadata(
 
     // resolve relationships
     let types = resolve_relationships(
-        &metadata_accessor,
+        metadata_accessor,
         &data_connectors,
         types,
         &models,
@@ -208,14 +205,14 @@ pub fn resolve_metadata(
 
     // resolve command permissions
     // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_command_permissions(&metadata_accessor, &mut commands)?;
+    resolve_command_permissions(metadata_accessor, &mut commands)?;
 
     // resolve model permissions
     // Note: Model permissions's predicate can include the relationship field,
     // hence Model permissions should be resolved after the relationships of a
     // model is resolved.
     // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_model_permissions(&metadata_accessor, &data_connectors, &types, &mut models)?;
+    resolve_model_permissions(metadata_accessor, &data_connectors, &types, &mut models)?;
 
     Ok(Metadata {
         types,
@@ -229,7 +226,7 @@ pub fn resolve_metadata(
 /// resolve commands
 fn resolve_commands(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
 ) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
@@ -263,39 +260,12 @@ fn resolve_commands(
     Ok(commands)
 }
 
-/// resolve data connectors
-fn resolve_data_connectors(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-) -> Result<HashMap<Qualified<DataConnectorName>, DataConnectorContext>, Error> {
-    let mut data_connectors = HashMap::new();
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: data_connector,
-    } in &metadata_accessor.data_connectors
-    {
-        let qualified_data_connector_name =
-            Qualified::new(subgraph.to_string(), data_connector.name.clone());
-        if data_connectors
-            .insert(
-                qualified_data_connector_name.clone(),
-                DataConnectorContext::new(data_connector)?,
-            )
-            .is_some()
-        {
-            return Err(Error::DuplicateDataConnectorDefinition {
-                name: qualified_data_connector_name,
-            });
-        }
-    }
-    Ok(data_connectors)
-}
-
 /// resolve object types, matching them to that in the data connectors
 /// this currently works by mutating `types` and `existing_graphql_types`, we should try
 /// and change this to return new values here and make the caller combine them together
 fn resolve_data_connector_type_mappings_and_objects(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<
@@ -463,7 +433,7 @@ fn resolve_type_permissions(
 /// resolve object boolean expression types
 fn resolve_boolean_expression_types(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -501,7 +471,7 @@ fn resolve_boolean_expression_types(
 /// return new values instead if possible
 fn resolve_data_connector_scalar_representations(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &mut HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &mut data_connectors::DataConnectors,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
 ) -> Result<(), Error> {
@@ -516,6 +486,7 @@ fn resolve_data_connector_scalar_representations(
             scalar_type_representation.data_connector_name.to_owned(),
         );
         let connector_context = data_connectors
+            .data_connectors
             .get_mut(&qualified_data_connector_name)
             .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
                 scalar_type: scalar_type_name.clone(),
@@ -578,7 +549,7 @@ fn resolve_data_connector_scalar_representations(
 /// resolve models
 fn resolve_models(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -588,7 +559,7 @@ fn resolve_models(
         Option<Qualified<open_dds::models::ModelName>>,
     >,
     boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
-    graphql_config: &GraphqlConfig,
+    graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<IndexMap<Qualified<ModelName>, Model>, Error> {
     // resolve models
     // TODO: validate types
@@ -662,7 +633,7 @@ fn resolve_models(
 /// returns updated `types` value
 fn resolve_relationships(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     mut types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
@@ -753,7 +724,7 @@ fn resolve_command_permissions(
 /// return new values instead where possible
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &HashMap<Qualified<DataConnectorName>, DataConnectorContext>,
+    data_connectors: &data_connectors::DataConnectors,
     types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
     models: &mut IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<(), Error> {
