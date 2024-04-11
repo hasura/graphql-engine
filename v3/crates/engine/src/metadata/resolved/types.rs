@@ -25,13 +25,6 @@ use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
 use super::stages::data_connectors;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-pub enum TypeRepresentation {
-    Object(ObjectTypeRepresentation),
-    #[display(fmt = "ScalarType")]
-    ScalarType(ScalarTypeRepresentation),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
 pub struct ScalarTypeRepresentation {
     pub graphql_type_name: Option<ast::TypeName>,
@@ -146,7 +139,7 @@ pub fn resolve_object_type(
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-) -> Result<TypeRepresentation, Error> {
+) -> Result<ObjectTypeRepresentation, Error> {
     let mut resolved_fields = IndexMap::new();
     let mut resolved_global_id_fields = Vec::new();
 
@@ -257,7 +250,7 @@ pub fn resolve_object_type(
     store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
     store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
 
-    Ok(TypeRepresentation::Object(ObjectTypeRepresentation {
+    Ok(ObjectTypeRepresentation {
         fields: resolved_fields,
         relationships: IndexMap::new(),
         global_id_fields: resolved_global_id_fields,
@@ -266,7 +259,7 @@ pub fn resolve_object_type(
         graphql_input_type_name,
         description: object_type_definition.description.clone(),
         apollo_federation_config,
-    }))
+    })
 }
 
 pub fn get_column<'a>(
@@ -372,77 +365,102 @@ pub fn resolve_data_connector_type_mapping(
     Ok(resolved_type_mapping)
 }
 
-// Get the underlying object type by resolving Custom ObjectType, Array and
-// Nullable container types
+#[derive(Debug)]
+/// we do not want to store our types like this, but occasionally it is useful
+/// for pattern matching
+pub enum TypeRepresentation<'a> {
+    Scalar(&'a ScalarTypeRepresentation),
+    Object(&'a ObjectTypeRepresentation),
+}
+
+/// validate whether a given CustomTypeName exists within `object_types` or `scalar_types`
+pub fn get_type_representation<'a>(
+    custom_type_name: &Qualified<CustomTypeName>,
+    object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &'a HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+) -> Result<TypeRepresentation<'a>, Error> {
+    match object_types.get(custom_type_name) {
+        Some(object_type_representation) => {
+            Ok(TypeRepresentation::Object(object_type_representation))
+        }
+        None => match scalar_types.get(custom_type_name) {
+            Some(scalar_type_representation) => {
+                Ok(TypeRepresentation::Scalar(scalar_type_representation))
+            }
+            None => Err(Error::UnknownType {
+                data_type: custom_type_name.clone(),
+            }),
+        },
+    }
+}
+
+// check that `custom_type_name` exists in `object_types`
 pub fn get_underlying_object_type(
-    output_type: &QualifiedTypeReference,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-) -> Result<Option<Qualified<CustomTypeName>>, Error> {
-    get_underlying_object_type_or_unknown_type(output_type, types)
-        .map(|opt| opt.cloned())
-        .map_err(|custom_type_name| Error::UnknownDataType {
+    custom_type_name: &Qualified<CustomTypeName>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+) -> Result<Qualified<CustomTypeName>, Error> {
+    object_types
+        .get(custom_type_name)
+        .map(|_| custom_type_name.clone())
+        .ok_or_else(|| Error::UnknownObjectType {
             data_type: custom_type_name.clone(),
         })
 }
 
-pub fn get_underlying_object_type_or_unknown_type<'a>(
-    output_type: &'a QualifiedTypeReference,
-    types: &'a HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-) -> Result<Option<&'a Qualified<CustomTypeName>>, Qualified<CustomTypeName>> {
-    match &output_type.underlying_type {
-        QualifiedBaseType::List(output_type) => {
-            get_underlying_object_type_or_unknown_type(output_type, types)
-        }
+// check that `custom_type_name` exists in `scalar_types`
+pub fn get_underlying_scalar_type(
+    custom_type_name: &Qualified<CustomTypeName>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+) -> Result<Qualified<CustomTypeName>, Error> {
+    scalar_types
+        .get(custom_type_name)
+        .map(|_| custom_type_name.clone())
+        .ok_or_else(|| Error::UnknownScalarType {
+            data_type: custom_type_name.clone(),
+        })
+}
+
+/// given a type like `Thing!` or `[Thing!]!` - try and extract `Thing`
+pub fn unwrap_custom_type_name(
+    type_reference: &QualifiedTypeReference,
+) -> Option<&Qualified<CustomTypeName>> {
+    match &type_reference.underlying_type {
+        QualifiedBaseType::List(inner_type) => unwrap_custom_type_name(inner_type),
         QualifiedBaseType::Named(type_name) => match type_name {
-            QualifiedTypeName::Inbuilt(_) => Ok(None),
-            QualifiedTypeName::Custom(custom_type_name) => {
-                let type_representation = types
-                    .get(custom_type_name)
-                    .ok_or_else(|| custom_type_name.clone())?;
-                match type_representation {
-                    TypeRepresentation::ScalarType { .. } => Ok(None),
-                    TypeRepresentation::Object { .. } => Ok(Some(custom_type_name)),
-                }
-            }
+            QualifiedTypeName::Inbuilt(_) => None,
+            QualifiedTypeName::Custom(custom_type_name) => Some(custom_type_name),
         },
     }
 }
 
 pub fn resolve_output_type_permission(
-    type_representation: &mut TypeRepresentation,
+    object_type_representation: &mut ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<(), Error> {
-    match type_representation {
-        TypeRepresentation::ScalarType { .. } => Err(Error::UnsupportedTypeInOutputPermissions {
-            type_name: type_permissions.type_name.clone(),
-        }),
-        TypeRepresentation::Object(object_type_representation) => {
-            // validate all the fields definied in output permissions actually
-            // exist in this type definition
-            for type_permission in &type_permissions.permissions {
-                if let Some(output) = &type_permission.output {
-                    for field_name in output.allowed_fields.iter() {
-                        if !object_type_representation.fields.contains_key(field_name) {
-                            return Err(Error::UnknownFieldInOutputPermissionsDefinition {
-                                field_name: field_name.clone(),
-                                type_name: type_permissions.type_name.clone(),
-                            });
-                        }
-                    }
-                    if object_type_representation
-                        .type_permissions
-                        .insert(type_permission.role.clone(), output.clone())
-                        .is_some()
-                    {
-                        return Err(Error::DuplicateOutputTypePermissions {
-                            type_name: type_permissions.type_name.clone(),
-                        });
-                    }
+    // validate all the fields definied in output permissions actually
+    // exist in this type definition
+    for type_permission in &type_permissions.permissions {
+        if let Some(output) = &type_permission.output {
+            for field_name in output.allowed_fields.iter() {
+                if !object_type_representation.fields.contains_key(field_name) {
+                    return Err(Error::UnknownFieldInOutputPermissionsDefinition {
+                        field_name: field_name.clone(),
+                        type_name: type_permissions.type_name.clone(),
+                    });
                 }
             }
-            Ok(())
+            if object_type_representation
+                .type_permissions
+                .insert(type_permission.role.clone(), output.clone())
+                .is_some()
+            {
+                return Err(Error::DuplicateOutputTypePermissions {
+                    type_name: type_permissions.type_name.clone(),
+                });
+            }
         }
     }
+    Ok(())
 }
 
 /// Resolves a given object boolean expression type
@@ -450,7 +468,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
 ) -> Result<ObjectBooleanExpressionType, Error> {
@@ -464,57 +482,52 @@ pub(crate) fn resolve_object_boolean_expression_type(
         subgraph.to_string(),
         object_boolean_expression.object_type.to_owned(),
     );
-    let type_representation = types.get(&qualified_object_type_name).ok_or_else(|| {
-        Error::from(
-            BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
-                type_name: qualified_object_type_name.clone(),
-            },
-        )
-    })?;
-    match type_representation {
-        // validate it should only be an object type
-        TypeRepresentation::ScalarType { .. } => Err(Error::from(
-            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
-                type_name: qualified_name.clone(),
-            },
-        )),
-        TypeRepresentation::Object(object_type_representation) => {
-            let qualified_data_connector_name = Qualified::new(
-                subgraph.to_string(),
-                object_boolean_expression.data_connector_name.to_owned(),
-            );
-
-            // validate data connector name
-            let data_connector_context = data_connectors
-                .data_connectors
-                .get(&qualified_data_connector_name)
-                .ok_or_else(|| {
-                    Error::from(
-                        BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
-                            data_connector: qualified_data_connector_name.clone(),
-                            boolean_expression_type: qualified_name.clone(),
-                        },
-                    )
-                })?;
-
-            // validate data connector object type
-            if !data_connector_context
-                .schema
-                .object_types
-                .contains_key(&object_boolean_expression.data_connector_object_type)
-            {
-                return Err(Error::from(
-                    BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
-                        data_connector: qualified_data_connector_name.clone(),
-                        boolean_expression_type: qualified_name.clone(),
-                        data_connector_object_type: object_boolean_expression
-                            .data_connector_object_type
-                            .clone(),
+    let object_type_representation =
+        object_types
+            .get(&qualified_object_type_name)
+            .ok_or_else(|| {
+                Error::from(
+                    BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
+                        type_name: qualified_object_type_name.clone(),
                     },
-                ));
-            }
+                )
+            })?;
+    let qualified_data_connector_name = Qualified::new(
+        subgraph.to_string(),
+        object_boolean_expression.data_connector_name.to_owned(),
+    );
 
-            data_connector_type_mappings
+    // validate data connector name
+    let data_connector_context = data_connectors
+        .data_connectors
+        .get(&qualified_data_connector_name)
+        .ok_or_else(|| {
+            Error::from(
+                BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                    data_connector: qualified_data_connector_name.clone(),
+                    boolean_expression_type: qualified_name.clone(),
+                },
+            )
+        })?;
+
+    // validate data connector object type
+    if !data_connector_context
+        .schema
+        .object_types
+        .contains_key(&object_boolean_expression.data_connector_object_type)
+    {
+        return Err(Error::from(
+            BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
+                data_connector: qualified_data_connector_name.clone(),
+                boolean_expression_type: qualified_name.clone(),
+                data_connector_object_type: object_boolean_expression
+                    .data_connector_object_type
+                    .clone(),
+            },
+        ));
+    }
+
+    data_connector_type_mappings
                 .get(
                     &qualified_object_type_name,
                     &qualified_data_connector_name,
@@ -531,23 +544,23 @@ pub(crate) fn resolve_object_boolean_expression_type(
                     })
                 })?;
 
-            // validate comparable fields
-            for comparable_field in object_boolean_expression.comparable_fields.iter() {
-                if !object_type_representation
-                    .fields
-                    .contains_key(&comparable_field.field_name)
-                {
-                    return Err(
-                        BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
-                            field_name: comparable_field.field_name.clone(),
-                            boolean_expression_type: qualified_name.clone(),
-                        }
-                        .into(),
-                    );
+    // validate comparable fields
+    for comparable_field in object_boolean_expression.comparable_fields.iter() {
+        if !object_type_representation
+            .fields
+            .contains_key(&comparable_field.field_name)
+        {
+            return Err(
+                BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
+                    field_name: comparable_field.field_name.clone(),
+                    boolean_expression_type: qualified_name.clone(),
                 }
+                .into(),
+            );
+        }
 
-                // As of now, only `"enableAll": true` is allowed for field operators
-                match &comparable_field.operators {
+        // As of now, only `"enableAll": true` is allowed for field operators
+        match &comparable_field.operators {
                     EnableAllOrSpecific::EnableAll(true) => {}
                     _ => {
                         return Err(Error::UnsupportedFeature {
@@ -555,43 +568,38 @@ pub(crate) fn resolve_object_boolean_expression_type(
                         })
                     }
                 }
-            }
+    }
 
-            // Comparable fields should have all type fields
-            if object_boolean_expression.comparable_fields.len()
-                != object_type_representation.fields.len()
-            {
-                return Err(Error::UnsupportedFeature {
+    // Comparable fields should have all type fields
+    if object_boolean_expression.comparable_fields.len() != object_type_representation.fields.len()
+    {
+        return Err(Error::UnsupportedFeature {
                     message: "Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.".to_string(),
                 });
-            }
-
-            // validate graphql config
-            let graphql_config = object_boolean_expression
-                .graphql
-                .as_ref()
-                .map(|graphql_config| {
-                    let graphql_type_name =
-                        mk_name(graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
-                    store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
-                    Ok::<_, Error>(ObjectBooleanExpressionTypeGraphQlConfiguration {
-                        type_name: graphql_type_name,
-                    })
-                })
-                .transpose()?;
-
-            let resolved_boolean_expression = ObjectBooleanExpressionType {
-                name: qualified_name.clone(),
-                object_type: qualified_object_type_name.clone(),
-                data_connector_name: qualified_data_connector_name,
-                data_connector_object_type: object_boolean_expression
-                    .data_connector_object_type
-                    .clone(),
-                graphql: graphql_config,
-            };
-            Ok(resolved_boolean_expression)
-        }
     }
+
+    // validate graphql config
+    let graphql_config = object_boolean_expression
+        .graphql
+        .as_ref()
+        .map(|graphql_config| {
+            let graphql_type_name =
+                mk_name(graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
+            store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
+            Ok::<_, Error>(ObjectBooleanExpressionTypeGraphQlConfiguration {
+                type_name: graphql_type_name,
+            })
+        })
+        .transpose()?;
+
+    let resolved_boolean_expression = ObjectBooleanExpressionType {
+        name: qualified_name.clone(),
+        object_type: qualified_object_type_name.clone(),
+        data_connector_name: qualified_data_connector_name,
+        data_connector_object_type: object_boolean_expression.data_connector_object_type.clone(),
+        graphql: graphql_config,
+    };
+    Ok(resolved_boolean_expression)
 }
 
 /// Helper function to create GraphQL compliant name
@@ -601,6 +609,7 @@ pub fn mk_name(name: &str) -> Result<ast::Name, Error> {
     })
 }
 
+#[derive(Debug)]
 pub struct TypeMappingToCollect<'a> {
     pub type_name: &'a Qualified<CustomTypeName>,
     pub ndc_object_type_name: &'a str,
@@ -639,8 +648,8 @@ pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_type_mappings: &DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
-    type_representations: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-    // ndc_object_types: &BTreeMap<String, ndc_models::ObjectType>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     let type_mapping = data_connector_type_mappings
@@ -676,51 +685,59 @@ pub(crate) fn collect_type_mapping_for_source(
         }
     }
 
-    let type_representation = type_representations
-        .get(mapping_to_collect.type_name)
-        .ok_or_else(|| TypeMappingCollectionError::InternalUnknownType {
-            type_name: mapping_to_collect.type_name.clone(),
-        })?;
+    match object_types.get(mapping_to_collect.type_name) {
+        Some(object_type_representation) => {
+            let TypeMapping::Object { field_mappings, .. } = type_mapping;
+            // For each field in the ObjectType, if that field is using an ObjectType in its type,
+            // resolve the type mappings for that ObjectType too
+            for (field_name, field_definition) in &object_type_representation.fields {
+                let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
+                    TypeMappingCollectionError::MissingFieldMapping {
+                        type_name: mapping_to_collect.type_name.clone(),
+                        field_name: field_name.clone(),
+                        data_connector: data_connector_name.clone(),
+                        ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
+                    }
+                })?;
 
-    if let TypeRepresentation::Object(object_type_representation) = type_representation {
-        let TypeMapping::Object { field_mappings, .. } = type_mapping;
-        // For each field in the ObjectType, if that field is using an ObjectType in its type,
-        // resolve the type mappings for that ObjectType too
-        for (field_name, field_definition) in &object_type_representation.fields {
-            let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                TypeMappingCollectionError::MissingFieldMapping {
-                    type_name: mapping_to_collect.type_name.clone(),
-                    field_name: field_name.clone(),
-                    data_connector: data_connector_name.clone(),
-                    ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
-                }
-            })?;
-            if let Some(object_type_name) = get_underlying_object_type_or_unknown_type(
-                &field_definition.field_type,
-                type_representations,
-            )
-            .map_err(|unknown_type| {
-                TypeMappingCollectionError::InternalUnknownType {
-                    type_name: unknown_type,
-                }
-            })? {
-                let underlying_ndc_field_named_type =
-                    get_underlying_named_type(&field_mapping.column_type)?;
+                if let Some(object_type_name) =
+                    unwrap_custom_type_name(&field_definition.field_type)
+                {
+                    match get_type_representation(object_type_name, object_types, scalar_types)
+                        .map_err(|_| TypeMappingCollectionError::InternalUnknownType {
+                            type_name: object_type_name.clone(),
+                        })? {
+                        TypeRepresentation::Object(_) => {
+                            let underlying_ndc_field_named_type =
+                                get_underlying_named_type(&field_mapping.column_type)?;
 
-                let field_type_mapping_to_collect = TypeMappingToCollect {
-                    type_name: object_type_name,
-                    ndc_object_type_name: underlying_ndc_field_named_type,
-                };
-                collect_type_mapping_for_source(
-                    &field_type_mapping_to_collect,
-                    data_connector_type_mappings,
-                    data_connector_name,
-                    type_representations,
-                    collected_mappings,
-                )?;
+                            let field_type_mapping_to_collect = TypeMappingToCollect {
+                                type_name: object_type_name,
+                                ndc_object_type_name: underlying_ndc_field_named_type,
+                            };
+
+                            collect_type_mapping_for_source(
+                                &field_type_mapping_to_collect,
+                                data_connector_type_mappings,
+                                data_connector_name,
+                                object_types,
+                                scalar_types,
+                                collected_mappings,
+                            )?;
+                        }
+                        TypeRepresentation::Scalar(_) => {}
+                    }
+                }
             }
+            Ok(())
         }
-    }
+        None => match scalar_types.get(mapping_to_collect.type_name) {
+            Some(_) => Ok(()),
+            None => Err(TypeMappingCollectionError::InternalUnknownType {
+                type_name: mapping_to_collect.type_name.clone(),
+            }),
+        },
+    }?;
 
     Ok(())
 }

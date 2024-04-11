@@ -1,7 +1,10 @@
 use crate::{
     metadata::resolved::{
         subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
-        types::{mk_name, FieldDefinition, ObjectTypeRepresentation, TypeRepresentation},
+        types::{
+            get_type_representation, mk_name, FieldDefinition, ObjectTypeRepresentation,
+            TypeRepresentation,
+        },
     },
     schema::{types, GDS},
 };
@@ -71,12 +74,14 @@ fn get_custom_input_type(
     builder: &mut gql_schema::Builder<GDS>,
     gds_type_name: &Qualified<CustomTypeName>,
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
-    let type_representation = gds.metadata.types.get(gds_type_name).ok_or_else(|| {
-        crate::schema::Error::InternalTypeNotFound {
-            type_name: gds_type_name.clone(),
-        }
-    })?;
-    match type_representation {
+    match get_type_representation(
+        gds_type_name,
+        &gds.metadata.object_types,
+        &gds.metadata.scalar_types,
+    )
+    .map_err(|_| crate::schema::Error::InternalTypeNotFound {
+        type_name: gds_type_name.clone(),
+    })? {
         TypeRepresentation::Object(ObjectTypeRepresentation {
             graphql_input_type_name,
             ..
@@ -89,7 +94,7 @@ fn get_custom_input_type(
                 })?
                 .clone(),
         })),
-        TypeRepresentation::ScalarType(graphql_type_name) => {
+        TypeRepresentation::Scalar(graphql_type_name) => {
             Ok(builder.register_type(super::TypeId::ScalarType {
                 gds_type_name: gds_type_name.clone(),
                 graphql_type_name: graphql_type_name
@@ -138,25 +143,15 @@ pub fn input_object_type_schema(
     type_name: &Qualified<CustomTypeName>,
     graphql_type_name: &ast::TypeName,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let type_representation =
+    let object_type_representation =
         gds.metadata
-            .types
+            .object_types
             .get(type_name)
             .ok_or_else(|| Error::InternalTypeNotFound {
                 type_name: type_name.clone(),
             })?;
 
     let graphql_type_name = graphql_type_name.clone();
-
-    let object_type_representation = match &type_representation {
-        TypeRepresentation::ScalarType { .. } => Err(Error::InternalUnsupported {
-            summary: format!(
-                "a scalar type {} mapping to non-scalar GraphQL types",
-                type_name.clone()
-            ),
-        }),
-        TypeRepresentation::Object(object_type_representation) => Ok(object_type_representation),
-    }?;
 
     let input_fields =
         input_object_type_input_fields(gds, builder, &object_type_representation.fields)?;

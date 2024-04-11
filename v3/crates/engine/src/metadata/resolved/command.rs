@@ -7,7 +7,10 @@ use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_reference, serialize_qualified_btreemap,
     ArgumentInfo, Qualified, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::{get_underlying_object_type, TypeRepresentation};
+use crate::metadata::resolved::types::{
+    get_type_representation, get_underlying_object_type, unwrap_custom_type_name,
+    ObjectTypeRepresentation, ScalarTypeRepresentation,
+};
 use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
@@ -67,15 +70,19 @@ pub struct CommandPermission {
 fn is_valid_type(
     type_obj: &TypeReference,
     subgraph: &str,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
 ) -> bool {
     match &type_obj.underlying_type {
-        BaseType::List(type_obj) => is_valid_type(type_obj, subgraph, types),
+        BaseType::List(type_obj) => is_valid_type(type_obj, subgraph, object_types, scalar_types),
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => true,
-            TypeName::Custom(type_name) => types
-                .get(&Qualified::new(subgraph.to_string(), type_name.to_owned()))
-                .is_some(),
+            TypeName::Custom(type_name) => {
+                let qualified_type_name =
+                    Qualified::new(subgraph.to_string(), type_name.to_owned());
+
+                get_type_representation(&qualified_type_name, object_types, scalar_types).is_ok()
+            }
         },
     }
 }
@@ -83,14 +90,20 @@ fn is_valid_type(
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &str,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
     let command_description = command.description.clone();
     // duplicate command arguments should not be allowed
     for argument in &command.arguments {
-        if is_valid_type(&argument.argument_type, subgraph, types) {
+        if is_valid_type(
+            &argument.argument_type,
+            subgraph,
+            object_types,
+            scalar_types,
+        ) {
             if arguments
                 .insert(
                     argument.name.clone(),
@@ -147,7 +160,9 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+
     data_connector_type_mappings: &DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if command.source.is_some() {
@@ -208,7 +223,8 @@ pub fn resolve_command_source(
         &command.arguments,
         &command_source.argument_mapping,
         ndc_arguments,
-        types,
+        object_types,
+        scalar_types,
     )
     .map_err(|err| match &command_source.data_connector_command {
         DataConnectorCommand::Function(function_name) => {
@@ -229,8 +245,12 @@ pub fn resolve_command_source(
         }
     })?;
 
-    let command_result_base_object_type_name =
-        get_underlying_object_type(&command.output_type, types)?;
+    // get object type name if it exists for the output type, and refers to a valid object
+    let command_result_base_object_type_name = unwrap_custom_type_name(&command.output_type)
+        .and_then(|custom_type_name| {
+            get_underlying_object_type(custom_type_name, object_types).ok()
+        });
+
     let mut type_mappings = BTreeMap::new();
 
     // Get the type mapping to resolve for the result type
@@ -263,7 +283,8 @@ pub fn resolve_command_source(
             type_mapping_to_collect,
             data_connector_type_mappings,
             &qualified_data_connector_name,
-            types,
+            object_types,
+            scalar_types,
             &mut type_mappings,
         )
         .map_err(|error| Error::CommandTypeMappingCollectionError {

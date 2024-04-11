@@ -22,7 +22,7 @@ use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
     mk_name, resolve_object_type, resolve_output_type_permission, store_new_graphql_type,
-    TypeRepresentation,
+    ObjectTypeRepresentation,
 };
 
 use super::types::{
@@ -34,7 +34,8 @@ use crate::metadata::resolved::stages::{data_connectors, graphql_config};
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
-    pub types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    pub scalar_types: HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, command::Command>,
     pub boolean_expression_types: HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
@@ -43,6 +44,8 @@ pub struct Metadata {
 
 pub type DataConnectorTypeMappingsForObjectType =
     HashMap<Qualified<DataConnectorName>, HashMap<String, TypeMapping>>;
+
+#[derive(Debug)]
 pub struct DataConnectorTypeMappings(
     HashMap<Qualified<CustomTypeName>, DataConnectorTypeMappingsForObjectType>,
 );
@@ -123,26 +126,27 @@ pub fn resolve_metadata(
     > = HashMap::new();
 
     // resolve object types
-    let (data_connector_type_mappings, types) = resolve_data_connector_type_mappings_and_objects(
-        metadata_accessor,
-        &data_connectors,
-        &mut existing_graphql_types,
-        &mut global_id_enabled_types,
-        &mut apollo_federation_entity_enabled_types,
-    )?;
+    let (data_connector_type_mappings, object_types) =
+        resolve_data_connector_type_mappings_and_objects(
+            metadata_accessor,
+            &data_connectors,
+            &mut existing_graphql_types,
+            &mut global_id_enabled_types,
+            &mut apollo_federation_entity_enabled_types,
+        )?;
 
     // resolve scalar types
     let scalar_types = resolve_scalar_types(metadata_accessor, &mut existing_graphql_types)?;
 
     // resolve type permissions
-    let types = resolve_type_permissions(metadata_accessor, extend_types(types, scalar_types)?)?;
+    let object_types = resolve_type_permissions(metadata_accessor, object_types)?;
 
     // resolve object boolean expression types
     let boolean_expression_types = resolve_boolean_expression_types(
         metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
-        &types,
+        &object_types,
         &mut existing_graphql_types,
     )?;
 
@@ -151,7 +155,7 @@ pub fn resolve_metadata(
     resolve_data_connector_scalar_representations(
         metadata_accessor,
         &mut data_connectors,
-        &types,
+        &scalar_types,
         &mut existing_graphql_types,
     )?;
 
@@ -161,7 +165,8 @@ pub fn resolve_metadata(
         metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
-        &types,
+        &object_types,
+        &scalar_types,
         &mut existing_graphql_types,
         &mut global_id_enabled_types,
         &mut apollo_federation_entity_enabled_types,
@@ -191,14 +196,15 @@ pub fn resolve_metadata(
         metadata_accessor,
         &data_connectors,
         &data_connector_type_mappings,
-        &types,
+        &object_types,
+        &scalar_types,
     )?;
 
     // resolve relationships
-    let types = resolve_relationships(
+    let object_types = resolve_relationships(
         metadata_accessor,
         &data_connectors,
-        types,
+        object_types,
         &models,
         &commands,
     )?;
@@ -212,10 +218,16 @@ pub fn resolve_metadata(
     // hence Model permissions should be resolved after the relationships of a
     // model is resolved.
     // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_model_permissions(metadata_accessor, &data_connectors, &types, &mut models)?;
+    resolve_model_permissions(
+        metadata_accessor,
+        &data_connectors,
+        &object_types,
+        &mut models,
+    )?;
 
     Ok(Metadata {
-        types,
+        scalar_types,
+        object_types,
         models,
         commands,
         boolean_expression_types,
@@ -228,7 +240,8 @@ fn resolve_commands(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
 ) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
     for open_dds::accessor::QualifiedObject {
@@ -236,14 +249,16 @@ fn resolve_commands(
         object: command,
     } in &metadata_accessor.commands
     {
-        let mut resolved_command = command::resolve_command(command, subgraph, types)?;
+        let mut resolved_command =
+            command::resolve_command(command, subgraph, object_types, scalar_types)?;
         if let Some(command_source) = &command.source {
             command::resolve_command_source(
                 command_source,
                 &mut resolved_command,
                 subgraph,
                 data_connectors,
-                types,
+                object_types,
+                scalar_types,
                 data_connector_type_mappings,
             )?;
         }
@@ -261,8 +276,6 @@ fn resolve_commands(
 }
 
 /// resolve object types, matching them to that in the data connectors
-/// this currently works by mutating `types` and `existing_graphql_types`, we should try
-/// and change this to return new values here and make the caller combine them together
 fn resolve_data_connector_type_mappings_and_objects(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
@@ -275,12 +288,12 @@ fn resolve_data_connector_type_mappings_and_objects(
 ) -> Result<
     (
         DataConnectorTypeMappings,
-        HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+        HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     ),
     Error,
 > {
     let mut data_connector_type_mappings = DataConnectorTypeMappings::new();
-    let mut types = HashMap::new();
+    let mut object_types = HashMap::new();
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -290,7 +303,7 @@ fn resolve_data_connector_type_mappings_and_objects(
         let qualified_object_type_name =
             Qualified::new(subgraph.to_string(), object_type_definition.name.clone());
 
-        let mut resolved_type = resolve_object_type(
+        let resolved_object_type = resolve_object_type(
             object_type_definition,
             existing_graphql_types,
             &qualified_object_type_name,
@@ -300,36 +313,34 @@ fn resolve_data_connector_type_mappings_and_objects(
         )?;
 
         // resolve object types' type mappings
-        if let TypeRepresentation::Object(ref mut resolved_object_type) = resolved_type {
-            for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
-                let qualified_data_connector_name = Qualified::new(
-                    subgraph.to_string(),
-                    dc_type_mapping.data_connector_name.clone(),
-                );
-                let type_mapping = resolve_data_connector_type_mapping(
-                    dc_type_mapping,
-                    &qualified_object_type_name,
-                    subgraph,
-                    resolved_object_type,
-                    data_connectors,
-                )
-                .map_err(|type_validation_error| {
-                    Error::DataConnectorTypeMappingValidationError {
-                        type_name: qualified_object_type_name.clone(),
-                        error: type_validation_error,
-                    }
-                })?;
-                data_connector_type_mappings.insert(
-                    &qualified_object_type_name,
-                    &qualified_data_connector_name,
-                    &dc_type_mapping.data_connector_object_type,
-                    type_mapping,
-                )?;
-            }
+        for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
+            let qualified_data_connector_name = Qualified::new(
+                subgraph.to_string(),
+                dc_type_mapping.data_connector_name.clone(),
+            );
+            let type_mapping = resolve_data_connector_type_mapping(
+                dc_type_mapping,
+                &qualified_object_type_name,
+                subgraph,
+                &resolved_object_type,
+                data_connectors,
+            )
+            .map_err(|type_validation_error| {
+                Error::DataConnectorTypeMappingValidationError {
+                    type_name: qualified_object_type_name.clone(),
+                    error: type_validation_error,
+                }
+            })?;
+            data_connector_type_mappings.insert(
+                &qualified_object_type_name,
+                &qualified_data_connector_name,
+                &dc_type_mapping.data_connector_object_type,
+                type_mapping,
+            )?;
         }
 
-        if types
-            .insert(qualified_object_type_name.clone(), resolved_type)
+        if object_types
+            .insert(qualified_object_type_name.clone(), resolved_object_type)
             .is_some()
         {
             return Err(Error::DuplicateTypeDefinition {
@@ -338,24 +349,7 @@ fn resolve_data_connector_type_mappings_and_objects(
         }
     }
 
-    Ok((data_connector_type_mappings, types))
-}
-
-/// combine two sets of types, returning a `DuplicateTypeDefinition` error if we find duplicates
-/// along the way
-fn extend_types(
-    mut old_types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-    new_types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-) -> Result<HashMap<Qualified<CustomTypeName>, TypeRepresentation>, Error> {
-    for new_type_name in new_types.keys() {
-        if old_types.contains_key(new_type_name) {
-            return Err(Error::DuplicateTypeDefinition {
-                name: new_type_name.clone(),
-            });
-        }
-    }
-    old_types.extend(new_types);
-    Ok(old_types)
+    Ok((data_connector_type_mappings, object_types))
 }
 
 /// resolve scalar types
@@ -364,7 +358,7 @@ fn extend_types(
 fn resolve_scalar_types(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
-) -> Result<HashMap<Qualified<CustomTypeName>, TypeRepresentation>, Error> {
+) -> Result<HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>, Error> {
     let mut scalar_types = HashMap::new();
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -384,10 +378,10 @@ fn resolve_scalar_types(
         if scalar_types
             .insert(
                 qualified_scalar_type_name.clone(),
-                TypeRepresentation::ScalarType(ScalarTypeRepresentation {
+                ScalarTypeRepresentation {
                     graphql_type_name: graphql_type_name.clone(),
                     description: scalar_type.description.clone(),
-                }),
+                },
             )
             .is_some()
         {
@@ -404,8 +398,8 @@ fn resolve_scalar_types(
 /// this works by mutating `types`, and returning an owned value
 fn resolve_type_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    mut types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
-) -> Result<HashMap<Qualified<CustomTypeName>, TypeRepresentation>, Error> {
+    mut object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>, Error> {
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -416,7 +410,7 @@ fn resolve_type_permissions(
             subgraph.to_string(),
             output_type_permission.type_name.to_owned(),
         );
-        match types.get_mut(&qualified_type_name) {
+        match object_types.get_mut(&qualified_type_name) {
             None => {
                 return Err(Error::UnknownTypeInOutputPermissionsDefinition {
                     type_name: qualified_type_name,
@@ -427,7 +421,7 @@ fn resolve_type_permissions(
             }
         }
     }
-    Ok(types)
+    Ok(object_types)
 }
 
 /// resolve object boolean expression types
@@ -435,7 +429,7 @@ fn resolve_boolean_expression_types(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
 ) -> Result<HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>, Error> {
     let mut boolean_expression_types = HashMap::new();
@@ -448,7 +442,7 @@ fn resolve_boolean_expression_types(
             boolean_expression_type,
             subgraph,
             data_connectors,
-            types,
+            object_types,
             data_connector_type_mappings,
             existing_graphql_types,
         )?;
@@ -472,7 +466,7 @@ fn resolve_boolean_expression_types(
 fn resolve_data_connector_scalar_representations(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &mut data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
 ) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
@@ -511,12 +505,13 @@ fn resolve_data_connector_scalar_representations(
                 TypeName::Custom(type_name) => {
                     let qualified_type_name =
                         Qualified::new(subgraph.to_string(), type_name.to_owned());
-                    let _representation = types.get(&qualified_type_name).ok_or_else(|| {
-                        Error::ScalarTypeUnknownRepresentation {
-                            scalar_type: scalar_type_name.clone(),
-                            type_name: qualified_type_name,
-                        }
-                    })?;
+                    let _representation =
+                        scalar_types.get(&qualified_type_name).ok_or_else(|| {
+                            Error::ScalarTypeUnknownRepresentation {
+                                scalar_type: scalar_type_name.clone(),
+                                type_name: qualified_type_name,
+                            }
+                        })?;
                 }
             }
             scalar_type.representation = Some(scalar_type_representation.representation.clone());
@@ -551,7 +546,8 @@ fn resolve_models(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
     data_connector_type_mappings: &DataConnectorTypeMappings,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<
@@ -574,7 +570,7 @@ fn resolve_models(
         let mut resolved_model = resolve_model(
             subgraph,
             model,
-            types,
+            object_types,
             global_id_enabled_types,
             apollo_federation_entity_enabled_types,
             boolean_expression_types,
@@ -601,7 +597,8 @@ fn resolve_models(
                 &mut resolved_model,
                 subgraph,
                 data_connectors,
-                types,
+                object_types,
+                scalar_types,
                 data_connector_type_mappings,
             )?;
         }
@@ -634,10 +631,10 @@ fn resolve_models(
 fn resolve_relationships(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-    mut types: HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    mut object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
-) -> Result<HashMap<Qualified<CustomTypeName>, TypeRepresentation>, Error> {
+) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>, Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: relationship,
@@ -645,45 +642,37 @@ fn resolve_relationships(
     {
         let qualified_relationship_source_type_name =
             Qualified::new(subgraph.to_string(), relationship.source.to_owned());
-        let source_type = types
+        let object_representation = object_types
             .get_mut(&qualified_relationship_source_type_name)
             .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
                 relationship_name: relationship.name.clone(),
                 type_name: qualified_relationship_source_type_name.clone(),
             })?;
 
-        match source_type {
-            TypeRepresentation::Object(object_representation) => {
-                let resolved_relationship = resolve_relationship(
-                    relationship,
-                    subgraph,
-                    models,
-                    commands,
-                    data_connectors,
-                    object_representation,
-                )?;
-                if object_representation
-                    .relationships
-                    .insert(
-                        resolved_relationship.field_name.clone(),
-                        resolved_relationship,
-                    )
-                    .is_some()
-                {
-                    return Err(Error::DuplicateRelationshipInSourceType {
-                        type_name: qualified_relationship_source_type_name,
-                        relationship_name: relationship.name.clone(),
-                    });
-                }
-            }
-            TypeRepresentation::ScalarType { .. } => {
-                return Err(Error::NotSupported {
-                    reason: "A relationship can only be defined on an OBJECT type.".to_string(),
-                })
-            }
+        let resolved_relationship = resolve_relationship(
+            relationship,
+            subgraph,
+            models,
+            commands,
+            data_connectors,
+            object_representation,
+        )?;
+        if object_representation
+            .relationships
+            .insert(
+                resolved_relationship.field_name.clone(),
+                resolved_relationship,
+            )
+            .is_some()
+        {
+            return Err(Error::DuplicateRelationshipInSourceType {
+                type_name: qualified_relationship_source_type_name,
+                relationship_name: relationship.name.clone(),
+            });
         }
     }
-    Ok(types)
+
+    Ok(object_types)
 }
 
 /// resolve command permissions
@@ -725,7 +714,7 @@ fn resolve_command_permissions(
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &mut IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<(), Error> {
     // Note: Model permissions's predicate can include the relationship field,
@@ -743,13 +732,14 @@ fn resolve_model_permissions(
                 .ok_or_else(|| Error::UnknownModelInModelSelectPermissions {
                     model_name: model_name.clone(),
                 })?;
+
         if model.select_permissions.is_none() {
             let select_permissions = Some(resolve_model_select_permissions(
                 model,
                 subgraph,
                 permissions,
                 data_connectors,
-                types,
+                object_types,
                 models, // This is required to get the model for the relationship target
             )?);
 

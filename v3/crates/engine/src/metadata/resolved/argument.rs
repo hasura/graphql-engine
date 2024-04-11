@@ -1,7 +1,8 @@
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 use crate::metadata::resolved::types::{
-    get_underlying_object_type_or_unknown_type, TypeMappingToCollect, TypeRepresentation,
+    get_type_representation, unwrap_custom_type_name, ObjectTypeRepresentation,
+    ScalarTypeRepresentation, TypeMappingToCollect, TypeRepresentation,
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
@@ -54,7 +55,8 @@ pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &HashMap<ArgumentName, String>,
     ndc_arguments: &'a BTreeMap<String, ndc_models::ArgumentInfo>,
-    all_type_representations: &'a HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &'a HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
 ) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToCollect<'a>>), ArgumentMappingError> {
     let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =
         HashMap::from_iter(argument_mapping.iter());
@@ -87,22 +89,26 @@ pub fn get_argument_mappings<'a>(
             });
         }
 
-        if let Some(object_type_name) = get_underlying_object_type_or_unknown_type(
-            &argument_type.argument_type,
-            all_type_representations,
-        )
-        .map_err(|custom_type_name| ArgumentMappingError::UnknownType {
-            argument_name: argument_name.clone(),
-            data_type: custom_type_name.clone(),
-        })? {
-            let underlying_ndc_argument_named_type =
-                ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
-                    .map_err(ArgumentMappingError::NDCValidationError)?;
+        // only do further checks if this is not a built-in type
+        if let Some(object_type_name) = unwrap_custom_type_name(&argument_type.argument_type) {
+            match get_type_representation(object_type_name, object_types, scalar_types).map_err(
+                |_| ArgumentMappingError::UnknownType {
+                    argument_name: argument_name.clone(),
+                    data_type: object_type_name.clone(),
+                },
+            )? {
+                TypeRepresentation::Object(_) => {
+                    let underlying_ndc_argument_named_type =
+                        ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
+                            .map_err(ArgumentMappingError::NDCValidationError)?;
 
-            type_mappings_to_collect.push(TypeMappingToCollect {
-                type_name: object_type_name,
-                ndc_object_type_name: underlying_ndc_argument_named_type,
-            })
+                    type_mappings_to_collect.push(TypeMappingToCollect {
+                        type_name: object_type_name,
+                        ndc_object_type_name: underlying_ndc_argument_named_type,
+                    })
+                }
+                TypeRepresentation::Scalar(_) => (),
+            }
         }
     }
 

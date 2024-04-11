@@ -18,12 +18,10 @@ use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::{
-    ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig,
+    get_type_representation, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig,
+    TypeRepresentation,
 };
-use crate::metadata::resolved::{
-    self,
-    types::{mk_name, TypeRepresentation},
-};
+use crate::metadata::resolved::{self, types::mk_name};
 use crate::schema::commands::generate_command_argument;
 use crate::schema::query_root::select_many::generate_select_many_arguments;
 use crate::schema::{mk_deprecation_status, permissions};
@@ -124,12 +122,14 @@ pub fn get_custom_output_type(
     builder: &mut gql_schema::Builder<GDS>,
     gds_type: &Qualified<CustomTypeName>,
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
-    let type_representation = gds.metadata.types.get(gds_type).ok_or_else(|| {
-        crate::schema::Error::InternalTypeNotFound {
-            type_name: gds_type.clone(),
-        }
-    })?;
-    match type_representation {
+    match get_type_representation(
+        gds_type,
+        &gds.metadata.object_types,
+        &gds.metadata.scalar_types,
+    )
+    .map_err(|_| crate::schema::Error::InternalTypeNotFound {
+        type_name: gds_type.clone(),
+    })? {
         TypeRepresentation::Object(object_type_representation) => {
             Ok(builder.register_type(super::TypeId::OutputType {
                 gds_type_name: gds_type.clone(),
@@ -142,7 +142,7 @@ pub fn get_custom_output_type(
                     .clone(),
             }))
         }
-        TypeRepresentation::ScalarType(scalar_type_representation) => {
+        TypeRepresentation::Scalar(scalar_type_representation) => {
             Ok(builder.register_type(super::TypeId::ScalarType {
                 gds_type_name: gds_type.clone(),
                 graphql_type_name: scalar_type_representation
@@ -165,16 +165,14 @@ pub(crate) fn get_type_kind(
         QualifiedBaseType::Named(qualified_type_name) => match qualified_type_name {
             QualifiedTypeName::Inbuilt(_) => Ok(super::TypeKind::Scalar), // Inbuilt types are all scalars
             QualifiedTypeName::Custom(type_name) => {
-                let type_rep =
-                    gds.metadata
-                        .types
-                        .get(type_name)
-                        .ok_or(Error::InternalTypeNotFound {
+                match gds.metadata.object_types.get(type_name) {
+                    Some(_) => Ok(super::TypeKind::Object),
+                    None => match gds.metadata.scalar_types.get(type_name) {
+                        Some(_) => Ok(super::TypeKind::Scalar),
+                        None => Err(Error::InternalTypeNotFound {
                             type_name: type_name.to_owned(),
-                        })?;
-                match type_rep {
-                    TypeRepresentation::Object(_) => Ok(super::TypeKind::Object),
-                    TypeRepresentation::ScalarType(_) => Ok(super::TypeKind::Scalar),
+                        }),
+                    },
                 }
             }
         },
@@ -401,9 +399,9 @@ pub fn output_type_schema(
     type_name: &Qualified<CustomTypeName>,
     graphql_type_name: &ast::TypeName,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let type_representation =
+    let object_type_representation =
         gds.metadata
-            .types
+            .object_types
             .get(type_name)
             .ok_or_else(|| Error::InternalTypeNotFound {
                 type_name: type_name.clone(),
@@ -411,85 +409,75 @@ pub fn output_type_schema(
 
     let graphql_type_name = graphql_type_name.clone();
 
-    match &type_representation {
-        resolved::types::TypeRepresentation::Object(object_type_representation) => {
-            let mut object_type_fields =
-                object_type_fields(gds, builder, type_name, object_type_representation)?;
-            let directives = match &object_type_representation.apollo_federation_config {
-                Some(apollo_federation_config) => {
-                    generate_apollo_federation_directives(apollo_federation_config)
-                }
-                None => Vec::new(),
-            };
-            if object_type_representation.global_id_fields.is_empty() {
-                Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
-                    builder,
-                    graphql_type_name,
-                    object_type_representation.description.clone(),
-                    object_type_fields,
-                    BTreeMap::new(),
-                    directives,
-                )))
-            } else {
-                // Generate the Global object `id` field and insert it
-                // into the `object_type_fields`.
-                let mut interfaces = BTreeMap::new();
-                let global_id_field_name = lang_graphql::mk_name!("id");
-                let global_id_field = gql_schema::Field::<GDS>::new(
-                    global_id_field_name.clone(),
-                    object_type_representation.description.clone(),
-                    Annotation::Output(super::OutputAnnotation::GlobalIDField {
-                        global_id_fields: object_type_representation.global_id_fields.to_vec(),
-                    }),
-                    get_output_type(gds, builder, &ID_TYPE_REFERENCE)?,
-                    BTreeMap::new(),
-                    gql_schema::DeprecationStatus::NotDeprecated,
-                );
-                if object_type_fields
-                    .insert(
-                        global_id_field_name.clone(),
-                        builder.conditional_namespaced(
-                            global_id_field,
-                            permissions::get_node_interface_annotations(object_type_representation),
-                        ),
-                    )
-                    .is_some()
-                {
-                    return Err(Error::DuplicateFieldNameGeneratedInObjectType {
-                        field_name: global_id_field_name,
-                        type_name: type_name.clone(),
-                    });
-                }
-                let node_interface_annotations =
-                    permissions::get_node_interface_annotations(object_type_representation);
-                if !node_interface_annotations.is_empty() {
-                    interfaces.insert(
-                        node_interface_type(builder),
-                        builder.conditional_namespaced((), node_interface_annotations),
-                    );
-                }
-                let directives = match &object_type_representation.apollo_federation_config {
-                    Some(apollo_federation_config) => {
-                        generate_apollo_federation_directives(apollo_federation_config)
-                    }
-                    None => Vec::new(),
-                };
-                Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
-                    builder,
-                    graphql_type_name,
-                    object_type_representation.description.clone(),
-                    object_type_fields,
-                    interfaces,
-                    directives,
-                )))
-            }
+    let mut object_type_fields =
+        object_type_fields(gds, builder, type_name, object_type_representation)?;
+    let directives = match &object_type_representation.apollo_federation_config {
+        Some(apollo_federation_config) => {
+            generate_apollo_federation_directives(apollo_federation_config)
         }
-        resolved::types::TypeRepresentation::ScalarType { .. } => Err(Error::InternalUnsupported {
-            summary: format!(
-                "a scalar type {} mapping to non-scalar GraphQL types",
-                type_name.clone()
-            ),
-        }),
+        None => Vec::new(),
+    };
+    if object_type_representation.global_id_fields.is_empty() {
+        Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
+            builder,
+            graphql_type_name,
+            object_type_representation.description.clone(),
+            object_type_fields,
+            BTreeMap::new(),
+            directives,
+        )))
+    } else {
+        // Generate the Global object `id` field and insert it
+        // into the `object_type_fields`.
+        let mut interfaces = BTreeMap::new();
+        let global_id_field_name = lang_graphql::mk_name!("id");
+        let global_id_field = gql_schema::Field::<GDS>::new(
+            global_id_field_name.clone(),
+            object_type_representation.description.clone(),
+            Annotation::Output(super::OutputAnnotation::GlobalIDField {
+                global_id_fields: object_type_representation.global_id_fields.to_vec(),
+            }),
+            get_output_type(gds, builder, &ID_TYPE_REFERENCE)?,
+            BTreeMap::new(),
+            gql_schema::DeprecationStatus::NotDeprecated,
+        );
+        if object_type_fields
+            .insert(
+                global_id_field_name.clone(),
+                builder.conditional_namespaced(
+                    global_id_field,
+                    permissions::get_node_interface_annotations(object_type_representation),
+                ),
+            )
+            .is_some()
+        {
+            return Err(Error::DuplicateFieldNameGeneratedInObjectType {
+                field_name: global_id_field_name,
+                type_name: type_name.clone(),
+            });
+        }
+        let node_interface_annotations =
+            permissions::get_node_interface_annotations(object_type_representation);
+        if !node_interface_annotations.is_empty() {
+            interfaces.insert(
+                node_interface_type(builder),
+                builder.conditional_namespaced((), node_interface_annotations),
+            );
+        }
+        let directives = match &object_type_representation.apollo_federation_config {
+            Some(apollo_federation_config) => {
+                generate_apollo_federation_directives(apollo_federation_config)
+            }
+            None => Vec::new(),
+        };
+        Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
+            builder,
+            graphql_type_name,
+            object_type_representation.description.clone(),
+            object_type_fields,
+            interfaces,
+            directives,
+        )))
     }
 }
 
@@ -500,19 +488,11 @@ pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
 ) -> Result<&'s ObjectTypeRepresentation, crate::schema::Error> {
-    let type_representation = gds.metadata.types.get(gds_type).ok_or_else(|| {
+    gds.metadata.object_types.get(gds_type).ok_or_else(|| {
         crate::schema::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),
         }
-    })?;
-    match type_representation {
-        TypeRepresentation::Object(object_type_representation) => Ok(object_type_representation),
-        TypeRepresentation::ScalarType { .. } => {
-            Err(crate::schema::Error::ExpectedTypeToBeObject {
-                type_name: gds_type.clone(),
-            })
-        }
-    }
+    })
 }
 
 pub(crate) fn representations_type_reference(

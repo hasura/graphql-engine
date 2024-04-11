@@ -3,7 +3,6 @@ use thiserror::Error;
 
 use crate::metadata::resolved::argument::ArgumentMappingError;
 use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::TypeRepresentation;
 use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
@@ -257,12 +256,6 @@ pub enum Error {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
     },
-
-    #[error("invalid type represented for model {model_name:}: {type_representation:}")]
-    InvalidTypeRepresentation {
-        model_name: Qualified<ModelName>,
-        type_representation: TypeRepresentation,
-    },
     #[error("a source must be defined for model {model:} in order to use filter expressions")]
     CannotUseFilterExpressionsWithoutSource { model: Qualified<ModelName> },
     #[error("graphql config must be defined for a filter expression to be used in a {model:}")]
@@ -476,9 +469,18 @@ pub enum Error {
         header_name: String,
     },
     #[error("the data type {data_type:} has not been defined")]
-    UnknownDataType {
+    UnknownType {
         data_type: Qualified<CustomTypeName>,
     },
+    #[error("the object type {data_type:} has not been defined")]
+    UnknownObjectType {
+        data_type: Qualified<CustomTypeName>,
+    },
+    #[error("the scalar type {data_type:} has not been defined")]
+    UnknownScalarType {
+        data_type: Qualified<CustomTypeName>,
+    },
+
     #[error("model {model_name:} with arguments is unsupported as a global ID source")]
     ModelWithArgumentsAsGlobalIdSource { model_name: Qualified<ModelName> },
     #[error(

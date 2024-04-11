@@ -5,7 +5,7 @@ use super::stages::data_connectors;
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
-    ObjectTypeRepresentation, TypeMappingToCollect,
+    ObjectTypeRepresentation, ScalarTypeRepresentation, TypeMappingToCollect,
 };
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector;
@@ -21,7 +21,6 @@ use crate::metadata::resolved::subgraph::{
     QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::store_new_graphql_type;
-use crate::metadata::resolved::types::TypeRepresentation;
 use crate::metadata::resolved::types::{mk_name, FieldDefinition, TypeMapping};
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
@@ -278,7 +277,7 @@ fn resolve_orderable_fields(
 pub fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<
         Qualified<CustomTypeName>,
@@ -290,7 +289,7 @@ pub fn resolve_model(
         Qualified::new(subgraph.to_string(), model.object_type.to_owned());
     let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
     let object_type_representation = get_model_object_type_representation(
-        types,
+        object_types,
         &qualified_object_type_name,
         &qualified_model_name,
     )?;
@@ -518,7 +517,7 @@ fn resolve_model_predicate(
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
     fields: &IndexMap<FieldName, FieldDefinition>,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
     // type_representation: &TypeRepresentation,
 ) -> Result<ModelPredicate, Error> {
@@ -626,8 +625,11 @@ fn resolve_model_predicate(
         }
         permissions::ModelPredicate::Relationship(RelationshipPredicate { name, predicate }) => {
             if let Some(nested_predicate) = predicate {
-                let object_type_representation =
-                    get_model_object_type_representation(types, &model.data_type, &model.name)?;
+                let object_type_representation = get_model_object_type_representation(
+                    object_types,
+                    &model.data_type,
+                    &model.name,
+                )?;
                 let relationship_field_name = mk_name(&name.0)?;
                 let relationship = &object_type_representation
                     .relationships
@@ -699,7 +701,7 @@ fn resolve_model_predicate(
                                     subgraph,
                                     data_connectors,
                                     &target_model.type_fields,
-                                    types,
+                                    object_types,
                                     models,
                                 )?;
 
@@ -737,7 +739,7 @@ fn resolve_model_predicate(
                 subgraph,
                 data_connectors,
                 fields,
-                types,
+                object_types,
                 models,
             )?;
             Ok(ModelPredicate::Not(Box::new(resolved_predicate)))
@@ -751,7 +753,7 @@ fn resolve_model_predicate(
                     subgraph,
                     data_connectors,
                     fields,
-                    types,
+                    object_types,
                     models,
                 )?);
             }
@@ -766,7 +768,7 @@ fn resolve_model_predicate(
                     subgraph,
                     data_connectors,
                     fields,
-                    types,
+                    object_types,
                     models,
                 )?);
             }
@@ -780,7 +782,7 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
@@ -793,7 +795,7 @@ pub fn resolve_model_select_permissions(
                     subgraph,
                     data_connectors,
                     &model.type_fields,
-                    types,
+                    object_types,
                     models,
                 )
                 .map(FilterPermission::Filter)?,
@@ -1275,7 +1277,8 @@ pub fn resolve_model_source(
     model: &mut Model,
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
-    types: &HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     data_connector_type_mappings: &DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if model.source.is_some() {
@@ -1311,7 +1314,8 @@ pub fn resolve_model_source(
         &model.arguments,
         &model_source.argument_mapping,
         &source_collection.arguments,
-        types,
+        object_types,
+        scalar_types,
     )
     .map_err(|err| Error::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),
@@ -1333,7 +1337,8 @@ pub fn resolve_model_source(
             type_mapping_to_collect,
             data_connector_type_mappings,
             &qualified_data_connector_name,
-            types,
+            object_types,
+            scalar_types,
             &mut type_mappings,
         )
         .map_err(|error| Error::ModelTypeMappingCollectionError {
@@ -1376,7 +1381,7 @@ pub fn resolve_model_source(
     };
 
     let model_object_type =
-        get_model_object_type_representation(types, &model.data_type, &model.name)?;
+        get_model_object_type_representation(object_types, &model.data_type, &model.name)?;
 
     if let Some(global_id_source) = &mut model.global_id_source {
         for global_id_field in &model_object_type.global_id_fields {
@@ -1428,22 +1433,15 @@ pub fn resolve_model_source(
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 pub(crate) fn get_model_object_type_representation<'s>(
-    types: &'s HashMap<Qualified<CustomTypeName>, TypeRepresentation>,
+    object_types: &'s HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
 ) -> Result<&'s ObjectTypeRepresentation, crate::metadata::resolved::error::Error> {
-    let object_type_representation = match types.get(data_type) {
-        Some(TypeRepresentation::Object(object_type_representation)) => {
-            Ok(object_type_representation)
-        }
-        Some(type_rep) => Err(Error::InvalidTypeRepresentation {
-            model_name: model_name.clone(),
-            type_representation: type_rep.clone(),
-        }),
+    match object_types.get(data_type) {
+        Some(object_type_representation) => Ok(object_type_representation),
         None => Err(Error::UnknownModelDataType {
             model_name: model_name.clone(),
             data_type: data_type.clone(),
         }),
-    }?;
-    Ok(object_type_representation)
+    }
 }
