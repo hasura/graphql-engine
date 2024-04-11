@@ -128,7 +128,8 @@ impl TraceableError for StartupError {
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
-    let schema = read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
+    let (raw_metadata, schema) =
+        read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
@@ -138,6 +139,8 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         schema,
         auth_config,
     });
+
+    let metadata_route = Router::new().route("/metadata", get(|| async { raw_metadata }));
 
     let graphql_route = Router::new()
         .route("/graphql", post(handle_request))
@@ -180,6 +183,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let app = Router::new()
         // serve graphiql at root
         .route("/", get(graphiql))
+        .merge(metadata_route)
         .merge(graphql_route)
         .merge(explain_route)
         .merge(health_route)
@@ -401,10 +405,12 @@ async fn handle_explain_request(
     response
 }
 
-fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
+fn read_schema(
+    metadata_path: &PathBuf,
+) -> Result<(String, gql::schema::Schema<GDS>), anyhow::Error> {
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    Ok(engine::build::build_schema(metadata)?)
+    Ok((raw_metadata, engine::build::build_schema(metadata)?))
 }
 
 fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
