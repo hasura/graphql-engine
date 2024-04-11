@@ -9,7 +9,19 @@ const DEFAULT_PORT: u16 = 3050;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let app = Router::new().route("/validate-request", post(validate_request));
+    if let Ok(otlp_endpoint) = env::var("OTLP_ENDPOINT") {
+        let _ = tracing_util::start_tracer(
+            Some(&otlp_endpoint),
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION"),
+        );
+    }
+
+    let app = Router::new()
+        .route("/validate-request", post(validate_request))
+        .layer(axum::middleware::from_fn(
+            graphql_request_tracing_middleware,
+        ));
 
     let host = net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED);
     let port = env::var("PORT")
@@ -57,4 +69,27 @@ async fn validate_request(
     Json(payload): Json<HashMap<String, HashMap<String, String>>>,
 ) -> Json<Value> {
     Json(serde_json::to_value(payload.get("headers").unwrap()).unwrap())
+}
+
+async fn graphql_request_tracing_middleware<B: Send>(
+    request: http::Request<B>,
+    next: axum::middleware::Next<B>,
+) -> axum::response::Result<axum::response::Response> {
+    use tracing_util::*;
+    let traceable = global_tracer()
+        .in_span_async_with_parent_context(
+            "request",
+            SpanVisibility::User,
+            &request.headers().clone(),
+            || {
+                Box::pin(async move {
+                    let mut response = next.run(request).await;
+                    TraceContextResponsePropagator::new()
+                        .inject(&mut HeaderInjector(response.headers_mut()));
+                    TraceableHttpResponse::new(response, "")
+                })
+            },
+        )
+        .await;
+    Ok(traceable.response)
 }

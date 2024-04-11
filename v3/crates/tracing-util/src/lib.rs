@@ -1,10 +1,12 @@
 mod http;
+mod request;
 mod setup;
 mod traceable;
 mod tracer;
 
 // Avoid conflicts with `http` crate
 pub use crate::http::TraceableHttpResponse;
+pub use request::get_trace_headers;
 pub use setup::{shutdown_tracer, start_tracer};
 pub use traceable::{ErrorVisibility, Traceable, TraceableError};
 pub use tracer::{

@@ -9,9 +9,9 @@ use opentelemetry_sdk::propagation::TraceContextPropagator;
 use opentelemetry_semantic_conventions as semcov;
 
 pub fn start_tracer(
-    endpoint: Option<String>,
+    endpoint: Option<&str>,
     service_name: &'static str,
-    service_version: String,
+    service_version: &'static str,
 ) -> Result<Tracer, TraceError> {
     global::set_text_map_propagator(TraceContextPropagator::new());
     let tracer = opentelemetry_otlp::new_pipeline()
@@ -19,7 +19,7 @@ pub fn start_tracer(
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_endpoint(endpoint.unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT.into())),
+                .with_endpoint(endpoint.unwrap_or(OTEL_EXPORTER_OTLP_ENDPOINT_DEFAULT)),
         )
         .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
             opentelemetry_sdk::Resource::new(vec![

@@ -169,7 +169,7 @@ async fn make_auth_hook_request(
     let tracer = tracing_util::global_tracer();
     let http_request_builder = match auth_hook_config.method {
         AuthHookMethod::Get => {
-            let mut auth_hook_headers = HeaderMap::new();
+            let mut auth_hook_headers = tracing_util::get_trace_headers();
             for (header_name, header_value) in client_headers.iter() {
                 if !COMMON_CLIENT_HEADERS_TO_IGNORE.contains(header_name.as_str()) {
                     auth_hook_headers.insert(header_name, header_value.clone());
@@ -199,6 +199,7 @@ async fn make_auth_hook_request(
             };
             http_client
                 .post(auth_hook_config.url.clone())
+                .headers(tracing_util::get_trace_headers())
                 .json(&request_body)
                 .timeout(Duration::from_secs(60))
         }

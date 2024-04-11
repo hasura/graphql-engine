@@ -58,9 +58,9 @@ async fn main() {
     let server = ServerOptions::parse();
 
     let tracer = tracing_util::start_tracer(
-        server.otlp_endpoint.clone(),
+        server.otlp_endpoint.as_deref(),
         "graphql-engine",
-        env!("CARGO_PKG_VERSION").to_string(),
+        env!("CARGO_PKG_VERSION"),
     )
     .unwrap();
 
@@ -215,12 +215,11 @@ async fn handle_health() -> reqwest::StatusCode {
 async fn graphql_request_tracing_middleware<B: Send>(
     request: Request<B>,
     next: Next<B>,
-) -> axum::response::Result<axum::response::Response> {
+) -> axum::response::Response {
     use tracing_util::*;
     let tracer = global_tracer();
     let path = "/graphql";
-
-    Ok(tracer
+    tracer
         .in_span_async_with_parent_context(
             path,
             SpanVisibility::User,
@@ -238,7 +237,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
             },
         )
         .await
-        .response)
+        .response
 }
 
 /// Middleware to start tracing of the `/v1/explain` request.
@@ -248,11 +247,10 @@ async fn graphql_request_tracing_middleware<B: Send>(
 async fn explain_request_tracing_middleware<B: Send>(
     request: Request<B>,
     next: Next<B>,
-) -> axum::response::Result<axum::response::Response> {
+) -> axum::response::Response {
     let tracer = tracing_util::global_tracer();
     let path = "/v1/explain";
-
-    Ok(tracer
+    tracer
         .in_span_async_with_parent_context(
             path,
             SpanVisibility::User,
@@ -265,7 +263,7 @@ async fn explain_request_tracing_middleware<B: Send>(
             },
         )
         .await
-        .response)
+        .response
 }
 
 #[derive(Debug, thiserror::Error)]

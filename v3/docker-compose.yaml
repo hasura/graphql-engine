@@ -32,14 +32,20 @@ services:
       retries: 20
 
   reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.18
+    build: https://github.com/hasura/ndc-spec.git#v0.1.2
     ports:
       - 8102:8100
 
   auth_hook:
-    build: ./crates/hasura-authn-webhook/dev-auth-webhook
+    build:
+      dockerfile: dev-auth-webhook.Dockerfile
+    environment:
+      OTLP_ENDPOINT: "http://jaeger:4317"
     ports:
       - "3050:3050"
+    depends_on:
+      jaeger:
+        condition: service_started
 
   jaeger:
     image: jaegertracing/all-in-one:1.55
@@ -66,7 +72,8 @@ services:
       - 8100:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
-      OLTP_ENDPOINT: "http://jaeger:4317"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
     volumes:
       - type: bind
         source: ./crates/engine/tests/ndc-postgres-configuration
@@ -75,6 +82,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      jaeger:
+        condition: service_started
 
   custom_connector:
     build:
@@ -100,7 +109,7 @@ services:
     environment:
       - METADATA_PATH
       - AUTHN_CONFIG_PATH
-      - OLTP_ENDPOINT=http://jaeger:4317
+      - OTLP_ENDPOINT=http://jaeger:4317
     ports:
       # Binding to localhost:3001 avoids conflict with dev_setup
       - 3001:3000
