@@ -19,6 +19,7 @@ use tracing_util::{
     TraceableError, TraceableHttpResponse,
 };
 
+use base64::engine::Engine;
 use engine::{
     authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig},
     execute::HttpContext,
@@ -29,6 +30,8 @@ use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
+use std::hash;
+use std::hash::{Hash, Hasher};
 
 const DEFAULT_PORT: u16 = 3000;
 
@@ -39,6 +42,12 @@ const MB: usize = 1_048_576;
 struct ServerOptions {
     #[arg(long, value_name = "METADATA_FILE", env = "METADATA_PATH")]
     metadata_path: PathBuf,
+    #[arg(
+        long,
+        value_name = "INTROSPECTION_METADATA_FILE",
+        env = "INTROSPECTION_METADATA_FILE"
+    )]
+    introspection_metadata: Option<String>,
     #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>,
     #[arg(long, value_name = "AUTHN_CONFIG_FILE", env = "AUTHN_CONFIG_PATH")]
@@ -128,8 +137,7 @@ impl TraceableError for StartupError {
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
-    let (raw_metadata, schema) =
-        read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
+    let schema = read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
@@ -139,8 +147,6 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         schema,
         auth_config,
     });
-
-    let metadata_route = Router::new().route("/metadata", get(|| async { raw_metadata }));
 
     let graphql_route = Router::new()
         .route("/graphql", post(handle_request))
@@ -180,14 +186,32 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
 
     let health_route = Router::new().route("/health", get(handle_health));
 
-    let app = Router::new()
+    let app_ = Router::new()
         // serve graphiql at root
         .route("/", get(graphiql))
-        .merge(metadata_route)
         .merge(graphql_route)
         .merge(explain_route)
         .merge(health_route)
         .layer(DefaultBodyLimit::max(10 * MB)); // Set request payload limit to 10 MB
+
+    // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
+    // and its hash on `/metadata-hash`. This is a temporary workaround to enable the console to
+    // interact with an engine process running locally (c.f running in the hasura cloud).
+    let app = match &server.introspection_metadata {
+        None => app_,
+        Some(file) => {
+            let file_owned = file.to_string();
+            let file_contents = tokio::fs::read_to_string(file_owned)
+                .await
+                .map_err(|err| StartupError::ReadSchema(err.into()))?;
+            let mut hasher = hash::DefaultHasher::new();
+            file_contents.as_str().hash(&mut hasher);
+            let hash = hasher.finish();
+            let base64_hash = base64::engine::general_purpose::STANDARD.encode(hash.to_ne_bytes());
+            app_.merge(Router::new().route("/metadata", get(|| async { file_contents })))
+                .merge(Router::new().route("/metadata-hash", get(|| async { base64_hash })))
+        }
+    };
 
     // The "unspecified" IPv6 address will match any IPv4 or IPv6 address.
     let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
@@ -405,12 +429,10 @@ async fn handle_explain_request(
     response
 }
 
-fn read_schema(
-    metadata_path: &PathBuf,
-) -> Result<(String, gql::schema::Schema<GDS>), anyhow::Error> {
+fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    Ok((raw_metadata, engine::build::build_schema(metadata)?))
+    Ok(engine::build::build_schema(metadata)?)
 }
 
 fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
