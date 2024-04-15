@@ -15,7 +15,7 @@
 //!     let path = "/graphql";
 //!
 //!     Ok(tracer
-//!        .in_span_async(path, SpanVisibility::User, || {
+//!        .in_span_async(path, path.to_string(), SpanVisibility::User, || {
 //!            Box::pin(async move {
 //!                let response = next.run(request).await;
 //!                TraceableHttpResponse::new(response, path)

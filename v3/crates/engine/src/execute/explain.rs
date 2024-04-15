@@ -321,6 +321,7 @@ async fn fetch_explain_from_data_connector(
     let response = tracer
         .in_span_async(
             "fetch_explain_from_data_connector",
+            format!("Execute explain on data connector {}", data_connector.name),
             SpanVisibility::Internal,
             || {
                 Box::pin(async {

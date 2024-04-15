@@ -41,62 +41,68 @@ pub async fn authenticate_request(
 ) -> Result<Identity, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("jwt_authenticate_request", SpanVisibility::Internal, || {
-            Box::pin({
-                async {
-                    let authorization_token: String =
-                        get_authorization_token(&jwt_config.token_location, headers)?;
-                    let hasura_claims = tracer
-                        .in_span_async(
-                            "decode_and_parse_hasura_claims",
-                            SpanVisibility::Internal,
-                            || {
-                                Box::pin(decode_and_parse_hasura_claims(
-                                    http_client,
-                                    jwt_config,
-                                    authorization_token,
-                                ))
+        .in_span_async(
+            "jwt_authenticate_request",
+            "Authenticate request using JSON Web Token".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin({
+                    async {
+                        let authorization_token: String =
+                            get_authorization_token(&jwt_config.token_location, headers)?;
+                        let hasura_claims = tracer
+                            .in_span_async(
+                                "decode_and_parse_hasura_claims",
+                                "Decode and parse Hasura claims".to_string(),
+                                SpanVisibility::Internal,
+                                || {
+                                    Box::pin(decode_and_parse_hasura_claims(
+                                        http_client,
+                                        jwt_config,
+                                        authorization_token,
+                                    ))
+                                },
+                            )
+                            .await?;
+                        Ok(match allow_role_emulation_for {
+                            // No emulation role found, so build the specific identity.
+                            None => Identity::Specific {
+                                default_role: hasura_claims.default_role.clone(),
+                                allowed_roles: build_allowed_roles(&hasura_claims)?,
                             },
-                        )
-                        .await?;
-                    Ok(match allow_role_emulation_for {
-                        // No emulation role found, so build the specific identity.
-                        None => Identity::Specific {
-                            default_role: hasura_claims.default_role.clone(),
-                            allowed_roles: build_allowed_roles(&hasura_claims)?,
-                        },
-                        Some(emulation_role) => {
-                            // Look for the `x-hasura-role` in the decoded claims.
-                            let role = hasura_claims
-                                .custom_claims
-                                .get(&SESSION_VARIABLE_ROLE)
-                                .map(|v| Role::new(v.0.as_str()));
-                            match role {
-                                // `x-hasura-role` is found, check if it's the
-                                // role that can emulate by comparing it to
-                                // `allow_role_emulation_for`, otherwise
-                                // return the specific identity.
-                                Some(role) => {
-                                    if role == emulation_role {
-                                        Identity::RoleEmulationEnabled(role)
-                                    } else {
-                                        Identity::Specific {
-                                            default_role: hasura_claims.default_role.clone(),
-                                            allowed_roles: build_allowed_roles(&hasura_claims)?,
+                            Some(emulation_role) => {
+                                // Look for the `x-hasura-role` in the decoded claims.
+                                let role = hasura_claims
+                                    .custom_claims
+                                    .get(&SESSION_VARIABLE_ROLE)
+                                    .map(|v| Role::new(v.0.as_str()));
+                                match role {
+                                    // `x-hasura-role` is found, check if it's the
+                                    // role that can emulate by comparing it to
+                                    // `allow_role_emulation_for`, otherwise
+                                    // return the specific identity.
+                                    Some(role) => {
+                                        if role == emulation_role {
+                                            Identity::RoleEmulationEnabled(role)
+                                        } else {
+                                            Identity::Specific {
+                                                default_role: hasura_claims.default_role.clone(),
+                                                allowed_roles: build_allowed_roles(&hasura_claims)?,
+                                            }
                                         }
                                     }
+                                    // `x-hasura-role` is not found, so build the specific identity.
+                                    None => Identity::Specific {
+                                        default_role: hasura_claims.default_role.clone(),
+                                        allowed_roles: build_allowed_roles(&hasura_claims)?,
+                                    },
                                 }
-                                // `x-hasura-role` is not found, so build the specific identity.
-                                None => Identity::Specific {
-                                    default_role: hasura_claims.default_role.clone(),
-                                    allowed_roles: build_allowed_roles(&hasura_claims)?,
-                                },
                             }
-                        }
-                    })
-                }
-            })
-        })
+                        })
+                    }
+                })
+            },
+        )
         .await
 }
 

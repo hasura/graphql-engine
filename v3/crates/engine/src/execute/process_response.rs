@@ -404,31 +404,36 @@ pub fn process_response(
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     // Post process the response to add the `__typename` fields
-    tracer.in_span("process_response", SpanVisibility::Internal, || {
-        let row_set = get_single_rowset(rows_sets)?;
-        match process_response_as {
-            ProcessResponseAs::Array { .. } => {
-                let result = process_selection_set_as_list(row_set, selection_set)?;
-                json::to_value(result).map_err(error::Error::from)
-            }
-            ProcessResponseAs::Object { .. } => {
-                let result = process_selection_set_as_object(row_set, selection_set)?;
-                json::to_value(result).map_err(error::Error::from)
-            }
-            ProcessResponseAs::CommandResponse {
-                command_name,
-                type_container,
-            } => {
-                let result = process_command_rows(
+    tracer.in_span(
+        "process_response",
+        "Process response".into(),
+        SpanVisibility::Internal,
+        || {
+            let row_set = get_single_rowset(rows_sets)?;
+            match process_response_as {
+                ProcessResponseAs::Array { .. } => {
+                    let result = process_selection_set_as_list(row_set, selection_set)?;
+                    json::to_value(result).map_err(error::Error::from)
+                }
+                ProcessResponseAs::Object { .. } => {
+                    let result = process_selection_set_as_object(row_set, selection_set)?;
+                    json::to_value(result).map_err(error::Error::from)
+                }
+                ProcessResponseAs::CommandResponse {
                     command_name,
-                    row_set.rows,
-                    selection_set,
                     type_container,
-                )?;
-                json::to_value(result).map_err(error::Error::from)
+                } => {
+                    let result = process_command_rows(
+                        command_name,
+                        row_set.rows,
+                        selection_set,
+                        type_container,
+                    )?;
+                    json::to_value(result).map_err(error::Error::from)
+                }
             }
-        }
-    })
+        },
+    )
 }
 
 fn get_single_rowset(

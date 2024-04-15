@@ -112,10 +112,12 @@ where
     for (key, location) in join_locations.locations {
         // collect the join column arguments from the LHS response, also get
         // the replacement tokens
-        let collect_arg_res =
-            tracer.in_span("collect_arguments", SpanVisibility::Internal, || {
-                collect::collect_arguments(lhs_response, lhs_response_type, &key, &location)
-            })?;
+        let collect_arg_res = tracer.in_span(
+            "collect_arguments",
+            "Collect arguments for join".into(),
+            SpanVisibility::Internal,
+            || collect::collect_arguments(lhs_response, lhs_response_type, &key, &location),
+        )?;
         if let Some(CollectArgumentResult {
             arguments,
             mut join_node,
@@ -135,6 +137,7 @@ where
             let mut target_response = tracer
                 .in_span_async(
                     "execute_remote_join_query",
+                    "Execute remote query for join".to_string(),
                     SpanVisibility::Internal,
                     || {
                         Box::pin(execute_ndc_query(
@@ -165,13 +168,18 @@ where
                 .await?;
             }
 
-            tracer.in_span("response_join", SpanVisibility::Internal, || {
-                // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                let rhs_response: HashMap<Argument, ndc_models::RowSet> =
-                    join_variables_.into_iter().zip(target_response).collect();
+            tracer.in_span(
+                "response_join",
+                "Join responses for remote query".into(),
+                SpanVisibility::Internal,
+                || {
+                    // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
+                    let rhs_response: HashMap<Argument, ndc_models::RowSet> =
+                        join_variables_.into_iter().zip(target_response).collect();
 
-                join::join_responses(&key, &remote_alias, &location, lhs_response, rhs_response)
-            })?;
+                    join::join_responses(&key, &remote_alias, &location, lhs_response, rhs_response)
+                },
+            )?;
         }
     }
     Ok(())

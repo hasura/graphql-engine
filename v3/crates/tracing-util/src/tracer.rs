@@ -6,6 +6,7 @@ use opentelemetry::{
     Context, Key,
 };
 use opentelemetry_http::HeaderExtractor;
+use std::borrow::Cow;
 use std::{collections::HashMap, future::Future, pin::Pin};
 
 #[derive(derive_more::Display)]
@@ -113,13 +114,25 @@ impl Tracer {
 impl Tracer {
     /// Runs the given closure `f` in a new span with the given `name`, and sets a visibility attribute
     /// on the span based on `visibility` and sets the span's error attributes based on the result of the closure.
-    pub fn in_span<R, F>(&self, name: &'static str, visibility: SpanVisibility, f: F) -> R
+    pub fn in_span<R, F>(
+        &self,
+        name: &'static str,
+        display_name: Cow<'static, str>,
+        visibility: SpanVisibility,
+        f: F,
+    ) -> R
     where
         F: FnOnce() -> R,
         R: Traceable,
     {
         self.tracer.in_span(name, |cx| {
             let result = f();
+            set_attribute_on_span(
+                &cx.span(),
+                AttributeVisibility::Default,
+                "display.name",
+                display_name,
+            );
             set_span_attributes(&cx.span(), visibility, &result);
             result
         })
@@ -130,6 +143,7 @@ impl Tracer {
     pub async fn in_span_async<'a, R, F>(
         &'a self,
         name: &'static str,
+        display_name: String,
         visibility: SpanVisibility,
         f: F,
     ) -> R
@@ -143,7 +157,15 @@ impl Tracer {
             .in_span(name, |cx| {
                 async move {
                     let result = f().await;
-                    get_active_span(|span| set_span_attributes(&span, visibility, &result));
+                    get_active_span(|span| {
+                        set_attribute_on_span(
+                            &span,
+                            AttributeVisibility::Default,
+                            "display.name",
+                            display_name,
+                        );
+                        set_span_attributes(&span, visibility, &result)
+                    });
                     result
                 }
                 .with_context(cx)
@@ -154,6 +176,7 @@ impl Tracer {
     pub async fn in_span_async_with_parent_context<'a, R, F>(
         &'a self,
         name: &'static str,
+        display_name: String,
         visibility: SpanVisibility,
         parent_headers: &HeaderMap<http::HeaderValue>,
         f: F,
@@ -171,11 +194,11 @@ impl Tracer {
 
         // if there is no parent span ID, we get something nonsensical, so we need to validate it
         if parent_context_span_context.is_valid() {
-            self.in_span_async(name, visibility, f)
+            self.in_span_async(name, display_name, visibility, f)
                 .with_context(parent_context)
                 .await
         } else {
-            self.in_span_async(name, visibility, f).await
+            self.in_span_async(name, display_name, visibility, f).await
         }
     }
 }

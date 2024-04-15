@@ -547,14 +547,17 @@ impl ExecuteQueryResult {
 
 /// Execute a single root field's query plan to produce a result.
 async fn execute_query_field_plan<'n, 's, 'ir>(
+    field_alias: &ast::Alias,
     http_context: &HttpContext,
     query_plan: NodeQueryPlan<'n, 's, 'ir>,
     project_id: Option<ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
+
     tracer
         .in_span_async(
-            "Execute request plan for query field",
+            "execute_query_field_plan",
+            format!("{} field planning", field_alias),
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
@@ -701,7 +704,8 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
-            "Execute request plan for mutation field",
+            "execute_mutation_field_plan",
+            "Execute request plan for mutation field".to_string(),
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {
@@ -770,12 +774,10 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
     for (alias, field_plan) in query_plan.into_iter() {
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
-        let task = async {
-            (
-                alias,
-                execute_query_field_plan(http_context, field_plan, project_id.clone()).await,
-            )
-        };
+        let execute_plan =
+            execute_query_field_plan(&alias, http_context, field_plan, project_id.clone()).await;
+
+        let task = async { (alias, execute_plan) };
 
         tasks.push(task);
     }

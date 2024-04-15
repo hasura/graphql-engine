@@ -76,17 +76,22 @@ pub async fn capabilities_get(
 ) -> Result<ndc_models::CapabilitiesResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("capabilities_get", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "capabilities_get",
+            "Get capabilities".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["capabilities"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::GET, uri);
+                    let uri = append_path(&configuration.base_path, &["capabilities"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::GET, uri);
 
-                execute_request(configuration, req_builder).await
-            })
-        })
+                    execute_request(configuration, req_builder).await
+                })
+            },
+        )
         .await
 }
 
@@ -99,17 +104,22 @@ pub async fn explain_query_post(
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("explain_query_post", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "explain_query_post",
+            "Post explain query".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["query", "explain"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::POST, uri);
+                    let uri = append_path(&configuration.base_path, &["query", "explain"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::POST, uri);
 
-                execute_request(configuration, req_builder.json(&query_request)).await
-            })
-        })
+                    execute_request(configuration, req_builder.json(&query_request)).await
+                })
+            },
+        )
         .await
 }
 
@@ -122,17 +132,22 @@ pub async fn explain_mutation_post(
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("explain_mutation_post", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "explain_mutation_post",
+            "Post explain mutation".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["mutation", "explain"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::POST, uri);
+                    let uri = append_path(&configuration.base_path, &["mutation", "explain"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::POST, uri);
 
-                execute_request(configuration, req_builder.json(&mutation_request)).await
-            })
-        })
+                    execute_request(configuration, req_builder.json(&mutation_request)).await
+                })
+            },
+        )
         .await
 }
 
@@ -145,17 +160,22 @@ pub async fn mutation_post(
 ) -> Result<ndc_models::MutationResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("mutation_post", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "mutation_post",
+            "Post request for mutation".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["mutation"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::POST, uri);
+                    let uri = append_path(&configuration.base_path, &["mutation"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::POST, uri);
 
-                execute_request(configuration, req_builder.json(&mutation_request)).await
-            })
-        })
+                    execute_request(configuration, req_builder.json(&mutation_request)).await
+                })
+            },
+        )
         .await
 }
 
@@ -168,17 +188,22 @@ pub async fn query_post(
 ) -> Result<ndc_models::QueryResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("query_post", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "query_post",
+            "Post request for query".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["query"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::POST, uri);
+                    let uri = append_path(&configuration.base_path, &["query"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::POST, uri);
 
-                execute_request(configuration, req_builder.json(&query_request)).await
-            })
-        })
+                    execute_request(configuration, req_builder.json(&query_request)).await
+                })
+            },
+        )
         .await
 }
 
@@ -190,17 +215,22 @@ pub async fn schema_get(
 ) -> Result<ndc_models::SchemaResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async("schema_get", SpanVisibility::Internal, || {
-            Box::pin(async {
-                let client = &configuration.client;
+        .in_span_async(
+            "schema_get",
+            "Get schema".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let client = &configuration.client;
 
-                let uri = append_path(&configuration.base_path, &["schema"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::GET, uri);
+                    let uri = append_path(&configuration.base_path, &["schema"])
+                        .map_err(|_| Error::InvalidBaseURL)?;
+                    let req_builder = client.request(reqwest::Method::GET, uri);
 
-                execute_request(configuration, req_builder).await
-            })
-        })
+                    execute_request(configuration, req_builder).await
+                })
+            },
+        )
         .await
 }
 

@@ -210,14 +210,19 @@ async fn make_auth_hook_request(
         .map_err(InternalError::ReqwestError)?;
 
     let response = tracer
-        .in_span_async("request_to_webhook", SpanVisibility::Internal, || {
-            Box::pin(async {
-                http_client
-                    .execute(req)
-                    .await
-                    .map_err(InternalError::ErrorWhileMakingHTTPRequestToTheAuthHook)
-            })
-        })
+        .in_span_async(
+            "request_to_webhook",
+            "Send request to webhook".to_string(),
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    http_client
+                        .execute(req)
+                        .await
+                        .map_err(InternalError::ErrorWhileMakingHTTPRequestToTheAuthHook)
+                })
+            },
+        )
         .await?;
 
     match response.status() {
@@ -287,6 +292,7 @@ pub async fn authenticate_request(
     tracer
         .in_span_async(
             "webhook_authenticate_request",
+            "Webhook authenticate request".to_string(),
             SpanVisibility::Internal,
             || {
                 Box::pin(make_auth_hook_request(

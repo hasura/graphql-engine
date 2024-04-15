@@ -74,9 +74,12 @@ async fn main() {
     .unwrap();
 
     if let Err(e) = tracer
-        .in_span_async("app init", SpanVisibility::Internal, || {
-            Box::pin(start_engine(&server))
-        })
+        .in_span_async(
+            "app init",
+            "App initialization".to_string(),
+            SpanVisibility::Internal,
+            || Box::pin(start_engine(&server)),
+        )
         .await
     {
         println!("Error while starting up the engine: {e}");
@@ -250,6 +253,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
     tracer
         .in_span_async_with_parent_context(
             path,
+            path.to_string(),
             SpanVisibility::User,
             &request.headers().clone(),
             || {
@@ -281,6 +285,7 @@ async fn explain_request_tracing_middleware<B: Send>(
     tracer
         .in_span_async_with_parent_context(
             path,
+            path.to_string(),
             SpanVisibility::User,
             &request.headers().clone(),
             || {
@@ -339,6 +344,7 @@ where
     let resolved_identity = tracer
         .in_span_async(
             "authentication_middleware",
+            "Authentication middleware".to_string(),
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
@@ -386,15 +392,20 @@ async fn handle_request(
 ) -> gql::http::Response {
     let tracer = tracing_util::global_tracer();
     let response = tracer
-        .in_span_async("Handle request", SpanVisibility::User, || {
-            Box::pin(engine::execute::execute_query(
-                &state.http_context,
-                &state.schema,
-                &session,
-                request,
-                None,
-            ))
-        })
+        .in_span_async(
+            "handle_request",
+            "Handle request".to_string(),
+            SpanVisibility::User,
+            || {
+                Box::pin(engine::execute::execute_query(
+                    &state.http_context,
+                    &state.schema,
+                    &session,
+                    request,
+                    None,
+                ))
+            },
+        )
         .await;
 
     // Set the span as error if the response contains an error
@@ -414,14 +425,19 @@ async fn handle_explain_request(
 ) -> engine::execute::explain::types::ExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
-        .in_span_async("Handle explain request", SpanVisibility::User, || {
-            Box::pin(engine::execute::explain::execute_explain(
-                &state.http_context,
-                &state.schema,
-                &session,
-                request,
-            ))
-        })
+        .in_span_async(
+            "handle_explain_request",
+            "Handle explain request".to_string(),
+            SpanVisibility::User,
+            || {
+                Box::pin(engine::execute::explain::execute_explain(
+                    &state.http_context,
+                    &state.schema,
+                    &session,
+                    request,
+                ))
+            },
+        )
         .await;
 
     // Set the span as error if the response contains an error
