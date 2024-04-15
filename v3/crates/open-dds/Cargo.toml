@@ -18,7 +18,7 @@ schemars = { version = "0.8.12", features = ["smol_str", "preserve_order"] }
 serde = "1.0.152"
 serde_json = { version = "1.0.92", features = ["preserve_order"] }
 serde_path_to_error = "0.1.14"
-strum = "0.25.0"
+strum = "0.26.2"
 strum_macros = "0.25.2"
 thiserror = "1.0"
 
