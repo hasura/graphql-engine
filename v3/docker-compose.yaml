@@ -69,7 +69,7 @@ services:
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
-      - 8100:8080
+      - 8080:8080
     environment:
       CONNECTION_URI: "postgresql://postgres:password@postgres"
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
