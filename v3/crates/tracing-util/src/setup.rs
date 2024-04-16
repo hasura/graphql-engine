@@ -1,4 +1,5 @@
 use crate::tracer::Tracer;
+use opentelemetry::propagation::composite::TextMapCompositePropagator;
 use opentelemetry::{
     global::{self, BoxedTracer},
     trace::TraceError,
@@ -13,7 +14,13 @@ pub fn start_tracer(
     service_name: &'static str,
     service_version: &'static str,
 ) -> Result<Tracer, TraceError> {
-    global::set_text_map_propagator(TraceContextPropagator::new());
+    // install global collector configured based on RUST_LOG env var.
+    tracing_subscriber::fmt::init();
+
+    global::set_text_map_propagator(TextMapCompositePropagator::new(vec![
+        Box::new(TraceContextPropagator::new()),
+        Box::new(opentelemetry_zipkin::Propagator::new()),
+    ]));
     let tracer = opentelemetry_otlp::new_pipeline()
         .tracing()
         .with_exporter(

@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::env;
 use std::net;
 
-use axum::{response::Json, routing::post, Router};
+use axum::{http::header::HeaderMap, response::Json, routing::post, Router};
 use serde_json::Value;
+use tower_http::trace::TraceLayer;
+use tracing::debug;
 
 const DEFAULT_PORT: u16 = 3050;
 
@@ -21,7 +23,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/validate-request", post(validate_request))
         .layer(axum::middleware::from_fn(
             graphql_request_tracing_middleware,
-        ));
+        ))
+        .layer(TraceLayer::new_for_http());
 
     let host = net::IpAddr::V4(net::Ipv4Addr::UNSPECIFIED);
     let port = env::var("PORT")
@@ -66,8 +69,15 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn validate_request(
+    headers: HeaderMap,
     Json(payload): Json<HashMap<String, HashMap<String, String>>>,
 ) -> Json<Value> {
+    debug!(
+        headers = format!("{:?}", headers),
+        body = format!("{:?}", payload),
+        "receiving request"
+    );
+
     Json(serde_json::to_value(payload.get("headers").unwrap()).unwrap())
 }
 
@@ -79,6 +89,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
     let traceable = global_tracer()
         .in_span_async_with_parent_context(
             "request",
+            "request".to_string(),
             SpanVisibility::User,
             &request.headers().clone(),
             || {

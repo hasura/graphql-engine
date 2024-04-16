@@ -41,6 +41,7 @@ services:
       dockerfile: dev-auth-webhook.Dockerfile
     environment:
       OTLP_ENDPOINT: "http://jaeger:4317"
+      RUST_LOG: debug
     ports:
       - "3050:3050"
     depends_on:

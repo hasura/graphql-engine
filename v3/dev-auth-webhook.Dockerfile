@@ -14,5 +14,8 @@ FROM debian:bookworm-slim
 
 COPY --from=builder /app/crates/hasura-authn-webhook/dev-auth-webhook/target/release/hasura-dev-auth-webhook /usr/bin
 
+RUN apt-get update && \
+  apt-get install -y openssl
+
 EXPOSE 3050
 ENTRYPOINT ["/usr/bin/hasura-dev-auth-webhook"]
