@@ -2,10 +2,10 @@ use super::client as ndc_client;
 
 /// Handle response return from an NDC request by applying the size limit and
 /// deserializing into a JSON value
-pub(crate) async fn handle_response_with_size_limit(
+pub(crate) async fn handle_response_with_size_limit<T: for<'de> serde::Deserialize<'de>>(
     response: reqwest::Response,
     size_limit: usize,
-) -> Result<serde_json::Value, ndc_client::Error> {
+) -> Result<T, ndc_client::Error> {
     if let Some(content_length) = &response.content_length() {
         // Check with content length
         if *content_length > size_limit as u64 {
@@ -25,10 +25,10 @@ pub(crate) async fn handle_response_with_size_limit(
 /// Handle response by chunks. For each chunk consumed, check if the total size exceeds the limit.
 ///
 /// This logic is separated in a function to allow testing.
-async fn handle_response_by_chunks_with_size_limit(
+async fn handle_response_by_chunks_with_size_limit<T: for<'de> serde::Deserialize<'de>>(
     response: reqwest::Response,
     size_limit: usize,
-) -> Result<serde_json::Value, ndc_client::Error> {
+) -> Result<T, ndc_client::Error> {
     let mut size = 0;
     let mut buf = bytes::BytesMut::new();
     let mut response = response;
@@ -61,7 +61,7 @@ mod test {
             .create();
         let response = reqwest::get(server.url() + "/test").await.unwrap();
         test_api.assert();
-        let err = super::handle_response_with_size_limit(response, 10)
+        let err = super::handle_response_with_size_limit::<serde_json::Value>(response, 10)
             .await
             .unwrap_err();
         assert_eq!(
@@ -81,9 +81,10 @@ mod test {
             .create();
         let response = reqwest::get(server.url() + "/test").await.unwrap();
         test_api.assert();
-        let err = super::handle_response_by_chunks_with_size_limit(response, 5)
-            .await
-            .unwrap_err();
+        let err =
+            super::handle_response_by_chunks_with_size_limit::<serde_json::Value>(response, 5)
+                .await
+                .unwrap_err();
         assert_eq!(
             err.to_string(),
             "error in response: too large: Size exceeds the limit 5"
@@ -108,7 +109,7 @@ mod test {
             .create();
         let response = reqwest::get(server.url() + "/test").await.unwrap();
         test_api.assert();
-        let res = super::handle_response_with_size_limit(response, 100)
+        let res = super::handle_response_with_size_limit::<serde_json::Value>(response, 100)
             .await
             .unwrap();
         assert_eq!(json, res)
@@ -132,9 +133,10 @@ mod test {
             .create();
         let response = reqwest::get(server.url() + "/test").await.unwrap();
         test_api.assert();
-        let res = super::handle_response_by_chunks_with_size_limit(response, 100)
-            .await
-            .unwrap();
+        let res =
+            super::handle_response_by_chunks_with_size_limit::<serde_json::Value>(response, 100)
+                .await
+                .unwrap();
         assert_eq!(json, res)
     }
 }

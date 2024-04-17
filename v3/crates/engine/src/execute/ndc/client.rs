@@ -51,18 +51,14 @@ impl tracing_util::TraceableError for Error {
 }
 
 #[derive(Debug, Clone, Error)]
-#[error("ConnectorError {{ status: {0}, error_response.message: {1} }}", status, error_response.message)]
+#[error("ConnectorError {{ status: {status}, error_response.message: {} }}", error_response.message)]
 pub struct ConnectorError {
     pub status: reqwest::StatusCode,
     pub error_response: ndc_models::ErrorResponse,
 }
 
 #[derive(Debug, Clone, Error)]
-#[error(
-    "InvalidConnectorError {{ status: {0}, content: {1} }}",
-    status,
-    content
-)]
+#[error("InvalidConnectorError {{ status: {status}, content: {content} }}")]
 pub struct InvalidConnectorError {
     pub status: reqwest::StatusCode,
     pub content: serde_json::Value,
@@ -269,39 +265,42 @@ async fn execute_request<T: DeserializeOwned>(
 
     // Build and execute the request
     let request = request_builder.build()?;
-    let resp = configuration.client.execute(request).await?;
+    let response = configuration.client.execute(request).await?;
 
-    let response_status = resp.status();
-
-    let response_content = match configuration.response_size_limit {
-        None => resp.json().await?,
-        Some(size_limit) => handle_response_with_size_limit(resp, size_limit).await?,
-    };
-
+    let response_status = response.status();
     if !response_status.is_client_error() && !response_status.is_server_error() {
-        serde_json::from_value(response_content).map_err(Error::from)
+        let result = match configuration.response_size_limit {
+            None => response.json().await?,
+            Some(size_limit) => handle_response_with_size_limit(response, size_limit).await?,
+        };
+        Ok(result)
     } else {
-        Err(construct_error(response_status, response_content))
+        Err(construct_error(response).await)
     }
 }
 
 /// Build an error from the response status and content
-fn construct_error(
-    response_status: reqwest::StatusCode,
-    response_content: serde_json::Value,
-) -> Error {
-    match ndc_models::ErrorResponse::deserialize(&response_content) {
-        Ok(error_response) => {
-            let connector_error = ConnectorError {
-                status: response_status,
-                error_response,
-            };
-            Error::ConnectorError(connector_error)
-        }
-        // If we can't read the error response, respond as-is.
+async fn construct_error(response: reqwest::Response) -> Error {
+    let status = response.status();
+    match response.json().await {
+        Ok(body) => match ndc_models::ErrorResponse::deserialize(&body) {
+            Ok(error_response) => {
+                let connector_error = ConnectorError {
+                    status,
+                    error_response,
+                };
+                Error::ConnectorError(connector_error)
+            }
+            // If we can't read the error response, respond as-is.
+            Err(_) => Error::InvalidConnectorError(InvalidConnectorError {
+                status,
+                content: body,
+            }),
+        },
+        // If we can't even parse the JSON response, drop it.
         Err(_) => Error::InvalidConnectorError(InvalidConnectorError {
-            status: response_status,
-            content: response_content,
+            status,
+            content: serde_json::Value::Null,
         }),
     }
 }
