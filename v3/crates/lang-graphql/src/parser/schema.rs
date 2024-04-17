@@ -43,7 +43,7 @@ impl<'a> Parser<'a> {
     fn parse_const_directives(&mut self) -> super::Result<Vec<Spanning<ConstDirective>>> {
         self.parse_list(
             |s| s.is_next_token(&lexer::Token::Punctuation(lexer::Punctuation::At)),
-            |s| s.parse_const_directive(),
+            Parser::parse_const_directive,
         )
     }
 
@@ -106,7 +106,7 @@ impl<'a> Parser<'a> {
         self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
-            |s| s.parse_input_value_definition(),
+            Parser::parse_input_value_definition,
         )
     }
 
@@ -114,7 +114,7 @@ impl<'a> Parser<'a> {
         self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
-            |s| s.parse_key_value(|s| s.parse_const_value()),
+            |s| s.parse_key_value(Parser::parse_const_value),
         )
     }
 
@@ -174,7 +174,7 @@ impl<'a> Parser<'a> {
         self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
-            |s| s.parse_field_definition(),
+            Parser::parse_field_definition,
         )
     }
 
@@ -397,7 +397,7 @@ impl<'a> Parser<'a> {
         let fields = self.parse_nonempty_delimited_list(
             lexer::Punctuation::BraceL,
             lexer::Punctuation::BraceR,
-            |s| s.parse_input_value_definition(),
+            Parser::parse_input_value_definition,
         )?;
         Ok(Spanning::start_end(
             start_position,

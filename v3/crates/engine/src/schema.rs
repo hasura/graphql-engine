@@ -315,7 +315,10 @@ pub(crate) fn mk_deprecation_status(
                     .as_ref()
                     // Use @deprecated built-in directive default reason.
                     // Ref: https://spec.graphql.org/October2021/#sec--deprecated
-                    .map_or_else(|| "No longer supported".to_owned(), |s| s.clone()),
+                    .map_or_else(
+                        || "No longer supported".to_owned(),
+                        std::clone::Clone::clone,
+                    ),
             ),
         },
         None => gql_schema::DeprecationStatus::NotDeprecated,

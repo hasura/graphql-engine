@@ -93,7 +93,7 @@ impl<'a> Parser<'a> {
         self.parse_optional_nonempty_delimited_list(
             lexer::Punctuation::ParenL,
             lexer::Punctuation::ParenR,
-            |s| s.parse_variable_definition(),
+            Parser::parse_variable_definition,
         )
     }
 

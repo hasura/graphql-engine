@@ -98,7 +98,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             }
             Value::List(xs) => serde_json::Value::from(
                 xs.iter()
-                    .map(|x| x.as_json())
+                    .map(Value::as_json)
                     .collect::<Vec<serde_json::Value>>(),
             ),
             Value::Object(xs) => serde_json::Value::Object(

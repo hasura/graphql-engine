@@ -204,7 +204,7 @@ pub enum DeprecationStatus {
 impl DeprecationStatus {
     pub fn new_deprecated(description: Option<&str>) -> Self {
         DeprecationStatus::Deprecated {
-            reason: description.map(|s| s.to_string()),
+            reason: description.map(ToString::to_string),
         }
     }
 

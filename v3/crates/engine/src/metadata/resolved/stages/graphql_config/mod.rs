@@ -204,7 +204,7 @@ pub fn resolve_graphql_config(
                                 let invalid_directions = order_by_enum_type
                                     .directions
                                     .iter()
-                                    .map(|v| v.to_string())
+                                    .map(std::string::ToString::to_string)
                                     .collect::<Vec<_>>()
                                     .join(",");
                                 Err(Error::GraphqlConfigError {

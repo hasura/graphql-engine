@@ -37,7 +37,7 @@ impl<'a> Parser<'a> {
     pub fn parse_optional_string(&mut self) -> super::Result<Option<Spanning<String>>> {
         self.parse_optional(
             |token| matches!(token, lexer::Token::String(_)),
-            |parser| parser.parse_string(),
+            Parser::parse_string,
         )
     }
 
@@ -109,7 +109,7 @@ impl<'a> Parser<'a> {
                 let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BracketL,
                     lexer::Punctuation::BracketR,
-                    |s| s.parse_const_value(),
+                    Parser::parse_const_value,
                 )?;
                 Ok(list.map(ConstValue::List))
             }
@@ -117,7 +117,7 @@ impl<'a> Parser<'a> {
                 let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BraceL,
                     lexer::Punctuation::BraceR,
-                    |s| s.parse_key_value(|r| r.parse_const_value()),
+                    |s| s.parse_key_value(Parser::parse_const_value),
                 )?;
                 Ok(list.map(ConstValue::Object))
             }
@@ -155,7 +155,7 @@ impl<'a> Parser<'a> {
                 let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BracketL,
                     lexer::Punctuation::BracketR,
-                    |s| s.parse_value(),
+                    Parser::parse_value,
                 )?;
                 Ok(list.map(Value::List))
             }
@@ -164,7 +164,7 @@ impl<'a> Parser<'a> {
                 let list = self.parse_possibly_empty_delimited_list(
                     lexer::Punctuation::BraceL,
                     lexer::Punctuation::BraceR,
-                    |s| s.parse_key_value(|r| r.parse_value()),
+                    |s| s.parse_key_value(Parser::parse_value),
                 )?;
                 Ok(list.map(Value::Object))
             }
