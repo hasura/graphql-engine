@@ -9,6 +9,8 @@ HGE_DATABASE_URL=postgres://postgres:postgrespassword@postgres:5432/postgres
 HGE_DATABASE_REPLICA_URL=postgres://postgres:postgrespassword@postgres-replica:5432/postgres
 HGE_ENABLED_LOG_TYPES=startup,http-log,query-log,websocket-log,response-caching-log
 HGE_ENABLED_APIS=metadata,graphql,config,metrics
+HGE_OTEL_STATUS=enabled
+HGE_LOG_LEVEL=info
 
 # Redis
 REDIS_IMAGE=redis:7.0.11

@@ -43,7 +43,7 @@ runSetOpenTelemetryConfig otelConfig = do
 -- | Set just the "status" field of the OpenTelemetry configuration.
 runSetOpenTelemetryStatus ::
   (MonadError QErr m, MetadataM m, CacheRWM m) =>
-  OtelStatus ->
+  OtelStatusConfig ->
   m EncJSON
 runSetOpenTelemetryStatus otelStatus = do
   withNewInconsistentObjsCheck

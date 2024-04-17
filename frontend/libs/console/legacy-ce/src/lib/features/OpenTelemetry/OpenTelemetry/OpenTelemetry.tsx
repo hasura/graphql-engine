@@ -35,7 +35,7 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
 
   let headerMode: 'enabled' | 'disabled' | 'skeleton' = 'enabled';
 
-  if (!metadataFormValues || !metadataFormValues.enabled)
+  if (!metadataFormValues || metadataFormValues.status !== 'enabled')
     headerMode = 'disabled';
 
   if (withoutLicense) headerMode = 'disabled';

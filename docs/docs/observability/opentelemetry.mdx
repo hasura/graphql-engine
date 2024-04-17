@@ -84,7 +84,7 @@ the parameters, click _Update_ and then toggle the _Status_ button to enable the
 Create and update parameters in the file `opentelemetry.yaml` inside the `metadata` directory as follows:
 
 ```yaml
-status: enabled
+status: enabled # accept enabled, disabled or env template {{ENV_NAME}}
 data_types:
   - traces
   - metrics
