@@ -1,7 +1,8 @@
+/// This is where we'll be moving explicit metadata resolve stages
 pub mod data_connector_type_mappings;
 pub mod data_connectors;
-/// This is where we'll be moving explicit metadata resolve stages
 pub mod graphql_config;
+pub mod scalar_types;
 
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::metadata::{resolve_metadata, Metadata};
@@ -18,13 +19,28 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
 
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;
 
-    let data_connector_type_mappings =
-        data_connector_type_mappings::resolve(&metadata_accessor, &data_connectors)?;
+    let data_connector_type_mappings::DataConnectorTypeMappingsOutput {
+        data_connector_type_mappings,
+        existing_graphql_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
+        object_types,
+    } = data_connector_type_mappings::resolve(&metadata_accessor, &data_connectors)?;
+
+    let scalar_types::ScalarTypesOutput {
+        scalar_types,
+        graphql_types,
+    } = scalar_types::resolve(&metadata_accessor, &existing_graphql_types)?;
 
     resolve_metadata(
         &metadata_accessor,
-        graphql_config,
+        &graphql_config,
         data_connectors,
-        data_connector_type_mappings,
+        graphql_types,
+        global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
+        &data_connector_type_mappings,
+        object_types,
+        &scalar_types,
     )
 }

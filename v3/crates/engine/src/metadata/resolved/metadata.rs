@@ -20,12 +20,10 @@ use crate::metadata::resolved::model::{
 use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
-    mk_name, resolve_output_type_permission, store_new_graphql_type, ObjectTypeRepresentation,
+    mk_name, resolve_object_boolean_expression_type, resolve_output_type_permission,
+    ObjectBooleanExpressionType, ObjectTypeRepresentation, ScalarTypeRepresentation,
 };
 
-use super::types::{
-    resolve_object_boolean_expression_type, ObjectBooleanExpressionType, ScalarTypeRepresentation,
-};
 use crate::metadata::resolved::stages::{
     data_connector_type_mappings, data_connectors, graphql_config,
 };
@@ -46,21 +44,18 @@ pub struct Metadata {
 *******************/
 pub fn resolve_metadata(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    graphql_config: graphql_config::GraphqlConfig,
+    graphql_config: &graphql_config::GraphqlConfig,
     mut data_connectors: data_connectors::DataConnectors,
-    data_connector_type_mappings_output: data_connector_type_mappings::DataConnectorTypeMappingsOutput,
+    mut existing_graphql_types: HashSet<ast::TypeName>,
+    mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    mut apollo_federation_entity_enabled_types: HashMap<
+        Qualified<CustomTypeName>,
+        Option<Qualified<open_dds::models::ModelName>>,
+    >,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
+    object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
 ) -> Result<Metadata, Error> {
-    let data_connector_type_mappings::DataConnectorTypeMappingsOutput {
-        mut existing_graphql_types,
-        mut global_id_enabled_types,
-        mut apollo_federation_entity_enabled_types,
-        object_types,
-        data_connector_type_mappings,
-    } = data_connector_type_mappings_output;
-
-    // resolve scalar types
-    let scalar_types = resolve_scalar_types(metadata_accessor, &mut existing_graphql_types)?;
-
     // resolve type permissions
     let object_types = resolve_type_permissions(metadata_accessor, object_types)?;
 
@@ -68,7 +63,7 @@ pub fn resolve_metadata(
     let boolean_expression_types = resolve_boolean_expression_types(
         metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
+        data_connector_type_mappings,
         &object_types,
         &mut existing_graphql_types,
     )?;
@@ -78,7 +73,7 @@ pub fn resolve_metadata(
     resolve_data_connector_scalar_representations(
         metadata_accessor,
         &mut data_connectors,
-        &scalar_types,
+        scalar_types,
         &mut existing_graphql_types,
     )?;
 
@@ -87,14 +82,14 @@ pub fn resolve_metadata(
     let mut models = resolve_models(
         metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
+        data_connector_type_mappings,
         &object_types,
-        &scalar_types,
+        scalar_types,
         &mut existing_graphql_types,
         &mut global_id_enabled_types,
         &mut apollo_federation_entity_enabled_types,
         &boolean_expression_types,
-        &graphql_config,
+        graphql_config,
     )?;
 
     // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
@@ -118,9 +113,9 @@ pub fn resolve_metadata(
     let mut commands = resolve_commands(
         metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
+        data_connector_type_mappings,
         &object_types,
-        &scalar_types,
+        scalar_types,
     )?;
 
     // resolve relationships
@@ -149,7 +144,7 @@ pub fn resolve_metadata(
     )?;
 
     Ok(Metadata {
-        scalar_types,
+        scalar_types: scalar_types.clone(),
         object_types,
         models,
         commands,
@@ -196,48 +191,6 @@ fn resolve_commands(
         }
     }
     Ok(commands)
-}
-
-/// resolve scalar types
-/// this currently works by mutating `existing_graphql_types`, we should try
-/// and change this to return new values here and make the caller combine them together
-fn resolve_scalar_types(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-) -> Result<HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>, Error> {
-    let mut scalar_types = HashMap::new();
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: scalar_type,
-    } in &metadata_accessor.scalar_types
-    {
-        let graphql_type_name = match scalar_type.graphql.as_ref() {
-            None => Ok(None),
-            Some(type_name) => mk_name(type_name.type_name.0.as_ref())
-                .map(ast::TypeName)
-                .map(Some),
-        }?;
-
-        let qualified_scalar_type_name =
-            Qualified::new(subgraph.to_string(), scalar_type.name.clone());
-
-        if scalar_types
-            .insert(
-                qualified_scalar_type_name.clone(),
-                ScalarTypeRepresentation {
-                    graphql_type_name: graphql_type_name.clone(),
-                    description: scalar_type.description.clone(),
-                },
-            )
-            .is_some()
-        {
-            return Err(Error::DuplicateTypeDefinition {
-                name: qualified_scalar_type_name,
-            });
-        }
-        store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
-    }
-    Ok(scalar_types)
 }
 
 /// resolve type permissions
