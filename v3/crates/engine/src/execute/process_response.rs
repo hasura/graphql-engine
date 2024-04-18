@@ -400,7 +400,7 @@ fn process_command_field_value(
 pub fn process_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     rows_sets: Vec<ndc_models::RowSet>,
-    process_response_as: ProcessResponseAs,
+    process_response_as: &ProcessResponseAs,
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     // Post process the response to add the `__typename` fields

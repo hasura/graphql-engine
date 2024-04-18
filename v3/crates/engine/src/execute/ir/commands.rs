@@ -83,7 +83,7 @@ pub(crate) fn generate_command_info<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
-    result_base_type_kind: &TypeKind,
+    result_base_type_kind: TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<CommandInfo<'s>, error::Error> {
@@ -118,7 +118,7 @@ pub(crate) fn generate_command_info<'n, 's>(
 
     // Add the name of the root command
     let mut usage_counts = UsagesCounts::new();
-    count_command(command_name.clone(), &mut usage_counts);
+    count_command(command_name, &mut usage_counts);
 
     let selection = selection_set::generate_nested_selection(
         result_type,
@@ -148,7 +148,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
-    result_base_type_kind: &TypeKind,
+    result_base_type_kind: TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
@@ -176,7 +176,7 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
-    result_base_type_kind: &TypeKind,
+    result_base_type_kind: TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {

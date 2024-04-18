@@ -119,7 +119,7 @@ pub struct ExecutionNode<'s> {
     pub data_connector: &'s resolved::data_connector::DataConnectorLink,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ProcessResponseAs<'ir> {
     Object {
         is_nullable: bool,
@@ -606,7 +606,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                         }
                         NodeQueryPlan::NDCQueryExecution(ndc_query) => RootFieldResult::new(
                             &ndc_query.process_response_as.is_nullable(),
-                            resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
+                            resolve_ndc_query_execution(http_context, &ndc_query, project_id).await,
                         ),
                         NodeQueryPlan::RelayNodeSelect(optional_query) => RootFieldResult::new(
                             &optional_query.as_ref().map_or(true, |ndc_query| {
@@ -827,7 +827,7 @@ fn resolve_schema_field(
 
 async fn resolve_ndc_query_execution(
     http_context: &HttpContext,
-    ndc_query: NDCQueryExecution<'_, '_>,
+    ndc_query: &NDCQueryExecution<'_, '_>,
     project_id: Option<ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCQueryExecution {
@@ -839,7 +839,7 @@ async fn resolve_ndc_query_execution(
     } = ndc_query;
     let mut response = ndc::execute_ndc_query(
         http_context,
-        execution_tree.root_node.query,
+        &execution_tree.root_node.query,
         execution_tree.root_node.data_connector,
         execution_span_attribute.clone(),
         field_span_attribute.clone(),
@@ -851,10 +851,9 @@ async fn resolve_ndc_query_execution(
     execute_join_locations(
         http_context,
         execution_span_attribute,
-        field_span_attribute,
         &mut response,
-        &process_response_as,
-        execution_tree.remote_executions,
+        process_response_as,
+        &execution_tree.remote_executions,
         project_id,
     )
     .await?;
@@ -879,7 +878,7 @@ async fn resolve_ndc_mutation_execution(
     } = ndc_query;
     let response = ndc::execute_ndc_mutation(
         http_context,
-        query,
+        &query,
         data_connector,
         selection_set,
         execution_span_attribute,
@@ -898,6 +897,6 @@ async fn resolve_optional_ndc_select(
 ) -> Result<json::Value, error::Error> {
     match optional_query {
         None => Ok(json::Value::Null),
-        Some(ndc_query) => resolve_ndc_query_execution(http_context, ndc_query, project_id).await,
+        Some(ndc_query) => resolve_ndc_query_execution(http_context, &ndc_query, project_id).await,
     }
 }

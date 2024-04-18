@@ -1,4 +1,3 @@
-use core::slice::Iter;
 use std::cmp::min;
 use std::str::from_utf8_unchecked;
 use thiserror::Error;
@@ -75,8 +74,8 @@ fn num_bytes_in_char(first_byte: u8) -> usize {
     }
 }
 
-fn is_whitespace(b: &u8) -> bool {
-    *b == b' ' || *b == b'\t'
+fn is_whitespace(b: u8) -> bool {
+    b == b' ' || b == b'\t'
 }
 
 struct Line {
@@ -94,8 +93,8 @@ impl Line {
         self.start = min(self.start + count, self.end);
     }
 
-    fn iter<'a>(&self, bytes: &'a [u8]) -> Iter<'a, u8> {
-        bytes[self.start..self.end].iter()
+    fn iter<'bytes>(&self, bytes: &'bytes [u8]) -> impl Iterator<Item = u8> + 'bytes {
+        bytes[self.start..self.end].iter().copied()
     }
 
     fn append_to(&self, bytes: &[u8], s: &mut String) {
@@ -179,7 +178,7 @@ fn parse_block_string(bytes: &[u8]) -> Result<(String, Consumed, usize), (Error,
         .skip(1)
         // Don't consider whitespace only lines
         .filter_map(|line| {
-            let indent = line.iter(bytes).take_while(|b| is_whitespace(b)).count();
+            let indent = line.iter(bytes).take_while(|b| is_whitespace(*b)).count();
             (indent < line.len()).then_some(indent)
         })
         // The minimum of all indents would be the common indent

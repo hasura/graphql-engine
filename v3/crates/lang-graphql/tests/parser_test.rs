@@ -10,8 +10,8 @@ use std::{
 use expect_test::expect_file;
 
 #[cfg(test)]
-fn test_parser_for_schema(schema_path: PathBuf) -> Result<(), io::Error> {
-    let schema = fs::read_to_string(schema_path.as_path())?;
+fn test_parser_for_schema(schema_path: &Path) -> Result<(), io::Error> {
+    let schema = fs::read_to_string(schema_path)?;
     let expected_ast_path = schema_path.with_extension("ast.txt");
     match fs::read_to_string(expected_ast_path.as_path()) {
         Err(io_error) => {
@@ -62,7 +62,7 @@ fn test_schema_parser() -> Result<(), io::Error> {
             dir_entry.path().extension().map(|e| e.to_str()),
             Some(Some("graphql"))
         ) {
-            test_parser_for_schema(dir_entry.path())?;
+            test_parser_for_schema(&dir_entry.path())?;
         }
     }
     Ok(())

@@ -213,7 +213,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
             );
 
             // Add the target model being used in the usage counts
-            count_model(target_model_name.clone(), usage_counts);
+            count_model(target_model_name, usage_counts);
 
             // This map contains the relationships or the columns of the relationship that needs to be used for ordering.
             let argument_value_map = argument.value.as_object()?;

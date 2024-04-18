@@ -596,18 +596,13 @@ fn collect_accessible_types<S: schema::SchemaContext>(
     // insert query root always to accessible types
     // then collect other accessible types
     accessible_types.insert(schema.query_type.clone());
-    collect_accessible_types_(
-        namespace,
-        schema,
-        schema.query_type.clone(),
-        accessible_types,
-    );
+    collect_accessible_types_(namespace, schema, &schema.query_type, accessible_types);
 
     // insert mutation root always to accessible types if it exists in schema
     // and collect related accessible types
     if let Some(mutation_type) = &schema.mutation_type {
         accessible_types.insert(mutation_type.clone());
-        collect_accessible_types_(namespace, schema, mutation_type.clone(), accessible_types);
+        collect_accessible_types_(namespace, schema, mutation_type, accessible_types);
     }
 }
 
@@ -615,10 +610,10 @@ fn collect_accessible_types<S: schema::SchemaContext>(
 fn collect_accessible_types_<S: schema::SchemaContext>(
     namespace: &S::Namespace,
     schema: &schema::Schema<S>,
-    current_type_name: ast::TypeName,
+    current_type_name: &ast::TypeName,
     accessible_types: &mut HashSet<TypeName>,
 ) {
-    let current_type = schema.types.get(&current_type_name);
+    let current_type = schema.types.get(current_type_name);
     match current_type {
         Some(schema::TypeInfo::Object(object)) => {
             for namespaced_fields in object.fields.values() {
@@ -631,7 +626,7 @@ fn collect_accessible_types_<S: schema::SchemaContext>(
                                 collect_accessible_types_(
                                     namespace,
                                     schema,
-                                    input_field_type_name.clone(),
+                                    input_field_type_name,
                                     accessible_types,
                                 )
                             }
@@ -643,7 +638,7 @@ fn collect_accessible_types_<S: schema::SchemaContext>(
                         collect_accessible_types_(
                             namespace,
                             schema,
-                            field_type_name.clone(),
+                            field_type_name,
                             accessible_types,
                         );
                     }
@@ -659,7 +654,7 @@ fn collect_accessible_types_<S: schema::SchemaContext>(
                         collect_accessible_types_(
                             namespace,
                             schema,
-                            input_field_type_name.clone(),
+                            input_field_type_name,
                             accessible_types,
                         )
                     }

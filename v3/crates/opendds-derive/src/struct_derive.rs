@@ -3,7 +3,7 @@ use quote::quote;
 use crate::container::*;
 use crate::helpers;
 
-pub fn impl_opendd_struct(name: &syn::Ident, data: StructData<'_>) -> TraitImpls {
+pub fn impl_opendd_struct(name: &syn::Ident, data: &StructData<'_>) -> TraitImpls {
     let (impl_deserialize, json_schema_expr) = match &data {
         StructData::Newtype(field) => (
             quote! {
@@ -185,7 +185,7 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
         let mut required = schemars::Set::new();
     };
 
-    let schema_object = helpers::schema_object(quote! {
+    let schema_object = helpers::schema_object(&quote! {
         instance_type: Some(schemars::schema::InstanceType::Object.into()),
         object: Some(Box::new(schemars::schema::ObjectValidation{
             properties,

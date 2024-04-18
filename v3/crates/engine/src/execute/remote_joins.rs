@@ -98,25 +98,24 @@ pub(crate) mod types;
 #[async_recursion]
 pub(crate) async fn execute_join_locations<'ir>(
     http_context: &HttpContext,
-    execution_span_attribute: String,
-    field_span_attribute: String,
+    execution_span_attribute: &str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
-    join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
+    join_locations: &JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
     project_id: Option<ProjectId>,
 ) -> Result<(), error::Error>
 where
     'ir: 'async_recursion,
 {
     let tracer = tracing_util::global_tracer();
-    for (key, location) in join_locations.locations {
+    for (key, location) in &join_locations.locations {
         // collect the join column arguments from the LHS response, also get
         // the replacement tokens
         let collect_arg_res = tracer.in_span(
             "collect_arguments",
             "Collect arguments for join".into(),
             SpanVisibility::Internal,
-            || collect::collect_arguments(lhs_response, lhs_response_type, &key, &location),
+            || collect::collect_arguments(lhs_response, lhs_response_type, key, location),
         )?;
         if let Some(CollectArgumentResult {
             arguments,
@@ -142,9 +141,9 @@ where
                     || {
                         Box::pin(execute_ndc_query(
                             http_context,
-                            join_node.target_ndc_ir,
+                            &join_node.target_ndc_ir,
                             join_node.target_data_connector,
-                            execution_span_attribute.clone(),
+                            execution_span_attribute.to_string(),
                             remote_alias.clone(),
                             project_id.clone(),
                         ))
@@ -157,12 +156,10 @@ where
             if !location.rest.locations.is_empty() {
                 execute_join_locations(
                     http_context,
-                    execution_span_attribute.clone(),
-                    // TODO: is this field span correct?
-                    field_span_attribute.clone(),
+                    execution_span_attribute,
                     &mut target_response,
                     &join_node.process_response_as,
-                    sub_tree,
+                    &sub_tree,
                     project_id.clone(),
                 )
                 .await?;
@@ -177,7 +174,7 @@ where
                     let rhs_response: HashMap<Argument, ndc_models::RowSet> =
                         join_variables_.into_iter().zip(target_response).collect();
 
-                    join::join_responses(&key, &remote_alias, &location, lhs_response, rhs_response)
+                    join::join_responses(key, &remote_alias, location, lhs_response, &rhs_response)
                 },
             )?;
         }

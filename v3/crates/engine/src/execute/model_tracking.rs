@@ -131,11 +131,11 @@ fn extend_usage_count(usage_counts: UsagesCounts, all_usage_counts: &mut UsagesC
     }
 }
 
-pub fn count_model(model: Qualified<ModelName>, all_usage_counts: &mut UsagesCounts) {
+pub fn count_model(model: &Qualified<ModelName>, all_usage_counts: &mut UsagesCounts) {
     match all_usage_counts
         .models_used
         .iter_mut()
-        .find(|element| element.model == model)
+        .find(|element| element.model == *model)
     {
         None => {
             let model_count = ModelCount {
@@ -150,11 +150,11 @@ pub fn count_model(model: Qualified<ModelName>, all_usage_counts: &mut UsagesCou
     }
 }
 
-pub fn count_command(command: Qualified<CommandName>, all_usage_counts: &mut UsagesCounts) {
+pub fn count_command(command: &Qualified<CommandName>, all_usage_counts: &mut UsagesCounts) {
     match all_usage_counts
         .commands_used
         .iter_mut()
-        .find(|element| element.command == command)
+        .find(|element| element.command == *command)
     {
         None => {
             let command_count = CommandCount {
@@ -261,7 +261,7 @@ mod tests {
     fn test_counter_functions() {
         let mut aggregator = UsagesCounts::new();
         count_command(
-            Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
+            &Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
             &mut aggregator,
         );
         assert_eq!(
@@ -278,7 +278,7 @@ mod tests {
             }
         );
         count_command(
-            Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
+            &Qualified::new("subgraph".to_string(), CommandName(identifier!("command1"))),
             &mut aggregator,
         );
         assert_eq!(
@@ -295,7 +295,7 @@ mod tests {
             }
         );
         count_model(
-            Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+            &Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
             &mut aggregator,
         );
         assert_eq!(
@@ -315,7 +315,7 @@ mod tests {
             }
         );
         count_model(
-            Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
+            &Qualified::new("subgraph".to_string(), ModelName(identifier!("model1"))),
             &mut aggregator,
         );
         assert_eq!(
@@ -335,7 +335,7 @@ mod tests {
             }
         );
         count_model(
-            Qualified::new("subgraph".to_string(), ModelName(identifier!("model2"))),
+            &Qualified::new("subgraph".to_string(), ModelName(identifier!("model2"))),
             &mut aggregator,
         );
         assert_eq!(
@@ -367,7 +367,7 @@ mod tests {
             }
         );
         count_command(
-            Qualified::new("subgraph".to_string(), CommandName(identifier!("command2"))),
+            &Qualified::new("subgraph".to_string(), CommandName(identifier!("command2"))),
             &mut aggregator,
         );
         assert_eq!(

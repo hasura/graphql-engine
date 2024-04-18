@@ -9,7 +9,7 @@ type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorRespo
 
 pub fn execute_mutation_request(
     state: &AppState,
-    request: ndc_models::MutationRequest,
+    request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::MutationResponse> {
     let mut operation_results = vec![];
 

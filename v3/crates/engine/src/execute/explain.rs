@@ -6,7 +6,6 @@ use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
 use crate::metadata::resolved;
 use crate::schema::GDS;
-use crate::utils::async_map::AsyncMap;
 use async_recursion::async_recursion;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -192,12 +191,8 @@ async fn get_execution_steps<'s>(
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
             // A command execution node
-            let data_connector_explain = fetch_explain_from_data_connector(
-                http_context,
-                ndc_request.clone(),
-                data_connector,
-            )
-            .await;
+            let data_connector_explain =
+                fetch_explain_from_data_connector(http_context, &ndc_request, data_connector).await;
             NonEmpty::new(Box::new(types::Step::CommandSelect(
                 types::CommandSelectIR {
                     command_name: alias.to_string(),
@@ -208,12 +203,8 @@ async fn get_execution_steps<'s>(
         }
         ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
             // A model execution node
-            let data_connector_explain = fetch_explain_from_data_connector(
-                http_context,
-                ndc_request.clone(),
-                data_connector,
-            )
-            .await;
+            let data_connector_explain =
+                fetch_explain_from_data_connector(http_context, &ndc_request, data_connector).await;
             NonEmpty::new(Box::new(types::Step::ModelSelect(types::ModelSelectIR {
                 model_name: alias.to_string(),
                 ndc_request,
@@ -221,8 +212,7 @@ async fn get_execution_steps<'s>(
             })))
         }
     };
-    if let Some(join_steps) = get_join_steps(alias.to_string(), join_locations, http_context).await
-    {
+    if let Some(join_steps) = get_join_steps(join_locations, http_context).await {
         sequence_steps.push(Box::new(types::Step::Sequence(join_steps)));
         sequence_steps.push(Box::new(types::Step::HashJoin));
     };
@@ -235,7 +225,6 @@ async fn get_execution_steps<'s>(
 /// TODO: Currently the steps are sequential, we should make them parallel once the executor supports it.
 #[async_recursion]
 async fn get_join_steps(
-    _root_field_name: String,
     join_locations: JoinLocations<(RemoteJoin<'async_recursion, 'async_recursion>, JoinId)>,
     http_context: &HttpContext,
 ) -> Option<NonEmpty<Box<types::Step>>> {
@@ -248,7 +237,7 @@ async fn get_join_steps(
             let ndc_request = types::NDCRequest::Query(query_request);
             let data_connector_explain = fetch_explain_from_data_connector(
                 http_context,
-                ndc_request.clone(),
+                &ndc_request,
                 remote_join.target_data_connector,
             )
             .await;
@@ -272,7 +261,7 @@ async fn get_join_steps(
                 },
             )))
         };
-        if let Some(rest_join_steps) = get_join_steps(alias, location.rest, http_context).await {
+        if let Some(rest_join_steps) = get_join_steps(location.rest, http_context).await {
             sequence_steps.push(Box::new(types::Step::Sequence(rest_join_steps)));
             sequence_steps.push(Box::new(types::Step::HashJoin));
         };
@@ -314,7 +303,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 
 async fn fetch_explain_from_data_connector(
     http_context: &HttpContext,
-    ndc_request: types::NDCRequest,
+    ndc_request: &types::NDCRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
 ) -> types::NDCExplainResponse {
     let tracer = tracing_util::global_tracer();
@@ -333,39 +322,28 @@ async fn fetch_explain_from_data_connector(
                         headers: data_connector.headers.0.clone(),
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
-                    {
-                        // TODO: use capabilities from the data connector context
-                        let capabilities = ndc_client::capabilities_get(&ndc_config).await?;
-                        match ndc_request {
-                            types::NDCRequest::Query(query_request) => capabilities
-                                .capabilities
-                                .query
-                                .explain
-                                .async_map(|_| {
-                                    Box::pin(async move {
-                                        ndc_client::explain_query_post(&ndc_config, query_request)
-                                            .await
-                                            .map_err(error::Error::from)
-                                    })
-                                })
-                                .await
-                                .transpose(),
-                            types::NDCRequest::Mutation(mutation_request) => capabilities
-                                .capabilities
-                                .mutation
-                                .explain
-                                .async_map(|_| {
-                                    Box::pin(async move {
-                                        ndc_client::explain_mutation_post(
-                                            &ndc_config,
-                                            mutation_request,
-                                        )
-                                        .await
-                                        .map_err(error::Error::from)
-                                    })
-                                })
-                                .await
-                                .transpose(),
+                    // TODO: use capabilities from the data connector context
+                    let capabilities = ndc_client::capabilities_get(&ndc_config).await?;
+                    match ndc_request {
+                        types::NDCRequest::Query(query_request) => {
+                            if capabilities.capabilities.query.explain.is_some() {
+                                ndc_client::explain_query_post(&ndc_config, query_request)
+                                    .await
+                                    .map(Some)
+                                    .map_err(error::Error::from)
+                            } else {
+                                Ok(None)
+                            }
+                        }
+                        types::NDCRequest::Mutation(mutation_request) => {
+                            if capabilities.capabilities.mutation.explain.is_some() {
+                                ndc_client::explain_mutation_post(&ndc_config, mutation_request)
+                                    .await
+                                    .map(Some)
+                                    .map_err(error::Error::from)
+                            } else {
+                                Ok(None)
+                            }
                         }
                     }
                 })

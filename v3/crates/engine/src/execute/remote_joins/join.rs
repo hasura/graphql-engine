@@ -21,7 +21,7 @@ pub(crate) fn join_responses(
     remote_alias: &str,
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     lhs_response: &mut [ndc_models::RowSet],
-    rhs_response: HashMap<BTreeMap<String, ValueExt>, ndc_models::RowSet>,
+    rhs_response: &HashMap<BTreeMap<String, ValueExt>, ndc_models::RowSet>,
 ) -> Result<(), error::Error> {
     for row_set in lhs_response.iter_mut() {
         if let Some(rows) = row_set.rows.as_mut() {
@@ -44,8 +44,8 @@ pub(crate) fn join_responses(
                                     location,
                                     &mut command_row_parsed,
                                     remote_alias.to_owned(),
-                                    alias.to_owned(),
-                                    &rhs_response,
+                                    alias,
+                                    rhs_response,
                                 )?;
                                 *command_row = json::to_value(command_row_parsed)?;
                             }
@@ -59,8 +59,8 @@ pub(crate) fn join_responses(
                                 location,
                                 &mut command_row,
                                 remote_alias.to_owned(),
-                                alias.to_owned(),
-                                &rhs_response,
+                                alias,
+                                rhs_response,
                             )?;
                             *x = ndc_models::RowFieldValue(json::to_value(command_row)?);
                         }
@@ -80,8 +80,8 @@ pub(crate) fn join_responses(
                             location,
                             row,
                             remote_alias.to_owned(),
-                            alias.to_owned(),
-                            &rhs_response,
+                            alias,
+                            rhs_response,
                         )?;
                     }
                 };
@@ -97,7 +97,7 @@ fn follow_location_and_insert_value(
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     row: &mut IndexMap<String, ndc_models::RowFieldValue>,
     remote_alias: String,
-    key: String,
+    key: &str,
     rhs_response: &HashMap<Argument, ndc_models::RowSet>,
 ) -> Result<(), error::Error> {
     match &location.join_node {
@@ -109,7 +109,7 @@ fn follow_location_and_insert_value(
         }
         JoinNode::Local(location_kind) => {
             let row_field_val =
-                row.get_mut(&key)
+                row.get_mut(key)
                     .ok_or(error::InternalEngineError::InternalGeneric {
                         description: "unexpected: could not find {key} in row".into(),
                     })?;
@@ -130,7 +130,7 @@ fn follow_location_and_insert_value(
                                 sub_location,
                                 inner_row,
                                 remote_alias.to_string(),
-                                sub_key.to_string(),
+                                sub_key,
                                 rhs_response,
                             )?;
                         }
@@ -152,7 +152,7 @@ fn follow_location_and_insert_value(
                                             sub_location,
                                             inner_row,
                                             remote_alias.to_string(),
-                                            sub_key.to_string(),
+                                            sub_key,
                                             rhs_response,
                                         )?
                                     }
@@ -171,7 +171,7 @@ fn follow_location_and_insert_value(
                                         sub_location,
                                         &mut inner_row,
                                         remote_alias.to_string(),
-                                        sub_key.to_string(),
+                                        sub_key,
                                         rhs_response,
                                     )?
                                 }

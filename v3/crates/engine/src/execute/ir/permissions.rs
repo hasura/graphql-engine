@@ -88,7 +88,7 @@ pub(crate) fn process_model_predicate<'s>(
             operator,
         } => Ok(make_permission_unary_boolean_expression(
             ndc_column.clone(),
-            operator,
+            *operator,
             &relationship_paths,
         )?),
         resolved::model::ModelPredicate::BinaryFieldComparison {
@@ -172,7 +172,7 @@ pub(crate) fn process_model_predicate<'s>(
             );
 
             // Add the target model being used in the usage counts
-            count_model(relationship_info.target_model_name.clone(), usage_counts);
+            count_model(&relationship_info.target_model_name, usage_counts);
 
             process_model_predicate(
                 predicate,
@@ -210,7 +210,7 @@ fn make_permission_binary_boolean_expression(
 
 fn make_permission_unary_boolean_expression(
     ndc_column: String,
-    operator: &ndc_models::UnaryComparisonOperator,
+    operator: ndc_models::UnaryComparisonOperator,
     relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
@@ -219,7 +219,7 @@ fn make_permission_unary_boolean_expression(
             name: ndc_column,
             path: path_elements,
         },
-        operator: *operator,
+        operator,
     })
 }
 

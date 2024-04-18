@@ -96,7 +96,7 @@ pub async fn capabilities_get(
 /// https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request
 pub async fn explain_query_post(
     configuration: &Configuration,
-    query_request: ndc_models::QueryRequest,
+    query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -112,7 +112,7 @@ pub async fn explain_query_post(
                         .map_err(|_| Error::InvalidBaseURL)?;
                     let req_builder = client.request(reqwest::Method::POST, uri);
 
-                    execute_request(configuration, req_builder.json(&query_request)).await
+                    execute_request(configuration, req_builder.json(query_request)).await
                 })
             },
         )
@@ -124,7 +124,7 @@ pub async fn explain_query_post(
 /// https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1
 pub async fn explain_mutation_post(
     configuration: &Configuration,
-    mutation_request: ndc_models::MutationRequest,
+    mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -140,7 +140,7 @@ pub async fn explain_mutation_post(
                         .map_err(|_| Error::InvalidBaseURL)?;
                     let req_builder = client.request(reqwest::Method::POST, uri);
 
-                    execute_request(configuration, req_builder.json(&mutation_request)).await
+                    execute_request(configuration, req_builder.json(mutation_request)).await
                 })
             },
         )
@@ -152,7 +152,7 @@ pub async fn explain_mutation_post(
 /// https://hasura.github.io/ndc-spec/specification/mutations/index.html
 pub async fn mutation_post(
     configuration: &Configuration,
-    mutation_request: ndc_models::MutationRequest,
+    mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::MutationResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -168,7 +168,7 @@ pub async fn mutation_post(
                         .map_err(|_| Error::InvalidBaseURL)?;
                     let req_builder = client.request(reqwest::Method::POST, uri);
 
-                    execute_request(configuration, req_builder.json(&mutation_request)).await
+                    execute_request(configuration, req_builder.json(mutation_request)).await
                 })
             },
         )
@@ -180,7 +180,7 @@ pub async fn mutation_post(
 /// https://hasura.github.io/ndc-spec/specification/queries/index.html
 pub async fn query_post(
     configuration: &Configuration,
-    query_request: ndc_models::QueryRequest,
+    query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::QueryResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -196,7 +196,7 @@ pub async fn query_post(
                         .map_err(|_| Error::InvalidBaseURL)?;
                     let req_builder = client.request(reqwest::Method::POST, uri);
 
-                    execute_request(configuration, req_builder.json(&query_request)).await
+                    execute_request(configuration, req_builder.json(query_request)).await
                 })
             },
         )

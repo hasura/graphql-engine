@@ -427,13 +427,13 @@ fn in_curly_braces(strings: Vec<String>) -> String {
         "{{\n{}\n}}",
         strings
             .into_iter()
-            .map(with_indent)
+            .map(|s| with_indent(&s))
             .collect::<Vec<String>>()
             .join("\n")
     )
 }
 
-fn with_indent(sdl: String) -> String {
+fn with_indent(sdl: &str) -> String {
     sdl.lines()
         .map(|l| format!("  {}", l))
         .collect::<Vec<String>>()

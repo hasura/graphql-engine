@@ -221,7 +221,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(annotation.model_name.clone(), usage_counts);
+    count_model(&annotation.model_name, usage_counts);
     let field_call = field.field_call()?;
 
     let mut limit = None;
@@ -335,7 +335,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
-    count_command(annotation.command_name.clone(), usage_counts);
+    count_command(&annotation.command_name, usage_counts);
     let field_call = field.field_call()?;
 
     let target_source =
@@ -439,7 +439,7 @@ pub(crate) fn build_local_command_relationship<'s>(
         field,
         field_call,
         &annotation.target_type,
-        &annotation.target_base_type_kind,
+        annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
     )?;
@@ -581,7 +581,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
         field,
         field_call,
         &annotation.target_type,
-        &annotation.target_base_type_kind,
+        annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
     )?;

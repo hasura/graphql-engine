@@ -112,7 +112,7 @@ pub(crate) enum NDCExplainResponse {
     Error(GraphQLError),
 }
 
-#[derive(Serialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type", content = "value")]
 pub(crate) enum NDCRequest {

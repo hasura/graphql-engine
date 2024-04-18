@@ -112,7 +112,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
 
     // Add the name of the root model
     let mut usage_counts = UsagesCounts::new();
-    count_model(model_name.clone(), &mut usage_counts);
+    count_model(model_name, &mut usage_counts);
 
     let filter_clause = ResolvedFilterExpression {
         expression: Some(ndc_models::Expression::And {

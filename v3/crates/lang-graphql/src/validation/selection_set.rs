@@ -230,7 +230,7 @@ where
             directives,
         };
         if cannonical_field.reachable {
-            field_calls.insert(reachability.iter().cloned().cloned().collect(), field_call);
+            field_calls.insert(reachability.iter().copied().cloned().collect(), field_call);
         }
         alias_selection_sets.push((reachability, selection_sets));
     }

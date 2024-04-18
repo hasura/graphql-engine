@@ -153,7 +153,7 @@ fn build_global_id_fields(
 
 pub(crate) fn generate_nested_selection<'s>(
     qualified_type_reference: &QualifiedTypeReference,
-    field_base_type_kind: &TypeKind,
+    field_base_type_kind: TypeKind,
     field: &normalized_ast::Field<'s, GDS>,
     data_connector: &'s resolved::data_connector::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
@@ -232,7 +232,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     })?;
                     let nested_selection = generate_nested_selection(
                         field_type,
-                        field_base_type_kind,
+                        *field_base_type_kind,
                         field,
                         data_connector,
                         type_mappings,

@@ -151,7 +151,7 @@ pub enum ApolloFederationRootFields {
     Service,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Display)]
 pub enum TypeKind {
     Scalar,
     Object,

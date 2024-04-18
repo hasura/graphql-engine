@@ -73,14 +73,14 @@ pub async fn post_query(
     State(state): State<Arc<AppState>>,
     Json(request): Json<ndc_models::QueryRequest>,
 ) -> Result<Json<ndc_models::QueryResponse>> {
-    custom_connector::query::execute_query_request(state.borrow(), request).map(Json)
+    custom_connector::query::execute_query_request(state.borrow(), &request).map(Json)
 }
 
 async fn post_mutation(
     State(state): State<Arc<AppState>>,
     Json(request): Json<ndc_models::MutationRequest>,
 ) -> Result<Json<ndc_models::MutationResponse>> {
-    custom_connector::mutation::execute_mutation_request(state.borrow(), request).map(Json)
+    custom_connector::mutation::execute_mutation_request(state.borrow(), &request).map(Json)
 }
 
 async fn post_explain(

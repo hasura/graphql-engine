@@ -1,15 +1,19 @@
-use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
-use http::HeaderMap;
-use opentelemetry::{
-    global::{self, BoxedTracer},
-    trace::{get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer},
-    Context, Key,
-};
-use opentelemetry_http::HeaderExtractor;
 use std::borrow::Cow;
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 
-#[derive(derive_more::Display)]
+use http::HeaderMap;
+use opentelemetry::global::{self, BoxedTracer};
+use opentelemetry::trace::{
+    get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer,
+};
+use opentelemetry::{Context, Key};
+use opentelemetry_http::HeaderExtractor;
+
+use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
+
+#[derive(Clone, Copy, derive_more::Display)]
 pub enum SpanVisibility {
     #[display(fmt = "internal")]
     Internal,
@@ -17,6 +21,7 @@ pub enum SpanVisibility {
     User,
 }
 
+#[derive(Clone, Copy)]
 pub enum AttributeVisibility {
     Default,
     Internal,

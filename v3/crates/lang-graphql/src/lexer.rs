@@ -23,7 +23,7 @@ pub mod string;
 //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 // ];
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Punctuation {
     // !
     Bang,

@@ -22,7 +22,7 @@ pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 /// Executes a NDC operation
 pub async fn execute_ndc_query<'n, 's>(
     http_context: &HttpContext,
-    query: ndc_models::QueryRequest,
+    query: &ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     execution_span_attribute: String,
     field_span_attribute: String,
@@ -61,7 +61,7 @@ pub async fn execute_ndc_query<'n, 's>(
 
 pub(crate) async fn fetch_from_data_connector<'s>(
     http_context: &HttpContext,
-    query_request: ndc_models::QueryRequest,
+    query_request: &ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
 ) -> Result<ndc_models::QueryResponse, error::Error> {
@@ -113,7 +113,7 @@ pub fn append_project_id_to_headers(
 /// Executes a NDC mutation
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
-    query: ndc_models::MutationRequest,
+    query: &ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
@@ -192,7 +192,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_context: &HttpContext,
-    query_request: ndc_models::MutationRequest,
+    query_request: &ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
     project_id: Option<ProjectId>,
 ) -> Result<ndc_models::MutationResponse, error::Error> {

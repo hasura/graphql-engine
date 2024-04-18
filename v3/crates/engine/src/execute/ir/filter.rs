@@ -175,7 +175,7 @@ pub(crate) fn build_filter_expression<'s>(
             },
         )) => {
             // Add the target model being used in the usage counts
-            count_model(target_model_name.clone(), usage_counts);
+            count_model(target_model_name, usage_counts);
 
             let ndc_relationship_name = NDCRelationshipName::new(source_type, relationship_name)?;
             relationships.insert(

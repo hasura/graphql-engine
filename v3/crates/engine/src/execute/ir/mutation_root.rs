@@ -67,7 +67,7 @@ pub fn generate_ir<'n, 's>(
                                     field,
                                     field_call,
                                     result_type,
-                                    result_base_type_kind,
+                                    *result_base_type_kind,
                                     source,
                                     session_variables,
                                 )?,

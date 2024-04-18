@@ -12,14 +12,14 @@ use crate::container::*;
 #[proc_macro_derive(OpenDd, attributes(opendd))]
 pub fn derive(input_tok: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input_tok as DeriveInput);
-    impl_opendd(input)
+    impl_opendd(&input)
         .unwrap_or_else(syn::Error::into_compile_error)
         .into()
 }
 
-fn impl_opendd(input: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+fn impl_opendd(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
-    let cont = Container::from_derive_input(&input)?;
+    let cont = Container::from_derive_input(input)?;
     let TraitImpls {
         deserialize: impl_deserialize,
         json_schema,
@@ -30,13 +30,13 @@ fn impl_opendd(input: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
             })
         }
         Data::Enum(EnumData::Impl(impl_style, enum_variants)) => {
-            enum_derive::impl_opendd_enum(impl_style, enum_variants)
+            enum_derive::impl_opendd_enum(impl_style, &enum_variants)
         }
-        Data::Struct(struct_data) => struct_derive::impl_opendd_struct(name, struct_data),
+        Data::Struct(struct_data) => struct_derive::impl_opendd_struct(name, &struct_data),
     };
     let json_schema_metadata = cont.json_schema_metadata;
     let schema_name = &json_schema_metadata.schema_name.to_string();
-    let impl_json_schema = helpers::apply_schema_metadata(json_schema, json_schema_metadata);
+    let impl_json_schema = helpers::apply_schema_metadata(&json_schema, json_schema_metadata);
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     Ok(quote! {
         impl #impl_generics open_dds::traits::OpenDd for #name #ty_generics #where_clause {

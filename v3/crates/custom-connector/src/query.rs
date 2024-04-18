@@ -16,14 +16,18 @@ use crate::{
 
 pub type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
+const DEFAULT_VARIABLE_SETS: &[BTreeMap<String, Value>] = &[BTreeMap::new()];
+
 pub fn execute_query_request(
     state: &AppState,
-    request: ndc_models::QueryRequest,
+    request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::QueryResponse> {
-    let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
-
+    let variable_sets: &[BTreeMap<String, Value>] = request
+        .variables
+        .as_deref()
+        .unwrap_or(DEFAULT_VARIABLE_SETS);
     let mut row_sets = vec![];
-    for variables in variable_sets.iter() {
+    for variables in variable_sets {
         let row_set = execute_query_with_variables(
             &request.collection,
             &request.arguments,
@@ -106,6 +110,7 @@ pub(crate) fn parse_object_argument<'a>(
     Ok(name_object)
 }
 
+#[derive(Clone, Copy)]
 enum Root<'a> {
     /// References to the root collection actually
     /// refer to the current row, because the path to
@@ -272,14 +277,14 @@ fn eval_aggregate(
                     ))
                 })
                 .collect::<Result<Vec<_>>>()?;
-            eval_aggregate_function(function, values)
+            eval_aggregate_function(function, &values)
         }
     }
 }
 
 fn eval_aggregate_function(
     function: &str,
-    values: Vec<&serde_json::Value>,
+    values: &[&serde_json::Value],
 ) -> Result<serde_json::Value> {
     let int_values = values
         .iter()
@@ -416,7 +421,7 @@ fn eval_order_by_element(
     element: &ndc_models::OrderByElement,
     item: &Row,
 ) -> Result<serde_json::Value> {
-    match element.target.clone() {
+    match &element.target {
         ndc_models::OrderByTarget::Column { name, path } => {
             eval_order_by_column(collection_relationships, variables, state, item, path, name)
         }
@@ -450,9 +455,9 @@ fn eval_order_by_star_count_aggregate(
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<ndc_models::PathElement>,
+    path: &[ndc_models::PathElement],
 ) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, &path, item)?;
+    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     Ok(rows.len().into())
 }
 
@@ -461,15 +466,15 @@ fn eval_order_by_single_column_aggregate(
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<ndc_models::PathElement>,
-    column: String,
-    function: String,
+    path: &[ndc_models::PathElement],
+    column: &str,
+    function: &str,
 ) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, &path, item)?;
+    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     let values = rows
         .iter()
         .map(|row| {
-            row.get(column.as_str()).ok_or((
+            row.get(column).ok_or((
                 StatusCode::BAD_REQUEST,
                 Json(ndc_models::ErrorResponse {
                     message: "invalid column name".into(),
@@ -478,7 +483,7 @@ fn eval_order_by_single_column_aggregate(
             ))
         })
         .collect::<Result<Vec<_>>>()?;
-    eval_aggregate_function(&function, values)
+    eval_aggregate_function(function, &values)
 }
 
 fn eval_order_by_column(
@@ -486,10 +491,10 @@ fn eval_order_by_column(
     variables: &BTreeMap<String, serde_json::Value>,
     state: &AppState,
     item: &BTreeMap<String, serde_json::Value>,
-    path: Vec<ndc_models::PathElement>,
-    name: String,
+    path: &[ndc_models::PathElement],
+    name: &str,
 ) -> Result<serde_json::Value> {
-    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, &path, item)?;
+    let rows: Vec<Row> = eval_path(collection_relationships, variables, state, path, item)?;
     if rows.len() > 1 {
         return Err((
             StatusCode::BAD_REQUEST,
@@ -500,7 +505,7 @@ fn eval_order_by_column(
         ));
     }
     match rows.first() {
-        Some(row) => eval_column(row, name.as_str()),
+        Some(row) => eval_column(row, name),
         None => Ok(serde_json::Value::Null),
     }
 }

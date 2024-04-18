@@ -105,7 +105,7 @@ pub fn check_fragment_cycles<'q>(
             executable::Selection::FragmentSpread(spread) => {
                 let fragment_name = &spread.fragment_name.item;
                 if fragment_path.contains(fragment_name) {
-                    let mut path = fragment_path.iter().cloned().cloned().collect::<Vec<_>>();
+                    let mut path = fragment_path.iter().copied().cloned().collect::<Vec<_>>();
                     path.push(fragment_name.clone());
                     return Err(Error::CycleDetected(path));
                 }

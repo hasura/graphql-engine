@@ -427,7 +427,7 @@ impl<'a> Parser<'a> {
     {
         let start = self.parse_punctuation(start_token)?;
         let mut items = vec![];
-        let end_token_ = &lexer::Token::Punctuation(end_token.clone());
+        let end_token_ = &lexer::Token::Punctuation(end_token);
         while !self.is_next_token(end_token_) {
             items.push(parse(self)?);
         }
@@ -451,7 +451,7 @@ impl<'a> Parser<'a> {
     where
         F: Fn(&mut Self) -> Result<T>,
     {
-        if self.is_next_token(&lexer::Token::Punctuation(start_token.clone())) {
+        if self.is_next_token(&lexer::Token::Punctuation(start_token)) {
             Ok(Some(self.parse_delimited_list_helper(
                 start_token,
                 end_token,

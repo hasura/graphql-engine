@@ -32,7 +32,7 @@ pub(crate) fn generate_select_many_arguments(
     // insert limit argument
     if let Some(limit_field) = &model.graphql_api.limit_field {
         let limit_argument = generate_int_input_argument(
-            limit_field.field_name.to_string(),
+            limit_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
                 ModelInputAnnotation::ModelLimitArgument,
             )),
@@ -46,7 +46,7 @@ pub(crate) fn generate_select_many_arguments(
     // insert offset argument
     if let Some(offset_field) = &model.graphql_api.offset_field {
         let offset_argument = generate_int_input_argument(
-            offset_field.field_name.to_string(),
+            offset_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
                 ModelInputAnnotation::ModelOffsetArgument,
             )),
@@ -153,10 +153,10 @@ pub(crate) fn select_many_field(
 
 ///  Generates the input field for the arguments which are of type int.
 pub(crate) fn generate_int_input_argument(
-    name: String,
+    name: &str,
     annotation: Annotation,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
-    let input_field_name = resolved::types::mk_name(&name)?;
+    let input_field_name = resolved::types::mk_name(name)?;
     Ok(gql_schema::InputField::new(
         input_field_name,
         None,

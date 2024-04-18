@@ -33,19 +33,19 @@ impl EnumTagType {
     }
 }
 
-pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: Vec<EnumVariant<'_>>) -> TraitImpls {
+pub fn impl_opendd_enum(impl_style: EnumImplStyle, variants: &[EnumVariant<'_>]) -> TraitImpls {
     let (tag, deserialize_exp, json_schema_expr) = match impl_style {
         EnumImplStyle::UntaggedWithKind => (
             "kind".to_string(),
-            impl_deserialize_as_untagged(&variants),
-            impl_json_schema_untagged(&variants),
+            impl_deserialize_as_untagged(variants),
+            impl_json_schema_untagged(variants),
         ),
         EnumImplStyle::Tagged(tag_kind) => {
             let tag_type = EnumTagType::new(&tag_kind);
             (
                 tag_type.generate_tag(),
-                impl_deserialize_as_tagged(&variants, &tag_type),
-                impl_json_schema_tagged(&variants, &tag_type),
+                impl_deserialize_as_tagged(variants, &tag_type),
+                impl_json_schema_tagged(variants, &tag_type),
             )
         }
     };
@@ -228,8 +228,8 @@ fn impl_json_schema_untagged(variants: &[EnumVariant<'_>]) -> proc_macro2::Token
                 open_dds::traits::gen_subschema_for::<#ty>(gen)
             }
         })
-        .collect();
-    helpers::variant_subschemas(false, schemas)
+        .collect::<Vec<_>>();
+    helpers::variant_subschemas(false, &schemas)
 }
 
 fn impl_json_schema_tagged(
@@ -303,9 +303,9 @@ fn impl_json_schema_tagged(
                     }}
 
                 })
-                .collect();
+                .collect::<Vec<_>>();
 
-            helpers::variant_subschemas(unique_names.len() == count, variant_schemas)
+            helpers::variant_subschemas(unique_names.len() == count, &variant_schemas)
         }
         EnumTagType::Adjacent { tag, content } => {
             let mut unique_names = std::collections::HashSet::new();
@@ -317,7 +317,7 @@ fn impl_json_schema_tagged(
                     count += 1;
 
                     let name = &variant.renamed_variant;
-                    let schema = helpers::schema_object(quote! {
+                    let schema = helpers::schema_object(&quote! {
                         instance_type: Some(schemars::schema::InstanceType::String.into()),
                         enum_values: Some(vec![#name.into()]),
                     });
@@ -325,7 +325,7 @@ fn impl_json_schema_tagged(
                     let content_schema = quote! {
                         open_dds::traits::gen_subschema_for::<#ty>(gen)
                     };
-                    helpers::schema_object(quote! {
+                    helpers::schema_object(&quote! {
                         instance_type: Some(schemars::schema::InstanceType::Object.into()),
                         object: Some(Box::new(schemars::schema::ObjectValidation {
                             properties: {
@@ -345,9 +345,9 @@ fn impl_json_schema_tagged(
                         })),
                     })
                 })
-                .collect();
+                .collect::<Vec<_>>();
 
-            helpers::variant_subschemas(unique_names.len() == count, variant_schemas)
+            helpers::variant_subschemas(unique_names.len() == count, &variant_schemas)
         }
     }
 }

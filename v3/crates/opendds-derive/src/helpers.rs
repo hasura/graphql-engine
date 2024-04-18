@@ -84,7 +84,7 @@ fn none_if_empty(s: String) -> Option<String> {
 }
 
 pub fn apply_schema_metadata(
-    schema_expr: proc_macro2::TokenStream,
+    schema_expr: &proc_macro2::TokenStream,
     json_schema_metadata: JsonSchemaMetadata,
 ) -> proc_macro2::TokenStream {
     let title = json_schema_metadata.title;
@@ -117,7 +117,7 @@ pub fn apply_schema_metadata(
     }
 }
 
-pub fn schema_object(properties: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+pub fn schema_object(properties: &proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     quote! {
         schemars::schema::Schema::Object(
             schemars::schema::SchemaObject {
@@ -131,17 +131,17 @@ pub fn schema_object(properties: proc_macro2::TokenStream) -> proc_macro2::Token
 /// be done for most tagging regimes by checking that all tag names are unique.
 pub fn variant_subschemas(
     unique: bool,
-    schemas: Vec<proc_macro2::TokenStream>,
+    schemas: &[proc_macro2::TokenStream],
 ) -> proc_macro2::TokenStream {
     if unique {
-        schema_object(quote! {
+        schema_object(&quote! {
             subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
                 one_of: Some(vec![#(#schemas),*]),
                 ..Default::default()
             })),
         })
     } else {
-        schema_object(quote! {
+        schema_object(&quote! {
             subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
                 any_of: Some(vec![#(#schemas),*]),
                 ..Default::default()

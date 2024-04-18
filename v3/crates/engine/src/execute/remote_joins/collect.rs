@@ -137,7 +137,7 @@ fn collect_argument_from_row<'s, 'ir>(
                         .to_string(),
                 })?;
 
-            let rows = rows_from_row_field_value(location_kind, nested_val)?;
+            let rows = rows_from_row_field_value(*location_kind, nested_val)?;
             if let Some(mut rows) = rows {
                 for (sub_key, sub_location) in &location.rest.locations {
                     for row in rows.iter_mut() {
@@ -186,7 +186,7 @@ pub(crate) fn create_argument(
 }
 
 fn rows_from_row_field_value(
-    location_kind: &LocationKind,
+    location_kind: LocationKind,
     nested_val: &ndc_models::RowFieldValue,
 ) -> Result<Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>>, error::Error> {
     let rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>> = match location_kind {
