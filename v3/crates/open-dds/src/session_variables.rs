@@ -1,5 +1,6 @@
 /// Module that defines the Hasura session variables.
 use core::fmt;
+use std::convert::Infallible;
 use std::str::FromStr;
 
 use lazy_static::lazy_static;
@@ -18,7 +19,7 @@ lazy_static! {
 }
 
 impl FromStr for SessionVariable {
-    type Err = ();
+    type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(SessionVariable(s.trim().to_lowercase()))

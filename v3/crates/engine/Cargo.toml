@@ -27,7 +27,7 @@ open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../opendds-derive" }
 tracing-util = { path = "../tracing-util" }
 
-anyhow = "1.0.75"
+anyhow = "1"
 async-recursion = "1.0.5"
 axum = { version = "0.6.20" }
 base64 = "0.21.2"

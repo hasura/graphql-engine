@@ -19,7 +19,7 @@ bench = false
 [dependencies]
 tracing-util = { path = "../../tracing-util" }
 
-anyhow = "1.0.80"
+anyhow = "1"
 axum = "0.6.20"
 http = "0.2"
 serde_json = "1.0.108"

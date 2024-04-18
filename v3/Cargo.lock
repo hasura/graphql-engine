@@ -1295,6 +1295,7 @@ dependencies = [
 name = "hasura-authn-jwt"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "cookie",
  "hasura-authn-core",
