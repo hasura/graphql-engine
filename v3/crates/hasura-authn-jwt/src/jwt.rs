@@ -16,7 +16,7 @@ use schemars::schema::{Schema, SchemaObject};
 
 use schemars::JsonSchema;
 use serde::{de::Error as SerdeDeError, Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::HashSet;
 use thiserror::Error;
 use tracing_util::{ErrorVisibility, SpanVisibility, TraceableError};
@@ -345,8 +345,7 @@ pub struct JWTConfig {
 
 impl JWTConfig {
     fn example() -> Self {
-        serde_json::from_str(
-            r#"
+        serde_json::from_value(json!(
             {
                 "key": {
                     "fixed": {
@@ -366,8 +365,7 @@ impl JWTConfig {
                     }
                 }
             }
-        "#,
-        )
+        ))
         .unwrap()
     }
 }
@@ -695,7 +693,6 @@ pub(crate) fn get_authorization_token(
 mod tests {
     use std::str::FromStr;
 
-    use indoc::indoc;
     use jsonwebkey as jwk;
     use jwk::{Algorithm::ES256, JsonWebKey};
     use jwt::{encode, EncodingKey};
@@ -706,24 +703,23 @@ mod tests {
     use super::*;
 
     fn get_claims(hasura_claims: &serde_json::Value, insert_hasura_claims_at: &str) -> Claims {
-        let claims_str = r#"
-                            {
-                              "sub": "1234567890",
-                              "name": "John Doe",
-                              "iat": 1693439022,
-                              "exp": 1916239022,
-                              "https://hasura.io/jwt/claims": {}
-                            }"#;
-        let mut claims: serde_json::Value = serde_json::from_str(claims_str).unwrap();
+        let mut claims = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1916239022,
+                "https://hasura.io/jwt/claims": {}
+            }
+        );
         *claims.pointer_mut(insert_hasura_claims_at).unwrap() = hasura_claims.clone();
-
         serde_json::from_value(claims).unwrap()
     }
 
     fn get_encoded_claims(alg: jwt::Algorithm) -> String {
         let hasura_claims = get_default_hasura_claims();
         let claims: Claims = get_claims(
-            &serde_json::to_value(hasura_claims.clone()).unwrap(),
+            &serde_json::to_value(hasura_claims).unwrap(),
             &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
         );
         let jwt_header = jwt::Header {
@@ -850,7 +846,7 @@ mod tests {
         let hasura_claims = get_default_hasura_claims();
         let encoded_claims = get_encoded_claims(jwt::Algorithm::HS256);
 
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_json = json!(
             {
                "key": {
                  "fixed": {
@@ -870,9 +866,9 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config: JWTConfig = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json).unwrap();
 
         let http_client = reqwest::Client::new();
 
@@ -886,7 +882,7 @@ mod tests {
     #[tokio::test]
     // This test emulates if the stringified JSON claims are decoded correctly from the encoded JWT using HS256 algorithm
     async fn test_jwt_stringified_hasura_claims() {
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_value = json!(
             {
                "key": {
                  "fixed": {
@@ -906,9 +902,9 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config = serde_json::from_value(jwt_secret_config_value).unwrap();
 
         let hasura_claims = get_default_hasura_claims();
         let stringified_hasura_claims = serde_json::to_string(&hasura_claims).unwrap();
@@ -943,7 +939,7 @@ mod tests {
     async fn test_jwt_claims_namespace_path() {
         let alg = jwt::Algorithm::HS256;
 
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_json = json!(
             {
                "key": {
                  "fixed": {
@@ -963,26 +959,27 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config = serde_json::from_value(jwt_secret_config_json).unwrap();
 
         let hasura_claims = get_default_hasura_claims();
-        let claims_str = r#"
-                            {
-                              "sub": "1234567890",
-                              "name": "John Doe",
-                              "iat": 1693439022,
-                              "exp": 1916239022,
-                              "foo": {
-                                 "hasuraClaims": {
-                                    "x-hasura-default-role": "user",
-                                    "x-hasura-allowed-roles": ["foo", "bar", "user"],
-                                    "x-hasura-user-id": "1"
-                                 }
-                              }
-                            }"#;
-        let claims: Claims = serde_json::from_str(claims_str).unwrap();
+        let claims_json = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1916239022,
+                "foo": {
+                    "hasuraClaims": {
+                        "x-hasura-default-role": "user",
+                        "x-hasura-allowed-roles": ["foo", "bar", "user"],
+                        "x-hasura-user-id": "1"
+                    }
+                }
+            }
+        );
+        let claims: Claims = serde_json::from_value(claims_json).unwrap();
 
         let jwt_header = jwt::Header {
             alg,
@@ -1009,7 +1006,7 @@ mod tests {
     async fn test_jwt_claims_mapping() {
         let alg = jwt::Algorithm::HS256;
 
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_json = json!(
             {
                "key": {
                  "fixed": {
@@ -1041,24 +1038,25 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config = serde_json::from_value(jwt_secret_config_json).unwrap();
 
         let hasura_claims = get_default_hasura_claims();
-        let claims_str = r#"
-                            {
-                              "sub": "1234567890",
-                              "name": "John Doe",
-                              "iat": 1693439022,
-                              "exp": 1916239022,
-                              "roles": [
-                                 "foo",
-                                 "bar",
-                                 "user"
-                              ]
-                            }"#;
-        let claims: Claims = serde_json::from_str(claims_str).unwrap();
+        let claims_json = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1916239022,
+                "roles": [
+                     "foo",
+                     "bar",
+                     "user"
+                ]
+            }
+        );
+        let claims: Claims = serde_json::from_value(claims_json).unwrap();
         let jwt_header = jwt::Header {
             alg,
             ..Default::default()
@@ -1132,25 +1130,24 @@ mod tests {
 
         let jwk_url = url + "/jwk";
 
-        let jwt_config_str = format!(
-            r#"
-             {{
-                "key": {{
-                   "jwkFromUrl": "{jwk_url}"
-                }},
-               "tokenLocation": {{
-                  "type": "BearerAuthorization"
-               }},
-               "claimsConfig": {{
-                  "namespace": {{
-                     "claimsFormat": "Json",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
-                  }}
-               }}
-             }}"#
+        let jwt_config_json = json!(
+            {
+                "key": {
+                   "jwkFromUrl": jwk_url
+                },
+                "tokenLocation": {
+                   "type": "BearerAuthorization"
+                },
+                "claimsConfig": {
+                   "namespace": {
+                      "claimsFormat": "Json",
+                      "location": "/https:~1~1hasura.io~1jwt~1claims"
+                   }
+                }
+            }
         );
 
-        let jwt_config: JWTConfig = serde_json::from_str(&jwt_config_str).unwrap();
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_config_json).unwrap();
 
         let decoded_hasura_claims =
             decode_and_parse_hasura_claims(&http_client, jwt_config.clone(), authorization_token_1)
@@ -1190,48 +1187,54 @@ mod tests {
         for alg in get_all_jwt_algorithms() {
             match alg {
                 jwt::Algorithm::HS256 => {
-                    let jwt_key_config = r#"
-                        "fixed":{
-                           "algorithm": "HS256",
-                           "key": {
-                              "value": "token"
-                           }
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                               "algorithm": "HS256",
+                               "key": {
+                                  "value": "token"
+                               }
+                            }
                         }
-                        "#;
+                    );
                     helper_test_jwt_encode_decode(
-                        jwt_key_config,
+                        &jwt_key_config,
                         jwt::Header::new(jwt::Algorithm::HS256),
                         EncodingKey::from_secret("token".as_ref()),
                     )
                     .await
                 }
                 jwt::Algorithm::HS384 => {
-                    let jwt_key_config = r#"
-                        "fixed":{
-                           "algorithm": "HS384",
-                           "key": {
-                              "value": "token"
-                           }
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                               "algorithm": "HS384",
+                               "key": {
+                                  "value": "token"
+                               }
+                            }
                         }
-                        "#;
+                    );
                     helper_test_jwt_encode_decode(
-                        jwt_key_config,
+                        &jwt_key_config,
                         jwt::Header::new(jwt::Algorithm::HS384),
                         EncodingKey::from_secret("token".as_ref()),
                     )
                     .await
                 }
                 jwt::Algorithm::HS512 => {
-                    let jwt_key_config = r#"
-                        "fixed":{
-                           "algorithm": "HS512",
-                           "key": {
-                              "value": "token"
-                           }
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                               "algorithm": "HS512",
+                               "key": {
+                                  "value": "token"
+                               }
+                            }
                         }
-                        "#;
+                    );
                     helper_test_jwt_encode_decode(
-                        jwt_key_config,
+                        &jwt_key_config,
                         jwt::Header::new(jwt::Algorithm::HS512),
                         EncodingKey::from_secret("token".as_ref()),
                     )
@@ -1249,13 +1252,13 @@ mod tests {
                         .clone()
                         .to_pem()
                         .replace('\n', "");
-                    let jwt_key_config = format!(
-                        r#"
-                        "fixed":{{
-                           "algorithm": "ES256",
-                           "key": {{ "value": "{test_jwk_public_key}" }}
-                        }}
-                        "#
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                                "algorithm": "ES256",
+                                "key": { "value": test_jwk_public_key }
+                            }
+                        }
                     );
 
                     helper_test_jwt_encode_decode(
@@ -1272,13 +1275,13 @@ mod tests {
                         .unwrap()
                         .replace('\n', "");
                     let priv_key = pkey.private_key_to_pem_pkcs8().unwrap();
-                    let jwt_key_config = format!(
-                        r#"
-                        "fixed":{{
-                           "algorithm": "RS256",
-                           "key": {{ "value": "{pub_key}" }}
-                        }}
-                        "#
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                                "algorithm": "RS256",
+                                "key": { "value": pub_key }
+                            }
+                        }
                     );
 
                     helper_test_jwt_encode_decode(
@@ -1295,13 +1298,13 @@ mod tests {
                         .unwrap()
                         .replace('\n', "");
                     let priv_key = pkey.private_key_to_pem_pkcs8().unwrap();
-                    let jwt_key_config = format!(
-                        r#"
-                        "fixed":{{
-                           "algorithm": "RS384",
-                           "key": {{ "value": "{pub_key}" }}
-                        }}
-                        "#
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                                "algorithm": "RS384",
+                                "key": { "value": pub_key }
+                            }
+                        }
                     );
 
                     helper_test_jwt_encode_decode(
@@ -1318,13 +1321,13 @@ mod tests {
                         .unwrap()
                         .replace('\n', "");
                     let priv_key = pkey.private_key_to_pem_pkcs8().unwrap();
-                    let jwt_key_config = format!(
-                        r#"
-                        "fixed":{{
-                           "algorithm": "RS512",
-                           "key": {{ "value": "{pub_key}" }}
-                        }}
-                        "#
+                    let jwt_key_config = json!(
+                        {
+                            "fixed": {
+                                "algorithm": "RS512",
+                                "key": { "value": pub_key }
+                            }
+                        }
                     );
 
                     helper_test_jwt_encode_decode(
@@ -1341,7 +1344,7 @@ mod tests {
     }
 
     async fn helper_test_jwt_encode_decode(
-        jwt_key_config: &str,
+        jwt_key_config: &serde_json::Value,
         jwt_header: jwt::Header,
         encoding_key: EncodingKey,
     ) {
@@ -1351,22 +1354,21 @@ mod tests {
             &DEFAULT_HASURA_CLAIMS_NAMESPACE_POINTER,
         );
         let encoded_claims = encode(&jwt_header, &claims, &encoding_key).unwrap();
-        let jwt_secret_config_str = format!(
-            r#"
-             {{
-               "key": {{{jwt_key_config}}},
-               "tokenLocation": {{
-                  "type": "BearerAuthorization"
-               }},
-               "claimsConfig": {{
-                  "namespace": {{
-                     "claimsFormat": "Json",
-                     "location": "/https:~1~1hasura.io~1jwt~1claims"
-                  }}
-               }}
-             }}"#
+        let jwt_secret_config_json = json!(
+            {
+                "key": jwt_key_config,
+                "tokenLocation": {
+                    "type": "BearerAuthorization"
+                },
+                "claimsConfig": {
+                    "namespace": {
+                        "claimsFormat": "Json",
+                        "location": "/https:~1~1hasura.io~1jwt~1claims"
+                    }
+                }
+            }
         );
-        let jwt_config: JWTConfig = serde_json::from_str(&jwt_secret_config_str).unwrap();
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json).unwrap();
         let http_client = reqwest::Client::new();
         let decoded_claims =
             decode_and_parse_hasura_claims(&http_client, jwt_config, encoded_claims)

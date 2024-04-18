@@ -111,27 +111,26 @@ mod tests {
     use std::str::FromStr;
 
     use auth_base::{RoleAuthorization, SessionVariable, SessionVariableValue};
-    use indoc::indoc;
     use jsonwebtoken as jwt;
     use jsonwebtoken::Algorithm;
     use jwt::{encode, EncodingKey};
     use reqwest::header::AUTHORIZATION;
+    use serde_json::json;
     use tokio;
 
     use super::*;
 
     fn get_claims(hasura_claims: &serde_json::Value, insert_hasura_claims_at: &str) -> Claims {
-        let claims_str = r#"
-                            {
-                              "sub": "1234567890",
-                              "name": "John Doe",
-                              "iat": 1693439022,
-                              "exp": 1916239022,
-                              "https://hasura.io/jwt/claims": {}
-                            }"#;
-        let mut claims: serde_json::Value = serde_json::from_str(claims_str).unwrap();
+        let mut claims = json!(
+            {
+                "sub": "1234567890",
+                "name": "John Doe",
+                "iat": 1693439022,
+                "exp": 1916239022,
+                "https://hasura.io/jwt/claims": {}
+            }
+        );
         *claims.pointer_mut(insert_hasura_claims_at).unwrap() = hasura_claims.clone();
-
         serde_json::from_value(claims).unwrap()
     }
 
@@ -171,7 +170,7 @@ mod tests {
     async fn test_unsuccessful_role_emulation() {
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &get_default_hasura_claims());
 
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_json = json!(
             {
                "key": {
                  "fixed": {
@@ -191,9 +190,9 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config: JWTConfig = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json).unwrap();
 
         let http_client = reqwest::Client::new();
 
@@ -270,7 +269,7 @@ mod tests {
         );
         let encoded_claims = get_encoded_claims(Algorithm::HS256, &hasura_claims);
 
-        let jwt_secret_config_str = indoc! {r#"
+        let jwt_secret_config_json = json!(
             {
                "key": {
                  "fixed": {
@@ -290,9 +289,9 @@ mod tests {
                   }
                }
             }
-            "#};
+        );
 
-        let jwt_config: JWTConfig = serde_json::from_str(jwt_secret_config_str).unwrap();
+        let jwt_config: JWTConfig = serde_json::from_value(jwt_secret_config_json).unwrap();
 
         let http_client = reqwest::Client::new();
 
