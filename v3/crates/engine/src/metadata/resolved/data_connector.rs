@@ -2,7 +2,7 @@ use super::error::Error;
 use super::subgraph::Qualified;
 use indexmap::IndexMap;
 
-use super::stages::data_connectors;
+use super::stages::data_connector_scalar_types;
 use lang_graphql::ast::common::OperationType;
 use ndc_models;
 use open_dds::{
@@ -201,8 +201,11 @@ impl<'de> Deserialize<'de> for SerializableHeaderMap {
 // helper function to determine whether a ndc type is a simple scalar
 pub fn get_simple_scalar<'a, 'b>(
     t: ndc_models::Type,
-    scalars: &'a HashMap<&str, data_connectors::ScalarTypeInfo<'b>>,
-) -> Option<(String, &'a data_connectors::ScalarTypeInfo<'b>)> {
+    scalars: &'a HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo<'b>>,
+) -> Option<(
+    String,
+    &'a data_connector_scalar_types::ScalarTypeWithRepresentationInfo<'b>,
+)> {
     match t {
         ndc_models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
         ndc_models::Type::Nullable { underlying_type } => {

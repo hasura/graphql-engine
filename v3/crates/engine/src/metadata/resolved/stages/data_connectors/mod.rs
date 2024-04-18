@@ -3,7 +3,7 @@ use crate::metadata::resolved::subgraph::Qualified;
 
 pub mod types;
 use std::collections::HashMap;
-pub use types::{DataConnectors, ScalarTypeInfo};
+pub use types::{ComparisonOperators, DataConnectorContext, DataConnectors};
 
 /// resolve data connectors
 pub fn resolve(

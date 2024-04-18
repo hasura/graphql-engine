@@ -1,6 +1,6 @@
 use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
-use super::stages::{data_connector_type_mappings, data_connectors};
+use super::stages::{data_connector_scalar_types, data_connector_type_mappings};
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
@@ -419,7 +419,7 @@ pub fn resolve_model(
 fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
-    scalars: &HashMap<&str, data_connectors::ScalarTypeInfo>,
+    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     subgraph: &str,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
@@ -472,7 +472,7 @@ fn resolve_binary_operator(
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
     fields: &IndexMap<FieldName, FieldDefinition>,
-    scalars: &HashMap<&str, data_connectors::ScalarTypeInfo>,
+    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
 ) -> Result<(String, QualifiedTypeReference), Error> {
@@ -514,7 +514,7 @@ fn resolve_model_predicate(
     model_predicate: &permissions::ModelPredicate,
     model: &Model,
     subgraph: &str,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     fields: &IndexMap<FieldName, FieldDefinition>,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
@@ -552,7 +552,7 @@ fn resolve_model_predicate(
                 // Determine whether the ndc type is a simple scalar
                 // Get available scalars defined in the data connector
                 let scalars = &data_connectors
-                    .data_connectors
+                    .data_connectors_with_scalars
                     .get(&model_source.data_connector.name)
                     .ok_or(Error::UnknownModelDataConnector {
                         model_name: model.name.clone(),
@@ -780,7 +780,7 @@ pub fn resolve_model_select_permissions(
     model: &Model,
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
@@ -863,7 +863,7 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
     model_data_type: &Qualified<CustomTypeName>,
     model_source: &ModelSource,
     field: &FieldName,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     comparison_location: F,
 ) -> Result<NdcColumnForComparison, Error> {
     // Get field mappings of model data type
@@ -891,7 +891,7 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
 
     // Get available scalars defined in the data connector
     let scalars = &data_connectors
-        .data_connectors
+        .data_connectors_with_scalars
         .get(&model_source.data_connector.name)
         .ok_or(Error::UnknownModelDataConnector {
             model_name: model_name.clone(),
@@ -941,7 +941,7 @@ pub fn resolve_model_graphql_api(
     model: &mut Model,
     subgraph: &str,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     model_description: &Option<String>,
     graphql_config: &GraphqlConfig,
 ) -> Result<(), Error> {
@@ -1084,7 +1084,7 @@ pub fn resolve_model_graphql_api(
                 let mut scalar_fields = HashMap::new();
 
                 let scalar_types = &data_connectors
-                    .data_connectors
+                    .data_connectors_with_scalars
                     .get(&model_source.data_connector.name)
                     .ok_or(Error::UnknownModelDataConnector {
                         model_name: model_name.clone(),
@@ -1275,7 +1275,7 @@ pub fn resolve_model_source(
     model_source: &models::ModelSource,
     model: &mut Model,
     subgraph: &str,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
@@ -1290,7 +1290,7 @@ pub fn resolve_model_source(
         model_source.data_connector_name.clone(),
     );
     let data_connector_context = data_connectors
-        .data_connectors
+        .data_connectors_with_scalars
         .get(&qualified_data_connector_name)
         .ok_or_else(|| Error::UnknownModelDataConnector {
             model_name: model.name.clone(),

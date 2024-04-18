@@ -4,7 +4,7 @@ use super::data_connector::DataConnectorLink;
 use super::error::{Error, RelationshipError};
 use super::model::get_ndc_column_for_comparison;
 use super::model::Model;
-use super::stages::data_connectors;
+use super::stages::data_connector_scalar_types;
 use super::subgraph::Qualified;
 use super::subgraph::QualifiedTypeReference;
 use super::types::mk_name;
@@ -153,7 +153,7 @@ fn resolve_relationship_mappings_model(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &ObjectTypeRepresentation,
     target_model: &Model,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut field_mapping_hashset_for_validation: HashSet<&String> = HashSet::new();
@@ -335,7 +335,7 @@ fn get_relationship_capabilities(
     relationship_name: &RelationshipName,
     source_data_connector: &Option<DataConnectorLink>,
     target_name: &RelationshipTargetName,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
     let data_connector = if let Some(data_connector) = &source_data_connector {
         data_connector
@@ -344,7 +344,7 @@ fn get_relationship_capabilities(
     };
 
     let resolved_data_connector = data_connectors
-        .data_connectors
+        .data_connectors_with_scalars
         .get(&data_connector.name)
         .ok_or_else(|| match target_name {
             RelationshipTargetName::Model(model_name) => Error::UnknownModelDataConnector {
@@ -381,7 +381,7 @@ pub fn resolve_relationship(
     subgraph: &str,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, Command>,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     source_type: &ObjectTypeRepresentation,
 ) -> Result<Relationship, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source.clone());

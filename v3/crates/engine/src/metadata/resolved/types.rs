@@ -20,7 +20,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
-use super::stages::{data_connector_type_mappings, data_connectors};
+use super::stages::data_connector_scalar_types;
+use super::stages::data_connector_type_mappings;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
@@ -362,7 +363,7 @@ pub fn resolve_output_type_permission(
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -394,7 +395,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     // validate data connector name
     let data_connector_context = data_connectors
-        .data_connectors
+        .data_connectors_with_scalars
         .get(&qualified_data_connector_name)
         .ok_or_else(|| {
             Error::from(

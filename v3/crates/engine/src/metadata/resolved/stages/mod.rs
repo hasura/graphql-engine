@@ -1,3 +1,4 @@
+pub mod data_connector_scalar_types;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod data_connector_type_mappings;
 pub mod data_connectors;
@@ -32,15 +33,25 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         graphql_types,
     } = scalar_types::resolve(&metadata_accessor, &existing_graphql_types)?;
 
+    let data_connector_scalar_types::DataConnectorWithScalarsOutput {
+        data_connectors,
+        graphql_types,
+    } = data_connector_scalar_types::resolve(
+        &metadata_accessor,
+        &data_connectors,
+        &scalar_types,
+        &graphql_types,
+    )?;
+
     resolve_metadata(
         &metadata_accessor,
         &graphql_config,
-        data_connectors,
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         &data_connector_type_mappings,
         object_types,
         &scalar_types,
+        &data_connectors,
     )
 }

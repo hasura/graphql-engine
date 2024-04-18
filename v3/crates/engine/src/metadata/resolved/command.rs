@@ -1,4 +1,4 @@
-use super::stages::data_connectors;
+use super::stages::data_connector_scalar_types;
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::Error;
@@ -159,7 +159,7 @@ pub fn resolve_command_source(
     command_source: &commands::CommandSource,
     command: &mut Command,
     subgraph: &str,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
@@ -177,7 +177,7 @@ pub fn resolve_command_source(
     );
 
     let data_connector_context = data_connectors
-        .data_connectors
+        .data_connectors_with_scalars
         .get(&qualified_data_connector_name)
         .ok_or_else(|| Error::UnknownCommandDataConnector {
             command_name: command.name.clone(),

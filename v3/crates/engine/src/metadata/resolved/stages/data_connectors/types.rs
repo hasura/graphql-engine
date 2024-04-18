@@ -3,11 +3,9 @@ use crate::metadata::resolved::subgraph::Qualified;
 use serde::{Deserialize, Serialize};
 
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 
 use ndc_models;
 use open_dds::data_connector::{self, DataConnectorName, VersionedSchemaAndCapabilities};
-use open_dds::types::TypeName;
 use std::collections::HashMap;
 
 /// information about a data connector
@@ -47,8 +45,6 @@ pub struct ComparisonOperators {
 // basic scalar type info
 pub struct ScalarTypeInfo<'a> {
     pub scalar_type: &'a ndc_models::ScalarType,
-    pub representation: Option<TypeName>,
-    pub comparison_expression_name: Option<ast::TypeName>,
     pub comparison_operators: ComparisonOperators,
 }
 
@@ -72,8 +68,6 @@ impl<'a> ScalarTypeInfo<'a> {
         }
         ScalarTypeInfo {
             scalar_type: source_scalar,
-            representation: None,
-            comparison_expression_name: None,
             comparison_operators,
         }
     }

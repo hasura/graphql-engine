@@ -4,11 +4,7 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use serde::{Deserialize, Serialize};
 
-use open_dds::{
-    commands::CommandName,
-    models::ModelName,
-    types::{CustomTypeName, TypeName},
-};
+use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::metadata::resolved::command;
 
@@ -20,12 +16,12 @@ use crate::metadata::resolved::model::{
 use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
-    mk_name, resolve_object_boolean_expression_type, resolve_output_type_permission,
+    resolve_object_boolean_expression_type, resolve_output_type_permission,
     ObjectBooleanExpressionType, ObjectTypeRepresentation, ScalarTypeRepresentation,
 };
 
 use crate::metadata::resolved::stages::{
-    data_connector_type_mappings, data_connectors, graphql_config,
+    data_connector_scalar_types, data_connector_type_mappings, graphql_config,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -45,7 +41,6 @@ pub struct Metadata {
 pub fn resolve_metadata(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     graphql_config: &graphql_config::GraphqlConfig,
-    mut data_connectors: data_connectors::DataConnectors,
     mut existing_graphql_types: HashSet<ast::TypeName>,
     mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     mut apollo_federation_entity_enabled_types: HashMap<
@@ -55,6 +50,7 @@ pub fn resolve_metadata(
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Metadata, Error> {
     // resolve type permissions
     let object_types = resolve_type_permissions(metadata_accessor, object_types)?;
@@ -62,18 +58,9 @@ pub fn resolve_metadata(
     // resolve object boolean expression types
     let boolean_expression_types = resolve_boolean_expression_types(
         metadata_accessor,
-        &data_connectors,
+        data_connectors,
         data_connector_type_mappings,
         &object_types,
-        &mut existing_graphql_types,
-    )?;
-
-    // resolve data connector scalar representations
-    // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_data_connector_scalar_representations(
-        metadata_accessor,
-        &mut data_connectors,
-        scalar_types,
         &mut existing_graphql_types,
     )?;
 
@@ -81,7 +68,7 @@ pub fn resolve_metadata(
     // TODO: validate types
     let mut models = resolve_models(
         metadata_accessor,
-        &data_connectors,
+        data_connectors,
         data_connector_type_mappings,
         &object_types,
         scalar_types,
@@ -112,7 +99,7 @@ pub fn resolve_metadata(
     // resolve commands
     let mut commands = resolve_commands(
         metadata_accessor,
-        &data_connectors,
+        data_connectors,
         data_connector_type_mappings,
         &object_types,
         scalar_types,
@@ -121,7 +108,7 @@ pub fn resolve_metadata(
     // resolve relationships
     let object_types = resolve_relationships(
         metadata_accessor,
-        &data_connectors,
+        data_connectors,
         object_types,
         &models,
         &commands,
@@ -138,7 +125,7 @@ pub fn resolve_metadata(
     // TODO: make this return values rather than blindly mutating it's inputs
     resolve_model_permissions(
         metadata_accessor,
-        &data_connectors,
+        data_connectors,
         &object_types,
         &mut models,
     )?;
@@ -156,7 +143,7 @@ pub fn resolve_metadata(
 /// resolve commands
 fn resolve_commands(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
@@ -226,7 +213,7 @@ fn resolve_type_permissions(
 /// resolve object boolean expression types
 fn resolve_boolean_expression_types(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -259,91 +246,10 @@ fn resolve_boolean_expression_types(
     Ok(boolean_expression_types)
 }
 
-/// resolve data connector scalar representations
-/// this currently works by mutating `existing_graphql_types`, let's change it to
-/// return new values instead if possible
-fn resolve_data_connector_scalar_representations(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &mut data_connectors::DataConnectors,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-) -> Result<(), Error> {
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: scalar_type_representation,
-    } in &metadata_accessor.data_connector_scalar_representations
-    {
-        let scalar_type_name: &String = &scalar_type_representation.data_connector_scalar_type;
-        let qualified_data_connector_name = Qualified::new(
-            subgraph.to_string(),
-            scalar_type_representation.data_connector_name.to_owned(),
-        );
-        let connector_context = data_connectors
-            .data_connectors
-            .get_mut(&qualified_data_connector_name)
-            .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
-                scalar_type: scalar_type_name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
-            })?;
-
-        let scalar_type = connector_context
-            .scalars
-            .get_mut(
-                scalar_type_representation
-                    .data_connector_scalar_type
-                    .as_str(),
-            )
-            .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
-                scalar_type: scalar_type_name.clone(),
-                data_connector: qualified_data_connector_name.clone(),
-            })?;
-
-        if scalar_type.representation.is_none() {
-            match &scalar_type_representation.representation {
-                TypeName::Inbuilt(_) => {} // TODO: Validate Nullable and Array types in Inbuilt
-                TypeName::Custom(type_name) => {
-                    let qualified_type_name =
-                        Qualified::new(subgraph.to_string(), type_name.to_owned());
-                    let _representation =
-                        scalar_types.get(&qualified_type_name).ok_or_else(|| {
-                            Error::ScalarTypeUnknownRepresentation {
-                                scalar_type: scalar_type_name.clone(),
-                                type_name: qualified_type_name,
-                            }
-                        })?;
-                }
-            }
-            scalar_type.representation = Some(scalar_type_representation.representation.clone());
-        } else {
-            return Err(Error::DuplicateDataConnectorScalarRepresentation {
-                data_connector: qualified_data_connector_name.clone(),
-                scalar_type: scalar_type_name.clone(),
-            });
-        }
-        scalar_type.comparison_expression_name = match scalar_type_representation.graphql.as_ref() {
-            None => Ok(None),
-            Some(graphql) => match &graphql.comparison_expression_type_name {
-                None => Ok(None),
-                Some(type_name) => mk_name(type_name.0.as_ref()).map(ast::TypeName).map(Some),
-            },
-        }?;
-        // We are allowing conflicting graphql types for scalar comparison expressions, but we still want the typename
-        // to not conflict with other graphql type names
-        //
-        // TODO: This means that comparison expression names conflicting with already encountered graphql type names
-        // will pass through. They'll eventually be caught during schema generation but only if the expression was
-        // reachable in the graphql API. Ideally, we should just fail the build here.
-        if let Some(new_graphql_type) = &scalar_type.comparison_expression_name {
-            existing_graphql_types.insert(new_graphql_type.clone());
-        };
-    }
-    Ok(())
-}
-
 /// resolve models
 fn resolve_models(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
@@ -429,7 +335,7 @@ fn resolve_models(
 /// returns updated `types` value
 fn resolve_relationships(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     mut object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
@@ -512,7 +418,7 @@ fn resolve_command_permissions(
 /// return new values instead where possible
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connectors::DataConnectors,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     models: &mut IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<(), Error> {
