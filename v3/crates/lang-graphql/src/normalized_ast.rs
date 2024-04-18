@@ -26,11 +26,10 @@ pub enum Error {
     #[error("empty type_name found for an object selection set")]
     NoTypenameFound,
 
-    // TODO, uses 'Debug' trait
-    #[error("value not as expected, expected: {expected_kind} but found: {found:?}")]
+    #[error("value not as expected, expected: {expected_kind} but found: {found}")]
     UnexpectedValue {
         expected_kind: &'static str,
-        found: core::result::Result<json::Value, json::Error>,
+        found: json::Value,
     },
 }
 
@@ -115,7 +114,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::Boolean(b)) => Ok(*b),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "BOOLEAN",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -125,7 +124,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::String(s)) => Ok(s.as_str()),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "STRING",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -138,7 +137,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::Integer(i)) => Ok(*i as f64),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "FLOAT",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -147,13 +146,13 @@ impl<'s, S: SchemaContext> Value<'s, S> {
         match self {
             Value::SimpleValue(SimpleValue::Integer(i)) => {
                 u32::try_from(*i).map_err(|_e| Error::UnexpectedValue {
-                    expected_kind: "u32",
-                    found: json::to_value(self),
+                    expected_kind: "NON-NEGATIVE 32-bit INT",
+                    found: self.as_json(),
                 })
             }
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "INT",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -163,7 +162,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::Integer(i)) => Ok(*i),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "INT",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -173,7 +172,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::Object(fields) => Ok(fields),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "OBJECT",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -183,7 +182,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::List(values) => Ok(values),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "LIST",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -193,7 +192,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::Id(s)) => Ok(s.to_string()),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "ID",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }
@@ -207,7 +206,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
             Value::SimpleValue(SimpleValue::Enum(val)) => Ok(val),
             _ => Err(Error::UnexpectedValue {
                 expected_kind: "ENUM",
-                found: json::to_value(self),
+                found: self.as_json(),
             }),
         }
     }

@@ -393,6 +393,20 @@ fn test_model_select_many_limit_offset() -> anyhow::Result<()> {
     )
 }
 
+// ----------- Limit and Offset negative value test
+#[test]
+fn test_model_select_many_negative_limit_offset() -> anyhow::Result<()> {
+    let test_path_string = "execute/models/select_many/limit_offset/unexpected_value";
+    let ndc_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let common_metadata_path_string =
+        "execute/models/select_many/limit_offset/common_metadata/metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[ndc_metadata_path_string, common_metadata_path_string],
+    )
+}
+
 #[test]
 fn test_relay() -> anyhow::Result<()> {
     let test_path_string = "execute/relay/relay";

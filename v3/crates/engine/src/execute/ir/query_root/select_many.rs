@@ -68,10 +68,20 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                 model_argument_annotation,
             )) => match model_argument_annotation {
                 ModelInputAnnotation::ModelLimitArgument => {
-                    limit = Some(argument.value.as_int_u32()?)
+                    limit = Some(
+                        argument
+                            .value
+                            .as_int_u32()
+                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
+                    )
                 }
                 ModelInputAnnotation::ModelOffsetArgument => {
-                    offset = Some(argument.value.as_int_u32()?)
+                    offset = Some(
+                        argument
+                            .value
+                            .as_int_u32()
+                            .map_err(error::Error::map_unexpected_value_to_external_error)?,
+                    )
                 }
                 ModelInputAnnotation::ModelFilterExpression => {
                     filter_clause = filter::resolve_filter_expression(

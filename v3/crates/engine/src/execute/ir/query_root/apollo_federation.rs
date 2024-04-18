@@ -91,20 +91,21 @@ pub(crate) fn entities_ir<'n, 's>(
         let representation = json_representation.as_object().ok_or(
             lang_graphql::normalized_ast::Error::UnexpectedValue {
                 expected_kind: "OBJECT",
-                found: serde_json::to_value(representation),
+                found: json_representation.clone(),
             },
         )?;
         // The __typename field is used to determine the type of the entity
-        let typename_str = representation
-            .get("__typename")
-            .ok_or(error::Error::FieldNotFoundInEntityRepresentation {
+        let typename_value = representation.get("__typename").ok_or(
+            error::Error::FieldNotFoundInEntityRepresentation {
                 field_name: "__typename".to_string(),
-            })?
-            .as_str()
-            .ok_or(lang_graphql::normalized_ast::Error::UnexpectedValue {
-                expected_kind: "OBJECT",
-                found: serde_json::to_value(representation),
-            })?;
+            },
+        )?;
+        let typename_str = typename_value.as_str().ok_or(
+            lang_graphql::normalized_ast::Error::UnexpectedValue {
+                expected_kind: "STRING",
+                found: typename_value.clone(),
+            },
+        )?;
 
         let typename = ast::TypeName(mk_name(typename_str).map_err(|_| {
             error::Error::TypeFieldInvalidGraphQlName {

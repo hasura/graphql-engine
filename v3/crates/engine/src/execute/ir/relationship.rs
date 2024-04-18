@@ -234,37 +234,43 @@ pub(crate) fn generate_model_relationship_ir<'s>(
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(argument_annotation) => match argument_annotation {
-                InputAnnotation::Model(model_argument_annotation) => {
-                    match model_argument_annotation {
-                        ModelInputAnnotation::ModelLimitArgument => {
-                            limit = Some(argument.value.as_int_u32()?)
-                        }
-                        ModelInputAnnotation::ModelOffsetArgument => {
-                            offset = Some(argument.value.as_int_u32()?)
-                        }
-                        ModelInputAnnotation::ModelFilterExpression => {
-                            filter_clause = resolve_filter_expression(
-                                argument.value.as_object()?,
-                                usage_counts,
-                            )?
-                        }
-                        ModelInputAnnotation::ModelOrderByExpression => {
-                            order_by = Some(build_ndc_order_by(argument, usage_counts)?)
-                        }
-                        _ => {
-                            return Err(error::InternalEngineError::UnexpectedAnnotation {
-                                annotation: annotation.clone(),
-                            })?
+            annotation @ Annotation::Input(argument_annotation) => {
+                match argument_annotation {
+                    InputAnnotation::Model(model_argument_annotation) => {
+                        match model_argument_annotation {
+                            ModelInputAnnotation::ModelLimitArgument => {
+                                limit = Some(argument.value.as_int_u32().map_err(
+                                    error::Error::map_unexpected_value_to_external_error,
+                                )?)
+                            }
+                            ModelInputAnnotation::ModelOffsetArgument => {
+                                offset = Some(argument.value.as_int_u32().map_err(
+                                    error::Error::map_unexpected_value_to_external_error,
+                                )?)
+                            }
+                            ModelInputAnnotation::ModelFilterExpression => {
+                                filter_clause = resolve_filter_expression(
+                                    argument.value.as_object()?,
+                                    usage_counts,
+                                )?
+                            }
+                            ModelInputAnnotation::ModelOrderByExpression => {
+                                order_by = Some(build_ndc_order_by(argument, usage_counts)?)
+                            }
+                            _ => {
+                                return Err(error::InternalEngineError::UnexpectedAnnotation {
+                                    annotation: annotation.clone(),
+                                })?
+                            }
                         }
                     }
+                    _ => {
+                        return Err(error::InternalEngineError::UnexpectedAnnotation {
+                            annotation: annotation.clone(),
+                        })?
+                    }
                 }
-                _ => {
-                    return Err(error::InternalEngineError::UnexpectedAnnotation {
-                        annotation: annotation.clone(),
-                    })?
-                }
-            },
+            }
 
             annotation => {
                 return Err(error::InternalEngineError::UnexpectedAnnotation {

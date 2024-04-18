@@ -162,6 +162,12 @@ pub enum Error {
         decoding_error: String,
     },
 
+    #[error("Unexpected value: expecting {expected_kind:}, but found: {found:}")]
+    UnexpectedValue {
+        expected_kind: &'static str,
+        found: json::Value,
+    },
+
     #[error("'{name:}' is not a valid GraphQL name.")]
     TypeFieldInvalidGraphQlName { name: String },
 
@@ -207,6 +213,21 @@ impl Error {
                 path,
                 extensions: details.map(|details| gql::http::Extensions { details }),
             },
+        }
+    }
+
+    /// Map the internal unexpected value error from gql::normalized_ast::Error to external error.
+    /// It is useful to expose any unexpected value error in API response.
+    pub fn map_unexpected_value_to_external_error(error: gql::normalized_ast::Error) -> Self {
+        match error {
+            gql::normalized_ast::Error::UnexpectedValue {
+                expected_kind,
+                found,
+            } => Error::UnexpectedValue {
+                expected_kind,
+                found,
+            },
+            err => Self::from(err),
         }
     }
 }
