@@ -427,7 +427,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
         selectDispatchFunc(e.target.value);
       };
 
-      if (typeof values?.[1] !== 'string') {
+      if (typeof values?.[0] !== 'string') {
         return (
           <SelectGroup
             selectDispatchFunc={selectDispatchFunc}
