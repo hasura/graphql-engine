@@ -164,7 +164,7 @@ async fn make_auth_hook_request(
     http_client: &reqwest::Client,
     auth_hook_config: &AuthHookConfig,
     client_headers: &HeaderMap,
-    allow_role_emulation_for: Option<Role>,
+    allow_role_emulation_for: Option<&Role>,
 ) -> Result<auth_base::Identity, Error> {
     let tracer = tracing_util::global_tracer();
     let http_request_builder = match auth_hook_config.method {
@@ -259,7 +259,7 @@ async fn make_auth_hook_request(
 
             Ok(match allow_role_emulation_for {
                 Some(emulation_role) => {
-                    if role == emulation_role {
+                    if role == *emulation_role {
                         Identity::RoleEmulationEnabled(role)
                     } else {
                         Identity::Specific {
@@ -286,7 +286,7 @@ pub async fn authenticate_request(
     http_client: &reqwest::Client,
     auth_hook_config: &AuthHookConfig,
     client_headers: &HeaderMap,
-    allow_role_emulation_for: Option<Role>,
+    allow_role_emulation_for: Option<&Role>,
 ) -> Result<auth_base::Identity, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -568,7 +568,7 @@ mod tests {
             &http_client,
             &auth_hook_config,
             &client_headers,
-            Some(Role::new("test-admin-role")),
+            Some(&Role::new("test-admin-role")),
         )
         .await
         .unwrap();
@@ -617,7 +617,7 @@ mod tests {
             &http_client,
             &auth_hook_config,
             &client_headers,
-            Some(Role::new("test-admin-role")),
+            Some(&Role::new("test-admin-role")),
         )
         .await
         .unwrap();

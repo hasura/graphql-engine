@@ -355,7 +355,7 @@ where
                                     &engine_state.http_context.client,
                                     webhook_config,
                                     &headers_map,
-                                    auth_config.allow_role_emulation_by.clone(),
+                                    auth_config.allow_role_emulation_by.as_ref(),
                                 )
                                 .await
                                 .map_err(AuthError::from)
@@ -364,7 +364,7 @@ where
                                 jwt_auth::authenticate_request(
                                     &engine_state.http_context.client,
                                     *jwt_secret_config.clone(),
-                                    auth_config.allow_role_emulation_by.clone(),
+                                    auth_config.allow_role_emulation_by.as_ref(),
                                     &headers_map,
                                 )
                                 .await

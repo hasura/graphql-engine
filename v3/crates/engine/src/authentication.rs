@@ -13,7 +13,7 @@ pub enum AuthModeConfig {
     Jwt(Box<jwt::JWTConfig>),
 }
 
-#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd, Deserialize)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
@@ -24,7 +24,7 @@ pub enum AuthConfig {
     V1(AuthConfigV1),
 }
 
-#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd)]
+#[derive(Serialize, Debug, Clone, JsonSchema, PartialEq, opendds_derive::OpenDd, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "AuthConfigV1")]

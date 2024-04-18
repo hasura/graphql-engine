@@ -36,7 +36,7 @@ fn build_allowed_roles(
 pub async fn authenticate_request(
     http_client: &reqwest::Client,
     jwt_config: JWTConfig,
-    allow_role_emulation_for: Option<Role>,
+    allow_role_emulation_for: Option<&Role>,
     headers: &HeaderMap,
 ) -> Result<Identity, Error> {
     let tracer = tracing_util::global_tracer();
@@ -82,7 +82,7 @@ pub async fn authenticate_request(
                                     // `allow_role_emulation_for`, otherwise
                                     // return the specific identity.
                                     Some(role) => {
-                                        if role == emulation_role {
+                                        if role == *emulation_role {
                                             Identity::RoleEmulationEnabled(role)
                                         } else {
                                             Identity::Specific {
@@ -206,7 +206,7 @@ mod tests {
         let authenticated_identity = authenticate_request(
             &http_client,
             jwt_config,
-            Some(Role::new("admin")),
+            Some(&Role::new("admin")),
             &header_map,
         )
         .await
@@ -305,7 +305,7 @@ mod tests {
         let authenticated_identity = authenticate_request(
             &http_client,
             jwt_config,
-            Some(Role::new("admin")),
+            Some(&Role::new("admin")),
             &header_map,
         )
         .await
