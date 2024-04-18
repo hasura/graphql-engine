@@ -455,6 +455,7 @@ async fn get_decoding_key_from_jwk_url(
                 Box::pin(async {
                     let jwk_request = http_client
                         .get(jwk_url)
+                        .headers(tracing_util::get_trace_headers())
                         .timeout(Duration::from_secs(60))
                         .build()
                         .map_err(InternalError::ReqwestError)?;
@@ -1072,6 +1073,7 @@ mod tests {
     #[tokio::test]
     // This test emulates scenarios where multiple JWKs are present and only the correct encoded JWT is used to decode the Hasura claims
     async fn test_jwk() -> anyhow::Result<()> {
+        let _ = tracing_util::start_tracer(None, "test_jwk", "0")?;
         let mut server = mockito::Server::new_async().await;
 
         let url = server.url();
@@ -1089,8 +1091,15 @@ mod tests {
         };
 
         // Create a mock
+        let non_empty = mockito::Matcher::Regex(".+".to_string());
         let mock = server
             .mock("GET", "/jwk")
+            // check W3C trace headrs are present
+            .match_header("traceparent", non_empty.clone())
+            .match_header("tracestate", mockito::Matcher::Any)
+            // check B3 trace headrs are present
+            .match_header("x-b3-traceid", non_empty.clone())
+            .match_header("x-b3-spanid", non_empty)
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_header("x-api-key", "1234")
