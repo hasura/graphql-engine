@@ -1,7 +1,6 @@
-use super::metadata::DataConnectorTypeMappings;
 use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
-use super::stages::data_connectors;
+use super::stages::{data_connector_type_mappings, data_connectors};
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
@@ -1279,7 +1278,7 @@ pub fn resolve_model_source(
     data_connectors: &data_connectors::DataConnectors,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
-    data_connector_type_mappings: &DataConnectorTypeMappings,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if model.source.is_some() {
         return Err(Error::DuplicateModelSourceDefinition {

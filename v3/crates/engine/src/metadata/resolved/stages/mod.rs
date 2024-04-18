@@ -1,3 +1,4 @@
+pub mod data_connector_type_mappings;
 pub mod data_connectors;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod graphql_config;
@@ -17,5 +18,13 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
 
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;
 
-    resolve_metadata(&metadata_accessor, graphql_config, data_connectors)
+    let data_connector_type_mappings =
+        data_connector_type_mappings::resolve(&metadata_accessor, &data_connectors)?;
+
+    resolve_metadata(
+        &metadata_accessor,
+        graphql_config,
+        data_connectors,
+        data_connector_type_mappings,
+    )
 }

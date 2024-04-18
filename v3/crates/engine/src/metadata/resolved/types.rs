@@ -1,4 +1,4 @@
-use crate::metadata::resolved::error::{BooleanExpressionError, Error, TypeMappingValidationError};
+use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 use crate::metadata::resolved::relationship::Relationship;
 use crate::metadata::resolved::subgraph::{
     mk_qualified_type_reference, Qualified, QualifiedBaseType, QualifiedTypeName,
@@ -13,16 +13,14 @@ use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
 use open_dds::permissions::{Role, TypeOutputPermission, TypePermissionsV1};
 use open_dds::types::{
-    self, CustomTypeName, DataConnectorTypeMapping, Deprecated, FieldName,
-    ObjectBooleanExpressionTypeV1, ObjectTypeV1,
+    self, CustomTypeName, Deprecated, FieldName, ObjectBooleanExpressionTypeV1, ObjectTypeV1,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
-use super::metadata::DataConnectorTypeMappings;
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
-use super::stages::data_connectors;
+use super::stages::{data_connector_type_mappings, data_connectors};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
@@ -262,109 +260,6 @@ pub fn resolve_object_type(
     })
 }
 
-pub fn get_column<'a>(
-    ndc_type: &'a ndc_models::ObjectType,
-    field_name: &FieldName,
-    column: &str,
-) -> Result<&'a ndc_models::ObjectField, TypeMappingValidationError> {
-    ndc_type
-        .fields
-        .get(column)
-        .ok_or(TypeMappingValidationError::UnknownTargetColumn {
-            field_name: field_name.clone(),
-            column_name: column.to_string(),
-        })
-}
-
-/// Resolve a given data connector type mapping
-pub fn resolve_data_connector_type_mapping(
-    data_connector_type_mapping: &DataConnectorTypeMapping,
-    qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
-    type_representation: &ObjectTypeRepresentation,
-    data_connectors: &data_connectors::DataConnectors,
-) -> Result<TypeMapping, TypeMappingValidationError> {
-    let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        data_connector_type_mapping.data_connector_name.clone(),
-    );
-    let data_connector_context = data_connectors
-        .data_connectors
-        .get(&qualified_data_connector_name)
-        .ok_or_else(|| TypeMappingValidationError::UnknownDataConnector {
-            data_connector: qualified_data_connector_name.clone(),
-            type_name: qualified_type_name.clone(),
-        })?;
-    let ndc_object_type = data_connector_context
-        .schema
-        .object_types
-        .get(&data_connector_type_mapping.data_connector_object_type)
-        .ok_or_else(|| TypeMappingValidationError::UnknownNdcType {
-            type_name: qualified_type_name.clone(),
-            unknown_ndc_type: data_connector_type_mapping
-                .data_connector_object_type
-                .clone(),
-        })?;
-
-    // Walk all the fields in the ObjectType, if there's a mapping for the field
-    // use it, otherwise assume the destination column is the same name as the field.
-    // At the end, if there are any mappings left over, these are invalid as they do not
-    // exist in the actual ObjectType.
-    let mut unconsumed_field_mappings = data_connector_type_mapping
-        .field_mapping
-        .0
-        .iter()
-        .collect::<HashMap<_, _>>();
-    let mut resolved_field_mappings = BTreeMap::new();
-    for field_name in type_representation.fields.keys() {
-        let resolved_field_mapping_column: &str =
-            if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
-                match field_mapping {
-                    types::FieldMapping::Column(column_mapping) => &column_mapping.name,
-                }
-            } else {
-                // If no mapping is defined for a field, implicitly create a mapping
-                // with the same column name as the field.
-                &field_name.0 .0
-            };
-        let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
-        let resolved_field_mapping = FieldMapping {
-            column: resolved_field_mapping_column.to_string(),
-            column_type: source_column.r#type.clone(),
-        };
-
-        let existing_mapping =
-            resolved_field_mappings.insert(field_name.clone(), resolved_field_mapping);
-        if existing_mapping.is_some() {
-            return Err(TypeMappingValidationError::DuplicateFieldMapping {
-                type_name: qualified_type_name.clone(),
-                field_name: field_name.clone(),
-            });
-        }
-    }
-    // If any unconsumed field mappings, these do not exist in the actual ObjectType
-    if !unconsumed_field_mappings.is_empty() {
-        let mut unconsumed_field_names = unconsumed_field_mappings
-            .into_keys()
-            .cloned()
-            .collect::<Vec<_>>();
-        unconsumed_field_names.sort();
-        return Err(TypeMappingValidationError::UnknownSourceFields {
-            type_name: qualified_type_name.clone(),
-            field_names: unconsumed_field_names,
-        });
-    }
-
-    let resolved_type_mapping = TypeMapping::Object {
-        ndc_object_type_name: data_connector_type_mapping
-            .data_connector_object_type
-            .to_string(),
-        field_mappings: resolved_field_mappings,
-    };
-
-    Ok(resolved_type_mapping)
-}
-
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching
@@ -469,7 +364,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     subgraph: &str,
     data_connectors: &data_connectors::DataConnectors,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    data_connector_type_mappings: &DataConnectorTypeMappings,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
 ) -> Result<ObjectBooleanExpressionType, Error> {
     // name of the boolean expression
@@ -646,7 +541,7 @@ pub enum TypeMappingCollectionError {
 
 pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
-    data_connector_type_mappings: &DataConnectorTypeMappings,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
