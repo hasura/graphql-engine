@@ -122,16 +122,8 @@ fn convert_data_connectors_contexts<'a>(
 ) -> HashMap<Qualified<DataConnectorName>, DataConnectorWithScalarsContext<'a>> {
     let mut data_connectors_with_scalars = HashMap::new();
 
-    for (
-        data_connector_name,
-        data_connectors::DataConnectorContext {
-            scalars,
-            url,
-            headers,
-            schema,
-            capabilities,
-        },
-    ) in &data_connectors.data_connectors
+    for (data_connector_name, data_connectors::DataConnectorContext { scalars, inner }) in
+        &data_connectors.data_connectors
     {
         let mut new_scalars = HashMap::new();
         for (scalar_name, scalar) in scalars {
@@ -148,10 +140,7 @@ fn convert_data_connectors_contexts<'a>(
         data_connectors_with_scalars.insert(
             data_connector_name.clone(),
             DataConnectorWithScalarsContext {
-                url,
-                headers,
-                schema,
-                capabilities,
+                inner: *inner,
                 scalars: new_scalars,
             },
         );

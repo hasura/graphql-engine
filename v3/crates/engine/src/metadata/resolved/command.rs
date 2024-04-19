@@ -189,6 +189,7 @@ pub fn resolve_command_source(
     let (source_result_type, ndc_arguments) = match &command_source.data_connector_command {
         DataConnectorCommand::Procedure(procedure) => {
             let source_procedure = data_connector_context
+                .inner
                 .schema
                 .procedures
                 .iter()
@@ -203,6 +204,7 @@ pub fn resolve_command_source(
         }
         DataConnectorCommand::Function(function) => {
             let source_function = data_connector_context
+                .inner
                 .schema
                 .functions
                 .iter()
@@ -295,15 +297,19 @@ pub fn resolve_command_source(
     command.source = Some(CommandSource {
         data_connector: DataConnectorLink::new(
             qualified_data_connector_name,
-            data_connector_context.url.clone(),
-            data_connector_context.headers,
+            data_connector_context.inner.url.clone(),
+            data_connector_context.inner.headers,
         )?,
         source: command_source.data_connector_command.clone(),
         type_mappings,
         argument_mappings,
     });
 
-    ndc_validation::validate_ndc_command(&command.name, command, data_connector_context.schema)?;
+    ndc_validation::validate_ndc_command(
+        &command.name,
+        command,
+        data_connector_context.inner.schema,
+    )?;
 
     Ok(())
 }

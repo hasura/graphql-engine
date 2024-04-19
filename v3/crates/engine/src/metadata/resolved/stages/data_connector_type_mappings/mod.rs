@@ -259,6 +259,7 @@ pub fn resolve_data_connector_type_mapping(
             type_name: qualified_type_name.clone(),
         })?;
     let ndc_object_type = data_connector_context
+        .inner
         .schema
         .object_types
         .get(&data_connector_type_mapping.data_connector_object_type)

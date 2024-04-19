@@ -356,7 +356,7 @@ fn get_relationship_capabilities(
                 data_connector: data_connector.name.clone(),
             },
         })?;
-    let capabilities = &resolved_data_connector.capabilities.capabilities;
+    let capabilities = &resolved_data_connector.inner.capabilities.capabilities;
 
     if capabilities.query.variables.is_none() {
         return Err(Error::RelationshipError {

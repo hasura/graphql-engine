@@ -280,6 +280,7 @@ mod tests {
         assert_eq!(
             DataConnectorContext::new(&data_connector_with_capabilities)
                 .unwrap()
+                .inner
                 .capabilities,
             &explicit_capabilities
         );

@@ -8,13 +8,19 @@ use ndc_models;
 use open_dds::data_connector::{self, DataConnectorName, VersionedSchemaAndCapabilities};
 use std::collections::HashMap;
 
-/// information about a data connector
-/// currently this contains partial ScalarTypeInfo, which we add to later
-pub struct DataConnectorContext<'a> {
+/// information that does not change between resolver stages
+#[derive(Clone, Copy)]
+pub struct DataConnectorCoreInfo<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
     pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
     pub schema: &'a ndc_models::SchemaResponse,
     pub capabilities: &'a ndc_models::CapabilitiesResponse,
+}
+
+/// information about a data connector
+/// currently this contains partial ScalarTypeInfo, which we add to later
+pub struct DataConnectorContext<'a> {
+    pub inner: DataConnectorCoreInfo<'a>,
     pub scalars: HashMap<&'a str, ScalarTypeInfo<'a>>,
 }
 
@@ -22,10 +28,12 @@ impl<'a> DataConnectorContext<'a> {
     pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
         let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
         Ok(DataConnectorContext {
-            url: &data_connector.url,
-            headers: &data_connector.headers,
-            schema: &schema_and_capabilities.schema,
-            capabilities: &schema_and_capabilities.capabilities,
+            inner: DataConnectorCoreInfo {
+                url: &data_connector.url,
+                headers: &data_connector.headers,
+                schema: &schema_and_capabilities.schema,
+                capabilities: &schema_and_capabilities.capabilities,
+            },
             scalars: schema_and_capabilities
                 .schema
                 .scalar_types

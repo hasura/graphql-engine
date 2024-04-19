@@ -1298,6 +1298,7 @@ pub fn resolve_model_source(
         })?;
 
     let source_collection = data_connector_context
+        .inner
         .schema
         .collections
         .iter()
@@ -1371,8 +1372,8 @@ pub fn resolve_model_source(
     let resolved_model_source = ModelSource {
         data_connector: DataConnectorLink::new(
             qualified_data_connector_name,
-            data_connector_context.url.clone(),
-            data_connector_context.headers,
+            data_connector_context.inner.url.clone(),
+            data_connector_context.inner.headers,
         )?,
         collection: model_source.collection.clone(),
         type_mappings,
@@ -1424,7 +1425,7 @@ pub fn resolve_model_source(
     }
 
     model.source = Some(resolved_model_source);
-    ndc_validation::validate_ndc(&model.name, model, data_connector_context.schema)?;
+    ndc_validation::validate_ndc(&model.name, model, data_connector_context.inner.schema)?;
     Ok(())
 }
 

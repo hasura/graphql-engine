@@ -408,6 +408,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     // validate data connector object type
     if !data_connector_context
+        .inner
         .schema
         .object_types
         .contains_key(&object_boolean_expression.data_connector_object_type)
