@@ -95,7 +95,7 @@ pub async fn execute_query(
     schema: &Schema<GDS>,
     session: &Session,
     request: RawRequest,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> GraphQLResponse {
     execute_query_internal(http_context, schema, session, request, project_id)
         .await
@@ -127,7 +127,7 @@ pub async fn execute_query_internal(
     schema: &gql::schema::Schema<GDS>,
     session: &Session,
     raw_request: gql::http::RawRequest,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<GraphQLResponse, error::Error> {
     let query_response = execute_request_internal(
         http_context,
@@ -155,7 +155,7 @@ pub async fn execute_request_internal(
     session: &Session,
     raw_request: gql::http::RawRequest,
     request_mode: explain::types::RequestMode,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<ExecuteOrExplainResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     let mode_query_span_name = match request_mode {

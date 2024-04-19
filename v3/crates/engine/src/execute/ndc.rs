@@ -24,9 +24,9 @@ pub async fn execute_ndc_query<'n, 's>(
     http_context: &HttpContext,
     query: &ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
-    execution_span_attribute: String,
+    execution_span_attribute: &'static str,
     field_span_attribute: String,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<Vec<ndc_models::RowSet>, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -63,7 +63,7 @@ pub(crate) async fn fetch_from_data_connector<'s>(
     http_context: &HttpContext,
     query_request: &ndc_models::QueryRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::QueryResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -95,7 +95,7 @@ pub(crate) async fn fetch_from_data_connector<'s>(
 // This function appends project-id (if present) to the HeaderMap defined by the data_connector object
 pub fn append_project_id_to_headers(
     mut headers: HeaderMap,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<HeaderMap, error::Error> {
     match project_id {
         None => Ok(headers),
@@ -119,7 +119,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     execution_span_attribute: String,
     field_span_attribute: String,
     process_response_as: ProcessResponseAs<'ir>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -194,7 +194,7 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_context: &HttpContext,
     query_request: &ndc_models::MutationRequest,
     data_connector: &resolved::data_connector::DataConnectorLink,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::MutationResponse, error::Error> {
     let tracer = tracing_util::global_tracer();
     tracer

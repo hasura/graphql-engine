@@ -98,11 +98,11 @@ pub(crate) mod types;
 #[async_recursion]
 pub(crate) async fn execute_join_locations<'ir>(
     http_context: &HttpContext,
-    execution_span_attribute: &str,
+    execution_span_attribute: &'static str,
     lhs_response: &mut Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     join_locations: &JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<(), error::Error>
 where
     'ir: 'async_recursion,
@@ -143,9 +143,9 @@ where
                             http_context,
                             &join_node.target_ndc_ir,
                             join_node.target_data_connector,
-                            execution_span_attribute.to_string(),
+                            execution_span_attribute,
                             remote_alias.clone(),
-                            project_id.clone(),
+                            project_id,
                         ))
                     },
                 )
@@ -160,7 +160,7 @@ where
                     &mut target_response,
                     &join_node.process_response_as,
                     &sub_tree,
-                    project_id.clone(),
+                    project_id,
                 )
                 .await?;
             }

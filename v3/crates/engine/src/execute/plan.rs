@@ -77,7 +77,7 @@ pub enum NodeQueryPlan<'n, 's, 'ir> {
 #[derive(Debug)]
 pub struct NDCQueryExecution<'s, 'ir> {
     pub execution_tree: ExecutionTree<'s, 'ir>,
-    pub execution_span_attribute: String,
+    pub execution_span_attribute: &'static str,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
     // This selection set can either be owned by the IR structures or by the normalized query request itself.
@@ -272,7 +272,7 @@ fn plan_query<'n, 's, 'ir>(
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
                 selection_set,
-                execution_span_attribute: "execute_model_select_one".into(),
+                execution_span_attribute: "execute_model_select_one",
                 field_span_attribute: ir.field_name.to_string(),
                 process_response_as: ProcessResponseAs::Object {
                     is_nullable: ir.type_container.nullable.to_owned(),
@@ -285,7 +285,7 @@ fn plan_query<'n, 's, 'ir>(
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
                 selection_set,
-                execution_span_attribute: "execute_model_select_many".into(),
+                execution_span_attribute: "execute_model_select_many",
                 field_span_attribute: ir.field_name.to_string(),
                 process_response_as: ProcessResponseAs::Array {
                     is_nullable: ir.type_container.nullable.to_owned(),
@@ -298,7 +298,7 @@ fn plan_query<'n, 's, 'ir>(
                 NodeQueryPlan::RelayNodeSelect(Some(NDCQueryExecution {
                     execution_tree,
                     selection_set: &ir.selection_set,
-                    execution_span_attribute: "execute_node".into(),
+                    execution_span_attribute: "execute_node",
                     field_span_attribute: "node".into(),
                     process_response_as: ProcessResponseAs::Object { is_nullable: true }, // node(id: ID!): Node; the node field is nullable,
                 }))
@@ -318,7 +318,7 @@ fn plan_query<'n, 's, 'ir>(
             NodeQueryPlan::NDCQueryExecution(NDCQueryExecution {
                 execution_tree,
                 selection_set,
-                execution_span_attribute: "execute_command".into(),
+                execution_span_attribute: "execute_command",
                 field_span_attribute: ir.command_info.field_name.to_string(),
                 process_response_as: ProcessResponseAs::CommandResponse {
                     command_name: &ir.command_info.command_name,
@@ -335,7 +335,7 @@ fn plan_query<'n, 's, 'ir>(
                 ndc_query_executions.push(NDCQueryExecution {
                     execution_tree,
                     selection_set: &ir.selection_set,
-                    execution_span_attribute: "execute_entity".into(),
+                    execution_span_attribute: "execute_entity",
                     field_span_attribute: "entity".into(),
                     process_response_as: ProcessResponseAs::Object { is_nullable: true },
                 });
@@ -550,7 +550,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
     field_alias: &ast::Alias,
     http_context: &HttpContext,
     query_plan: NodeQueryPlan<'n, 's, 'ir>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
 
@@ -627,7 +627,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                     (resolve_optional_ndc_select(
                                         http_context,
                                         Some(query),
-                                        project_id.clone(),
+                                        project_id,
                                     )
                                     .await,)
                                 };
@@ -635,7 +635,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                 tasks.push(task);
                             }
 
-                            let executed_entities = futures::future::join_all(tasks).await;
+                            let executed_entities = futures_util::future::join_all(tasks).await;
                             let mut entities_result = Vec::new();
                             for result in executed_entities {
                                 match result {
@@ -699,7 +699,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
 async fn execute_mutation_field_plan<'n, 's, 'ir>(
     http_context: &HttpContext,
     mutation_plan: NDCMutationExecution<'n, 's, 'ir>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> RootFieldResult {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -726,7 +726,7 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
 pub async fn execute_mutation_plan<'n, 's, 'ir>(
     http_context: &HttpContext,
     mutation_plan: MutationPlan<'n, 's, 'ir>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
     let mut executed_root_fields = Vec::new();
@@ -747,7 +747,7 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
         for (alias, field_plan) in mutation_group {
             executed_root_fields.push((
                 alias,
-                execute_mutation_field_plan(http_context, field_plan, project_id.clone()).await,
+                execute_mutation_field_plan(http_context, field_plan, project_id).await,
             ));
         }
     }
@@ -765,7 +765,7 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
 pub async fn execute_query_plan<'n, 's, 'ir>(
     http_context: &HttpContext,
     query_plan: QueryPlan<'n, 's, 'ir>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
 
@@ -775,14 +775,14 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
         let execute_plan =
-            execute_query_field_plan(&alias, http_context, field_plan, project_id.clone()).await;
+            execute_query_field_plan(&alias, http_context, field_plan, project_id).await;
 
         let task = async { (alias, execute_plan) };
 
         tasks.push(task);
     }
 
-    let executed_root_fields = futures::future::join_all(tasks).await;
+    let executed_root_fields = futures_util::future::join_all(tasks).await;
 
     for executed_root_field in executed_root_fields.into_iter() {
         let (alias, root_field) = executed_root_field;
@@ -828,7 +828,7 @@ fn resolve_schema_field(
 async fn resolve_ndc_query_execution(
     http_context: &HttpContext,
     ndc_query: &NDCQueryExecution<'_, '_>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCQueryExecution {
         execution_tree,
@@ -841,9 +841,9 @@ async fn resolve_ndc_query_execution(
         http_context,
         &execution_tree.root_node.query,
         execution_tree.root_node.data_connector,
-        execution_span_attribute.clone(),
+        execution_span_attribute,
         field_span_attribute.clone(),
-        project_id.clone(),
+        project_id,
     )
     .await?;
     // TODO: Failures in remote joins should result in partial response
@@ -864,7 +864,7 @@ async fn resolve_ndc_query_execution(
 async fn resolve_ndc_mutation_execution(
     http_context: &HttpContext,
     ndc_query: NDCMutationExecution<'_, '_, '_>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<json::Value, error::Error> {
     let NDCMutationExecution {
         query,
@@ -893,7 +893,7 @@ async fn resolve_ndc_mutation_execution(
 async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
-    project_id: Option<ProjectId>,
+    project_id: Option<&ProjectId>,
 ) -> Result<json::Value, error::Error> {
     match optional_query {
         None => Ok(json::Value::Null),
