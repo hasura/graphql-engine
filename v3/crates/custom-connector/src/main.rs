@@ -1,4 +1,6 @@
-use std::{borrow::Borrow, sync::Arc};
+use std::borrow::Borrow;
+use std::net;
+use std::sync::Arc;
 
 use axum::{
     extract::State,
@@ -12,8 +14,8 @@ use custom_connector::state::AppState;
 type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorResponse>)>;
 
 #[tokio::main]
-async fn main() {
-    let app_state = Arc::new(custom_connector::state::init_app_state());
+async fn main() -> anyhow::Result<()> {
+    let app_state = Arc::new(custom_connector::state::init_app_state()?);
 
     let app = Router::new()
         .route("/healthz", get(get_healthz))
@@ -25,7 +27,10 @@ async fn main() {
         .with_state(app_state);
 
     // run it with hyper on localhost:8101
-    axum::Server::bind(&"0.0.0.0:8101".parse().unwrap())
+    let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
+    let port = 8101;
+    let socket_addr = net::SocketAddr::new(host, port);
+    axum::Server::bind(&socket_addr)
         .serve(app.into_make_service())
         .with_graceful_shutdown(async {
             // wait for a SIGINT, i.e. a Ctrl+C from the keyboard
@@ -53,8 +58,8 @@ async fn main() {
                 _ = sigint => (),
             }
         })
-        .await
-        .unwrap();
+        .await?;
+    Ok(())
 }
 
 async fn get_healthz() -> StatusCode {

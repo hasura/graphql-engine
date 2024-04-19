@@ -744,6 +744,7 @@ dependencies = [
 name = "custom-connector"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "axum",
  "indexmap 2.2.6",
  "ndc-models",
