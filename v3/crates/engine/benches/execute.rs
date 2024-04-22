@@ -70,6 +70,7 @@ pub fn bench_execute(
 
     // these numbers are fairly low, optimising for runtime of benchmark suite
     group.warm_up_time(Duration::from_millis(500));
+    group.measurement_time(Duration::from_secs(5));
     group.sample_size(20);
     group.sampling_mode(SamplingMode::Flat);
 
