@@ -11,7 +11,7 @@ default:
 # run commands in a rust docker environment with source code only without starting any dependencies.
 docker_with_source_only +args:
   #!/usr/bin/env sh
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --build --rm source_only "$@"
+  docker compose -f ci.docker-compose.yaml run --build --rm source_only "$@"
   exit_code=$?
   docker compose -f ci.docker-compose.yaml down
   exit $exit_code
@@ -20,7 +20,7 @@ docker_with_source_only +args:
 # while emiting the exit code of the docker command
 docker_with_test_env +args:
   #!/usr/bin/env sh
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --build --rm test_setup "$@"
+  docker compose -f ci.docker-compose.yaml run --build --rm test_setup "$@"
   exit_code=$?
   docker compose -f ci.docker-compose.yaml down
   exit $exit_code
@@ -51,25 +51,21 @@ fix-local:
 
 # tests run by CI
 ci-test: docker-refresh
-  just docker_with_test_env cargo nextest run --no-fail-fast
+  just docker_with_test_env cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
 
 test TESTNAME='':
   #!/usr/bin/env bash
   if [[ -z '{{TESTNAME}}' ]]; then
-    echo 'cargo nextest run --no-fail-fast'
-    just docker_with_test_env cargo nextest run --no-fail-fast
+    COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast)
   else
-    echo "cargo nextest run --no-fail-fast -E 'test(={{TESTNAME}})'"
-    just docker_with_test_env cargo nextest run --no-fail-fast -E 'test(={{TESTNAME}})'
+    COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast -E 'test(={{TESTNAME}})')
   fi
-
-# tests using cargo test and not nextest.
-# The nextest binary pulled in the docker image only works on linux hosts.
-cargo-test *args:
-  just docker_with_test_env cargo test {{args}}
+  echo "${COMMAND[*]}"
+  just docker_with_test_env "${COMMAND[@]}"
 
 update-golden-files: docker-refresh
-  DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f ci.docker-compose.yaml run --rm -e REGENERATE_GOLDENFILES=1 test_setup cargo test
+  docker compose -f ci.docker-compose.yaml run --rm -e REGENERATE_GOLDENFILES=1 test_setup \
+    cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
 
 # Benchmarks run by CI
 ci-bench:

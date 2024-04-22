@@ -22,14 +22,18 @@ services:
         source: ./crates/engine/tests/chinook-postgres.sql
         target: /docker-entrypoint-initdb.d/02-chinook.sql
         read_only: true
+      - type: bind
+        source: ./crates/engine/tests/finish.sql
+        target: /docker-entrypoint-initdb.d/03-finish.sql
+        read_only: true
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
+        - psql -U "$${POSTGRES_USER:-postgres}" finished < /dev/null
+      start_period: 2s
+      interval: 2s
+      timeout: 1s
+      retries: 5
 
   reference_agent:
     build: https://github.com/hasura/ndc-spec.git#v0.1.2
@@ -88,10 +92,9 @@ services:
 
   custom_connector:
     build:
-      context: .
-      target: built
+      dockerfile: debug.Dockerfile
     entrypoint:
-      - ./target/release/custom-connector
+      - ./bin/custom-connector
     ports:
       - 8101:8101
     healthcheck:
@@ -103,10 +106,9 @@ services:
 
   engine:
     build:
-      context: .
-      target: built
+      dockerfile: debug.Dockerfile
     entrypoint:
-      - ./target/release/engine
+      - ./bin/engine
     environment:
       - METADATA_PATH
       - AUTHN_CONFIG_PATH

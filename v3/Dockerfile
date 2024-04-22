@@ -5,14 +5,21 @@ FROM rust:1.77.0 as chef
 
 WORKDIR app
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -ex;\
+    apt-get update; \
     apt-get install --no-install-recommends --assume-yes \
-      lld protobuf-compiler libssl-dev ssh git pkg-config curl jq
+      curl git jq pkg-config ssh \
+      libssl-dev lld protobuf-compiler
 
+# Set up a directory to store Cargo files.
 ENV CARGO_HOME=/app/.cargo
+ENV PATH="$PATH:$CARGO_HOME/bin"
+# Switch to `lld` as the linker.
+ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 
-RUN cargo install cargo-chef just grcov critcmp cargo-nextest
+RUN cargo install cargo-chef cargo-nextest critcmp grcov just
 
 # Building with build.rs require git context to be available across directories
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
@@ -25,34 +32,34 @@ RUN rustup show
 # Plan recipe
 FROM chef AS planner
 
-ENV CARGO_HOME=/app/.cargo
-ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
 
-COPY . .
+# Prepare the recipe
 RUN cargo chef prepare --recipe-path recipe.json
 
 ###
 # Build recipe
 FROM chef AS builder
 
-# Use lld
-ENV CARGO_HOME=/app/.cargo
-ENV PATH="$PATH:$CARGO_HOME/bin"
-ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
-
 COPY --from=planner /app/recipe.json recipe.json
 COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
 
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --all-targets --recipe-path recipe.json
-RUN cargo chef cook --all-targets --recipe-path recipe.json
-
-# Copies the source after building dependencies to allow caching
-COPY . .
 
 ###
 # Builds the application
 FROM builder AS built
+
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY .git ./.git
+
 # Build the app
 RUN cargo build --release --all-targets
 
@@ -62,8 +69,8 @@ FROM ubuntu:jammy
 
 # Install `curl` for health checks
 RUN set -ex; \
-    apt-get update -q; \
-    apt-get install -q -y curl
+    apt-get update; \
+    apt-get install --assume-yes curl
 
 # Install the engine
 COPY --from=built /app/target/release/engine /usr/local/bin

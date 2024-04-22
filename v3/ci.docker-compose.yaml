@@ -1,32 +1,8 @@
 services:
   postgres:
-    image: postgis/postgis:16-3.4
-    platform: linux/amd64
-    command:
-      - -F # turn fsync off for speed
-      - -N 1000 # increase max connections from 100 so we can run more HGEs
-    environment:
-      POSTGRES_PASSWORD: "password"
-    volumes:
-      - type: volume
-        source: postgres
-        target: /var/lib/postgresql/data
-      - type: bind
-        source: ./crates/engine/tests/db_definition.sql
-        target: /docker-entrypoint-initdb.d/01-db_definition.sql
-        read_only: true
-      - type: bind
-        source: ./crates/engine/tests/chinook-postgres.sql
-        target: /docker-entrypoint-initdb.d/02-chinook.sql
-        read_only: true
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
+    extends:
+      file: ./docker-compose.yaml
+      service: postgres
 
   postgres_connector:
     image: ghcr.io/hasura/ndc-postgres:dev-main
@@ -45,10 +21,9 @@ services:
 
   custom_connector:
     build:
-      context: .
-      target: built
+      dockerfile: debug.Dockerfile
     entrypoint:
-      - ./target/release/custom-connector
+      - ./bin/custom-connector
     ports:
       - "8101:8101"
     healthcheck:
@@ -60,22 +35,17 @@ services:
 
   source_only:
     build:
-      context: .
-      target: builder
+      dockerfile: debug.Dockerfile
     volumes:
-      # So that updated files make their way back to the host machine
-      - ./crates/tracing-util:/app/tracing-util
-      - ./crates/lang-graphql:/app/lang-graphql
-      - ./crates/open-dds:/app/open-dds
-      - ./crates/engine:/app/engine
-      - ./crates/hasura-authn-core:/app/hasura-authn-core
-      - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./auth_config.json:/app/auth_config.json
+      - ./benchmark.sh:/app/benchmark.sh
+      - ./coverage.sh:/app/coverage.sh
+      - ./crates:/app/crates
       - ./coverage:/app/coverage
 
   test_setup:
     build:
-      context: .
-      target: builder
+      dockerfile: debug.Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,14 +54,10 @@ services:
       custom_connector:
         condition: service_healthy
     volumes:
-      # So that updated files make their way back to the host machine
-      - ./crates/tracing-util:/app/tracing-util
-      - ./crates/lang-graphql:/app/lang-graphql
-      - ./crates/open-dds:/app/open-dds
-      - ./crates/engine:/app/engine
-      - ./crates/hasura-authn-core:/app/hasura-authn-core
-      - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./auth_config.json:/app/auth_config.json
       - ./benchmark.sh:/app/benchmark.sh
+      - ./coverage.sh:/app/coverage.sh
+      - ./crates:/app/crates
       - ./coverage:/app/coverage
 
 volumes:
