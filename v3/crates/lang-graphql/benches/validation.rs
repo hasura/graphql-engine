@@ -17,7 +17,7 @@ pub fn bench_validation(c: &mut Criterion) {
         // benches/queries/<file_name>.graphql -> <file_name>
         let query_name = query_path.file_stem().unwrap().to_str().unwrap();
         let parsed_query = Parser::new(&query).parse_executable_document().unwrap();
-        let schema = sdl::SDL::new("type Query {}")
+        let fake_schema = sdl::SDL::new("type Query {foo: Int}")
             .and_then(|v| v.build_schema())
             .unwrap();
         let request = http::Request {
@@ -25,13 +25,13 @@ pub fn bench_validation(c: &mut Criterion) {
             query: parsed_query,
             variables: HashMap::new(),
         };
-        validation::normalize_request(&sdl::Namespace, &schema, &request).unwrap();
+        validation::normalize_request(&sdl::Namespace, &fake_schema, &request).unwrap();
         // parse with our parser
         group.bench_with_input(
             BenchmarkId::new("hasura", query_name),
-            &(&request, &schema),
-            |b, (request, default_schema)| {
-                b.iter(|| validation::normalize_request(&sdl::Namespace, default_schema, request))
+            &(request, fake_schema),
+            |b, (request, schema)| {
+                b.iter(|| validation::normalize_request(&sdl::Namespace, schema, request).unwrap())
             },
         );
     }

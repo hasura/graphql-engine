@@ -18,6 +18,10 @@ bench = false
 name = "execute"
 harness = false
 
+[[bench]]
+name = "generate_ir"
+harness = false
+
 [dependencies]
 hasura-authn-core = { path = "../hasura-authn-core" }
 hasura-authn-jwt = { path = "../hasura-authn-jwt" }
