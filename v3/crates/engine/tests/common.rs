@@ -1,5 +1,6 @@
 use goldenfile::{differs::text_diff, Mint};
 use hasura_authn_core::{Identity, Role, Session, SessionError, SessionVariableValue};
+use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use open_dds::session_variables::{SessionVariable, SESSION_VARIABLE_ROLE};
 use serde_json as json;
@@ -230,6 +231,7 @@ pub fn test_execution_expectation(
         let test_path = root_test_dir.join(test_path_string);
 
         let request_path = test_path.join("request.gql");
+        let variables_path = test_path.join("variables.json");
         let response_path = test_path_string.to_string() + "/expected.json";
         let metadata_path = test_path.join("metadata.json");
 
@@ -268,6 +270,16 @@ pub fn test_execution_expectation(
 
         let query = fs::read_to_string(request_path)?;
 
+        // Read optional GQL query variables.
+        // NOTE: It is expected the variables.json file contains a list of
+        // variables. Each item in the list corresponding to a session in
+        // session_variables.json
+        let query_vars: Option<Vec<HashMap<ast::Name, serde_json::Value>>> =
+            match fs::read_to_string(variables_path) {
+                Ok(query_vars_str) => Some(json::from_str(&query_vars_str)?),
+                Err(_) => None,
+            };
+
         let session_vars_path = &test_path.join("session_variables.json");
         let sessions: Vec<HashMap<SessionVariable, SessionVariableValue>> =
             json::from_str(fs::read_to_string(session_vars_path)?.as_ref())?;
@@ -281,24 +293,46 @@ pub fn test_execution_expectation(
             "Found less than 2 roles in test scenario"
         );
 
-        let raw_request = RawRequest {
-            operation_name: None,
-            query,
-            variables: None,
-        };
-
         // Execute the test
         let mut responses = Vec::new();
-        for session in sessions.iter() {
-            let response = execute_query(
-                &test_ctx.http_context,
-                &schema,
-                session,
-                raw_request.clone(),
-                None,
-            )
-            .await;
-            responses.push(response.0);
+
+        match query_vars {
+            None => {
+                let raw_request = RawRequest {
+                    operation_name: None,
+                    query,
+                    variables: None,
+                };
+                for session in sessions.iter() {
+                    let response = execute_query(
+                        &test_ctx.http_context,
+                        &schema,
+                        session,
+                        raw_request.clone(),
+                        None,
+                    )
+                    .await;
+                    responses.push(response.0);
+                }
+            }
+            Some(vars) => {
+                for (session, variables) in sessions.iter().zip(vars) {
+                    let raw_request = RawRequest {
+                        operation_name: None,
+                        query: query.clone(),
+                        variables: Some(variables),
+                    };
+                    let response = execute_query(
+                        &test_ctx.http_context,
+                        &schema,
+                        session,
+                        raw_request.clone(),
+                        None,
+                    )
+                    .await;
+                    responses.push(response.0);
+                }
+            }
         }
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
