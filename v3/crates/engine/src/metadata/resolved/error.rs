@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use thiserror::Error;
 
 use crate::metadata::resolved::argument::ArgumentMappingError;
@@ -700,7 +699,7 @@ pub enum TypeMappingValidationError {
     },
     #[error(
         "the following fields in field mappings of type {type_name:} are unknown: {}",
-        comma_separate_field_names(field_names)
+        field_names.join(", ")
     )]
     UnknownSourceFields {
         type_name: Qualified<CustomTypeName>,
@@ -745,8 +744,4 @@ pub enum TypeMappingValidationError {
     },
     #[error("ndc validation error: {0}")]
     NDCValidationError(NDCValidationError),
-}
-
-fn comma_separate_field_names(argument_names: &[FieldName]) -> String {
-    argument_names.iter().map(|a| a.0.as_str()).join(", ")
 }

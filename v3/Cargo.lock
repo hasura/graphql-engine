@@ -972,7 +972,6 @@ dependencies = [
  "hasura-authn-jwt",
  "hasura-authn-webhook",
  "indexmap 2.2.6",
- "itertools 0.10.5",
  "json_value_merge",
  "lang-graphql",
  "lazy_static",

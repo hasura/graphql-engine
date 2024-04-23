@@ -6,7 +6,6 @@ use crate::metadata::resolved::types::{
     TypeMappingToCollect, TypeRepresentation,
 };
 use indexmap::IndexMap;
-use itertools::Itertools;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::CustomTypeName;
@@ -20,7 +19,7 @@ use super::ndc_validation::NDCValidationError;
 pub enum ArgumentMappingError {
     #[error(
         "the following arguments referenced in argument mappings are unknown: {}",
-        comma_separate_argument_names(argument_names)
+        argument_names.join(", ")
     )]
     UnknownArguments { argument_names: Vec<ArgumentName> },
     #[error("argument {argument_name:} is mapped to an unknown argument {ndc_argument_name:}")]
@@ -46,10 +45,6 @@ pub enum ArgumentMappingError {
     },
     #[error("ndc validation error: {0}")]
     NDCValidationError(NDCValidationError),
-}
-
-fn comma_separate_argument_names(argument_names: &[ArgumentName]) -> String {
-    argument_names.iter().map(|a| a.0.as_str()).join(", ")
 }
 
 pub fn get_argument_mappings<'a>(

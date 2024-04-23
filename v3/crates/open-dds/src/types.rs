@@ -1,4 +1,6 @@
-use std::{fmt::Display, ops::Deref};
+use std::borrow::Borrow;
+use std::fmt::Display;
+use std::ops::Deref;
 
 use derive_more::Display;
 use indexmap::IndexMap;
@@ -410,6 +412,13 @@ pub struct ColumnFieldMapping {
     opendds_derive::OpenDd,
 )]
 pub struct FieldName(pub Identifier);
+
+// Used for joining slices.
+impl Borrow<str> for FieldName {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
 
 impl_JsonSchema_with_OpenDd_for!(FieldName);
 

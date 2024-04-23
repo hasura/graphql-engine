@@ -37,7 +37,6 @@ clap = { version = "4", features = ["derive", "env"] }
 derive_more = "0.99.17"
 futures-util = "0.3"
 indexmap = { version = "2", features = ["serde"] }
-itertools = "0.10.5"
 json_value_merge = "2.0"
 lazy_static = "1.4.0"
 ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }

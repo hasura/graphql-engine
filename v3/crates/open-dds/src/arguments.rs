@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{identifier::Identifier, impl_JsonSchema_with_OpenDd_for, types::TypeReference};
@@ -16,6 +18,13 @@ use crate::{identifier::Identifier, impl_JsonSchema_with_OpenDd_for, types::Type
     opendds_derive::OpenDd,
 )]
 pub struct ArgumentName(pub Identifier);
+
+// Used for joining slices.
+impl Borrow<str> for ArgumentName {
+    fn borrow(&self) -> &str {
+        &self.0
+    }
+}
 
 impl_JsonSchema_with_OpenDd_for!(ArgumentName);
 
