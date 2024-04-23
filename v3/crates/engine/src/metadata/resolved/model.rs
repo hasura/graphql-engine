@@ -1,10 +1,10 @@
 use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
-use super::stages::{data_connector_scalar_types, data_connector_type_mappings};
+use super::stages::{data_connector_scalar_types, data_connector_type_mappings, scalar_types};
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
-    ObjectTypeRepresentation, ScalarTypeRepresentation, TypeMappingToCollect,
+    ObjectTypeRepresentation, TypeMappingToCollect,
 };
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector;
@@ -1277,7 +1277,7 @@ pub fn resolve_model_source(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if model.source.is_some() {

@@ -2,16 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use lang_graphql::ast::common as ast;
 
-use open_dds::types::CustomTypeName;
-
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::{mk_name, store_new_graphql_type, ScalarTypeRepresentation};
+use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
 
-pub struct ScalarTypesOutput {
-    pub scalar_types: HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
-    pub graphql_types: HashSet<ast::TypeName>,
-}
+pub mod types;
+pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
 
 /// resolve scalar types
 pub fn resolve(

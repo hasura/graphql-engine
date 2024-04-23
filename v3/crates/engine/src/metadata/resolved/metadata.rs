@@ -17,18 +17,18 @@ use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
     resolve_object_boolean_expression_type, resolve_output_type_permission,
-    ObjectBooleanExpressionType, ObjectTypeRepresentation, ScalarTypeRepresentation,
+    ObjectBooleanExpressionType, ObjectTypeRepresentation,
 };
 
 use crate::metadata::resolved::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, graphql_config,
+    data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
     pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    pub scalar_types: HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, command::Command>,
     pub boolean_expression_types: HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
@@ -49,7 +49,7 @@ pub fn resolve_metadata(
     >,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Metadata, Error> {
     // resolve type permissions
@@ -146,7 +146,7 @@ fn resolve_commands(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
     for open_dds::accessor::QualifiedObject {
@@ -252,7 +252,7 @@ fn resolve_models(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<

@@ -21,14 +21,7 @@ use std::str::FromStr;
 
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
 use super::stages::data_connector_scalar_types;
-use super::stages::data_connector_type_mappings;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
-pub struct ScalarTypeRepresentation {
-    pub graphql_type_name: Option<ast::TypeName>,
-    pub description: Option<String>,
-}
+use super::stages::{data_connector_type_mappings, scalar_types};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
@@ -265,7 +258,7 @@ pub fn resolve_object_type(
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching
 pub enum TypeRepresentation<'a> {
-    Scalar(&'a ScalarTypeRepresentation),
+    Scalar(&'a scalar_types::ScalarTypeRepresentation),
     Object(&'a ObjectTypeRepresentation),
 }
 
@@ -273,7 +266,7 @@ pub enum TypeRepresentation<'a> {
 pub fn get_type_representation<'a>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &'a HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<TypeRepresentation<'a>, Error> {
     match object_types.get(custom_type_name) {
         Some(object_type_representation) => {
@@ -306,7 +299,7 @@ pub fn get_underlying_object_type(
 // check that `custom_type_name` exists in `scalar_types`
 pub fn get_underlying_scalar_type(
     custom_type_name: &Qualified<CustomTypeName>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<Qualified<CustomTypeName>, Error> {
     scalar_types
         .get(custom_type_name)
@@ -546,7 +539,7 @@ pub(crate) fn collect_type_mapping_for_source(
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     let type_mapping = data_connector_type_mappings

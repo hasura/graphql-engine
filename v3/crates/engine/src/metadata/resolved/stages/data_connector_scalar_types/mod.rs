@@ -13,9 +13,9 @@ use open_dds::data_connector::DataConnectorName;
 
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::{mk_name, ScalarTypeRepresentation};
+use crate::metadata::resolved::types::mk_name;
 
-use crate::metadata::resolved::stages::data_connectors;
+use crate::metadata::resolved::stages::{data_connectors, scalar_types};
 
 pub struct DataConnectorWithScalarsOutput<'a> {
     pub data_connectors: DataConnectorsWithScalars<'a>,
@@ -26,7 +26,7 @@ pub struct DataConnectorWithScalarsOutput<'a> {
 pub fn resolve<'a>(
     metadata_accessor: &'a open_dds::accessor::MetadataAccessor,
     data_connectors: &'a data_connectors::DataConnectors,
-    scalar_types: &'a HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &'a HashSet<ast::TypeName>,
 ) -> Result<DataConnectorWithScalarsOutput<'a>, Error> {
     let mut graphql_types = existing_graphql_types.clone();

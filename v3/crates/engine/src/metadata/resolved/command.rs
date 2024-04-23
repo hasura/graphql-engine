@@ -1,4 +1,4 @@
-use super::stages::data_connector_scalar_types;
+use super::stages::{data_connector_scalar_types, scalar_types};
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::Error;
@@ -9,7 +9,7 @@ use crate::metadata::resolved::subgraph::{
 };
 use crate::metadata::resolved::types::{
     get_type_representation, get_underlying_object_type, unwrap_custom_type_name,
-    ObjectTypeRepresentation, ScalarTypeRepresentation,
+    ObjectTypeRepresentation,
 };
 use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use indexmap::IndexMap;
@@ -71,7 +71,7 @@ fn is_valid_type(
     type_obj: &TypeReference,
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> bool {
     match &type_obj.underlying_type {
         BaseType::List(type_obj) => is_valid_type(type_obj, subgraph, object_types, scalar_types),
@@ -91,7 +91,7 @@ pub fn resolve_command(
     command: &CommandV1,
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
@@ -161,7 +161,7 @@ pub fn resolve_command_source(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     if command.source.is_some() {

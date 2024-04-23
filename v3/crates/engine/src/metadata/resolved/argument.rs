@@ -1,8 +1,9 @@
 use crate::metadata::resolved::ndc_validation;
+use crate::metadata::resolved::stages::scalar_types;
 use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 use crate::metadata::resolved::types::{
     get_type_representation, unwrap_custom_type_name, ObjectTypeRepresentation,
-    ScalarTypeRepresentation, TypeMappingToCollect, TypeRepresentation,
+    TypeMappingToCollect, TypeRepresentation,
 };
 use indexmap::IndexMap;
 use itertools::Itertools;
@@ -56,7 +57,7 @@ pub fn get_argument_mappings<'a>(
     argument_mapping: &HashMap<ArgumentName, String>,
     ndc_arguments: &'a BTreeMap<String, ndc_models::ArgumentInfo>,
     object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-    scalar_types: &'a HashMap<Qualified<CustomTypeName>, ScalarTypeRepresentation>,
+    scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToCollect<'a>>), ArgumentMappingError> {
     let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =
         HashMap::from_iter(argument_mapping.iter());
