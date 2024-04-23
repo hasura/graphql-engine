@@ -2,9 +2,7 @@
 resolver = "2"
 
 package.version = "0.1.0"
-
 package.edition = "2021"
-
 package.license = "Apache-2.0"
 
 members = [
@@ -56,11 +54,3 @@ unnested_or_patterns = "allow"
 unreadable_literal = "allow"
 unused_async = "allow"
 used_underscore_binding = "allow"
-
-[profile.release]
-debug = true
-
-[profile.bench]
-debug = true
-
-
