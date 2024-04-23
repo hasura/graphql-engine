@@ -15,11 +15,13 @@ ENV CARGO_HOME=/app/.cargo
 ENV PATH="$PATH:$CARGO_HOME/bin"
 # Switch to `lld` as the linker.
 ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+# Building with build.rs requires the Git context to be available across volumes.
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Install Rust tools.
+RUN cargo install cargo-chef cargo-nextest critcmp grcov just
 COPY rust-toolchain.toml .
 RUN rustup show
-RUN cargo install cargo-chef cargo-nextest critcmp grcov just
 
 COPY Cargo.toml Cargo.lock .
 
