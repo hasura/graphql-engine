@@ -112,7 +112,7 @@ pub(crate) fn command_field(
             arguments,
             deprecation_status,
         ),
-        permissions::get_command_namespace_annotations(command)?,
+        permissions::get_command_namespace_annotations(command, &gds.metadata.object_types)?,
     );
     Ok((command_field_name, field))
 }

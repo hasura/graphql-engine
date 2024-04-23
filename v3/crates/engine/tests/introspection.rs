@@ -44,6 +44,36 @@ fn test_introspect_model_with_preset_arguments_select_one() -> anyhow::Result<()
 }
 
 #[test]
+fn test_introspect_input_type_field_presets_on_command() -> anyhow::Result<()> {
+    let test_path_string = "execute/input_types/field_presets/commands";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
+fn test_introspect_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
+    let test_path_string = "execute/input_types/field_presets/models";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_introspection_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+#[test]
 fn test_graphql_deprecated() -> anyhow::Result<()> {
     let common_custom_connector_path_string =
         "execute/common_metadata/custom_connector_schema.json";

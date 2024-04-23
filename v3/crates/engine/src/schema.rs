@@ -1,5 +1,6 @@
 use lang_graphql::schema as gql_schema;
 use lang_graphql::{ast::common as ast, mk_name};
+use open_dds::types::FieldName;
 use open_dds::{
     commands::CommandName,
     models::ModelName,
@@ -276,6 +277,12 @@ pub enum Error {
     },
     #[error("relationships to procedure based commands are not supported")]
     RelationshipsToProcedureBasedCommandsAreNotSupported,
+
+    #[error("internal error: type mapping or field mapping not found for type {type_name:} and field {field_name:}")]
+    InternalMappingNotFound {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
 }
 
 impl From<ast::InvalidGraphQlName> for Error {

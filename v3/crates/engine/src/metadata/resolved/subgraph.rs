@@ -93,6 +93,41 @@ where
     Ok(result)
 }
 
+pub fn serialize_non_string_key_btreemap<K, V, S>(
+    map: &BTreeMap<K, V>,
+    s: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+    V: Serialize,
+    K: Serialize,
+{
+    let mut obj = s.serialize_map(Some(map.len()))?;
+    for (name, value) in map {
+        let stringified_key: String =
+            serde_json::to_string(name).map_err(serde::ser::Error::custom)?;
+        obj.serialize_entry(&stringified_key, value)?;
+    }
+    obj.end()
+}
+
+pub fn deserialize_non_string_key_btreemap<'de, D, K, V>(
+    deserializer: D,
+) -> Result<BTreeMap<K, V>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    K: Ord + DeserializeOwned,
+    V: Deserialize<'de>,
+{
+    let map: BTreeMap<String, V> = Deserialize::deserialize(deserializer)?;
+    let mut result = BTreeMap::new();
+    for (key, value) in map {
+        let qualified = serde_json::from_str(&key.to_owned()).map_err(serde::de::Error::custom)?;
+        result.insert(qualified, value);
+    }
+    Ok(result)
+}
+
 pub(crate) fn mk_qualified_type_reference(
     type_reference: &TypeReference,
     subgraph: &str,

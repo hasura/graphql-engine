@@ -518,6 +518,26 @@
                         }
                       }
                     }
+                  },
+                  {
+                    "name": "get_institutions_by_institution_query",
+                    "description": "Get institutions by specifying parts of institution object. For example by 'location.city'. All fields are optional.",
+                    "arguments": {
+                      "institution_query": {
+                        "description": "The institution query object. All fields are optional",
+                        "type": {
+                          "type": "named",
+                          "name": "institution"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "array",
+                      "element_type": {
+                        "type": "named",
+                        "name": "institution"
+                      }
+                    }
                   }
                 ],
                 "procedures": [
@@ -645,7 +665,7 @@
                     "order_by_aggregate": {}
                   }
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }

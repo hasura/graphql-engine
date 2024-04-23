@@ -6,13 +6,14 @@
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
-use ndc_models;
+
 use open_dds;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
 use super::error;
 use crate::execute::ir::arguments;
+
 use crate::execute::ir::filter;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
@@ -21,6 +22,7 @@ use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
+
 use crate::schema::types::{self, Annotation, ModelInputAnnotation};
 use crate::schema::GDS;
 
@@ -124,26 +126,15 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
 
     // the first and only argument seemingly being "args"
     if let Some((_, field_call_argument)) = &field_call.arguments.first() {
-        if let Some(types::ArgumentPresets { argument_presets }) =
+        if let Some(argument_presets) =
             permissions::get_argument_presets(field_call_argument.info.namespaced)?
         {
             // add any preset arguments from model permissions
-            for (
-                open_dds::arguments::ArgumentName(argument_name_inner),
-                (field_type, argument_value),
-            ) in argument_presets
-            {
-                model_arguments.insert(
-                    argument_name_inner.to_string(),
-                    ndc_models::Argument::Literal {
-                        value: permissions::make_value_from_value_expression(
-                            argument_value,
-                            field_type,
-                            session_variables,
-                        )?,
-                    },
-                );
-            }
+            arguments::process_model_arguments_presets(
+                argument_presets,
+                session_variables,
+                &mut model_arguments,
+            )?;
         }
     }
 

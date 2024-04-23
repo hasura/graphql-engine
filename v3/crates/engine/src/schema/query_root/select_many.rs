@@ -114,7 +114,10 @@ pub(crate) fn select_many_field(
 
         let model_arguments = builder.conditional_namespaced(
             model_arguments_input,
-            permissions::get_select_permissions_namespace_annotations(model),
+            permissions::get_select_permissions_namespace_annotations(
+                model,
+                &gds.metadata.object_types,
+            )?,
         );
 
         if arguments.insert(name.clone(), model_arguments).is_some() {
@@ -146,7 +149,10 @@ pub(crate) fn select_many_field(
             arguments,
             mk_deprecation_status(&select_many.deprecated),
         ),
-        permissions::get_select_permissions_namespace_annotations(model),
+        permissions::get_select_permissions_namespace_annotations(
+            model,
+            &gds.metadata.object_types,
+        )?,
     );
     Ok((query_root_field, field))
 }

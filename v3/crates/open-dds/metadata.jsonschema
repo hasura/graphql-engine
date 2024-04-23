@@ -1812,7 +1812,7 @@
           ]
         },
         "description": {
-          "description": "The description of the command. Gets added to the description of the command's root field in the graphql schema.",
+          "description": "The description of the command. Gets added to the description of the command's root field in the GraphQL schema.",
           "type": [
             "string",
             "null"
@@ -2445,6 +2445,16 @@
               "article_id",
               "author_id"
             ]
+          },
+          "input": {
+            "fieldPresets": [
+              {
+                "field": "author_id",
+                "value": {
+                  "sessionVariable": "x-hasura-user-id"
+                }
+              }
+            ]
           }
         }
       ],
@@ -2466,6 +2476,17 @@
           "anyOf": [
             {
               "$ref": "#/definitions/TypeOutputPermission"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input": {
+          "description": "Permissions for this role when this type is used in an input context. If null, this type is accessible for this role in an input context.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TypeInputPermission"
             },
             {
               "type": "null"
@@ -2499,6 +2520,83 @@
         }
       },
       "additionalProperties": false
+    },
+    "TypeInputPermission": {
+      "$id": "https://hasura.io/jsonschemas/metadata/TypeInputPermission",
+      "title": "TypeInputPermission",
+      "description": "Permissions for a type for a particular role when used in an input context.",
+      "type": "object",
+      "properties": {
+        "fieldPresets": {
+          "description": "Preset values for fields of the type",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldPreset"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldPreset": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldPreset",
+      "title": "FieldPreset",
+      "description": "Preset value for a field",
+      "type": "object",
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "description": "Field name for preset",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "value": {
+          "description": "Value for preset",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValueExpression2"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "ValueExpression2": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
+      "title": "ValueExpression",
+      "description": "An expression which evaluates to a value that can be used in permissions.",
+      "oneOf": [
+        {
+          "title": "Literal",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": true
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "SessionVariable",
+          "type": "object",
+          "required": [
+            "sessionVariable"
+          ],
+          "properties": {
+            "sessionVariable": {
+              "$ref": "#/definitions/OpenDdSessionVariable"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "ModelPermissionsV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ModelPermissionsV1",
@@ -2869,37 +2967,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "ValueExpression2": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ValueExpression2",
-      "title": "ValueExpression",
-      "description": "An expression which evaluates to a value that can be used in permissions.",
-      "oneOf": [
-        {
-          "title": "Literal",
-          "type": "object",
-          "required": [
-            "literal"
-          ],
-          "properties": {
-            "literal": true
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "SessionVariable",
-          "type": "object",
-          "required": [
-            "sessionVariable"
-          ],
-          "properties": {
-            "sessionVariable": {
-              "$ref": "#/definitions/OpenDdSessionVariable"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
     },
     "CommandPermissionsV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/CommandPermissionsV1",

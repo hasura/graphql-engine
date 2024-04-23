@@ -277,6 +277,7 @@ pub enum Error {
         filter_expression_data_connector_object_type: String,
     },
     // Permission errors
+    // Type Output Permissions
     #[error("unsupported type in output type permissions definition: {type_name:}; only object types are supported")]
     UnsupportedTypeInOutputPermissions { type_name: CustomTypeName },
     #[error("multiple output type permissions have been defined for type: {type_name:}")]
@@ -290,6 +291,25 @@ pub enum Error {
         field_name: FieldName,
         type_name: CustomTypeName,
     },
+    // Type Input Permissions
+    #[error("unsupported type in input type permissions definition: {type_name:}; only object types are supported")]
+    UnsupportedTypeInInputPermissions { type_name: CustomTypeName },
+    #[error("unknown field '{field_name:}' used in output permissions of type '{type_name:}'")]
+    UnknownFieldInInputPermissionsDefinition {
+        field_name: FieldName,
+        type_name: CustomTypeName,
+    },
+    #[error("multiple input type permissions have been defined for type: {type_name:}")]
+    DuplicateInputTypePermissions { type_name: CustomTypeName },
+    #[error(
+        "Type error in field preset of {field_name:}, for input type permissions definition of type {type_name:}: {type_error:}"
+    )]
+    FieldPresetTypeError {
+        field_name: FieldName,
+        type_name: CustomTypeName,
+        type_error: typecheck::TypecheckError,
+    },
+
     #[error("unknown model used in model select permissions definition: {model_name:}")]
     UnknownModelInModelSelectPermissions { model_name: Qualified<ModelName> },
     #[error("multiple select permissions defined for model: {model_name:}")]

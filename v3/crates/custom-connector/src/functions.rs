@@ -15,6 +15,7 @@ pub mod get_actors_by_movie_id_bounds;
 pub mod get_actors_by_name;
 pub mod get_all_actors;
 pub mod get_all_movies;
+pub mod get_institutions_by_institution_query;
 pub mod get_movie_by_id;
 pub mod latest_actor;
 pub mod latest_actor_id;
@@ -31,6 +32,7 @@ pub(crate) fn get_functions() -> Vec<ndc_models::FunctionInfo> {
         get_actors_by_movie_id::function_info(),
         get_all_actors::function_info(),
         get_all_movies::function_info(),
+        get_institutions_by_institution_query::function_info(),
         // TODO: Looks like the other functions where never added to the schema?
     ]
 }
@@ -52,6 +54,9 @@ pub(crate) fn get_function_by_name(
         "get_all_movies" => get_all_movies::rows(state),
         "get_actors_by_movie_id_bounds" => get_actors_by_movie_id_bounds::rows(arguments, state),
         "get_actors_by_movie_id" => get_actors_by_movie_id::rows(arguments, state),
+        "get_institutions_by_institution_query" => {
+            get_institutions_by_institution_query::rows(arguments, state)
+        }
         _ => Err((
             StatusCode::BAD_REQUEST,
             Json(ndc_models::ErrorResponse {

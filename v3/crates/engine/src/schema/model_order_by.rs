@@ -233,7 +233,8 @@ pub fn build_model_order_by_input_schema(
                                             object_type_representation,
                                             target_object_type_representation,
                                             mappings,
-                                        ),
+                                            &gds.metadata.object_types,
+                                        )?,
                                     ),
                                 );
                             }

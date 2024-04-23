@@ -11,7 +11,9 @@ use ndc_models;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
-use open_dds::permissions::{Role, TypeOutputPermission, TypePermissionsV1};
+use open_dds::permissions::{
+    FieldPreset, Role, TypeOutputPermission, TypePermissionsV1, ValueExpression,
+};
 use open_dds::types::{
     self, CustomTypeName, Deprecated, FieldName, ObjectBooleanExpressionTypeV1, ObjectTypeV1,
 };
@@ -22,19 +24,31 @@ use std::str::FromStr;
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
 use super::stages::data_connector_scalar_types;
 use super::stages::{data_connector_type_mappings, scalar_types};
+use super::typecheck;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
 pub struct ObjectTypeRepresentation {
     pub fields: IndexMap<FieldName, FieldDefinition>,
     pub relationships: IndexMap<ast::Name, Relationship>,
-    pub type_permissions: HashMap<Role, TypeOutputPermission>,
+    /// permissions on this type, when it is used in an output context (e.g. as
+    /// a return type of Model or Command)
+    pub type_output_permissions: HashMap<Role, TypeOutputPermission>,
+    /// permissions on this type, when it is used in an input context (e.g. in
+    /// an argument type of Model or Command)
+    pub type_input_permissions: HashMap<Role, TypeInputPermission>,
     pub global_id_fields: Vec<FieldName>,
     pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
     pub graphql_output_type_name: Option<ast::TypeName>,
     pub graphql_input_type_name: Option<ast::TypeName>,
     pub description: Option<String>,
     // TODO: add graphql_output_type_kind if we support creating interfaces.
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct TypeInputPermission {
+    pub field_presets: HashMap<FieldName, ValueExpression>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
@@ -246,7 +260,8 @@ pub fn resolve_object_type(
         fields: resolved_fields,
         relationships: IndexMap::new(),
         global_id_fields: resolved_global_id_fields,
-        type_permissions: HashMap::new(),
+        type_output_permissions: HashMap::new(),
+        type_input_permissions: HashMap::new(),
         graphql_output_type_name: graphql_type_name,
         graphql_input_type_name,
         description: object_type_definition.description.clone(),
@@ -339,11 +354,72 @@ pub fn resolve_output_type_permission(
                 }
             }
             if object_type_representation
-                .type_permissions
+                .type_output_permissions
                 .insert(type_permission.role.clone(), output.clone())
                 .is_some()
             {
                 return Err(Error::DuplicateOutputTypePermissions {
+                    type_name: type_permissions.type_name.clone(),
+                });
+            }
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn resolve_input_type_permission(
+    object_type_representation: &mut ObjectTypeRepresentation,
+    type_permissions: &TypePermissionsV1,
+) -> Result<(), Error> {
+    for type_permission in &type_permissions.permissions {
+        if let Some(input) = &type_permission.input {
+            let mut resolved_field_presets = HashMap::new();
+            for FieldPreset {
+                field: field_name,
+                value,
+            } in input.field_presets.iter()
+            {
+                // check if the field exists on this type
+                match object_type_representation.fields.get(field_name) {
+                    Some(field_definition) => {
+                        // check if the value is provided typechecks
+                        match &value {
+                            ValueExpression::SessionVariable(_) => Ok(()),
+                            ValueExpression::Literal(json_value) => {
+                                typecheck::typecheck_qualified_type_reference(
+                                    &field_definition.field_type,
+                                    json_value,
+                                )
+                            }
+                        }
+                        .map_err(|type_error| {
+                            Error::FieldPresetTypeError {
+                                field_name: field_name.clone(),
+                                type_name: type_permissions.type_name.clone(),
+                                type_error,
+                            }
+                        })?;
+                    }
+                    None => {
+                        return Err(Error::UnknownFieldInInputPermissionsDefinition {
+                            field_name: field_name.clone(),
+                            type_name: type_permissions.type_name.clone(),
+                        });
+                    }
+                }
+                resolved_field_presets.insert(field_name.clone(), value.clone());
+            }
+            if object_type_representation
+                .type_input_permissions
+                .insert(
+                    type_permission.role.clone(),
+                    TypeInputPermission {
+                        field_presets: resolved_field_presets,
+                    },
+                )
+                .is_some()
+            {
+                return Err(Error::DuplicateInputTypePermissions {
                     type_name: type_permissions.type_name.clone(),
                 });
             }

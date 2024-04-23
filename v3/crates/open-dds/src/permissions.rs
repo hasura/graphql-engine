@@ -113,6 +113,9 @@ pub struct TypePermission {
     /// Permissions for this role when this type is used in an output context.
     /// If null, this type is inaccessible for this role in an output context.
     pub output: Option<TypeOutputPermission>,
+    /// Permissions for this role when this type is used in an input context.
+    /// If null, this type is accessible for this role in an input context.
+    pub input: Option<TypeInputPermission>,
 }
 
 impl TypePermission {
@@ -124,6 +127,16 @@ impl TypePermission {
                     "allowedFields": [
                         "article_id",
                         "author_id"
+                    ]
+                },
+                "input": {
+                    "fieldPresets": [
+                        {
+                            "field": "author_id",
+                            "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                            }
+                        }
                     ]
                 }
             }
@@ -141,6 +154,27 @@ pub struct TypeOutputPermission {
     pub allowed_fields: IndexSet<FieldName>,
     // TODO: Presets for field arguments
     // pub field_argument_presets: HashMap<FieldName, Vec<ParameterPreset>>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+#[opendd(json_schema(title = "TypeInputPermission"))]
+/// Permissions for a type for a particular role when used in an input context.
+pub struct TypeInputPermission {
+    /// Preset values for fields of the type
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub field_presets: Vec<FieldPreset>,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]
+#[serde(rename_all = "camelCase")]
+/// Preset value for a field
+pub struct FieldPreset {
+    /// Field name for preset
+    pub field: FieldName,
+    /// Value for preset
+    pub value: ValueExpression,
 }
 
 #[derive(Serialize, Clone, Debug, Eq, PartialEq, opendds_derive::OpenDd)]

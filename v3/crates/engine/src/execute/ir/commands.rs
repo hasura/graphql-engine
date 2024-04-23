@@ -6,7 +6,8 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::ast::common::TypeContainer;
 use lang_graphql::ast::common::TypeName;
 use lang_graphql::normalized_ast;
-use open_dds::arguments::ArgumentName;
+
+use nonempty::NonEmpty;
 use open_dds::commands;
 use open_dds::commands::FunctionName;
 use open_dds::commands::ProcedureName;
@@ -22,6 +23,7 @@ use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph;
 use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+use crate::schema::types::ArgumentNameAndPath;
 use crate::schema::types::ArgumentPresets;
 use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::TypeKind;
@@ -90,29 +92,58 @@ pub(crate) fn generate_command_info<'n, 's>(
     let mut command_arguments = BTreeMap::new();
 
     for argument in field_call.arguments.values() {
-        command_arguments.extend(
-            arguments::build_ndc_command_arguments_as_value(
-                &field_call.name,
-                argument,
-                &command_source.type_mappings,
-            )?
-            .into_iter(),
-        );
+        let (ndc_arg_name, ndc_val) = arguments::build_ndc_command_arguments_as_value(
+            &field_call.name,
+            argument,
+            &command_source.type_mappings,
+        )?;
+        command_arguments.insert(ndc_arg_name, ndc_val);
     }
 
     // fetch argument presets from namespace annotation
     if let Some(ArgumentPresets { argument_presets }) =
         permissions::get_argument_presets(field_call.info.namespaced)?
     {
-        // add any preset arguments from command permissions
-        for (ArgumentName(argument_name_inner), (field_type, argument_value)) in argument_presets {
+        // add any preset arguments from command permissions or input type permissions
+        for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
+            let ArgumentNameAndPath {
+                field_path,
+                ndc_argument_name,
+            } = argument_name_and_path;
+
+            let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
+                // this can only happen when no argument mapping was not found
+                // during annotation generation
+                error::InternalEngineError::ArgumentPresetExecution {
+                    description: "unexpected; ndc argument name not preset".to_string(),
+                }
+            })?;
+
             let actual_value = permissions::make_value_from_value_expression(
                 argument_value,
                 field_type,
                 session_variables,
             )?;
 
-            command_arguments.insert(argument_name_inner.to_string(), actual_value);
+            match NonEmpty::from_slice(field_path) {
+                // if field path is empty, then the entire argument has to preset
+                None => {
+                    command_arguments.insert(argument_name.to_string(), actual_value);
+                }
+                // if there is some field path, preset the argument partially based on the field path
+                Some(field_path) => {
+                    if let Some(current_arg) = command_arguments.get_mut(&argument_name.to_string())
+                    {
+                        if let Some(current_arg_object) = current_arg.as_object_mut() {
+                            arguments::follow_field_path_and_insert_value(
+                                &field_path,
+                                current_arg_object,
+                                actual_value,
+                            )?;
+                        }
+                    }
+                }
+            }
         }
     }
 

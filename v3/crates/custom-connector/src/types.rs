@@ -2,7 +2,10 @@ use ndc_models;
 use std::collections::BTreeMap;
 
 pub mod actor;
+pub mod institution;
+pub mod location;
 pub mod name_query;
+pub mod staff_member;
 
 pub(crate) fn scalar_types() -> BTreeMap<String, ndc_models::ScalarType> {
     BTreeMap::from_iter([
@@ -91,135 +94,12 @@ pub(crate) fn object_types() -> BTreeMap<String, ndc_models::ObjectType> {
         ]),
     };
 
-    let institution_type = ndc_models::ObjectType {
-        description: Some("An institution".into()),
-        fields: BTreeMap::from_iter([
-            (
-                "id".into(),
-                ndc_models::ObjectField {
-                    description: Some("The institution's primary key".into()),
-                    r#type: ndc_models::Type::Named { name: "Int".into() },
-                },
-            ),
-            (
-                "name".into(),
-                ndc_models::ObjectField {
-                    description: Some("The institution's name".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                },
-            ),
-            (
-                "location".into(),
-                ndc_models::ObjectField {
-                    description: Some("The institution's location".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "location".into(),
-                    },
-                },
-            ),
-            (
-                "staff".into(),
-                ndc_models::ObjectField {
-                    description: Some("The institution's staff".into()),
-                    r#type: ndc_models::Type::Array {
-                        element_type: Box::new(ndc_models::Type::Named {
-                            name: "staff_member".into(),
-                        }),
-                    },
-                },
-            ),
-            (
-                "departments".into(),
-                ndc_models::ObjectField {
-                    description: Some("The institution's departments".into()),
-                    r#type: ndc_models::Type::Array {
-                        element_type: Box::new(ndc_models::Type::Named {
-                            name: "String".into(),
-                        }),
-                    },
-                },
-            ),
-        ]),
-    };
-
-    let location_type = ndc_models::ObjectType {
-        description: Some("A location".into()),
-        fields: BTreeMap::from_iter([
-            (
-                "city".into(),
-                ndc_models::ObjectField {
-                    description: Some("The location's city".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                },
-            ),
-            (
-                "country".into(),
-                ndc_models::ObjectField {
-                    description: Some("The location's country".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                },
-            ),
-            (
-                "campuses".into(),
-                ndc_models::ObjectField {
-                    description: Some("The location's campuses".into()),
-                    r#type: ndc_models::Type::Array {
-                        element_type: Box::new(ndc_models::Type::Named {
-                            name: "String".into(),
-                        }),
-                    },
-                },
-            ),
-        ]),
-    };
-
-    let staff_member_type = ndc_models::ObjectType {
-        description: Some("A staff member".into()),
-        fields: BTreeMap::from_iter([
-            (
-                "first_name".into(),
-                ndc_models::ObjectField {
-                    description: Some("The staff member's first name".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                },
-            ),
-            (
-                "last_name".into(),
-                ndc_models::ObjectField {
-                    description: Some("The staff member's last name".into()),
-                    r#type: ndc_models::Type::Named {
-                        name: "String".into(),
-                    },
-                },
-            ),
-            (
-                "specialities".into(),
-                ndc_models::ObjectField {
-                    description: Some("The staff member's specialities".into()),
-                    r#type: ndc_models::Type::Array {
-                        element_type: Box::new(ndc_models::Type::Named {
-                            name: "String".into(),
-                        }),
-                    },
-                },
-            ),
-        ]),
-    };
-
     BTreeMap::from_iter([
         ("actor".into(), actor::definition()),
         ("movie".into(), movie_type),
         ("name_query".into(), name_query::definition()),
-        ("institution".into(), institution_type),
-        ("location".into(), location_type),
-        ("staff_member".into(), staff_member_type),
+        ("institution".into(), institution::definition()),
+        ("location".into(), location::definition()),
+        ("staff_member".into(), staff_member::definition()),
     ])
 }

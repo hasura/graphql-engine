@@ -77,7 +77,8 @@ pub(crate) fn select_one_field(
         model,
         object_type_representation,
         select_unique,
-    );
+        &gds.metadata.object_types,
+    )?;
 
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(

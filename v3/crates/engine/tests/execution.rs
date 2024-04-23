@@ -814,6 +814,38 @@ fn test_model_argument_presets_select_one() -> anyhow::Result<()> {
     )
 }
 
+// Tests input type permissions -> field presets, on command
+#[test]
+fn test_input_type_field_presets_on_command() -> anyhow::Result<()> {
+    let test_path_string = "execute/input_types/field_presets/commands";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
+// Tests input type permissions -> field presets, on model arguments
+#[test]
+fn test_input_type_field_presets_on_model_arguments() -> anyhow::Result<()> {
+    let test_path_string = "execute/input_types/field_presets/models";
+    let common_metadata_path_string = "execute/common_metadata/custom_connector_schema.json";
+    let common_command_metadata_path_string = "execute/common_metadata/command_metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            common_command_metadata_path_string,
+        ],
+    )
+}
+
 // Tests using relationships in predicates
 // Array relationship
 #[test]

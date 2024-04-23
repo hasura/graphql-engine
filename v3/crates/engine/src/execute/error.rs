@@ -118,6 +118,9 @@ pub enum InternalEngineError {
     // namespace annotation while building the metadata.
     ExpectedNamespaceAnnotationNotFound { namespace_annotation_type: String },
 
+    #[error("internal error during execution of argument presets: {description}")]
+    ArgumentPresetExecution { description: String },
+
     #[error("internal error: {description}")]
     InternalGeneric { description: String },
 }

@@ -1,18 +1,15 @@
 use crate::{
     metadata::resolved::{
         subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
-        types::{
-            get_type_representation, mk_name, FieldDefinition, ObjectTypeRepresentation,
-            TypeRepresentation,
-        },
+        types::{get_type_representation, mk_name, ObjectTypeRepresentation, TypeRepresentation},
     },
-    schema::{types, GDS},
+    schema::{types, Role, GDS},
 };
-use indexmap::IndexMap;
+
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
-use open_dds::types::{CustomTypeName, FieldName};
-use std::collections::BTreeMap;
+use open_dds::types::CustomTypeName;
+use std::collections::{BTreeMap, HashMap};
 
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 
@@ -112,9 +109,10 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    fields: &IndexMap<FieldName, FieldDefinition>,
+    object_type_representation: &ObjectTypeRepresentation,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
-    fields
+    object_type_representation
+        .fields
         .iter()
         .map(|(field_name, field_definition)| {
             let graphql_field_name = mk_name(field_name.0.as_str())?;
@@ -131,7 +129,41 @@ fn input_object_type_input_fields(
                 gql_schema::DeprecationStatus::NotDeprecated,
             );
 
-            let namespaced_input_field = builder.allow_all_namespaced(input_field, None);
+            // construct the input field based on input permissions
+            let namespaced_input_field = {
+                // if no input permissions are defined, include the field for all roles
+                if object_type_representation.type_input_permissions.is_empty() {
+                    builder.allow_all_namespaced(input_field, None)
+                // if input permissions are defined, include the field conditionally
+                } else {
+                    let mut role_map = HashMap::new();
+                    for (role, permission) in &object_type_representation.type_input_permissions {
+                        // add the field only if there is no field preset defined
+                        // for this role
+                        if !permission.field_presets.contains_key(field_name) {
+                            role_map.insert(Role(role.0.clone()), None);
+                        }
+                    }
+                    // for roles present in the metadata, but does not have any
+                    // input permission defined for this types, we still allow
+                    // all fields
+                    let roles_in_this_permission: Vec<_> = object_type_representation
+                        .type_input_permissions
+                        .keys()
+                        .collect();
+                    let roles_not_in_this_permission: Vec<_> = gds
+                        .metadata
+                        .roles
+                        .iter()
+                        .filter(|role| !roles_in_this_permission.contains(role))
+                        .collect();
+                    for role in roles_not_in_this_permission {
+                        role_map.insert(Role(role.0.clone()), None);
+                    }
+
+                    builder.conditional_namespaced(input_field, role_map)
+                }
+            };
             Ok((graphql_field_name, namespaced_input_field))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()
@@ -153,8 +185,7 @@ pub fn input_object_type_schema(
 
     let graphql_type_name = graphql_type_name.clone();
 
-    let input_fields =
-        input_object_type_input_fields(gds, builder, &object_type_representation.fields)?;
+    let input_fields = input_object_type_input_fields(gds, builder, object_type_representation)?;
 
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(

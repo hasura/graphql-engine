@@ -9,14 +9,21 @@ use std::{
     fmt::Display,
 };
 
-use open_dds::{arguments::ArgumentName, commands, models, types};
+use open_dds::{
+    arguments::ArgumentName,
+    commands, models,
+    types::{self},
+};
 
 use crate::{
     metadata::resolved::{
         self,
         data_connector::DataConnectorLink,
         permission::ValueExpression,
-        subgraph::{Qualified, QualifiedTypeReference},
+        subgraph::{
+            deserialize_non_string_key_btreemap, serialize_non_string_key_btreemap, Qualified,
+            QualifiedTypeReference,
+        },
         types::NdcColumnForComparison,
     },
     schema::types::resolved::{
@@ -266,13 +273,28 @@ pub enum Annotation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 /// Preset arguments for models or commands
 pub struct ArgumentPresets {
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
+    #[serde(
+        serialize_with = "serialize_non_string_key_btreemap",
+        deserialize_with = "deserialize_non_string_key_btreemap"
+    )]
+    pub argument_presets: BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, ValueExpression)>,
 }
 
 impl Display for ArgumentPresets {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Debug::fmt(&self.argument_presets, f)
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// Argument name with optional field path, if part of the argument has to be
+/// preset
+pub struct ArgumentNameAndPath {
+    /// Name of the ndc function/procedure argument
+    pub ndc_argument_name: Option<String>,
+    /// Optional path of field names to traverse to get to a field, in case of
+    /// complex input object types
+    pub field_path: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]

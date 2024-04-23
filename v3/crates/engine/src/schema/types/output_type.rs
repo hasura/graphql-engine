@@ -186,6 +186,7 @@ fn object_type_fields(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &ObjectTypeRepresentation,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
         .fields
@@ -208,7 +209,7 @@ fn object_type_fields(
             // include fields
             let namespaced_field = {
                 let mut role_map = HashMap::new();
-                for (role, perms) in &object_type_representation.type_permissions {
+                for (role, perms) in &object_type_representation.type_output_permissions {
                     if perms.allowed_fields.contains(field_name) {
                         role_map.insert(Role(role.0.clone()), None);
                     }
@@ -279,6 +280,7 @@ fn object_type_fields(
                         command,
                         object_type_representation,
                         mappings,
+                        object_types,
                     )?,
                 )
             }
@@ -348,7 +350,8 @@ fn object_type_fields(
                         object_type_representation,
                         target_object_type_representation,
                         mappings,
-                    ),
+                        object_types,
+                    )?,
                 )
             }
         };
@@ -409,8 +412,13 @@ pub fn output_type_schema(
 
     let graphql_type_name = graphql_type_name.clone();
 
-    let mut object_type_fields =
-        object_type_fields(gds, builder, type_name, object_type_representation)?;
+    let mut object_type_fields = object_type_fields(
+        gds,
+        builder,
+        type_name,
+        object_type_representation,
+        &gds.metadata.object_types,
+    )?;
     let directives = match &object_type_representation.apollo_federation_config {
         Some(apollo_federation_config) => {
             generate_apollo_federation_directives(apollo_federation_config)

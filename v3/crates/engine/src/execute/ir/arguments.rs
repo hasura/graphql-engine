@@ -1,25 +1,140 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
+use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
 use ndc_models;
+use nonempty::NonEmpty;
 use open_dds::types::{CustomTypeName, InbuiltType};
 
 use crate::execute::error;
+use crate::execute::ir::arguments;
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::TypeMapping;
-use crate::schema::types::{Annotation, InputAnnotation, ModelInputAnnotation};
+use crate::schema::types::{
+    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
+};
 use crate::schema::GDS;
+
+use super::permissions;
+
+/// Takes a field path and a serde_json object, and insert a serde_json value
+/// into that object, following the field path.
+///
+/// For example,
+/// with JSON object -
+///   `{"name": "Queen Mary University of London", "location": {"city": "London"}}`
+/// a field path - `["location", "country"]`, and a value - "UK"
+/// it will modify the JSON object to -
+///   `{"name": "Queen Mary University of London", "location": {"city": "London", "country": "UK"}}`
+pub(crate) fn follow_field_path_and_insert_value(
+    field_path: &NonEmpty<String>,
+    object_slice: &mut serde_json::Map<String, serde_json::Value>,
+    value: serde_json::Value,
+) -> Result<(), error::Error> {
+    let (field_name, rest) = field_path.split_first();
+    match NonEmpty::from_slice(rest) {
+        // if rest is empty, we have only one-top level field. insert that into the object
+        None => {
+            object_slice.insert(field_name.to_string(), value);
+        }
+        // if rest is *not* empty, pick the field from the current object, and
+        // recursively process with the rest
+        Some(tail) => {
+            match object_slice.get_mut(field_name) {
+                None => {
+                    // object should have this field; if it doesn't then all the fields are preset
+                    object_slice.insert(
+                        field_name.to_string(),
+                        serde_json::Value::Object(serde_json::Map::new()),
+                    );
+                }
+                Some(json_value) => {
+                    let inner_object = json_value.as_object_mut().ok_or_else(|| {
+                        error::InternalEngineError::ArgumentPresetExecution {
+                            description: "input value is not a valid JSON object".to_string(),
+                        }
+                    })?;
+                    follow_field_path_and_insert_value(&tail, inner_object, value)?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Takes 'ArgumentPresets' annotations and existing model arguments (which
+/// might be partially filled), and fill values in the existing model arguments
+/// based on the presets
+pub(crate) fn process_model_arguments_presets(
+    argument_presets: &ArgumentPresets,
+    session_variables: &SessionVariables,
+    model_arguments: &mut BTreeMap<String, ndc_models::Argument>,
+) -> Result<(), error::Error> {
+    let ArgumentPresets { argument_presets } = argument_presets;
+    for (argument_name_and_path, (field_type, argument_value)) in argument_presets {
+        let ArgumentNameAndPath {
+            ndc_argument_name,
+            field_path,
+        } = argument_name_and_path;
+
+        let argument_name = ndc_argument_name.as_ref().ok_or_else(|| {
+            // this can only happen when no argument mapping was not found
+            // during annotation generation
+            error::InternalEngineError::ArgumentPresetExecution {
+                description: "unexpected; ndc argument name not preset".to_string(),
+            }
+        })?;
+
+        let actual_value = permissions::make_value_from_value_expression(
+            argument_value,
+            field_type,
+            session_variables,
+        )?;
+
+        match NonEmpty::from_slice(field_path) {
+            // if field path is empty, then the entire argument has to preset
+            None => {
+                model_arguments.insert(
+                    argument_name.to_string(),
+                    ndc_models::Argument::Literal {
+                        value: actual_value,
+                    },
+                );
+            }
+            // if there is some field path, preset the argument partially based on the field path
+            Some(field_path) => {
+                if let Some(current_arg) = model_arguments.get_mut(&argument_name.to_string()) {
+                    let current_arg = match current_arg {
+                        ndc_models::Argument::Variable { name: _ } => {
+                            Err(error::InternalEngineError::ArgumentPresetExecution {
+                                description: "unexpected; ndc argument can't be a variable"
+                                    .to_string(),
+                            })
+                        }
+                        ndc_models::Argument::Literal { value } => Ok(value),
+                    }?;
+                    if let Some(current_arg_object) = current_arg.as_object_mut() {
+                        arguments::follow_field_path_and_insert_value(
+                            &field_path,
+                            current_arg_object,
+                            actual_value,
+                        )?;
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
 
 pub fn build_ndc_command_arguments_as_value(
     command_field: &Name,
     argument: &InputField<GDS>,
     command_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<HashMap<String, serde_json::Value>, error::Error> {
-    let mut ndc_arguments = HashMap::new();
-
+) -> Result<(String, serde_json::Value), error::Error> {
     match argument.info.generic {
         Annotation::Input(InputAnnotation::CommandArgument {
             argument_type,
@@ -36,14 +151,12 @@ pub fn build_ndc_command_arguments_as_value(
                 &argument.value,
                 command_type_mappings,
             )?;
-            ndc_arguments.insert(ndc_func_proc_argument, mapped_argument_value);
-            Ok(())
+            return Ok((ndc_func_proc_argument, mapped_argument_value));
         }
         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
             annotation: annotation.clone(),
         }),
-    }?;
-    Ok(ndc_arguments)
+    }?
 }
 
 pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputField<'a, GDS>>>(

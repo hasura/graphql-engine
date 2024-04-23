@@ -88,7 +88,7 @@ pub struct CommandV1 {
     /// Configuration for how this command should appear in the GraphQL schema.
     pub graphql: Option<CommandGraphQlDefinition>,
     /// The description of the command.
-    /// Gets added to the description of the command's root field in the graphql schema.
+    /// Gets added to the description of the command's root field in the GraphQL schema.
     pub description: Option<String>,
 }
 
