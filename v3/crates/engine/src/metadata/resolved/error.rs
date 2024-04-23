@@ -605,6 +605,11 @@ pub enum BooleanExpressionError {
         data_connector_object_type: String,
         data_connector: Qualified<DataConnectorName>,
     },
+    #[error("{error:} in boolean expression type {boolean_expression_type:}")]
+    BooleanExpressionTypeMappingCollectionError {
+        boolean_expression_type: Qualified<CustomTypeName>,
+        error: TypeMappingCollectionError,
+    },
     #[error("the following object boolean expression type is defined more than once: {name:}")]
     DuplicateObjectBooleanExpressionTypeDefinition { name: Qualified<CustomTypeName> },
     #[error("unknown object boolean expression type {name:} is used in model {model:}")]

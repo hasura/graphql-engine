@@ -39,7 +39,7 @@ use crate::{
 use crate::{
     metadata::resolved::{self, subgraph::Qualified},
     schema::{
-        types::{Annotation, InputAnnotation, ModelInputAnnotation},
+        types::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation},
         GDS,
     },
 };
@@ -248,12 +248,6 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                                     error::Error::map_unexpected_value_to_external_error,
                                 )?)
                             }
-                            ModelInputAnnotation::ModelFilterExpression => {
-                                filter_clause = resolve_filter_expression(
-                                    argument.value.as_object()?,
-                                    usage_counts,
-                                )?
-                            }
                             ModelInputAnnotation::ModelOrderByExpression => {
                                 order_by = Some(build_ndc_order_by(argument, usage_counts)?)
                             }
@@ -264,6 +258,13 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                             }
                         }
                     }
+                    InputAnnotation::BooleanExpression(
+                        BooleanExpressionAnnotation::BooleanExpression,
+                    ) => {
+                        filter_clause =
+                            resolve_filter_expression(argument.value.as_object()?, usage_counts)?
+                    }
+
                     _ => {
                         return Err(error::InternalEngineError::UnexpectedAnnotation {
                             annotation: annotation.clone(),

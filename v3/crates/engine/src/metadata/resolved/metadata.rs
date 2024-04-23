@@ -63,7 +63,9 @@ pub fn resolve_metadata(
         data_connectors,
         data_connector_type_mappings,
         &object_types,
+        scalar_types,
         &mut existing_graphql_types,
+        graphql_config,
     )?;
 
     // resolve models
@@ -252,7 +254,9 @@ fn resolve_boolean_expression_types(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
+    graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>, Error> {
     let mut boolean_expression_types = HashMap::new();
     for open_dds::accessor::QualifiedObject {
@@ -264,9 +268,11 @@ fn resolve_boolean_expression_types(
             boolean_expression_type,
             subgraph,
             data_connectors,
-            object_types,
             data_connector_type_mappings,
+            object_types,
+            scalar_types,
             existing_graphql_types,
+            graphql_config,
         )?;
         if let Some(existing) = boolean_expression_types.insert(
             resolved_boolean_expression.name.clone(),
@@ -347,7 +353,6 @@ fn resolve_models(
             resolve_model_graphql_api(
                 model_graphql_definition,
                 &mut resolved_model,
-                subgraph,
                 existing_graphql_types,
                 data_connectors,
                 &model.description,
@@ -398,6 +403,7 @@ fn resolve_relationships(
             data_connectors,
             object_representation,
         )?;
+
         if object_representation
             .relationships
             .insert(

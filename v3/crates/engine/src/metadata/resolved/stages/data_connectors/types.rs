@@ -51,6 +51,7 @@ pub struct ComparisonOperators {
 }
 
 // basic scalar type info
+#[derive(Debug)]
 pub struct ScalarTypeInfo<'a> {
     pub scalar_type: &'a ndc_models::ScalarType,
     pub comparison_operators: ComparisonOperators,

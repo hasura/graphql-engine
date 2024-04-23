@@ -75,13 +75,19 @@ pub(crate) fn generate_select_many_arguments(
     }
 
     // generate and insert where argument
-    if let Some(filter_expression_info) = &model.graphql_api.filter_expression {
-        let where_argument =
-            get_where_expression_input_field(builder, model.name.clone(), filter_expression_info);
-        arguments.insert(
-            where_argument.name.clone(),
-            builder.allow_all_namespaced(where_argument, None),
-        );
+    if let Some(object_boolean_expression_type) = &model.filter_expression_type {
+        if let Some(boolean_expression) = &object_boolean_expression_type.graphql {
+            let where_argument = get_where_expression_input_field(
+                builder,
+                object_boolean_expression_type.name.clone(),
+                boolean_expression,
+            );
+
+            arguments.insert(
+                where_argument.name.clone(),
+                builder.allow_all_namespaced(where_argument, None),
+            );
+        }
     }
 
     Ok(arguments)

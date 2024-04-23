@@ -22,8 +22,7 @@ use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
 use crate::metadata::resolved::subgraph::Qualified;
-
-use crate::schema::types::{self, Annotation, ModelInputAnnotation};
+use crate::schema::types::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use crate::schema::GDS;
 
 /// IR for the 'select_many' operation on a model
@@ -85,12 +84,6 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                             .map_err(error::Error::map_unexpected_value_to_external_error)?,
                     )
                 }
-                ModelInputAnnotation::ModelFilterExpression => {
-                    filter_clause = filter::resolve_filter_expression(
-                        argument.value.as_object()?,
-                        &mut usage_counts,
-                    )?;
-                }
                 ModelInputAnnotation::ModelArgumentsExpression => match &argument.value {
                     normalized_ast::Value::Object(arguments) => {
                         model_arguments.extend(
@@ -115,6 +108,15 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                     })?
                 }
             },
+
+            Annotation::Input(types::InputAnnotation::BooleanExpression(
+                BooleanExpressionAnnotation::BooleanExpression,
+            )) => {
+                filter_clause = filter::resolve_filter_expression(
+                    argument.value.as_object()?,
+                    &mut usage_counts,
+                )?;
+            }
 
             annotation => {
                 return Err(error::InternalEngineError::UnexpectedAnnotation {

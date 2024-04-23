@@ -1,10 +1,15 @@
+use super::stages::{
+    data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
+};
+use crate::metadata::resolved::boolean_expression;
+use crate::metadata::resolved::data_connector;
 use crate::metadata::resolved::error::{BooleanExpressionError, Error};
+
 use crate::metadata::resolved::relationship::Relationship;
 use crate::metadata::resolved::subgraph::{
     mk_qualified_type_reference, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
 };
-
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use ndc_models;
@@ -22,8 +27,6 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
-use super::stages::data_connector_scalar_types;
-use super::stages::{data_connector_type_mappings, scalar_types};
 use super::typecheck;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
@@ -83,13 +86,10 @@ pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
+    pub data_connector_link: data_connector::DataConnectorLink,
     pub data_connector_object_type: String,
-    pub graphql: Option<ObjectBooleanExpressionTypeGraphQlConfiguration>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ObjectBooleanExpressionTypeGraphQlConfiguration {
-    pub type_name: ast::TypeName,
+    pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
+    pub graphql: Option<boolean_expression::BooleanExpression>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
@@ -433,9 +433,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
+    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
+    graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, Error> {
     // name of the boolean expression
     let qualified_name = Qualified::new(
@@ -544,26 +546,88 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 });
     }
 
+    let boolean_expression_type =
+        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
+
+    let object_type = Qualified::new(
+        subgraph.to_string(),
+        object_boolean_expression.object_type.clone(),
+    );
+
+    let data_connector_name = Qualified::new(
+        subgraph.to_string(),
+        object_boolean_expression.data_connector_name.clone(),
+    );
+
+    // Collect type mappings.
+    let mut type_mappings = BTreeMap::new();
+
+    let type_mapping_to_collect = TypeMappingToCollect {
+        type_name: &object_type,
+        ndc_object_type_name: object_boolean_expression
+            .data_connector_object_type
+            .as_str(),
+    };
+    collect_type_mapping_for_source(
+        &type_mapping_to_collect,
+        data_connector_type_mappings,
+        &qualified_data_connector_name,
+        object_types,
+        scalar_types,
+        &mut type_mappings,
+    )
+    .map_err(|error| {
+        Error::from(
+            BooleanExpressionError::BooleanExpressionTypeMappingCollectionError {
+                boolean_expression_type: boolean_expression_type.clone(),
+                error,
+            },
+        )
+    })?;
+
     // validate graphql config
-    let graphql_config = object_boolean_expression
+    let boolean_expression_graphql_config = object_boolean_expression
         .graphql
         .as_ref()
-        .map(|graphql_config| {
+        .map(|object_boolean_graphql_config| {
             let graphql_type_name =
-                mk_name(graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
+                mk_name(object_boolean_graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
+
             store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
-            Ok::<_, Error>(ObjectBooleanExpressionTypeGraphQlConfiguration {
-                type_name: graphql_type_name,
-            })
+
+            let type_mapping = type_mappings
+                .get(&Qualified::new(
+                    subgraph.to_string(),
+                    object_boolean_expression.object_type.clone(),
+                ))
+                .unwrap();
+
+            boolean_expression::resolve_boolean_expression(
+                &boolean_expression_type,
+                &data_connector_name,
+                graphql_type_name.clone(),
+                subgraph,
+                data_connectors,
+                type_mapping,
+                graphql_config,
+            )
         })
         .transpose()?;
 
+    let data_connector_link = data_connector::DataConnectorLink::new(
+        data_connector_name,
+        data_connector_context.inner.url.clone(),
+        data_connector_context.inner.headers,
+    )?;
+
     let resolved_boolean_expression = ObjectBooleanExpressionType {
         name: qualified_name.clone(),
+        type_mappings,
         object_type: qualified_object_type_name.clone(),
         data_connector_name: qualified_data_connector_name,
+        data_connector_link,
         data_connector_object_type: object_boolean_expression.data_connector_object_type.clone(),
-        graphql: graphql_config,
+        graphql: boolean_expression_graphql_config,
     };
     Ok(resolved_boolean_expression)
 }

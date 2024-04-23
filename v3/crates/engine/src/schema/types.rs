@@ -200,10 +200,6 @@ pub enum ModelInputAnnotation {
         argument_type: QualifiedTypeReference,
         ndc_table_argument: Option<String>,
     },
-    ModelFilterExpression,
-    ModelFilterArgument {
-        field: ModelFilterArgument,
-    },
     ComparisonOperation {
         operator: String,
     },
@@ -226,6 +222,13 @@ pub enum ModelInputAnnotation {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
+/// Annotations of the input types/fields related to boolean expressions.
+pub enum BooleanExpressionAnnotation {
+    BooleanExpression,
+    BooleanExpressionArgument { field: ModelFilterArgument },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
 /// Annotations for Relay input arguments/types.
 pub enum RelayInputAnnotation {
     NodeFieldIdArgument,
@@ -245,6 +248,7 @@ pub enum InputAnnotation {
         field_name: types::FieldName,
         field_type: QualifiedTypeReference,
     },
+    BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
         argument_type: QualifiedTypeReference,
         ndc_func_proc_argument: Option<String>,
@@ -341,14 +345,14 @@ pub enum TypeId {
         gds_type_name: Qualified<types::CustomTypeName>,
         graphql_type_name: ast::TypeName,
     },
+    InputObjectBooleanExpressionType {
+        gds_type_name: Qualified<types::CustomTypeName>,
+        graphql_type_name: ast::TypeName,
+    },
     NodeRoot,
     ModelArgumentsInput {
         model_name: Qualified<models::ModelName>,
         type_name: ast::TypeName,
-    },
-    ModelBooleanExpression {
-        model_name: Qualified<models::ModelName>,
-        graphql_type_name: ast::TypeName,
     },
     ModelOrderByExpression {
         model_name: Qualified<models::ModelName>,
@@ -396,7 +400,7 @@ impl TypeId {
             } => graphql_type_name.clone(),
             TypeId::NodeRoot => ast::TypeName(mk_name!("Node")),
             TypeId::ModelArgumentsInput { type_name, .. } => type_name.clone(),
-            TypeId::ModelBooleanExpression {
+            TypeId::InputObjectBooleanExpressionType {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
             TypeId::ScalarTypeComparisonExpression {
