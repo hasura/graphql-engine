@@ -1,11 +1,11 @@
 use crate::{
     metadata::resolved::{
+        stages::data_connector_type_mappings,
         subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
-        types::{get_type_representation, mk_name, ObjectTypeRepresentation, TypeRepresentation},
+        types::{get_type_representation, mk_name, TypeRepresentation},
     },
     schema::{types, Role, GDS},
 };
-
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;
@@ -79,7 +79,7 @@ fn get_custom_input_type(
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
     })? {
-        TypeRepresentation::Object(ObjectTypeRepresentation {
+        TypeRepresentation::Object(data_connector_type_mappings::ObjectTypeRepresentation {
             graphql_input_type_name,
             ..
         }) => Ok(builder.register_type(super::TypeId::InputObjectType {
@@ -109,7 +109,7 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_representation: &ObjectTypeRepresentation,
+    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     object_type_representation
         .fields

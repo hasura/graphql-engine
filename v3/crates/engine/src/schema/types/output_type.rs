@@ -14,13 +14,11 @@ use self::relationship::{
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
+use crate::metadata::resolved::stages::data_connector_type_mappings;
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::{
-    get_type_representation, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig,
-    TypeRepresentation,
-};
+use crate::metadata::resolved::types::{get_type_representation, TypeRepresentation};
 use crate::metadata::resolved::{self, types::mk_name};
 use crate::schema::commands::generate_command_argument;
 use crate::schema::query_root::select_many::generate_select_many_arguments;
@@ -185,8 +183,11 @@ fn object_type_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &ObjectTypeRepresentation,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
         .fields
@@ -370,7 +371,7 @@ fn object_type_fields(
 }
 
 fn generate_apollo_federation_directives(
-    apollo_federation_config: &ResolvedObjectApolloFederationConfig,
+    apollo_federation_config: &data_connector_type_mappings::ResolvedObjectApolloFederationConfig,
 ) -> Vec<Directive> {
     let mut directives = Vec::new();
     for key in &apollo_federation_config.keys {
@@ -495,7 +496,7 @@ pub fn output_type_schema(
 pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
-) -> Result<&'s ObjectTypeRepresentation, crate::schema::Error> {
+) -> Result<&'s data_connector_type_mappings::ObjectTypeRepresentation, crate::schema::Error> {
     gds.metadata.object_types.get(gds_type).ok_or_else(|| {
         crate::schema::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),

@@ -4,7 +4,7 @@ use super::stages::{data_connector_scalar_types, data_connector_type_mappings, s
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
-    ObjectTypeRepresentation, TypeMappingToCollect,
+    TypeMappingToCollect,
 };
 use crate::metadata::resolved::argument::get_argument_mappings;
 
@@ -21,7 +21,7 @@ use crate::metadata::resolved::subgraph::{
     QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::store_new_graphql_type;
-use crate::metadata::resolved::types::{mk_name, FieldDefinition, TypeMapping};
+use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
@@ -154,7 +154,7 @@ pub enum ModelPredicate {
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,
-    pub type_fields: IndexMap<FieldName, FieldDefinition>,
+    pub type_fields: IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: ModelGraphQlApi,
@@ -219,7 +219,7 @@ fn resolve_filter_expression_type(
 
 fn resolve_orderable_fields(
     model: &ModelV1,
-    type_fields: &IndexMap<FieldName, FieldDefinition>,
+    type_fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
 ) -> Result<Vec<OrderableField>, Error> {
     for field in &model.orderable_fields {
         // Check for unknown orderable field
@@ -251,7 +251,10 @@ fn resolve_orderable_fields(
 pub fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<
         Qualified<CustomTypeName>,
@@ -446,7 +449,7 @@ fn resolve_binary_operator(
     model_name: &Qualified<ModelName>,
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
-    fields: &IndexMap<FieldName, FieldDefinition>,
+    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
     scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
@@ -490,8 +493,11 @@ fn resolve_model_predicate(
     model: &Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    fields: &IndexMap<FieldName, FieldDefinition>,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     models: &IndexMap<Qualified<ModelName>, Model>,
     // type_representation: &TypeRepresentation,
 ) -> Result<ModelPredicate, Error> {
@@ -756,7 +762,10 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     models: &IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
@@ -1115,7 +1124,10 @@ pub fn resolve_model_source(
     model: &mut Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
@@ -1268,14 +1280,20 @@ pub fn resolve_model_source(
     Ok(())
 }
 
-/// Gets the `ObjectTypeRepresentation` of the type identified with the
+/// Gets the `data_connector_type_mappings::ObjectTypeRepresentation` of the type identified with the
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 pub(crate) fn get_model_object_type_representation<'s>(
-    object_types: &'s HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &'s HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<&'s ObjectTypeRepresentation, crate::metadata::resolved::error::Error> {
+) -> Result<
+    &'s data_connector_type_mappings::ObjectTypeRepresentation,
+    crate::metadata::resolved::error::Error,
+> {
     match object_types.get(data_type) {
         Some(object_type_representation) => Ok(object_type_representation),
         None => Err(Error::UnknownModelDataType {

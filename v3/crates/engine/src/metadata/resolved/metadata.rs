@@ -22,13 +22,14 @@ use crate::metadata::resolved::stages::{
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
     resolve_object_boolean_expression_type, resolve_output_type_permission,
-    ObjectBooleanExpressionType, ObjectTypeRepresentation,
+    ObjectBooleanExpressionType,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
-    pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    pub object_types:
+        HashMap<Qualified<CustomTypeName>, data_connector_type_mappings::ObjectTypeRepresentation>,
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub commands: IndexMap<Qualified<CommandName>, command::Command>,
@@ -50,7 +51,10 @@ pub fn resolve_metadata(
         Option<Qualified<open_dds::models::ModelName>>,
     >,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Metadata, Error> {
@@ -149,7 +153,10 @@ pub fn resolve_metadata(
 
 /// Gather all roles from various permission objects.
 fn collect_all_roles(
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
 ) -> Vec<Role> {
@@ -184,7 +191,10 @@ fn resolve_commands(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
@@ -223,8 +233,14 @@ fn resolve_commands(
 /// this works by mutating `types`, and returning an owned value
 fn resolve_type_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    mut object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
-) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>, Error> {
+    mut object_types: HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
+) -> Result<
+    HashMap<Qualified<CustomTypeName>, data_connector_type_mappings::ObjectTypeRepresentation>,
+    Error,
+> {
     // resolve type permissions
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -253,7 +269,10 @@ fn resolve_boolean_expression_types(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -293,7 +312,10 @@ fn resolve_models(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
@@ -377,10 +399,16 @@ fn resolve_models(
 fn resolve_relationships(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    mut object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    mut object_types: HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
-) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>, Error> {
+) -> Result<
+    HashMap<Qualified<CustomTypeName>, data_connector_type_mappings::ObjectTypeRepresentation>,
+    Error,
+> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: relationship,
@@ -461,7 +489,10 @@ fn resolve_command_permissions(
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     models: &mut IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<(), Error> {
     // Note: Model permissions's predicate can include the relationship field,

@@ -5,7 +5,6 @@ use crate::metadata::resolved::boolean_expression;
 use crate::metadata::resolved::data_connector;
 use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 
-use crate::metadata::resolved::relationship::Relationship;
 use crate::metadata::resolved::subgraph::{
     mk_qualified_type_reference, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
@@ -16,11 +15,9 @@ use ndc_models;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
-use open_dds::permissions::{
-    FieldPreset, Role, TypeOutputPermission, TypePermissionsV1, ValueExpression,
-};
+use open_dds::permissions::{FieldPreset, TypePermissionsV1, ValueExpression};
 use open_dds::types::{
-    self, CustomTypeName, Deprecated, FieldName, ObjectBooleanExpressionTypeV1, ObjectTypeV1,
+    self, CustomTypeName, FieldName, ObjectBooleanExpressionTypeV1, ObjectTypeV1,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -29,42 +26,10 @@ use std::str::FromStr;
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
 use super::typecheck;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
-pub struct ObjectTypeRepresentation {
-    pub fields: IndexMap<FieldName, FieldDefinition>,
-    pub relationships: IndexMap<ast::Name, Relationship>,
-    /// permissions on this type, when it is used in an output context (e.g. as
-    /// a return type of Model or Command)
-    pub type_output_permissions: HashMap<Role, TypeOutputPermission>,
-    /// permissions on this type, when it is used in an input context (e.g. in
-    /// an argument type of Model or Command)
-    pub type_input_permissions: HashMap<Role, TypeInputPermission>,
-    pub global_id_fields: Vec<FieldName>,
-    pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
-    pub graphql_output_type_name: Option<ast::TypeName>,
-    pub graphql_input_type_name: Option<ast::TypeName>,
-    pub description: Option<String>,
-    // TODO: add graphql_output_type_kind if we support creating interfaces.
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
-pub struct TypeInputPermission {
-    pub field_presets: HashMap<FieldName, ValueExpression>,
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct NdcColumnForComparison {
     pub column: String,
     pub equal_operator: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct FieldDefinition {
-    pub field_type: QualifiedTypeReference,
-    pub description: Option<String>,
-    pub deprecated: Option<Deprecated>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -92,18 +57,6 @@ pub struct ObjectBooleanExpressionType {
     pub graphql: Option<boolean_expression::BooleanExpression>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
-pub struct ResolvedObjectApolloFederationConfig {
-    pub keys: nonempty::NonEmpty<ResolvedApolloFederationObjectKey>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
-pub struct ResolvedApolloFederationObjectKey {
-    pub fields: nonempty::NonEmpty<FieldName>,
-}
-
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
 /// if there is a name conflict
 pub fn store_new_graphql_type(
@@ -124,8 +77,8 @@ pub fn store_new_graphql_type(
 pub fn resolve_field(
     field: &types::FieldDefinition,
     subgraph: &str,
-) -> Result<FieldDefinition, Error> {
-    Ok(FieldDefinition {
+) -> Result<data_connector_type_mappings::FieldDefinition, Error> {
+    Ok(data_connector_type_mappings::FieldDefinition {
         field_type: mk_qualified_type_reference(&field.field_type, subgraph),
         description: field.description.clone(),
         deprecated: field.deprecated.clone(),
@@ -145,7 +98,7 @@ pub fn resolve_object_type(
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-) -> Result<ObjectTypeRepresentation, Error> {
+) -> Result<data_connector_type_mappings::ObjectTypeRepresentation, Error> {
     let mut resolved_fields = IndexMap::new();
     let mut resolved_global_id_fields = Vec::new();
 
@@ -211,7 +164,9 @@ pub fn resolve_object_type(
                     None => Ok(None),
                     Some(apollo_federation) => {
                         // Validate that the fields in the apollo federation keys are defined in the object type
-                        let mut resolved_keys: Vec<ResolvedApolloFederationObjectKey> = Vec::new();
+                        let mut resolved_keys: Vec<
+                            data_connector_type_mappings::ResolvedApolloFederationObjectKey,
+                        > = Vec::new();
                         for key in &apollo_federation.keys {
                             let mut resolved_key_fields = Vec::new();
                             for field in &key.fields {
@@ -232,7 +187,7 @@ pub fn resolve_object_type(
                                             },
                                         )
                                     }
-                                    Some(fields) => ResolvedApolloFederationObjectKey { fields },
+                                    Some(fields) => data_connector_type_mappings::ResolvedApolloFederationObjectKey { fields },
                                 };
                             resolved_keys.push(resolved_key);
                         }
@@ -242,7 +197,8 @@ pub fn resolve_object_type(
                             None => Err(Error::EmptyKeysInApolloFederationConfigForObject {
                                 object_type: qualified_type_name.clone(),
                             }),
-                            Some(keys) => Ok(Some(ResolvedObjectApolloFederationConfig { keys })),
+                            Some(keys) => Ok(Some(data_connector_type_mappings
+                                    ::ResolvedObjectApolloFederationConfig { keys })),
                         }
                     }
                 }?;
@@ -256,7 +212,7 @@ pub fn resolve_object_type(
     store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
     store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
 
-    Ok(ObjectTypeRepresentation {
+    Ok(data_connector_type_mappings::ObjectTypeRepresentation {
         fields: resolved_fields,
         relationships: IndexMap::new(),
         global_id_fields: resolved_global_id_fields,
@@ -274,13 +230,16 @@ pub fn resolve_object_type(
 /// for pattern matching
 pub enum TypeRepresentation<'a> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
-    Object(&'a ObjectTypeRepresentation),
+    Object(&'a data_connector_type_mappings::ObjectTypeRepresentation),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types` or `scalar_types`
 pub fn get_type_representation<'a>(
     custom_type_name: &Qualified<CustomTypeName>,
-    object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &'a HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<TypeRepresentation<'a>, Error> {
     match object_types.get(custom_type_name) {
@@ -301,7 +260,10 @@ pub fn get_type_representation<'a>(
 // check that `custom_type_name` exists in `object_types`
 pub fn get_underlying_object_type(
     custom_type_name: &Qualified<CustomTypeName>,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
 ) -> Result<Qualified<CustomTypeName>, Error> {
     object_types
         .get(custom_type_name)
@@ -338,7 +300,7 @@ pub fn unwrap_custom_type_name(
 }
 
 pub fn resolve_output_type_permission(
-    object_type_representation: &mut ObjectTypeRepresentation,
+    object_type_representation: &mut data_connector_type_mappings::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<(), Error> {
     // validate all the fields definied in output permissions actually
@@ -368,7 +330,7 @@ pub fn resolve_output_type_permission(
 }
 
 pub(crate) fn resolve_input_type_permission(
-    object_type_representation: &mut ObjectTypeRepresentation,
+    object_type_representation: &mut data_connector_type_mappings::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<(), Error> {
     for type_permission in &type_permissions.permissions {
@@ -413,7 +375,7 @@ pub(crate) fn resolve_input_type_permission(
                 .type_input_permissions
                 .insert(
                     type_permission.role.clone(),
-                    TypeInputPermission {
+                    data_connector_type_mappings::TypeInputPermission {
                         field_presets: resolved_field_presets,
                     },
                 )
@@ -434,7 +396,10 @@ pub(crate) fn resolve_object_boolean_expression_type(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -678,7 +643,10 @@ pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {

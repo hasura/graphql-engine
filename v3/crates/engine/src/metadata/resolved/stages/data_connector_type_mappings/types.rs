@@ -1,12 +1,18 @@
+use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::relationship::Relationship;
+use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+
+use indexmap::IndexMap;
+
+use open_dds::permissions::{Role, TypeOutputPermission, ValueExpression};
+use open_dds::types::{CustomTypeName, Deprecated, FieldName};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-use open_dds::{models::ModelName, types::CustomTypeName};
-
-use crate::metadata::resolved::types::ObjectTypeRepresentation;
+use open_dds::models::ModelName;
 
 use crate::metadata::resolved::types::TypeMapping;
 
-use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::subgraph::Qualified;
 
 use lang_graphql::ast::common as ast;
@@ -83,4 +89,48 @@ pub struct DataConnectorTypeMappingsOutput {
         HashMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
     pub data_connector_type_mappings: DataConnectorTypeMappings,
     pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ObjectTypeRepresentation {
+    pub fields: IndexMap<FieldName, FieldDefinition>,
+    pub relationships: IndexMap<ast::Name, Relationship>,
+    /// permissions on this type, when it is used in an output context (e.g. as
+    /// a return type of Model or Command)
+    pub type_output_permissions: HashMap<Role, TypeOutputPermission>,
+    /// permissions on this type, when it is used in an input context (e.g. in
+    /// an argument type of Model or Command)
+    pub type_input_permissions: HashMap<Role, TypeInputPermission>,
+    pub global_id_fields: Vec<FieldName>,
+    pub apollo_federation_config: Option<ResolvedObjectApolloFederationConfig>,
+    pub graphql_output_type_name: Option<ast::TypeName>,
+    pub graphql_input_type_name: Option<ast::TypeName>,
+    pub description: Option<String>,
+    // TODO: add graphql_output_type_kind if we support creating interfaces.
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct TypeInputPermission {
+    pub field_presets: HashMap<FieldName, ValueExpression>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct FieldDefinition {
+    pub field_type: QualifiedTypeReference,
+    pub description: Option<String>,
+    pub deprecated: Option<Deprecated>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ResolvedObjectApolloFederationConfig {
+    pub keys: nonempty::NonEmpty<ResolvedApolloFederationObjectKey>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
+#[display(fmt = "Display")]
+pub struct ResolvedApolloFederationObjectKey {
+    pub fields: nonempty::NonEmpty<FieldName>,
 }

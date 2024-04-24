@@ -8,7 +8,7 @@ pub mod model;
 pub mod ndc_validation;
 pub mod permission;
 pub mod relationship;
-mod stages;
+pub mod stages;
 pub mod subgraph;
 mod typecheck;
 pub mod types;

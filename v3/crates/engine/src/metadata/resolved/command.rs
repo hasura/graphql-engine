@@ -9,7 +9,6 @@ use crate::metadata::resolved::subgraph::{
 };
 use crate::metadata::resolved::types::{
     get_type_representation, get_underlying_object_type, unwrap_custom_type_name,
-    ObjectTypeRepresentation,
 };
 use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use indexmap::IndexMap;
@@ -70,7 +69,10 @@ pub struct CommandPermission {
 fn is_valid_type(
     type_obj: &TypeReference,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> bool {
     match &type_obj.underlying_type {
@@ -90,7 +92,10 @@ fn is_valid_type(
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
@@ -160,7 +165,10 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::ObjectTypeRepresentation,
+    >,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
