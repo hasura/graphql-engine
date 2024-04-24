@@ -57,12 +57,39 @@ pub enum DataConnectorCommand {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "Command"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "Command", example = "Command::example")
+)]
 pub enum Command {
     V1(CommandV1),
 }
 
 impl Command {
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+            "kind": "Command",
+            "version": "v1",
+            "definition": {
+                "name": "get_latest_article",
+                "outputType": "commandArticle",
+                "arguments": [],
+                "source": {
+                    "dataConnectorName": "data_connector",
+                    "dataConnectorCommand": {
+                        "function": "latest_article"
+                    },
+                    "argumentMapping": {}
+                },
+                "graphql": {
+                    "rootFieldName": "getLatestArticle",
+                    "rootFieldKind": "Query"
+                },
+                "description": "Get the latest article",
+            }
+        })
+    }
+
     pub fn upgrade(self) -> CommandV1 {
         match self {
             Command::V1(v1) => v1,
@@ -72,7 +99,7 @@ impl Command {
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "CommandV1", example = "CommandV1::example"))]
+#[opendd(json_schema(title = "CommandV1"))]
 /// Definition of an OpenDD Command, which is a custom operation that can take arguments and
 /// returns an output. The semantics of a command are opaque to OpenDD.
 pub struct CommandV1 {
@@ -90,28 +117,6 @@ pub struct CommandV1 {
     /// The description of the command.
     /// Gets added to the description of the command's root field in the GraphQL schema.
     pub description: Option<String>,
-}
-
-impl CommandV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!({
-            "name": "get_latest_article",
-            "outputType": "commandArticle",
-            "arguments": [],
-            "source": {
-                "dataConnectorName": "data_connector",
-                "dataConnectorCommand": {
-                    "function": "latest_article"
-                },
-                "argumentMapping": {}
-            },
-            "graphql": {
-                "rootFieldName": "getLatestArticle",
-                "rootFieldKind": "Query"
-            },
-            "description": "Get the latest article",
-        })
-    }
 }
 
 #[derive(Default, Serialize, opendds_derive::OpenDd, Clone, Debug, PartialEq)]

@@ -26,13 +26,51 @@ pub struct DataConnectorName(pub Identifier);
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "DataConnectorLink"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "DataConnectorLink", example = "DataConnectorLink::example")
+)]
 /// Definition of a data connector, used to bring in sources of data and connect them to OpenDD models and commands.
 pub enum DataConnectorLink {
     V1(DataConnectorLinkV1),
 }
 
 impl DataConnectorLink {
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+            "kind": "DataConnectorLink",
+            "version": "v1",
+            "definition": {
+                "name": "data_connector",
+                "url": {
+                    "singleUrl": {
+                        "value": "http://data_connector:8100"
+                    }
+                },
+                "headers": {},
+                "schema": {
+                    "version": "v0.1",
+                    "schema": {
+                        "scalar_types": {},
+                        "object_types": {},
+                        "collections": [],
+                        "functions": [],
+                        "procedures": []
+                    },
+                    "capabilities": {
+                        "version": "0.1.0",
+                        "capabilities": {
+                            "query": {
+                                "variables": {}
+                            },
+                            "mutation": {}
+                        }
+                    },
+                }
+            }
+        })
+    }
+
     pub fn upgrade(self) -> DataConnectorLinkV1 {
         match self {
             DataConnectorLink::V1(v1) => v1,

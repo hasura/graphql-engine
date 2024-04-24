@@ -265,12 +265,62 @@ pub struct ObjectTypeGraphQLConfiguration {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "ObjectType"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "ObjectType", example = "ObjectType::example")
+)]
 pub enum ObjectType {
     V1(ObjectTypeV1),
 }
 
 impl ObjectType {
+    fn example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "ObjectType",
+                "version": "v1",
+                "definition": {
+                    "name": "Author",
+                    "fields": [
+                        {
+                            "name": "author_id",
+                            "type": "Int!",
+                            "description": "The id of the author"
+                        },
+                        {
+                            "name": "first_name",
+                            "type": "String",
+                            "description": "The first name of the author"
+                        },
+                        {
+                            "name": "last_name",
+                            "type": "String",
+                            "description": "The last name of the author"
+                        }
+                    ],
+                    "description": "An author of a book",
+                    "globalIdFields": [
+                        "author_id"
+                    ],
+                    "graphql": {
+                        "typeName": "Author"
+                    },
+                    "dataConnectorTypeMapping": [{
+                        "dataConnectorName": "my_db",
+                        "dataConnectorObjectType": "author",
+                        "fieldMapping": {
+                            "author_id": {
+                                "column": {
+                                    "name": "id"
+                                }
+                            }
+                        }
+                    }]
+                }
+            }
+        )
+    }
+
     pub fn upgrade(self) -> ObjectTypeV1 {
         match self {
             ObjectType::V1(v1) => v1,
@@ -280,7 +330,7 @@ impl ObjectType {
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "ObjectTypeV1", example = "ObjectTypeV1::example"))]
+#[opendd(json_schema(title = "ObjectTypeV1"))]
 /// Definition of a user-defined Open DD object type.
 pub struct ObjectTypeV1 {
     /// The name to give this object type, used to refer to it elsewhere in the metadata.
@@ -305,51 +355,6 @@ pub struct ObjectTypeV1 {
     /// Mapping of this object type to corresponding object types in various data connectors.
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub data_connector_type_mapping: Vec<DataConnectorTypeMapping>,
-}
-
-impl ObjectTypeV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!(
-            {
-                "name": "Author",
-                "fields": [
-                    {
-                        "name": "author_id",
-                        "type": "Int!",
-                        "description": "The id of the author"
-                    },
-                    {
-                        "name": "first_name",
-                        "type": "String",
-                        "description": "The first name of the author"
-                    },
-                    {
-                        "name": "last_name",
-                        "type": "String",
-                        "description": "The last name of the author"
-                    }
-                ],
-                "description": "An author of a book",
-                "globalIdFields": [
-                    "author_id"
-                ],
-                "graphql": {
-                    "typeName": "Author"
-                },
-                "dataConnectorTypeMapping": [{
-                    "dataConnectorName": "my_db",
-                    "dataConnectorObjectType": "author",
-                    "fieldMapping": {
-                        "author_id": {
-                            "column": {
-                                "name": "id"
-                            }
-                        }
-                    }
-                }]
-            }
-        )
-    }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -460,12 +465,29 @@ pub struct ScalarTypeGraphQLConfiguration {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "ScalarType"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "ScalarType", example = "ScalarType::example")
+)]
 pub enum ScalarType {
     V1(ScalarTypeV1),
 }
 
 impl ScalarType {
+    fn example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "ScalarType",
+                "version": "v1",
+                "name": "CustomString",
+                "graphql": {
+                    "typeName": "CustomString"
+                },
+                "description": "A custom string type"
+            }
+        )
+    }
+
     pub fn upgrade(self) -> ScalarTypeV1 {
         match self {
             ScalarType::V1(v1) => v1,
@@ -475,7 +497,7 @@ impl ScalarType {
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "ScalarTypeV1", example = "ScalarTypeV1::example"))]
+#[opendd(json_schema(title = "ScalarTypeV1"))]
 /// Definition of a user-defined scalar type that that has opaque semantics.
 pub struct ScalarTypeV1 {
     /// The name to give this scalar type, used to refer to it elsewhere in the metadata.
@@ -486,20 +508,6 @@ pub struct ScalarTypeV1 {
     /// The description of this scalar.
     /// Gets added to the description of the scalar's definition in the graphql schema.
     pub description: Option<String>,
-}
-
-impl ScalarTypeV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!(
-            {
-                "name": "CustomString",
-                "graphql": {
-                    "typeName": "CustomString"
-                },
-                "description": "A custom string type"
-            }
-        )
-    }
 }
 
 /// GraphQL configuration of a data connector scalar
@@ -569,13 +577,54 @@ impl DataConnectorScalarRepresentationV1 {
 #[serde(rename_all = "camelCase")]
 #[opendd(
     as_versioned_with_definition,
-    json_schema(title = "ObjectBooleanExpressionType")
+    json_schema(
+        title = "ObjectBooleanExpressionType",
+        example = "ObjectBooleanExpressionType::example"
+    )
 )]
 pub enum ObjectBooleanExpressionType {
     V1(ObjectBooleanExpressionTypeV1),
 }
 
 impl ObjectBooleanExpressionType {
+    fn example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "ObjectBooleanExpressionType",
+                "version": "v1",
+                "definition": {
+                    "name": "AuthorBoolExp",
+                    "objectType": "Author",
+                    "dataConnectorName": "my_db",
+                    "dataConnectorObjectType": "author",
+                    "comparableFields": [
+                        {
+                            "fieldName": "article_id",
+                            "operators": {
+                                "enableAll": true
+                            }
+                        },
+                        {
+                            "fieldName": "title",
+                            "operators": {
+                                "enableAll": true
+                            }
+                        },
+                        {
+                            "fieldName": "author_id",
+                            "operators": {
+                                "enableAll": true
+                            }
+                        }
+                    ],
+                    "graphql": {
+                        "typeName": "Author_bool_exp"
+                    }
+                }
+            }
+        )
+    }
+
     pub fn upgrade(self) -> ObjectBooleanExpressionTypeV1 {
         match self {
             ObjectBooleanExpressionType::V1(v1) => v1,
@@ -598,10 +647,7 @@ pub struct OperatorName(pub String);
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(
-    title = "ObjectBooleanExpressionTypeV1",
-    example = "ObjectBooleanExpressionTypeV1::example"
-))]
+#[opendd(json_schema(title = "ObjectBooleanExpressionTypeV1",))]
 /// Definition of a type representing a boolean expression on an Open DD object type.
 pub struct ObjectBooleanExpressionTypeV1 {
     /// The name to give this object boolean expression type, used to refer to it elsewhere in the metadata.
@@ -622,42 +668,6 @@ pub struct ObjectBooleanExpressionTypeV1 {
 
     /// Configuration for how this object type should appear in the GraphQL schema.
     pub graphql: Option<ObjectBooleanExpressionTypeGraphQlConfiguration>,
-}
-
-impl ObjectBooleanExpressionTypeV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!(
-            {
-                "name": "AuthorBoolExp",
-                "objectType": "Author",
-                "dataConnectorName": "my_db",
-                "dataConnectorObjectType": "author",
-                "comparableFields": [
-                    {
-                        "fieldName": "article_id",
-                        "operators": {
-                            "enableAll": true
-                        }
-                    },
-                    {
-                        "fieldName": "title",
-                        "operators": {
-                            "enableAll": true
-                        }
-                    },
-                    {
-                        "fieldName": "author_id",
-                        "operators": {
-                            "enableAll": true
-                        }
-                    }
-                ],
-                "graphql": {
-                    "typeName": "Author_bool_exp"
-                }
-            }
-        )
-    }
 }
 
 /// GraphQL configuration of an Open DD boolean expression type.

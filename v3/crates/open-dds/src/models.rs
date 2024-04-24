@@ -32,12 +32,74 @@ impl_JsonSchema_with_OpenDd_for!(ModelName);
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "Model"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "Model", example = "Model::example")
+)]
 pub enum Model {
     V1(ModelV1),
 }
 
 impl Model {
+    fn example() -> serde_json::Value {
+        serde_json::json!({
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+              "name": "Articles",
+              "objectType": "article",
+              "globalIdSource": true,
+              "arguments": [],
+              "source": {
+                "dataConnectorName": "data_connector",
+                "collection": "articles",
+                "argumentMapping": {}
+              },
+              "filterExpressionType": "Article_bool_exp",
+              "orderableFields": [
+                {
+                  "fieldName": "article_id",
+                  "orderByDirections": {
+                    "enableAll": true
+                  }
+                },
+                {
+                  "fieldName": "title",
+                  "orderByDirections": {
+                    "enableAll": true
+                  }
+                },
+                {
+                  "fieldName": "author_id",
+                  "orderByDirections": {
+                    "enableAll": true
+                  }
+                }
+              ],
+              "graphql": {
+                  "selectUniques": [
+                      {
+                          "queryRootField": "ArticleByID",
+                          "uniqueIdentifier": [
+                              "article_id"
+                          ],
+                          "description": "Description for the select unique ArticleByID"
+                      }
+                  ],
+                  "selectMany": {
+                      "queryRootField": "ArticleMany",
+                      "description": "Description for the select many ArticleMany"
+                  },
+                  "orderByExpressionType": "Article_Order_By",
+                  "apolloFederation": {
+                    "entitySource": true
+                  }
+              },
+              "description": "Description for the model Articles"
+          }
+        })
+    }
+
     pub fn upgrade(self) -> ModelV1 {
         match self {
             Model::V1(v1) => v1,
@@ -47,7 +109,7 @@ impl Model {
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "ModelV1", example = "ModelV1::example"))]
+#[opendd(json_schema(title = "ModelV1"))]
 /// The definition of a data model.
 /// A data model is a collection of objects of a particular type. Models can support one or more CRUD operations.
 pub struct ModelV1 {
@@ -72,63 +134,6 @@ pub struct ModelV1 {
     /// The description of the model.
     /// Gets added to the description of the model in the graphql schema.
     pub description: Option<String>,
-}
-
-impl ModelV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!({
-          "name": "Articles",
-          "objectType": "article",
-          "globalIdSource": true,
-          "arguments": [],
-          "source": {
-            "dataConnectorName": "data_connector",
-            "collection": "articles",
-            "argumentMapping": {}
-          },
-          "filterExpressionType": "Article_bool_exp",
-          "orderableFields": [
-            {
-              "fieldName": "article_id",
-              "orderByDirections": {
-                "enableAll": true
-              }
-            },
-            {
-              "fieldName": "title",
-              "orderByDirections": {
-                "enableAll": true
-              }
-            },
-            {
-              "fieldName": "author_id",
-              "orderByDirections": {
-                "enableAll": true
-              }
-            }
-          ],
-            "graphql": {
-                "selectUniques": [
-                    {
-                        "queryRootField": "ArticleByID",
-                        "uniqueIdentifier": [
-                            "article_id"
-                        ],
-                        "description": "Description for the select unique ArticleByID"
-                    }
-                ],
-                "selectMany": {
-                    "queryRootField": "ArticleMany",
-                    "description": "Description for the select many ArticleMany"
-                },
-                "orderByExpressionType": "Article_Order_By",
-                "apolloFederation": {
-                  "entitySource": true
-                }
-            },
-            "description": "Description for the model Articles"
-        })
-    }
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]

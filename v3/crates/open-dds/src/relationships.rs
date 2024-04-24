@@ -182,13 +182,55 @@ impl RelationshipMapping {
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
-#[opendd(as_versioned_with_definition, json_schema(title = "Relationship"))]
+#[opendd(
+    as_versioned_with_definition,
+    json_schema(title = "Relationship", example = "Relationship::example")
+)]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub enum Relationship {
     V1(RelationshipV1),
 }
 
 impl Relationship {
+    fn example() -> serde_json::Value {
+        serde_json::json!(
+            {
+                "kind": "Relationship",
+                "version": "v1",
+                "definition": {
+                    "name": "Articles",
+                    "source": "author",
+                    "target": {
+                        "model": {
+                            "name": "Articles",
+                            "subgraph": null,
+                            "relationshipType": "Array"
+                        }
+                    },
+                    "mapping": [
+                        {
+                            "source": {
+                                "fieldPath": [
+                                    {
+                                        "fieldName": "author_id"
+                                    }
+                                ]
+                            },
+                            "target": {
+                                "modelField": [
+                                    {
+                                        "fieldName": "author_id"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "description": "Articles written by an author"
+                }
+            }
+        )
+    }
+
     pub fn upgrade(self) -> RelationshipV1 {
         match self {
             Relationship::V1(v1) => v1,
@@ -198,7 +240,7 @@ impl Relationship {
 
 #[derive(Serialize, Clone, Debug, PartialEq, Eq, opendds_derive::OpenDd)]
 #[serde(rename_all = "camelCase")]
-#[opendd(json_schema(title = "RelationshipV1", example = "RelationshipV1::example"))]
+#[opendd(json_schema(title = "RelationshipV1"))]
 /// Definition of a relationship on an OpenDD type which allows it to be extended with related models or commands.
 pub struct RelationshipV1 {
     /// The name of the relationship.
@@ -215,41 +257,4 @@ pub struct RelationshipV1 {
     /// Whether this relationship is deprecated.
     /// If set, the deprecation status is added to the relationship field's graphql schema.
     pub deprecated: Option<Deprecated>,
-}
-
-impl RelationshipV1 {
-    fn example() -> serde_json::Value {
-        serde_json::json!(
-            {
-                "name": "Articles",
-                "source": "author",
-                "target": {
-                    "model": {
-                        "name": "Articles",
-                        "subgraph": null,
-                        "relationshipType": "Array"
-                    }
-                },
-                "mapping": [
-                    {
-                        "source": {
-                            "fieldPath": [
-                                {
-                                    "fieldName": "author_id"
-                                }
-                            ]
-                        },
-                        "target": {
-                            "modelField": [
-                                {
-                                    "fieldName": "author_id"
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "description": "Articles written by an author"
-            }
-        )
-    }
 }
