@@ -1,0 +1,61 @@
+version: "3"
+
+name: hge-postgres-replicas
+
+services:
+  # The primary server, which supports reads and writes.
+  postgres-primary:
+    extends:
+      service: postgres
+      file: ../../../docker-compose/databases.yaml
+    command:
+      # for some reason this is necessary, even if we don't actually use an archive
+      - "--archive_mode=on"
+    volumes:
+      - primary-data:/var/lib/postgresql/data
+      # this script enables replication for all users
+      - ./init-primary.sh:/docker-entrypoint-initdb.d/init-primary.sh:ro
+      - type: bind
+        source: certificates/
+        target: /certificates
+
+  # Initializes the replica by creating a backup of the primary into the
+  # replica's data directory, then marking it as "standby" by creating the
+  # "standby.signal" file.
+  init-replica:
+    extends:
+      service: postgres
+      file: ../../../docker-compose/databases.yaml
+    command: 
+      - su
+      - postgres
+      - -c
+      - |
+        set -ex
+        PGPASSWORD=password pg_basebackup --host=postgres-primary --username=postgres --no-password --pgdata=/var/lib/postgresql/data
+        touch /var/lib/postgresql/data/standby.signal
+    volumes:
+      - replica-data:/var/lib/postgresql/data
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  # The replica server, which streams writes from the primary, and supports reads.
+  postgres-replica:
+    extends:
+      service: postgres
+      file: ../../../docker-compose/databases.yaml
+    command:
+      - "--primary_conninfo=host=postgres-primary port=5432 user=postgres password=password options='-c wal_sender_timeout=5000'"
+      - "--hot_standby=on"
+    volumes:
+      - replica-data:/var/lib/postgresql/data
+    depends_on:
+      postgres-primary:
+        condition: service_started
+      init-replica:
+        condition: service_completed_successfully
+
+volumes:
+  primary-data:
+  replica-data:
