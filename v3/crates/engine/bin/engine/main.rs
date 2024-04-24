@@ -40,20 +40,24 @@ const MB: usize = 1_048_576;
 #[derive(Parser)]
 #[command(version = VERSION)]
 struct ServerOptions {
-    #[arg(long, value_name = "METADATA_FILE", env = "METADATA_PATH")]
+    /// The path to the metadata file, used to construct the schema.g
+    #[arg(long, value_name = "PATH", env = "METADATA_PATH")]
     metadata_path: PathBuf,
-    #[arg(
-        long,
-        value_name = "INTROSPECTION_METADATA_FILE",
-        env = "INTROSPECTION_METADATA_FILE"
-    )]
-    introspection_metadata: Option<String>,
-    #[arg(long, value_name = "OTLP_ENDPOINT", env = "OTLP_ENDPOINT")]
+    /// An introspection metadata file, served over `/metadata` if provided.
+    #[arg(long, value_name = "PATH", env = "INTROSPECTION_METADATA_FILE")]
+    introspection_metadata: Option<PathBuf>,
+    /// The OpenTelemetry collector endpoint.
+    #[arg(long, value_name = "URL", env = "OTLP_ENDPOINT")]
     otlp_endpoint: Option<String>,
-    #[arg(long, value_name = "AUTHN_CONFIG_FILE", env = "AUTHN_CONFIG_PATH")]
+    /// The configuration file used for authentication.
+    #[arg(long, value_name = "PATH", env = "AUTHN_CONFIG_PATH")]
     authn_config_path: PathBuf,
-    #[arg(long, value_name = "SERVER_PORT", env = "PORT")]
-    port: Option<u16>,
+    /// The host IP on which the server listens, defaulting to all IPv4 and IPv6 addresses.
+    #[arg(long, value_name = "HOST", env = "HOST", default_value_t = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED))]
+    host: net::IpAddr,
+    /// The port on which the server listens.
+    #[arg(long, value_name = "PORT", env = "PORT", default_value_t = DEFAULT_PORT)]
+    port: u16,
 }
 
 struct EngineState {
@@ -202,13 +206,12 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     // interact with an engine process running locally (c.f running in the hasura cloud).
     let app = match &server.introspection_metadata {
         None => app_,
-        Some(file) => {
-            let file_owned = file.to_string();
-            let file_contents = tokio::fs::read_to_string(file_owned)
+        Some(path) => {
+            let file_contents = tokio::fs::read_to_string(path)
                 .await
                 .map_err(|err| StartupError::ReadSchema(err.into()))?;
             let mut hasher = hash::DefaultHasher::new();
-            file_contents.as_str().hash(&mut hasher);
+            file_contents.hash(&mut hasher);
             let hash = hasher.finish();
             let base64_hash = base64::engine::general_purpose::STANDARD.encode(hash.to_ne_bytes());
             app_.merge(Router::new().route("/metadata", get(|| async { file_contents })))
@@ -216,10 +219,7 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         }
     };
 
-    // The "unspecified" IPv6 address will match any IPv4 or IPv6 address.
-    let host = net::IpAddr::V6(net::Ipv6Addr::UNSPECIFIED);
-    let port = server.port.unwrap_or(DEFAULT_PORT);
-    let address = net::SocketAddr::new(host, port);
+    let address = net::SocketAddr::new(server.host, server.port);
     let log = format!("starting server on {address}");
     println!("{log}");
     add_event_on_active_span(log);
