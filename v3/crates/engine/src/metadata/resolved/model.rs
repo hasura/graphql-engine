@@ -1,6 +1,9 @@
 use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
-use super::stages::{data_connector_scalar_types, data_connector_type_mappings, scalar_types};
+use super::stages::{
+    data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
+    type_permissions,
+};
 use super::typecheck;
 use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
@@ -14,7 +17,6 @@ use crate::metadata::resolved::error::{
     BooleanExpressionError, Error, GraphqlConfigError, RelationshipError,
 };
 use crate::metadata::resolved::ndc_validation;
-use crate::metadata::resolved::stages::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::subgraph::{
     deserialize_qualified_btreemap, mk_qualified_type_name, mk_qualified_type_reference,
     serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
@@ -251,10 +253,7 @@ fn resolve_orderable_fields(
 pub fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &mut HashMap<
         Qualified<CustomTypeName>,
@@ -274,7 +273,11 @@ pub fn resolve_model(
     if model.global_id_source {
         // Check if there are any global fields present in the related
         // object type, if the model is marked as a global source.
-        if object_type_representation.global_id_fields.is_empty() {
+        if object_type_representation
+            .object_type
+            .global_id_fields
+            .is_empty()
+        {
             return Err(Error::NoGlobalFieldsPresentInGlobalIdSource {
                 type_name: qualified_object_type_name,
                 model_name: model.name.clone(),
@@ -312,8 +315,10 @@ pub fn resolve_model(
     {
         // Check if there are any apollo federation keys present in the related
         // object type, if the model is marked as an apollo federation entity source.
-        if let Some(_apollo_federation_config) =
-            &object_type_representation.apollo_federation_config
+        if object_type_representation
+            .object_type
+            .apollo_federation_config
+            .is_some()
         {
             if !model.arguments.is_empty() {
                 return Err(Error::ModelWithArgumentsAsApolloFederationEntitySource {
@@ -380,8 +385,11 @@ pub fn resolve_model(
     Ok(Model {
         name: qualified_model_name,
         data_type: qualified_object_type_name,
-        type_fields: object_type_representation.fields.clone(),
-        global_id_fields: object_type_representation.global_id_fields.clone(),
+        type_fields: object_type_representation.object_type.fields.clone(),
+        global_id_fields: object_type_representation
+            .object_type
+            .global_id_fields
+            .clone(),
         arguments,
         graphql_api: ModelGraphQlApi::default(),
         source: None,
@@ -389,7 +397,10 @@ pub fn resolve_model(
         global_id_source,
         apollo_federation_key_source,
         filter_expression_type,
-        orderable_fields: resolve_orderable_fields(model, &object_type_representation.fields)?,
+        orderable_fields: resolve_orderable_fields(
+            model,
+            &object_type_representation.object_type.fields,
+        )?,
     })
 }
 
@@ -494,10 +505,7 @@ fn resolve_model_predicate(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &IndexMap<Qualified<ModelName>, Model>,
     // type_representation: &TypeRepresentation,
 ) -> Result<ModelPredicate, Error> {
@@ -612,6 +620,7 @@ fn resolve_model_predicate(
                 )?;
                 let relationship_field_name = mk_name(&name.0)?;
                 let relationship = &object_type_representation
+                    .object_type
                     .relationships
                     .get(&relationship_field_name)
                     .ok_or_else(|| Error::UnknownRelationshipInSelectPermissionsPredicate {
@@ -762,10 +771,7 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &IndexMap<Qualified<ModelName>, Model>,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
@@ -926,7 +932,7 @@ pub fn resolve_model_graphql_api(
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     model_description: &Option<String>,
-    graphql_config: &GraphqlConfig,
+    graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<(), Error> {
     let model_name = &model.name;
     for select_unique in &model_graphql_definition.select_uniques {
@@ -1124,10 +1130,7 @@ pub fn resolve_model_source(
     model: &mut Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
@@ -1235,7 +1238,7 @@ pub fn resolve_model_source(
         get_model_object_type_representation(object_types, &model.data_type, &model.name)?;
 
     if let Some(global_id_source) = &mut model.global_id_source {
-        for global_id_field in &model_object_type.global_id_fields {
+        for global_id_field in &model_object_type.object_type.global_id_fields {
             global_id_source.ndc_mapping.insert(
                 global_id_field.clone(),
                 get_ndc_column_for_comparison(
@@ -1251,7 +1254,9 @@ pub fn resolve_model_source(
     }
 
     if let Some(apollo_federation_key_source) = &mut model.apollo_federation_key_source {
-        if let Some(apollo_federation_config) = &model_object_type.apollo_federation_config {
+        if let Some(apollo_federation_config) =
+            &model_object_type.object_type.apollo_federation_config
+        {
             for key in &apollo_federation_config.keys {
                 for field in &key.fields {
                     apollo_federation_key_source.ndc_mapping.insert(
@@ -1280,20 +1285,18 @@ pub fn resolve_model_source(
     Ok(())
 }
 
-/// Gets the `data_connector_type_mappings::ObjectTypeRepresentation` of the type identified with the
+/// Gets the `type_permissions::ObjectTypeWithPermissions` of the type identified with the
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 pub(crate) fn get_model_object_type_representation<'s>(
     object_types: &'s HashMap<
         Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
+        type_permissions::ObjectTypeWithPermissions,
     >,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<
-    &'s data_connector_type_mappings::ObjectTypeRepresentation,
-    crate::metadata::resolved::error::Error,
-> {
+) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::metadata::resolved::error::Error>
+{
     match object_types.get(data_type) {
         Some(object_type_representation) => Ok(object_type_representation),
         None => Err(Error::UnknownModelDataType {

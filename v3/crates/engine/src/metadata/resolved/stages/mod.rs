@@ -1,9 +1,10 @@
-pub mod data_connector_scalar_types;
 /// This is where we'll be moving explicit metadata resolve stages
+pub mod data_connector_scalar_types;
 pub mod data_connector_type_mappings;
 pub mod data_connectors;
 pub mod graphql_config;
 pub mod scalar_types;
+pub mod type_permissions;
 
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::metadata::{resolve_metadata, Metadata};
@@ -43,6 +44,9 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &graphql_types,
     )?;
 
+    let object_types_with_permissions =
+        type_permissions::resolve(&metadata_accessor, &object_types)?;
+
     resolve_metadata(
         &metadata_accessor,
         &graphql_config,
@@ -50,7 +54,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         &data_connector_type_mappings,
-        object_types,
+        object_types_with_permissions,
         &scalar_types,
         &data_connectors,
     )

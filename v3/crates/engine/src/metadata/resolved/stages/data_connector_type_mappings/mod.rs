@@ -4,7 +4,7 @@ use open_dds::types::CustomTypeName;
 pub use types::{
     DataConnectorTypeMappings, DataConnectorTypeMappingsOutput, FieldDefinition,
     ObjectTypeRepresentation, ResolvedApolloFederationObjectKey,
-    ResolvedObjectApolloFederationConfig, TypeInputPermission,
+    ResolvedObjectApolloFederationConfig,
 };
 
 use crate::metadata::resolved::stages::data_connectors;
@@ -232,8 +232,6 @@ pub fn resolve_object_type(
         fields: resolved_fields,
         relationships: IndexMap::new(),
         global_id_fields: resolved_global_id_fields,
-        type_output_permissions: HashMap::new(),
-        type_input_permissions: HashMap::new(),
         graphql_output_type_name: graphql_type_name,
         graphql_input_type_name,
         description: object_type_definition.description.clone(),

@@ -159,7 +159,8 @@ pub fn build_model_order_by_input_schema(
 
         // relationship fields
         // TODO(naveen): Add support for command relationships.
-        for (rel_name, relationship) in object_type_representation.relationships.iter() {
+        for (rel_name, relationship) in object_type_representation.object_type.relationships.iter()
+        {
             if let RelationshipTarget::Model {
                 model_name,
                 relationship_type,

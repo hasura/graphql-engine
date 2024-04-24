@@ -1,4 +1,4 @@
-use super::stages::{data_connector_scalar_types, scalar_types};
+use super::stages::{data_connector_scalar_types, scalar_types, type_permissions};
 use crate::metadata::resolved::argument::get_argument_mappings;
 use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::Error;
@@ -69,10 +69,7 @@ pub struct CommandPermission {
 fn is_valid_type(
     type_obj: &TypeReference,
     subgraph: &str,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> bool {
     match &type_obj.underlying_type {
@@ -92,10 +89,7 @@ fn is_valid_type(
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &str,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
@@ -165,10 +159,7 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {

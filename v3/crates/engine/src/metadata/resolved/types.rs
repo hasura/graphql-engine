@@ -1,5 +1,6 @@
 use super::stages::{
     data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
+    type_permissions,
 };
 use crate::metadata::resolved::boolean_expression;
 use crate::metadata::resolved::data_connector;
@@ -9,22 +10,16 @@ use crate::metadata::resolved::subgraph::{
     mk_qualified_type_reference, Qualified, QualifiedBaseType, QualifiedTypeName,
     QualifiedTypeReference,
 };
-use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use ndc_models;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::identifier;
 use open_dds::models::EnableAllOrSpecific;
-use open_dds::permissions::{FieldPreset, TypePermissionsV1, ValueExpression};
-use open_dds::types::{
-    self, CustomTypeName, FieldName, ObjectBooleanExpressionTypeV1, ObjectTypeV1,
-};
+use open_dds::types::{self, CustomTypeName, FieldName, ObjectBooleanExpressionTypeV1};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
 
 use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
-use super::typecheck;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct NdcColumnForComparison {
@@ -85,6 +80,7 @@ pub fn resolve_field(
     })
 }
 
+/*
 pub fn resolve_object_type(
     object_type_definition: &ObjectTypeV1,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
@@ -224,13 +220,14 @@ pub fn resolve_object_type(
         apollo_federation_config,
     })
 }
+*/
 
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
 /// for pattern matching
 pub enum TypeRepresentation<'a> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
-    Object(&'a data_connector_type_mappings::ObjectTypeRepresentation),
+    Object(&'a type_permissions::ObjectTypeWithPermissions),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types` or `scalar_types`
@@ -238,7 +235,7 @@ pub fn get_type_representation<'a>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a HashMap<
         Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
+        type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 ) -> Result<TypeRepresentation<'a>, Error> {
@@ -260,10 +257,7 @@ pub fn get_type_representation<'a>(
 // check that `custom_type_name` exists in `object_types`
 pub fn get_underlying_object_type(
     custom_type_name: &Qualified<CustomTypeName>,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<Qualified<CustomTypeName>, Error> {
     object_types
         .get(custom_type_name)
@@ -299,107 +293,13 @@ pub fn unwrap_custom_type_name(
     }
 }
 
-pub fn resolve_output_type_permission(
-    object_type_representation: &mut data_connector_type_mappings::ObjectTypeRepresentation,
-    type_permissions: &TypePermissionsV1,
-) -> Result<(), Error> {
-    // validate all the fields definied in output permissions actually
-    // exist in this type definition
-    for type_permission in &type_permissions.permissions {
-        if let Some(output) = &type_permission.output {
-            for field_name in output.allowed_fields.iter() {
-                if !object_type_representation.fields.contains_key(field_name) {
-                    return Err(Error::UnknownFieldInOutputPermissionsDefinition {
-                        field_name: field_name.clone(),
-                        type_name: type_permissions.type_name.clone(),
-                    });
-                }
-            }
-            if object_type_representation
-                .type_output_permissions
-                .insert(type_permission.role.clone(), output.clone())
-                .is_some()
-            {
-                return Err(Error::DuplicateOutputTypePermissions {
-                    type_name: type_permissions.type_name.clone(),
-                });
-            }
-        }
-    }
-    Ok(())
-}
-
-pub(crate) fn resolve_input_type_permission(
-    object_type_representation: &mut data_connector_type_mappings::ObjectTypeRepresentation,
-    type_permissions: &TypePermissionsV1,
-) -> Result<(), Error> {
-    for type_permission in &type_permissions.permissions {
-        if let Some(input) = &type_permission.input {
-            let mut resolved_field_presets = HashMap::new();
-            for FieldPreset {
-                field: field_name,
-                value,
-            } in input.field_presets.iter()
-            {
-                // check if the field exists on this type
-                match object_type_representation.fields.get(field_name) {
-                    Some(field_definition) => {
-                        // check if the value is provided typechecks
-                        match &value {
-                            ValueExpression::SessionVariable(_) => Ok(()),
-                            ValueExpression::Literal(json_value) => {
-                                typecheck::typecheck_qualified_type_reference(
-                                    &field_definition.field_type,
-                                    json_value,
-                                )
-                            }
-                        }
-                        .map_err(|type_error| {
-                            Error::FieldPresetTypeError {
-                                field_name: field_name.clone(),
-                                type_name: type_permissions.type_name.clone(),
-                                type_error,
-                            }
-                        })?;
-                    }
-                    None => {
-                        return Err(Error::UnknownFieldInInputPermissionsDefinition {
-                            field_name: field_name.clone(),
-                            type_name: type_permissions.type_name.clone(),
-                        });
-                    }
-                }
-                resolved_field_presets.insert(field_name.clone(), value.clone());
-            }
-            if object_type_representation
-                .type_input_permissions
-                .insert(
-                    type_permission.role.clone(),
-                    data_connector_type_mappings::TypeInputPermission {
-                        field_presets: resolved_field_presets,
-                    },
-                )
-                .is_some()
-            {
-                return Err(Error::DuplicateInputTypePermissions {
-                    type_name: type_permissions.type_name.clone(),
-                });
-            }
-        }
-    }
-    Ok(())
-}
-
 /// Resolves a given object boolean expression type
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut HashSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -480,6 +380,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
     // validate comparable fields
     for comparable_field in object_boolean_expression.comparable_fields.iter() {
         if !object_type_representation
+            .object_type
             .fields
             .contains_key(&comparable_field.field_name)
         {
@@ -504,7 +405,8 @@ pub(crate) fn resolve_object_boolean_expression_type(
     }
 
     // Comparable fields should have all type fields
-    if object_boolean_expression.comparable_fields.len() != object_type_representation.fields.len()
+    if object_boolean_expression.comparable_fields.len()
+        != object_type_representation.object_type.fields.len()
     {
         return Err(Error::UnsupportedFeature {
                     message: "Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.".to_string(),
@@ -643,10 +545,7 @@ pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
@@ -688,7 +587,7 @@ pub(crate) fn collect_type_mapping_for_source(
             let TypeMapping::Object { field_mappings, .. } = type_mapping;
             // For each field in the ObjectType, if that field is using an ObjectType in its type,
             // resolve the type mappings for that ObjectType too
-            for (field_name, field_definition) in &object_type_representation.fields {
+            for (field_name, field_definition) in &object_type_representation.object_type.fields {
                 let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
                     TypeMappingCollectionError::MissingFieldMapping {
                         type_name: mapping_to_collect.type_name.clone(),

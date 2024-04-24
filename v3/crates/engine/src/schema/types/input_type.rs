@@ -1,6 +1,6 @@
 use crate::{
     metadata::resolved::{
-        stages::data_connector_type_mappings,
+        stages::{data_connector_type_mappings, type_permissions},
         subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
         types::{get_type_representation, mk_name, TypeRepresentation},
     },
@@ -79,8 +79,12 @@ fn get_custom_input_type(
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
     })? {
-        TypeRepresentation::Object(data_connector_type_mappings::ObjectTypeRepresentation {
-            graphql_input_type_name,
+        TypeRepresentation::Object(type_permissions::ObjectTypeWithPermissions {
+            object_type:
+                data_connector_type_mappings::ObjectTypeRepresentation {
+                    graphql_input_type_name,
+                    ..
+                },
             ..
         }) => Ok(builder.register_type(super::TypeId::InputObjectType {
             gds_type_name: gds_type_name.clone(),
@@ -109,9 +113,10 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
+    object_type_representation: &type_permissions::ObjectTypeWithPermissions,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     object_type_representation
+        .object_type
         .fields
         .iter()
         .map(|(field_name, field_definition)| {
@@ -190,7 +195,7 @@ pub fn input_object_type_schema(
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(
             graphql_type_name,
-            object_type_representation.description.clone(),
+            object_type_representation.object_type.description.clone(),
             input_fields,
             Vec::new(),
         ),

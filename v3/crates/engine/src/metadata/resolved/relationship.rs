@@ -14,7 +14,7 @@ use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::CommandName;
 
-use crate::metadata::resolved::stages::data_connector_type_mappings;
+use crate::metadata::resolved::stages::type_permissions;
 use open_dds::models::ModelName;
 use open_dds::relationships::{
     self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
@@ -114,7 +114,7 @@ pub fn relationship_execution_category(
 fn resolve_relationship_source_mapping<'a>(
     relationship_name: &'a RelationshipName,
     source_type_name: &'a Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &type_permissions::ObjectTypeWithPermissions,
     relationship_mapping: &'a open_dds::relationships::RelationshipMapping,
 ) -> Result<&'a FieldAccess, Error> {
     match &relationship_mapping.source {
@@ -129,7 +129,11 @@ fn resolve_relationship_source_mapping<'a>(
                 relationship_name: relationship_name.clone(),
             }),
             [field_access] => {
-                if !source_type.fields.contains_key(&field_access.field_name) {
+                if !source_type
+                    .object_type
+                    .fields
+                    .contains_key(&field_access.field_name)
+                {
                     return Err(Error::RelationshipError {
                         relationship_error:
                             RelationshipError::UnknownSourceFieldInRelationshipMapping {
@@ -151,7 +155,7 @@ fn resolve_relationship_source_mapping<'a>(
 fn resolve_relationship_mappings_model(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &type_permissions::ObjectTypeWithPermissions,
     target_model: &Model,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
@@ -255,7 +259,7 @@ fn resolve_relationship_mappings_model(
 fn resolve_relationship_mappings_command(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &type_permissions::ObjectTypeWithPermissions,
     target_command: &Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
@@ -382,7 +386,7 @@ pub fn resolve_relationship(
     models: &IndexMap<Qualified<ModelName>, Model>,
     commands: &IndexMap<Qualified<CommandName>, Command>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &type_permissions::ObjectTypeWithPermissions,
 ) -> Result<Relationship, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source.clone());
     let (relationship_target, source_data_connector, target_name) = match &relationship.target {

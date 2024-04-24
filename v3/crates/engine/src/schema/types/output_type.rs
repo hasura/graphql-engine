@@ -14,7 +14,7 @@ use self::relationship::{
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
-use crate::metadata::resolved::stages::data_connector_type_mappings;
+use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
@@ -132,6 +132,7 @@ pub fn get_custom_output_type(
             Ok(builder.register_type(super::TypeId::OutputType {
                 gds_type_name: gds_type.clone(),
                 graphql_type_name: object_type_representation
+                    .object_type
                     .graphql_output_type_name
                     .as_ref()
                     .ok_or_else(|| Error::NoGraphQlOutputTypeNameForObject {
@@ -183,13 +184,11 @@ fn object_type_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
-    >,
+    object_type_representation: &type_permissions::ObjectTypeWithPermissions,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
+        .object_type
         .fields
         .iter()
         .map(|(field_name, field_definition)| -> Result<_, Error> {
@@ -220,7 +219,9 @@ fn object_type_fields(
             Ok((graphql_field_name, namespaced_field))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    for (relationship_field_name, relationship) in &object_type_representation.relationships {
+    for (relationship_field_name, relationship) in
+        &object_type_representation.object_type.relationships
+    {
         let deprecation_status = mk_deprecation_status(&relationship.deprecated);
 
         let relationship_field = match &relationship.target {
@@ -420,17 +421,24 @@ pub fn output_type_schema(
         object_type_representation,
         &gds.metadata.object_types,
     )?;
-    let directives = match &object_type_representation.apollo_federation_config {
+    let directives = match &object_type_representation
+        .object_type
+        .apollo_federation_config
+    {
         Some(apollo_federation_config) => {
             generate_apollo_federation_directives(apollo_federation_config)
         }
         None => Vec::new(),
     };
-    if object_type_representation.global_id_fields.is_empty() {
+    if object_type_representation
+        .object_type
+        .global_id_fields
+        .is_empty()
+    {
         Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
             builder,
             graphql_type_name,
-            object_type_representation.description.clone(),
+            object_type_representation.object_type.description.clone(),
             object_type_fields,
             BTreeMap::new(),
             directives,
@@ -442,9 +450,12 @@ pub fn output_type_schema(
         let global_id_field_name = lang_graphql::mk_name!("id");
         let global_id_field = gql_schema::Field::<GDS>::new(
             global_id_field_name.clone(),
-            object_type_representation.description.clone(),
+            object_type_representation.object_type.description.clone(),
             Annotation::Output(super::OutputAnnotation::GlobalIDField {
-                global_id_fields: object_type_representation.global_id_fields.to_vec(),
+                global_id_fields: object_type_representation
+                    .object_type
+                    .global_id_fields
+                    .to_vec(),
             }),
             get_output_type(gds, builder, &ID_TYPE_REFERENCE)?,
             BTreeMap::new(),
@@ -473,7 +484,10 @@ pub fn output_type_schema(
                 builder.conditional_namespaced((), node_interface_annotations),
             );
         }
-        let directives = match &object_type_representation.apollo_federation_config {
+        let directives = match &object_type_representation
+            .object_type
+            .apollo_federation_config
+        {
             Some(apollo_federation_config) => {
                 generate_apollo_federation_directives(apollo_federation_config)
             }
@@ -482,7 +496,7 @@ pub fn output_type_schema(
         Ok(gql_schema::TypeInfo::Object(gql_schema::Object::new(
             builder,
             graphql_type_name,
-            object_type_representation.description.clone(),
+            object_type_representation.object_type.description.clone(),
             object_type_fields,
             interfaces,
             directives,
@@ -496,7 +510,7 @@ pub fn output_type_schema(
 pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
-) -> Result<&'s data_connector_type_mappings::ObjectTypeRepresentation, crate::schema::Error> {
+) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::schema::Error> {
     gds.metadata.object_types.get(gds_type).ok_or_else(|| {
         crate::schema::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),
