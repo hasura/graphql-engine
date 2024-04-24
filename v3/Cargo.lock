@@ -862,6 +862,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dev-auth-webhook"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "http",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-util",
+]
+
+[[package]]
 name = "diff"
 version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"

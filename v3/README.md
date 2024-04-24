@@ -33,10 +33,10 @@ Following are steps to run V3 engine with a reference agent (read only, in memor
     --authn-config-path auth_config.json
    ```
 
-A dev webhook implementation is provided in `hasura-authn-webhook/dev-auth-webhook`,
-that exposes the `POST /validate-request` which accepts converts the headers present
-in the incoming request to a object containing session variables, note that only headers
-that start with `x-hasura-` will be returned in the response.
+A dev webhook implementation is provided in `dev-auth-webhook`, that exposes
+the `POST /validate-request` which accepts converts the headers present in the
+incoming request to a object containing session variables, note that only
+headers that start with `x-hasura-` will be returned in the response.
 
 The dev webhook can be run using the following command:
 

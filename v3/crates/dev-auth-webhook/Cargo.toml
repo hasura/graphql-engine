@@ -1,23 +1,16 @@
-# Exclude this crate from the repo workspace
-[workspace]
-# this does not use the root properties so it can be built standalone
-package.version = "0.1.0"
-package.edition = "2021"
-package.license = "Apache-2.0"
-
 [package]
-name = "hasura-dev-auth-webhook"
+name = "dev-auth-webhook"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [[bin]]
-name = "hasura-dev-auth-webhook"
+name = "dev-auth-webhook"
 path = "src/main.rs"
 bench = false
 
 [dependencies]
-tracing-util = { path = "../../tracing-util" }
+tracing-util = { path = "../tracing-util" }
 
 anyhow = "1"
 axum = "0.6.20"
