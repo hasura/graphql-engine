@@ -332,15 +332,10 @@ pub fn resolve_command_permissions(
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     // if our value is a literal, typecheck it against expected type
-                    match &argument_preset.value {
-                        open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
-                        open_dds::permissions::ValueExpression::Literal(json_value) => {
-                            typecheck::typecheck_qualified_type_reference(
-                                &argument.argument_type,
-                                json_value,
-                            )
-                        }
-                    }
+                    typecheck::typecheck_value_expression(
+                        &argument.argument_type,
+                        &argument_preset.value,
+                    )
                     .map_err(|type_error| {
                         Error::CommandArgumentPresetTypeError {
                             command_name: command.name.clone(),

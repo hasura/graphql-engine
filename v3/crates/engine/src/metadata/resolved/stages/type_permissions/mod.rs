@@ -132,22 +132,12 @@ pub(crate) fn resolve_input_type_permission(
                 match object_type_representation.fields.get(field_name) {
                     Some(field_definition) => {
                         // check if the value is provided typechecks
-                        match &value {
-                            ValueExpression::SessionVariable(_) => Ok(()),
-                            ValueExpression::Literal(json_value) => {
-                                typecheck::typecheck_qualified_type_reference(
-                                    &field_definition.field_type,
-                                    json_value,
-                                )
-                            }
-                        }
-                        .map_err(|type_error| {
-                            Error::FieldPresetTypeError {
+                        typecheck::typecheck_value_expression(&field_definition.field_type, value)
+                            .map_err(|type_error| Error::FieldPresetTypeError {
                                 field_name: field_name.clone(),
                                 type_name: type_permissions.type_name.clone(),
                                 type_error,
-                            }
-                        })?;
+                            })?;
                     }
                     None => {
                         return Err(Error::UnknownFieldInInputPermissionsDefinition {

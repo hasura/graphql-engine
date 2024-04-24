@@ -804,15 +804,10 @@ pub fn resolve_model_select_permissions(
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
                         // if our value is a literal, typecheck it against expected type
-                        match &argument_preset.value {
-                            open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
-                            open_dds::permissions::ValueExpression::Literal(json_value) => {
-                                typecheck::typecheck_qualified_type_reference(
-                                    &argument.argument_type,
-                                    json_value,
-                                )
-                            }
-                        }
+                        typecheck::typecheck_value_expression(
+                            &argument.argument_type,
+                            &argument_preset.value,
+                        )
                         .map_err(|type_error| {
                             Error::ModelArgumentPresetTypeError {
                                 model_name: model.name.clone(),

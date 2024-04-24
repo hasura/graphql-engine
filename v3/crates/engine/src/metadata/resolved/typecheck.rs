@@ -19,6 +19,19 @@ pub enum TypecheckError {
     NullInNonNullableColumn,
 }
 
+/// helper for typechecking a ValueExpression only if it contains a Literal
+pub fn typecheck_value_expression(
+    ty: &subgraph::QualifiedTypeReference,
+    value_expression: &open_dds::permissions::ValueExpression,
+) -> Result<(), TypecheckError> {
+    match &value_expression {
+        open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
+        open_dds::permissions::ValueExpression::Literal(json_value) => {
+            typecheck_qualified_type_reference(ty, json_value)
+        }
+    }
+}
+
 /// check whether a serde_json::Value matches our expected type
 /// currently only works for primitive types (Int, String, etc)
 /// and arrays of those types
