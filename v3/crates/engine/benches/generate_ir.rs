@@ -1,4 +1,5 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
+use engine::execute;
 use engine::schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::Request;
@@ -8,8 +9,7 @@ use open_dds::permissions::Role;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-
-use engine::execute;
+use std::time::Duration;
 
 pub fn bench_generate_ir(c: &mut Criterion) {
     let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
@@ -19,6 +19,11 @@ pub fn bench_generate_ir(c: &mut Criterion) {
     let schema = GDS::build_schema(&gds).unwrap();
 
     let mut group = c.benchmark_group("generate_ir");
+
+    // these numbers are fairly low, optimising for runtime of benchmark suite
+    group.warm_up_time(Duration::from_millis(500));
+    group.sample_size(20);
+    group.sampling_mode(SamplingMode::Flat);
 
     let session = Identity::admin(Role::new("admin"))
         .get_role_authorization(None)
