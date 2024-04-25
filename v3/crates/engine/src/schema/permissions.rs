@@ -6,7 +6,7 @@ use crate::metadata::resolved::permission::resolve_value_expression;
 use crate::metadata::resolved::stages::type_permissions;
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
 use crate::metadata::resolved::types::{
-    get_underlying_object_type, unwrap_custom_type_name, FieldMapping, TypeMapping,
+    object_type_exists, unwrap_custom_type_name, FieldMapping, TypeMapping,
 };
 use crate::metadata::resolved::{self};
 use crate::schema::Role;
@@ -232,7 +232,7 @@ fn build_annotations_from_input_object_type_permissions(
     role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
 ) -> Result<(), schema::Error> {
     if let Some(custom_typename) = unwrap_custom_type_name(type_reference) {
-        if let Ok(object_type) = get_underlying_object_type(custom_typename, object_types) {
+        if let Ok(object_type) = object_type_exists(custom_typename, object_types) {
             if let Some(object_type_repr) = object_types.get(&object_type) {
                 let field_mappings =
                     type_mappings

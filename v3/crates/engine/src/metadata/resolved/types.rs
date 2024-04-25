@@ -255,7 +255,7 @@ pub fn get_type_representation<'a>(
 }
 
 // check that `custom_type_name` exists in `object_types`
-pub fn get_underlying_object_type(
+pub fn object_type_exists(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<Qualified<CustomTypeName>, Error> {
@@ -263,19 +263,6 @@ pub fn get_underlying_object_type(
         .get(custom_type_name)
         .map(|_| custom_type_name.clone())
         .ok_or_else(|| Error::UnknownObjectType {
-            data_type: custom_type_name.clone(),
-        })
-}
-
-// check that `custom_type_name` exists in `scalar_types`
-pub fn get_underlying_scalar_type(
-    custom_type_name: &Qualified<CustomTypeName>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-) -> Result<Qualified<CustomTypeName>, Error> {
-    scalar_types
-        .get(custom_type_name)
-        .map(|_| custom_type_name.clone())
-        .ok_or_else(|| Error::UnknownScalarType {
             data_type: custom_type_name.clone(),
         })
 }

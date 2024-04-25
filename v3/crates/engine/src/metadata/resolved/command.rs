@@ -8,7 +8,7 @@ use crate::metadata::resolved::subgraph::{
     ArgumentInfo, Qualified, QualifiedTypeReference,
 };
 use crate::metadata::resolved::types::{
-    get_type_representation, get_underlying_object_type, unwrap_custom_type_name,
+    get_type_representation, object_type_exists, unwrap_custom_type_name,
 };
 use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use indexmap::IndexMap;
@@ -247,9 +247,7 @@ pub fn resolve_command_source(
 
     // get object type name if it exists for the output type, and refers to a valid object
     let command_result_base_object_type_name = unwrap_custom_type_name(&command.output_type)
-        .and_then(|custom_type_name| {
-            get_underlying_object_type(custom_type_name, object_types).ok()
-        });
+        .and_then(|custom_type_name| object_type_exists(custom_type_name, object_types).ok());
 
     let mut type_mappings = BTreeMap::new();
 
