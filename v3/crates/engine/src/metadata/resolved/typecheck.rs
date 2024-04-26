@@ -1,5 +1,4 @@
 //! Functions for typechecking JSON literals against expected types
-
 use crate::metadata::resolved::subgraph;
 use thiserror::Error;
 
@@ -19,13 +18,17 @@ pub enum TypecheckError {
     NullInNonNullableColumn,
 }
 
-/// helper for typechecking a ValueExpression only if it contains a Literal
+/// These are run at schema resolve time, so that we can warn the user against
+/// using the wrong types in their engine metadata.
+/// If the values are passed in a session variable then there is nothing we can do at this point
+/// and we must rely on run time casts
 pub fn typecheck_value_expression(
     ty: &subgraph::QualifiedTypeReference,
     value_expression: &open_dds::permissions::ValueExpression,
 ) -> Result<(), TypecheckError> {
     match &value_expression {
         open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
+        open_dds::permissions::ValueExpression::BooleanExpression(_) => Ok(()),
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             typecheck_qualified_type_reference(ty, json_value)
         }

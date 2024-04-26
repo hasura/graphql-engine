@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 use crate::metadata::resolved::argument::ArgumentMappingError;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
@@ -309,7 +309,11 @@ pub enum Error {
         type_name: CustomTypeName,
         type_error: typecheck::TypecheckError,
     },
-
+    #[error("Type error in argument {argument_name:}: {type_error:}")]
+    ArgumentTypeError {
+        argument_name: ArgumentName,
+        type_error: TypeError,
+    },
     #[error("unknown model used in model select permissions definition: {model_name:}")]
     UnknownModelInModelSelectPermissions { model_name: Qualified<ModelName> },
     #[error("multiple select permissions defined for model: {model_name:}")]
@@ -342,6 +346,9 @@ pub enum Error {
         field_name: FieldName,
         model_name: Qualified<ModelName>,
     },
+    #[error("Nested predicate used in select permissions of model '{model_name:}'")]
+    NestedPredicateInSelectPermissionPredicate { model_name: Qualified<ModelName> },
+
     #[error("relationship '{relationship_name:}' used in select permissions of model '{model_name:}' does not exist on type {type_name:}")]
     UnknownRelationshipInSelectPermissionsPredicate {
         relationship_name: RelationshipName,
@@ -357,7 +364,7 @@ pub enum Error {
     #[error(
         "Invalid operator used in model '{model_name:}' select permission: '{operator_name:}'"
     )]
-    InvalidOperator {
+    InvalidOperatorInModelSelectPermission {
         model_name: Qualified<ModelName>,
         operator_name: OperatorName,
     },
@@ -562,6 +569,12 @@ pub enum Error {
     BooleanExpressionError {
         boolean_expression_error: BooleanExpressionError,
     },
+    #[error("{type_predicate_error:}")]
+    TypePredicateError {
+        type_predicate_error: TypePredicateError,
+    },
+    #[error("{type_error:}")]
+    TypeError { type_error: TypeError },
 }
 
 impl From<BooleanExpressionError> for Error {
@@ -682,6 +695,36 @@ pub enum RelationshipError {
 }
 
 #[derive(Debug, Error)]
+pub enum TypePredicateError {
+    #[error("unknown field '{field_name:}' used in predicate for type '{type_name:}'")]
+    UnknownFieldInTypePredicate {
+        field_name: FieldName,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error(
+        "the source data connector {data_connector:} for type {type_name:} has not been defined"
+    )]
+    UnknownTypeDataConnector {
+        type_name: Qualified<CustomTypeName>,
+        data_connector: Qualified<DataConnectorName>,
+    },
+    #[error("field '{field_name:}' used in predicate for type '{type_name:}' should be mapped to non-array scalar field")]
+    UnsupportedFieldInTypePredicate {
+        field_name: FieldName,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("Invalid operator used in type '{type_name:}' predicate: '{operator_name:}'")]
+    InvalidOperatorInTypePredicate {
+        type_name: Qualified<CustomTypeName>,
+        operator_name: OperatorName,
+    },
+    #[error("Nested predicate used in type '{type_name:}'")]
+    NestedPredicateInTypePredicate {
+        type_name: Qualified<CustomTypeName>,
+    },
+}
+
+#[derive(Debug, Error)]
 pub enum GraphqlConfigError {
     #[error("graphql configuration is not defined in supergraph")]
     MissingGraphqlConfig,
@@ -705,6 +748,14 @@ pub enum GraphqlConfigError {
     InvalidOrderByDirection { directions: String },
     #[error("the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType")]
     MissingArgumentsInputFieldInGraphqlConfig,
+}
+
+#[derive(Error, Debug)]
+pub enum TypeError {
+    #[error("expected to find a custom named type in {qualified_type_reference:} but none found")]
+    NoNamedTypeFound {
+        qualified_type_reference: QualifiedTypeReference,
+    },
 }
 
 #[derive(Error, Debug)]
@@ -749,6 +800,12 @@ pub enum TypeMappingValidationError {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         unknown_field_type_name: Qualified<CustomTypeName>,
+    },
+    #[error("could not find mappings for {object_type_name:} to the {data_connector_object_type:} on data connector {data_connector_name:}")]
+    DataConnectorTypeMappingNotFound {
+        object_type_name: Qualified<CustomTypeName>,
+        data_connector_name: Qualified<DataConnectorName>,
+        data_connector_object_type: String,
     },
     #[error(
         "the type {unknown_ndc_type:} is not defined as an object type in the connector's schema. This type is being mapped to by the type {type_name:}"

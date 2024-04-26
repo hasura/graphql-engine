@@ -71,9 +71,11 @@ pub fn resolve_field(
 pub enum TypeRepresentation<'a> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
     Object(&'a type_permissions::ObjectTypeWithPermissions),
+    BooleanExpression(&'a ObjectBooleanExpressionType),
 }
 
-/// validate whether a given CustomTypeName exists within `object_types` or `scalar_types`
+/// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
+/// `boolean_expression_types`
 pub fn get_type_representation<'a>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a HashMap<
@@ -81,6 +83,7 @@ pub fn get_type_representation<'a>(
         type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &'a HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<TypeRepresentation<'a>, Error> {
     match object_types.get(custom_type_name) {
         Some(object_type_representation) => {
@@ -90,13 +93,36 @@ pub fn get_type_representation<'a>(
             Some(scalar_type_representation) => {
                 Ok(TypeRepresentation::Scalar(scalar_type_representation))
             }
-            None => Err(Error::UnknownType {
-                data_type: custom_type_name.clone(),
-            }),
+            None => match boolean_expression_types.get(custom_type_name) {
+                Some(boolean_expression_type) => Ok(TypeRepresentation::BooleanExpression(
+                    boolean_expression_type,
+                )),
+                None => Err(Error::UnknownType {
+                    data_type: custom_type_name.clone(),
+                }),
+            },
         },
     }
 }
 
+pub(crate) fn get_object_type_for_boolean_expression<'a>(
+    boolean_expression_type: &ObjectBooleanExpressionType,
+    object_types: &'a HashMap<
+        Qualified<CustomTypeName>,
+        type_permissions::ObjectTypeWithPermissions,
+    >,
+) -> Result<&'a type_permissions::ObjectTypeWithPermissions, Error> {
+    object_types
+        .get(&boolean_expression_type.object_type)
+        .ok_or(Error::from(
+            BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
+                type_name: boolean_expression_type.object_type.clone(),
+            },
+        ))
+}
+
+// Get the underlying object type by resolving Custom ObjectType, Array and
+// Nullable container types
 // check that `custom_type_name` exists in `object_types`
 pub fn object_type_exists(
     custom_type_name: &Qualified<CustomTypeName>,
@@ -124,7 +150,7 @@ pub fn unwrap_custom_type_name(
 }
 
 /// Resolves a given object boolean expression type
-pub(crate) fn resolve_object_boolean_expression_type(
+pub(crate) fn resolve_boolean_expression_type(
     object_boolean_expression: &ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
@@ -434,29 +460,23 @@ pub(crate) fn collect_type_mapping_for_source(
                 if let Some(object_type_name) =
                     unwrap_custom_type_name(&field_definition.field_type)
                 {
-                    match get_type_representation(object_type_name, object_types, scalar_types)
-                        .map_err(|_| TypeMappingCollectionError::InternalUnknownType {
-                            type_name: object_type_name.clone(),
-                        })? {
-                        TypeRepresentation::Object(_) => {
-                            let underlying_ndc_field_named_type =
-                                get_underlying_named_type(&field_mapping.column_type)?;
+                    if object_type_exists(object_type_name, object_types).is_ok() {
+                        let underlying_ndc_field_named_type =
+                            get_underlying_named_type(&field_mapping.column_type)?;
 
-                            let field_type_mapping_to_collect = TypeMappingToCollect {
-                                type_name: object_type_name,
-                                ndc_object_type_name: underlying_ndc_field_named_type,
-                            };
+                        let field_type_mapping_to_collect = TypeMappingToCollect {
+                            type_name: object_type_name,
+                            ndc_object_type_name: underlying_ndc_field_named_type,
+                        };
 
-                            collect_type_mapping_for_source(
-                                &field_type_mapping_to_collect,
-                                data_connector_type_mappings,
-                                data_connector_name,
-                                object_types,
-                                scalar_types,
-                                collected_mappings,
-                            )?;
-                        }
-                        TypeRepresentation::Scalar(_) => {}
+                        collect_type_mapping_for_source(
+                            &field_type_mapping_to_collect,
+                            data_connector_type_mappings,
+                            data_connector_name,
+                            object_types,
+                            scalar_types,
+                            collected_mappings,
+                        )?;
                     }
                 }
             }

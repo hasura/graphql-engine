@@ -1,0 +1,222 @@
+[
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByBoolExp",
+              "args": []
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "Actor_bool_exp",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_and",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Actor_bool_exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByBoolExp",
+              "args": []
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "Actor_bool_exp",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_and",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Actor_bool_exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": {
+      "__schema": {
+        "queryType": {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "getActorsByBoolExp",
+              "args": [
+                {
+                  "name": "actor_boolean_expression",
+                  "defaultValue": null,
+                  "type": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "Actor_bool_exp"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "type_name_query": {
+        "name": "Actor_bool_exp",
+        "kind": "INPUT_OBJECT",
+        "inputFields": [
+          {
+            "name": "_and",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "_not",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "Actor_bool_exp",
+              "ofType": null
+            }
+          },
+          {
+            "name": "_or",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "Actor_bool_exp",
+                  "ofType": null
+                }
+              }
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "String_Comparison_Exp",
+              "ofType": null
+            }
+          }
+        ]
+      }
+    }
+  }
+]

@@ -239,6 +239,9 @@ pub(crate) fn make_value_from_value_expression(
 
             typecast_session_variable(value, value_type)
         }
+        resolved::permission::ValueExpression::BooleanExpression(_model_predicate) => {
+            Err(InternalDeveloperError::BooleanExpressionNotImplemented.into())
+        }
     }
 }
 

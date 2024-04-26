@@ -1,4 +1,4 @@
-use super::permission::{resolve_value_expression, ValueExpression};
+use super::permission::ValueExpression;
 use super::relationship::RelationshipTarget;
 use super::stages::{
     data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
@@ -9,10 +9,12 @@ use super::types::{
     collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
     TypeMappingToCollect,
 };
-use crate::metadata::resolved::argument::get_argument_mappings;
 
+use crate::metadata::resolved::argument::{
+    get_argument_mappings, resolve_value_expression_for_argument,
+};
 use crate::metadata::resolved::error::{
-    BooleanExpressionError, Error, GraphqlConfigError, RelationshipError,
+    BooleanExpressionError, Error, GraphqlConfigError, RelationshipError, TypePredicateError,
 };
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -20,8 +22,7 @@ use crate::metadata::resolved::subgraph::{
     serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
     QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::mk_name;
-use crate::metadata::resolved::types::store_new_graphql_type;
+use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
@@ -454,7 +455,58 @@ pub(crate) fn resolve_ndc_type(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn resolve_binary_operator(
+fn resolve_binary_operator_for_type(
+    operator: &OperatorName,
+    type_name: &Qualified<CustomTypeName>,
+    data_connector: &Qualified<DataConnectorName>,
+    field_name: &FieldName,
+    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    ndc_scalar_type: &ndc_models::ScalarType,
+    subgraph: &str,
+) -> Result<(String, QualifiedTypeReference), Error> {
+    let field_definition = fields
+        .get(field_name)
+        .ok_or_else(|| Error::TypePredicateError {
+            type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                field_name: field_name.clone(),
+                type_name: type_name.clone(),
+            },
+        })?;
+    let comparison_operator_definition = &ndc_scalar_type
+        .comparison_operators
+        .get(&operator.0)
+        .ok_or_else(|| Error::TypePredicateError {
+            type_predicate_error: TypePredicateError::InvalidOperatorInTypePredicate {
+                type_name: type_name.clone(),
+                operator_name: operator.clone(),
+            },
+        })?;
+    match comparison_operator_definition {
+        ndc_models::ComparisonOperatorDefinition::Equal => {
+            Ok((operator.0.clone(), field_definition.field_type.clone()))
+        }
+        ndc_models::ComparisonOperatorDefinition::In => Ok((
+            operator.0.clone(),
+            QualifiedTypeReference {
+                underlying_type: QualifiedBaseType::List(Box::new(
+                    field_definition.field_type.clone(),
+                )),
+                nullable: true,
+            },
+        )),
+        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
+            operator.0.clone(),
+            resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
+        )),
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+/// this is mostly the same code as `resolve_binary_operator_for_type`, they could probably be
+/// recombined if we nest our error types better, so we don't need to specify the model name this deep
+/// into the code
+fn resolve_binary_operator_for_model(
     operator: &OperatorName,
     model_name: &Qualified<ModelName>,
     data_connector: &Qualified<DataConnectorName>,
@@ -474,7 +526,7 @@ fn resolve_binary_operator(
     let comparison_operator_definition = &ndc_scalar_type
         .comparison_operators
         .get(&operator.0)
-        .ok_or_else(|| Error::InvalidOperator {
+        .ok_or_else(|| Error::InvalidOperatorInModelSelectPermission {
             model_name: model_name.clone(),
             operator_name: operator.clone(),
         })?;
@@ -495,6 +547,165 @@ fn resolve_binary_operator(
             operator.0.clone(),
             resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
         )),
+    }
+}
+
+/// a simplified version of resolve_model_predicate that only requires a type rather than an entire
+/// Model for context. It skips relationships for simplicity, this should be simple enough to
+/// re-add in future. Because this function takes the `data_connector_field_mappings` as an input,
+/// many of the errors thrown in `resolve_model_predicate` are pushed out.
+pub(crate) fn resolve_model_predicate_with_type(
+    model_predicate: &permissions::ModelPredicate,
+    type_name: &Qualified<CustomTypeName>,
+    data_connector_field_mappings: &BTreeMap<FieldName, data_connector_type_mappings::FieldMapping>,
+    data_connector_name: &Qualified<DataConnectorName>,
+    subgraph: &str,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+) -> Result<ModelPredicate, Error> {
+    match model_predicate {
+        permissions::ModelPredicate::FieldComparison(permissions::FieldComparisonPredicate {
+            field,
+            operator,
+            value,
+        }) => {
+            // TODO: (anon) typecheck the value expression with the field
+            // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
+
+            // Determine field_mapping for the predicate field
+            let field_mapping = data_connector_field_mappings.get(field).ok_or_else(|| {
+                Error::TypePredicateError {
+                    type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                        field_name: field.clone(),
+                        type_name: type_name.clone(),
+                    },
+                }
+            })?;
+            // Determine ndc type of the field
+            let field_ndc_type = &field_mapping.column_type;
+
+            // Determine whether the ndc type is a simple scalar
+            // Get available scalars defined in the data connector
+            let scalars = &data_connectors
+                .data_connectors_with_scalars
+                .get(data_connector_name)
+                .ok_or(Error::TypePredicateError {
+                    type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
+                        type_name: type_name.clone(),
+                        data_connector: data_connector_name.clone(),
+                    },
+                })?
+                .scalars;
+
+            // Get scalar type info from the data connector
+            let (_, scalar_type_info) =
+                data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
+                    .ok_or_else(|| Error::TypePredicateError {
+                        type_predicate_error: TypePredicateError::UnsupportedFieldInTypePredicate {
+                            field_name: field.clone(),
+                            type_name: type_name.clone(),
+                        },
+                    })?;
+
+            let (resolved_operator, argument_type) = resolve_binary_operator_for_type(
+                operator,
+                type_name,
+                data_connector_name,
+                field,
+                fields,
+                scalars,
+                scalar_type_info.scalar_type,
+                subgraph,
+            )?;
+
+            let value_expression = match value {
+                open_dds::permissions::ValueExpression::Literal(json_value) => {
+                    Ok(ValueExpression::Literal(json_value.clone()))
+                }
+                open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+                    Ok(ValueExpression::SessionVariable(session_variable.clone()))
+                }
+                open_dds::permissions::ValueExpression::BooleanExpression(
+                    _inner_model_predicate,
+                ) => Err(Error::TypePredicateError {
+                    type_predicate_error: TypePredicateError::NestedPredicateInTypePredicate {
+                        type_name: type_name.clone(),
+                    },
+                }),
+            }?;
+
+            Ok(ModelPredicate::BinaryFieldComparison {
+                field: field.clone(),
+                ndc_column: field_mapping.column.clone(),
+                operator: resolved_operator,
+                argument_type,
+                value: value_expression,
+            })
+        }
+        permissions::ModelPredicate::FieldIsNull(FieldIsNullPredicate { field }) => {
+            // Determine field_mapping for the predicate field
+            let field_mapping = data_connector_field_mappings.get(field).ok_or_else(|| {
+                Error::TypePredicateError {
+                    type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
+                        field_name: field.clone(),
+                        type_name: type_name.clone(),
+                    },
+                }
+            })?;
+
+            Ok(ModelPredicate::UnaryFieldComparison {
+                field: field.clone(),
+                ndc_column: field_mapping.column.clone(),
+                operator: ndc_models::UnaryComparisonOperator::IsNull,
+            })
+        }
+        permissions::ModelPredicate::Relationship(RelationshipPredicate { .. }) => {
+            Err(Error::UnsupportedFeature {
+                message: "relationships not supported in type predicates".to_string(),
+            })
+        }
+        permissions::ModelPredicate::Not(predicate) => {
+            let resolved_predicate = resolve_model_predicate_with_type(
+                predicate,
+                type_name,
+                data_connector_field_mappings,
+                data_connector_name,
+                subgraph,
+                data_connectors,
+                fields,
+            )?;
+            Ok(ModelPredicate::Not(Box::new(resolved_predicate)))
+        }
+        permissions::ModelPredicate::And(predicates) => {
+            let mut resolved_predicates = Vec::new();
+            for predicate in predicates {
+                resolved_predicates.push(resolve_model_predicate_with_type(
+                    predicate,
+                    type_name,
+                    data_connector_field_mappings,
+                    data_connector_name,
+                    subgraph,
+                    data_connectors,
+                    fields,
+                )?);
+            }
+            Ok(ModelPredicate::And(resolved_predicates))
+        }
+        permissions::ModelPredicate::Or(predicates) => {
+            let mut resolved_predicates = Vec::new();
+            for predicate in predicates {
+                resolved_predicates.push(resolve_model_predicate_with_type(
+                    predicate,
+                    type_name,
+                    data_connector_field_mappings,
+                    data_connector_name,
+                    subgraph,
+                    data_connectors,
+                    fields,
+                )?);
+            }
+            Ok(ModelPredicate::Or(resolved_predicates))
+        }
     }
 }
 
@@ -556,7 +767,7 @@ fn resolve_model_predicate(
                             model_name: model.name.clone(),
                         })?;
 
-                let (resolved_operator, argument_type) = resolve_binary_operator(
+                let (resolved_operator, argument_type) = resolve_binary_operator_for_model(
                     operator,
                     &model.name,
                     &model_source.data_connector.name,
@@ -566,12 +777,27 @@ fn resolve_model_predicate(
                     scalar_type_info.scalar_type,
                     subgraph,
                 )?;
+
+                let value_expression = match value {
+                    open_dds::permissions::ValueExpression::Literal(json_value) => {
+                        Ok(ValueExpression::Literal(json_value.clone()))
+                    }
+                    open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+                        Ok(ValueExpression::SessionVariable(session_variable.clone()))
+                    }
+                    open_dds::permissions::ValueExpression::BooleanExpression(_model_predicate) => {
+                        Err(Error::NestedPredicateInSelectPermissionPredicate {
+                            model_name: model.name.clone(),
+                        })
+                    }
+                }?;
+
                 Ok(ModelPredicate::BinaryFieldComparison {
                     field: field.clone(),
                     ndc_column: field_mapping.column.clone(),
                     operator: resolved_operator,
                     argument_type,
-                    value: resolve_value_expression(value.clone()),
+                    value: value_expression,
                 })
             } else {
                 Err(Error::ModelSourceRequiredForPredicate {
@@ -771,6 +997,8 @@ pub fn resolve_model_select_permissions(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &IndexMap<Qualified<ModelName>, Model>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for model_permission in &model_permissions.permissions {
@@ -801,7 +1029,20 @@ pub fn resolve_model_select_permissions(
 
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
-                        // if our value is a literal, typecheck it against expected type
+                        let value_expression = resolve_value_expression_for_argument(
+                            &argument_preset.argument,
+                            &argument_preset.value,
+                            &argument.argument_type,
+                            subgraph,
+                            object_types,
+                            boolean_expression_types,
+                            data_connectors,
+                            data_connector_type_mappings,
+                        )?;
+
+                        // additionally typecheck literals
+                        // we do this outside the argument resolve so that we can emit a model-specific error
+                        // on typechecking failure
                         typecheck::typecheck_value_expression(
                             &argument.argument_type,
                             &argument_preset.value,
@@ -814,12 +1055,9 @@ pub fn resolve_model_select_permissions(
                             }
                         })?;
 
-                        let resolved_argument_value =
-                            resolve_value_expression(argument_preset.value.clone());
-
                         argument_presets.insert(
                             argument_preset.argument.clone(),
-                            (argument.argument_type.clone(), resolved_argument_value),
+                            (argument.argument_type.clone(), value_expression),
                         );
                     }
                     None => {
@@ -1127,6 +1365,7 @@ pub fn resolve_model_source(
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<(), Error> {
     if model.source.is_some() {
         return Err(Error::DuplicateModelSourceDefinition {
@@ -1164,6 +1403,7 @@ pub fn resolve_model_source(
         &source_collection.arguments,
         object_types,
         scalar_types,
+        boolean_expression_types,
     )
     .map_err(|err| Error::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),

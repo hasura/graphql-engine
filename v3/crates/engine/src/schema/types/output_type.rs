@@ -124,6 +124,7 @@ pub fn get_custom_output_type(
         gds_type,
         &gds.metadata.object_types,
         &gds.metadata.scalar_types,
+        &gds.metadata.boolean_expression_types,
     )
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type.clone(),
@@ -153,6 +154,7 @@ pub fn get_custom_output_type(
                     .clone(),
             }))
         }
+        TypeRepresentation::BooleanExpression(_) => Err(Error::BooleanExpressionUsedAsOutputType),
     }
 }
 
@@ -164,14 +166,18 @@ pub(crate) fn get_type_kind(
         QualifiedBaseType::Named(qualified_type_name) => match qualified_type_name {
             QualifiedTypeName::Inbuilt(_) => Ok(super::TypeKind::Scalar), // Inbuilt types are all scalars
             QualifiedTypeName::Custom(type_name) => {
-                match gds.metadata.object_types.get(type_name) {
-                    Some(_) => Ok(super::TypeKind::Object),
-                    None => match gds.metadata.scalar_types.get(type_name) {
-                        Some(_) => Ok(super::TypeKind::Scalar),
-                        None => Err(Error::InternalTypeNotFound {
-                            type_name: type_name.to_owned(),
-                        }),
-                    },
+                match get_type_representation(
+                    type_name,
+                    &gds.metadata.object_types,
+                    &gds.metadata.scalar_types,
+                    &gds.metadata.boolean_expression_types,
+                )
+                .map_err(|_| Error::InternalTypeNotFound {
+                    type_name: type_name.to_owned(),
+                })? {
+                    TypeRepresentation::Object(_) => Ok(super::TypeKind::Object),
+                    TypeRepresentation::Scalar(_) => Ok(super::TypeKind::Scalar),
+                    TypeRepresentation::BooleanExpression(_) => Ok(super::TypeKind::Object),
                 }
             }
         },

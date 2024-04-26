@@ -527,6 +527,8 @@ pub enum ValueExpression {
     Literal(JsonValue),
     #[schemars(title = "SessionVariable")]
     SessionVariable(SessionVariable),
+    #[schemars(title = "BooleanExpression")]
+    BooleanExpression(Box<ModelPredicate>),
     // TODO: Uncomment the below, once commands are supported.
     // Command {
     //     name: CommandName,

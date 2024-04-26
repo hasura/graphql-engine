@@ -2,7 +2,7 @@ use open_dds::types::{CustomTypeName, FieldName};
 use std::collections::{BTreeMap, HashMap};
 
 use crate::metadata::resolved::model::FilterPermission;
-use crate::metadata::resolved::permission::resolve_value_expression;
+use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
 use crate::metadata::resolved::types::{object_type_exists, unwrap_custom_type_name};
@@ -332,9 +332,20 @@ fn build_preset_map_from_input_object_type_permission(
                 ndc_argument_name: ndc_argument_name.clone(),
                 field_path: new_field_path,
             };
+
             let value = (
                 type_reference.clone(),
-                resolve_value_expression(preset.clone()),
+                match preset {
+                    open_dds::permissions::ValueExpression::Literal(literal) => {
+                        Ok(ValueExpression::Literal(literal.clone()))
+                    }
+                    open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
+                        Ok(ValueExpression::SessionVariable(session_variable.clone()))
+                    }
+                    open_dds::permissions::ValueExpression::BooleanExpression(_) => {
+                        Err(schema::Error::BooleanExpressionInTypePresetArgument)
+                    }
+                }?,
             );
 
             Ok((key, value))

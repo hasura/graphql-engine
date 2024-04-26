@@ -72,7 +72,6 @@ impl<'a> Parser<'a> {
                 let token = self.parse_string()?;
                 Ok(token.map(SimpleValue::String))
             }
-            // lexer::Token::BlockString(_) => todo!(),
             lexer::Token::Punctuation(_) => {
                 Self::unexpected_token(expected_tokens, token.item.clone(), &token.start)
             }

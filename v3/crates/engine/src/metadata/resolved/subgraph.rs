@@ -19,7 +19,8 @@ impl<T: Display> Qualified<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, derive_more::Display, PartialEq, Hash, Eq)]
+#[display(fmt = "QualifiedBaseType")]
 pub struct QualifiedTypeReference {
     pub underlying_type: QualifiedBaseType,
     pub nullable: bool,
@@ -31,13 +32,13 @@ pub struct ArgumentInfo {
     pub description: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, derive_more::Display, PartialEq, Hash, Eq)]
 pub enum QualifiedBaseType {
     Named(QualifiedTypeName),
     List(Box<QualifiedTypeReference>),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
+#[derive(Serialize, Deserialize, Clone, derive_more::Display, Debug, PartialEq, Hash, Eq)]
 pub enum QualifiedTypeName {
     Inbuilt(InbuiltType),
     Custom(Qualified<CustomTypeName>),

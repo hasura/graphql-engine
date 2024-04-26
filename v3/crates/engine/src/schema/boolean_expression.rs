@@ -26,15 +26,15 @@ pub fn build_boolean_expression_input_schema(
     type_name: &ast::TypeName,
     gds_type_name: &Qualified<CustomTypeName>,
 ) -> Result<gql_schema::TypeInfo<GDS>, Error> {
-    let object_boolean_expression_type =
-        gds.metadata
-            .boolean_expression_types
-            .get(gds_type_name)
-            .ok_or_else(|| crate::schema::Error::InternalTypeNotFound {
-                type_name: gds_type_name.clone(),
-            })?;
+    let boolean_expression_type = gds
+        .metadata
+        .boolean_expression_types
+        .get(gds_type_name)
+        .ok_or_else(|| crate::schema::Error::InternalTypeNotFound {
+            type_name: gds_type_name.clone(),
+        })?;
 
-    if let Some(boolean_expression_info) = &object_boolean_expression_type.graphql {
+    if let Some(boolean_expression_info) = &boolean_expression_type.graphql {
         let mut input_fields = BTreeMap::new();
 
         // `_and`, `_or` or `_not` fields are available for all roles
@@ -107,7 +107,7 @@ pub fn build_boolean_expression_input_schema(
         );
 
         let object_type_representation =
-            get_object_type_representation(gds, &object_boolean_expression_type.object_type)?;
+            get_object_type_representation(gds, &boolean_expression_type.object_type)?;
 
         // column fields
         for (field_name, comparison_expression) in &boolean_expression_info.scalar_fields {
@@ -169,20 +169,20 @@ pub fn build_boolean_expression_input_schema(
 
                     // filter expression with relationships is currently only supported for local relationships
                     if let RelationshipExecutionCategory::Local = relationship_execution_category(
-                        &object_boolean_expression_type.data_connector_link,
+                        &boolean_expression_type.data_connector_link,
                         &target_source.data_connector,
                         &target_model_source.capabilities,
                     ) {
                         if target_source.data_connector.name
-                            == object_boolean_expression_type.data_connector_name
+                            == boolean_expression_type.data_connector_name
                         {
                             // If the relationship target model does not have filterExpressionType do not include
                             // it in the source model filter expression input type.
                             if let Some(ref target_model_filter_expression) = &target_model
                                 .clone()
                                 .filter_expression_type
-                                .and_then(|ref object_boolean_expression_type| {
-                                    object_boolean_expression_type.clone().graphql
+                                .and_then(|ref boolean_expression_type| {
+                                    boolean_expression_type.clone().graphql
                                 })
                             {
                                 let target_model_filter_expression_type_name =
@@ -196,10 +196,10 @@ pub fn build_boolean_expression_input_schema(
                                     target_model_name: target_model.name.clone(),
                                     relationship_type: relationship_type.clone(),
                                     mappings: mappings.clone(),
-                                    source_data_connector: object_boolean_expression_type
+                                    source_data_connector: boolean_expression_type
                                         .data_connector_link
                                         .clone(),
-                                    source_type_mappings: object_boolean_expression_type
+                                    source_type_mappings: boolean_expression_type
                                         .type_mappings
                                         .clone(),
                                 };

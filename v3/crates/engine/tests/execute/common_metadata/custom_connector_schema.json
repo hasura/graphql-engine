@@ -497,6 +497,29 @@
                     }
                   },
                   {
+                    "name": "get_actors_by_bool_exp",
+                    "description": "Get all actors with a boolean expression",
+                    "arguments": {
+                      "actor_bool_exp": {
+                        "description": "boolean expression over actor",
+                        "type": {
+                          "type": "predicate",
+                          "object_type_name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "array",
+                        "element_type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    }
+                  },
+                  {
                     "name": "get_actors_by_movie_id",
                     "description": "Get all actors from a movie by movie ID",
                     "arguments": {

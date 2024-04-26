@@ -17,7 +17,7 @@ use crate::metadata::resolved::model::{
 use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
-    resolve_object_boolean_expression_type, ObjectBooleanExpressionType,
+    resolve_boolean_expression_type, ObjectBooleanExpressionType,
 };
 
 use crate::metadata::resolved::stages::{
@@ -105,6 +105,7 @@ pub fn resolve_metadata(
         data_connector_type_mappings,
         &object_types,
         scalar_types,
+        &boolean_expression_types,
     )?;
 
     // resolve relationships
@@ -118,7 +119,14 @@ pub fn resolve_metadata(
 
     // resolve command permissions
     // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_command_permissions(metadata_accessor, &mut commands)?;
+    resolve_command_permissions(
+        metadata_accessor,
+        &mut commands,
+        &object_types,
+        &boolean_expression_types,
+        data_connectors,
+        data_connector_type_mappings,
+    )?;
 
     // resolve model permissions
     // Note: Model permissions's predicate can include the relationship field,
@@ -130,6 +138,8 @@ pub fn resolve_metadata(
         data_connectors,
         &object_types,
         &mut models,
+        &boolean_expression_types,
+        data_connector_type_mappings,
     )?;
 
     let roles = collect_all_roles(&object_types, &models, &commands);
@@ -184,6 +194,7 @@ fn resolve_commands(
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
     for open_dds::accessor::QualifiedObject {
@@ -191,17 +202,23 @@ fn resolve_commands(
         object: command,
     } in &metadata_accessor.commands
     {
-        let mut resolved_command =
-            command::resolve_command(command, subgraph, object_types, scalar_types)?;
+        let mut resolved_command = command::resolve_command(
+            command,
+            subgraph,
+            object_types,
+            scalar_types,
+            boolean_expression_types,
+        )?;
         if let Some(command_source) = &command.source {
             command::resolve_command_source(
                 command_source,
                 &mut resolved_command,
                 subgraph,
                 data_connectors,
+                data_connector_type_mappings,
                 object_types,
                 scalar_types,
-                data_connector_type_mappings,
+                boolean_expression_types,
             )?;
         }
         let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
@@ -231,9 +248,9 @@ fn resolve_boolean_expression_types(
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: boolean_expression_type,
-    } in &metadata_accessor.object_boolean_expression_types
+    } in &metadata_accessor.boolean_expression_types
     {
-        let resolved_boolean_expression = resolve_object_boolean_expression_type(
+        let resolved_boolean_expression = resolve_boolean_expression_type(
             boolean_expression_type,
             subgraph,
             data_connectors,
@@ -316,6 +333,7 @@ fn resolve_models(
                 object_types,
                 scalar_types,
                 data_connector_type_mappings,
+                boolean_expression_types,
             )?;
         }
         if let Some(model_graphql_definition) = &model.graphql {
@@ -402,6 +420,10 @@ fn resolve_relationships(
 fn resolve_command_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &mut IndexMap<Qualified<CommandName>, command::Command>,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -419,6 +441,11 @@ fn resolve_command_permissions(
             command.permissions = Some(command::resolve_command_permissions(
                 command,
                 command_permissions,
+                object_types,
+                boolean_expression_types,
+                data_connectors,
+                data_connector_type_mappings,
+                subgraph,
             )?);
         } else {
             return Err(Error::DuplicateCommandPermission {
@@ -437,6 +464,8 @@ fn resolve_model_permissions(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &mut IndexMap<Qualified<ModelName>, Model>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<(), Error> {
     // Note: Model permissions's predicate can include the relationship field,
     // hence Model permissions should be resolved after the relationships of a
@@ -462,6 +491,8 @@ fn resolve_model_permissions(
                 data_connectors,
                 object_types,
                 models, // This is required to get the model for the relationship target
+                boolean_expression_types,
+                data_connector_type_mappings,
             )?);
 
             let model = models.get_mut(&model_name).ok_or_else(|| {

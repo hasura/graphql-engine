@@ -2,7 +2,9 @@ use super::stages::{
     data_connector_scalar_types, data_connector_type_mappings, data_connectors, scalar_types,
     type_permissions,
 };
-use crate::metadata::resolved::argument::get_argument_mappings;
+use crate::metadata::resolved::argument::{
+    get_argument_mappings, resolve_value_expression_for_argument,
+};
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -25,10 +27,11 @@ use open_dds::types::{BaseType, CustomTypeName, Deprecated, TypeName, TypeRefere
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
-use super::permission::{resolve_value_expression, ValueExpression};
+use super::permission::ValueExpression;
 use super::typecheck;
 use super::types::{
-    collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
+    collect_type_mapping_for_source, ObjectBooleanExpressionType, TypeMappingCollectionError,
+    TypeMappingToCollect,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -68,21 +71,34 @@ pub struct CommandPermission {
     pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
 }
 
-fn is_valid_type(
+fn type_exists(
     type_obj: &TypeReference,
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> bool {
     match &type_obj.underlying_type {
-        BaseType::List(type_obj) => is_valid_type(type_obj, subgraph, object_types, scalar_types),
+        BaseType::List(type_obj) => type_exists(
+            type_obj,
+            subgraph,
+            object_types,
+            scalar_types,
+            boolean_expression_types,
+        ),
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => true,
             TypeName::Custom(type_name) => {
                 let qualified_type_name =
                     Qualified::new(subgraph.to_string(), type_name.to_owned());
 
-                get_type_representation(&qualified_type_name, object_types, scalar_types).is_ok()
+                get_type_representation(
+                    &qualified_type_name,
+                    object_types,
+                    scalar_types,
+                    boolean_expression_types,
+                )
+                .is_ok()
             }
         },
     }
@@ -93,17 +109,19 @@ pub fn resolve_command(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
     let command_description = command.description.clone();
     // duplicate command arguments should not be allowed
     for argument in &command.arguments {
-        if is_valid_type(
+        if type_exists(
             &argument.argument_type,
             subgraph,
             object_types,
             scalar_types,
+            boolean_expression_types,
         ) {
             if arguments
                 .insert(
@@ -161,9 +179,10 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
 ) -> Result<(), Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
@@ -227,6 +246,7 @@ pub fn resolve_command_source(
         ndc_arguments,
         object_types,
         scalar_types,
+        boolean_expression_types,
     )
     .map_err(|err| match &command_source.data_connector_command {
         DataConnectorCommand::Function(function_name) => {
@@ -316,6 +336,11 @@ pub fn resolve_command_source(
 pub fn resolve_command_permissions(
     command: &Command,
     permissions: &CommandPermissionsV1,
+    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
+    subgraph: &str,
 ) -> Result<HashMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for command_permission in &permissions.permissions {
@@ -331,7 +356,20 @@ pub fn resolve_command_permissions(
 
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
-                    // if our value is a literal, typecheck it against expected type
+                    let value_expression = resolve_value_expression_for_argument(
+                        &argument_preset.argument,
+                        &argument_preset.value,
+                        &argument.argument_type,
+                        subgraph,
+                        object_types,
+                        boolean_expression_types,
+                        data_connectors,
+                        data_connector_type_mappings,
+                    )?;
+
+                    // additionally typecheck literals
+                    // we do this outside the argument resolve so that we can emit a command-specific error
+                    // on typechecking failure
                     typecheck::typecheck_value_expression(
                         &argument.argument_type,
                         &argument_preset.value,
@@ -343,12 +381,10 @@ pub fn resolve_command_permissions(
                             type_error,
                         }
                     })?;
+
                     argument_presets.insert(
                         argument_preset.argument.clone(),
-                        (
-                            argument.argument_type.clone(),
-                            resolve_value_expression(argument_preset.value.clone()),
-                        ),
+                        (argument.argument_type.clone(), value_expression),
                     );
                 }
                 None => {

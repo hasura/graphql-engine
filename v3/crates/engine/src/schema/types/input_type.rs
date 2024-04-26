@@ -75,6 +75,7 @@ fn get_custom_input_type(
         gds_type_name,
         &gds.metadata.object_types,
         &gds.metadata.scalar_types,
+        &gds.metadata.boolean_expression_types,
     )
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
@@ -86,7 +87,7 @@ fn get_custom_input_type(
                     ..
                 },
             ..
-        }) => Ok(builder.register_type(super::TypeId::InputObjectType {
+        }) => Ok(super::TypeId::InputObjectType {
             gds_type_name: gds_type_name.clone(),
             graphql_type_name: graphql_input_type_name
                 .as_ref()
@@ -94,20 +95,31 @@ fn get_custom_input_type(
                     type_name: gds_type_name.clone(),
                 })?
                 .clone(),
-        })),
-        TypeRepresentation::Scalar(graphql_type_name) => {
-            Ok(builder.register_type(super::TypeId::ScalarType {
-                gds_type_name: gds_type_name.clone(),
-                graphql_type_name: graphql_type_name
-                    .graphql_type_name
-                    .as_ref()
-                    .ok_or_else(|| Error::NoGraphQlTypeNameForScalar {
-                        type_name: gds_type_name.clone(),
-                    })?
-                    .clone(),
-            }))
-        }
+        }),
+        TypeRepresentation::Scalar(graphql_type_name) => Ok(super::TypeId::ScalarType {
+            gds_type_name: gds_type_name.clone(),
+            graphql_type_name: graphql_type_name
+                .graphql_type_name
+                .as_ref()
+                .ok_or_else(|| Error::NoGraphQlTypeNameForScalar {
+                    type_name: gds_type_name.clone(),
+                })?
+                .clone(),
+        }),
+        TypeRepresentation::BooleanExpression(
+            crate::metadata::resolved::types::ObjectBooleanExpressionType { graphql, .. },
+        ) => Ok(super::TypeId::InputObjectBooleanExpressionType {
+            gds_type_name: gds_type_name.clone(),
+            graphql_type_name: graphql
+                .as_ref()
+                .map(|graphql_config| graphql_config.type_name.clone())
+                .ok_or_else(|| Error::NoGraphQlInputTypeNameForObject {
+                    type_name: gds_type_name.clone(),
+                })?
+                .clone(),
+        }),
     }
+    .map(|type_id| builder.register_type(type_id))
 }
 
 fn input_object_type_input_fields(

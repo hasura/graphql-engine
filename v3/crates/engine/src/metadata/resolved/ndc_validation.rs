@@ -119,8 +119,6 @@ pub enum NDCValidationError {
     QueryCapabilityUnsupported,
     #[error("data connector does not support mutations")]
     MutationCapabilityUnsupported,
-    #[error("Using predicate types as field or argument types is currently unsupported")]
-    PredicateTypeUnsupported,
 }
 
 // Get the underlying type name by resolving Array and Nullable container types
@@ -377,8 +375,6 @@ pub fn get_underlying_named_type(
         ndc_models::Type::Nullable { underlying_type } => {
             get_underlying_named_type(underlying_type)
         }
-        ndc_models::Type::Predicate {
-            object_type_name: _,
-        } => Err(NDCValidationError::PredicateTypeUnsupported),
+        ndc_models::Type::Predicate { object_type_name } => Ok(object_type_name),
     }
 }

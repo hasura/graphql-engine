@@ -69,6 +69,11 @@ pub enum InternalDeveloperError {
     #[error("unexpected response from data connector: {summary}")]
     BadGDCResponse { summary: String },
 
+    // we'll be adding them shortly, and not advertising the feature until they are complete
+    // however temporarily emitting the error allows merging the work in chunks
+    #[error("boolean expressions not implemented")]
+    BooleanExpressionNotImplemented,
+
     // Since explain and execute follow the same code-path. The types allow the following illegal responses. However,
     // these should never happen.
     #[error("illegal response: execute query returned explain response")]

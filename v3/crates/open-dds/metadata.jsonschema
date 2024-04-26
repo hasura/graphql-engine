@@ -2414,12 +2414,218 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "BooleanExpression",
+          "type": "object",
+          "required": [
+            "booleanExpression"
+          ],
+          "properties": {
+            "booleanExpression": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
     "OpenDdSessionVariable": {
       "description": "Used to represent the name of a session variable, like \"x-hasura-role\".",
       "type": "string"
+    },
+    "ModelPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/ModelPredicate",
+      "title": "ModelPredicate",
+      "description": "A predicate that can be used to restrict the objects returned when querying a model.",
+      "examples": [
+        {
+          "fieldComparison": {
+            "field": "author_id",
+            "operator": "_eq",
+            "value": {
+              "sessionVariable": "x-hasura-user-id"
+            }
+          }
+        }
+      ],
+      "oneOf": [
+        {
+          "description": "Filters objects based on a field value.",
+          "type": "object",
+          "required": [
+            "fieldComparison"
+          ],
+          "properties": {
+            "fieldComparison": {
+              "$ref": "#/definitions/FieldComparisonPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "fieldIsNull"
+          ],
+          "properties": {
+            "fieldIsNull": {
+              "$ref": "#/definitions/FieldIsNullPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Filters objects based on the relationship of a model.",
+          "type": "object",
+          "required": [
+            "relationship"
+          ],
+          "properties": {
+            "relationship": {
+              "$ref": "#/definitions/RelationshipPredicate"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "And",
+          "description": "Evaluates to true if all sub-predicates evaluate to true.",
+          "type": "object",
+          "required": [
+            "and"
+          ],
+          "properties": {
+            "and": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelPredicate"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Or",
+          "description": "Evaluates to true if any of the sub-predicates evaluate to true.",
+          "type": "object",
+          "required": [
+            "or"
+          ],
+          "properties": {
+            "or": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelPredicate"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "Not",
+          "description": "Evaluates to true if the sub-predicate evaluates to false.",
+          "type": "object",
+          "required": [
+            "not"
+          ],
+          "properties": {
+            "not": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "FieldComparisonPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldComparisonPredicate",
+      "title": "FieldComparisonPredicate",
+      "description": "Field comparison predicate filters objects based on a field value.",
+      "type": "object",
+      "required": [
+        "field",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "description": "The field name of the object type of the model to compare.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        },
+        "operator": {
+          "description": "The name of the operator to use for comparison.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OperatorName"
+            }
+          ]
+        },
+        "value": {
+          "description": "The value expression to compare against.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/ValueExpression"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "FieldIsNullPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
+      "title": "FieldIsNullPredicate",
+      "description": "Predicate to check if the given field is null.",
+      "type": "object",
+      "required": [
+        "field"
+      ],
+      "properties": {
+        "field": {
+          "description": "The name of the field that should be checked for a null value.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FieldName"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "RelationshipPredicate": {
+      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipPredicate",
+      "title": "RelationshipPredicate",
+      "description": "Relationship predicate filters objects of a source model based on a predicate on the related model.",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "description": "The name of the relationship of the object type of the model to follow.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RelationshipName"
+            }
+          ]
+        },
+        "predicate": {
+          "description": "The predicate to apply on the related objects. If this is null, then the predicate evaluates to true as long as there is at least one related object present.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ModelPredicate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     },
     "FieldAccess": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldAccess",
@@ -2675,6 +2881,19 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "title": "BooleanExpression",
+          "type": "object",
+          "required": [
+            "booleanExpression"
+          ],
+          "properties": {
+            "booleanExpression": {
+              "$ref": "#/definitions/ModelPredicate"
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
@@ -2798,199 +3017,6 @@
           "$ref": "#/definitions/ModelPredicate"
         }
       ]
-    },
-    "ModelPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/ModelPredicate",
-      "title": "ModelPredicate",
-      "description": "A predicate that can be used to restrict the objects returned when querying a model.",
-      "examples": [
-        {
-          "fieldComparison": {
-            "field": "author_id",
-            "operator": "_eq",
-            "value": {
-              "sessionVariable": "x-hasura-user-id"
-            }
-          }
-        }
-      ],
-      "oneOf": [
-        {
-          "description": "Filters objects based on a field value.",
-          "type": "object",
-          "required": [
-            "fieldComparison"
-          ],
-          "properties": {
-            "fieldComparison": {
-              "$ref": "#/definitions/FieldComparisonPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [
-            "fieldIsNull"
-          ],
-          "properties": {
-            "fieldIsNull": {
-              "$ref": "#/definitions/FieldIsNullPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "description": "Filters objects based on the relationship of a model.",
-          "type": "object",
-          "required": [
-            "relationship"
-          ],
-          "properties": {
-            "relationship": {
-              "$ref": "#/definitions/RelationshipPredicate"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "And",
-          "description": "Evaluates to true if all sub-predicates evaluate to true.",
-          "type": "object",
-          "required": [
-            "and"
-          ],
-          "properties": {
-            "and": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ModelPredicate"
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "Or",
-          "description": "Evaluates to true if any of the sub-predicates evaluate to true.",
-          "type": "object",
-          "required": [
-            "or"
-          ],
-          "properties": {
-            "or": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ModelPredicate"
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "title": "Not",
-          "description": "Evaluates to true if the sub-predicate evaluates to false.",
-          "type": "object",
-          "required": [
-            "not"
-          ],
-          "properties": {
-            "not": {
-              "$ref": "#/definitions/ModelPredicate"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "FieldComparisonPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldComparisonPredicate",
-      "title": "FieldComparisonPredicate",
-      "description": "Field comparison predicate filters objects based on a field value.",
-      "type": "object",
-      "required": [
-        "field",
-        "operator",
-        "value"
-      ],
-      "properties": {
-        "field": {
-          "description": "The field name of the object type of the model to compare.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/FieldName"
-            }
-          ]
-        },
-        "operator": {
-          "description": "The name of the operator to use for comparison.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/OperatorName"
-            }
-          ]
-        },
-        "value": {
-          "description": "The value expression to compare against.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/ValueExpression"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "FieldIsNullPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/FieldIsNullPredicate",
-      "title": "FieldIsNullPredicate",
-      "description": "Predicate to check if the given field is null.",
-      "type": "object",
-      "required": [
-        "field"
-      ],
-      "properties": {
-        "field": {
-          "description": "The name of the field that should be checked for a null value.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/FieldName"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
-    },
-    "RelationshipPredicate": {
-      "$id": "https://hasura.io/jsonschemas/metadata/RelationshipPredicate",
-      "title": "RelationshipPredicate",
-      "description": "Relationship predicate filters objects of a source model based on a predicate on the related model.",
-      "type": "object",
-      "required": [
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "description": "The name of the relationship of the object type of the model to follow.",
-          "allOf": [
-            {
-              "$ref": "#/definitions/RelationshipName"
-            }
-          ]
-        },
-        "predicate": {
-          "description": "The predicate to apply on the related objects. If this is null, then the predicate evaluates to true as long as there is at least one related object present.",
-          "anyOf": [
-            {
-              "$ref": "#/definitions/ModelPredicate"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": false
     },
     "ArgumentPreset": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentPreset",
