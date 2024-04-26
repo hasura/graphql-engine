@@ -8,10 +8,11 @@
 , pkg-config
 , protobuf
 , darwin
+, pname
 }:
 let
   buildArgs = {
-    pname = "v3-engine";
+    inherit pname;
 
     src =
       let
@@ -40,13 +41,16 @@ let
     ];
   };
 
+  # only build the binary we care about
+  cargoExtraArgs = "--bin ${buildArgs.pname}";
+
   # Build the dependencies first.
   cargoArtifacts = craneLib.buildDepsOnly buildArgs;
 in
 # Then build the crate.
 craneLib.buildPackage
   (buildArgs // {
-    inherit cargoArtifacts;
+    inherit cargoArtifacts cargoExtraArgs;
     doCheck = false;
     RELEASE_VERSION = version;
   })
