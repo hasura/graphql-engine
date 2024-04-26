@@ -39,7 +39,7 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::data_connector::DataConnectorLink,
+    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -56,7 +56,7 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::data_connector::DataConnectorLink,
+    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -73,7 +73,7 @@ pub struct PredicateRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::data_connector::DataConnectorLink,
+    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"

@@ -154,7 +154,7 @@ pub(crate) fn generate_nested_selection<'s>(
     qualified_type_reference: &QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     field: &normalized_ast::Field<'s, GDS>,
-    data_connector: &'s resolved::data_connector::DataConnectorLink,
+    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -205,7 +205,7 @@ pub(crate) fn generate_nested_selection<'s>(
 /// sources depending on the model being queried.
 pub(crate) fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_connector: &'s resolved::data_connector::DataConnectorLink,
+    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     field_mappings: &BTreeMap<FieldName, resolved::FieldMapping>,
     session_variables: &SessionVariables,

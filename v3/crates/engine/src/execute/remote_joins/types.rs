@@ -118,7 +118,7 @@ pub struct Location<T> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
-    pub target_data_connector: &'s resolved::data_connector::DataConnectorLink,
+    pub target_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     /// NDC IR to execute on a data connector
     pub target_ndc_ir: ndc_models::QueryRequest,
     /// Mapping of the fields in source to fields in target.

@@ -1,10 +1,9 @@
 use super::command::Command;
 
-use super::data_connector::DataConnectorLink;
 use super::error::{Error, RelationshipError};
 use super::model::get_ndc_column_for_comparison;
 use super::model::Model;
-use super::stages::data_connector_scalar_types;
+use super::stages::{data_connector_scalar_types, data_connectors};
 use super::subgraph::Qualified;
 use super::subgraph::QualifiedTypeReference;
 use super::types::mk_name;
@@ -92,8 +91,8 @@ pub enum RelationshipExecutionCategory {
 
 #[allow(clippy::match_single_binding)]
 pub fn relationship_execution_category(
-    source_connector: &DataConnectorLink,
-    target_connector: &DataConnectorLink,
+    source_connector: &data_connectors::DataConnectorLink,
+    target_connector: &data_connectors::DataConnectorLink,
     target_source_relationship_capabilities: &RelationshipCapabilities,
 ) -> RelationshipExecutionCategory {
     // It's a local relationship if the source and target connectors are the same and
@@ -337,7 +336,7 @@ fn resolve_relationship_mappings_command(
 fn get_relationship_capabilities(
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
-    source_data_connector: &Option<DataConnectorLink>,
+    source_data_connector: &Option<data_connectors::DataConnectorLink>,
     target_name: &RelationshipTargetName,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Option<RelationshipCapabilities>, Error> {

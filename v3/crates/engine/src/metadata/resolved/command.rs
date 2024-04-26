@@ -1,8 +1,8 @@
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, scalar_types, type_permissions,
+    data_connector_scalar_types, data_connector_type_mappings, data_connectors, scalar_types,
+    type_permissions,
 };
 use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::subgraph::{
@@ -40,7 +40,7 @@ pub struct CommandGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandSource {
-    pub data_connector: DataConnectorLink,
+    pub data_connector: data_connectors::DataConnectorLink,
     pub source: DataConnectorCommand,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
@@ -294,7 +294,7 @@ pub fn resolve_command_source(
     }
 
     command.source = Some(CommandSource {
-        data_connector: DataConnectorLink::new(
+        data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context.inner.url.clone(),
             data_connector_context.inner.headers,

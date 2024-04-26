@@ -1,8 +1,8 @@
 use super::permission::{resolve_value_expression, ValueExpression};
 use super::relationship::RelationshipTarget;
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
-    type_permissions,
+    data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
+    scalar_types, type_permissions,
 };
 use super::typecheck;
 use super::types::{
@@ -11,8 +11,6 @@ use super::types::{
 };
 use crate::metadata::resolved::argument::get_argument_mappings;
 
-use crate::metadata::resolved::data_connector;
-use crate::metadata::resolved::data_connector::DataConnectorLink;
 use crate::metadata::resolved::error::{
     BooleanExpressionError, Error, GraphqlConfigError, RelationshipError,
 };
@@ -106,7 +104,7 @@ pub struct ModelGraphQlApi {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ModelSource {
-    pub data_connector: DataConnectorLink,
+    pub data_connector: data_connectors::DataConnectorLink,
     pub collection: String,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
@@ -552,12 +550,11 @@ fn resolve_model_predicate(
 
                 // Get scalar type info from the data connector
                 let (_, scalar_type_info) =
-                    data_connector::get_simple_scalar(field_ndc_type.clone(), scalars).ok_or_else(
-                        || Error::UnsupportedFieldInSelectPermissionsPredicate {
+                    data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
+                        .ok_or_else(|| Error::UnsupportedFieldInSelectPermissionsPredicate {
                             field_name: field.clone(),
                             model_name: model.name.clone(),
-                        },
-                    )?;
+                        })?;
 
                 let (resolved_operator, argument_type) = resolve_binary_operator(
                     operator,
@@ -886,13 +883,12 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
         .scalars;
     // Determine whether the ndc type is a simple scalar and get scalar type info
     let (_field_ndc_type_scalar, scalar_type_info) =
-        data_connector::get_simple_scalar(field_ndc_type.clone(), scalars).ok_or_else(|| {
-            Error::UncomparableNonScalarFieldType {
+        data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
+            .ok_or_else(|| Error::UncomparableNonScalarFieldType {
                 comparison_location: comparison_location(),
                 field_name: field.clone(),
                 model_name: model_name.clone(),
-            }
-        })?;
+            })?;
 
     let equal_operator = match scalar_type_info
         .comparison_operators
@@ -1222,7 +1218,7 @@ pub fn resolve_model_source(
     }
 
     let resolved_model_source = ModelSource {
-        data_connector: DataConnectorLink::new(
+        data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context.inner.url.clone(),
             data_connector_context.inner.headers,

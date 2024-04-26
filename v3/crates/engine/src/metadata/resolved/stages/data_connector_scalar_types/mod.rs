@@ -147,3 +147,20 @@ fn convert_data_connectors_contexts<'a>(
     }
     data_connectors_with_scalars
 }
+
+// helper function to determine whether a ndc type is a simple scalar
+pub fn get_simple_scalar<'a, 'b>(
+    t: ndc_models::Type,
+    scalars: &'a HashMap<&str, ScalarTypeWithRepresentationInfo<'b>>,
+) -> Option<(String, &'a ScalarTypeWithRepresentationInfo<'b>)> {
+    match t {
+        ndc_models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
+        ndc_models::Type::Nullable { underlying_type } => {
+            get_simple_scalar(*underlying_type, scalars)
+        }
+        ndc_models::Type::Array { element_type: _ } => None,
+        ndc_models::Type::Predicate {
+            object_type_name: _,
+        } => None,
+    }
+}

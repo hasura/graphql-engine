@@ -1,7 +1,6 @@
 mod argument;
 pub mod boolean_expression;
 pub mod command;
-pub mod data_connector;
 pub mod error;
 pub mod metadata;
 pub mod model;

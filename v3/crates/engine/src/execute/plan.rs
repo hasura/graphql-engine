@@ -35,7 +35,7 @@ pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir
 /// Otherwise, we can just send them one-by-one (though still sequentially).
 pub struct MutationPlan<'n, 's, 'ir> {
     pub nodes: IndexMap<
-        resolved::data_connector::DataConnectorLink,
+        resolved::stages::data_connectors::DataConnectorLink,
         IndexMap<ast::Alias, NDCMutationExecution<'n, 's, 'ir>>,
     >,
     pub type_names: IndexMap<ast::Alias, ast::TypeName>,
@@ -100,7 +100,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub query: ndc_models::MutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
-    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
+    pub data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -116,7 +116,7 @@ pub struct ExecutionTree<'s, 'ir> {
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
     pub query: ndc_models::QueryRequest,
-    pub data_connector: &'s resolved::data_connector::DataConnectorLink,
+    pub data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

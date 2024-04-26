@@ -1,9 +1,8 @@
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, graphql_config, scalar_types,
-    type_permissions,
+    data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
+    scalar_types, type_permissions,
 };
 use crate::metadata::resolved::boolean_expression;
-use crate::metadata::resolved::data_connector;
 use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 
 use crate::metadata::resolved::subgraph::{
@@ -31,7 +30,7 @@ pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
-    pub data_connector_link: data_connector::DataConnectorLink,
+    pub data_connector_link: data_connectors::DataConnectorLink,
     pub data_connector_object_type: String,
     pub type_mappings:
         BTreeMap<Qualified<types::CustomTypeName>, data_connector_type_mappings::TypeMapping>,
@@ -312,7 +311,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
         })
         .transpose()?;
 
-    let data_connector_link = data_connector::DataConnectorLink::new(
+    let data_connector_link = data_connectors::DataConnectorLink::new(
         data_connector_name,
         data_connector_context.inner.url.clone(),
         data_connector_context.inner.headers,

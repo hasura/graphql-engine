@@ -49,7 +49,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub relationship_name: &'s RelationshipName,
     pub relationship_type: &'s RelationshipType,
     pub source_type: &'s Qualified<CustomTypeName>,
-    pub source_data_connector: &'s resolved::data_connector::DataConnectorLink,
+    pub source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s ModelTargetSource,
@@ -60,7 +60,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
 #[derive(Debug, Serialize)]
 pub(crate) struct LocalCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
-    pub source_data_connector: &'s resolved::data_connector::DataConnectorLink,
+    pub source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s CommandTargetSource,
@@ -215,7 +215,7 @@ pub(crate) fn process_command_relationship_definition(
 pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    source_data_connector: &'s resolved::data_connector::DataConnectorLink,
+    source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -331,7 +331,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
 pub(crate) fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    source_data_connector: &'s resolved::data_connector::DataConnectorLink,
+    source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -383,7 +383,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    data_connector: &'s resolved::data_connector::DataConnectorLink,
+    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
@@ -429,7 +429,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    data_connector: &'s resolved::data_connector::DataConnectorLink,
+    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
