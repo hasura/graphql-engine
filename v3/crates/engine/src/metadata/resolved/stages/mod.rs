@@ -1,3 +1,4 @@
+pub mod boolean_expressions;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod data_connector_scalar_types;
 pub mod data_connector_type_mappings;
@@ -47,6 +48,19 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, &object_types)?;
 
+    let boolean_expressions::BooleanExpressionsOutput {
+        boolean_expression_types,
+        graphql_types,
+    } = boolean_expressions::resolve(
+        &metadata_accessor,
+        &data_connectors,
+        &data_connector_type_mappings,
+        &object_types_with_permissions,
+        &scalar_types,
+        &graphql_types,
+        &graphql_config,
+    )?;
+
     resolve_metadata(
         &metadata_accessor,
         &graphql_config,
@@ -56,6 +70,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &data_connector_type_mappings,
         object_types_with_permissions,
         &scalar_types,
+        &boolean_expression_types,
         &data_connectors,
     )
 }

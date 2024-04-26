@@ -1,14 +1,11 @@
 use super::permission::ValueExpression;
 use super::relationship::RelationshipTarget;
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
-    scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
+    data_connectors, graphql_config, scalar_types, type_permissions,
 };
 use super::typecheck;
-use super::types::{
-    collect_type_mapping_for_source, NdcColumnForComparison, ObjectBooleanExpressionType,
-    TypeMappingToCollect,
-};
+use super::types::{collect_type_mapping_for_source, NdcColumnForComparison, TypeMappingToCollect};
 
 use crate::metadata::resolved::argument::{
     get_argument_mappings, resolve_value_expression_for_argument,
@@ -164,7 +161,7 @@ pub struct Model {
     pub select_permissions: Option<HashMap<Role, SelectPermission>>,
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
-    pub filter_expression_type: Option<ObjectBooleanExpressionType>,
+    pub filter_expression_type: Option<boolean_expressions::ObjectBooleanExpressionType>,
     pub orderable_fields: Vec<OrderableField>,
 }
 
@@ -177,8 +174,11 @@ fn resolve_filter_expression_type(
     model: &ModelV1,
     model_data_type: &Qualified<CustomTypeName>,
     subgraph: &str,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
-) -> Result<Option<ObjectBooleanExpressionType>, Error> {
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
+) -> Result<Option<boolean_expressions::ObjectBooleanExpressionType>, Error> {
     model
         .filter_expression_type
         .as_ref()
@@ -259,7 +259,10 @@ pub fn resolve_model(
         Qualified<CustomTypeName>,
         Option<Qualified<ModelName>>,
     >,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<Model, Error> {
     let qualified_object_type_name =
         Qualified::new(subgraph.to_string(), model.object_type.to_owned());
@@ -997,7 +1000,10 @@ pub fn resolve_model_select_permissions(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &IndexMap<Qualified<ModelName>, Model>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
@@ -1365,7 +1371,10 @@ pub fn resolve_model_source(
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<(), Error> {
     if model.source.is_some() {
         return Err(Error::DuplicateModelSourceDefinition {

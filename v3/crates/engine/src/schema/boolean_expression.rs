@@ -257,7 +257,7 @@ pub fn build_boolean_expression_input_schema(
 
 fn get_scalar_comparison_input_type(
     builder: &mut gql_schema::Builder<GDS>,
-    comparison_expression: &resolved::boolean_expression::ComparisonExpressionInfo,
+    comparison_expression: &resolved::ComparisonExpressionInfo,
 ) -> Result<gql_schema::RegisteredTypeName, Error> {
     let graphql_type_name = comparison_expression.type_name.clone();
     let mut operators = Vec::new();

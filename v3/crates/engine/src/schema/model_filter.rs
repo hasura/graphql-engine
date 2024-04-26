@@ -16,7 +16,7 @@ type Error = crate::schema::Error;
 pub fn get_where_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     gds_type_name: Qualified<CustomTypeName>,
-    boolean_expression_info: &resolved::boolean_expression::BooleanExpression,
+    boolean_expression_info: &resolved::BooleanExpressionInfo,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
         boolean_expression_info

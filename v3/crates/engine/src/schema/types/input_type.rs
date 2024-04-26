@@ -107,7 +107,7 @@ fn get_custom_input_type(
                 .clone(),
         }),
         TypeRepresentation::BooleanExpression(
-            crate::metadata::resolved::types::ObjectBooleanExpressionType { graphql, .. },
+            crate::metadata::resolved::ObjectBooleanExpressionType { graphql, .. },
         ) => Ok(super::TypeId::InputObjectBooleanExpressionType {
             gds_type_name: gds_type_name.clone(),
             graphql_type_name: graphql

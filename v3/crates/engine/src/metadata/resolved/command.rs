@@ -1,6 +1,6 @@
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, data_connectors, scalar_types,
-    type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
+    data_connectors, scalar_types, type_permissions,
 };
 use crate::metadata::resolved::argument::{
     get_argument_mappings, resolve_value_expression_for_argument,
@@ -30,8 +30,7 @@ use std::collections::{BTreeMap, HashMap};
 use super::permission::ValueExpression;
 use super::typecheck;
 use super::types::{
-    collect_type_mapping_for_source, ObjectBooleanExpressionType, TypeMappingCollectionError,
-    TypeMappingToCollect,
+    collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -76,7 +75,10 @@ fn type_exists(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> bool {
     match &type_obj.underlying_type {
         BaseType::List(type_obj) => type_exists(
@@ -109,7 +111,10 @@ pub fn resolve_command(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
     let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
@@ -182,7 +187,10 @@ pub fn resolve_command_source(
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<(), Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
@@ -337,7 +345,10 @@ pub fn resolve_command_permissions(
     command: &Command,
     permissions: &CommandPermissionsV1,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     subgraph: &str,

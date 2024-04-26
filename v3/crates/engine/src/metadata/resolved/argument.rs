@@ -1,7 +1,8 @@
 use crate::metadata::resolved::error::{Error, TypeError, TypeMappingValidationError};
 use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, scalar_types,
+    type_permissions,
 };
 use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 
@@ -9,7 +10,7 @@ use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::subgraph::QualifiedTypeReference;
 use crate::metadata::resolved::types::{
     get_object_type_for_boolean_expression, get_type_representation, unwrap_custom_type_name,
-    ObjectBooleanExpressionType, TypeMappingToCollect, TypeRepresentation,
+    TypeMappingToCollect, TypeRepresentation,
 };
 use indexmap::IndexMap;
 use ndc_models;
@@ -62,7 +63,10 @@ pub fn get_argument_mappings<'a>(
         type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &'a HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &'a HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<(HashMap<ArgumentName, String>, Vec<TypeMappingToCollect<'a>>), ArgumentMappingError> {
     let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =
         HashMap::from_iter(argument_mapping.iter());
@@ -158,7 +162,10 @@ pub(crate) fn resolve_value_expression_for_argument(
     argument_type: &QualifiedTypeReference,
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    boolean_expression_types: &HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<ValueExpression, Error> {

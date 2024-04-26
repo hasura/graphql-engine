@@ -1,8 +1,6 @@
 use super::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
-    scalar_types, type_permissions,
+    boolean_expressions, data_connector_type_mappings, scalar_types, type_permissions,
 };
-use crate::metadata::resolved::boolean_expression;
 use crate::metadata::resolved::error::{BooleanExpressionError, Error};
 
 use crate::metadata::resolved::subgraph::{
@@ -11,8 +9,7 @@ use crate::metadata::resolved::subgraph::{
 };
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorName;
-use open_dds::models::EnableAllOrSpecific;
-use open_dds::types::{self, CustomTypeName, FieldName, ObjectBooleanExpressionTypeV1};
+use open_dds::types::{self, CustomTypeName, FieldName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::str::FromStr;
@@ -23,18 +20,6 @@ use super::ndc_validation::{get_underlying_named_type, NDCValidationError};
 pub struct NdcColumnForComparison {
     pub column: String,
     pub equal_operator: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ObjectBooleanExpressionType {
-    pub name: Qualified<CustomTypeName>,
-    pub object_type: Qualified<CustomTypeName>,
-    pub data_connector_name: Qualified<DataConnectorName>,
-    pub data_connector_link: data_connectors::DataConnectorLink,
-    pub data_connector_object_type: String,
-    pub type_mappings:
-        BTreeMap<Qualified<types::CustomTypeName>, data_connector_type_mappings::TypeMapping>,
-    pub graphql: Option<boolean_expression::BooleanExpression>,
 }
 
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
@@ -71,7 +56,7 @@ pub fn resolve_field(
 pub enum TypeRepresentation<'a> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
     Object(&'a type_permissions::ObjectTypeWithPermissions),
-    BooleanExpression(&'a ObjectBooleanExpressionType),
+    BooleanExpression(&'a boolean_expressions::ObjectBooleanExpressionType),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
@@ -83,7 +68,10 @@ pub fn get_type_representation<'a>(
         type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &'a HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    boolean_expression_types: &'a HashMap<
+        Qualified<CustomTypeName>,
+        boolean_expressions::ObjectBooleanExpressionType,
+    >,
 ) -> Result<TypeRepresentation<'a>, Error> {
     match object_types.get(custom_type_name) {
         Some(object_type_representation) => {
@@ -106,7 +94,7 @@ pub fn get_type_representation<'a>(
 }
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(
-    boolean_expression_type: &ObjectBooleanExpressionType,
+    boolean_expression_type: &boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a HashMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -147,212 +135,6 @@ pub fn unwrap_custom_type_name(
             QualifiedTypeName::Custom(custom_type_name) => Some(custom_type_name),
         },
     }
-}
-
-/// Resolves a given object boolean expression type
-pub(crate) fn resolve_boolean_expression_type(
-    object_boolean_expression: &ObjectBooleanExpressionTypeV1,
-    subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-    graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<ObjectBooleanExpressionType, Error> {
-    // name of the boolean expression
-    let qualified_name = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.name.to_owned(),
-    );
-    // name of the object type backing the boolean expression
-    let qualified_object_type_name = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.object_type.to_owned(),
-    );
-    let object_type_representation =
-        object_types
-            .get(&qualified_object_type_name)
-            .ok_or_else(|| {
-                Error::from(
-                    BooleanExpressionError::UnknownTypeInObjectBooleanExpressionType {
-                        type_name: qualified_object_type_name.clone(),
-                    },
-                )
-            })?;
-    let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.data_connector_name.to_owned(),
-    );
-
-    // validate data connector name
-    let data_connector_context = data_connectors
-        .data_connectors_with_scalars
-        .get(&qualified_data_connector_name)
-        .ok_or_else(|| {
-            Error::from(
-                BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
-                    data_connector: qualified_data_connector_name.clone(),
-                    boolean_expression_type: qualified_name.clone(),
-                },
-            )
-        })?;
-
-    // validate data connector object type
-    if !data_connector_context
-        .inner
-        .schema
-        .object_types
-        .contains_key(&object_boolean_expression.data_connector_object_type)
-    {
-        return Err(Error::from(
-            BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
-                data_connector: qualified_data_connector_name.clone(),
-                boolean_expression_type: qualified_name.clone(),
-                data_connector_object_type: object_boolean_expression
-                    .data_connector_object_type
-                    .clone(),
-            },
-        ));
-    }
-
-    data_connector_type_mappings
-                .get(
-                    &qualified_object_type_name,
-                    &qualified_data_connector_name,
-                    &object_boolean_expression.data_connector_object_type,
-                )
-                .ok_or_else(|| {
-                    Error::from(BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
-                        object_type: qualified_object_type_name.clone(),
-                        boolean_expression_type: qualified_name.clone(),
-                        data_connector_object_type: object_boolean_expression
-                            .data_connector_object_type
-                            .clone(),
-                        data_connector: qualified_data_connector_name.clone(),
-                    })
-                })?;
-
-    // validate comparable fields
-    for comparable_field in object_boolean_expression.comparable_fields.iter() {
-        if !object_type_representation
-            .object_type
-            .fields
-            .contains_key(&comparable_field.field_name)
-        {
-            return Err(
-                BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
-                    field_name: comparable_field.field_name.clone(),
-                    boolean_expression_type: qualified_name.clone(),
-                }
-                .into(),
-            );
-        }
-
-        // As of now, only `"enableAll": true` is allowed for field operators
-        match &comparable_field.operators {
-                    EnableAllOrSpecific::EnableAll(true) => {}
-                    _ => {
-                        return Err(Error::UnsupportedFeature {
-                            message: "Field level comparison operator configuration is not fully supported yet. Please use \"enableAll\":true.".to_string(),
-                        })
-                    }
-                }
-    }
-
-    // Comparable fields should have all type fields
-    if object_boolean_expression.comparable_fields.len()
-        != object_type_representation.object_type.fields.len()
-    {
-        return Err(Error::UnsupportedFeature {
-                    message: "Field level comparison operator configuration is not fully supported yet. Please add all fields in filterable_fields.".to_string(),
-                });
-    }
-
-    let boolean_expression_type =
-        Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
-
-    let object_type = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.object_type.clone(),
-    );
-
-    let data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        object_boolean_expression.data_connector_name.clone(),
-    );
-
-    // Collect type mappings.
-    let mut type_mappings = BTreeMap::new();
-
-    let type_mapping_to_collect = TypeMappingToCollect {
-        type_name: &object_type,
-        ndc_object_type_name: object_boolean_expression
-            .data_connector_object_type
-            .as_str(),
-    };
-    collect_type_mapping_for_source(
-        &type_mapping_to_collect,
-        data_connector_type_mappings,
-        &qualified_data_connector_name,
-        object_types,
-        scalar_types,
-        &mut type_mappings,
-    )
-    .map_err(|error| {
-        Error::from(
-            BooleanExpressionError::BooleanExpressionTypeMappingCollectionError {
-                boolean_expression_type: boolean_expression_type.clone(),
-                error,
-            },
-        )
-    })?;
-
-    // validate graphql config
-    let boolean_expression_graphql_config = object_boolean_expression
-        .graphql
-        .as_ref()
-        .map(|object_boolean_graphql_config| {
-            let graphql_type_name =
-                mk_name(object_boolean_graphql_config.type_name.0.as_ref()).map(ast::TypeName)?;
-
-            store_new_graphql_type(existing_graphql_types, Some(&graphql_type_name))?;
-
-            let type_mapping = type_mappings
-                .get(&Qualified::new(
-                    subgraph.to_string(),
-                    object_boolean_expression.object_type.clone(),
-                ))
-                .unwrap();
-
-            boolean_expression::resolve_boolean_expression(
-                &boolean_expression_type,
-                &data_connector_name,
-                graphql_type_name.clone(),
-                subgraph,
-                data_connectors,
-                type_mapping,
-                graphql_config,
-            )
-        })
-        .transpose()?;
-
-    let data_connector_link = data_connectors::DataConnectorLink::new(
-        data_connector_name,
-        data_connector_context.inner.url.clone(),
-        data_connector_context.inner.headers,
-    )?;
-
-    let resolved_boolean_expression = ObjectBooleanExpressionType {
-        name: qualified_name.clone(),
-        type_mappings,
-        object_type: qualified_object_type_name.clone(),
-        data_connector_name: qualified_data_connector_name,
-        data_connector_link,
-        data_connector_object_type: object_boolean_expression.data_connector_object_type.clone(),
-        graphql: boolean_expression_graphql_config,
-    };
-    Ok(resolved_boolean_expression)
 }
 
 /// Helper function to create GraphQL compliant name
