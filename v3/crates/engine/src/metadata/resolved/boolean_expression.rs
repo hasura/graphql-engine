@@ -1,4 +1,4 @@
-use super::stages::data_connector_scalar_types;
+use super::stages::{data_connector_scalar_types, data_connector_type_mappings};
 
 use crate::metadata::resolved::data_connector;
 
@@ -7,8 +7,6 @@ use crate::metadata::resolved::model;
 
 use crate::metadata::resolved::stages::graphql_config::GraphqlConfig;
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
-
-use crate::metadata::resolved::types::TypeMapping;
 
 use lang_graphql::ast::common::{self as ast};
 use ndc_models;
@@ -52,7 +50,7 @@ pub fn resolve_boolean_expression(
     where_type_name: ast::TypeName,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    type_mappings: &TypeMapping,
+    type_mappings: &data_connector_type_mappings::TypeMapping,
     graphql_config: &GraphqlConfig,
 ) -> Result<BooleanExpression, Error> {
     let mut scalar_fields = HashMap::new();
@@ -69,7 +67,7 @@ pub fn resolve_boolean_expression(
         })?
         .scalars;
 
-    let TypeMapping::Object { field_mappings, .. } = type_mappings;
+    let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
     let filter_graphql_config = graphql_config
         .query

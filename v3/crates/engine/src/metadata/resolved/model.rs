@@ -22,8 +22,8 @@ use crate::metadata::resolved::subgraph::{
     serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
     QualifiedTypeReference,
 };
+use crate::metadata::resolved::types::mk_name;
 use crate::metadata::resolved::types::store_new_graphql_type;
-use crate::metadata::resolved::types::{mk_name, TypeMapping};
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
@@ -112,7 +112,8 @@ pub struct ModelSource {
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
     )]
-    pub type_mappings: BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    pub type_mappings:
+        BTreeMap<Qualified<CustomTypeName>, data_connector_type_mappings::TypeMapping>,
     pub argument_mappings: HashMap<ArgumentName, String>,
 }
 
@@ -519,14 +520,14 @@ fn resolve_model_predicate(
             // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
             if let Some(model_source) = &model.source {
                 // Get field mappings of model data type
-                let TypeMapping::Object { field_mappings, .. } = model_source
-                    .type_mappings
-                    .get(&model.data_type)
-                    .ok_or(Error::TypeMappingRequired {
-                        model_name: model.name.clone(),
-                        type_name: model.data_type.clone(),
-                        data_connector: model_source.data_connector.name.clone(),
-                    })?;
+                let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
+                    model_source.type_mappings.get(&model.data_type).ok_or(
+                        Error::TypeMappingRequired {
+                            model_name: model.name.clone(),
+                            type_name: model.data_type.clone(),
+                            data_connector: model_source.data_connector.name.clone(),
+                        },
+                    )?;
 
                 // Determine field_mapping for the predicate field
                 let field_mapping = field_mappings.get(field).ok_or_else(|| {
@@ -584,14 +585,14 @@ fn resolve_model_predicate(
         permissions::ModelPredicate::FieldIsNull(FieldIsNullPredicate { field }) => {
             if let Some(model_source) = &model.source {
                 // Get field mappings of model data type
-                let TypeMapping::Object { field_mappings, .. } = model_source
-                    .type_mappings
-                    .get(&model.data_type)
-                    .ok_or(Error::TypeMappingRequired {
-                        model_name: model.name.clone(),
-                        type_name: model.data_type.clone(),
-                        data_connector: model_source.data_connector.name.clone(),
-                    })?;
+                let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
+                    model_source.type_mappings.get(&model.data_type).ok_or(
+                        Error::TypeMappingRequired {
+                            model_name: model.name.clone(),
+                            type_name: model.data_type.clone(),
+                            data_connector: model_source.data_connector.name.clone(),
+                        },
+                    )?;
                 // Determine field_mapping for the predicate field
                 let field_mapping = field_mappings.get(field).ok_or_else(|| {
                     Error::UnknownFieldInSelectPermissionsDefinition {
@@ -852,7 +853,7 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
     comparison_location: F,
 ) -> Result<NdcColumnForComparison, Error> {
     // Get field mappings of model data type
-    let TypeMapping::Object { field_mappings, .. } = model_source
+    let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(model_data_type)
         .ok_or(Error::TypeMappingRequired {
@@ -1009,14 +1010,16 @@ pub fn resolve_model_graphql_api(
                 )?;
                 order_by_expression_type_name
                     .map(|order_by_type_name| {
-                        let TypeMapping::Object { field_mappings, .. } = model_source
-                            .type_mappings
-                            .get(&model.data_type)
-                            .ok_or(Error::TypeMappingRequired {
+                        let data_connector_type_mappings::TypeMapping::Object {
+                            field_mappings,
+                            ..
+                        } = model_source.type_mappings.get(&model.data_type).ok_or(
+                            Error::TypeMappingRequired {
                                 model_name: model_name.clone(),
                                 type_name: model.data_type.clone(),
                                 data_connector: model_source.data_connector.name.clone(),
-                            })?;
+                            },
+                        )?;
 
                         let mut order_by_fields = HashMap::new();
                         for (field_name, field_mapping) in field_mappings.iter() {

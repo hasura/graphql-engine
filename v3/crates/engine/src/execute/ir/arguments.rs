@@ -12,7 +12,7 @@ use crate::execute::ir::arguments;
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::TypeMapping;
+use crate::metadata::resolved::TypeMapping;
 use crate::schema::types::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
 };

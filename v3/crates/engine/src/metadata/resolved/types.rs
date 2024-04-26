@@ -11,7 +11,6 @@ use crate::metadata::resolved::subgraph::{
     QualifiedTypeReference,
 };
 use lang_graphql::ast::common as ast;
-use ndc_models;
 use open_dds::data_connector::DataConnectorName;
 use open_dds::models::EnableAllOrSpecific;
 use open_dds::types::{self, CustomTypeName, FieldName, ObjectBooleanExpressionTypeV1};
@@ -27,20 +26,6 @@ pub struct NdcColumnForComparison {
     pub equal_operator: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct FieldMapping {
-    pub column: String,
-    pub column_type: ndc_models::Type,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum TypeMapping {
-    Object {
-        ndc_object_type_name: String,
-        field_mappings: BTreeMap<FieldName, FieldMapping>,
-    },
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
@@ -48,7 +33,8 @@ pub struct ObjectBooleanExpressionType {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub data_connector_link: data_connector::DataConnectorLink,
     pub data_connector_object_type: String,
-    pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
+    pub type_mappings:
+        BTreeMap<Qualified<types::CustomTypeName>, data_connector_type_mappings::TypeMapping>,
     pub graphql: Option<boolean_expression::BooleanExpression>,
 }
 
@@ -79,148 +65,6 @@ pub fn resolve_field(
         deprecated: field.deprecated.clone(),
     })
 }
-
-/*
-pub fn resolve_object_type(
-    object_type_definition: &ObjectTypeV1,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-    qualified_type_name: &Qualified<CustomTypeName>,
-    subgraph: &str,
-    global_id_enabled_types: &mut HashMap<
-        Qualified<CustomTypeName>,
-        Vec<Qualified<open_dds::models::ModelName>>,
-    >,
-    apollo_federation_entity_enabled_types: &mut HashMap<
-        Qualified<CustomTypeName>,
-        Option<Qualified<open_dds::models::ModelName>>,
-    >,
-) -> Result<data_connector_type_mappings::ObjectTypeRepresentation, Error> {
-    let mut resolved_fields = IndexMap::new();
-    let mut resolved_global_id_fields = Vec::new();
-
-    for field in &object_type_definition.fields {
-        if resolved_fields
-            .insert(field.name.clone(), resolve_field(field, subgraph)?)
-            .is_some()
-        {
-            return Err(Error::DuplicateFieldDefinition {
-                type_name: qualified_type_name.clone(),
-                field_name: field.name.clone(),
-            });
-        }
-    }
-    match &object_type_definition.global_id_fields {
-        Some(global_id_fields) => {
-            if !global_id_fields.is_empty() {
-                // Throw error if the object type has a field called id" and has global fields configured.
-                // Because, when the global id fields are configured, the `id` field will be auto-generated.
-                if resolved_fields.contains_key(&FieldName(identifier!("id"))) {
-                    return Err(Error::IdFieldConflictingGlobalId {
-                        type_name: qualified_type_name.clone(),
-                    });
-                }
-                // To check if global_id_fields are defined in object type but no model has global_id_source set to
-                // true:
-                //   - If the object type has globalIdFields configured, add the object type to the
-                //     global_id_enabled_types map.
-                global_id_enabled_types.insert(qualified_type_name.clone(), Vec::new());
-            };
-            for global_id_field in global_id_fields {
-                if !resolved_fields.contains_key(global_id_field) {
-                    return Err(Error::UnknownFieldInGlobalId {
-                        field_name: global_id_field.clone(),
-                        type_name: qualified_type_name.clone(),
-                    });
-                } else {
-                    resolved_global_id_fields.push(global_id_field.clone())
-                }
-            }
-        }
-        None => {}
-    }
-    let (graphql_type_name, graphql_input_type_name, apollo_federation_config) =
-        match object_type_definition.graphql.as_ref() {
-            None => Ok::<_, Error>((None, None, None)),
-            Some(graphql) => {
-                let graphql_type_name = graphql
-                    .type_name
-                    .as_ref()
-                    .map(|type_name| mk_name(type_name.0.as_ref()).map(ast::TypeName))
-                    .transpose()?;
-                let graphql_input_type_name = graphql
-                    .input_type_name
-                    .as_ref()
-                    .map(|input_type_name| mk_name(input_type_name.0.as_ref()).map(ast::TypeName))
-                    .transpose()?;
-                // To check if apolloFederation.keys are defined in object type but no model has
-                // apollo_federation_entity_source set to true:
-                //   - If the object type has apolloFederation.keys configured, add the object type to the
-                //     apollo_federation_entity_enabled_types map.
-                let resolved_apollo_federation_config = match &graphql.apollo_federation {
-                    None => Ok(None),
-                    Some(apollo_federation) => {
-                        // Validate that the fields in the apollo federation keys are defined in the object type
-                        let mut resolved_keys: Vec<
-                            data_connector_type_mappings::ResolvedApolloFederationObjectKey,
-                        > = Vec::new();
-                        for key in &apollo_federation.keys {
-                            let mut resolved_key_fields = Vec::new();
-                            for field in &key.fields {
-                                if !resolved_fields.contains_key(field) {
-                                    return Err(Error::UnknownFieldInApolloFederationKey {
-                                        field_name: field.clone(),
-                                        object_type: qualified_type_name.clone(),
-                                    });
-                                }
-                                resolved_key_fields.push(field.clone());
-                            }
-                            let resolved_key =
-                                match nonempty::NonEmpty::from_vec(resolved_key_fields) {
-                                    None => {
-                                        return Err(
-                                            Error::EmptyFieldsInApolloFederationConfigForObject {
-                                                object_type: qualified_type_name.clone(),
-                                            },
-                                        )
-                                    }
-                                    Some(fields) => data_connector_type_mappings::ResolvedApolloFederationObjectKey { fields },
-                                };
-                            resolved_keys.push(resolved_key);
-                        }
-                        apollo_federation_entity_enabled_types
-                            .insert(qualified_type_name.clone(), None);
-                        match nonempty::NonEmpty::from_vec(resolved_keys) {
-                            None => Err(Error::EmptyKeysInApolloFederationConfigForObject {
-                                object_type: qualified_type_name.clone(),
-                            }),
-                            Some(keys) => Ok(Some(data_connector_type_mappings
-                                    ::ResolvedObjectApolloFederationConfig { keys })),
-                        }
-                    }
-                }?;
-                Ok((
-                    graphql_type_name,
-                    graphql_input_type_name,
-                    resolved_apollo_federation_config,
-                ))
-            }
-        }?;
-    store_new_graphql_type(existing_graphql_types, graphql_type_name.as_ref())?;
-    store_new_graphql_type(existing_graphql_types, graphql_input_type_name.as_ref())?;
-
-    Ok(data_connector_type_mappings::ObjectTypeRepresentation {
-        fields: resolved_fields,
-        relationships: IndexMap::new(),
-        global_id_fields: resolved_global_id_fields,
-        type_output_permissions: HashMap::new(),
-        type_input_permissions: HashMap::new(),
-        graphql_output_type_name: graphql_type_name,
-        graphql_input_type_name,
-        description: object_type_definition.description.clone(),
-        apollo_federation_config,
-    })
-}
-*/
 
 #[derive(Debug)]
 /// we do not want to store our types like this, but occasionally it is useful
@@ -534,7 +378,10 @@ pub(crate) fn collect_type_mapping_for_source(
     data_connector_name: &Qualified<DataConnectorName>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    collected_mappings: &mut BTreeMap<
+        Qualified<CustomTypeName>,
+        data_connector_type_mappings::TypeMapping,
+    >,
 ) -> Result<(), TypeMappingCollectionError> {
     let type_mapping = data_connector_type_mappings
         .get(
@@ -552,7 +399,7 @@ pub(crate) fn collect_type_mapping_for_source(
     if let Some(inserted_mapping) =
         collected_mappings.insert(mapping_to_collect.type_name.clone(), type_mapping.clone())
     {
-        let TypeMapping::Object {
+        let data_connector_type_mappings::TypeMapping::Object {
             ndc_object_type_name,
             ..
         } = inserted_mapping;
@@ -571,7 +418,8 @@ pub(crate) fn collect_type_mapping_for_source(
 
     match object_types.get(mapping_to_collect.type_name) {
         Some(object_type_representation) => {
-            let TypeMapping::Object { field_mappings, .. } = type_mapping;
+            let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
+                type_mapping;
             // For each field in the ObjectType, if that field is using an ObjectType in its type,
             // resolve the type mappings for that ObjectType too
             for (field_name, field_definition) in &object_type_representation.object_type.fields {

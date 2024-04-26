@@ -171,7 +171,7 @@ pub fn validate_ndc(
         NDCValidationError::NoSuchType(collection.collection_type.clone()),
     )?;
 
-    let super::types::TypeMapping::Object { field_mappings, .. } = model_source
+    let super::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(&model.data_type)
         .ok_or_else(|| NDCValidationError::UnknownModelTypeMapping {
@@ -333,7 +333,7 @@ pub fn validate_ndc_command(
                 // Check if the command.output_type is available in schema.object_types
                 Some(command_source_ndc_type) => {
                     // Check if the command.output_type has typeMappings
-                    let super::types::TypeMapping::Object { field_mappings, .. } = command_source
+                    let super::TypeMapping::Object { field_mappings, .. } = command_source
                         .type_mappings
                         .get(custom_type)
                         .ok_or_else(|| NDCValidationError::UnknownCommandTypeMapping {

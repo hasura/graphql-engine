@@ -3,11 +3,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::metadata::resolved::model::FilterPermission;
 use crate::metadata::resolved::permission::resolve_value_expression;
-use crate::metadata::resolved::stages::type_permissions;
+use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
-use crate::metadata::resolved::types::{
-    object_type_exists, unwrap_custom_type_name, FieldMapping, TypeMapping,
-};
+use crate::metadata::resolved::types::{object_type_exists, unwrap_custom_type_name};
 use crate::metadata::resolved::{self};
 use crate::schema::Role;
 use crate::schema::{self, types};
@@ -228,7 +226,7 @@ fn build_annotations_from_input_object_type_permissions(
     type_reference: &QualifiedTypeReference,
     ndc_argument_name: &Option<String>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, data_connector_type_mappings::TypeMapping>,
     role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
 ) -> Result<(), schema::Error> {
     if let Some(custom_typename) = unwrap_custom_type_name(type_reference) {
@@ -238,7 +236,7 @@ fn build_annotations_from_input_object_type_permissions(
                     type_mappings
                         .get(&object_type)
                         .map(|type_mapping| match type_mapping {
-                            TypeMapping::Object {
+                            data_connector_type_mappings::TypeMapping::Object {
                                 ndc_object_type_name: _,
                                 field_mappings,
                             } => field_mappings,
@@ -296,7 +294,7 @@ fn build_annotations_from_input_object_type_permissions(
 ///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
 fn build_preset_map_from_input_object_type_permission(
     permission: &type_permissions::TypeInputPermission,
-    field_mappings: Option<&BTreeMap<FieldName, FieldMapping>>,
+    field_mappings: Option<&BTreeMap<FieldName, data_connector_type_mappings::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[String],
     ndc_argument_name: &Option<String>,

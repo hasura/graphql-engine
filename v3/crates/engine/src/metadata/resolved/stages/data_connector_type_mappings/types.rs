@@ -6,11 +6,9 @@ use indexmap::IndexMap;
 
 use open_dds::types::{CustomTypeName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use open_dds::models::ModelName;
-
-use crate::metadata::resolved::types::TypeMapping;
 
 use crate::metadata::resolved::subgraph::Qualified;
 
@@ -120,4 +118,18 @@ pub struct ResolvedObjectApolloFederationConfig {
 #[display(fmt = "Display")]
 pub struct ResolvedApolloFederationObjectKey {
     pub fields: nonempty::NonEmpty<FieldName>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct FieldMapping {
+    pub column: String,
+    pub column_type: ndc_models::Type,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub enum TypeMapping {
+    Object {
+        ndc_object_type_name: String,
+        field_mappings: BTreeMap<FieldName, FieldMapping>,
+    },
 }

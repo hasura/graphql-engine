@@ -51,7 +51,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub source_type: &'s Qualified<CustomTypeName>,
     pub source_data_connector: &'s resolved::data_connector::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
-    pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s ModelTargetSource,
     pub target_type: &'s Qualified<CustomTypeName>,
     pub mappings: &'s Vec<resolved::relationship::RelationshipModelMapping>,
@@ -62,7 +62,7 @@ pub(crate) struct LocalCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
     pub source_data_connector: &'s resolved::data_connector::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
-    pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s CommandTargetSource,
 }
 
@@ -71,7 +71,7 @@ pub struct RemoteModelRelationshipInfo<'s> {
     pub annotation: &'s ModelRelationshipAnnotation,
     /// This contains processed information about the mappings.
     /// `RelationshipMapping` only contains mapping of field names. This
-    /// contains mapping of field names and `resolved::types::FieldMapping`.
+    /// contains mapping of field names and `resolved::FieldMapping`.
     /// Also see `build_remote_relationship`.
     pub join_mapping: Vec<(SourceField, TargetField)>,
 }
@@ -82,7 +82,7 @@ pub(crate) struct RemoteCommandRelationshipInfo<'s> {
     pub join_mapping: Vec<(SourceField, ArgumentName)>,
 }
 
-pub type SourceField = (FieldName, resolved::types::FieldMapping);
+pub type SourceField = (FieldName, resolved::FieldMapping);
 pub type TargetField = (FieldName, resolved::types::NdcColumnForComparison);
 
 pub(crate) fn process_model_relationship_definition(
@@ -216,7 +216,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
     source_data_connector: &'s resolved::data_connector::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -332,7 +332,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
     source_data_connector: &'s resolved::data_connector::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -384,7 +384,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
     data_connector: &'s resolved::data_connector::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
@@ -430,7 +430,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
     data_connector: &'s resolved::data_connector::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -471,7 +471,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
@@ -556,7 +556,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
 ) -> Result<FieldSelection<'s>, error::Error> {
@@ -606,11 +606,11 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
 }
 
 fn get_field_mapping_of_field_name(
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, resolved::types::TypeMapping>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,
     field_name: &FieldName,
-) -> Result<resolved::types::FieldMapping, error::Error> {
+) -> Result<resolved::FieldMapping, error::Error> {
     let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
         error::InternalDeveloperError::TypeMappingNotFoundForRelationship {
             type_name: type_name.clone(),
@@ -618,7 +618,7 @@ fn get_field_mapping_of_field_name(
         }
     })?;
     match type_mapping {
-        resolved::types::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
+        resolved::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
             .get(field_name)
             .ok_or_else(
                 || error::InternalDeveloperError::FieldMappingNotFoundForRelationship {

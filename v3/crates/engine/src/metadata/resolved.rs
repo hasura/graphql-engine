@@ -13,4 +13,5 @@ pub mod subgraph;
 mod typecheck;
 pub mod types;
 
+pub use stages::data_connector_type_mappings::{FieldMapping, TypeMapping};
 pub use stages::resolve;

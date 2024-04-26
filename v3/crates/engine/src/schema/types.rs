@@ -28,7 +28,7 @@ use crate::{
     },
     schema::types::resolved::{
         subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap},
-        types::TypeMapping,
+        TypeMapping,
     },
     utils::HashMapWithJsonKey,
 };

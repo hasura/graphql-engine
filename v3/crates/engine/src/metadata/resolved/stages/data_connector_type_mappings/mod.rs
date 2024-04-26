@@ -2,15 +2,13 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 pub mod types;
 use open_dds::types::CustomTypeName;
 pub use types::{
-    DataConnectorTypeMappings, DataConnectorTypeMappingsOutput, FieldDefinition,
+    DataConnectorTypeMappings, DataConnectorTypeMappingsOutput, FieldDefinition, FieldMapping,
     ObjectTypeRepresentation, ResolvedApolloFederationObjectKey,
-    ResolvedObjectApolloFederationConfig,
+    ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::metadata::resolved::stages::data_connectors;
-use crate::metadata::resolved::types::{
-    mk_name, store_new_graphql_type, FieldMapping, TypeMapping,
-};
+use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
 
 use crate::metadata::resolved::error::{Error, TypeMappingValidationError};
 use crate::metadata::resolved::subgraph::{mk_qualified_type_reference, Qualified};
