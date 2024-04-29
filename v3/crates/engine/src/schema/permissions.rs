@@ -146,7 +146,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
     let mut permissions = HashMap::new();
@@ -358,7 +358,7 @@ fn build_preset_map_from_input_object_type_permission(
 /// We need to check the permissions of the source fields
 /// in the relationship mappings.
 pub(crate) fn get_command_relationship_namespace_annotations(
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     source_object_type_representation: &type_permissions::ObjectTypeWithPermissions,
     mappings: &[resolved::relationship::RelationshipCommandMapping],
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,

@@ -142,7 +142,7 @@ pub struct CommandTargetSource {
 
 impl CommandTargetSource {
     pub fn new(
-        command: &resolved::command::Command,
+        command: &resolved::Command,
         relationship: &resolved::relationship::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         command

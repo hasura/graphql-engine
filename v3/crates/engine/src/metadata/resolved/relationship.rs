@@ -1,7 +1,7 @@
-use super::command::Command;
-
 use super::error::{Error, RelationshipError};
-use super::stages::{data_connector_scalar_types, data_connectors, models, type_permissions};
+use super::stages::{
+    commands, data_connector_scalar_types, data_connectors, models, type_permissions,
+};
 use super::subgraph::Qualified;
 use super::subgraph::QualifiedTypeReference;
 use super::types::mk_name;
@@ -256,7 +256,7 @@ fn resolve_relationship_mappings_command(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &type_permissions::ObjectTypeWithPermissions,
-    target_command: &Command,
+    target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut field_mapping_hashset_for_validation: HashSet<&String> = HashSet::new();
@@ -380,7 +380,7 @@ pub fn resolve_relationship(
     relationship: &RelationshipV1,
     subgraph: &str,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, Command>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     source_type: &type_permissions::ObjectTypeWithPermissions,
 ) -> Result<Relationship, Error> {

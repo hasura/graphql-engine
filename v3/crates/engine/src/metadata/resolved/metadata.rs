@@ -13,8 +13,8 @@ use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, graphql_config,
-    models, scalar_types, type_permissions,
+    boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
+    graphql_config, models, scalar_types, type_permissions,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -24,7 +24,7 @@ pub struct Metadata {
         HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, models::Model>,
-    pub commands: IndexMap<Qualified<CommandName>, command::Command>,
+    pub commands: IndexMap<Qualified<CommandName>, commands::Command>,
     pub boolean_expression_types:
         HashMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
@@ -51,6 +51,7 @@ pub fn resolve_metadata(
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     mut models: IndexMap<Qualified<ModelName>, models::Model>,
+    mut commands: IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Result<Metadata, Error> {
     // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
     //   - Throw an error if no model with globalIdSource:true is found for the object type.
@@ -68,16 +69,6 @@ pub fn resolve_metadata(
             return Err(Error::ApolloFederationEntitySourceNotDefined { object_type });
         }
     }
-
-    // resolve commands
-    let mut commands = resolve_commands(
-        metadata_accessor,
-        data_connectors,
-        data_connector_type_mappings,
-        &object_types,
-        scalar_types,
-        boolean_expression_types,
-    )?;
 
     // resolve relationships
     let object_types = resolve_relationships(
@@ -130,7 +121,7 @@ pub fn resolve_metadata(
 fn collect_all_roles(
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, command::Command>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Vec<Role> {
     let mut roles = Vec::new();
     for object_type in object_types.values() {
@@ -158,56 +149,6 @@ fn collect_all_roles(
     roles
 }
 
-/// resolve commands
-fn resolve_commands(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-) -> Result<IndexMap<Qualified<CommandName>, command::Command>, Error> {
-    let mut commands: IndexMap<Qualified<CommandName>, command::Command> = IndexMap::new();
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: command,
-    } in &metadata_accessor.commands
-    {
-        let mut resolved_command = command::resolve_command(
-            command,
-            subgraph,
-            object_types,
-            scalar_types,
-            boolean_expression_types,
-        )?;
-        if let Some(command_source) = &command.source {
-            command::resolve_command_source(
-                command_source,
-                &mut resolved_command,
-                subgraph,
-                data_connectors,
-                data_connector_type_mappings,
-                object_types,
-                scalar_types,
-                boolean_expression_types,
-            )?;
-        }
-        let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
-        if commands
-            .insert(qualified_command_name.clone(), resolved_command)
-            .is_some()
-        {
-            return Err(Error::DuplicateCommandDefinition {
-                name: qualified_command_name,
-            });
-        }
-    }
-    Ok(commands)
-}
-
 /// resolve relationships
 /// returns updated `types` value
 fn resolve_relationships(
@@ -218,7 +159,7 @@ fn resolve_relationships(
         type_permissions::ObjectTypeWithPermissions,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, command::Command>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Result<HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>, Error>
 {
     for open_dds::accessor::QualifiedObject {
@@ -268,7 +209,7 @@ fn resolve_relationships(
 /// return new values instead where possible
 fn resolve_command_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    commands: &mut IndexMap<Qualified<CommandName>, command::Command>,
+    commands: &mut IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,

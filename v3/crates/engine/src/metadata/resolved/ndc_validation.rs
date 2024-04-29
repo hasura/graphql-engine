@@ -1,4 +1,4 @@
-use crate::metadata::resolved::stages::models;
+use crate::metadata::resolved::stages::{commands, models};
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
@@ -8,10 +8,7 @@ use open_dds::{
 };
 use thiserror::Error;
 
-use super::{
-    command::Command,
-    subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
-};
+use super::subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
 #[derive(Debug, Error)]
 pub enum NDCValidationError {
@@ -238,7 +235,7 @@ pub fn validate_ndc(
 // Validate the mappings b/w dds object and ndc objects present in command source.
 pub fn validate_ndc_command(
     command_name: &Qualified<CommandName>,
-    command: &Command,
+    command: &commands::Command,
     schema: &ndc_models::SchemaResponse,
 ) -> std::result::Result<(), NDCValidationError> {
     // Check if the command source exists for the command

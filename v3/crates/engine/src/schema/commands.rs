@@ -31,7 +31,7 @@ pub enum Response {
 pub(crate) fn generate_command_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     argument_name: &ArgumentName,
     argument_type: &crate::schema::commands::resolved::subgraph::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
@@ -83,7 +83,7 @@ pub(crate) fn generate_command_argument(
 pub(crate) fn command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     command_field_name: ast::Name,
     command_annotation: Annotation,
     deprecation_status: gql_schema::DeprecationStatus,
@@ -120,7 +120,7 @@ pub(crate) fn command_field(
 pub(crate) fn function_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -173,7 +173,7 @@ pub(crate) fn function_command_field(
 pub(crate) fn procedure_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::command::Command,
+    command: &resolved::Command,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
