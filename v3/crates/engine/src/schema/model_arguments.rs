@@ -14,7 +14,7 @@ use crate::metadata::resolved::subgraph::Qualified;
 /// arguments fields will live.
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::model::Model,
+    model: &resolved::Model,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
     model
         .graphql_api
@@ -49,7 +49,7 @@ pub fn get_model_arguments_input_field(
 pub fn build_model_argument_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::model::Model,
+    model: &resolved::Model,
 ) -> Result<
     BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,

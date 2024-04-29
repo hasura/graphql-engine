@@ -42,7 +42,7 @@ pub struct NodeSelect<'n, 's> {
 fn get_relay_node_namespace_typename_mappings<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
 ) -> Result<
-    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
+    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::FilterPermission>,
     error::Error,
 > {
     field_call
@@ -89,10 +89,8 @@ pub(crate) fn relay_node_ir<'n, 's>(
             decoding_error: e.to_string(),
         })?;
     let global_id: GlobalID = serde_json::from_slice(decoded_id_value.as_slice())?;
-    let typename_permissions: &'s HashMap<
-        Qualified<CustomTypeName>,
-        resolved::model::FilterPermission,
-    > = &get_relay_node_namespace_typename_mappings(field_call)?.0;
+    let typename_permissions: &'s HashMap<Qualified<CustomTypeName>, resolved::FilterPermission> =
+        &get_relay_node_namespace_typename_mappings(field_call)?.0;
     let typename_mapping = typename_mappings.get(&global_id.typename).ok_or(
         error::InternalDeveloperError::TypenameMappingNotFound {
             type_name: global_id.typename.clone(),

@@ -80,7 +80,7 @@ impl DataConnectorTypeMappings {
 
 /// output of `data_connector_type_mappings` step
 pub struct DataConnectorTypeMappingsOutput {
-    pub existing_graphql_types: HashSet<ast::TypeName>,
+    pub graphql_types: HashSet<ast::TypeName>,
     pub global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         HashMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,

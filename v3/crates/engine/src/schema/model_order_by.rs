@@ -82,7 +82,7 @@ pub fn build_order_by_enum_type_schema(
 pub fn get_order_by_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model_name: Qualified<ModelName>,
-    order_by_expression_info: &resolved::model::ModelOrderByExpression,
+    order_by_expression_info: &resolved::ModelOrderByExpression,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
         order_by_expression_info.order_by_field_name.clone(),

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     metadata::resolved::{
         self,
+        stages::models,
         subgraph::{
             deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
             QualifiedTypeReference,
@@ -87,13 +88,13 @@ pub struct PredicateRelationshipAnnotation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
-    pub(crate) model: resolved::model::ModelSource,
+    pub(crate) model: models::ModelSource,
     pub(crate) capabilities: resolved::relationship::RelationshipCapabilities,
 }
 
 impl ModelTargetSource {
     pub fn new(
-        model: &resolved::model::Model,
+        model: &models::Model,
         relationship: &resolved::relationship::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         model
@@ -104,7 +105,7 @@ impl ModelTargetSource {
     }
 
     pub fn from_model_source(
-        model_source: &resolved::model::ModelSource,
+        model_source: &models::ModelSource,
         relationship: &resolved::relationship::Relationship,
     ) -> Result<Self, schema::Error> {
         Ok(Self {

@@ -1,9 +1,7 @@
 use super::command::Command;
 
 use super::error::{Error, RelationshipError};
-use super::model::get_ndc_column_for_comparison;
-use super::model::Model;
-use super::stages::{data_connector_scalar_types, data_connectors};
+use super::stages::{data_connector_scalar_types, data_connectors, models, type_permissions};
 use super::subgraph::Qualified;
 use super::subgraph::QualifiedTypeReference;
 use super::types::mk_name;
@@ -13,7 +11,6 @@ use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::CommandName;
 
-use crate::metadata::resolved::stages::type_permissions;
 use open_dds::models::ModelName;
 use open_dds::relationships::{
     self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
@@ -155,7 +152,7 @@ fn resolve_relationship_mappings_model(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &type_permissions::ObjectTypeWithPermissions,
-    target_model: &Model,
+    target_model: &models::Model,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
@@ -219,7 +216,7 @@ fn resolve_relationship_mappings_model(
                     .source
                     .as_ref()
                     .map(|target_model_source| {
-                        get_ndc_column_for_comparison(
+                        models::get_ndc_column_for_comparison(
                             &target_model.name,
                             &target_model.data_type,
                             target_model_source,
@@ -382,7 +379,7 @@ fn get_relationship_capabilities(
 pub fn resolve_relationship(
     relationship: &RelationshipV1,
     subgraph: &str,
-    models: &IndexMap<Qualified<ModelName>, Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, Command>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     source_type: &type_permissions::ObjectTypeWithPermissions,

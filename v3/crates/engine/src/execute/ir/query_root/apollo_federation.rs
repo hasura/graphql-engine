@@ -38,7 +38,7 @@ pub struct EntitySelect<'n, 's> {
 fn get_entity_namespace_typename_mappings<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
 ) -> Result<
-    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
+    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::FilterPermission>,
     error::Error,
 > {
     field_call
@@ -115,7 +115,7 @@ pub(crate) fn entities_ir<'n, 's>(
         // Get the permissions for the typename
         let typename_permissions: &'s HashMap<
             Qualified<CustomTypeName>,
-            resolved::model::FilterPermission,
+            resolved::FilterPermission,
         > = &get_entity_namespace_typename_mappings(field_call)?.0;
         let typename_mapping = typename_mappings.get(&typename).ok_or(
             error::InternalDeveloperError::TypenameMappingNotFound {

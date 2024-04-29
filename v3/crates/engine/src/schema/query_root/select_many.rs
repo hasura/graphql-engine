@@ -22,7 +22,7 @@ use crate::schema::{
 /// limit, offset, order_by and where.
 pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::model::Model,
+    model: &resolved::Model,
 ) -> Result<
     BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
@@ -97,8 +97,8 @@ pub(crate) fn generate_select_many_arguments(
 pub(crate) fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::model::Model,
-    select_many: &resolved::model::SelectManyGraphQlDefinition,
+    model: &resolved::Model,
+    select_many: &resolved::SelectManyGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
     (

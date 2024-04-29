@@ -1,3 +1,4 @@
+use crate::metadata::resolved::stages::models;
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
@@ -9,7 +10,6 @@ use thiserror::Error;
 
 use super::{
     command::Command,
-    model::Model,
     subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
 };
 
@@ -131,7 +131,7 @@ fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedT
 
 pub fn validate_ndc(
     model_name: &Qualified<ModelName>,
-    model: &Model,
+    model: &models::Model,
     schema: &ndc_models::SchemaResponse,
 ) -> std::result::Result<(), NDCValidationError> {
     let model_source = match &model.source {

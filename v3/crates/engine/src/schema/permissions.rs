@@ -1,9 +1,8 @@
 use open_dds::types::{CustomTypeName, FieldName};
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved::model::FilterPermission;
 use crate::metadata::resolved::permission::ValueExpression;
-use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
+use crate::metadata::resolved::stages::{data_connector_type_mappings, models, type_permissions};
 use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
 use crate::metadata::resolved::types::{object_type_exists, unwrap_custom_type_name};
 use crate::metadata::resolved::{self};
@@ -14,7 +13,7 @@ use super::types::ArgumentNameAndPath;
 
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
-    model: &resolved::model::Model,
+    model: &models::Model,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let mut permissions: HashMap<Role, Option<types::NamespaceAnnotation>> = model
@@ -97,9 +96,9 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 /// This is different from generating permissions for select_many etc,
 /// as we need to check the permissions of the arguments used in the selection.
 pub(crate) fn get_select_one_namespace_annotations(
-    model: &resolved::model::Model,
+    model: &models::Model,
     object_type_representation: &type_permissions::ObjectTypeWithPermissions,
-    select_unique: &resolved::model::SelectUniqueGraphQlDefinition,
+    select_unique: &models::SelectUniqueGraphQlDefinition,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let select_permissions = get_select_permissions_namespace_annotations(model, object_types)?;
@@ -120,7 +119,7 @@ pub(crate) fn get_select_one_namespace_annotations(
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
-    target_model: &resolved::model::Model,
+    target_model: &models::Model,
     source_object_type_representation: &type_permissions::ObjectTypeWithPermissions,
     target_object_type_representation: &type_permissions::ObjectTypeWithPermissions,
     mappings: &[resolved::relationship::RelationshipModelMapping],
@@ -442,8 +441,8 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 /// Builds namespace annotations for the `node` field.
 pub(crate) fn get_node_field_namespace_permissions(
     object_type_representation: &type_permissions::ObjectTypeWithPermissions,
-    model: &resolved::model::Model,
-) -> HashMap<Role, FilterPermission> {
+    model: &models::Model,
+) -> HashMap<Role, resolved::FilterPermission> {
     let mut permissions = HashMap::new();
 
     match &model.select_permissions {
@@ -481,8 +480,8 @@ pub(crate) fn get_node_field_namespace_permissions(
 /// Builds namespace annotations for the `_entities` field.
 pub(crate) fn get_entities_field_namespace_permissions(
     object_type_representation: &type_permissions::ObjectTypeWithPermissions,
-    model: &resolved::model::Model,
-) -> HashMap<Role, FilterPermission> {
+    model: &models::Model,
+) -> HashMap<Role, resolved::FilterPermission> {
     let mut permissions = HashMap::new();
 
     match &model.select_permissions {

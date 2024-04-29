@@ -24,7 +24,7 @@ use super::selection_set::NDCRelationshipName;
 /// is not found, then an error will be thrown.
 pub(crate) fn get_select_filter_predicate<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
-) -> Result<&'s resolved::model::FilterPermission, Error> {
+) -> Result<&'s resolved::FilterPermission, Error> {
     field_call
         .info
         .namespaced
@@ -75,14 +75,14 @@ pub(crate) fn get_argument_presets(
 }
 
 pub(crate) fn process_model_predicate<'s>(
-    model_predicate: &'s resolved::model::ModelPredicate,
+    model_predicate: &'s resolved::ModelPredicate,
     session_variables: &SessionVariables,
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, Error> {
     match model_predicate {
-        resolved::model::ModelPredicate::UnaryFieldComparison {
+        resolved::ModelPredicate::UnaryFieldComparison {
             field: _,
             ndc_column,
             operator,
@@ -91,7 +91,7 @@ pub(crate) fn process_model_predicate<'s>(
             *operator,
             &relationship_paths,
         )?),
-        resolved::model::ModelPredicate::BinaryFieldComparison {
+        resolved::ModelPredicate::BinaryFieldComparison {
             field: _,
             ndc_column,
             argument_type,
@@ -105,7 +105,7 @@ pub(crate) fn process_model_predicate<'s>(
             session_variables,
             &relationship_paths,
         )?),
-        resolved::model::ModelPredicate::Not(predicate) => {
+        resolved::ModelPredicate::Not(predicate) => {
             let expr = process_model_predicate(
                 predicate,
                 session_variables,
@@ -117,7 +117,7 @@ pub(crate) fn process_model_predicate<'s>(
                 expression: Box::new(expr),
             })
         }
-        resolved::model::ModelPredicate::And(predicates) => {
+        resolved::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
                 .map(|p| {
@@ -132,7 +132,7 @@ pub(crate) fn process_model_predicate<'s>(
                 .collect::<Result<Vec<_>, Error>>()?;
             Ok(ndc_models::Expression::And { expressions: exprs })
         }
-        resolved::model::ModelPredicate::Or(predicates) => {
+        resolved::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
                 .map(|p| {
@@ -147,7 +147,7 @@ pub(crate) fn process_model_predicate<'s>(
                 .collect::<Result<Vec<_>, Error>>()?;
             Ok(ndc_models::Expression::Or { expressions: exprs })
         }
-        resolved::model::ModelPredicate::Relationship {
+        resolved::ModelPredicate::Relationship {
             relationship_info,
             predicate,
         } => {

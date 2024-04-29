@@ -5,6 +5,7 @@ use crate::metadata::resolved::stages::{
     scalar_types, type_permissions,
 };
 
+use crate::metadata::resolved::model::resolve_ndc_type;
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::{
     collect_type_mapping_for_source, mk_name, store_new_graphql_type, TypeMappingToCollect,
@@ -317,7 +318,7 @@ pub fn resolve_boolean_expression_info(
                 {
                     operators.insert(
                         op_name.clone(),
-                        crate::metadata::resolved::model::resolve_ndc_type(
+                        resolve_ndc_type(
                             data_connector_name,
                             &get_argument_type(op_definition, &field_mapping.column_type),
                             scalar_types,

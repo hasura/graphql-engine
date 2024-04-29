@@ -1,25 +1,20 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
 use serde::{Deserialize, Serialize};
 
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::metadata::resolved::command;
-
 use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::model::{
-    resolve_model, resolve_model_graphql_api, resolve_model_select_permissions,
-    resolve_model_source, Model,
-};
+use crate::metadata::resolved::model::resolve_model_select_permissions;
 use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, graphql_config,
-    scalar_types, type_permissions,
+    models, scalar_types, type_permissions,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -28,7 +23,7 @@ pub struct Metadata {
     pub object_types:
         HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    pub models: IndexMap<Qualified<ModelName>, Model>,
+    pub models: IndexMap<Qualified<ModelName>, models::Model>,
     pub commands: IndexMap<Qualified<CommandName>, command::Command>,
     pub boolean_expression_types:
         HashMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
@@ -42,9 +37,8 @@ pub struct Metadata {
 pub fn resolve_metadata(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     graphql_config: &graphql_config::GraphqlConfig,
-    mut existing_graphql_types: HashSet<ast::TypeName>,
-    mut global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    mut apollo_federation_entity_enabled_types: HashMap<
+    global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: HashMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
@@ -56,22 +50,8 @@ pub fn resolve_metadata(
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    mut models: IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<Metadata, Error> {
-    // resolve models
-    // TODO: validate types
-    let mut models = resolve_models(
-        metadata_accessor,
-        data_connectors,
-        data_connector_type_mappings,
-        &object_types,
-        scalar_types,
-        &mut existing_graphql_types,
-        &mut global_id_enabled_types,
-        &mut apollo_federation_entity_enabled_types,
-        boolean_expression_types,
-        graphql_config,
-    )?;
-
     // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
     //   - Throw an error if no model with globalIdSource:true is found for the object type.
     for (object_type, model_name_list) in global_id_enabled_types {
@@ -149,7 +129,7 @@ pub fn resolve_metadata(
 /// Gather all roles from various permission objects.
 fn collect_all_roles(
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    models: &IndexMap<Qualified<ModelName>, Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
 ) -> Vec<Role> {
     let mut roles = Vec::new();
@@ -228,94 +208,6 @@ fn resolve_commands(
     Ok(commands)
 }
 
-/// resolve models
-fn resolve_models(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-    global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &mut HashMap<
-        Qualified<CustomTypeName>,
-        Option<Qualified<open_dds::models::ModelName>>,
-    >,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-    graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<IndexMap<Qualified<ModelName>, Model>, Error> {
-    // resolve models
-    // TODO: validate types
-    let mut models = IndexMap::new();
-    let mut global_id_models = HashMap::new();
-
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: model,
-    } in &metadata_accessor.models
-    {
-        let mut resolved_model = resolve_model(
-            subgraph,
-            model,
-            object_types,
-            global_id_enabled_types,
-            apollo_federation_entity_enabled_types,
-            boolean_expression_types,
-        )?;
-        if resolved_model.global_id_source.is_some() {
-            match global_id_models.insert(
-                resolved_model.data_type.clone(),
-                resolved_model.name.clone(),
-            ) {
-                None => {}
-                Some(duplicate_model_name) => {
-                    return Err(Error::DuplicateModelGlobalIdSource {
-                        model_1: resolved_model.name,
-                        model_2: duplicate_model_name,
-                        object_type: resolved_model.data_type,
-                    })
-                }
-            }
-        }
-
-        if let Some(model_source) = &model.source {
-            resolve_model_source(
-                model_source,
-                &mut resolved_model,
-                subgraph,
-                data_connectors,
-                object_types,
-                scalar_types,
-                data_connector_type_mappings,
-                boolean_expression_types,
-            )?;
-        }
-        if let Some(model_graphql_definition) = &model.graphql {
-            resolve_model_graphql_api(
-                model_graphql_definition,
-                &mut resolved_model,
-                existing_graphql_types,
-                data_connectors,
-                &model.description,
-                graphql_config,
-            )?;
-        }
-        let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
-        if models
-            .insert(qualified_model_name.clone(), resolved_model)
-            .is_some()
-        {
-            return Err(Error::DuplicateModelDefinition {
-                name: qualified_model_name,
-            });
-        }
-    }
-    Ok(models)
-}
-
 /// resolve relationships
 /// returns updated `types` value
 fn resolve_relationships(
@@ -325,7 +217,7 @@ fn resolve_relationships(
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
     >,
-    models: &IndexMap<Qualified<ModelName>, Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, command::Command>,
 ) -> Result<HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>, Error>
 {
@@ -423,7 +315,7 @@ fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    models: &mut IndexMap<Qualified<ModelName>, Model>,
+    models: &mut IndexMap<Qualified<ModelName>, models::Model>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,

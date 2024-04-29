@@ -1,411 +1,32 @@
 use super::permission::ValueExpression;
 use super::relationship::RelationshipTarget;
 use super::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
-    data_connectors, graphql_config, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, models,
+    type_permissions,
 };
 use super::typecheck;
-use super::types::{collect_type_mapping_for_source, NdcColumnForComparison, TypeMappingToCollect};
 
-use crate::metadata::resolved::argument::{
-    get_argument_mappings, resolve_value_expression_for_argument,
-};
-use crate::metadata::resolved::error::{
-    BooleanExpressionError, Error, GraphqlConfigError, RelationshipError, TypePredicateError,
-};
-use crate::metadata::resolved::ndc_validation;
+use crate::metadata::resolved::argument::resolve_value_expression_for_argument;
+use crate::metadata::resolved::error::{Error, RelationshipError};
+
 use crate::metadata::resolved::subgraph::{
-    deserialize_qualified_btreemap, mk_qualified_type_name, mk_qualified_type_reference,
-    serialize_qualified_btreemap, ArgumentInfo, Qualified, QualifiedBaseType,
-    QualifiedTypeReference,
+    mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
+use crate::metadata::resolved::types::mk_name;
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{self as ast, Name};
+
 use ndc_models;
 use open_dds::permissions::{FieldIsNullPredicate, NullableModelPredicate, RelationshipPredicate};
-use open_dds::types::Deprecated;
 use open_dds::{
-    arguments::ArgumentName,
     data_connector::DataConnectorName,
-    models::{
-        self, EnableAllOrSpecific, ModelGraphQlDefinition, ModelName, ModelV1, OrderableField,
-    },
+    models::ModelName,
     permissions::{self, ModelPermissionsV1, Role},
     types::{CustomTypeName, FieldName, OperatorName},
 };
-use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::iter;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct UniqueIdentifierField {
-    pub field_type: QualifiedTypeReference,
-    pub ndc_column: Option<NdcColumnForComparison>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct SelectUniqueGraphQlDefinition {
-    pub query_root_field: ast::Name,
-    pub unique_identifier: IndexMap<FieldName, UniqueIdentifierField>,
-    pub description: Option<String>,
-    pub deprecated: Option<Deprecated>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct SelectManyGraphQlDefinition {
-    pub query_root_field: ast::Name,
-    pub description: Option<String>,
-    pub deprecated: Option<Deprecated>,
-}
-
-// TODO: add support for aggregates
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct OrderByExpressionInfo {
-    pub ndc_column: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ModelOrderByExpression {
-    pub data_connector_name: Qualified<DataConnectorName>,
-    pub order_by_type_name: ast::TypeName,
-    pub order_by_fields: HashMap<FieldName, OrderByExpressionInfo>,
-    pub order_by_field_name: ast::Name,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ModelGraphqlApiArgumentsConfig {
-    pub field_name: Name,
-    pub type_name: ast::TypeName,
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct LimitFieldGraphqlConfig {
-    pub field_name: Name,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct OffsetFieldGraphqlConfig {
-    pub field_name: Name,
-}
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
-pub struct ModelGraphQlApi {
-    pub arguments_input_config: Option<ModelGraphqlApiArgumentsConfig>,
-    pub select_uniques: Vec<SelectUniqueGraphQlDefinition>,
-    pub select_many: Option<SelectManyGraphQlDefinition>,
-    pub order_by_expression: Option<ModelOrderByExpression>,
-    pub limit_field: Option<LimitFieldGraphqlConfig>,
-    pub offset_field: Option<OffsetFieldGraphqlConfig>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct ModelSource {
-    pub data_connector: data_connectors::DataConnectorLink,
-    pub collection: String,
-    #[serde(
-        serialize_with = "serialize_qualified_btreemap",
-        deserialize_with = "deserialize_qualified_btreemap"
-    )]
-    pub type_mappings:
-        BTreeMap<Qualified<CustomTypeName>, data_connector_type_mappings::TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum FilterPermission {
-    AllowAll,
-    Filter(ModelPredicate),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct SelectPermission {
-    pub filter: FilterPermission,
-    // pub allow_aggregations: bool,
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum ModelPredicate {
-    UnaryFieldComparison {
-        field: FieldName,
-        ndc_column: String,
-        operator: ndc_models::UnaryComparisonOperator,
-    },
-    BinaryFieldComparison {
-        field: FieldName,
-        ndc_column: String,
-        operator: String,
-        argument_type: QualifiedTypeReference,
-        value: ValueExpression,
-    },
-    Relationship {
-        relationship_info: PredicateRelationshipAnnotation,
-        predicate: Box<ModelPredicate>,
-    },
-    And(Vec<ModelPredicate>),
-    Or(Vec<ModelPredicate>),
-    Not(Box<ModelPredicate>),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Model {
-    pub name: Qualified<ModelName>,
-    pub data_type: Qualified<CustomTypeName>,
-    pub type_fields: IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-    pub global_id_fields: Vec<FieldName>,
-    pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
-    pub graphql_api: ModelGraphQlApi,
-    pub source: Option<ModelSource>,
-    pub select_permissions: Option<HashMap<Role, SelectPermission>>,
-    pub global_id_source: Option<NDCFieldSourceMapping>,
-    pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
-    pub filter_expression_type: Option<boolean_expressions::ObjectBooleanExpressionType>,
-    pub orderable_fields: Vec<OrderableField>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct NDCFieldSourceMapping {
-    pub ndc_mapping: HashMap<FieldName, NdcColumnForComparison>,
-}
-
-fn resolve_filter_expression_type(
-    model: &ModelV1,
-    model_data_type: &Qualified<CustomTypeName>,
-    subgraph: &str,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-) -> Result<Option<boolean_expressions::ObjectBooleanExpressionType>, Error> {
-    model
-        .filter_expression_type
-        .as_ref()
-        .map(|filter_expression_type| {
-            let boolean_expression_type_name =
-                Qualified::new(subgraph.to_string(), filter_expression_type.clone());
-            let boolean_expression_type = boolean_expression_types
-                .get(&boolean_expression_type_name)
-                .ok_or_else(|| {
-                    Error::from(
-                        BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
-                            name: boolean_expression_type_name.clone(),
-                            model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                        },
-                    )
-                })?;
-            if boolean_expression_type.object_type != *model_data_type {
-                return Err(Error::from(
-                    BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
-                        name: boolean_expression_type_name.clone(),
-                        boolean_expression_object_type: boolean_expression_type.object_type.clone(),
-                        model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                        model_object_type: model_data_type.clone(),
-                    },
-                ));
-            }
-            // This is also checked in resolve_model_graphql_api, but we want to disallow this even
-            // if the model is not used in the graphql layer.
-            if model.source.is_none() {
-                return Err(Error::CannotUseFilterExpressionsWithoutSource {
-                    model: Qualified::new(subgraph.to_string(), model.name.clone()),
-                });
-                // TODO: Compatibility of model source and the boolean expression type is checked in
-                // resolve_model_source. Figure out a way to make this logic not scattered.
-            }
-            Ok(boolean_expression_type.clone())
-        })
-        .transpose()
-}
-
-fn resolve_orderable_fields(
-    model: &ModelV1,
-    type_fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-) -> Result<Vec<OrderableField>, Error> {
-    for field in &model.orderable_fields {
-        // Check for unknown orderable field
-        if !type_fields.contains_key(&field.field_name) {
-            return Err(Error::UnknownFieldInOrderableFields {
-                model_name: model.name.clone(),
-                field_name: field.field_name.clone(),
-            });
-        }
-        match &field.order_by_directions {
-            EnableAllOrSpecific::EnableAll(true) => {}
-            _ => {
-                return Err(Error::UnsupportedFeature {
-                    message: "Field level order by configuration is not fully supported yet. Please use \"enableAll\":true.".to_string(),
-                })
-            }
-        }
-    }
-
-    // Model orderable fields should have all type fields
-    if model.orderable_fields.len() != type_fields.len() {
-        return Err(Error::UnsupportedFeature {
-            message: "Field level order by configuration is not fully supported yet. Please add all fields in orderable_fields.".to_string(),
-        });
-    }
-    Ok(model.orderable_fields.clone())
-}
-
-pub fn resolve_model(
-    subgraph: &str,
-    model: &ModelV1,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &mut HashMap<
-        Qualified<CustomTypeName>,
-        Option<Qualified<ModelName>>,
-    >,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-) -> Result<Model, Error> {
-    let qualified_object_type_name =
-        Qualified::new(subgraph.to_string(), model.object_type.to_owned());
-    let qualified_model_name = Qualified::new(subgraph.to_string(), model.name.clone());
-    let object_type_representation = get_model_object_type_representation(
-        object_types,
-        &qualified_object_type_name,
-        &qualified_model_name,
-    )?;
-    let mut global_id_source = None;
-    if model.global_id_source {
-        // Check if there are any global fields present in the related
-        // object type, if the model is marked as a global source.
-        if object_type_representation
-            .object_type
-            .global_id_fields
-            .is_empty()
-        {
-            return Err(Error::NoGlobalFieldsPresentInGlobalIdSource {
-                type_name: qualified_object_type_name,
-                model_name: model.name.clone(),
-            });
-        }
-        if !model.arguments.is_empty() {
-            return Err(Error::ModelWithArgumentsAsGlobalIdSource {
-                model_name: qualified_model_name,
-            });
-        }
-        // model has `global_id_source`; insert into the hashmap of `global_id_enabled_types`
-        match global_id_enabled_types.get_mut(&qualified_object_type_name) {
-            None => {
-                // this shouldn't happen; but for some reason the object type
-                // containing globalIdFields is not inserted. Insert it now
-                global_id_enabled_types.insert(
-                    qualified_object_type_name.clone(),
-                    vec![qualified_model_name.clone()],
-                );
-            }
-            Some(model_names) => {
-                model_names.push(qualified_model_name.clone());
-            }
-        }
-        global_id_source = Some(NDCFieldSourceMapping {
-            ndc_mapping: HashMap::new(),
-        });
-    };
-    let mut apollo_federation_key_source = None;
-    if model
-        .graphql
-        .as_ref()
-        .and_then(|g| g.apollo_federation.as_ref().map(|a| a.entity_source))
-        .unwrap_or_default()
-    {
-        // Check if there are any apollo federation keys present in the related
-        // object type, if the model is marked as an apollo federation entity source.
-        if object_type_representation
-            .object_type
-            .apollo_federation_config
-            .is_some()
-        {
-            if !model.arguments.is_empty() {
-                return Err(Error::ModelWithArgumentsAsApolloFederationEntitySource {
-                    model_name: qualified_model_name,
-                });
-            }
-            // model has `apollo_federation_entity_source`; insert into the hashmap of
-            // `apollo_federation_entity_enabled_types`
-            match apollo_federation_entity_enabled_types.get_mut(&qualified_object_type_name) {
-                None => {
-                    // the model's graphql configuration has `apollo_federation.entitySource` but the object type
-                    // of the model doesn't have any apollo federation keys
-                    return Err(Error::NoKeysFieldsPresentInEntitySource {
-                        type_name: qualified_object_type_name,
-                        model_name: model.name.clone(),
-                    });
-                }
-                Some(type_name) => {
-                    match type_name {
-                        None => {
-                            *type_name = Some(qualified_model_name.clone());
-                        }
-                        // Multiple models are marked as apollo federation entity source
-                        Some(_) => {
-                            return Err(Error::MultipleEntitySourcesForType {
-                                type_name: qualified_object_type_name,
-                            });
-                        }
-                    }
-                }
-            }
-            apollo_federation_key_source = Some(NDCFieldSourceMapping {
-                ndc_mapping: HashMap::new(),
-            });
-        }
-    }
-
-    let mut arguments = IndexMap::new();
-    for argument in &model.arguments {
-        if arguments
-            .insert(
-                argument.name.clone(),
-                ArgumentInfo {
-                    argument_type: mk_qualified_type_reference(&argument.argument_type, subgraph),
-                    description: argument.description.clone(),
-                },
-            )
-            .is_some()
-        {
-            return Err(Error::DuplicateModelArgumentDefinition {
-                model_name: qualified_model_name,
-                argument_name: argument.name.clone(),
-            });
-        }
-    }
-
-    let filter_expression_type = resolve_filter_expression_type(
-        model,
-        &qualified_object_type_name,
-        subgraph,
-        boolean_expression_types,
-    )?;
-
-    Ok(Model {
-        name: qualified_model_name,
-        data_type: qualified_object_type_name,
-        type_fields: object_type_representation.object_type.fields.clone(),
-        global_id_fields: object_type_representation
-            .object_type
-            .global_id_fields
-            .clone(),
-        arguments,
-        graphql_api: ModelGraphQlApi::default(),
-        source: None,
-        select_permissions: None,
-        global_id_source,
-        apollo_federation_key_source,
-        filter_expression_type,
-        orderable_fields: resolve_orderable_fields(
-            model,
-            &object_type_representation.object_type.fields,
-        )?,
-    })
-}
+use std::collections::{BTreeMap, HashMap};
 
 // helper function to resolve ndc types to dds type based on scalar type representations
 pub(crate) fn resolve_ndc_type(
@@ -457,271 +78,16 @@ pub(crate) fn resolve_ndc_type(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn resolve_binary_operator_for_type(
-    operator: &OperatorName,
-    type_name: &Qualified<CustomTypeName>,
-    data_connector: &Qualified<DataConnectorName>,
-    field_name: &FieldName,
-    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
-    ndc_scalar_type: &ndc_models::ScalarType,
-    subgraph: &str,
-) -> Result<(String, QualifiedTypeReference), Error> {
-    let field_definition = fields
-        .get(field_name)
-        .ok_or_else(|| Error::TypePredicateError {
-            type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
-                field_name: field_name.clone(),
-                type_name: type_name.clone(),
-            },
-        })?;
-    let comparison_operator_definition = &ndc_scalar_type
-        .comparison_operators
-        .get(&operator.0)
-        .ok_or_else(|| Error::TypePredicateError {
-            type_predicate_error: TypePredicateError::InvalidOperatorInTypePredicate {
-                type_name: type_name.clone(),
-                operator_name: operator.clone(),
-            },
-        })?;
-    match comparison_operator_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => {
-            Ok((operator.0.clone(), field_definition.field_type.clone()))
-        }
-        ndc_models::ComparisonOperatorDefinition::In => Ok((
-            operator.0.clone(),
-            QualifiedTypeReference {
-                underlying_type: QualifiedBaseType::List(Box::new(
-                    field_definition.field_type.clone(),
-                )),
-                nullable: true,
-            },
-        )),
-        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
-            operator.0.clone(),
-            resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
-        )),
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-/// this is mostly the same code as `resolve_binary_operator_for_type`, they could probably be
-/// recombined if we nest our error types better, so we don't need to specify the model name this deep
-/// into the code
-fn resolve_binary_operator_for_model(
-    operator: &OperatorName,
-    model_name: &Qualified<ModelName>,
-    data_connector: &Qualified<DataConnectorName>,
-    field_name: &FieldName,
-    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
-    ndc_scalar_type: &ndc_models::ScalarType,
-    subgraph: &str,
-) -> Result<(String, QualifiedTypeReference), Error> {
-    let field_definition =
-        fields
-            .get(field_name)
-            .ok_or_else(|| Error::UnknownFieldInSelectPermissionsDefinition {
-                field_name: field_name.clone(),
-                model_name: model_name.clone(),
-            })?;
-    let comparison_operator_definition = &ndc_scalar_type
-        .comparison_operators
-        .get(&operator.0)
-        .ok_or_else(|| Error::InvalidOperatorInModelSelectPermission {
-            model_name: model_name.clone(),
-            operator_name: operator.clone(),
-        })?;
-    match comparison_operator_definition {
-        ndc_models::ComparisonOperatorDefinition::Equal => {
-            Ok((operator.0.clone(), field_definition.field_type.clone()))
-        }
-        ndc_models::ComparisonOperatorDefinition::In => Ok((
-            operator.0.clone(),
-            QualifiedTypeReference {
-                underlying_type: QualifiedBaseType::List(Box::new(
-                    field_definition.field_type.clone(),
-                )),
-                nullable: true,
-            },
-        )),
-        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
-            operator.0.clone(),
-            resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
-        )),
-    }
-}
-
-/// a simplified version of resolve_model_predicate that only requires a type rather than an entire
-/// Model for context. It skips relationships for simplicity, this should be simple enough to
-/// re-add in future. Because this function takes the `data_connector_field_mappings` as an input,
-/// many of the errors thrown in `resolve_model_predicate` are pushed out.
-pub(crate) fn resolve_model_predicate_with_type(
-    model_predicate: &permissions::ModelPredicate,
-    type_name: &Qualified<CustomTypeName>,
-    data_connector_field_mappings: &BTreeMap<FieldName, data_connector_type_mappings::FieldMapping>,
-    data_connector_name: &Qualified<DataConnectorName>,
-    subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-) -> Result<ModelPredicate, Error> {
-    match model_predicate {
-        permissions::ModelPredicate::FieldComparison(permissions::FieldComparisonPredicate {
-            field,
-            operator,
-            value,
-        }) => {
-            // TODO: (anon) typecheck the value expression with the field
-            // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
-
-            // Determine field_mapping for the predicate field
-            let field_mapping = data_connector_field_mappings.get(field).ok_or_else(|| {
-                Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
-                        field_name: field.clone(),
-                        type_name: type_name.clone(),
-                    },
-                }
-            })?;
-            // Determine ndc type of the field
-            let field_ndc_type = &field_mapping.column_type;
-
-            // Determine whether the ndc type is a simple scalar
-            // Get available scalars defined in the data connector
-            let scalars = &data_connectors
-                .data_connectors_with_scalars
-                .get(data_connector_name)
-                .ok_or(Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
-                        type_name: type_name.clone(),
-                        data_connector: data_connector_name.clone(),
-                    },
-                })?
-                .scalars;
-
-            // Get scalar type info from the data connector
-            let (_, scalar_type_info) =
-                data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
-                    .ok_or_else(|| Error::TypePredicateError {
-                        type_predicate_error: TypePredicateError::UnsupportedFieldInTypePredicate {
-                            field_name: field.clone(),
-                            type_name: type_name.clone(),
-                        },
-                    })?;
-
-            let (resolved_operator, argument_type) = resolve_binary_operator_for_type(
-                operator,
-                type_name,
-                data_connector_name,
-                field,
-                fields,
-                scalars,
-                scalar_type_info.scalar_type,
-                subgraph,
-            )?;
-
-            let value_expression = match value {
-                open_dds::permissions::ValueExpression::Literal(json_value) => {
-                    Ok(ValueExpression::Literal(json_value.clone()))
-                }
-                open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
-                    Ok(ValueExpression::SessionVariable(session_variable.clone()))
-                }
-                open_dds::permissions::ValueExpression::BooleanExpression(
-                    _inner_model_predicate,
-                ) => Err(Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::NestedPredicateInTypePredicate {
-                        type_name: type_name.clone(),
-                    },
-                }),
-            }?;
-
-            Ok(ModelPredicate::BinaryFieldComparison {
-                field: field.clone(),
-                ndc_column: field_mapping.column.clone(),
-                operator: resolved_operator,
-                argument_type,
-                value: value_expression,
-            })
-        }
-        permissions::ModelPredicate::FieldIsNull(FieldIsNullPredicate { field }) => {
-            // Determine field_mapping for the predicate field
-            let field_mapping = data_connector_field_mappings.get(field).ok_or_else(|| {
-                Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::UnknownFieldInTypePredicate {
-                        field_name: field.clone(),
-                        type_name: type_name.clone(),
-                    },
-                }
-            })?;
-
-            Ok(ModelPredicate::UnaryFieldComparison {
-                field: field.clone(),
-                ndc_column: field_mapping.column.clone(),
-                operator: ndc_models::UnaryComparisonOperator::IsNull,
-            })
-        }
-        permissions::ModelPredicate::Relationship(RelationshipPredicate { .. }) => {
-            Err(Error::UnsupportedFeature {
-                message: "relationships not supported in type predicates".to_string(),
-            })
-        }
-        permissions::ModelPredicate::Not(predicate) => {
-            let resolved_predicate = resolve_model_predicate_with_type(
-                predicate,
-                type_name,
-                data_connector_field_mappings,
-                data_connector_name,
-                subgraph,
-                data_connectors,
-                fields,
-            )?;
-            Ok(ModelPredicate::Not(Box::new(resolved_predicate)))
-        }
-        permissions::ModelPredicate::And(predicates) => {
-            let mut resolved_predicates = Vec::new();
-            for predicate in predicates {
-                resolved_predicates.push(resolve_model_predicate_with_type(
-                    predicate,
-                    type_name,
-                    data_connector_field_mappings,
-                    data_connector_name,
-                    subgraph,
-                    data_connectors,
-                    fields,
-                )?);
-            }
-            Ok(ModelPredicate::And(resolved_predicates))
-        }
-        permissions::ModelPredicate::Or(predicates) => {
-            let mut resolved_predicates = Vec::new();
-            for predicate in predicates {
-                resolved_predicates.push(resolve_model_predicate_with_type(
-                    predicate,
-                    type_name,
-                    data_connector_field_mappings,
-                    data_connector_name,
-                    subgraph,
-                    data_connectors,
-                    fields,
-                )?);
-            }
-            Ok(ModelPredicate::Or(resolved_predicates))
-        }
-    }
-}
-
 fn resolve_model_predicate(
     model_predicate: &permissions::ModelPredicate,
-    model: &Model,
+    model: &models::Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    models: &IndexMap<Qualified<ModelName>, Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     // type_representation: &TypeRepresentation,
-) -> Result<ModelPredicate, Error> {
+) -> Result<models::ModelPredicate, Error> {
     match model_predicate {
         permissions::ModelPredicate::FieldComparison(permissions::FieldComparisonPredicate {
             field,
@@ -795,7 +161,7 @@ fn resolve_model_predicate(
                     }
                 }?;
 
-                Ok(ModelPredicate::BinaryFieldComparison {
+                Ok(models::ModelPredicate::BinaryFieldComparison {
                     field: field.clone(),
                     ndc_column: field_mapping.column.clone(),
                     operator: resolved_operator,
@@ -827,7 +193,7 @@ fn resolve_model_predicate(
                     }
                 })?;
 
-                Ok(ModelPredicate::UnaryFieldComparison {
+                Ok(models::ModelPredicate::UnaryFieldComparison {
                     field: field.clone(),
                     ndc_column: field_mapping.column.clone(),
                     operator: ndc_models::UnaryComparisonOperator::IsNull,
@@ -921,7 +287,7 @@ fn resolve_model_predicate(
                                     models,
                                 )?;
 
-                                Ok(ModelPredicate::Relationship {
+                                Ok(models::ModelPredicate::Relationship {
                                     relationship_info: annotation,
                                     predicate: Box::new(target_model_predicate),
                                 })
@@ -958,7 +324,7 @@ fn resolve_model_predicate(
                 object_types,
                 models,
             )?;
-            Ok(ModelPredicate::Not(Box::new(resolved_predicate)))
+            Ok(models::ModelPredicate::Not(Box::new(resolved_predicate)))
         }
         permissions::ModelPredicate::And(predicates) => {
             let mut resolved_predicates = Vec::new();
@@ -973,7 +339,7 @@ fn resolve_model_predicate(
                     models,
                 )?);
             }
-            Ok(ModelPredicate::And(resolved_predicates))
+            Ok(models::ModelPredicate::And(resolved_predicates))
         }
         permissions::ModelPredicate::Or(predicates) => {
             let mut resolved_predicates = Vec::new();
@@ -988,24 +354,24 @@ fn resolve_model_predicate(
                     models,
                 )?);
             }
-            Ok(ModelPredicate::Or(resolved_predicates))
+            Ok(models::ModelPredicate::Or(resolved_predicates))
         }
     }
 }
 
 pub fn resolve_model_select_permissions(
-    model: &Model,
+    model: &models::Model,
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    models: &IndexMap<Qualified<ModelName>, Model>,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-) -> Result<HashMap<Role, SelectPermission>, Error> {
+) -> Result<HashMap<Role, models::SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for model_permission in &model_permissions.permissions {
         if let Some(select) = &model_permission.select {
@@ -1019,8 +385,8 @@ pub fn resolve_model_select_permissions(
                     object_types,
                     models,
                 )
-                .map(FilterPermission::Filter)?,
-                NullableModelPredicate::Null(()) => FilterPermission::AllowAll,
+                .map(models::FilterPermission::Filter)?,
+                NullableModelPredicate::Null(()) => models::FilterPermission::AllowAll,
             };
 
             let mut argument_presets = BTreeMap::new();
@@ -1075,7 +441,7 @@ pub fn resolve_model_select_permissions(
                 }
             }
 
-            let resolved_permission = SelectPermission {
+            let resolved_permission = models::SelectPermission {
                 filter: resolved_predicate.clone(),
                 argument_presets,
             };
@@ -1085,453 +451,58 @@ pub fn resolve_model_select_permissions(
     Ok(validated_permissions)
 }
 
-pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
+#[allow(clippy::too_many_arguments)]
+/// this is mostly the same code as `resolve_binary_operator_for_type`, they could probably be
+/// recombined if we nest our error types better, so we don't need to specify the model name this deep
+/// into the code
+fn resolve_binary_operator_for_model(
+    operator: &OperatorName,
     model_name: &Qualified<ModelName>,
-    model_data_type: &Qualified<CustomTypeName>,
-    model_source: &ModelSource,
-    field: &FieldName,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    comparison_location: F,
-) -> Result<NdcColumnForComparison, Error> {
-    // Get field mappings of model data type
-    let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } = model_source
-        .type_mappings
-        .get(model_data_type)
-        .ok_or(Error::TypeMappingRequired {
-            model_name: model_name.clone(),
-            type_name: model_data_type.clone(),
-            data_connector: model_source.data_connector.name.clone(),
-        })?;
-
-    // Determine field_mapping for the given field
-    let field_mapping =
-        field_mappings
-            .get(field)
-            .ok_or_else(|| Error::NoFieldMappingForComparedField {
-                comparison_location: comparison_location(),
-                field_name: field.clone(),
-                model_name: model_name.clone(),
-            })?;
-
-    // Determine ndc type of the field
-    let field_ndc_type = &field_mapping.column_type;
-
-    // Get available scalars defined in the data connector
-    let scalars = &data_connectors
-        .data_connectors_with_scalars
-        .get(&model_source.data_connector.name)
-        .ok_or(Error::UnknownModelDataConnector {
-            model_name: model_name.clone(),
-            data_connector: model_source.data_connector.name.clone(),
-        })?
-        .scalars;
-    // Determine whether the ndc type is a simple scalar and get scalar type info
-    let (_field_ndc_type_scalar, scalar_type_info) =
-        data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
-            .ok_or_else(|| Error::UncomparableNonScalarFieldType {
-                comparison_location: comparison_location(),
-                field_name: field.clone(),
-                model_name: model_name.clone(),
-            })?;
-
-    let equal_operator = match scalar_type_info
-        .comparison_operators
-        .equal_operators
-        .as_slice()
-    {
-        [] => {
-            return Err(Error::NoEqualOperatorForComparedField {
-                comparison_location: comparison_location(),
-                field_name: field.clone(),
-                model_name: model_name.clone(),
-            });
-        }
-        [equal_operator] => equal_operator,
-        _ => {
-            return Err(Error::MultipleEqualOperatorsForComparedField {
-                comparison_location: comparison_location(),
-                field_name: field.clone(),
-                model_name: model_name.clone(),
-            });
-        }
-    };
-
-    Ok(NdcColumnForComparison {
-        column: field_mapping.column.clone(),
-        equal_operator: equal_operator.clone(),
-    })
-}
-
-pub fn resolve_model_graphql_api(
-    model_graphql_definition: &ModelGraphQlDefinition,
-    model: &mut Model,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    model_description: &Option<String>,
-    graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<(), Error> {
-    let model_name = &model.name;
-    for select_unique in &model_graphql_definition.select_uniques {
-        let mut unique_identifier_fields = IndexMap::new();
-        for field_name in &select_unique.unique_identifier {
-            let field_type = &model
-                .type_fields
-                .get(field_name)
-                .ok_or_else(|| Error::UnknownFieldInUniqueIdentifier {
-                    model_name: model_name.clone(),
-                    field_name: field_name.clone(),
-                })?
-                .field_type;
-            let ndc_column = model
-                .source
-                .as_ref()
-                .map(|model_source| {
-                    get_ndc_column_for_comparison(
-                        &model.name,
-                        &model.data_type,
-                        model_source,
-                        field_name,
-                        data_connectors,
-                        || "the unique identifier for select unique".to_string(),
-                    )
-                })
-                .transpose()?;
-            let unique_identifier_field = UniqueIdentifierField {
-                field_type: field_type.clone(),
-                ndc_column,
-            };
-            if unique_identifier_fields
-                .insert(field_name.clone(), unique_identifier_field)
-                .is_some()
-            {
-                return Err(Error::DuplicateFieldInUniqueIdentifier {
-                    model_name: model_name.clone(),
-                    field_name: field_name.clone(),
-                });
-            }
-        }
-        let select_unique_field_name = mk_name(&select_unique.query_root_field.0)?;
-        let select_unique_description = if select_unique.description.is_some() {
-            select_unique.description.clone()
-        } else {
-            model_description.as_ref().map(|description| {
-                format!(
-                    "Selects a single object from the model. Model description: {}",
-                    description
-                )
-            })
-        };
-        model
-            .graphql_api
-            .select_uniques
-            .push(SelectUniqueGraphQlDefinition {
-                query_root_field: select_unique_field_name,
-                unique_identifier: unique_identifier_fields,
-                description: select_unique_description,
-                deprecated: select_unique.deprecated.clone(),
-            });
-    }
-
-    model.graphql_api.order_by_expression = model
-        .source
-        .as_ref()
-        .map(
-            |model_source: &ModelSource| -> Result<Option<ModelOrderByExpression>, Error> {
-                let order_by_expression_type_name = match &model_graphql_definition
-                    .order_by_expression_type
-                {
-                    None => Ok(None),
-                    Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
-                }?;
-                // TODO: (paritosh) should we check for conflicting graphql types for default order_by type name as well?
-                store_new_graphql_type(
-                    existing_graphql_types,
-                    order_by_expression_type_name.as_ref(),
-                )?;
-                order_by_expression_type_name
-                    .map(|order_by_type_name| {
-                        let data_connector_type_mappings::TypeMapping::Object {
-                            field_mappings,
-                            ..
-                        } = model_source.type_mappings.get(&model.data_type).ok_or(
-                            Error::TypeMappingRequired {
-                                model_name: model_name.clone(),
-                                type_name: model.data_type.clone(),
-                                data_connector: model_source.data_connector.name.clone(),
-                            },
-                        )?;
-
-                        let mut order_by_fields = HashMap::new();
-                        for (field_name, field_mapping) in field_mappings.iter() {
-                            order_by_fields.insert(
-                                field_name.clone(),
-                                OrderByExpressionInfo {
-                                    ndc_column: field_mapping.column.clone(),
-                                },
-                            );
-                        }
-
-                        match &graphql_config.query.order_by_field_name {
-                            None => Err(Error::GraphqlConfigError {
-                                graphql_config_error:
-                                    GraphqlConfigError::MissingOrderByInputFieldInGraphqlConfig,
-                            }),
-                            Some(order_by_field_name) => Ok(ModelOrderByExpression {
-                                data_connector_name: model_source.data_connector.name.clone(),
-                                order_by_type_name,
-                                order_by_fields,
-                                order_by_field_name: order_by_field_name.clone(),
-                            }),
-                        }
-                    })
-                    .transpose()
-            },
-        )
-        .transpose()?
-        .flatten();
-
-    // record select_many root field
-    model.graphql_api.select_many = match &model_graphql_definition.select_many {
-        None => Ok(None),
-        Some(gql_definition) => mk_name(&gql_definition.query_root_field.0).map(|f: ast::Name| {
-            let select_many_description = if gql_definition.description.is_some() {
-                gql_definition.description.clone()
-            } else {
-                model_description.as_ref().map(|description| {
-                    format!(
-                        "Selects multiple objects from the model. Model description: {}",
-                        description
-                    )
-                })
-            };
-            Some(SelectManyGraphQlDefinition {
-                query_root_field: f,
-                description: select_many_description,
-                deprecated: gql_definition.deprecated.clone(),
-            })
-        }),
-    }?;
-
-    // record limit and offset field names
-    model.graphql_api.limit_field =
-        graphql_config
-            .query
-            .limit_field_name
-            .as_ref()
-            .map(|limit_field| LimitFieldGraphqlConfig {
-                field_name: limit_field.clone(),
-            });
-
-    model.graphql_api.offset_field =
-        graphql_config
-            .query
-            .offset_field_name
-            .as_ref()
-            .map(|offset_field| OffsetFieldGraphqlConfig {
-                field_name: offset_field.clone(),
-            });
-
-    if model.arguments.is_empty() {
-        if model_graphql_definition.arguments_input_type.is_some() {
-            return Err(Error::UnnecessaryModelArgumentsGraphQlInputConfiguration {
-                model_name: model_name.clone(),
-            });
-        }
-    } else {
-        let arguments_input_type_name = match &model_graphql_definition.arguments_input_type {
-            None => Ok(None),
-            Some(type_name) => mk_name(type_name.0.as_str()).map(ast::TypeName).map(Some),
-        }?;
-        store_new_graphql_type(existing_graphql_types, arguments_input_type_name.as_ref())?;
-
-        if let Some(type_name) = arguments_input_type_name {
-            let argument_input_field_name = graphql_config
-                .query
-                .arguments_field_name
-                .as_ref()
-                .ok_or_else(|| Error::GraphqlConfigError {
-                    graphql_config_error:
-                        GraphqlConfigError::MissingArgumentsInputFieldInGraphqlConfig,
-                })?;
-            model.graphql_api.arguments_input_config = Some(ModelGraphqlApiArgumentsConfig {
-                field_name: argument_input_field_name.clone(),
-                type_name,
-            });
-        }
-    }
-
-    Ok(())
-}
-
-pub fn resolve_model_source(
-    model_source: &models::ModelSource,
-    model: &mut Model,
+    data_connector: &Qualified<DataConnectorName>,
+    field_name: &FieldName,
+    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-) -> Result<(), Error> {
-    if model.source.is_some() {
-        return Err(Error::DuplicateModelSourceDefinition {
-            model_name: model.name.clone(),
-        });
-    }
-    let qualified_data_connector_name = Qualified::new(
-        subgraph.to_string(),
-        model_source.data_connector_name.clone(),
-    );
-    let data_connector_context = data_connectors
-        .data_connectors_with_scalars
-        .get(&qualified_data_connector_name)
-        .ok_or_else(|| Error::UnknownModelDataConnector {
-            model_name: model.name.clone(),
-            data_connector: qualified_data_connector_name.clone(),
+) -> Result<(String, QualifiedTypeReference), Error> {
+    let field_definition =
+        fields
+            .get(field_name)
+            .ok_or_else(|| Error::UnknownFieldInSelectPermissionsDefinition {
+                field_name: field_name.clone(),
+                model_name: model_name.clone(),
+            })?;
+    let comparison_operator_definition = &ndc_scalar_type
+        .comparison_operators
+        .get(&operator.0)
+        .ok_or_else(|| Error::InvalidOperatorInModelSelectPermission {
+            model_name: model_name.clone(),
+            operator_name: operator.clone(),
         })?;
-
-    let source_collection = data_connector_context
-        .inner
-        .schema
-        .collections
-        .iter()
-        .find(|collection_info| collection_info.name == *model_source.collection)
-        .ok_or_else(|| Error::UnknownModelCollection {
-            model_name: model.name.clone(),
-            data_connector: qualified_data_connector_name.clone(),
-            collection: model_source.collection.clone(),
-        })?;
-
-    // Get the mappings of arguments and any type mappings that need resolving from the arguments
-    let (argument_mappings, argument_type_mappings_to_collect) = get_argument_mappings(
-        &model.arguments,
-        &model_source.argument_mapping,
-        &source_collection.arguments,
-        object_types,
-        scalar_types,
-        boolean_expression_types,
-    )
-    .map_err(|err| Error::ModelCollectionArgumentMappingError {
-        data_connector_name: qualified_data_connector_name.clone(),
-        model_name: model.name.clone(),
-        collection_name: model_source.collection.clone(),
-        error: err,
-    })?;
-
-    // Collect type mappings.
-    let mut type_mappings = BTreeMap::new();
-    let source_collection_type_mapping_to_collect = TypeMappingToCollect {
-        type_name: &model.data_type,
-        ndc_object_type_name: source_collection.collection_type.as_str(),
-    };
-    for type_mapping_to_collect in iter::once(&source_collection_type_mapping_to_collect)
-        .chain(argument_type_mappings_to_collect.iter())
-    {
-        collect_type_mapping_for_source(
-            type_mapping_to_collect,
-            data_connector_type_mappings,
-            &qualified_data_connector_name,
-            object_types,
-            scalar_types,
-            &mut type_mappings,
-        )
-        .map_err(|error| Error::ModelTypeMappingCollectionError {
-            model_name: model.name.clone(),
-            error,
-        })?;
-    }
-
-    if let Some(filter_expression) = &model.filter_expression_type {
-        if filter_expression.data_connector_name != qualified_data_connector_name {
-            return Err(Error::DifferentDataConnectorInFilterExpression {
-                model: model.name.clone(),
-                model_data_connector: qualified_data_connector_name.clone(),
-                filter_expression_type: filter_expression.name.clone(),
-                filter_expression_data_connector: filter_expression.data_connector_name.clone(),
-            });
+    match comparison_operator_definition {
+        ndc_models::ComparisonOperatorDefinition::Equal => {
+            Ok((operator.0.clone(), field_definition.field_type.clone()))
         }
-
-        if filter_expression.data_connector_object_type != source_collection.collection_type {
-            return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
-                model: model.name.clone(),
-                model_data_connector_object_type: source_collection.collection_type.clone(),
-                filter_expression_type: filter_expression.name.clone(),
-                filter_expression_data_connector_object_type: filter_expression
-                    .data_connector_object_type
-                    .clone(),
-            });
-        }
+        ndc_models::ComparisonOperatorDefinition::In => Ok((
+            operator.0.clone(),
+            QualifiedTypeReference {
+                underlying_type: QualifiedBaseType::List(Box::new(
+                    field_definition.field_type.clone(),
+                )),
+                nullable: true,
+            },
+        )),
+        ndc_models::ComparisonOperatorDefinition::Custom { argument_type } => Ok((
+            operator.0.clone(),
+            resolve_ndc_type(data_connector, argument_type, scalars, subgraph)?,
+        )),
     }
-
-    let resolved_model_source = ModelSource {
-        data_connector: data_connectors::DataConnectorLink::new(
-            qualified_data_connector_name,
-            data_connector_context.inner.url.clone(),
-            data_connector_context.inner.headers,
-        )?,
-        collection: model_source.collection.clone(),
-        type_mappings,
-        argument_mappings,
-    };
-
-    let model_object_type =
-        get_model_object_type_representation(object_types, &model.data_type, &model.name)?;
-
-    if let Some(global_id_source) = &mut model.global_id_source {
-        for global_id_field in &model_object_type.object_type.global_id_fields {
-            global_id_source.ndc_mapping.insert(
-                global_id_field.clone(),
-                get_ndc_column_for_comparison(
-                    &model.name,
-                    &model.data_type,
-                    &resolved_model_source,
-                    global_id_field,
-                    data_connectors,
-                    || format!("the global ID fields of type {}", model.data_type),
-                )?,
-            );
-        }
-    }
-
-    if let Some(apollo_federation_key_source) = &mut model.apollo_federation_key_source {
-        if let Some(apollo_federation_config) =
-            &model_object_type.object_type.apollo_federation_config
-        {
-            for key in &apollo_federation_config.keys {
-                for field in &key.fields {
-                    apollo_federation_key_source.ndc_mapping.insert(
-                        field.clone(),
-                        get_ndc_column_for_comparison(
-                            &model.name,
-                            &model.data_type,
-                            &resolved_model_source,
-                            field,
-                            data_connectors,
-                            || {
-                                format!(
-                                    "the apollo federation key fields of type {}",
-                                    model.data_type
-                                )
-                            },
-                        )?,
-                    );
-                }
-            }
-        }
-    }
-
-    model.source = Some(resolved_model_source);
-    ndc_validation::validate_ndc(&model.name, model, data_connector_context.inner.schema)?;
-    Ok(())
 }
 
 /// Gets the `type_permissions::ObjectTypeWithPermissions` of the type identified with the
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
-pub(crate) fn get_model_object_type_representation<'s>(
+fn get_model_object_type_representation<'s>(
     object_types: &'s HashMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,

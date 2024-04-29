@@ -21,8 +21,8 @@ use crate::schema::{
 pub(crate) fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::model::Model,
-    select_unique: &resolved::model::SelectUniqueGraphQlDefinition,
+    model: &resolved::Model,
+    select_unique: &resolved::SelectUniqueGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
     (

@@ -64,7 +64,7 @@ pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<resolved::model::ModelSource>,
+    pub model_source: Option<resolved::ModelSource>,
     pub global_id_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -73,7 +73,7 @@ pub struct EntityFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<resolved::model::ModelSource>,
+    pub model_source: Option<resolved::ModelSource>,
     pub key_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -126,7 +126,7 @@ pub enum RootFieldAnnotation {
     },
     Model {
         data_type: Qualified<types::CustomTypeName>,
-        source: Option<resolved::model::ModelSource>,
+        source: Option<resolved::ModelSource>,
         // select_permissions: HashMap<Role, resolved::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
@@ -307,7 +307,7 @@ pub enum NamespaceAnnotation {
     Command(ArgumentPresets),
     /// any filter and arguments for selecting from a model
     Model {
-        filter: resolved::model::FilterPermission,
+        filter: resolved::FilterPermission,
         argument_presets: ArgumentPresets,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
@@ -315,13 +315,13 @@ pub enum NamespaceAnnotation {
     /// decoding, a typename will be obtained. We need to use that typename to look up the
     /// Hashmap to get the appropriate `resolved::model::FilterPermission`.
     NodeFieldTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::FilterPermission>,
     ),
     /// `EntityTypeMappings` is similar to the `NodeFieldTypeMappings`. While executing the `_entities` field, the
     /// `representations` argument is used, which contains typename. We need to use that typename to look up the hashmap
     /// to get the appropriate `resolved::model::FilterPermission`.
     EntityTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::model::FilterPermission>,
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::FilterPermission>,
     ),
 }
 

@@ -45,7 +45,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'s normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,
-    model_source: &'s resolved::model::ModelSource,
+    model_source: &'s resolved::ModelSource,
     session_variables: &SessionVariables,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectOne<'n, 's>, error::Error> {

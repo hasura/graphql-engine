@@ -24,7 +24,7 @@ pub(crate) fn resolve(
 ) -> Result<DataConnectorTypeMappingsOutput, Error> {
     let mut data_connector_type_mappings = DataConnectorTypeMappings::new();
     let mut object_types = HashMap::new();
-    let mut existing_graphql_types = HashSet::new();
+    let mut graphql_types = HashSet::new();
     let mut global_id_enabled_types = HashMap::new();
     let mut apollo_federation_entity_enabled_types = HashMap::new();
 
@@ -38,7 +38,7 @@ pub(crate) fn resolve(
 
         let resolved_object_type = resolve_object_type(
             object_type_definition,
-            &mut existing_graphql_types,
+            &mut graphql_types,
             &qualified_object_type_name,
             subgraph,
             &mut global_id_enabled_types,
@@ -85,7 +85,7 @@ pub(crate) fn resolve(
     Ok(DataConnectorTypeMappingsOutput {
         data_connector_type_mappings,
         object_types,
-        existing_graphql_types,
+        graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
     })

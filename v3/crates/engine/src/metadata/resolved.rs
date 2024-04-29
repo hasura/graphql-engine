@@ -18,4 +18,8 @@ pub use stages::boolean_expressions::{
     BooleanExpressionInfo, ComparisonExpressionInfo, ObjectBooleanExpressionType,
 };
 pub use stages::data_connector_type_mappings::{FieldMapping, TypeMapping};
+pub use stages::models::{
+    FilterPermission, Model, ModelOrderByExpression, ModelPredicate, ModelSource,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+};
 pub use stages::resolve;

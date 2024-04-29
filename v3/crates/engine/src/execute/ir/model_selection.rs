@@ -50,10 +50,10 @@ pub struct ModelSelection<'s> {
 pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
-    model_source: &'s resolved::model::ModelSource,
+    model_source: &'s resolved::ModelSource,
     arguments: BTreeMap<String, ndc_models::Argument>,
     mut filter_clauses: ResolvedFilterExpression<'s>,
-    permissions_predicate: &'s resolved::model::FilterPermission,
+    permissions_predicate: &'s resolved::FilterPermission,
     limit: Option<u32>,
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
@@ -61,8 +61,8 @@ pub(crate) fn model_selection_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     match permissions_predicate {
-        resolved::model::FilterPermission::AllowAll => {}
-        resolved::model::FilterPermission::Filter(predicate) => {
+        resolved::FilterPermission::AllowAll => {}
+        resolved::FilterPermission::Filter(predicate) => {
             let permissions_predicate_relationship_paths = Vec::new();
             let mut permissions_predicate_relationships = BTreeMap::new();
             let processed_model_perdicate = permissions::process_model_predicate(

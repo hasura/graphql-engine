@@ -169,7 +169,7 @@ fn generate_type_field_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<resolved::model::ModelSource>,
+    source: &'s Option<resolved::ModelSource>,
     data_type: &subgraph::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,

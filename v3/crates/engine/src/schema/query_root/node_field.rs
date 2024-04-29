@@ -53,7 +53,7 @@ pub(crate) fn relay_node_field(
 
     let mut roles_type_permissions: HashMap<
         Role,
-        HashMap<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
+        HashMap<Qualified<CustomTypeName>, resolved::FilterPermission>,
     > = HashMap::new();
     for model in gds.metadata.models.values() {
         if let Some(global_id_source) = &model.global_id_source {

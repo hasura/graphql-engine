@@ -36,7 +36,7 @@ pub(crate) fn apollo_federation_field(
 ) -> Result<ApolloFederationFieldOutput, crate::schema::Error> {
     let mut roles_type_permissions: HashMap<
         Role,
-        HashMap<Qualified<CustomTypeName>, resolved::model::FilterPermission>,
+        HashMap<Qualified<CustomTypeName>, resolved::FilterPermission>,
     > = HashMap::new();
     let mut typename_mappings = HashMap::new();
     for model in gds.metadata.models.values() {
