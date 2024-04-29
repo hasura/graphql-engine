@@ -1,8 +1,7 @@
 use super::permission::ValueExpression;
-use super::relationship::RelationshipTarget;
 use super::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, models,
-    type_permissions,
+    relationships,
 };
 use super::typecheck;
 
@@ -84,9 +83,8 @@ fn resolve_model_predicate(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    // type_representation: &TypeRepresentation,
 ) -> Result<models::ModelPredicate, Error> {
     match model_predicate {
         permissions::ModelPredicate::FieldComparison(permissions::FieldComparisonPredicate {
@@ -213,7 +211,6 @@ fn resolve_model_predicate(
                 )?;
                 let relationship_field_name = mk_name(&name.0)?;
                 let relationship = &object_type_representation
-                    .object_type
                     .relationships
                     .get(&relationship_field_name)
                     .ok_or_else(|| Error::UnknownRelationshipInSelectPermissionsPredicate {
@@ -223,11 +220,13 @@ fn resolve_model_predicate(
                     })?;
 
                 match &relationship.target {
-                    RelationshipTarget::Command { .. } => Err(Error::UnsupportedFeature {
-                        message: "Predicate cannot be built using command relationships"
-                            .to_string(),
-                    }),
-                    RelationshipTarget::Model {
+                    relationships::RelationshipTarget::Command { .. } => {
+                        Err(Error::UnsupportedFeature {
+                            message: "Predicate cannot be built using command relationships"
+                                .to_string(),
+                        })
+                    }
+                    relationships::RelationshipTarget::Model {
                         model_name,
                         relationship_type,
                         target_typename,
@@ -364,7 +363,7 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
@@ -505,11 +504,11 @@ fn resolve_binary_operator_for_model(
 fn get_model_object_type_representation<'s>(
     object_types: &'s HashMap<
         Qualified<CustomTypeName>,
-        type_permissions::ObjectTypeWithPermissions,
+        relationships::ObjectTypeWithRelationships,
     >,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::metadata::resolved::error::Error>
+) -> Result<&'s relationships::ObjectTypeWithRelationships, crate::metadata::resolved::error::Error>
 {
     match object_types.get(data_type) {
         Some(object_type_representation) => Ok(object_type_representation),

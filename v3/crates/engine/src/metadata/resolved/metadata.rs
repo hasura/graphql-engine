@@ -9,19 +9,18 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use crate::metadata::resolved::command;
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::model::resolve_model_select_permissions;
-use crate::metadata::resolved::relationship::resolve_relationship;
 use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
-    graphql_config, models, roles, scalar_types, type_permissions,
+    graphql_config, models, relationships, roles, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
     pub object_types:
-        HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+        HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, models::Model>,
     pub commands: IndexMap<Qualified<CommandName>, commands::Command>,
@@ -38,7 +37,7 @@ pub fn resolve_metadata(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     graphql_config: &graphql_config::GraphqlConfig,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-    object_types: HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
@@ -48,15 +47,6 @@ pub fn resolve_metadata(
     mut models: IndexMap<Qualified<ModelName>, models::Model>,
     mut commands: IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Result<Metadata, Error> {
-    // resolve relationships
-    let object_types = resolve_relationships(
-        metadata_accessor,
-        data_connectors,
-        object_types,
-        &models,
-        &commands,
-    )?;
-
     // resolve command permissions
     // TODO: make this return values rather than blindly mutating it's inputs
     resolve_command_permissions(
@@ -95,68 +85,13 @@ pub fn resolve_metadata(
     })
 }
 
-/// resolve relationships
-/// returns updated `types` value
-fn resolve_relationships(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    mut object_types: HashMap<
-        Qualified<CustomTypeName>,
-        type_permissions::ObjectTypeWithPermissions,
-    >,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-) -> Result<HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>, Error>
-{
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: relationship,
-    } in &metadata_accessor.relationships
-    {
-        let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.to_string(), relationship.source.to_owned());
-        let object_representation = object_types
-            .get_mut(&qualified_relationship_source_type_name)
-            .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
-                relationship_name: relationship.name.clone(),
-                type_name: qualified_relationship_source_type_name.clone(),
-            })?;
-
-        let resolved_relationship = resolve_relationship(
-            relationship,
-            subgraph,
-            models,
-            commands,
-            data_connectors,
-            object_representation,
-        )?;
-
-        if object_representation
-            .object_type
-            .relationships
-            .insert(
-                resolved_relationship.field_name.clone(),
-                resolved_relationship,
-            )
-            .is_some()
-        {
-            return Err(Error::DuplicateRelationshipInSourceType {
-                type_name: qualified_relationship_source_type_name,
-                relationship_name: relationship.name.clone(),
-            });
-        }
-    }
-
-    Ok(object_types)
-}
-
 /// resolve command permissions
 /// this currently works by mutating `commands`, let's change it to
 /// return new values instead where possible
 fn resolve_command_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &mut IndexMap<Qualified<CommandName>, commands::Command>,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
@@ -201,7 +136,7 @@ fn resolve_command_permissions(
 fn resolve_model_permissions(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &mut IndexMap<Qualified<ModelName>, models::Model>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,

@@ -1,89 +1,100 @@
-use super::error::{Error, RelationshipError};
-use super::stages::{
-    commands, data_connector_scalar_types, data_connectors, models, type_permissions,
+mod types;
+pub use types::{
+    ObjectTypeWithRelationships, Relationship, RelationshipCapabilities,
+    RelationshipCommandMapping, RelationshipExecutionCategory, RelationshipModelMapping,
+    RelationshipTarget, RelationshipTargetName,
 };
-use super::subgraph::Qualified;
-use super::subgraph::QualifiedTypeReference;
-use super::types::mk_name;
-use super::types::NdcColumnForComparison;
-use indexmap::IndexMap;
-use lang_graphql::ast::common as ast;
-use open_dds::arguments::ArgumentName;
-use open_dds::commands::CommandName;
 
-use open_dds::models::ModelName;
-use open_dds::relationships::{
-    self, FieldAccess, RelationshipName, RelationshipType, RelationshipV1,
+use std::collections::HashMap;
+
+use indexmap::IndexMap;
+
+use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
+
+use crate::metadata::resolved::error::{Error, RelationshipError};
+use crate::metadata::resolved::subgraph::Qualified;
+
+use crate::metadata::resolved::stages::{
+    commands, data_connector_scalar_types, data_connector_type_mappings, data_connectors, models,
+    type_permissions,
 };
-use open_dds::types::CustomTypeName;
-use open_dds::types::Deprecated;
-use serde::{Deserialize, Serialize};
+use crate::metadata::resolved::types::mk_name;
+
+use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
 
 use std::collections::HashSet;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum RelationshipTarget {
-    Model {
-        // TODO(Abhinav): Refactor resolved types to contain denormalized data (eg: actual resolved model)
-        model_name: Qualified<ModelName>,
-        relationship_type: RelationshipType,
-        target_typename: Qualified<CustomTypeName>,
-        mappings: Vec<RelationshipModelMapping>,
-    },
-    Command {
-        command_name: Qualified<CommandName>,
-        target_type: QualifiedTypeReference,
-        mappings: Vec<RelationshipCommandMapping>,
-    },
-}
+/// resolve relationships
+/// returns updated `types` value
+pub fn resolve(
+    metadata_accessor: &open_dds::accessor::MetadataAccessor,
+    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    object_types_with_permissions: &HashMap<
+        Qualified<CustomTypeName>,
+        type_permissions::ObjectTypeWithPermissions,
+    >,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
+    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
+) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
+    let mut object_types_with_relationships = HashMap::new();
+    for (
+        object_type_name,
+        type_permissions::ObjectTypeWithPermissions {
+            type_output_permissions,
+            type_input_permissions,
+            object_type,
+        },
+    ) in object_types_with_permissions
+    {
+        object_types_with_relationships.insert(
+            object_type_name.clone(),
+            ObjectTypeWithRelationships {
+                object_type: object_type.clone(),
+                type_output_permissions: type_output_permissions.clone(),
+                type_input_permissions: type_input_permissions.clone(),
+                relationships: IndexMap::new(),
+            },
+        );
+    }
+    for open_dds::accessor::QualifiedObject {
+        subgraph,
+        object: relationship,
+    } in &metadata_accessor.relationships
+    {
+        let qualified_relationship_source_type_name =
+            Qualified::new(subgraph.to_string(), relationship.source.to_owned());
+        let object_representation = object_types_with_relationships
+            .get_mut(&qualified_relationship_source_type_name)
+            .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
+                relationship_name: relationship.name.clone(),
+                type_name: qualified_relationship_source_type_name.clone(),
+            })?;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum RelationshipTargetName {
-    Model(Qualified<ModelName>),
-    Command(Qualified<CommandName>),
-}
+        let resolved_relationship = resolve_relationship(
+            relationship,
+            subgraph,
+            models,
+            commands,
+            data_connectors,
+            &object_representation.object_type,
+        )?;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct RelationshipModelMapping {
-    pub source_field: FieldAccess,
-    pub target_field: FieldAccess,
-    // Optional because we allow building schema without specifying a data source
-    pub target_ndc_column: Option<NdcColumnForComparison>,
-}
+        if object_representation
+            .relationships
+            .insert(
+                resolved_relationship.field_name.clone(),
+                resolved_relationship,
+            )
+            .is_some()
+        {
+            return Err(Error::DuplicateRelationshipInSourceType {
+                type_name: qualified_relationship_source_type_name,
+                relationship_name: relationship.name.clone(),
+            });
+        }
+    }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct RelationshipCommandMapping {
-    pub source_field: FieldAccess,
-    pub argument_name: ArgumentName,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Relationship {
-    pub name: RelationshipName,
-    // `ast::Name` representation of `RelationshipName`. This is used to avoid
-    // the recurring conversion between `RelationshipName` to `ast::Name` during
-    // relationship IR generation
-    pub field_name: ast::Name,
-    pub source: Qualified<CustomTypeName>,
-    pub target: RelationshipTarget,
-    pub target_capabilities: Option<RelationshipCapabilities>,
-    pub description: Option<String>,
-    pub deprecated: Option<Deprecated>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct RelationshipCapabilities {
-    // TODO: We don't handle relationships without foreach.
-    // Change this to a bool, when we support that
-    pub foreach: (),
-    pub relationships: bool,
-}
-
-pub enum RelationshipExecutionCategory {
-    // Push down relationship definition to the data connector
-    Local,
-    // Use foreach in the data connector to fetch related rows for multiple objects in a single request
-    RemoteForEach,
+    Ok(object_types_with_relationships)
 }
 
 #[allow(clippy::match_single_binding)]
@@ -110,7 +121,7 @@ pub fn relationship_execution_category(
 fn resolve_relationship_source_mapping<'a>(
     relationship_name: &'a RelationshipName,
     source_type_name: &'a Qualified<CustomTypeName>,
-    source_type: &type_permissions::ObjectTypeWithPermissions,
+    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
     relationship_mapping: &'a open_dds::relationships::RelationshipMapping,
 ) -> Result<&'a FieldAccess, Error> {
     match &relationship_mapping.source {
@@ -125,11 +136,7 @@ fn resolve_relationship_source_mapping<'a>(
                 relationship_name: relationship_name.clone(),
             }),
             [field_access] => {
-                if !source_type
-                    .object_type
-                    .fields
-                    .contains_key(&field_access.field_name)
-                {
+                if !source_type.fields.contains_key(&field_access.field_name) {
                     return Err(Error::RelationshipError {
                         relationship_error:
                             RelationshipError::UnknownSourceFieldInRelationshipMapping {
@@ -151,7 +158,7 @@ fn resolve_relationship_source_mapping<'a>(
 fn resolve_relationship_mappings_model(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &type_permissions::ObjectTypeWithPermissions,
+    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
     target_model: &models::Model,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
@@ -255,7 +262,7 @@ fn resolve_relationship_mappings_model(
 fn resolve_relationship_mappings_command(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &type_permissions::ObjectTypeWithPermissions,
+    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
     target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
@@ -382,7 +389,7 @@ pub fn resolve_relationship(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    source_type: &type_permissions::ObjectTypeWithPermissions,
+    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
 ) -> Result<Relationship, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source.clone());
     let (relationship_target, source_data_connector, target_name) = match &relationship.target {

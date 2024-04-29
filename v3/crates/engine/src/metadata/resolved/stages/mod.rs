@@ -7,6 +7,7 @@ pub mod data_connector_type_mappings;
 pub mod data_connectors;
 pub mod graphql_config;
 pub mod models;
+pub mod relationships;
 pub mod roles;
 pub mod scalar_types;
 pub mod type_permissions;
@@ -97,11 +98,19 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &apollo_federation_entity_enabled_types,
     )?;
 
+    let object_types_with_relationships = relationships::resolve(
+        &metadata_accessor,
+        &data_connectors,
+        &object_types_with_permissions,
+        &models,
+        &commands,
+    )?;
+
     resolve_metadata(
         &metadata_accessor,
         &graphql_config,
         &data_connector_type_mappings,
-        object_types_with_permissions,
+        object_types_with_relationships,
         &scalar_types,
         &boolean_expression_types,
         &data_connectors,

@@ -1,6 +1,6 @@
 use super::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
-    type_permissions,
+    relationships,
 };
 use crate::metadata::resolved::argument::resolve_value_expression_for_argument;
 use crate::metadata::resolved::error::Error;
@@ -17,7 +17,7 @@ use super::typecheck;
 pub fn resolve_command_permissions(
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,

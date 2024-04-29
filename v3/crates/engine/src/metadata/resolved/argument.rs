@@ -6,7 +6,7 @@ use crate::metadata::resolved::ndc_validation;
 use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, models,
-    scalar_types, type_permissions,
+    relationships, scalar_types, type_permissions,
 };
 use crate::metadata::resolved::subgraph::{ArgumentInfo, Qualified};
 use crate::metadata::resolved::subgraph::{QualifiedBaseType, QualifiedTypeReference};
@@ -165,7 +165,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     value_expression: &open_dds::permissions::ValueExpression,
     argument_type: &QualifiedTypeReference,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,

@@ -32,7 +32,7 @@ pub struct ModelRelationshipAnnotation {
     pub target_source: Option<ModelTargetSource>,
     pub target_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
-    pub mappings: Vec<resolved::relationship::RelationshipModelMapping>,
+    pub mappings: Vec<resolved::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -49,7 +49,7 @@ pub struct FilterRelationshipAnnotation {
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<resolved::relationship::RelationshipModelMapping>,
+    pub mappings: Vec<resolved::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -66,7 +66,7 @@ pub struct OrderByRelationshipAnnotation {
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<resolved::relationship::RelationshipModelMapping>,
+    pub mappings: Vec<resolved::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -83,19 +83,19 @@ pub struct PredicateRelationshipAnnotation {
     pub target_source: ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<resolved::relationship::RelationshipModelMapping>,
+    pub mappings: Vec<resolved::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
     pub(crate) model: models::ModelSource,
-    pub(crate) capabilities: resolved::relationship::RelationshipCapabilities,
+    pub(crate) capabilities: resolved::RelationshipCapabilities,
 }
 
 impl ModelTargetSource {
     pub fn new(
         model: &models::Model,
-        relationship: &resolved::relationship::Relationship,
+        relationship: &resolved::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         model
             .source
@@ -106,7 +106,7 @@ impl ModelTargetSource {
 
     pub fn from_model_source(
         model_source: &models::ModelSource,
-        relationship: &resolved::relationship::Relationship,
+        relationship: &resolved::Relationship,
     ) -> Result<Self, schema::Error> {
         Ok(Self {
             model: model_source.clone(),
@@ -130,20 +130,20 @@ pub struct CommandRelationshipAnnotation {
     pub target_source: Option<CommandTargetSource>,
     pub target_type: QualifiedTypeReference,
     pub target_base_type_kind: TypeKind,
-    pub mappings: Vec<resolved::relationship::RelationshipCommandMapping>,
+    pub mappings: Vec<resolved::RelationshipCommandMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CommandTargetSource {
     pub(crate) details: CommandSourceDetail,
     pub(crate) function_name: FunctionName,
-    pub(crate) capabilities: resolved::relationship::RelationshipCapabilities,
+    pub(crate) capabilities: resolved::RelationshipCapabilities,
 }
 
 impl CommandTargetSource {
     pub fn new(
         command: &resolved::Command,
-        relationship: &resolved::relationship::Relationship,
+        relationship: &resolved::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         command
             .source

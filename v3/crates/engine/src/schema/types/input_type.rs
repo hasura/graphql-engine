@@ -1,6 +1,7 @@
 use crate::{
     metadata::resolved::{
-        stages::{data_connector_type_mappings, type_permissions},
+        self,
+        stages::data_connector_type_mappings,
         subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
         types::{get_type_representation, mk_name, TypeRepresentation},
     },
@@ -80,7 +81,7 @@ fn get_custom_input_type(
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
     })? {
-        TypeRepresentation::Object(type_permissions::ObjectTypeWithPermissions {
+        TypeRepresentation::Object(resolved::ObjectTypeWithRelationships {
             object_type:
                 data_connector_type_mappings::ObjectTypeRepresentation {
                     graphql_input_type_name,
@@ -125,7 +126,7 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_representation: &type_permissions::ObjectTypeWithPermissions,
+    object_type_representation: &resolved::ObjectTypeWithRelationships,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     object_type_representation
         .object_type

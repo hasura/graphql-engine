@@ -8,9 +8,6 @@ use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::{FilterRelationshipAnnotation, ModelTargetSource};
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use crate::metadata::resolved;
-use crate::metadata::resolved::relationship::{
-    relationship_execution_category, RelationshipExecutionCategory, RelationshipTarget,
-};
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::mk_name;
 
@@ -143,9 +140,8 @@ pub fn build_boolean_expression_input_schema(
 
         // relationship fields
         // TODO(naveen): Add support for command relationships
-        for (rel_name, relationship) in object_type_representation.object_type.relationships.iter()
-        {
-            if let RelationshipTarget::Model {
+        for (rel_name, relationship) in object_type_representation.relationships.iter() {
+            if let resolved::RelationshipTarget::Model {
                 model_name,
                 relationship_type,
                 target_typename,
@@ -168,11 +164,13 @@ pub fn build_boolean_expression_input_schema(
                         ModelTargetSource::from_model_source(target_source, relationship)?;
 
                     // filter expression with relationships is currently only supported for local relationships
-                    if let RelationshipExecutionCategory::Local = relationship_execution_category(
-                        &boolean_expression_type.data_connector_link,
-                        &target_source.data_connector,
-                        &target_model_source.capabilities,
-                    ) {
+                    if let resolved::RelationshipExecutionCategory::Local =
+                        resolved::relationship_execution_category(
+                            &boolean_expression_type.data_connector_link,
+                            &target_source.data_connector,
+                            &target_model_source.capabilities,
+                        )
+                    {
                         if target_source.data_connector.name
                             == boolean_expression_type.data_connector_name
                         {

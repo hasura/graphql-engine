@@ -8,9 +8,6 @@ use std::collections::{BTreeMap, HashMap};
 use super::types::output_type::relationship::{ModelTargetSource, OrderByRelationshipAnnotation};
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
 use crate::metadata::resolved;
-use crate::metadata::resolved::relationship::{
-    relationship_execution_category, RelationshipExecutionCategory, RelationshipTarget,
-};
 use crate::metadata::resolved::subgraph::Qualified;
 use crate::metadata::resolved::types::mk_name;
 use crate::schema::permissions;
@@ -159,9 +156,8 @@ pub fn build_model_order_by_input_schema(
 
         // relationship fields
         // TODO(naveen): Add support for command relationships.
-        for (rel_name, relationship) in object_type_representation.object_type.relationships.iter()
-        {
-            if let RelationshipTarget::Model {
+        for (rel_name, relationship) in object_type_representation.relationships.iter() {
+            if let resolved::RelationshipTarget::Model {
                 model_name,
                 relationship_type,
                 target_typename,
@@ -185,11 +181,13 @@ pub fn build_model_order_by_input_schema(
                     let target_model_source =
                         ModelTargetSource::from_model_source(target_source, relationship)?;
                     // order_by expression with relationships is currently only supported for local relationships
-                    if let RelationshipExecutionCategory::Local = relationship_execution_category(
-                        &model_source.data_connector,
-                        &target_source.data_connector,
-                        &target_model_source.capabilities,
-                    ) {
+                    if let resolved::RelationshipExecutionCategory::Local =
+                        resolved::relationship_execution_category(
+                            &model_source.data_connector,
+                            &target_source.data_connector,
+                            &target_model_source.capabilities,
+                        )
+                    {
                         // TODO(naveen): Support Array relationships in order_by when the support for aggregates is implemented
                         if let RelationshipType::Object = relationship_type {
                             // If the relationship target model does not have orderByExpressionType do not include

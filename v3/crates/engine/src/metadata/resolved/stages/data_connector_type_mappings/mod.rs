@@ -228,7 +228,6 @@ pub fn resolve_object_type(
 
     Ok(ObjectTypeRepresentation {
         fields: resolved_fields,
-        relationships: IndexMap::new(),
         global_id_fields: resolved_global_id_fields,
         graphql_output_type_name: graphql_type_name,
         graphql_input_type_name,

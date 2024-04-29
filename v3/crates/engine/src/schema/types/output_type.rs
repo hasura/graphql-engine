@@ -14,7 +14,7 @@ use self::relationship::{
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
-use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
+use crate::metadata::resolved::stages::data_connector_type_mappings;
 use crate::metadata::resolved::subgraph::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
@@ -190,8 +190,8 @@ fn object_type_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &type_permissions::ObjectTypeWithPermissions,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    object_type_representation: &resolved::ObjectTypeWithRelationships,
+    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
         .object_type
@@ -225,13 +225,11 @@ fn object_type_fields(
             Ok((graphql_field_name, namespaced_field))
         })
         .collect::<Result<BTreeMap<_, _>, _>>()?;
-    for (relationship_field_name, relationship) in
-        &object_type_representation.object_type.relationships
-    {
+    for (relationship_field_name, relationship) in &object_type_representation.relationships {
         let deprecation_status = mk_deprecation_status(&relationship.deprecated);
 
         let relationship_field = match &relationship.target {
-            resolved::relationship::RelationshipTarget::Command {
+            resolved::RelationshipTarget::Command {
                 command_name,
                 target_type,
                 mappings,
@@ -292,7 +290,7 @@ fn object_type_fields(
                     )?,
                 )
             }
-            resolved::relationship::RelationshipTarget::Model {
+            resolved::RelationshipTarget::Model {
                 model_name,
                 relationship_type,
                 target_typename,
@@ -516,7 +514,7 @@ pub fn output_type_schema(
 pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
-) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::schema::Error> {
+) -> Result<&'s resolved::ObjectTypeWithRelationships, crate::schema::Error> {
     gds.metadata.object_types.get(gds_type).ok_or_else(|| {
         crate::schema::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),

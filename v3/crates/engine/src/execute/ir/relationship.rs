@@ -23,10 +23,7 @@ use super::{
 };
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved::{
-    relationship::{relationship_execution_category, RelationshipExecutionCategory},
-    subgraph::serialize_qualified_btreemap,
-};
+use crate::metadata::resolved::subgraph::serialize_qualified_btreemap;
 use crate::schema::types::output_type::relationship::{
     ModelRelationshipAnnotation, ModelTargetSource,
 };
@@ -54,7 +51,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s ModelTargetSource,
     pub target_type: &'s Qualified<CustomTypeName>,
-    pub mappings: &'s Vec<resolved::relationship::RelationshipModelMapping>,
+    pub mappings: &'s Vec<resolved::RelationshipModelMapping>,
 }
 
 #[derive(Debug, Serialize)]
@@ -100,19 +97,19 @@ pub(crate) fn process_model_relationship_definition(
     } = relationship_info;
 
     let mut column_mapping = BTreeMap::new();
-    for resolved::relationship::RelationshipModelMapping {
+    for resolved::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: _,
         target_ndc_column,
     } in mappings.iter()
     {
         if !matches!(
-            relationship_execution_category(
+            resolved::relationship_execution_category(
                 source_data_connector,
                 &target_source.model.data_connector,
                 &target_source.capabilities
             ),
-            RelationshipExecutionCategory::Local
+            resolved::RelationshipExecutionCategory::Local
         ) {
             Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
         } else {
@@ -165,18 +162,18 @@ pub(crate) fn process_command_relationship_definition(
     } = relationship_info;
 
     let mut arguments = BTreeMap::new();
-    for resolved::relationship::RelationshipCommandMapping {
+    for resolved::RelationshipCommandMapping {
         source_field: source_field_path,
         argument_name: target_argument,
     } in annotation.mappings.iter()
     {
         if !matches!(
-            relationship_execution_category(
+            resolved::relationship_execution_category(
                 source_data_connector,
                 &target_source.details.data_connector,
                 &target_source.capabilities
             ),
-            RelationshipExecutionCategory::Local
+            resolved::RelationshipExecutionCategory::Local
         ) {
             Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
         } else {
@@ -293,12 +290,12 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                 }
                 None => error::Error::from(normalized_ast::Error::NoTypenameFound),
             })?;
-    match relationship_execution_category(
+    match resolved::relationship_execution_category(
         source_data_connector,
         &target_source.model.data_connector,
         &target_source.capabilities,
     ) {
-        RelationshipExecutionCategory::Local => build_local_model_relationship(
+        resolved::RelationshipExecutionCategory::Local => build_local_model_relationship(
             field,
             field_call,
             annotation,
@@ -312,7 +309,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
             session_variables,
             usage_counts,
         ),
-        RelationshipExecutionCategory::RemoteForEach => build_remote_relationship(
+        resolved::RelationshipExecutionCategory::RemoteForEach => build_remote_relationship(
             field,
             field_call,
             annotation,
@@ -353,12 +350,12 @@ pub(crate) fn generate_command_relationship_ir<'s>(
                 None => error::Error::from(normalized_ast::Error::NoTypenameFound),
             })?;
 
-    match relationship_execution_category(
+    match resolved::relationship_execution_category(
         source_data_connector,
         &target_source.details.data_connector,
         &target_source.capabilities,
     ) {
-        RelationshipExecutionCategory::Local => build_local_command_relationship(
+        resolved::RelationshipExecutionCategory::Local => build_local_command_relationship(
             field,
             field_call,
             annotation,
@@ -367,14 +364,16 @@ pub(crate) fn generate_command_relationship_ir<'s>(
             target_source,
             session_variables,
         ),
-        RelationshipExecutionCategory::RemoteForEach => build_remote_command_relationship(
-            field,
-            field_call,
-            annotation,
-            type_mappings,
-            target_source,
-            session_variables,
-        ),
+        resolved::RelationshipExecutionCategory::RemoteForEach => {
+            build_remote_command_relationship(
+                field,
+                field_call,
+                annotation,
+                type_mappings,
+                target_source,
+                session_variables,
+            )
+        }
     }
 }
 
@@ -481,7 +480,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, TargetField)> = vec![];
-    for resolved::relationship::RelationshipModelMapping {
+    for resolved::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: target_field_path,
         target_ndc_column,
@@ -561,7 +560,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     session_variables: &SessionVariables,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, ArgumentName)> = vec![];
-    for resolved::relationship::RelationshipCommandMapping {
+    for resolved::RelationshipCommandMapping {
         source_field: source_field_path,
         argument_name: target_argument_name,
     } in annotation.mappings.iter()
