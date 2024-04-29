@@ -14,7 +14,7 @@ use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
-    graphql_config, models, scalar_types, type_permissions,
+    graphql_config, models, roles, scalar_types, type_permissions,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -37,11 +37,6 @@ pub struct Metadata {
 pub fn resolve_metadata(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     graphql_config: &graphql_config::GraphqlConfig,
-    global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: HashMap<
-        Qualified<CustomTypeName>,
-        Option<Qualified<open_dds::models::ModelName>>,
-    >,
     data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -53,23 +48,6 @@ pub fn resolve_metadata(
     mut models: IndexMap<Qualified<ModelName>, models::Model>,
     mut commands: IndexMap<Qualified<CommandName>, commands::Command>,
 ) -> Result<Metadata, Error> {
-    // To check if global_id_fields are defined in object type but no model has global_id_source set to true:
-    //   - Throw an error if no model with globalIdSource:true is found for the object type.
-    for (object_type, model_name_list) in global_id_enabled_types {
-        if model_name_list.is_empty() {
-            return Err(Error::GlobalIdSourceNotDefined { object_type });
-        }
-    }
-
-    // To check if apollo federation entity keys are defined in object type but no model has
-    // apollo_federation_entity_source set to true:
-    //   - Throw an error if no model with apolloFederation.entitySource:true is found for the object type.
-    for (object_type, model_name_list) in apollo_federation_entity_enabled_types {
-        if model_name_list.is_none() {
-            return Err(Error::ApolloFederationEntitySourceNotDefined { object_type });
-        }
-    }
-
     // resolve relationships
     let object_types = resolve_relationships(
         metadata_accessor,
@@ -104,7 +82,7 @@ pub fn resolve_metadata(
         data_connector_type_mappings,
     )?;
 
-    let roles = collect_all_roles(&object_types, &models, &commands);
+    let roles = roles::resolve(&object_types, &models, &commands);
 
     Ok(Metadata {
         scalar_types: scalar_types.clone(),
@@ -115,38 +93,6 @@ pub fn resolve_metadata(
         graphql_config: graphql_config.global.clone(),
         roles,
     })
-}
-
-/// Gather all roles from various permission objects.
-fn collect_all_roles(
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-) -> Vec<Role> {
-    let mut roles = Vec::new();
-    for object_type in object_types.values() {
-        for role in object_type.type_output_permissions.keys() {
-            roles.push(role.clone());
-        }
-        for role in object_type.type_input_permissions.keys() {
-            roles.push(role.clone());
-        }
-    }
-    for model in models.values() {
-        if let Some(select_permissions) = &model.select_permissions {
-            for role in select_permissions.keys() {
-                roles.push(role.clone());
-            }
-        }
-    }
-    for command in commands.values() {
-        if let Some(command_permissions) = &command.permissions {
-            for role in command_permissions.keys() {
-                roles.push(role.clone());
-            }
-        }
-    }
-    roles
 }
 
 /// resolve relationships
