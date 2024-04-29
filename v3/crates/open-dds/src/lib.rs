@@ -69,7 +69,7 @@ enum EnvironmentValueImpl {
 }
 
 #[derive(
-    Serialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd,
+    Serialize, Clone, Debug, PartialEq, strum_macros::VariantNames, opendds_derive::OpenDd,
 )]
 #[serde(tag = "kind")]
 #[opendd(as_kind)]
@@ -229,7 +229,7 @@ pub struct MetadataV2 {
 }
 
 #[derive(
-    Serialize, Clone, Debug, PartialEq, strum_macros::EnumVariantNames, opendds_derive::OpenDd,
+    Serialize, Clone, Debug, PartialEq, strum_macros::VariantNames, opendds_derive::OpenDd,
 )]
 #[serde(tag = "kind")]
 #[opendd(as_kind)]

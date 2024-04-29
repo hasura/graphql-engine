@@ -208,7 +208,7 @@ related attributes.
 
     The JSON object is not tagged with any variant. Each variant should hold a enum type with `#[opendd(as_kind)]` (see above)
     implementation. Using `kind` as tag and its value is matched with internal enum variants. The internal enum variants need to
-    have `strum_macros::EnumVariantNames` implementation.
+    have `strum_macros::VariantNames` implementation.
 
     Example:
     ```rust

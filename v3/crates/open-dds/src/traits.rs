@@ -374,7 +374,7 @@ mod tests {
 
     // Untagged enum deserialize tests
 
-    use strum_macros::EnumVariantNames;
+    use strum_macros::VariantNames;
 
     #[derive(Debug, PartialEq, OpenDd)]
     #[opendd(untagged_with_kind)]
@@ -383,14 +383,14 @@ mod tests {
         Two(KindEnumTwo),
     }
 
-    #[derive(Debug, PartialEq, EnumVariantNames, OpenDd)]
+    #[derive(Debug, PartialEq, VariantNames, OpenDd)]
     #[opendd(as_kind)]
     enum KindEnumOne {
         First(FirstStruct),
         Second(SecondStruct),
     }
 
-    #[derive(Debug, PartialEq, EnumVariantNames, OpenDd)]
+    #[derive(Debug, PartialEq, VariantNames, OpenDd)]
     #[opendd(as_kind)]
     enum KindEnumTwo {
         Third(ThirdStruct),
