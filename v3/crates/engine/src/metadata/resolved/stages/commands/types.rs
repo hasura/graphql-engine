@@ -9,12 +9,9 @@ use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::{CommandName, DataConnectorCommand, GraphQlRootFieldKind};
 
-use open_dds::permissions::Role;
 use open_dds::types::{CustomTypeName, Deprecated};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
-
-use crate::metadata::resolved::permission::ValueExpression;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandGraphQlApi {
@@ -43,12 +40,5 @@ pub struct Command {
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: Option<CommandGraphQlApi>,
     pub source: Option<CommandSource>,
-    pub permissions: Option<HashMap<Role, CommandPermission>>,
     pub description: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct CommandPermission {
-    pub allow_execution: bool,
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
 }

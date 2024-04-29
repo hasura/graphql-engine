@@ -250,7 +250,7 @@ fn object_type_fields(
                 // generate argument fields for the command arguments which are not mapped to
                 // any type fields, so that they can be exposed in the relationship field schema
                 let mut arguments = BTreeMap::new();
-                for (argument_name, argument_type) in &command.arguments {
+                for (argument_name, argument_type) in &command.command.arguments {
                     if !arguments_with_mapping.contains(argument_name) {
                         let (field_name, input_field) = generate_command_argument(
                             gds,

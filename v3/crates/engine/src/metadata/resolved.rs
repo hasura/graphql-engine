@@ -1,5 +1,4 @@
 mod argument;
-pub mod command;
 pub mod error;
 pub mod metadata;
 pub mod model;
@@ -16,6 +15,7 @@ pub mod types;
 pub use stages::boolean_expressions::{
     BooleanExpressionInfo, ComparisonExpressionInfo, ObjectBooleanExpressionType,
 };
+pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
 pub use stages::data_connector_type_mappings::{FieldMapping, TypeMapping};
 pub use stages::models::{

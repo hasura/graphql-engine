@@ -1,5 +1,6 @@
 mod apollo;
 pub mod boolean_expressions;
+pub mod command_permissions;
 pub mod commands;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod data_connector_scalar_types;
@@ -106,6 +107,15 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &commands,
     )?;
 
+    let commands_with_permissions = command_permissions::resolve(
+        &metadata_accessor,
+        &commands,
+        &object_types_with_relationships,
+        &boolean_expression_types,
+        &data_connectors,
+        &data_connector_type_mappings,
+    )?;
+
     resolve_metadata(
         &metadata_accessor,
         &graphql_config,
@@ -115,6 +125,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &boolean_expression_types,
         &data_connectors,
         models,
-        commands,
+        commands_with_permissions,
     )
 }

@@ -148,7 +148,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
     let mut permissions = HashMap::new();
@@ -165,6 +165,7 @@ pub(crate) fn get_command_namespace_annotations(
                             (
                                 ArgumentNameAndPath {
                                     ndc_argument_name: command
+                                        .command
                                         .source
                                         .as_ref()
                                         .and_then(|command_source| {
@@ -193,9 +194,9 @@ pub(crate) fn get_command_namespace_annotations(
     // them to command argument preset annotations as well. if there is no
     // source defined for the command, we don't generate these preset
     // annotations.
-    if let Some(command_source) = command.source.as_ref() {
+    if let Some(command_source) = command.command.source.as_ref() {
         let mut role_presets_map = HashMap::new();
-        for (arg_name, arg_info) in &command.arguments {
+        for (arg_name, arg_info) in &command.command.arguments {
             // get the NDC argument name of this command source
             let ndc_argument_name = command_source.argument_mappings.get(arg_name).cloned();
 
@@ -360,7 +361,7 @@ fn build_preset_map_from_input_object_type_permission(
 /// We need to check the permissions of the source fields
 /// in the relationship mappings.
 pub(crate) fn get_command_relationship_namespace_annotations(
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     source_object_type_representation: &resolved::ObjectTypeWithRelationships,
     mappings: &[resolved::RelationshipCommandMapping],
     object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,

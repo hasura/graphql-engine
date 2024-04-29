@@ -31,7 +31,7 @@ pub enum Response {
 pub(crate) fn generate_command_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     argument_name: &ArgumentName,
     argument_type: &crate::schema::commands::resolved::subgraph::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
@@ -44,6 +44,7 @@ pub(crate) fn generate_command_argument(
         Annotation::Input(types::InputAnnotation::CommandArgument {
             argument_type: argument_type.argument_type.clone(),
             ndc_func_proc_argument: command
+                .command
                 .source
                 .as_ref()
                 .and_then(|command_source| command_source.argument_mappings.get(argument_name))
@@ -83,7 +84,7 @@ pub(crate) fn generate_command_argument(
 pub(crate) fn command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     command_field_name: ast::Name,
     command_annotation: Annotation,
     deprecation_status: gql_schema::DeprecationStatus,
@@ -94,11 +95,11 @@ pub(crate) fn command_field(
     ),
     crate::schema::Error,
 > {
-    let output_typename = get_output_type(gds, builder, &command.output_type)?;
+    let output_typename = get_output_type(gds, builder, &command.command.output_type)?;
 
     let mut arguments = BTreeMap::new();
 
-    for (argument_name, argument_type) in &command.arguments {
+    for (argument_name, argument_type) in &command.command.arguments {
         let (field_name, input_field) =
             generate_command_argument(gds, builder, command, argument_name, argument_type)?;
         arguments.insert(field_name, input_field);
@@ -106,7 +107,7 @@ pub(crate) fn command_field(
     let field = builder.conditional_namespaced(
         gql_schema::Field::new(
             command_field_name.clone(),
-            command.description.clone(),
+            command.command.description.clone(),
             command_annotation,
             output_typename,
             arguments,
@@ -120,7 +121,7 @@ pub(crate) fn command_field(
 pub(crate) fn function_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -130,7 +131,7 @@ pub(crate) fn function_command_field(
     ),
     crate::schema::Error,
 > {
-    let (command_source_detail, function_name) = match &command.source {
+    let (command_source_detail, function_name) = match &command.command.source {
         Some(command_source) => {
             let command_source_detail = types::CommandSourceDetail {
                 data_connector: command_source.data_connector.clone(),
@@ -141,7 +142,7 @@ pub(crate) fn function_command_field(
                 DataConnectorCommand::Function(function_name) => function_name.clone(),
                 _ => {
                     return Err(crate::schema::Error::IncorrectCommandBacking {
-                        command_name: command.name.clone(),
+                        command_name: command.command.name.clone(),
                     })
                 }
             };
@@ -152,9 +153,9 @@ pub(crate) fn function_command_field(
 
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
         types::RootFieldAnnotation::FunctionCommand {
-            name: command.name.clone(),
-            result_type: command.output_type.clone(),
-            result_base_type_kind: get_type_kind(gds, &command.output_type)?,
+            name: command.command.name.clone(),
+            result_type: command.command.output_type.clone(),
+            result_base_type_kind: get_type_kind(gds, &command.command.output_type)?,
             source: command_source_detail,
             function_name,
         },
@@ -173,7 +174,7 @@ pub(crate) fn function_command_field(
 pub(crate) fn procedure_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::Command,
+    command: &resolved::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -183,7 +184,7 @@ pub(crate) fn procedure_command_field(
     ),
     crate::schema::Error,
 > {
-    let (command_source_detail, procedure_name) = match &command.source {
+    let (command_source_detail, procedure_name) = match &command.command.source {
         Some(command_source) => {
             let command_source_detail = types::CommandSourceDetail {
                 data_connector: command_source.data_connector.clone(),
@@ -194,7 +195,7 @@ pub(crate) fn procedure_command_field(
                 DataConnectorCommand::Procedure(procedure_name) => procedure_name.clone(),
                 _ => {
                     return Err(crate::schema::Error::IncorrectCommandBacking {
-                        command_name: command.name.clone(),
+                        command_name: command.command.name.clone(),
                     })
                 }
             };
@@ -205,9 +206,9 @@ pub(crate) fn procedure_command_field(
 
     let command_annotation = Annotation::Output(types::OutputAnnotation::RootField(
         types::RootFieldAnnotation::ProcedureCommand {
-            name: command.name.clone(),
-            result_type: command.output_type.clone(),
-            result_base_type_kind: get_type_kind(gds, &command.output_type)?,
+            name: command.command.name.clone(),
+            result_type: command.command.output_type.clone(),
+            result_base_type_kind: get_type_kind(gds, &command.command.output_type)?,
             source: command_source_detail,
             procedure_name,
         },

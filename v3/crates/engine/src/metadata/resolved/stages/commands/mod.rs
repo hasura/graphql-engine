@@ -15,7 +15,7 @@ use crate::metadata::resolved::types::{
 use indexmap::IndexMap;
 
 use open_dds::commands::{self, CommandName, CommandV1, DataConnectorCommand};
-pub use types::{Command, CommandGraphQlApi, CommandPermission, CommandSource};
+pub use types::{Command, CommandGraphQlApi, CommandSource};
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
@@ -179,7 +179,6 @@ pub fn resolve_command(
         arguments,
         graphql_api,
         source: None,
-        permissions: None,
         description: command_description,
     })
 }

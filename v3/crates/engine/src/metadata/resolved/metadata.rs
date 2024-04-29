@@ -6,14 +6,13 @@ use serde::{Deserialize, Serialize};
 
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
-use crate::metadata::resolved::command;
 use crate::metadata::resolved::error::Error;
 use crate::metadata::resolved::model::resolve_model_select_permissions;
 use crate::metadata::resolved::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{
-    boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
-    graphql_config, models, relationships, roles, scalar_types,
+    boolean_expressions, command_permissions, data_connector_scalar_types,
+    data_connector_type_mappings, graphql_config, models, relationships, roles, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -23,7 +22,7 @@ pub struct Metadata {
         HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, models::Model>,
-    pub commands: IndexMap<Qualified<CommandName>, commands::Command>,
+    pub commands: IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
     pub boolean_expression_types:
         HashMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
@@ -45,19 +44,8 @@ pub fn resolve_metadata(
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     mut models: IndexMap<Qualified<ModelName>, models::Model>,
-    mut commands: IndexMap<Qualified<CommandName>, commands::Command>,
+    commands: IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
 ) -> Result<Metadata, Error> {
-    // resolve command permissions
-    // TODO: make this return values rather than blindly mutating it's inputs
-    resolve_command_permissions(
-        metadata_accessor,
-        &mut commands,
-        &object_types,
-        boolean_expression_types,
-        data_connectors,
-        data_connector_type_mappings,
-    )?;
-
     // resolve model permissions
     // Note: Model permissions's predicate can include the relationship field,
     // hence Model permissions should be resolved after the relationships of a
@@ -83,51 +71,6 @@ pub fn resolve_metadata(
         graphql_config: graphql_config.global.clone(),
         roles,
     })
-}
-
-/// resolve command permissions
-/// this currently works by mutating `commands`, let's change it to
-/// return new values instead where possible
-fn resolve_command_permissions(
-    metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    commands: &mut IndexMap<Qualified<CommandName>, commands::Command>,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    boolean_expression_types: &HashMap<
-        Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
-    >,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
-) -> Result<(), Error> {
-    for open_dds::accessor::QualifiedObject {
-        subgraph,
-        object: command_permissions,
-    } in &metadata_accessor.command_permissions
-    {
-        let command_name = &command_permissions.command_name;
-        let qualified_command_name = Qualified::new(subgraph.to_string(), command_name.to_owned());
-        let command = commands.get_mut(&qualified_command_name).ok_or_else(|| {
-            Error::UnknownCommandInCommandPermissions {
-                command_name: qualified_command_name.clone(),
-            }
-        })?;
-        if command.permissions.is_none() {
-            command.permissions = Some(command::resolve_command_permissions(
-                command,
-                command_permissions,
-                object_types,
-                boolean_expression_types,
-                data_connectors,
-                data_connector_type_mappings,
-                subgraph,
-            )?);
-        } else {
-            return Err(Error::DuplicateCommandPermission {
-                command_name: qualified_command_name.clone(),
-            });
-        }
-    }
-    Ok(())
 }
 
 /// resolve model permissions

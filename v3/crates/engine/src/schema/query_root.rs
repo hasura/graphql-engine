@@ -49,7 +49,7 @@ pub fn query_root_schema(
     // Add node field for only the commands which have a query root field
     // defined, that is, they are based on functions.
     for command in gds.metadata.commands.values() {
-        if let Some(command_graphql_api) = &command.graphql_api {
+        if let Some(command_graphql_api) = &command.command.graphql_api {
             if matches!(
                 command_graphql_api.root_field_kind,
                 GraphQlRootFieldKind::Query

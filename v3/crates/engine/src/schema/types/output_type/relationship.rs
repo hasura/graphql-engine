@@ -142,10 +142,11 @@ pub struct CommandTargetSource {
 
 impl CommandTargetSource {
     pub fn new(
-        command: &resolved::Command,
+        command: &resolved::CommandWithPermissions,
         relationship: &resolved::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         command
+            .command
             .source
             .as_ref()
             .map(|command_source| {

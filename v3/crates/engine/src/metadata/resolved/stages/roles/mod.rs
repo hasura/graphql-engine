@@ -7,13 +7,13 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::metadata::resolved::subgraph::Qualified;
 
-use crate::metadata::resolved::stages::{commands, models, relationships};
+use crate::metadata::resolved::stages::{command_permissions, models, relationships};
 
 /// Gather all roles from various permission objects.
 pub fn resolve(
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    commands: &IndexMap<Qualified<CommandName>, commands::Command>,
+    commands: &IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
 ) -> Vec<Role> {
     let mut roles = Vec::new();
     for object_type in object_types.values() {
