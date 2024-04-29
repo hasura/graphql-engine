@@ -14,7 +14,7 @@ open-dds = { path = "../open-dds" }
 tracing-util = { path = "../tracing-util"}
 
 axum = "0.6.20"
-cookie = "0.17.0"
+cookie = "0.18.1"
 jsonptr = { version = "0.4.0" }
 jsonwebtoken = "8.3.0"
 lazy_static = "1.4.0"
