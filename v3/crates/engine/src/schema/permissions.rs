@@ -154,40 +154,35 @@ pub(crate) fn get_command_namespace_annotations(
     let mut permissions = HashMap::new();
 
     // process command permissions, and annotate any command argument presets
-    match &command.permissions {
-        Some(command_permissions) => {
-            for (role, permission) in command_permissions {
-                if permission.allow_execution {
-                    let argument_presets = permission
-                        .argument_presets
-                        .iter()
-                        .map(|(argument_name, preset)| {
-                            (
-                                ArgumentNameAndPath {
-                                    ndc_argument_name: command
-                                        .command
-                                        .source
-                                        .as_ref()
-                                        .and_then(|command_source| {
-                                            command_source.argument_mappings.get(argument_name)
-                                        })
-                                        .cloned(),
-                                    field_path: vec![],
-                                },
-                                preset.clone(),
-                            )
-                        })
-                        .collect();
-                    permissions.insert(
-                        role.clone(),
-                        Some(types::NamespaceAnnotation::Command(
-                            types::ArgumentPresets { argument_presets },
-                        )),
-                    );
-                }
-            }
+    for (role, permission) in &command.permissions {
+        if permission.allow_execution {
+            let argument_presets = permission
+                .argument_presets
+                .iter()
+                .map(|(argument_name, preset)| {
+                    (
+                        ArgumentNameAndPath {
+                            ndc_argument_name: command
+                                .command
+                                .source
+                                .as_ref()
+                                .and_then(|command_source| {
+                                    command_source.argument_mappings.get(argument_name)
+                                })
+                                .cloned(),
+                            field_path: vec![],
+                        },
+                        preset.clone(),
+                    )
+                })
+                .collect();
+            permissions.insert(
+                role.clone(),
+                Some(types::NamespaceAnnotation::Command(
+                    types::ArgumentPresets { argument_presets },
+                )),
+            );
         }
-        None => {}
     }
 
     // if any of command argument's input type has field presets defined, add

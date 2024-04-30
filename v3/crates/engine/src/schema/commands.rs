@@ -56,29 +56,20 @@ pub(crate) fn generate_command_argument(
     );
 
     // a role is "allowed" to use this argument if it DOESN'T have a preset argument defined
-    match &command.permissions {
-        // if this command has any permissions, we must assume it has them setup for every role
-        // that is interested
-        Some(permissions_by_namespace) => {
-            let mut namespaced_annotations = HashMap::new();
+    let mut namespaced_annotations = HashMap::new();
 
-            for (namespace, permission) in permissions_by_namespace {
-                // if there is a preset for this argument, remove it from the schema
-                // so the user cannot provide one
-                if !permission.argument_presets.contains_key(argument_name) {
-                    namespaced_annotations.insert(namespace.clone(), None);
-                }
-            }
-
-            Ok((
-                field_name,
-                builder.conditional_namespaced(input_field, namespaced_annotations),
-            ))
+    for (namespace, permission) in &command.permissions {
+        // if there is a preset for this argument, remove it from the schema
+        // so the user cannot provide one
+        if !permission.argument_presets.contains_key(argument_name) {
+            namespaced_annotations.insert(namespace.clone(), None);
         }
-        // if there are no permissions for this command, there are no presets so we assume all
-        // arguments are OK to use
-        None => Ok((field_name, builder.allow_all_namespaced(input_field, None))),
     }
+
+    Ok((
+        field_name,
+        builder.conditional_namespaced(input_field, namespaced_annotations),
+    ))
 }
 
 pub(crate) fn command_field(

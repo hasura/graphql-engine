@@ -26,7 +26,7 @@ use crate::metadata::resolved::typecheck;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandWithPermissions {
     pub command: commands::Command,
-    pub permissions: Option<HashMap<Role, CommandPermission>>,
+    pub permissions: HashMap<Role, CommandPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -55,7 +55,7 @@ pub fn resolve(
                     command_name.clone(),
                     CommandWithPermissions {
                         command: command.clone(),
-                        permissions: None,
+                        permissions: HashMap::new(),
                     },
                 )
             })
@@ -72,8 +72,8 @@ pub fn resolve(
             .ok_or_else(|| Error::UnknownCommandInCommandPermissions {
                 command_name: qualified_command_name.clone(),
             })?;
-        if command.permissions.is_none() {
-            command.permissions = Some(resolve_command_permissions(
+        if command.permissions.is_empty() {
+            command.permissions = resolve_command_permissions(
                 &command.command,
                 command_permissions,
                 object_types,
@@ -81,7 +81,7 @@ pub fn resolve(
                 data_connectors,
                 data_connector_type_mappings,
                 subgraph,
-            )?);
+            )?;
         } else {
             return Err(Error::DuplicateCommandPermission {
                 command_name: qualified_command_name.clone(),

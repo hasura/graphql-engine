@@ -32,10 +32,8 @@ pub fn resolve(
         }
     }
     for command in commands.values() {
-        if let Some(command_permissions) = &command.permissions {
-            for role in command_permissions.keys() {
-                roles.push(role.clone());
-            }
+        for role in command.permissions.keys() {
+            roles.push(role.clone());
         }
     }
     roles
