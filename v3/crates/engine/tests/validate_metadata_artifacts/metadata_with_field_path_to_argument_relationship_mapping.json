@@ -340,7 +340,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "actor",
+      "sourceType": "actor",
       "name": "Movies",
       "target": {
         "model": {

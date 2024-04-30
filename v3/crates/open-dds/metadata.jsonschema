@@ -2116,7 +2116,7 @@
       "required": [
         "mapping",
         "name",
-        "source",
+        "sourceType",
         "target"
       ],
       "properties": {
@@ -2128,7 +2128,7 @@
             }
           ]
         },
-        "source": {
+        "sourceType": {
           "description": "The source type of the relationship.",
           "allOf": [
             {

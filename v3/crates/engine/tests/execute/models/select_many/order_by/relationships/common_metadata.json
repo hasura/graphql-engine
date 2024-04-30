@@ -362,7 +362,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Tracks",
             "target": {
               "model": {
@@ -394,7 +394,7 @@
         },
         {
           "definition": {
-            "source": "Track",
+            "sourceType": "Track",
             "name": "Album",
             "target": {
               "model": {
@@ -426,7 +426,7 @@
         },
         {
           "definition": {
-            "source": "Track",
+            "sourceType": "Track",
             "name": "TrackAlbums",
             "target": {
               "model": {
@@ -604,7 +604,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Artist",
             "target": {
               "model": {

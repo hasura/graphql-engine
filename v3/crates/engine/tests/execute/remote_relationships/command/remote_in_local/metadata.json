@@ -876,7 +876,7 @@
     "version": "v1",
     "definition": {
       "name": "Actors",
-      "source": "movie",
+      "sourceType": "movie",
       "target": {
         "model": {
           "name": "Actors",
@@ -908,7 +908,7 @@
     "version": "v1",
     "definition": {
       "name": "Analytics",
-      "source": "movie",
+      "sourceType": "movie",
       "target": {
         "model": {
           "name": "MovieAnalytics",
@@ -940,7 +940,7 @@
     "version": "v1",
     "definition": {
       "name": "MovieFromCommand",
-      "source": "actor",
+      "sourceType": "actor",
       "target": {
         "command": {
           "name": "get_movie_by_id"
@@ -969,7 +969,7 @@
     "version": "v1",
     "definition": {
       "name": "ActorsFromCommand",
-      "source": "movie",
+      "sourceType": "movie",
       "target": {
         "command": {
           "name": "get_actors_by_movie"

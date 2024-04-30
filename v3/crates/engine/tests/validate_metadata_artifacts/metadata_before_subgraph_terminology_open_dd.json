@@ -1199,7 +1199,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "commandArticle",
+            "sourceType": "commandArticle",
             "name": "article",
             "target": {
               "model": {
@@ -1830,7 +1830,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "Articles",
             "target": {
               "model": {
@@ -1862,7 +1862,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "article",
+            "sourceType": "article",
             "name": "Author",
             "target": {
               "model": {
@@ -2164,7 +2164,7 @@
         },
         {
           "definition": {
-            "source": "Artist",
+            "sourceType": "Artist",
             "name": "Albums",
             "target": {
               "model": {
@@ -2196,7 +2196,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Tracks",
             "target": {
               "model": {
@@ -2228,7 +2228,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Artist",
             "target": {
               "model": {
@@ -2260,7 +2260,7 @@
         },
         {
           "definition": {
-            "source": "Track",
+            "sourceType": "Track",
             "name": "Album",
             "target": {
               "model": {

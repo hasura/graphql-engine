@@ -335,7 +335,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Tracks",
             "target": {
               "model": {
@@ -368,7 +368,7 @@
         },
         {
           "definition": {
-            "source": "Album",
+            "sourceType": "Album",
             "name": "Artist",
             "target": {
               "model": {

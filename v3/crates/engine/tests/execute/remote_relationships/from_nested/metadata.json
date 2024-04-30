@@ -517,7 +517,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "staff_member",
+      "sourceType": "staff_member",
       "name": "favourite_artist",
       "target": {
         "model": {

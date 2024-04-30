@@ -256,7 +256,7 @@
           "version": "v1",
           "definition": {
             "name": "Albums",
-            "source": "Artist",
+            "sourceType": "Artist",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -288,7 +288,7 @@
           "version": "v1",
           "definition": {
             "name": "Album2",
-            "source": "Album",
+            "sourceType": "Album",
             "target": {
               "model": {
                 "subgraph": "connector_2",

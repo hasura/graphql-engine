@@ -409,7 +409,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "Articles",
             "target": {
               "model": {

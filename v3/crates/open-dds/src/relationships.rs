@@ -246,7 +246,9 @@ pub struct RelationshipV1 {
     /// The name of the relationship.
     pub name: RelationshipName,
     /// The source type of the relationship.
-    pub source: CustomTypeName,
+    #[serde(alias = "source")]
+    #[opendd(alias = "source")]
+    pub source_type: CustomTypeName,
     /// The target of the relationship.
     pub target: RelationshipTarget,
     /// The mapping configuration of source to target for the relationship.

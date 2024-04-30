@@ -180,7 +180,7 @@
         },
         {
           "definition": {
-            "source": "commandActor",
+            "sourceType": "commandActor",
             "name": "getMovieFromActor",
             "target": {
               "command": {
@@ -209,7 +209,7 @@
         },
         {
           "definition": {
-            "source": "commandMovie",
+            "sourceType": "commandMovie",
             "name": "getActorsFromMovie",
             "target": {
               "command": {

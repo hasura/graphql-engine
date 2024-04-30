@@ -302,7 +302,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "commandActor",
+            "sourceType": "commandActor",
             "name": "Movies",
             "target": {
               "model": {

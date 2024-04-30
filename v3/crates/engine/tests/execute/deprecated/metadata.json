@@ -432,7 +432,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "Articles_relationship",
             "description": "Gets the corresponding articles of the author.",
             "deprecated": {

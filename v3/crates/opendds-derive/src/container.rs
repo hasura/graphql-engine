@@ -27,6 +27,7 @@ struct StructOpts {
 struct FieldOpts {
     default: Option<bool>,
     rename: Option<String>,
+    alias: Option<String>,
     #[darling(default)]
     json_schema: JsonSchemaFieldOpts,
 }
@@ -149,6 +150,7 @@ pub struct NamedField<'a> {
     pub field_name: &'a syn::Ident,
     pub field_type: &'a syn::Type,
     pub renamed_field: String,
+    pub field_alias: Option<String>,
     pub is_default: bool,
     pub is_optional: bool,
     pub default_exp: Option<syn::Expr>,
@@ -166,8 +168,8 @@ impl<'a> NamedField<'a> {
             .ok_or_else(|| syn::Error::new_spanned(field, "field does not have an identifier"))?;
         let renamed_field = field_opts
             .rename
-            .clone()
             .unwrap_or_else(|| field_name.to_string().to_case(Case::Camel));
+        let field_alias = field_opts.alias;
         let is_default = field_opts.default.unwrap_or(false);
         let is_optional = is_option_type(&field.ty);
         let default_exp = field_opts.json_schema.default_exp;
@@ -175,6 +177,7 @@ impl<'a> NamedField<'a> {
             field_name,
             field_type,
             renamed_field,
+            field_alias,
             is_default,
             is_optional,
             default_exp,

@@ -269,7 +269,7 @@
         },
         {
           "definition": {
-            "source": "commandActor",
+            "sourceType": "commandActor",
             "name": "MovieFromActor",
             "target": {
               "command": {

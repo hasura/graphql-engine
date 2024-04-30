@@ -257,7 +257,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "Articles",
             "target": {
               "model": {
@@ -289,7 +289,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "article",
+            "sourceType": "article",
             "name": "Author",
             "target": {
               "model": {
@@ -432,7 +432,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "newspaper_article",
+            "sourceType": "newspaper_article",
             "name": "Author",
             "target": {
               "model": {
@@ -464,7 +464,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "NewspaperArticles",
             "target": {
               "model": {

@@ -582,7 +582,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "actor",
+      "sourceType": "actor",
       "name": "Movie",
       "target": {
         "model": {
@@ -614,7 +614,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "movie",
+      "sourceType": "movie",
       "name": "Actors",
       "target": {
         "model": {
@@ -646,7 +646,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "movie",
+      "sourceType": "movie",
       "name": "Analytics",
       "target": {
         "model": {
@@ -678,7 +678,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "movie_analytics",
+      "sourceType": "movie_analytics",
       "name": "Movie",
       "target": {
         "model": {

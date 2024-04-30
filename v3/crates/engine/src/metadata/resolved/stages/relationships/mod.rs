@@ -62,7 +62,7 @@ pub fn resolve(
     } in &metadata_accessor.relationships
     {
         let qualified_relationship_source_type_name =
-            Qualified::new(subgraph.to_string(), relationship.source.to_owned());
+            Qualified::new(subgraph.to_string(), relationship.source_type.to_owned());
         let object_representation = object_types_with_relationships
             .get_mut(&qualified_relationship_source_type_name)
             .ok_or_else(|| Error::RelationshipDefinedOnUnknownType {
@@ -391,7 +391,7 @@ pub fn resolve_relationship(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
 ) -> Result<Relationship, Error> {
-    let source_type_name = Qualified::new(subgraph.to_string(), relationship.source.clone());
+    let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
     let (relationship_target, source_data_connector, target_name) = match &relationship.target {
         relationships::RelationshipTarget::Model(target_model) => {
             let qualified_target_model_name = Qualified::new(

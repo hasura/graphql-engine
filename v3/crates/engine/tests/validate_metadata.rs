@@ -352,6 +352,18 @@ fn test_disallow_conflicting_object_field_name_and_relationship_name() -> anyhow
     Ok(())
 }
 
+#[test]
+fn test_allow_metadata_with_deprecated_field() -> anyhow::Result<()> {
+    // {"kind": "Relationship", "source": "<source>"} is deprecated in favor of "sourceType"
+    let metadata =
+        read_metadata("validate_metadata_artifacts/metadata_with_deprecated_field.json")?;
+
+    let gds = GDS::new(metadata);
+
+    gds?; // assert that it is OK
+    Ok(())
+}
+
 fn read_metadata(path: &str) -> anyhow::Result<open_dds::Metadata> {
     let json = read_file(path)?;
     let value = open_dds::Metadata::from_json_str(&json)?;

@@ -5174,7 +5174,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "commandArticle",
+            "sourceType": "commandArticle",
             "name": "article",
             "description": "commandArticle - article relationship description",
             "target": {
@@ -5205,7 +5205,7 @@
         },
         {
           "definition": {
-            "source": "article",
+            "sourceType": "article",
             "name": "AuthorFromCommand",
             "description": "AuthorFromCommand description",
             "target": {
@@ -5237,7 +5237,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "author",
+            "sourceType": "author",
             "name": "Articles",
             "target": {
               "model": {
@@ -5269,7 +5269,7 @@
           "kind": "Relationship",
           "version": "v1",
           "definition": {
-            "source": "article",
+            "sourceType": "article",
             "name": "Author",
             "target": {
               "model": {
@@ -5302,7 +5302,7 @@
           "version": "v1",
           "definition": {
             "name": "Artist",
-            "source": "Album",
+            "sourceType": "Album",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5334,7 +5334,7 @@
           "version": "v1",
           "definition": {
             "name": "Albums",
-            "source": "Artist",
+            "sourceType": "Artist",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5366,7 +5366,7 @@
           "version": "v1",
           "definition": {
             "name": "Employee",
-            "source": "Customer",
+            "sourceType": "Customer",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5398,7 +5398,7 @@
           "version": "v1",
           "definition": {
             "name": "Customers",
-            "source": "Employee",
+            "sourceType": "Employee",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5430,7 +5430,7 @@
           "version": "v1",
           "definition": {
             "name": "Employee",
-            "source": "Employee",
+            "sourceType": "Employee",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5462,7 +5462,7 @@
           "version": "v1",
           "definition": {
             "name": "Employees",
-            "source": "Employee",
+            "sourceType": "Employee",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5494,7 +5494,7 @@
           "version": "v1",
           "definition": {
             "name": "Customer",
-            "source": "Invoice",
+            "sourceType": "Invoice",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5526,7 +5526,7 @@
           "version": "v1",
           "definition": {
             "name": "Invoices",
-            "source": "Customer",
+            "sourceType": "Customer",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5558,7 +5558,7 @@
           "version": "v1",
           "definition": {
             "name": "Invoice",
-            "source": "InvoiceLine",
+            "sourceType": "InvoiceLine",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5590,7 +5590,7 @@
           "version": "v1",
           "definition": {
             "name": "InvoiceLines",
-            "source": "Invoice",
+            "sourceType": "Invoice",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5622,7 +5622,7 @@
           "version": "v1",
           "definition": {
             "name": "Track",
-            "source": "InvoiceLine",
+            "sourceType": "InvoiceLine",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5654,7 +5654,7 @@
           "version": "v1",
           "definition": {
             "name": "InvoiceLines",
-            "source": "Track",
+            "sourceType": "Track",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5686,7 +5686,7 @@
           "version": "v1",
           "definition": {
             "name": "Playlist",
-            "source": "PlaylistTrack",
+            "sourceType": "PlaylistTrack",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5718,7 +5718,7 @@
           "version": "v1",
           "definition": {
             "name": "PlaylistTracks",
-            "source": "Playlist",
+            "sourceType": "Playlist",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5750,7 +5750,7 @@
           "version": "v1",
           "definition": {
             "name": "Track",
-            "source": "PlaylistTrack",
+            "sourceType": "PlaylistTrack",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5782,7 +5782,7 @@
           "version": "v1",
           "definition": {
             "name": "PlaylistTracks",
-            "source": "Track",
+            "sourceType": "Track",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5814,7 +5814,7 @@
           "version": "v1",
           "definition": {
             "name": "Album",
-            "source": "Track",
+            "sourceType": "Track",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5846,7 +5846,7 @@
           "version": "v1",
           "definition": {
             "name": "Tracks",
-            "source": "Album",
+            "sourceType": "Album",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5878,7 +5878,7 @@
           "version": "v1",
           "definition": {
             "name": "Genre",
-            "source": "Track",
+            "sourceType": "Track",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5910,7 +5910,7 @@
           "version": "v1",
           "definition": {
             "name": "Tracks",
-            "source": "Genre",
+            "sourceType": "Genre",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -5942,7 +5942,7 @@
           "version": "v1",
           "definition": {
             "name": "MediaType",
-            "source": "Track",
+            "sourceType": "Track",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -5974,7 +5974,7 @@
           "version": "v1",
           "definition": {
             "name": "Tracks",
-            "source": "MediaType",
+            "sourceType": "MediaType",
             "target": {
               "model": {
                 "relationshipType": "Array",
@@ -6006,7 +6006,7 @@
           "version": "v1",
           "definition": {
             "name": "topology_topology",
-            "source": "topology_layer",
+            "sourceType": "topology_layer",
             "target": {
               "model": {
                 "relationshipType": "Object",
@@ -6038,7 +6038,7 @@
           "version": "v1",
           "definition": {
             "name": "topology_layers",
-            "source": "topology_topology",
+            "sourceType": "topology_topology",
             "target": {
               "model": {
                 "relationshipType": "Array",

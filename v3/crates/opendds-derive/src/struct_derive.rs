@@ -46,24 +46,24 @@ fn impl_deserialize_named_fields<'a>(
     quote! {
         let mut __object_map = match json {
             serde_json::Value::Object(map) => map,
-                    _ => {
-                        return Err(open_dds::traits::OpenDdDeserializeError {
-                            error: serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Other("not an object"),
-                                &"object",
-                            ),
-                            path: open_dds::traits::JSONPath::new(),
-                        })
-                    }
+            _ => {
+                return Err(open_dds::traits::OpenDdDeserializeError {
+                    error: serde::de::Error::invalid_type(
+                        serde::de::Unexpected::Other("not an object"),
+                        &"object",
+                    ),
+                    path: open_dds::traits::JSONPath::new(),
+                })
+            },
         };
         let __value = #named_fields_value;
-        let __remaing_keys = __object_map.keys().cloned().collect::<Vec<_>>();
+        let __remaining_keys = __object_map.keys().cloned().collect::<Vec<_>>();
         // Check for unexpected keys
-        if !__remaing_keys.is_empty() {
+        if !__remaining_keys.is_empty() {
             return Err(open_dds::traits::OpenDdDeserializeError {
                 error: serde::de::Error::custom(format!(
                     "unexpected keys: {}; expecting: {}",
-                    __remaing_keys.join(", "),
+                    __remaining_keys.join(", "),
                     [#(#expected_fields),*].join(", "),
                 )),
                 path: open_dds::traits::JSONPath::new(),
@@ -83,10 +83,22 @@ fn generate_named_fields_value<'a>(
         let field_name_str = field.renamed_field.as_str();
 
         let field_value_deserialize = quote! {
-            open_dds::traits::OpenDd::deserialize(__value).map_err(|e| open_dds::traits::OpenDdDeserializeError{
-                path: e.path.prepend_key(#field_name_str.to_string()),
-                error: e.error,
-            })
+            |__value| open_dds::traits::OpenDd::deserialize(__value)
+                .map_err(|e| open_dds::traits::OpenDdDeserializeError {
+                    path: e.path.prepend_key(#field_name_str.to_string()),
+                    error: e.error,
+                })
+        };
+
+        let deserialize_field = quote! {
+            __object_map.remove(#field_name_str).map(#field_value_deserialize)
+        };
+
+        let deserialize_alias = match &field.field_alias {
+            None => quote! {},
+            Some(alias) => quote! {
+                .or_else(|| __object_map.remove(#alias).map(#field_value_deserialize))
+            },
         };
 
         let field_value_fallback = if field.is_default {
@@ -107,7 +119,7 @@ fn generate_named_fields_value<'a>(
         };
 
         field_deserializations.push(quote! {
-            #field_name: __object_map.remove(#field_name_str).map(|__value| #field_value_deserialize).transpose()?#field_value_fallback
+            #field_name: #deserialize_field #deserialize_alias .transpose()? #field_value_fallback
         });
     }
 

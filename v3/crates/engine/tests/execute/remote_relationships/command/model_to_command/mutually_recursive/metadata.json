@@ -405,7 +405,7 @@
     "kind": "Relationship",
     "version": "v1",
     "definition": {
-      "source": "commandMovie",
+      "sourceType": "commandMovie",
       "name": "AnalyticsFromMovie",
       "target": {
         "model": {
@@ -436,7 +436,7 @@
   {
     "kind": "Relationship",
     "definition": {
-      "source": "movie_analytics",
+      "sourceType": "movie_analytics",
       "name": "MovieFromCommand",
       "target": {
         "command": {
