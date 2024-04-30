@@ -2,7 +2,7 @@ query MyQuery {
   ArticleByID(article_id: 4) {
     title
     article_id
-    Author{
+    Author {
       author_id
       first_name
       last_name

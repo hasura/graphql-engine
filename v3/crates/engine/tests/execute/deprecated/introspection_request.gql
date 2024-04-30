@@ -1,9 +1,9 @@
 query TypeIntrospectionDescription {
-    __schema {
-      types {
-        ...FullType
-      }
+  __schema {
+    types {
+      ...FullType
     }
+  }
 }
 
 fragment FullType on __Type {

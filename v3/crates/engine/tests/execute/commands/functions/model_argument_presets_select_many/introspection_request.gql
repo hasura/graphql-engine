@@ -1,17 +1,17 @@
 query {
   __type(name: "ActorsByMovieArgs") {
+    name
+    kind
+    inputFields {
       name
-      kind
-      inputFields {
+      type {
+        kind
         name
-        type {
+        ofType {
           kind
           name
-          ofType {
-            kind
-            name
-          }
         }
       }
+    }
   }
 }

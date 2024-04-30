@@ -183,9 +183,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -198,9 +196,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -377,7 +373,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }
@@ -491,11 +487,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]
@@ -535,9 +527,7 @@
                 "type": "Int!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -581,9 +571,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ]
             },
@@ -618,11 +606,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               }
             ]

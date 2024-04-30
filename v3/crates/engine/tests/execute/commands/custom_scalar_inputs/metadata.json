@@ -60,11 +60,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]

@@ -8,7 +8,10 @@ query MyQuery {
       }
     }
   }
-  AlbumWithFilterAndPredicate: Album(limit: 2, where: {Tracks: {TrackId: {_eq: 3}}}) {
+  AlbumWithFilterAndPredicate: Album(
+    limit: 2
+    where: { Tracks: { TrackId: { _eq: 3 } } }
+  ) {
     AlbumId
     Tracks {
       TrackAlbums {

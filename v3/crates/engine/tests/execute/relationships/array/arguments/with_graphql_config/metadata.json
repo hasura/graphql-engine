@@ -86,9 +86,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ],
               "selectMany": {
@@ -126,21 +124,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]
@@ -186,9 +176,7 @@
                 "type": "Int!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -284,15 +272,13 @@
             ],
             "graphql": {
               "selectUniques": [
-                  {
-                      "queryRootField": "ArticleByID",
-                      "uniqueIdentifier": [
-                          "article_id"
-                      ]
-                  }
+                {
+                  "queryRootField": "ArticleByID",
+                  "uniqueIdentifier": ["article_id"]
+                }
               ],
               "selectMany": {
-                  "queryRootField": "ArticleMany"
+                "queryRootField": "ArticleMany"
               },
               "orderByExpressionType": "Article_Order_By"
             }
@@ -307,21 +293,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               }
             ]

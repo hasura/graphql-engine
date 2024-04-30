@@ -60,31 +60,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user_2",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               }
             ]
@@ -212,9 +200,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "MoviesByActorNameById",
-                  "uniqueIdentifier": [
-                    "movie_id"
-                  ]
+                  "uniqueIdentifier": ["movie_id"]
                 }
               ],
               "selectMany": {

@@ -161,7 +161,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }
@@ -249,9 +249,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ActorByMovieId",
-                  "uniqueIdentifier": [
-                    "actor_id"
-                  ]
+                  "uniqueIdentifier": ["actor_id"]
                 }
               ],
               "selectMany": {

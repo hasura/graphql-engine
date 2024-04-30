@@ -64,9 +64,9 @@
   <body>
     <div id="graphiql">Loading...</div>
     <script>
-      const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+      const root = ReactDOM.createRoot(document.getElementById("graphiql"));
       const fetcher = GraphiQL.createFetcher({
-        url: '/graphql',
+        url: "/graphql",
         // default header so that we don't have to add it manually in local dev
         // headers: { 'x-hasura-role': 'admin' },
       });

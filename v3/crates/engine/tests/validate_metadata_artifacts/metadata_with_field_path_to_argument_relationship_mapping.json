@@ -119,9 +119,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "ActorByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -134,9 +132,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "MovieByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -182,9 +178,7 @@
           "type": "String!"
         }
       ],
-      "globalIdFields": [
-        "actor_id"
-      ],
+      "globalIdFields": ["actor_id"],
       "graphql": {
         "typeName": "Actor"
       },
@@ -275,9 +269,7 @@
         "selectUniques": [
           {
             "queryRootField": "ActorByMovieId",
-            "uniqueIdentifier": [
-              "actor_id"
-            ]
+            "uniqueIdentifier": ["actor_id"]
           }
         ],
         "selectMany": {

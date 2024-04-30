@@ -99,21 +99,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]
@@ -137,9 +129,7 @@
                 {
                   "queryRootField": "AuthorByID",
                   "description": "Selecting an author by ID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ],
+                  "uniqueIdentifier": ["author_id"],
                   "deprecated": {
                     "reason": "Selecting an author by ID is deprecated"
                   }
@@ -204,11 +194,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]
@@ -381,21 +367,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "title",
-                    "author_id",
-                    "article_id"
-                  ]
+                  "allowedFields": ["title", "author_id", "article_id"]
                 }
               }
             ]

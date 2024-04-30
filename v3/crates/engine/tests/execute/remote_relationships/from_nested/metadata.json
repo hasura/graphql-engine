@@ -86,9 +86,7 @@
         "selectUniques": [
           {
             "queryRootField": "ArtistById",
-            "uniqueIdentifier": [
-              "artist_id"
-            ]
+            "uniqueIdentifier": ["artist_id"]
           }
         ],
         "selectMany": {
@@ -106,28 +104,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "artist_id",
-              "name"
-            ]
+            "allowedFields": ["artist_id", "name"]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": [
-              "artist_id",
-              "name"
-            ]
+            "allowedFields": ["artist_id", "name"]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": [
-              "artist_id",
-              "name"
-            ]
+            "allowedFields": ["artist_id", "name"]
           }
         }
       ]
@@ -255,37 +244,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "id",
-              "name",
-              "location",
-              "staff",
-              "departments"
-            ]
+            "allowedFields": ["id", "name", "location", "staff", "departments"]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": [
-              "id",
-              "name",
-              "location",
-              "staff",
-              "departments"
-            ]
+            "allowedFields": ["id", "name", "location", "staff", "departments"]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": [
-              "id",
-              "name",
-              "location",
-              "staff",
-              "departments"
-            ]
+            "allowedFields": ["id", "name", "location", "staff", "departments"]
           }
         }
       ]
@@ -347,31 +318,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "city",
-              "country",
-              "campuses"
-            ]
+            "allowedFields": ["city", "country", "campuses"]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": [
-              "city",
-              "country",
-              "campuses"
-            ]
+            "allowedFields": ["city", "country", "campuses"]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": [
-              "city",
-              "country",
-              "campuses"
-            ]
+            "allowedFields": ["city", "country", "campuses"]
           }
         }
       ]

@@ -60,40 +60,25 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               },
               {
                 "role": "user_without_perm_on_movie_id",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name"
-                  ]
+                  "allowedFields": ["actor_id", "name"]
                 }
               },
               {
                 "role": "user_without_perm_on_command",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]
@@ -141,33 +126,33 @@
           "kind": "ModelPermissions",
           "version": "v1",
           "definition": {
-              "modelName": "Actors",
-              "permissions": [
-                  {
-                      "role": "admin",
-                      "select": {
-                          "filter": null
-                      }
-                  },
-                  {
-                    "role": "user",
-                    "select": {
-                        "filter": null
-                    }
-                  },
-                  {
-                    "role": "user_without_perm_on_movie_id",
-                    "select": {
-                        "filter": null
-                    }
-                  },
-                  {
-                    "role": "user_without_perm_on_command",
-                    "select": {
-                        "filter": null
-                    }
-                  }
-              ]
+            "modelName": "Actors",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_without_perm_on_movie_id",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user_without_perm_on_command",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
           }
         },
         {
@@ -179,40 +164,25 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title"
-                  ]
+                  "allowedFields": ["movie_id", "title"]
                 }
               },
               {
                 "role": "user_without_perm_on_movie_id",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user_without_perm_on_command",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               }
             ]
@@ -272,29 +242,29 @@
         },
         {
           "definition": {
-              "source": "actor",
-              "name": "MovieFromCommand",
-              "target": {
-                  "command": {
-                      "name": "get_movie_by_id"
+            "source": "actor",
+            "name": "MovieFromCommand",
+            "target": {
+              "command": {
+                "name": "get_movie_by_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "movie_id"
                   }
-              },
-              "mapping": [
-                  {
-                      "source": {
-                          "fieldPath": [
-                              {
-                                  "fieldName": "movie_id"
-                              }
-                          ]
-                      },
-                      "target": {
-                          "argument": {
-                              "argumentName": "movie_id"
-                          }
-                      }
-                  }
-              ]
+                }
+              }
+            ]
           },
           "version": "v1",
           "kind": "Relationship"

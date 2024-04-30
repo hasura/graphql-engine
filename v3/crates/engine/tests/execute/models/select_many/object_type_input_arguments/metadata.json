@@ -81,11 +81,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               }
             ]
@@ -109,23 +105,24 @@
             "graphql": {
               "inputTypeName": "NameQuery"
             },
-              "dataConnectorTypeMapping": [{
-                  "dataConnectorName": "custom",
-                  "dataConnectorObjectType": "name_query",
-                  "fieldMapping": {
-                      "first_name": {
-                          "column": {
-                "name": "first_name"
-                          }
-              },
-                      "surname": {
-                          "column": {
-                "name": "last_name"
-                          }
-              }
-
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "custom",
+                "dataConnectorObjectType": "name_query",
+                "fieldMapping": {
+                  "first_name": {
+                    "column": {
+                      "name": "first_name"
+                    }
+                  },
+                  "surname": {
+                    "column": {
+                      "name": "last_name"
+                    }
                   }
-              }]
+                }
+              }
+            ]
           }
         },
         {
@@ -171,9 +168,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "MoviesByActorNameById",
-                  "uniqueIdentifier": [
-                    "movie_id"
-                  ]
+                  "uniqueIdentifier": ["movie_id"]
                 }
               ],
               "selectMany": {

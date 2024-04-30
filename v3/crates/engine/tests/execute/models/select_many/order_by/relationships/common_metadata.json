@@ -165,9 +165,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AlbumByID",
-                  "uniqueIdentifier": [
-                    "AlbumId"
-                  ]
+                  "uniqueIdentifier": ["AlbumId"]
                 }
               ],
               "selectMany": {
@@ -245,9 +243,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "TrackByID",
-                  "uniqueIdentifier": [
-                    "TrackId"
-                  ]
+                  "uniqueIdentifier": ["TrackId"]
                 }
               ],
               "selectMany": {
@@ -287,21 +283,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               }
             ]
@@ -316,21 +304,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               }
             ]
@@ -553,9 +533,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArtistByID",
-                  "uniqueIdentifier": [
-                    "ArtistId"
-                  ]
+                  "uniqueIdentifier": ["ArtistId"]
                 }
               ],
               "selectMany": {
@@ -610,19 +588,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]

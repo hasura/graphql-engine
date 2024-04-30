@@ -266,9 +266,7 @@
               "type": "actor",
               "uniqueness_constraints": {
                 "ActorByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -280,9 +278,7 @@
               "type": "movie",
               "uniqueness_constraints": {
                 "MovieByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -294,9 +290,7 @@
               "type": "institution",
               "uniqueness_constraints": {
                 "InstitutionByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -574,7 +568,7 @@
               "order_by_aggregate": {}
             }
           },
-          "version": "0.1.0" 
+          "version": "0.1.0"
         }
       }
     }
@@ -859,9 +853,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "ArticleByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -874,9 +866,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "AuthorByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -889,9 +879,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "AnalyticsById": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -966,9 +954,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "ArtistById": {
-                  "unique_columns": [
-                    "ArtistId"
-                  ]
+                  "unique_columns": ["ArtistId"]
                 }
               },
               "foreign_keys": {}
@@ -1083,7 +1069,7 @@
               "order_by_aggregate": {}
             }
           },
-          "version": "0.1.0" 
+          "version": "0.1.0"
         }
       }
     }

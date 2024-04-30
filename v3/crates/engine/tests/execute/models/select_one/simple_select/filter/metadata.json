@@ -86,9 +86,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ]
             },
@@ -123,21 +121,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]

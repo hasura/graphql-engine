@@ -181,9 +181,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "ArticleByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -196,9 +194,7 @@
               "deletable": false,
               "uniqueness_constraints": {
                 "AuthorByID": {
-                  "unique_columns": [
-                    "id"
-                  ]
+                  "unique_columns": ["id"]
                 }
               },
               "foreign_keys": {}
@@ -456,9 +452,7 @@
           "type": "CustomInt!"
         }
       ],
-      "globalIdFields": [
-        "article_id"
-      ],
+      "globalIdFields": ["article_id"],
       "graphql": {
         "typeName": "Article"
       },
@@ -575,9 +569,7 @@
         "selectUniques": [
           {
             "queryRootField": "AuthorByID",
-            "uniqueIdentifier": [
-              "author_id"
-            ]
+            "uniqueIdentifier": ["author_id"]
           }
         ],
         "selectMany": {
@@ -642,9 +634,7 @@
         "selectUniques": [
           {
             "queryRootField": "ArticleByID",
-            "uniqueIdentifier": [
-              "article_id"
-            ]
+            "uniqueIdentifier": ["article_id"]
           }
         ],
         "selectMany": {
@@ -674,9 +664,7 @@
         "selectUniques": [
           {
             "queryRootField": "ArticlesByAuthorByID",
-            "uniqueIdentifier": [
-              "article_id"
-            ]
+            "uniqueIdentifier": ["article_id"]
           }
         ],
         "selectMany": {
@@ -782,10 +770,7 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "author_id",
-              "first_name"
-            ]
+            "allowedFields": ["author_id", "first_name"]
           }
         }
       ]
@@ -886,29 +871,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "article_id",
-              "title",
-              "author_id"
-            ]
+            "allowedFields": ["article_id", "title", "author_id"]
           }
         },
         {
           "role": "user_1",
           "output": {
-            "allowedFields": [
-              "article_id",
-              "author_id"
-            ]
+            "allowedFields": ["article_id", "author_id"]
           }
         },
         {
           "role": "user_2",
           "output": {
-            "allowedFields": [
-              "article_id",
-              "title"
-            ]
+            "allowedFields": ["article_id", "title"]
           }
         }
       ]
@@ -997,10 +972,7 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "id",
-              "name"
-            ]
+            "allowedFields": ["id", "name"]
           }
         }
       ]
@@ -1030,15 +1002,11 @@
         "selectUniques": [
           {
             "queryRootField": "TestModelByID",
-            "uniqueIdentifier": [
-              "id"
-            ]
+            "uniqueIdentifier": ["id"]
           },
           {
             "queryRootField": "TestModelByName",
-            "uniqueIdentifier": [
-              "name"
-            ]
+            "uniqueIdentifier": ["name"]
           }
         ]
       }
@@ -1195,21 +1163,13 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "article_id",
-              "title",
-              "author_id"
-            ]
+            "allowedFields": ["article_id", "title", "author_id"]
           }
         },
         {
           "role": "user",
           "output": {
-            "allowedFields": [
-              "article_id",
-              "title",
-              "author_id"
-            ]
+            "allowedFields": ["article_id", "title", "author_id"]
           }
         }
       ]

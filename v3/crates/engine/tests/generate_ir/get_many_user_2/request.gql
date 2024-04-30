@@ -1,5 +1,6 @@
 query {
-    ArticleMany{
-      article_id title
-    }
+  ArticleMany {
+    article_id
+    title
+  }
 }

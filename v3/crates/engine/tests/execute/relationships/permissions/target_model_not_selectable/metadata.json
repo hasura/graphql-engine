@@ -113,11 +113,7 @@
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]
@@ -142,9 +138,7 @@
                 "type": "Int!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -188,9 +182,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ]
             },
@@ -225,11 +217,7 @@
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               }
             ]

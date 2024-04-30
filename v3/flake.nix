@@ -166,6 +166,7 @@
                 # Development
                 pkgs.just
                 pkgs.nixpkgs-fmt
+                pkgs.nodePackages.prettier
 
                 # Rust
                 pkgs.cargo-edit

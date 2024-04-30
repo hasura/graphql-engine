@@ -86,9 +86,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ],
               "selectMany": {
@@ -126,31 +124,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user1",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user2",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               }
             ]
@@ -202,9 +188,7 @@
                 "type": "Int!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -244,17 +228,15 @@
               "dataConnectorName": "db",
               "collection": "article"
             },
-            "graphql" :{
+            "graphql": {
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ],
-              "selectMany" :{
-                "queryRootField": "Articles"              
+              "selectMany": {
+                "queryRootField": "Articles"
               }
             },
             "orderableFields": [
@@ -288,31 +270,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "user1",
                 "output": {
-                  "allowedFields": [
-                    "title",
-                    "author_id",
-                    "article_id"
-                  ]
+                  "allowedFields": ["title", "author_id", "article_id"]
                 }
               },
               {
                 "role": "user2",
                 "output": {
-                  "allowedFields": [
-                    "title",
-                    "author_id",
-                    "article_id"
-                  ]
+                  "allowedFields": ["title", "author_id", "article_id"]
                 }
               }
             ]

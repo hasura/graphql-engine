@@ -1,9 +1,13 @@
 query MyQuery {
-  getActorsByNameOpaqueSurname(name_filter: { first_name: "Leonardo", surname: "DiCaprio" }) {
+  getActorsByNameOpaqueSurname(
+    name_filter: { first_name: "Leonardo", surname: "DiCaprio" }
+  ) {
     movie_id
     name
-  },
-  getActorsByOpaqueName(name_filter: { first_name: "Leonardo", last_name: "DiCaprio" }) {
+  }
+  getActorsByOpaqueName(
+    name_filter: { first_name: "Leonardo", last_name: "DiCaprio" }
+  ) {
     movie_id
     name
   }

@@ -43,11 +43,13 @@ fix:
 
 format:
   cargo fmt --check
+  prettier --check .
 alias fmt := format
 
 fix-local:
   cargo clippy --no-deps --fix --allow-no-vcs
   cargo fmt
+  prettier --write .
 
 # tests run by CI
 ci-test: docker-refresh

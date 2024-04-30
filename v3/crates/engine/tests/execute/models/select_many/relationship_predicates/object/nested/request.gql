@@ -9,7 +9,12 @@ query MyQuery {
     }
   }
   TrackWithFilterAndPredicate: Track(
-    where: {_and: [{Album: {Artist: {ArtistId: {_eq: 2}}}}, {TrackId: {_eq: 3}}]}
+    where: {
+      _and: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
   ) {
     TrackId
     Album {

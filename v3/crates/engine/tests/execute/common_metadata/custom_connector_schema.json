@@ -264,9 +264,7 @@
                     "type": "actor",
                     "uniqueness_constraints": {
                       "ActorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -278,9 +276,7 @@
                     "type": "movie",
                     "uniqueness_constraints": {
                       "MovieByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -292,9 +288,7 @@
                     "type": "institution",
                     "uniqueness_constraints": {
                       "InstitutionByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}

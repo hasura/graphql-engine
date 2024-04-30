@@ -44,10 +44,7 @@
                 "type": "String!"
               }
             ],
-            "globalIdFields": [
-              "first_name",
-              "last_name"
-            ],
+            "globalIdFields": ["first_name", "last_name"],
             "graphql": {
               "typeName": "Author"
             },
@@ -95,9 +92,7 @@
                 "type": "Int!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -141,9 +136,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ]
             },
@@ -204,9 +197,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ],
               "selectMany": {
@@ -225,9 +216,7 @@
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "first_name"
-                  ]
+                  "allowedFields": ["first_name"]
                 }
               }
             ]
@@ -242,20 +231,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "article_type_only",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title"
-                  ]
+                  "allowedFields": ["article_id", "title"]
                 }
               }
             ]

@@ -141,9 +141,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "TrackByID",
-                  "uniqueIdentifier": [
-                    "TrackId"
-                  ]
+                  "uniqueIdentifier": ["TrackId"]
                 }
               ],
               "selectMany": {
@@ -164,31 +162,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               },
               {
                 "role": "user_2",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               }
             ]

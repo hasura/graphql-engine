@@ -96,10 +96,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]
@@ -114,11 +111,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               }
             ]
@@ -135,8 +128,7 @@
               "collection": "Track"
             },
             "graphql": {
-              "selectUniques": [
-              ]
+              "selectUniques": []
             },
             "orderableFields": [
               {
@@ -186,8 +178,7 @@
               "collection": "Artist"
             },
             "graphql": {
-              "selectUniques": [
-              ]
+              "selectUniques": []
             },
             "orderableFields": [
               {
@@ -281,11 +272,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               }
             ]
@@ -302,8 +289,7 @@
               "collection": "Album"
             },
             "graphql": {
-              "selectUniques": [
-              ],
+              "selectUniques": [],
               "selectMany": {
                 "queryRootField": "Album"
               }

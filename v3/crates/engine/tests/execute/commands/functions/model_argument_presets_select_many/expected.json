@@ -33,9 +33,7 @@
     "errors": [
       {
         "message": "internal error",
-        "path": [
-          "ActorsByMovieMany"
-        ]
+        "path": ["ActorsByMovieMany"]
       }
     ]
   }

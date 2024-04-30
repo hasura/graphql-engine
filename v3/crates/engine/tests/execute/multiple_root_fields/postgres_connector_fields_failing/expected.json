@@ -25,9 +25,7 @@
   "errors": [
     {
       "message": "internal error",
-      "path": [
-        "AuthorMany"
-      ]
+      "path": ["AuthorMany"]
     }
   ]
 }

@@ -16,9 +16,7 @@
               },
               "enumTypeNames": [
                 {
-                  "directions": [
-                    "Asc"
-                  ],
+                  "directions": ["Asc"],
                   "typeName": "OrderByAsc"
                 }
               ]
@@ -132,9 +130,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ActorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -223,9 +219,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ActorByMovieId",
-                  "uniqueIdentifier": [
-                    "actor_id"
-                  ]
+                  "uniqueIdentifier": ["actor_id"]
                 }
               ],
               "orderByExpressionType": "Actor_Order_By"

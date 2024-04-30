@@ -124,9 +124,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ActorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -139,9 +137,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "MovieByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -427,21 +423,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               }
             ]
@@ -495,21 +483,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]
@@ -780,9 +760,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -795,9 +773,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -1038,9 +1014,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ],
               "selectMany": {
@@ -1100,10 +1074,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name"]
                 }
               }
             ]

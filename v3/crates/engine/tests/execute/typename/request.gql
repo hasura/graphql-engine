@@ -1,3 +1,3 @@
-query { 
-    __typename
+query {
+  __typename
 }

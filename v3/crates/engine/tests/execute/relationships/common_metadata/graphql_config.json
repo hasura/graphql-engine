@@ -31,10 +31,7 @@
               },
               "enumTypeNames": [
                 {
-                  "directions": [
-                    "Asc",
-                    "Desc"
-                  ],
+                  "directions": ["Asc", "Desc"],
                   "typeName": "OrderByAscDesc"
                 }
               ]

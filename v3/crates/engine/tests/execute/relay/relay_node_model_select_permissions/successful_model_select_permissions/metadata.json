@@ -44,9 +44,7 @@
                 "type": "String!"
               }
             ],
-            "globalIdFields": [
-              "author_id"
-            ],
+            "globalIdFields": ["author_id"],
             "graphql": {
               "typeName": "Author"
             },
@@ -90,9 +88,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AuthorByID",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ],
               "selectMany": {
@@ -130,32 +126,21 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "last_name"]
                 }
               },
               {
                 "role": "guest",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "last_name"]
                 }
               }
-
             ]
           }
         },

@@ -1,5 +1,5 @@
 query MyQuery {
-  Track(where: {Album: {Artist: {ArtistId: {_eq: 2}}}}) {
+  Track(where: { Album: { Artist: { ArtistId: { _eq: 2 } } } }) {
     TrackId
     Album {
       Artist {
@@ -8,7 +8,14 @@ query MyQuery {
       }
     }
   }
-  TrackAnd:Track(where: {_and: [{Album: {Artist: {ArtistId: {_eq: 2}}}}, {TrackId: {_eq: 3}}]} ) {
+  TrackAnd: Track(
+    where: {
+      _and: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
     TrackId
     Album {
       Artist {
@@ -17,7 +24,14 @@ query MyQuery {
       }
     }
   }
-  TrackOr:Track(where: {_or: [{Album: {Artist: {ArtistId: {_eq: 2}}}}, {TrackId: {_eq: 3}}]} ) {
+  TrackOr: Track(
+    where: {
+      _or: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
     TrackId
     Album {
       Artist {

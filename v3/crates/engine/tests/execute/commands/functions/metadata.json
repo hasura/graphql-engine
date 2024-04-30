@@ -117,21 +117,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "movie_id",
-                    "title",
-                    "rating"
-                  ]
+                  "allowedFields": ["movie_id", "title", "rating"]
                 }
               }
             ]
@@ -222,11 +214,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]
@@ -290,9 +278,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ActorsByMovieByID",
-                  "uniqueIdentifier": [
-                    "actor_id"
-                  ]
+                  "uniqueIdentifier": ["actor_id"]
                 }
               ],
               "selectMany": {
@@ -410,21 +396,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]

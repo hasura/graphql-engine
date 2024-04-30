@@ -1,16 +1,19 @@
 query MyQuery {
-  Track(order_by: [{Album: {ArtistId: Desc}}], limit: 3) {
+  Track(order_by: [{ Album: { ArtistId: Desc } }], limit: 3) {
     Album {
       ArtistId
       Title
     }
   }
-  TrackOrderByWithoutRelationshipField: Track(order_by: [{Album: {ArtistId: Desc}}, {Name: Asc}], limit: 3) {
+  TrackOrderByWithoutRelationshipField: Track(
+    order_by: [{ Album: { ArtistId: Desc } }, { Name: Asc }]
+    limit: 3
+  ) {
     Name
   }
   TrackOrderByWithFilter: Track(
-    order_by: [{Album: {ArtistId: Asc}}, {TrackId: Desc}]
-    where: {Album: {Artist: {ArtistId: {_eq: 2}}}}
+    order_by: [{ Album: { ArtistId: Asc } }, { TrackId: Desc }]
+    where: { Album: { Artist: { ArtistId: { _eq: 2 } } } }
   ) {
     TrackId
     Album {

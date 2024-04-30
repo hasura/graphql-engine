@@ -1,5 +1,7 @@
 query MyQuery {
-  leonardoDiCaprio: getActorsByName(name_filter: { first_name: "Leonardo", surname: "DiCaprio" }) {
+  leonardoDiCaprio: getActorsByName(
+    name_filter: { first_name: "Leonardo", surname: "DiCaprio" }
+  ) {
     movie_id
     name
   }
@@ -9,9 +11,9 @@ query MyQuery {
     name
   }
 
-# This scenario is broken due to missing input properties not being coerced into nulls properly
-#   khan: getActorsByName(name_filter: { surname: "Khan" }) {
-#     movie_id
-#     name
-#   }
+  # This scenario is broken due to missing input properties not being coerced into nulls properly
+  #   khan: getActorsByName(name_filter: { surname: "Khan" }) {
+  #     movie_id
+  #     name
+  #   }
 }

@@ -153,9 +153,7 @@
                     "type": "actor",
                     "uniqueness_constraints": {
                       "ActorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -167,9 +165,7 @@
                     "type": "movie",
                     "uniqueness_constraints": {
                       "MovieByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -477,7 +473,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }
@@ -636,9 +632,7 @@
                     "type": "actor",
                     "uniqueness_constraints": {
                       "ActorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -650,9 +644,7 @@
                     "type": "movie",
                     "uniqueness_constraints": {
                       "MovieByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -960,7 +952,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }

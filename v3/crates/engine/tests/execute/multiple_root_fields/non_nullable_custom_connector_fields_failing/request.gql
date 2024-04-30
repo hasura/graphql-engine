@@ -1,18 +1,18 @@
 query {
   # this is fallible non-null command field
-  getActorById(actor_id: 1){
+  getActorById(actor_id: 1) {
     name
-    Movies{
+    Movies {
       title
     }
   }
 
-  AuthorMany(order_by: [{author_id: Desc}]){
+  AuthorMany(order_by: [{ author_id: Desc }]) {
     author_id
     first_name
   }
 
-  MovieMany{
+  MovieMany {
     title
     rating
   }

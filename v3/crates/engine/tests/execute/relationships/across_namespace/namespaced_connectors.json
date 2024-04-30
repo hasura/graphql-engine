@@ -186,9 +186,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -201,9 +199,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -380,7 +376,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }
@@ -572,9 +568,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -587,9 +581,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -766,7 +758,7 @@
                   },
                   "mutation": {}
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           }

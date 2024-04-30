@@ -1,9 +1,9 @@
 query RemoteJoinsCandidateQuery2 {
-  MovieMany(where: {rating: {_eq: 4}}) {
+  MovieMany(where: { rating: { _eq: 4 } }) {
     id
     title
     rating
-    Analytics(limit: 5, order_by: [{analytics_id: Asc}]) {
+    Analytics(limit: 5, order_by: [{ analytics_id: Asc }]) {
       id
       num_users_faved
       num_views_day

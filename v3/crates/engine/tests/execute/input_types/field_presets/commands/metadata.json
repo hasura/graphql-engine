@@ -60,21 +60,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "actor_id",
-                    "name",
-                    "movie_id"
-                  ]
+                  "allowedFields": ["actor_id", "name", "movie_id"]
                 }
               }
             ]
@@ -236,21 +228,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "city",
-                    "country",
-                    "campuses"
-                  ]
+                  "allowedFields": ["city", "country", "campuses"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "city",
-                    "country",
-                    "campuses"
-                  ]
+                  "allowedFields": ["city", "country", "campuses"]
                 },
                 "input": {
                   "fieldPresets": [
@@ -335,21 +319,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "first_name",
-                    "last_name",
-                    "specialities"
-                  ]
+                  "allowedFields": ["first_name", "last_name", "specialities"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "first_name",
-                    "last_name",
-                    "specialities"
-                  ]
+                  "allowedFields": ["first_name", "last_name", "specialities"]
                 }
               }
             ]

@@ -75,9 +75,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArtistByID",
-                  "uniqueIdentifier": [
-                    "ArtistId"
-                  ]
+                  "uniqueIdentifier": ["ArtistId"]
                 }
               ],
               "selectMany": {
@@ -111,28 +109,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               },
               {
                 "role": "user1",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               },
               {
                 "role": "user2",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]
@@ -224,9 +213,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AlbumByID",
-                  "uniqueIdentifier": [
-                    "AlbumId"
-                  ]
+                  "uniqueIdentifier": ["AlbumId"]
                 }
               ],
               "selectMany": {
@@ -266,31 +253,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               },
               {
                 "role": "user1",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               },
               {
                 "role": "user2",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               }
             ]

@@ -62,9 +62,7 @@
           "type": "Int"
         }
       ],
-      "globalIdFields": [
-        "analytics_id"
-      ],
+      "globalIdFields": ["analytics_id"],
       "graphql": {
         "typeName": "MovieAnalytics"
       },
@@ -183,9 +181,7 @@
         "selectUniques": [
           {
             "queryRootField": "AnalyticsById",
-            "uniqueIdentifier": [
-              "analytics_id"
-            ]
+            "uniqueIdentifier": ["analytics_id"]
           }
         ],
         "selectMany": {
@@ -302,9 +298,7 @@
           "type": "Int!"
         }
       ],
-      "globalIdFields": [
-        "movie_id"
-      ],
+      "globalIdFields": ["movie_id"],
       "graphql": {
         "typeName": "Movie"
       },
@@ -416,21 +410,13 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "movie_id",
-              "title",
-              "rating"
-            ]
+            "allowedFields": ["movie_id", "title", "rating"]
           }
         },
         {
           "role": "user",
           "output": {
-            "allowedFields": [
-              "movie_id",
-              "title",
-              "rating"
-            ]
+            "allowedFields": ["movie_id", "title", "rating"]
           }
         }
       ]
@@ -521,21 +507,13 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "actor_id",
-              "name",
-              "movie_id"
-            ]
+            "allowedFields": ["actor_id", "name", "movie_id"]
           }
         },
         {
           "role": "user",
           "output": {
-            "allowedFields": [
-              "actor_id",
-              "name",
-              "movie_id"
-            ]
+            "allowedFields": ["actor_id", "name", "movie_id"]
           }
         }
       ]

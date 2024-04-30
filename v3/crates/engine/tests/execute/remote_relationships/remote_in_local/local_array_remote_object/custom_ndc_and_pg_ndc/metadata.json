@@ -176,9 +176,7 @@
         "selectUniques": [
           {
             "queryRootField": "AnalyticsById",
-            "uniqueIdentifier": [
-              "analytics_id"
-            ]
+            "uniqueIdentifier": ["analytics_id"]
           }
         ],
         "selectMany": {
@@ -346,31 +344,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "author_id",
-              "first_name",
-              "last_name"
-            ]
+            "allowedFields": ["author_id", "first_name", "last_name"]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": [
-              "author_id",
-              "first_name",
-              "last_name"
-            ]
+            "allowedFields": ["author_id", "first_name", "last_name"]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": [
-              "author_id",
-              "first_name",
-              "last_name"
-            ]
+            "allowedFields": ["author_id", "first_name", "last_name"]
           }
         }
       ]
@@ -392,9 +378,7 @@
           {
             "queryRootField": "AuthorByID",
             "description": "Selecting an author by ID",
-            "uniqueIdentifier": [
-              "author_id"
-            ]
+            "uniqueIdentifier": ["author_id"]
           }
         ],
         "selectMany": {
@@ -566,31 +550,19 @@
         {
           "role": "admin",
           "output": {
-            "allowedFields": [
-              "movie_id",
-              "title",
-              "rating"
-            ]
+            "allowedFields": ["movie_id", "title", "rating"]
           }
         },
         {
           "role": "user1",
           "output": {
-            "allowedFields": [
-              "movie_id",
-              "title",
-              "rating"
-            ]
+            "allowedFields": ["movie_id", "title", "rating"]
           }
         },
         {
           "role": "user2",
           "output": {
-            "allowedFields": [
-              "movie_id",
-              "title",
-              "rating"
-            ]
+            "allowedFields": ["movie_id", "title", "rating"]
           }
         }
       ]

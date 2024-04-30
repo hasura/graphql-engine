@@ -167,11 +167,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "city",
-                    "country",
-                    "campuses"
-                  ]
+                  "allowedFields": ["city", "country", "campuses"]
                 }
               }
             ]
@@ -233,11 +229,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "first_name",
-                    "last_name",
-                    "specialities"
-                  ]
+                  "allowedFields": ["first_name", "last_name", "specialities"]
                 }
               }
             ]

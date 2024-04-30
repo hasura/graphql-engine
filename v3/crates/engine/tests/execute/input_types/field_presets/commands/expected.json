@@ -20,10 +20,7 @@
             "Industrial and Materials Science"
           ],
           "location": {
-            "campuses": [
-              "Johanneberg",
-              "Lindholmen"
-            ],
+            "campuses": ["Johanneberg", "Lindholmen"],
             "city": "Gothenburg",
             "country": "Sweden"
           },
@@ -83,10 +80,7 @@
             {
               "first_name": "Peter",
               "last_name": "Landin",
-              "specialities": [
-                "Computer Science",
-                "Education"
-              ]
+              "specialities": ["Computer Science", "Education"]
             }
           ]
         }

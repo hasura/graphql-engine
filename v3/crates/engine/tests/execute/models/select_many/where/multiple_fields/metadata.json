@@ -143,9 +143,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ],
               "selectMany": {
@@ -164,21 +162,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "title",
-                    "article_id",
-                    "author_id"
-                  ]
+                  "allowedFields": ["title", "article_id", "author_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "title",
-                    "article_id",
-                    "author_id"
-                  ]
+                  "allowedFields": ["title", "article_id", "author_id"]
                 }
               }
             ]

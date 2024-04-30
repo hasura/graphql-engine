@@ -1,5 +1,5 @@
 query MyQuery {
-  getAllActors{
+  getAllActors {
     actor_id
     name
     movie_id

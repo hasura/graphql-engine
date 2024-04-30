@@ -1,0 +1,2 @@
+crates/custom-connector/data/*.json
+crates/lang-graphql/tests/**/*.graphql

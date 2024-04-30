@@ -143,9 +143,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "actorById",
-                  "uniqueIdentifier": [
-                    "id"
-                  ]
+                  "uniqueIdentifier": ["id"]
                 }
               ],
               "selectMany": {

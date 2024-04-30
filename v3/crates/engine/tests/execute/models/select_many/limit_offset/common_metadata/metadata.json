@@ -119,29 +119,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name"]
                 }
               },
               {
                 "role": "user_2",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name"]
                 }
               }
             ]

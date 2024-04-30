@@ -18,10 +18,7 @@
         "staff": [
           {
             "last_name": "Landin",
-            "specialities": [
-              "Computer Science",
-              "Education"
-            ]
+            "specialities": ["Computer Science", "Education"]
           }
         ],
         "staff_first_name": [
@@ -39,10 +36,7 @@
         "id": 2,
         "location": {
           "city": "Gothenburg",
-          "campuses": [
-            "Johanneberg",
-            "Lindholmen"
-          ]
+          "campuses": ["Johanneberg", "Lindholmen"]
         },
         "location_country": {
           "country": "Sweden"
@@ -87,10 +81,7 @@
         "location_country": null,
         "staff": null,
         "staff_first_name": null,
-        "departments": [
-          "nothing",
-          null
-        ]
+        "departments": ["nothing", null]
       }
     ]
   }

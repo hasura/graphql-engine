@@ -34,10 +34,7 @@
               },
               "enumTypeNames": [
                 {
-                  "directions": [
-                    "Asc",
-                    "Desc"
-                  ],
+                  "directions": ["Asc", "Desc"],
                   "typeName": "OrderByAscDesc"
                 }
               ]
@@ -1466,9 +1463,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -1481,9 +1476,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -1495,9 +1488,7 @@
                     "type": "Album",
                     "uniqueness_constraints": {
                       "PK_Album": {
-                        "unique_columns": [
-                          "AlbumId"
-                        ]
+                        "unique_columns": ["AlbumId"]
                       }
                     },
                     "foreign_keys": {
@@ -1516,9 +1507,7 @@
                     "type": "Artist",
                     "uniqueness_constraints": {
                       "PK_Artist": {
-                        "unique_columns": [
-                          "ArtistId"
-                        ]
+                        "unique_columns": ["ArtistId"]
                       }
                     },
                     "foreign_keys": {}
@@ -1530,9 +1519,7 @@
                     "type": "Customer",
                     "uniqueness_constraints": {
                       "PK_Customer": {
-                        "unique_columns": [
-                          "CustomerId"
-                        ]
+                        "unique_columns": ["CustomerId"]
                       }
                     },
                     "foreign_keys": {
@@ -1550,9 +1537,7 @@
                     "type": "Employee",
                     "uniqueness_constraints": {
                       "PK_Employee": {
-                        "unique_columns": [
-                          "EmployeeId"
-                        ]
+                        "unique_columns": ["EmployeeId"]
                       }
                     },
                     "foreign_keys": {
@@ -1570,9 +1555,7 @@
                     "type": "Genre",
                     "uniqueness_constraints": {
                       "PK_Genre": {
-                        "unique_columns": [
-                          "GenreId"
-                        ]
+                        "unique_columns": ["GenreId"]
                       }
                     },
                     "foreign_keys": {}
@@ -1583,9 +1566,7 @@
                     "type": "Invoice",
                     "uniqueness_constraints": {
                       "PK_Invoice": {
-                        "unique_columns": [
-                          "InvoiceId"
-                        ]
+                        "unique_columns": ["InvoiceId"]
                       }
                     },
                     "foreign_keys": {
@@ -1603,9 +1584,7 @@
                     "type": "InvoiceLine",
                     "uniqueness_constraints": {
                       "PK_InvoiceLine": {
-                        "unique_columns": [
-                          "InvoiceLineId"
-                        ]
+                        "unique_columns": ["InvoiceLineId"]
                       }
                     },
                     "foreign_keys": {
@@ -1629,9 +1608,7 @@
                     "type": "MediaType",
                     "uniqueness_constraints": {
                       "PK_MediaType": {
-                        "unique_columns": [
-                          "MediaTypeId"
-                        ]
+                        "unique_columns": ["MediaTypeId"]
                       }
                     },
                     "foreign_keys": {}
@@ -1642,9 +1619,7 @@
                     "type": "Playlist",
                     "uniqueness_constraints": {
                       "PK_Playlist": {
-                        "unique_columns": [
-                          "PlaylistId"
-                        ]
+                        "unique_columns": ["PlaylistId"]
                       }
                     },
                     "foreign_keys": {}
@@ -1655,10 +1630,7 @@
                     "type": "PlaylistTrack",
                     "uniqueness_constraints": {
                       "PK_PlaylistTrack": {
-                        "unique_columns": [
-                          "PlaylistId",
-                          "TrackId"
-                        ]
+                        "unique_columns": ["PlaylistId", "TrackId"]
                       }
                     },
                     "foreign_keys": {
@@ -1682,9 +1654,7 @@
                     "type": "Track",
                     "uniqueness_constraints": {
                       "PK_Track": {
-                        "unique_columns": [
-                          "TrackId"
-                        ]
+                        "unique_columns": ["TrackId"]
                       }
                     },
                     "foreign_keys": {
@@ -1714,9 +1684,7 @@
                     "type": "spatial_ref_sys",
                     "uniqueness_constraints": {
                       "spatial_ref_sys_pkey": {
-                        "unique_columns": [
-                          "srid"
-                        ]
+                        "unique_columns": ["srid"]
                       }
                     },
                     "foreign_keys": {}
@@ -1727,10 +1695,7 @@
                     "type": "topology_layer",
                     "uniqueness_constraints": {
                       "layer_pkey": {
-                        "unique_columns": [
-                          "layer_id",
-                          "topology_id"
-                        ]
+                        "unique_columns": ["layer_id", "topology_id"]
                       },
                       "layer_schema_name_table_name_feature_column_key": {
                         "unique_columns": [
@@ -1755,14 +1720,10 @@
                     "type": "topology_topology",
                     "uniqueness_constraints": {
                       "topology_name_key": {
-                        "unique_columns": [
-                          "name"
-                        ]
+                        "unique_columns": ["name"]
                       },
                       "topology_pkey": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -2038,11 +1999,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "ArtistId",
-                    "Title"
-                  ]
+                  "allowedFields": ["AlbumId", "ArtistId", "Title"]
                 }
               }
             ]
@@ -2067,9 +2024,7 @@
                 "type": "CustomInt!"
               }
             ],
-            "globalIdFields": [
-              "article_id"
-            ],
+            "globalIdFields": ["article_id"],
             "graphql": {
               "typeName": "Article"
             },
@@ -2140,29 +2095,19 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "user_1",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "author_id"]
                 }
               },
               {
                 "role": "user_2",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title"
-                  ]
+                  "allowedFields": ["article_id", "title"]
                 }
               }
             ]
@@ -2189,9 +2134,7 @@
                 "type": "String!"
               }
             ],
-            "globalIdFields": [
-              "author_id"
-            ],
+            "globalIdFields": ["author_id"],
             "graphql": {
               "typeName": "Author"
             },
@@ -2262,10 +2205,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "author_id",
-                    "first_name"
-                  ]
+                  "allowedFields": ["author_id", "first_name"]
                 }
               }
             ]
@@ -2307,9 +2247,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArticleByID",
-                  "uniqueIdentifier": [
-                    "article_id"
-                  ]
+                  "uniqueIdentifier": ["article_id"]
                 }
               ],
               "selectMany": {
@@ -2391,9 +2329,7 @@
                 {
                   "queryRootField": "AuthorByID",
                   "description": "AuthorByID description",
-                  "uniqueIdentifier": [
-                    "author_id"
-                  ]
+                  "uniqueIdentifier": ["author_id"]
                 }
               ],
               "selectMany": {
@@ -2469,9 +2405,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AlbumByID",
-                  "uniqueIdentifier": [
-                    "AlbumId"
-                  ]
+                  "uniqueIdentifier": ["AlbumId"]
                 }
               ],
               "selectMany": {
@@ -2511,9 +2445,7 @@
               "apolloFederation": {
                 "keys": [
                   {
-                    "fields": [
-                      "ArtistId"
-                    ]
+                    "fields": ["ArtistId"]
                   }
                 ]
               }
@@ -2557,10 +2489,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]
@@ -2591,9 +2520,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "ArtistByID",
-                  "uniqueIdentifier": [
-                    "ArtistId"
-                  ]
+                  "uniqueIdentifier": ["ArtistId"]
                 }
               ],
               "selectMany": {
@@ -2883,9 +2810,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "CustomerByID",
-                  "uniqueIdentifier": [
-                    "CustomerId"
-                  ]
+                  "uniqueIdentifier": ["CustomerId"]
                 }
               ],
               "selectMany": {
@@ -3246,9 +3171,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "EmployeeByID",
-                  "uniqueIdentifier": [
-                    "EmployeeId"
-                  ]
+                  "uniqueIdentifier": ["EmployeeId"]
                 }
               ],
               "selectMany": {
@@ -3325,10 +3248,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "GenreId",
-                    "Name"
-                  ]
+                  "allowedFields": ["GenreId", "Name"]
                 }
               }
             ]
@@ -3359,9 +3279,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "GenreByID",
-                  "uniqueIdentifier": [
-                    "GenreId"
-                  ]
+                  "uniqueIdentifier": ["GenreId"]
                 }
               ],
               "selectMany": {
@@ -3606,9 +3524,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "InvoiceByID",
-                  "uniqueIdentifier": [
-                    "InvoiceId"
-                  ]
+                  "uniqueIdentifier": ["InvoiceId"]
                 }
               ],
               "selectMany": {
@@ -3767,9 +3683,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "InvoiceLineByID",
-                  "uniqueIdentifier": [
-                    "InvoiceLineId"
-                  ]
+                  "uniqueIdentifier": ["InvoiceLineId"]
                 }
               ],
               "selectMany": {
@@ -3846,10 +3760,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "MediaTypeId",
-                    "Name"
-                  ]
+                  "allowedFields": ["MediaTypeId", "Name"]
                 }
               }
             ]
@@ -3880,9 +3791,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "MediaTypeByID",
-                  "uniqueIdentifier": [
-                    "MediaTypeId"
-                  ]
+                  "uniqueIdentifier": ["MediaTypeId"]
                 }
               ],
               "selectMany": {
@@ -3959,10 +3868,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "Name",
-                    "PlaylistId"
-                  ]
+                  "allowedFields": ["Name", "PlaylistId"]
                 }
               }
             ]
@@ -3993,9 +3899,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "PlaylistByID",
-                  "uniqueIdentifier": [
-                    "PlaylistId"
-                  ]
+                  "uniqueIdentifier": ["PlaylistId"]
                 }
               ],
               "selectMany": {
@@ -4072,10 +3976,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "PlaylistId",
-                    "TrackId"
-                  ]
+                  "allowedFields": ["PlaylistId", "TrackId"]
                 }
               }
             ]
@@ -4106,10 +4007,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "PlaylistTrackByPK",
-                  "uniqueIdentifier": [
-                    "PlaylistId",
-                    "TrackId"
-                  ]
+                  "uniqueIdentifier": ["PlaylistId", "TrackId"]
                 }
               ],
               "selectMany": {
@@ -4332,9 +4230,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "TrackByID",
-                  "uniqueIdentifier": [
-                    "TrackId"
-                  ]
+                  "uniqueIdentifier": ["TrackId"]
                 }
               ],
               "selectMany": {
@@ -4493,9 +4389,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "SpatialRefSysSrID",
-                  "uniqueIdentifier": [
-                    "srid"
-                  ]
+                  "uniqueIdentifier": ["srid"]
                 }
               ],
               "selectMany": {
@@ -4702,10 +4596,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "LayerPkey",
-                  "uniqueIdentifier": [
-                    "layer_id",
-                    "topology_id"
-                  ]
+                  "uniqueIdentifier": ["layer_id", "topology_id"]
                 },
                 {
                   "queryRootField": "LayerSchemaNameTableNameFeatureColumnKey",
@@ -4861,13 +4752,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "hasz",
-                    "id",
-                    "name",
-                    "precision",
-                    "srid"
-                  ]
+                  "allowedFields": ["hasz", "id", "name", "precision", "srid"]
                 }
               }
             ]
@@ -4916,15 +4801,11 @@
               "selectUniques": [
                 {
                   "queryRootField": "TopologyTopologyByName",
-                  "uniqueIdentifier": [
-                    "name"
-                  ]
+                  "uniqueIdentifier": ["name"]
                 },
                 {
                   "queryRootField": "TopologyTopologyById",
-                  "uniqueIdentifier": [
-                    "id"
-                  ]
+                  "uniqueIdentifier": ["id"]
                 }
               ],
               "selectMany": {
@@ -5010,21 +4891,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "article_id",
-                    "title",
-                    "author_id"
-                  ]
+                  "allowedFields": ["article_id", "title", "author_id"]
                 }
               }
             ]
@@ -5086,21 +4959,13 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["id", "first_name", "last_name"]
                 }
               },
               {
                 "role": "user",
                 "output": {
-                  "allowedFields": [
-                    "id",
-                    "first_name",
-                    "last_name"
-                  ]
+                  "allowedFields": ["id", "first_name", "last_name"]
                 }
               }
             ]

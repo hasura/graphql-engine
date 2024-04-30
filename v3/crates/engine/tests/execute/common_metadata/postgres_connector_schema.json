@@ -579,9 +579,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArticleByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -594,9 +592,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AuthorByID": {
-                        "unique_columns": [
-                          "id"
-                        ]
+                        "unique_columns": ["id"]
                       }
                     },
                     "foreign_keys": {}
@@ -671,9 +667,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "ArtistById": {
-                        "unique_columns": [
-                          "ArtistId"
-                        ]
+                        "unique_columns": ["ArtistId"]
                       }
                     },
                     "foreign_keys": {}
@@ -686,9 +680,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "AlbumById": {
-                        "unique_columns": [
-                          "AlbumId"
-                        ]
+                        "unique_columns": ["AlbumId"]
                       }
                     },
                     "foreign_keys": {}
@@ -701,9 +693,7 @@
                     "deletable": false,
                     "uniqueness_constraints": {
                       "TrackById": {
-                        "unique_columns": [
-                          "TrackId"
-                        ]
+                        "unique_columns": ["TrackId"]
                       }
                     },
                     "foreign_keys": {}
@@ -731,9 +721,7 @@
                     "type": "Genre",
                     "uniqueness_constraints": {
                       "PK_Genre": {
-                        "unique_columns": [
-                          "GenreId"
-                        ]
+                        "unique_columns": ["GenreId"]
                       }
                     },
                     "foreign_keys": {}
@@ -848,7 +836,7 @@
                     "order_by_aggregate": {}
                   }
                 },
-                "version": "0.1.0" 
+                "version": "0.1.0"
               }
             }
           },

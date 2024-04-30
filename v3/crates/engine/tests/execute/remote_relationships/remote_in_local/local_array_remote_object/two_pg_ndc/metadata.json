@@ -73,10 +73,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]
@@ -162,9 +159,7 @@
               "selectUniques": [
                 {
                   "queryRootField": "AlbumByID",
-                  "uniqueIdentifier": [
-                    "AlbumId"
-                  ]
+                  "uniqueIdentifier": ["AlbumId"]
                 }
               ],
               "selectMany": {
@@ -187,11 +182,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "ArtistId",
-                    "Title"
-                  ]
+                  "allowedFields": ["AlbumId", "ArtistId", "Title"]
                 }
               }
             ]
@@ -379,11 +370,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "ArtistId",
-                    "Title"
-                  ]
+                  "allowedFields": ["AlbumId", "ArtistId", "Title"]
                 }
               }
             ]

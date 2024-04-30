@@ -3,9 +3,7 @@
   "errors": [
     {
       "message": "internal error",
-      "path": [
-        "getActorById"
-      ]
+      "path": ["getActorById"]
     }
   ]
 }

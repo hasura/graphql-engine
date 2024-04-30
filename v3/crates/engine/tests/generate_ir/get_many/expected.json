@@ -15,9 +15,7 @@
                       "generic": {
                         "Output": {
                           "GlobalIDField": {
-                            "global_id_fields": [
-                              "article_id"
-                            ]
+                            "global_id_fields": ["article_id"]
                           }
                         }
                       },

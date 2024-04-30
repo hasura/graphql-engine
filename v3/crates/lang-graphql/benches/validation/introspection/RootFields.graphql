@@ -6,12 +6,16 @@ query RootFields {
         ...TypeRef
         fields {
           name
-          type { ...TypeRef }
+          type {
+            ...TypeRef
+          }
         }
       }
       args {
         name
-        type { ...TypeRef }
+        type {
+          ...TypeRef
+        }
       }
     }
   }

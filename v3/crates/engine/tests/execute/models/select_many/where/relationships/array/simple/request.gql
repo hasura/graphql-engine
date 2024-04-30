@@ -1,5 +1,5 @@
 query MyQuery {
-  Album(where: {Tracks: {TrackId: {_eq: 3}}}) {
+  Album(where: { Tracks: { TrackId: { _eq: 3 } } }) {
     AlbumId
     Title
     ArtistId
@@ -10,7 +10,9 @@ query MyQuery {
     }
   }
   AlbumAnd: Album(
-    where: {_and: [{Tracks: {TrackId: {_eq: 3}}}, {ArtistId: {_eq: 2}}]}
+    where: {
+      _and: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
   ) {
     AlbumId
     Title
@@ -22,7 +24,9 @@ query MyQuery {
     }
   }
   AlbumOr: Album(
-    where: {_or: [{Tracks: {TrackId: {_eq: 3}}}, {ArtistId: {_eq: 2}}]}
+    where: {
+      _or: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
   ) {
     AlbumId
     Title
@@ -34,7 +38,9 @@ query MyQuery {
     }
   }
   AlbumTracksTwoRelationships: Album(
-    where: {Tracks: {Album: {AlbumId: {_eq: 1}}, Genre: {GenreId: {_eq: 1}}}}
+    where: {
+      Tracks: { Album: { AlbumId: { _eq: 1 } }, Genre: { GenreId: { _eq: 1 } } }
+    }
     limit: 1
   ) {
     Tracks(limit: 2) {

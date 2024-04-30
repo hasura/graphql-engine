@@ -49,10 +49,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "ArtistId",
-                    "Name"
-                  ]
+                  "allowedFields": ["ArtistId", "Name"]
                 }
               }
             ]
@@ -158,11 +155,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               }
             ]
@@ -279,11 +272,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "AlbumId",
-                    "Title",
-                    "ArtistId"
-                  ]
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
                 }
               }
             ]
@@ -398,11 +387,7 @@
               {
                 "role": "admin",
                 "output": {
-                  "allowedFields": [
-                    "TrackId",
-                    "Name",
-                    "AlbumId"
-                  ]
+                  "allowedFields": ["TrackId", "Name", "AlbumId"]
                 }
               }
             ]
