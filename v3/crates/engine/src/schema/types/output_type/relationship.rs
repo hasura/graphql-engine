@@ -94,10 +94,11 @@ pub struct ModelTargetSource {
 
 impl ModelTargetSource {
     pub fn new(
-        model: &models::Model,
+        model: &resolved::ModelWithPermissions,
         relationship: &resolved::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         model
+            .model
             .source
             .as_ref()
             .map(|model_source| Self::from_model_source(model_source, relationship))

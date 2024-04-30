@@ -18,9 +18,10 @@ pub use stages::boolean_expressions::{
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
 pub use stages::data_connector_type_mappings::{FieldMapping, TypeMapping};
+pub use stages::model_permissions::{FilterPermission, ModelPredicate, ModelWithPermissions};
 pub use stages::models::{
-    FilterPermission, Model, ModelOrderByExpression, ModelPredicate, ModelSource,
-    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition,
+    Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
+    SelectUniqueGraphQlDefinition,
 };
 /// we seem to be exporting functions. perhaps these would be better served as methods on the data
 /// types we export?

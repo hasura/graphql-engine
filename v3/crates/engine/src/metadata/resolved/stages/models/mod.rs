@@ -1,9 +1,8 @@
 pub use types::{
-    FilterPermission, LimitFieldGraphqlConfig, Model, ModelGraphQlApi,
-    ModelGraphqlApiArgumentsConfig, ModelOrderByExpression, ModelPredicate, ModelSource,
-    ModelsOutput, NDCFieldSourceMapping, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
-    SelectManyGraphQlDefinition, SelectPermission, SelectUniqueGraphQlDefinition,
-    UniqueIdentifierField,
+    LimitFieldGraphqlConfig, Model, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
+    ModelOrderByExpression, ModelSource, ModelsOutput, NDCFieldSourceMapping,
+    OffsetFieldGraphqlConfig, OrderByExpressionInfo, SelectManyGraphQlDefinition,
+    SelectUniqueGraphQlDefinition, UniqueIdentifierField,
 };
 mod types;
 
@@ -356,7 +355,6 @@ fn resolve_model(
         arguments,
         graphql_api: ModelGraphQlApi::default(),
         source: None,
-        select_permissions: None,
         global_id_source,
         apollo_federation_key_source,
         filter_expression_type,

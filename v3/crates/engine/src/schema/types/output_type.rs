@@ -316,7 +316,7 @@ fn object_type_fields(
                     }
                 })?;
 
-                if !model.arguments.is_empty() {
+                if !model.model.arguments.is_empty() {
                     return Err(Error::InternalUnsupported {
                         summary: "Relationships to models with arguments aren't supported".into(),
                     });
@@ -330,7 +330,7 @@ fn object_type_fields(
                 };
 
                 let target_object_type_representation =
-                    get_object_type_representation(gds, &model.data_type)?;
+                    get_object_type_representation(gds, &model.model.data_type)?;
 
                 builder.conditional_namespaced(
                     gql_schema::Field::<GDS>::new(

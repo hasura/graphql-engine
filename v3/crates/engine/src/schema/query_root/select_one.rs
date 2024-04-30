@@ -21,7 +21,7 @@ use crate::schema::{
 pub(crate) fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::Model,
+    model: &resolved::ModelWithPermissions,
     select_unique: &resolved::SelectUniqueGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -70,8 +70,8 @@ pub(crate) fn select_one_field(
         }
     }
 
-    let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
-    let output_typename = get_custom_output_type(gds, builder, &model.data_type)?;
+    let object_type_representation = get_object_type_representation(gds, &model.model.data_type)?;
+    let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
     let field_annotations = permissions::get_select_one_namespace_annotations(
         model,
@@ -86,10 +86,10 @@ pub(crate) fn select_one_field(
             select_unique.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
-                    data_type: model.data_type.clone(),
-                    source: model.source.clone(),
+                    data_type: model.model.data_type.clone(),
+                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectOne,
-                    name: model.name.clone(),
+                    name: model.model.name.clone(),
                 },
             )),
             ast::TypeContainer::named_null(output_typename),

@@ -40,25 +40,27 @@ pub(crate) fn apollo_federation_field(
     > = HashMap::new();
     let mut typename_mappings = HashMap::new();
     for model in gds.metadata.models.values() {
-        if let Some(apollo_federation_key_source) = &model.apollo_federation_key_source {
-            let output_typename = get_custom_output_type(gds, builder, &model.data_type)?;
+        if let Some(apollo_federation_key_source) = &model.model.apollo_federation_key_source {
+            let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
-            let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
+            let object_type_representation =
+                get_object_type_representation(gds, &model.model.data_type)?;
 
             let entities_field_permissions =
                 get_entities_field_namespace_permissions(object_type_representation, model);
 
             for (role, model_predicate) in entities_field_permissions.iter() {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
-                role_type_permissions.insert(model.data_type.clone(), model_predicate.clone());
+                role_type_permissions
+                    .insert(model.model.data_type.clone(), model_predicate.clone());
             }
 
             if typename_mappings
                 .insert(
                     output_typename.type_name().clone(),
                     EntityFieldTypeNameMapping {
-                        type_name: model.data_type.clone(),
-                        model_source: model.source.clone(),
+                        type_name: model.model.data_type.clone(),
+                        model_source: model.model.source.clone(),
                         key_fields_ndc_mapping: apollo_federation_key_source.ndc_mapping.clone(),
                     },
                 )

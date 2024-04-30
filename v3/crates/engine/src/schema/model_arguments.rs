@@ -14,20 +14,21 @@ use crate::metadata::resolved::subgraph::Qualified;
 /// arguments fields will live.
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::Model,
+    model: &resolved::ModelWithPermissions,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
     model
+        .model
         .graphql_api
         .arguments_input_config
         .as_ref()
         .ok_or(crate::schema::Error::NoArgumentsInputConfigForSelectMany {
-            model_name: model.name.clone(),
+            model_name: model.model.name.clone(),
         })
         .map(|arguments_input_config| {
             // This function call adds the model arguments to the
             // `args` input object
             builder.register_type(TypeId::ModelArgumentsInput {
-                model_name: model.name.clone(),
+                model_name: model.model.name.clone(),
                 type_name: arguments_input_config.type_name.clone(),
             });
 
@@ -49,12 +50,13 @@ pub fn get_model_arguments_input_field(
 pub fn build_model_argument_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::Model,
+    model: &resolved::ModelWithPermissions,
 ) -> Result<
     BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
 > {
     model
+        .model
         .arguments
         .iter()
         .map(|(argument_name, argument_type)| {
@@ -68,6 +70,7 @@ pub fn build_model_argument_fields(
                     ModelInputAnnotation::ModelArgument {
                         argument_type: argument_type.argument_type.clone(),
                         ndc_table_argument: model
+                            .model
                             .source
                             .as_ref()
                             .and_then(|model_source| {

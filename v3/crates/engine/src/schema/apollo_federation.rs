@@ -22,10 +22,11 @@ pub fn apollo_federation_entities_schema(
     let entity_typename = mk_typename("_Entity")?;
     let mut entity_members = BTreeMap::new();
     for model in gds.metadata.models.values() {
-        if model.apollo_federation_key_source.is_some() {
-            let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
+        if model.model.apollo_federation_key_source.is_some() {
+            let object_type_representation =
+                get_object_type_representation(gds, &model.model.data_type)?;
 
-            let object_typename = get_custom_output_type(gds, builder, &model.data_type)?;
+            let object_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
             let entity_union_permissions =
                 permissions::get_entity_union_permissions(object_type_representation);
             entity_members.insert(

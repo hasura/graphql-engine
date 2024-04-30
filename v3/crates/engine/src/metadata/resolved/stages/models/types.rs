@@ -1,4 +1,3 @@
-use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_type_mappings, data_connectors,
 };
@@ -8,17 +7,14 @@ use crate::metadata::resolved::subgraph::{
 };
 use crate::metadata::resolved::types::NdcColumnForComparison;
 
-use crate::schema::types::output_type::relationship::PredicateRelationshipAnnotation;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};
-use ndc_models;
 
 use open_dds::types::Deprecated;
 use open_dds::{
     arguments::ArgumentName,
     data_connector::DataConnectorName,
     models::{ModelName, OrderableField},
-    permissions::Role,
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
@@ -105,42 +101,6 @@ pub struct ModelSource {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum FilterPermission {
-    AllowAll,
-    Filter(ModelPredicate),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct SelectPermission {
-    pub filter: FilterPermission,
-    // pub allow_aggregations: bool,
-    pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum ModelPredicate {
-    UnaryFieldComparison {
-        field: FieldName,
-        ndc_column: String,
-        operator: ndc_models::UnaryComparisonOperator,
-    },
-    BinaryFieldComparison {
-        field: FieldName,
-        ndc_column: String,
-        operator: String,
-        argument_type: QualifiedTypeReference,
-        value: ValueExpression,
-    },
-    Relationship {
-        relationship_info: PredicateRelationshipAnnotation,
-        predicate: Box<ModelPredicate>,
-    },
-    And(Vec<ModelPredicate>),
-    Or(Vec<ModelPredicate>),
-    Not(Box<ModelPredicate>),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,
@@ -149,7 +109,6 @@ pub struct Model {
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: ModelGraphQlApi,
     pub source: Option<ModelSource>,
-    pub select_permissions: Option<HashMap<Role, SelectPermission>>,
     pub global_id_source: Option<NDCFieldSourceMapping>,
     pub apollo_federation_key_source: Option<NDCFieldSourceMapping>,
     pub filter_expression_type: Option<boolean_expressions::ObjectBooleanExpressionType>,

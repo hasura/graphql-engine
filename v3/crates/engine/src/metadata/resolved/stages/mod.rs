@@ -7,6 +7,7 @@ pub mod data_connector_scalar_types;
 pub mod data_connector_type_mappings;
 pub mod data_connectors;
 pub mod graphql_config;
+pub mod model_permissions;
 pub mod models;
 pub mod relationships;
 pub mod roles;
@@ -116,15 +117,21 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &data_connector_type_mappings,
     )?;
 
-    resolve_metadata(
+    let models_with_permissions = model_permissions::resolve(
         &metadata_accessor,
-        &graphql_config,
+        &data_connectors,
+        &object_types_with_relationships,
+        &models,
+        &boolean_expression_types,
         &data_connector_type_mappings,
+    )?;
+
+    resolve_metadata(
+        &graphql_config,
         object_types_with_relationships,
         &scalar_types,
         &boolean_expression_types,
-        &data_connectors,
-        models,
+        models_with_permissions,
         commands_with_permissions,
     )
 }

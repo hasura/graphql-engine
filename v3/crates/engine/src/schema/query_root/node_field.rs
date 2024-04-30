@@ -56,25 +56,27 @@ pub(crate) fn relay_node_field(
         HashMap<Qualified<CustomTypeName>, resolved::FilterPermission>,
     > = HashMap::new();
     for model in gds.metadata.models.values() {
-        if let Some(global_id_source) = &model.global_id_source {
-            let output_typename = get_custom_output_type(gds, builder, &model.data_type)?;
+        if let Some(global_id_source) = &model.model.global_id_source {
+            let output_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
-            let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
+            let object_type_representation =
+                get_object_type_representation(gds, &model.model.data_type)?;
 
             let node_field_permissions =
                 get_node_field_namespace_permissions(object_type_representation, model);
 
             for (role, model_predicate) in node_field_permissions.iter() {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
-                role_type_permissions.insert(model.data_type.clone(), model_predicate.clone());
+                role_type_permissions
+                    .insert(model.model.data_type.clone(), model_predicate.clone());
             }
 
             if typename_mappings
                 .insert(
                     output_typename.type_name().clone(),
                     NodeFieldTypeNameMapping {
-                        type_name: model.data_type.clone(),
-                        model_source: model.source.clone(),
+                        type_name: model.model.data_type.clone(),
+                        model_source: model.model.source.clone(),
                         global_id_fields_ndc_mapping: global_id_source.ndc_mapping.clone(),
                     },
                 )

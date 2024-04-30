@@ -22,7 +22,7 @@ use crate::schema::{
 /// limit, offset, order_by and where.
 pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::Model,
+    model: &resolved::ModelWithPermissions,
 ) -> Result<
     BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
@@ -30,7 +30,7 @@ pub(crate) fn generate_select_many_arguments(
     let mut arguments = BTreeMap::new();
 
     // insert limit argument
-    if let Some(limit_field) = &model.graphql_api.limit_field {
+    if let Some(limit_field) = &model.model.graphql_api.limit_field {
         let limit_argument = generate_int_input_argument(
             limit_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
@@ -44,7 +44,7 @@ pub(crate) fn generate_select_many_arguments(
     }
 
     // insert offset argument
-    if let Some(offset_field) = &model.graphql_api.offset_field {
+    if let Some(offset_field) = &model.model.graphql_api.offset_field {
         let offset_argument = generate_int_input_argument(
             offset_field.field_name.as_str(),
             Annotation::Input(types::InputAnnotation::Model(
@@ -59,11 +59,11 @@ pub(crate) fn generate_select_many_arguments(
     }
 
     // generate and insert order_by argument
-    if let Some(order_by_expression_info) = &model.graphql_api.order_by_expression {
+    if let Some(order_by_expression_info) = &model.model.graphql_api.order_by_expression {
         let order_by_argument = {
             get_order_by_expression_input_field(
                 builder,
-                model.name.clone(),
+                model.model.name.clone(),
                 order_by_expression_info,
             )
         };
@@ -75,7 +75,7 @@ pub(crate) fn generate_select_many_arguments(
     }
 
     // generate and insert where argument
-    if let Some(boolean_expression_type) = &model.filter_expression_type {
+    if let Some(boolean_expression_type) = &model.model.filter_expression_type {
         if let Some(boolean_expression) = &boolean_expression_type.graphql {
             let where_argument = get_where_expression_input_field(
                 builder,
@@ -97,7 +97,7 @@ pub(crate) fn generate_select_many_arguments(
 pub(crate) fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::Model,
+    model: &resolved::ModelWithPermissions,
     select_many: &resolved::SelectManyGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
@@ -112,7 +112,7 @@ pub(crate) fn select_many_field(
 
     // Generate the `args` input object and add the model
     // arguments within it.
-    if !model.arguments.is_empty() {
+    if !model.model.arguments.is_empty() {
         let model_arguments_input =
             model_arguments::get_model_arguments_input_field(builder, model)?;
 
@@ -136,7 +136,7 @@ pub(crate) fn select_many_field(
     }
 
     let field_type = ast::TypeContainer::list_null(ast::TypeContainer::named_non_null(
-        get_custom_output_type(gds, builder, &model.data_type)?,
+        get_custom_output_type(gds, builder, &model.model.data_type)?,
     ));
 
     let field = builder.conditional_namespaced(
@@ -145,10 +145,10 @@ pub(crate) fn select_many_field(
             select_many.description.clone(),
             Annotation::Output(types::OutputAnnotation::RootField(
                 types::RootFieldAnnotation::Model {
-                    data_type: model.data_type.clone(),
-                    source: model.source.clone(),
+                    data_type: model.model.data_type.clone(),
+                    source: model.model.source.clone(),
                     kind: types::RootFieldKind::SelectMany,
-                    name: model.name.clone(),
+                    name: model.model.name.clone(),
                 },
             )),
             field_type,

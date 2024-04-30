@@ -23,10 +23,11 @@ pub fn node_interface_schema(
     let mut roles_implementing_global_id: HashMap<Role, Option<types::NamespaceAnnotation>> =
         HashMap::new();
     for model in gds.metadata.models.values() {
-        if model.global_id_source.is_some() {
-            let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
+        if model.model.global_id_source.is_some() {
+            let object_type_representation =
+                get_object_type_representation(gds, &model.model.data_type)?;
 
-            let object_typename = get_custom_output_type(gds, builder, &model.data_type)?;
+            let object_typename = get_custom_output_type(gds, builder, &model.model.data_type)?;
 
             let node_interface_annotations =
                 permissions::get_node_interface_annotations(object_type_representation);
@@ -43,7 +44,7 @@ pub fn node_interface_schema(
             // Multiple models can be backed by the same type
             typename_global_id_mappings.insert(
                 object_typename.type_name().clone(),
-                model.global_id_fields.clone(),
+                model.model.global_id_fields.clone(),
             );
         }
     }

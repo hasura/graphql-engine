@@ -112,7 +112,7 @@ pub fn build_model_order_by_input_schema(
                 model_name: model_name.clone(),
             })?;
 
-    let object_type_representation = get_object_type_representation(gds, &model.data_type)?;
+    let object_type_representation = get_object_type_representation(gds, &model.model.data_type)?;
 
     let mut fields = BTreeMap::new();
 
@@ -125,7 +125,7 @@ pub fn build_model_order_by_input_schema(
             model_name: model_name.clone(),
         })?;
 
-    if let Some(model_order_by_expression) = model.graphql_api.order_by_expression.as_ref() {
+    if let Some(model_order_by_expression) = model.model.graphql_api.order_by_expression.as_ref() {
         for (field_name, order_by_expression) in &model_order_by_expression.order_by_fields {
             let graphql_field_name = mk_name(field_name.clone().0.as_str())?;
             let input_type =
@@ -171,12 +171,12 @@ pub fn build_model_order_by_input_schema(
                 })?;
 
                 let target_object_type_representation =
-                    get_object_type_representation(gds, &target_model.data_type)?;
+                    get_object_type_representation(gds, &target_model.model.data_type)?;
 
                 // Build relationship field in filter expression only when both
                 // the target_model and source model are backed by a source
                 if let (Some(target_source), Some(model_source)) =
-                    (&target_model.source, &model.source)
+                    (&target_model.model.source, &model.model.source)
                 {
                     let target_model_source =
                         ModelTargetSource::from_model_source(target_source, relationship)?;
@@ -193,7 +193,7 @@ pub fn build_model_order_by_input_schema(
                             // If the relationship target model does not have orderByExpressionType do not include
                             // it in the source model order_by input type.
                             if let Some(target_model_order_by_expression) =
-                                target_model.graphql_api.order_by_expression.as_ref()
+                                target_model.model.graphql_api.order_by_expression.as_ref()
                             {
                                 let target_model_order_by_expression_type_name =
                                     &target_model_order_by_expression.order_by_type_name;
