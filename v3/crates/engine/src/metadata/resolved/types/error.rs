@@ -1,7 +1,7 @@
 use thiserror::Error;
 
-use crate::metadata::resolved::argument::ArgumentMappingError;
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::helpers::argument::ArgumentMappingError;
+use crate::metadata::resolved::types::subgraph::{Qualified, QualifiedTypeReference};
 use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
@@ -12,7 +12,9 @@ use open_dds::{
     types::{CustomTypeName, FieldName, OperatorName, TypeReference},
 };
 
-use super::{ndc_validation::NDCValidationError, typecheck, types::TypeMappingCollectionError};
+use crate::metadata::resolved::helpers::{
+    ndc_validation::NDCValidationError, type_mappings::TypeMappingCollectionError, typecheck,
+};
 
 // TODO: This enum really needs structuring
 #[derive(Error, Debug)]
@@ -384,7 +386,7 @@ pub enum Error {
     #[error("{0}")]
     DeserializationError(#[from] serde_json::Error),
     #[error("NDC validation error: {0}")]
-    NDCValidationError(#[from] super::ndc_validation::NDCValidationError),
+    NDCValidationError(#[from] NDCValidationError),
     #[error(
         "duplicate relationship {relationship_name:} associated with source type {type_name:}"
     )]

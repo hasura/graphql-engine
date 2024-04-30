@@ -9,7 +9,6 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::plan::ProcessResponseAs;
 use crate::metadata::resolved;
-use crate::metadata::resolved::types::NdcColumnForComparison;
 use crate::utils::json_ext::ValueExt;
 
 /// This tree structure captures all the locations (in the selection set IR) where
@@ -118,7 +117,7 @@ pub struct Location<T> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteJoin<'s, 'ir> {
     /// target data connector to execute query on
-    pub target_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    pub target_data_connector: &'s resolved::DataConnectorLink,
     /// NDC IR to execute on a data connector
     pub target_ndc_ir: ndc_models::QueryRequest,
     /// Mapping of the fields in source to fields in target.
@@ -142,7 +141,7 @@ pub type SourceFieldAlias = String;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetField {
-    ModelField((FieldName, NdcColumnForComparison)),
+    ModelField((FieldName, resolved::NdcColumnForComparison)),
     CommandField(ArgumentName),
 }
 

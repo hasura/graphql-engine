@@ -1,9 +1,9 @@
-use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::stages::models;
+use crate::metadata::resolved::types::permission::ValueExpression;
 
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+use crate::metadata::resolved::types::subgraph::QualifiedTypeReference;
 
 use crate::schema::types::output_type::relationship::PredicateRelationshipAnnotation;
 

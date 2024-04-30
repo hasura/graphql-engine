@@ -1,13 +1,10 @@
 use open_dds::types::{CustomTypeName, FieldName};
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved::permission::ValueExpression;
-use crate::metadata::resolved::stages::{
-    data_connector_type_mappings, models, relationships, type_permissions,
-};
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
-use crate::metadata::resolved::types::{object_type_exists, unwrap_custom_type_name};
+use crate::metadata::resolved::ValueExpression;
 use crate::metadata::resolved::{self};
+use crate::metadata::resolved::{object_type_exists, unwrap_custom_type_name};
+use crate::metadata::resolved::{Qualified, QualifiedTypeReference};
 use crate::schema::Role;
 use crate::schema::{self, types};
 
@@ -101,7 +98,7 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 pub(crate) fn get_select_one_namespace_annotations(
     model: &resolved::ModelWithPermissions,
     object_type_representation: &resolved::ObjectTypeWithRelationships,
-    select_unique: &models::SelectUniqueGraphQlDefinition,
+    select_unique: &resolved::SelectUniqueGraphQlDefinition,
     object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let select_permissions = get_select_permissions_namespace_annotations(model, object_types)?;
@@ -126,7 +123,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
     source_object_type_representation: &resolved::ObjectTypeWithRelationships,
     target_object_type_representation: &resolved::ObjectTypeWithRelationships,
     mappings: &[resolved::RelationshipModelMapping],
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let select_permissions =
         get_select_permissions_namespace_annotations(target_model, object_types)?;
@@ -224,7 +221,7 @@ fn build_annotations_from_input_object_type_permissions(
     type_reference: &QualifiedTypeReference,
     ndc_argument_name: &Option<String>,
     object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, data_connector_type_mappings::TypeMapping>,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
 ) -> Result<(), schema::Error> {
     if let Some(object_type) = unwrap_custom_type_name(type_reference) {
@@ -234,7 +231,7 @@ fn build_annotations_from_input_object_type_permissions(
                     type_mappings
                         .get(object_type)
                         .map(|type_mapping| match type_mapping {
-                            data_connector_type_mappings::TypeMapping::Object {
+                            resolved::TypeMapping::Object {
                                 ndc_object_type_name: _,
                                 field_mappings,
                             } => field_mappings,
@@ -291,20 +288,14 @@ fn build_annotations_from_input_object_type_permissions(
 /// Preset map we generate -
 ///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
 fn build_preset_map_from_input_object_type_permission(
-    permission: &type_permissions::TypeInputPermission,
-    field_mappings: Option<&BTreeMap<FieldName, data_connector_type_mappings::FieldMapping>>,
+    permission: &resolved::TypeInputPermission,
+    field_mappings: Option<&BTreeMap<FieldName, resolved::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[String],
     ndc_argument_name: &Option<String>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
-    BTreeMap<
-        ArgumentNameAndPath,
-        (
-            QualifiedTypeReference,
-            resolved::permission::ValueExpression,
-        ),
-    >,
+    BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, resolved::ValueExpression)>,
     schema::Error,
 > {
     let preset_map = permission

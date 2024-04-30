@@ -33,7 +33,7 @@ pub(crate) fn generate_command_argument(
     builder: &mut gql_schema::Builder<GDS>,
     command: &resolved::CommandWithPermissions,
     argument_name: &ArgumentName,
-    argument_type: &crate::schema::commands::resolved::subgraph::ArgumentInfo,
+    argument_type: &crate::schema::commands::resolved::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
     let field_name = ast::Name::new(argument_name.0.as_str())?;
     let input_type = types::input_type::get_input_type(gds, builder, &argument_type.argument_type)?;

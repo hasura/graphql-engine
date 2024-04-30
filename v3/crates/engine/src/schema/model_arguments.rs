@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::types::input_type::get_input_type;
 use super::types::{Annotation, InputAnnotation, ModelInputAnnotation, TypeId};
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 
 /// Creates the `args` input object within which the model
 /// arguments fields will live.

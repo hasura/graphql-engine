@@ -1,16 +1,17 @@
 mod types;
 
-use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::ndc_validation;
+use crate::metadata::resolved::helpers::argument::get_argument_mappings;
+use crate::metadata::resolved::helpers::ndc_validation;
+use crate::metadata::resolved::helpers::types::{
+    get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
+};
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
     data_connectors, scalar_types, type_permissions,
 };
-use crate::metadata::resolved::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
-use crate::metadata::resolved::types::mk_name;
-use crate::metadata::resolved::types::{
-    get_type_representation, object_type_exists, unwrap_custom_type_name,
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::subgraph::{
+    mk_qualified_type_reference, ArgumentInfo, Qualified,
 };
 use indexmap::IndexMap;
 
@@ -21,9 +22,7 @@ use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved::types::{
-    collect_type_mapping_for_source, TypeMappingCollectionError, TypeMappingToCollect,
-};
+use crate::metadata::resolved::helpers::type_mappings;
 
 /// resolve commands
 pub fn resolve(
@@ -294,11 +293,11 @@ pub fn resolve_command_source(
                 ndc_validation::get_underlying_named_type(source_result_type).map_err(|e| {
                     Error::CommandTypeMappingCollectionError {
                         command_name: command.name.clone(),
-                        error: TypeMappingCollectionError::NDCValidationError(e),
+                        error: type_mappings::TypeMappingCollectionError::NDCValidationError(e),
                     }
                 })?;
 
-            let source_result_type_mapping_to_resolve = TypeMappingToCollect {
+            let source_result_type_mapping_to_resolve = type_mappings::TypeMappingToCollect {
                 type_name: custom_type_name,
                 ndc_object_type_name: source_result_type_name,
             };
@@ -311,7 +310,7 @@ pub fn resolve_command_source(
         .iter()
         .chain(argument_type_mappings_to_resolve.iter())
     {
-        collect_type_mapping_for_source(
+        type_mappings::collect_type_mapping_for_source(
             type_mapping_to_collect,
             data_connector_type_mappings,
             &qualified_data_connector_name,

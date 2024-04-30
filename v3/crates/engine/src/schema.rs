@@ -13,8 +13,8 @@ use std::str::FromStr;
 use thiserror::Error;
 
 use crate::metadata::{
-    resolved::error::Error as ResolveMetadataError, resolved::metadata::Metadata,
-    resolved::resolve, resolved::subgraph::Qualified,
+    resolved::resolve, resolved::Error as ResolveMetadataError, resolved::Metadata,
+    resolved::Qualified,
 };
 
 use self::types::{PossibleApolloFederationTypes, RootFieldAnnotation};

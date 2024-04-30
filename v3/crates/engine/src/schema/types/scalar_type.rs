@@ -1,4 +1,4 @@
-use crate::{metadata::resolved::subgraph::Qualified, schema::GDS};
+use crate::{metadata::resolved::Qualified, schema::GDS};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;

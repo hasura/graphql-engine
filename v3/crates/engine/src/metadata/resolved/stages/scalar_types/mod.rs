@@ -2,9 +2,9 @@ use std::collections::{HashMap, HashSet};
 
 use lang_graphql::ast::common as ast;
 
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
+use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 pub mod types;
 pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};

@@ -8,8 +8,8 @@ use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::{FilterRelationshipAnnotation, ModelTargetSource};
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::mk_name;
+use crate::metadata::resolved::mk_name;
+use crate::metadata::resolved::Qualified;
 
 use crate::schema::permissions;
 use crate::schema::types;

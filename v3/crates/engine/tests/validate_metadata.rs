@@ -1,8 +1,8 @@
 use std::fs;
 use std::path::PathBuf;
 
-use engine::metadata::resolved::error::BooleanExpressionError;
-use engine::metadata::resolved::error::Error as ResolveError;
+use engine::metadata::resolved::BooleanExpressionError;
+use engine::metadata::resolved::Error as ResolveError;
 use engine::schema::Error as SchemaError;
 use engine::schema::GDS;
 

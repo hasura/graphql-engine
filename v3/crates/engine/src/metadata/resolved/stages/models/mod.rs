@@ -6,19 +6,20 @@ pub use types::{
 };
 mod types;
 
-use crate::metadata::resolved::argument::get_argument_mappings;
-use crate::metadata::resolved::error::{BooleanExpressionError, Error, GraphqlConfigError};
-use crate::metadata::resolved::ndc_validation;
+use crate::metadata::resolved::helpers::argument::get_argument_mappings;
+use crate::metadata::resolved::helpers::ndc_validation;
+use crate::metadata::resolved::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
 
+use crate::metadata::resolved::helpers::type_mappings;
+use crate::metadata::resolved::helpers::types::NdcColumnForComparison;
+use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
     data_connectors, graphql_config, scalar_types, type_permissions,
 };
-use crate::metadata::resolved::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
-use crate::metadata::resolved::types::{
-    collect_type_mapping_for_source, NdcColumnForComparison, TypeMappingToCollect,
+use crate::metadata::resolved::types::subgraph::{
+    mk_qualified_type_reference, ArgumentInfo, Qualified,
 };
-use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
@@ -626,14 +627,14 @@ fn resolve_model_source(
 
     // Collect type mappings.
     let mut type_mappings = BTreeMap::new();
-    let source_collection_type_mapping_to_collect = TypeMappingToCollect {
+    let source_collection_type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &model.data_type,
         ndc_object_type_name: source_collection.collection_type.as_str(),
     };
     for type_mapping_to_collect in iter::once(&source_collection_type_mapping_to_collect)
         .chain(argument_type_mappings_to_collect.iter())
     {
-        collect_type_mapping_for_source(
+        type_mappings::collect_type_mapping_for_source(
             type_mapping_to_collect,
             data_connector_type_mappings,
             &qualified_data_connector_name,
@@ -741,8 +742,7 @@ fn get_model_object_type_representation<'s>(
     >,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::metadata::resolved::error::Error>
-{
+) -> Result<&'s type_permissions::ObjectTypeWithPermissions, crate::metadata::resolved::Error> {
     match object_types.get(data_type) {
         Some(object_type_representation) => Ok(object_type_representation),
         None => Err(Error::UnknownModelDataType {

@@ -11,8 +11,7 @@ use std::collections::HashMap;
 use super::commands;
 use super::root_field;
 use crate::execute::error;
-use crate::metadata::resolved::subgraph::QualifiedTypeReference;
-use crate::metadata::resolved::{self, subgraph};
+use crate::metadata::resolved;
 use crate::schema::types::ApolloFederationRootFields;
 use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::EntityFieldTypeNameMapping;
@@ -170,12 +169,12 @@ fn generate_type_field_ir<'n, 's>(
 fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
     source: &'s Option<resolved::ModelSource>,
-    data_type: &subgraph::Qualified<CustomTypeName>,
+    data_type: &resolved::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session: &Session,
-    model_name: &'s subgraph::Qualified<models::ModelName>,
+    model_name: &'s resolved::Qualified<models::ModelName>,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let source =
         source
@@ -212,11 +211,11 @@ fn generate_model_rootfield_ir<'n, 's>(
 }
 
 fn generate_command_rootfield_ir<'n, 's>(
-    name: &'s subgraph::Qualified<CommandName>,
+    name: &'s resolved::Qualified<CommandName>,
     type_name: &ast::TypeName,
     function_name: &'s Option<open_dds::commands::FunctionName>,
     source: &'s Option<CommandSourceDetail>,
-    result_type: &'s QualifiedTypeReference,
+    result_type: &'s resolved::QualifiedTypeReference,
     result_base_type_kind: &'s TypeKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,

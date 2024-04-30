@@ -1,5 +1,5 @@
 use crate::metadata::resolved::stages::{data_connector_type_mappings, data_connectors};
-use crate::metadata::resolved::subgraph::{
+use crate::metadata::resolved::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
 };

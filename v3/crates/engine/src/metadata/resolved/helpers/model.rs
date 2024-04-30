@@ -1,8 +1,8 @@
-use super::stages::data_connector_scalar_types;
+use crate::metadata::resolved::stages::data_connector_scalar_types;
 
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::types::error::Error;
 
-use crate::metadata::resolved::subgraph::{
+use crate::metadata::resolved::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
 };
 

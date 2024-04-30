@@ -1,6 +1,6 @@
+use crate::metadata::resolved::helpers::types::mk_name;
 /// this is where we will resolve graphql configuration
-use crate::metadata::resolved::error::{Error, GraphqlConfigError};
-use crate::metadata::resolved::types::mk_name;
+use crate::metadata::resolved::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
 use open_dds::graphql_config::{self, OrderByDirection};
 use serde::{Deserialize, Serialize};

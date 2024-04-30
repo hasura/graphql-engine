@@ -168,7 +168,7 @@ pub(crate) fn generate_int_input_argument(
     name: &str,
     annotation: Annotation,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
-    let input_field_name = resolved::types::mk_name(name)?;
+    let input_field_name = resolved::mk_name(name)?;
     Ok(gql_schema::InputField::new(
         input_field_name,
         None,

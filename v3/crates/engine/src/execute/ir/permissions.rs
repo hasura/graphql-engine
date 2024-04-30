@@ -10,9 +10,7 @@ use crate::execute::error::{Error, InternalDeveloperError, InternalEngineError, 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
 
-use crate::metadata::resolved::subgraph::{
-    QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
+use crate::metadata::resolved::{QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use crate::schema::types;
 use crate::schema::GDS;
 
@@ -189,7 +187,7 @@ fn make_permission_binary_boolean_expression(
     ndc_column: String,
     argument_type: &QualifiedTypeReference,
     operator: &str,
-    value_expression: &resolved::permission::ValueExpression,
+    value_expression: &resolved::ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, Error> {
@@ -224,13 +222,13 @@ fn make_permission_unary_boolean_expression(
 }
 
 pub(crate) fn make_value_from_value_expression(
-    val_expr: &resolved::permission::ValueExpression,
+    val_expr: &resolved::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
 ) -> Result<serde_json::Value, Error> {
     match val_expr {
-        resolved::permission::ValueExpression::Literal(val) => Ok(val.clone()),
-        resolved::permission::ValueExpression::SessionVariable(session_var) => {
+        resolved::ValueExpression::Literal(val) => Ok(val.clone()),
+        resolved::ValueExpression::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
                 InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.clone(),
@@ -239,7 +237,7 @@ pub(crate) fn make_value_from_value_expression(
 
             typecast_session_variable(value, value_type)
         }
-        resolved::permission::ValueExpression::BooleanExpression(_model_predicate) => {
+        resolved::ValueExpression::BooleanExpression(_model_predicate) => {
             Err(InternalDeveloperError::BooleanExpressionNotImplemented.into())
         }
     }

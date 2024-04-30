@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use open_dds::{models::ModelName, types::CustomTypeName};
 
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::types::error::Error;
 
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 /// This isn't a particularly satisfying resolve step, as it only serves to validate
 /// the output of previous steps.

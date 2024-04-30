@@ -12,7 +12,7 @@ use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
 use crate::execute::ndc::client as ndc_client;
-use crate::metadata::resolved::{ndc_validation::NDCValidationError, subgraph::Qualified};
+use crate::metadata::resolved::{NDCValidationError, Qualified};
 
 use super::types::{Annotation, NamespaceAnnotation};
 

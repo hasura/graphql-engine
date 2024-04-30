@@ -5,7 +5,7 @@ use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use crate::schema::permissions::get_node_field_namespace_permissions;
 use crate::schema::types::RelayInputAnnotation;
 use crate::schema::types::{

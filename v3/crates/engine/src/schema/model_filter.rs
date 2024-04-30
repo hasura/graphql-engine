@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use super::types::input_type;
 use crate::metadata::resolved;
 
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::{Qualified, QualifiedTypeReference};
 
 use crate::schema::types;
 use crate::schema::GDS;

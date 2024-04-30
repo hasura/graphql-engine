@@ -19,7 +19,7 @@ use crate::execute::ir::model_selection;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 
 use crate::schema::types::{self, Annotation, ModelInputAnnotation};
 use crate::schema::GDS;

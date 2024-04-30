@@ -11,9 +11,9 @@ use open_dds::types::{CustomTypeName, TypeName};
 
 use open_dds::data_connector::DataConnectorName;
 
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::mk_name;
+use crate::metadata::resolved::helpers::types::mk_name;
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{data_connectors, scalar_types};
 

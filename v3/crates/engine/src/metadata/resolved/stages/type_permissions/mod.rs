@@ -6,12 +6,12 @@ use open_dds::permissions::{
 
 use open_dds::types::{CustomTypeName, FieldName};
 
-use crate::metadata::resolved::error::Error;
+use crate::metadata::resolved::types::error::Error;
 
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
+use crate::metadata::resolved::helpers::typecheck;
 use crate::metadata::resolved::stages::data_connector_type_mappings;
-use crate::metadata::resolved::typecheck;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]

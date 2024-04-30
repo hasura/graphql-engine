@@ -1,5 +1,5 @@
 //! Functions for typechecking JSON literals against expected types
-use crate::metadata::resolved::subgraph;
+use crate::metadata::resolved::types::subgraph;
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]

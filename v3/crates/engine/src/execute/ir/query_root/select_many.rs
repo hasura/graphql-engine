@@ -21,7 +21,7 @@ use crate::execute::ir::order_by::build_ndc_order_by;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use crate::schema::types::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use crate::schema::GDS;
 

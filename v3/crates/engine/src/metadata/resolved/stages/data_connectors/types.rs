@@ -1,5 +1,5 @@
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::subgraph::Qualified;
 use serde::{Deserialize, Serialize};
 
 use indexmap::IndexMap;

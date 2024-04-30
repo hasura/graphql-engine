@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::{command_permissions, model_permissions, relationships};
 

@@ -9,10 +9,10 @@ use open_dds::types::{CustomTypeName, InbuiltType};
 
 use crate::execute::error;
 use crate::execute::ir::arguments;
-use crate::metadata::resolved::subgraph::{
+use crate::metadata::resolved::TypeMapping;
+use crate::metadata::resolved::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
 };
-use crate::metadata::resolved::TypeMapping;
 use crate::schema::types::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
 };

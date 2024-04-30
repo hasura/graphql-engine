@@ -19,9 +19,6 @@ use crate::execute::error::{self};
 use crate::execute::global_id;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::{
-    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
 use crate::schema::types::TypeKind;
 use crate::schema::{
     types::{Annotation, OutputAnnotation, RootFieldAnnotation},
@@ -87,7 +84,7 @@ pub struct NDCRelationshipName(pub(crate) String);
 
 impl NDCRelationshipName {
     pub fn new(
-        source_type: &Qualified<CustomTypeName>,
+        source_type: &resolved::Qualified<CustomTypeName>,
         relationship_name: &RelationshipName,
     ) -> Result<Self, error::Error> {
         let name = serde_json::to_string(&(source_type, relationship_name))?;
@@ -151,16 +148,16 @@ fn build_global_id_fields(
 }
 
 pub(crate) fn generate_nested_selection<'s>(
-    qualified_type_reference: &QualifiedTypeReference,
+    qualified_type_reference: &resolved::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     field: &normalized_ast::Field<'s, GDS>,
-    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
+    data_connector: &'s resolved::DataConnectorLink,
+    type_mappings: &'s BTreeMap<resolved::Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<NestedSelection<'s>>, error::Error> {
     match &qualified_type_reference.underlying_type {
-        QualifiedBaseType::List(element_type) => {
+        resolved::QualifiedBaseType::List(element_type) => {
             let array_selection = generate_nested_selection(
                 element_type,
                 field_base_type_kind,
@@ -172,10 +169,10 @@ pub(crate) fn generate_nested_selection<'s>(
             )?;
             Ok(array_selection.map(|a| NestedSelection::Array(Box::new(a))))
         }
-        QualifiedBaseType::Named(qualified_type_name) => {
+        resolved::QualifiedBaseType::Named(qualified_type_name) => {
             match qualified_type_name {
-                QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
-                QualifiedTypeName::Custom(data_type) => match field_base_type_kind {
+                resolved::QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
+                resolved::QualifiedTypeName::Custom(data_type) => match field_base_type_kind {
                     TypeKind::Scalar => Ok(None),
                     TypeKind::Object => {
                         let resolved::TypeMapping::Object { field_mappings, .. } = type_mappings
@@ -205,8 +202,8 @@ pub(crate) fn generate_nested_selection<'s>(
 /// sources depending on the model being queried.
 pub(crate) fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
+    data_connector: &'s resolved::DataConnectorLink,
+    type_mappings: &'s BTreeMap<resolved::Qualified<CustomTypeName>, resolved::TypeMapping>,
     field_mappings: &BTreeMap<FieldName, resolved::FieldMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,

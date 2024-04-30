@@ -1,22 +1,22 @@
 mod types;
-use crate::metadata::resolved::permission::ValueExpression;
+use crate::metadata::resolved::helpers::typecheck;
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, models,
     relationships,
 };
-use crate::metadata::resolved::typecheck;
+use crate::metadata::resolved::types::permission::ValueExpression;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, HashMap};
 pub use types::{FilterPermission, ModelPredicate, ModelWithPermissions, SelectPermission};
 
-use crate::metadata::resolved::argument::resolve_value_expression_for_argument;
-use crate::metadata::resolved::error::{Error, RelationshipError};
+use crate::metadata::resolved::helpers::argument::resolve_value_expression_for_argument;
+use crate::metadata::resolved::types::error::{Error, RelationshipError};
 
-use crate::metadata::resolved::subgraph::{
+use crate::metadata::resolved::helpers::types::mk_name;
+use crate::metadata::resolved::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::mk_name;
 use crate::schema::types::output_type::relationship::{
     ModelTargetSource, PredicateRelationshipAnnotation,
 };
@@ -485,8 +485,7 @@ fn get_model_object_type_representation<'s>(
     >,
     data_type: &Qualified<CustomTypeName>,
     model_name: &Qualified<ModelName>,
-) -> Result<&'s relationships::ObjectTypeWithRelationships, crate::metadata::resolved::error::Error>
-{
+) -> Result<&'s relationships::ObjectTypeWithRelationships, crate::metadata::resolved::Error> {
     match object_types.get(data_type) {
         Some(object_type_representation) => Ok(object_type_representation),
         None => Err(Error::UnknownModelDataType {

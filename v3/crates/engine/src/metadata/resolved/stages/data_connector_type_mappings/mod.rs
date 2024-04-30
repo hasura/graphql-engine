@@ -7,11 +7,11 @@ pub use types::{
     ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
+use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
 use crate::metadata::resolved::stages::data_connectors;
-use crate::metadata::resolved::types::{mk_name, store_new_graphql_type};
 
-use crate::metadata::resolved::error::{Error, TypeMappingValidationError};
-use crate::metadata::resolved::subgraph::{mk_qualified_type_reference, Qualified};
+use crate::metadata::resolved::types::error::{Error, TypeMappingValidationError};
+use crate::metadata::resolved::types::subgraph::{mk_qualified_type_reference, Qualified};
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;

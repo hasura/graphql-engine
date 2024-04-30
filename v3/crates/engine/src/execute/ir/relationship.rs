@@ -23,7 +23,7 @@ use super::{
 };
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved::subgraph::serialize_qualified_btreemap;
+use crate::metadata::resolved::{serialize_qualified_btreemap, Qualified};
 use crate::schema::types::output_type::relationship::{
     ModelRelationshipAnnotation, ModelTargetSource,
 };
@@ -34,7 +34,7 @@ use crate::{
     },
 };
 use crate::{
-    metadata::resolved::{self, subgraph::Qualified},
+    metadata::resolved,
     schema::{
         types::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation},
         GDS,
@@ -46,7 +46,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub relationship_name: &'s RelationshipName,
     pub relationship_type: &'s RelationshipType,
     pub source_type: &'s Qualified<CustomTypeName>,
-    pub source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    pub source_data_connector: &'s resolved::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s ModelTargetSource,
@@ -57,7 +57,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
 #[derive(Debug, Serialize)]
 pub(crate) struct LocalCommandRelationshipInfo<'s> {
     pub annotation: &'s CommandRelationshipAnnotation,
-    pub source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    pub source_data_connector: &'s resolved::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     pub target_source: &'s CommandTargetSource,
@@ -80,7 +80,7 @@ pub(crate) struct RemoteCommandRelationshipInfo<'s> {
 }
 
 pub type SourceField = (FieldName, resolved::FieldMapping);
-pub type TargetField = (FieldName, resolved::types::NdcColumnForComparison);
+pub type TargetField = (FieldName, resolved::NdcColumnForComparison);
 
 pub(crate) fn process_model_relationship_definition(
     relationship_info: &LocalModelRelationshipInfo,
@@ -212,7 +212,7 @@ pub(crate) fn process_command_relationship_definition(
 pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    source_data_connector: &'s resolved::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -328,7 +328,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
 pub(crate) fn generate_command_relationship_ir<'s>(
     field: &Field<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    source_data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    source_data_connector: &'s resolved::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
@@ -382,7 +382,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
-    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    data_connector: &'s resolved::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
@@ -428,7 +428,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     field: &normalized_ast::Field<'s, GDS>,
     field_call: &normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s CommandRelationshipAnnotation,
-    data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    data_connector: &'s resolved::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,

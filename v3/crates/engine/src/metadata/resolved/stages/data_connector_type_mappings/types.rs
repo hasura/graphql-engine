@@ -1,5 +1,5 @@
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::subgraph::QualifiedTypeReference;
 use indexmap::IndexMap;
 
 use open_dds::types::{CustomTypeName, Deprecated, FieldName};
@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use open_dds::models::ModelName;
 
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorName;

@@ -11,14 +11,14 @@ use indexmap::IndexMap;
 
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
-use crate::metadata::resolved::error::{Error, RelationshipError};
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::error::{Error, RelationshipError};
+use crate::metadata::resolved::types::subgraph::Qualified;
 
+use crate::metadata::resolved::helpers::types::mk_name;
 use crate::metadata::resolved::stages::{
     commands, data_connector_scalar_types, data_connector_type_mappings, data_connectors, models,
     type_permissions,
 };
-use crate::metadata::resolved::types::mk_name;
 
 use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
 

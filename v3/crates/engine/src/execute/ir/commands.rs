@@ -21,8 +21,7 @@ use crate::execute::error;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph;
-use crate::metadata::resolved::subgraph::QualifiedTypeReference;
+use crate::metadata::resolved::{Qualified, QualifiedTypeReference};
 use crate::schema::types::ArgumentNameAndPath;
 use crate::schema::types::ArgumentPresets;
 use crate::schema::types::CommandSourceDetail;
@@ -33,13 +32,13 @@ use crate::schema::GDS;
 #[derive(Serialize, Debug)]
 pub struct CommandInfo<'s> {
     /// The name of the command
-    pub command_name: subgraph::Qualified<commands::CommandName>,
+    pub command_name: Qualified<commands::CommandName>,
 
     /// The name of the field as published in the schema
     pub field_name: ast::Name,
 
     /// The data connector backing this model.
-    pub data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    pub data_connector: &'s resolved::DataConnectorLink,
 
     /// Arguments for the NDC table
     pub(crate) arguments: BTreeMap<String, json::Value>,
@@ -81,7 +80,7 @@ pub struct ProcedureBasedCommand<'s> {
 /// Generates the IR for a 'command' operation
 #[allow(irrefutable_let_patterns)]
 pub(crate) fn generate_command_info<'n, 's>(
-    command_name: &subgraph::Qualified<commands::CommandName>,
+    command_name: &Qualified<commands::CommandName>,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     result_type: &QualifiedTypeReference,
@@ -174,7 +173,7 @@ pub(crate) fn generate_command_info<'n, 's>(
 
 /// Generates the IR for a 'function based command' operation
 pub(crate) fn generate_function_based_command<'n, 's>(
-    command_name: &subgraph::Qualified<commands::CommandName>,
+    command_name: &Qualified<commands::CommandName>,
     function_name: &'s open_dds::commands::FunctionName,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
@@ -202,7 +201,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
 
 /// Generates the IR for a 'procedure based command' operation
 pub(crate) fn generate_procedure_based_command<'n, 's>(
-    command_name: &subgraph::Qualified<commands::CommandName>,
+    command_name: &Qualified<commands::CommandName>,
     procedure_name: &'s open_dds::commands::ProcedureName,
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,

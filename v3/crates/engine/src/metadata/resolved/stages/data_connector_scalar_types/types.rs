@@ -1,4 +1,4 @@
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::types::subgraph::Qualified;
 
 use crate::metadata::resolved::stages::data_connectors;
 use lang_graphql::ast::common as ast;

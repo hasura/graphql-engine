@@ -1,9 +1,7 @@
 use crate::{
     metadata::resolved::{
-        self,
-        stages::data_connector_type_mappings,
-        subgraph::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference},
-        types::{get_type_representation, mk_name, TypeRepresentation},
+        self, get_type_representation, mk_name, Qualified, QualifiedBaseType, QualifiedTypeName,
+        QualifiedTypeReference, TypeRepresentation,
     },
     schema::{types, Role, GDS},
 };
@@ -83,7 +81,7 @@ fn get_custom_input_type(
     })? {
         TypeRepresentation::Object(resolved::ObjectTypeWithRelationships {
             object_type:
-                data_connector_type_mappings::ObjectTypeRepresentation {
+                resolved::ObjectTypeRepresentation {
                     graphql_input_type_name,
                     ..
                 },

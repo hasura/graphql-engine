@@ -1,11 +1,11 @@
 use crate::metadata::resolved::stages::{data_connector_type_mappings, type_permissions};
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::types::subgraph::{Qualified, QualifiedTypeReference};
 use indexmap::IndexMap;
 use open_dds::permissions::Role;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
 
-use crate::metadata::resolved::types::NdcColumnForComparison;
+use crate::metadata::resolved::helpers::types::NdcColumnForComparison;
 use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
 use std::collections::HashMap;

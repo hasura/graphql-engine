@@ -1,11 +1,11 @@
+use crate::metadata::resolved::helpers::types::NdcColumnForComparison;
 use crate::metadata::resolved::stages::{
     boolean_expressions, data_connector_type_mappings, data_connectors,
 };
-use crate::metadata::resolved::subgraph::{
+use crate::metadata::resolved::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
 };
-use crate::metadata::resolved::types::NdcColumnForComparison;
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast, Name};

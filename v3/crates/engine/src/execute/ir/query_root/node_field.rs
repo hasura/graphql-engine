@@ -14,7 +14,7 @@ use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use crate::schema::types::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use crate::schema::GDS;
 use crate::utils::HashMapWithJsonKey;

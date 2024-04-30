@@ -13,9 +13,11 @@ pub mod relationships;
 pub mod roles;
 pub mod scalar_types;
 pub mod type_permissions;
+mod types;
 
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::metadata::{resolve_metadata, Metadata};
+pub use types::Metadata;
+
+use crate::metadata::resolved::types::error::Error;
 
 /// this is where we take the input metadata and attempt to resolve a working `Metadata` object
 /// currently the bulk of this lives in the `resolve_metadata` function, we'll be slowly breaking
@@ -126,12 +128,19 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &data_connector_type_mappings,
     )?;
 
-    resolve_metadata(
-        &graphql_config,
-        object_types_with_relationships,
-        &scalar_types,
-        &boolean_expression_types,
-        models_with_permissions,
-        commands_with_permissions,
-    )
+    let roles = roles::resolve(
+        &object_types_with_relationships,
+        &models_with_permissions,
+        &commands_with_permissions,
+    );
+
+    Ok(Metadata {
+        scalar_types,
+        object_types: object_types_with_relationships,
+        models: models_with_permissions,
+        commands: commands_with_permissions,
+        boolean_expression_types,
+        graphql_config: graphql_config.global,
+        roles,
+    })
 }

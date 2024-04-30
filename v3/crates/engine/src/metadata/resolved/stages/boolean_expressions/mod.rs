@@ -1,15 +1,15 @@
 pub mod types;
-use crate::metadata::resolved::error::{BooleanExpressionError, Error, GraphqlConfigError};
 use crate::metadata::resolved::stages::{
     data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
     scalar_types, type_permissions,
 };
+use crate::metadata::resolved::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
 
-use crate::metadata::resolved::model::resolve_ndc_type;
-use crate::metadata::resolved::subgraph::Qualified;
-use crate::metadata::resolved::types::{
-    collect_type_mapping_for_source, mk_name, store_new_graphql_type, TypeMappingToCollect,
-};
+use crate::metadata::resolved::helpers::model::resolve_ndc_type;
+use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
+use crate::metadata::resolved::types::subgraph::Qualified;
+
+use crate::metadata::resolved::helpers::type_mappings;
 use lang_graphql::ast::common as ast;
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -199,13 +199,13 @@ pub(crate) fn resolve_boolean_expression_type(
     // Collect type mappings.
     let mut type_mappings = BTreeMap::new();
 
-    let type_mapping_to_collect = TypeMappingToCollect {
+    let type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &object_type,
         ndc_object_type_name: object_boolean_expression
             .data_connector_object_type
             .as_str(),
     };
-    collect_type_mapping_for_source(
+    type_mappings::collect_type_mapping_for_source(
         &type_mapping_to_collect,
         data_connector_type_mappings,
         &qualified_data_connector_name,

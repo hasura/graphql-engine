@@ -1,7 +1,7 @@
 //! Track the models that were used in query.
 
 use super::ir::root_field::{self, RootField};
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
 use open_dds::{commands::CommandName, models::ModelName};
@@ -177,7 +177,7 @@ mod tests {
         execute::model_tracking::{
             count_command, count_model, extend_usage_count, CommandCount, ModelCount, UsagesCounts,
         },
-        metadata::resolved::subgraph::Qualified,
+        metadata::resolved::Qualified,
     };
 
     #[test]

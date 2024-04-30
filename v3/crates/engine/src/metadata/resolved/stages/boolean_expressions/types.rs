@@ -1,6 +1,6 @@
 use crate::metadata::resolved::stages::{data_connector_type_mappings, data_connectors};
 
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::types::subgraph::{Qualified, QualifiedTypeReference};
 use std::collections::{BTreeMap, HashMap};
 
 use lang_graphql::ast::common::{self as ast};

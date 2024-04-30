@@ -11,12 +11,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     metadata::resolved::{
-        self,
-        stages::models,
-        subgraph::{
-            deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
-            QualifiedTypeReference,
-        },
+        self, deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
+        QualifiedTypeReference,
     },
     schema::{
         self,
@@ -40,7 +36,7 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
+    pub source_data_connector: resolved::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -57,7 +53,7 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
+    pub source_data_connector: resolved::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -74,7 +70,7 @@ pub struct PredicateRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::stages::data_connectors::DataConnectorLink,
+    pub source_data_connector: resolved::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
@@ -88,7 +84,7 @@ pub struct PredicateRelationshipAnnotation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelTargetSource {
-    pub(crate) model: models::ModelSource,
+    pub(crate) model: resolved::ModelSource,
     pub(crate) capabilities: resolved::RelationshipCapabilities,
 }
 
@@ -106,7 +102,7 @@ impl ModelTargetSource {
     }
 
     pub fn from_model_source(
-        model_source: &models::ModelSource,
+        model_source: &resolved::ModelSource,
         relationship: &resolved::Relationship,
     ) -> Result<Self, schema::Error> {
         Ok(Self {

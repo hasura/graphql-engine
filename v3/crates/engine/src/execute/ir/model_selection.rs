@@ -14,14 +14,14 @@ use super::selection_set;
 use crate::execute::error;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use crate::schema::GDS;
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]
 pub struct ModelSelection<'s> {
     // The data connector backing this model.
-    pub data_connector: &'s resolved::stages::data_connectors::DataConnectorLink,
+    pub data_connector: &'s resolved::DataConnectorLink,
 
     // Source collection in the data connector for this model
     pub(crate) collection: &'s String,

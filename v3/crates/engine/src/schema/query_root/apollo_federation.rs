@@ -6,7 +6,7 @@ use lang_graphql::{mk_name, schema as gql_schema};
 use open_dds::types::CustomTypeName;
 
 use crate::metadata::resolved;
-use crate::metadata::resolved::subgraph::Qualified;
+use crate::metadata::resolved::Qualified;
 use crate::schema::permissions::get_entities_field_namespace_permissions;
 
 use crate::schema::types::output_type::{

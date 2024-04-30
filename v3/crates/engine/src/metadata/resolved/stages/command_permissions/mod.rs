@@ -6,22 +6,22 @@ use indexmap::IndexMap;
 
 use open_dds::{commands::CommandName, types::CustomTypeName};
 
-use crate::metadata::resolved::error::Error;
-use crate::metadata::resolved::permission::ValueExpression;
 use crate::metadata::resolved::stages::{
     boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
     relationships,
 };
-use crate::metadata::resolved::subgraph::{Qualified, QualifiedTypeReference};
+use crate::metadata::resolved::types::error::Error;
+use crate::metadata::resolved::types::permission::ValueExpression;
+use crate::metadata::resolved::types::subgraph::{Qualified, QualifiedTypeReference};
 use open_dds::arguments::ArgumentName;
 
-use crate::metadata::resolved::argument::resolve_value_expression_for_argument;
+use crate::metadata::resolved::helpers::argument::resolve_value_expression_for_argument;
 
 use open_dds::permissions::CommandPermissionsV1;
 
 use std::collections::BTreeMap;
 
-use crate::metadata::resolved::typecheck;
+use crate::metadata::resolved::helpers::typecheck;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandWithPermissions {

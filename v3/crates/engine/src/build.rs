@@ -7,7 +7,7 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum BuildError {
     #[error("invalid metadata: {0}")]
-    InvalidMetadata(#[from] metadata::resolved::error::Error),
+    InvalidMetadata(#[from] metadata::resolved::Error),
     #[error("unable to build schema: {0}")]
     UnableToBuildSchema(#[from] schema::Error),
     #[error("unable to encode schema: {0}")]
