@@ -13,11 +13,11 @@ use crate::container::*;
 pub fn derive(input_tok: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input_tok as DeriveInput);
     impl_opendd(&input)
-        .unwrap_or_else(syn::Error::into_compile_error)
-        .into()
+        .map(TokenStream::from)
+        .unwrap_or_else(TokenStream::from)
 }
 
-fn impl_opendd(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
     let name = &input.ident;
     let cont = Container::from_derive_input(input)?;
     let TraitImpls {
@@ -58,4 +58,23 @@ fn impl_opendd(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
             }
         }
     })
+}
+
+#[derive(Debug, thiserror::Error)]
+enum MacroError {
+    #[error("{0}")]
+    Darling(#[from] darling::Error),
+    #[error("{0}")]
+    Syn(#[from] syn::Error),
+}
+
+type MacroResult<T> = Result<T, MacroError>;
+
+impl From<MacroError> for TokenStream {
+    fn from(value: MacroError) -> Self {
+        match value {
+            MacroError::Darling(inner) => inner.write_errors().into(),
+            MacroError::Syn(inner) => inner.into_compile_error().into(),
+        }
+    }
 }
