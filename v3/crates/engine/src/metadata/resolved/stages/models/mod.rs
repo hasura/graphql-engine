@@ -38,7 +38,6 @@ use std::iter;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     existing_graphql_types: &HashSet<ast::TypeName>,
     global_id_enabled_types: &HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &HashMap<
@@ -98,7 +97,6 @@ pub fn resolve(
                 data_connectors,
                 object_types,
                 scalar_types,
-                data_connector_type_mappings,
                 boolean_expression_types,
             )?;
         }
@@ -574,7 +572,6 @@ fn resolve_model_source(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
@@ -636,7 +633,6 @@ fn resolve_model_source(
     {
         type_mappings::collect_type_mapping_for_source(
             type_mapping_to_collect,
-            data_connector_type_mappings,
             &qualified_data_connector_name,
             object_types,
             scalar_types,

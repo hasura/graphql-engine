@@ -179,7 +179,6 @@ pub(crate) fn resolve_value_expression_for_argument(
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<ValueExpression, Error> {
     match value_expression {
         open_dds::permissions::ValueExpression::SessionVariable(session_variable) => {
@@ -213,9 +212,9 @@ pub(crate) fn resolve_value_expression_for_argument(
 
             // look up this type in the context of it's data connector
             // so that we use the correct column names for the data source
-            let data_connector_field_mappings = data_connector_type_mappings
+            let data_connector_field_mappings = object_type_representation
+                .type_mappings
                 .get(
-                    &boolean_expression_type.object_type,
                     &boolean_expression_type.data_connector_name,
                     &boolean_expression_type.data_connector_object_type,
                 )

@@ -43,6 +43,7 @@ pub fn resolve(
             type_output_permissions,
             type_input_permissions,
             object_type,
+            type_mappings,
         },
     ) in object_types_with_permissions
     {
@@ -53,6 +54,7 @@ pub fn resolve(
                 type_output_permissions: type_output_permissions.clone(),
                 type_input_permissions: type_input_permissions.clone(),
                 relationships: IndexMap::new(),
+                type_mappings: type_mappings.clone(),
             },
         );
     }

@@ -2,9 +2,9 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 pub mod types;
 use open_dds::types::CustomTypeName;
 pub use types::{
-    DataConnectorTypeMappings, DataConnectorTypeMappingsOutput, FieldDefinition, FieldMapping,
-    ObjectTypeRepresentation, ResolvedApolloFederationObjectKey,
-    ResolvedObjectApolloFederationConfig, TypeMapping,
+    DataConnectorTypeMappingsForObject, DataConnectorTypeMappingsOutput, FieldDefinition,
+    FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
+    ResolvedApolloFederationObjectKey, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 
 use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
@@ -22,7 +22,6 @@ pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<DataConnectorTypeMappingsOutput, Error> {
-    let mut data_connector_type_mappings = DataConnectorTypeMappings::new();
     let mut object_types = HashMap::new();
     let mut graphql_types = HashSet::new();
     let mut global_id_enabled_types = HashMap::new();
@@ -45,6 +44,8 @@ pub(crate) fn resolve(
             &mut apollo_federation_entity_enabled_types,
         )?;
 
+        let mut type_mappings = DataConnectorTypeMappingsForObject::new();
+
         // resolve object types' type mappings
         for dc_type_mapping in &object_type_definition.data_connector_type_mapping {
             let qualified_data_connector_name = Qualified::new(
@@ -64,16 +65,23 @@ pub(crate) fn resolve(
                     error: type_validation_error,
                 }
             })?;
-            data_connector_type_mappings.insert(
-                &qualified_object_type_name,
+            type_mappings.insert(
                 &qualified_data_connector_name,
                 &dc_type_mapping.data_connector_object_type,
                 type_mapping,
             )?;
         }
 
+        let object_type_with_type_mappings = ObjectTypeWithTypeMappings {
+            object_type: resolved_object_type,
+            type_mappings,
+        };
+
         if object_types
-            .insert(qualified_object_type_name.clone(), resolved_object_type)
+            .insert(
+                qualified_object_type_name.clone(),
+                object_type_with_type_mappings,
+            )
             .is_some()
         {
             return Err(Error::DuplicateTypeDefinition {
@@ -83,7 +91,6 @@ pub(crate) fn resolve(
     }
 
     Ok(DataConnectorTypeMappingsOutput {
-        data_connector_type_mappings,
         object_types,
         graphql_types,
         global_id_enabled_types,

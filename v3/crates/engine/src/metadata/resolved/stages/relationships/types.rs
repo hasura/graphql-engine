@@ -25,6 +25,8 @@ pub struct ObjectTypeWithRelationships {
     pub type_input_permissions: HashMap<Role, type_permissions::TypeInputPermission>,
     /// any relationships defined on this object
     pub relationships: IndexMap<ast::Name, Relationship>,
+    /// type mappings for each data connector
+    pub type_mappings: data_connector_type_mappings::DataConnectorTypeMappingsForObject,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

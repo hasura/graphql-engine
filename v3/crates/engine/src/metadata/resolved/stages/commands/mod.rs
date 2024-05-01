@@ -6,8 +6,8 @@ use crate::metadata::resolved::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
 use crate::metadata::resolved::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
-    data_connectors, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, scalar_types,
+    type_permissions,
 };
 use crate::metadata::resolved::types::error::Error;
 use crate::metadata::resolved::types::subgraph::{
@@ -28,7 +28,6 @@ use crate::metadata::resolved::helpers::type_mappings;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &HashMap<
@@ -55,7 +54,6 @@ pub fn resolve(
                 &mut resolved_command,
                 subgraph,
                 data_connectors,
-                data_connector_type_mappings,
                 object_types,
                 scalar_types,
                 boolean_expression_types,
@@ -187,7 +185,6 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &HashMap<
@@ -312,7 +309,6 @@ pub fn resolve_command_source(
     {
         type_mappings::collect_type_mapping_for_source(
             type_mapping_to_collect,
-            data_connector_type_mappings,
             &qualified_data_connector_name,
             object_types,
             scalar_types,

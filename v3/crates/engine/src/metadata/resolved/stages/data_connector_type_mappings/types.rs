@@ -13,61 +13,48 @@ use crate::metadata::resolved::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorName;
 
-pub type DataConnectorTypeMappingsForObjectType =
-    HashMap<Qualified<DataConnectorName>, HashMap<String, TypeMapping>>;
-
-#[derive(Debug)]
-pub struct DataConnectorTypeMappings(
-    HashMap<Qualified<CustomTypeName>, DataConnectorTypeMappingsForObjectType>,
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct DataConnectorTypeMappingsForObject(
+    HashMap<Qualified<DataConnectorName>, HashMap<String, TypeMapping>>,
 );
 
-impl Default for DataConnectorTypeMappings {
+impl Default for DataConnectorTypeMappingsForObject {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl DataConnectorTypeMappings {
+impl DataConnectorTypeMappingsForObject {
     pub fn new() -> Self {
         Self(HashMap::new())
     }
 
     pub fn get(
         &self,
-        object_type_name: &Qualified<CustomTypeName>,
         data_connector_name: &Qualified<DataConnectorName>,
         data_connector_object_type: &str,
     ) -> Option<&TypeMapping> {
         self.0
-            .get(object_type_name)
-            .and_then(|connectors| {
-                connectors
-                    .get(data_connector_name)
-                    .map(|data_connector_object_types| {
-                        data_connector_object_types.get(data_connector_object_type)
-                    })
+            .get(data_connector_name)
+            .and_then(|data_connector_object_types| {
+                data_connector_object_types.get(data_connector_object_type)
             })
-            .flatten()
     }
 
     pub fn insert(
         &mut self,
-        object_type_name: &Qualified<CustomTypeName>,
         data_connector_name: &Qualified<DataConnectorName>,
         data_connector_object_type: &str,
         type_mapping: TypeMapping,
     ) -> Result<(), Error> {
         if self
             .0
-            .entry(object_type_name.clone())
-            .or_default()
             .entry(data_connector_name.clone())
             .or_default()
             .insert(data_connector_object_type.to_string(), type_mapping)
             .is_some()
         {
-            return Err(Error::DuplicateDataConnectorTypeMapping {
-                type_name: object_type_name.clone(),
+            return Err(Error::DuplicateDataConnectorObjectTypeMapping {
                 data_connector: data_connector_name.clone(),
                 data_connector_object_type: data_connector_object_type.to_string(),
             });
@@ -82,8 +69,7 @@ pub struct DataConnectorTypeMappingsOutput {
     pub global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
         HashMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
-    pub data_connector_type_mappings: DataConnectorTypeMappings,
-    pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeRepresentation>,
+    pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
@@ -96,6 +82,11 @@ pub struct ObjectTypeRepresentation {
     pub graphql_input_type_name: Option<ast::TypeName>,
     pub description: Option<String>,
     // TODO: add graphql_output_type_kind if we support creating interfaces.
+}
+
+pub struct ObjectTypeWithTypeMappings {
+    pub object_type: ObjectTypeRepresentation,
+    pub type_mappings: DataConnectorTypeMappingsForObject,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

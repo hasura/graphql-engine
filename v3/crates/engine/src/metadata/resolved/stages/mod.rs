@@ -32,7 +32,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;
 
     let data_connector_type_mappings::DataConnectorTypeMappingsOutput {
-        data_connector_type_mappings,
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
@@ -63,7 +62,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     } = boolean_expressions::resolve(
         &metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
         &object_types_with_permissions,
         &scalar_types,
         &graphql_types,
@@ -78,7 +76,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     } = models::resolve(
         &metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
         &graphql_types,
         &global_id_enabled_types,
         &apollo_federation_entity_enabled_types,
@@ -91,7 +88,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     let commands = commands::resolve(
         &metadata_accessor,
         &data_connectors,
-        &data_connector_type_mappings,
         &object_types_with_permissions,
         &scalar_types,
         &boolean_expression_types,
@@ -116,7 +112,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &object_types_with_relationships,
         &boolean_expression_types,
         &data_connectors,
-        &data_connector_type_mappings,
     )?;
 
     let models_with_permissions = model_permissions::resolve(
@@ -125,7 +120,6 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &object_types_with_relationships,
         &models,
         &boolean_expression_types,
-        &data_connector_type_mappings,
     )?;
 
     let roles = roles::resolve(

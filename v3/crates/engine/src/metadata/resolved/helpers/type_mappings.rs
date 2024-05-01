@@ -50,7 +50,6 @@ pub enum TypeMappingCollectionError {
 
 pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     data_connector_name: &Qualified<DataConnectorName>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -59,41 +58,38 @@ pub(crate) fn collect_type_mapping_for_source(
         data_connector_type_mappings::TypeMapping,
     >,
 ) -> Result<(), TypeMappingCollectionError> {
-    let type_mapping = data_connector_type_mappings
-        .get(
-            mapping_to_collect.type_name,
-            data_connector_name,
-            mapping_to_collect.ndc_object_type_name,
-        )
-        .ok_or_else(|| TypeMappingCollectionError::MappingNotDefined {
-            type_name: mapping_to_collect.type_name.clone(),
-            data_connector: data_connector_name.clone(),
-            ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
-        })?;
-
-    // If there is an existing mapping, make sure it maps to the same NDC object type.
-    if let Some(inserted_mapping) =
-        collected_mappings.insert(mapping_to_collect.type_name.clone(), type_mapping.clone())
-    {
-        let data_connector_type_mappings::TypeMapping::Object {
-            ndc_object_type_name,
-            ..
-        } = inserted_mapping;
-        if ndc_object_type_name != mapping_to_collect.ndc_object_type_name {
-            return Err(
-                TypeMappingCollectionError::MappingToMultipleDataConnectorObjectType {
-                    type_name: mapping_to_collect.type_name.clone(),
-                    ndc_type_1: ndc_object_type_name,
-                    ndc_type_2: mapping_to_collect.ndc_object_type_name.to_string(),
-                },
-            );
-        } else {
-            return Ok(());
-        }
-    }
-
     match object_types.get(mapping_to_collect.type_name) {
         Some(object_type_representation) => {
+            let type_mapping = object_type_representation
+                .type_mappings
+                .get(data_connector_name, mapping_to_collect.ndc_object_type_name)
+                .ok_or_else(|| TypeMappingCollectionError::MappingNotDefined {
+                    type_name: mapping_to_collect.type_name.clone(),
+                    data_connector: data_connector_name.clone(),
+                    ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
+                })?;
+
+            // If there is an existing mapping, make sure it maps to the same NDC object type.
+            if let Some(inserted_mapping) = collected_mappings
+                .insert(mapping_to_collect.type_name.clone(), type_mapping.clone())
+            {
+                let data_connector_type_mappings::TypeMapping::Object {
+                    ndc_object_type_name,
+                    ..
+                } = inserted_mapping;
+                if ndc_object_type_name != mapping_to_collect.ndc_object_type_name {
+                    return Err(
+                        TypeMappingCollectionError::MappingToMultipleDataConnectorObjectType {
+                            type_name: mapping_to_collect.type_name.clone(),
+                            ndc_type_1: ndc_object_type_name,
+                            ndc_type_2: mapping_to_collect.ndc_object_type_name.to_string(),
+                        },
+                    );
+                } else {
+                    return Ok(());
+                }
+            }
+
             let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
                 type_mapping;
             // For each field in the ObjectType, if that field is using an ObjectType in its type,
@@ -122,7 +118,6 @@ pub(crate) fn collect_type_mapping_for_source(
 
                         collect_type_mapping_for_source(
                             &field_type_mapping_to_collect,
-                            data_connector_type_mappings,
                             data_connector_name,
                             object_types,
                             scalar_types,

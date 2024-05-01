@@ -39,7 +39,6 @@ pub fn resolve(
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
         .iter()
@@ -78,7 +77,6 @@ pub fn resolve(
                 object_types,
                 models, // This is required to get the model for the relationship target
                 boolean_expression_types,
-                data_connector_type_mappings,
             )?);
 
             model.select_permissions = select_permissions;
@@ -506,7 +504,6 @@ pub fn resolve_model_select_permissions(
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<HashMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = HashMap::new();
     for model_permission in &model_permissions.permissions {
@@ -545,7 +542,6 @@ pub fn resolve_model_select_permissions(
                             object_types,
                             boolean_expression_types,
                             data_connectors,
-                            data_connector_type_mappings,
                         )?;
 
                         // additionally typecheck literals

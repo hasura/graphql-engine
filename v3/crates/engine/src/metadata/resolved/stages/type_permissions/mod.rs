@@ -30,6 +30,8 @@ pub struct ObjectTypeWithPermissions {
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
     pub type_input_permissions: HashMap<Role, TypeInputPermission>,
+    /// type mappings for each data connector
+    pub type_mappings: data_connector_type_mappings::DataConnectorTypeMappingsForObject,
 }
 
 /// resolve type permissions
@@ -37,7 +39,7 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     object_types: &HashMap<
         Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeRepresentation,
+        data_connector_type_mappings::ObjectTypeWithTypeMappings,
     >,
 ) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>, Error> {
     let mut object_types_with_permissions = HashMap::new();
@@ -45,7 +47,8 @@ pub fn resolve(
         object_types_with_permissions.insert(
             object_type_name.clone(),
             ObjectTypeWithPermissions {
-                object_type: object_type.clone(),
+                object_type: object_type.object_type.clone(),
+                type_mappings: object_type.type_mappings.clone(),
                 type_input_permissions: HashMap::new(),
                 type_output_permissions: HashMap::new(),
             },

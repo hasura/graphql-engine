@@ -33,9 +33,8 @@ pub enum Error {
         type_name: Qualified<CustomTypeName>,
         error: TypeMappingValidationError,
     },
-    #[error("Multiple mappings have been defined from type {type_name:} to object {data_connector_object_type:} of data connector {data_connector:}")]
-    DuplicateDataConnectorTypeMapping {
-        type_name: Qualified<CustomTypeName>,
+    #[error("Multiple mappings have been defined from object {data_connector_object_type:} of data connector {data_connector:}")]
+    DuplicateDataConnectorObjectTypeMapping {
         data_connector: Qualified<DataConnectorName>,
         data_connector_object_type: String,
     },

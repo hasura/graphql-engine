@@ -7,8 +7,7 @@ use indexmap::IndexMap;
 use open_dds::{commands::CommandName, types::CustomTypeName};
 
 use crate::metadata::resolved::stages::{
-    boolean_expressions, commands, data_connector_scalar_types, data_connector_type_mappings,
-    relationships,
+    boolean_expressions, commands, data_connector_scalar_types, relationships,
 };
 use crate::metadata::resolved::types::error::Error;
 use crate::metadata::resolved::types::permission::ValueExpression;
@@ -45,7 +44,6 @@ pub fn resolve(
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
 ) -> Result<IndexMap<Qualified<CommandName>, CommandWithPermissions>, Error> {
     let mut commands_with_permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions> =
         commands
@@ -79,7 +77,6 @@ pub fn resolve(
                 object_types,
                 boolean_expression_types,
                 data_connectors,
-                data_connector_type_mappings,
                 subgraph,
             )?;
         } else {
@@ -100,7 +97,6 @@ pub fn resolve_command_permissions(
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    data_connector_type_mappings: &data_connector_type_mappings::DataConnectorTypeMappings,
     subgraph: &str,
 ) -> Result<HashMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = HashMap::new();
@@ -125,7 +121,6 @@ pub fn resolve_command_permissions(
                         object_types,
                         boolean_expression_types,
                         data_connectors,
-                        data_connector_type_mappings,
                     )?;
 
                     // additionally typecheck literals
