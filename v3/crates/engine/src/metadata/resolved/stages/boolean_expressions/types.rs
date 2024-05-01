@@ -1,4 +1,4 @@
-use crate::metadata::resolved::stages::{data_connector_type_mappings, data_connectors};
+use crate::metadata::resolved::stages::{data_connectors, object_types};
 
 use crate::metadata::resolved::types::subgraph::{Qualified, QualifiedTypeReference};
 use std::collections::{BTreeMap, HashMap};
@@ -24,10 +24,8 @@ pub struct ObjectBooleanExpressionType {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub data_connector_link: data_connectors::DataConnectorLink,
     pub data_connector_object_type: String,
-    pub type_mappings: BTreeMap<
-        Qualified<open_dds::types::CustomTypeName>,
-        data_connector_type_mappings::TypeMapping,
-    >,
+    pub type_mappings:
+        BTreeMap<Qualified<open_dds::types::CustomTypeName>, object_types::TypeMapping>,
     pub graphql: Option<BooleanExpressionInfo>,
 }
 

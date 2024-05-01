@@ -11,7 +11,7 @@ use crate::metadata::resolved::types::error::Error;
 use crate::metadata::resolved::types::subgraph::Qualified;
 
 use crate::metadata::resolved::helpers::typecheck;
-use crate::metadata::resolved::stages::data_connector_type_mappings;
+use crate::metadata::resolved::stages::object_types;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
@@ -23,7 +23,7 @@ pub struct TypeInputPermission {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
 #[display(fmt = "Display")]
 pub struct ObjectTypeWithPermissions {
-    pub object_type: data_connector_type_mappings::ObjectTypeRepresentation,
+    pub object_type: object_types::ObjectTypeRepresentation,
     /// permissions on this type, when it is used in an output context (e.g. as
     /// a return type of Model or Command)
     pub type_output_permissions: HashMap<Role, TypeOutputPermission>,
@@ -31,16 +31,13 @@ pub struct ObjectTypeWithPermissions {
     /// an argument type of Model or Command)
     pub type_input_permissions: HashMap<Role, TypeInputPermission>,
     /// type mappings for each data connector
-    pub type_mappings: data_connector_type_mappings::DataConnectorTypeMappingsForObject,
+    pub type_mappings: object_types::DataConnectorTypeMappingsForObject,
 }
 
 /// resolve type permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &HashMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::ObjectTypeWithTypeMappings,
-    >,
+    object_types: &HashMap<Qualified<CustomTypeName>, object_types::ObjectTypeWithTypeMappings>,
 ) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>, Error> {
     let mut object_types_with_permissions = HashMap::new();
     for (object_type_name, object_type) in object_types {
@@ -87,7 +84,7 @@ pub fn resolve(
 }
 
 pub fn resolve_output_type_permission(
-    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
+    object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<HashMap<Role, TypeOutputPermission>, Error> {
     let mut resolved_type_permissions = HashMap::new();
@@ -118,7 +115,7 @@ pub fn resolve_output_type_permission(
 }
 
 pub(crate) fn resolve_input_type_permission(
-    object_type_representation: &data_connector_type_mappings::ObjectTypeRepresentation,
+    object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
 ) -> Result<HashMap<Role, TypeInputPermission>, Error> {
     let mut resolved_type_permissions = HashMap::new();

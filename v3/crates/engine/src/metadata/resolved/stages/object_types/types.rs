@@ -63,7 +63,7 @@ impl DataConnectorTypeMappingsForObject {
     }
 }
 
-/// output of `data_connector_type_mappings` step
+/// output of `object_types` step
 pub struct DataConnectorTypeMappingsOutput {
     pub graphql_types: HashSet<ast::TypeName>,
     pub global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,

@@ -1,8 +1,7 @@
 mod types;
 use crate::metadata::resolved::helpers::typecheck;
 use crate::metadata::resolved::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings, models,
-    relationships,
+    boolean_expressions, data_connector_scalar_types, models, object_types, relationships,
 };
 use crate::metadata::resolved::types::permission::ValueExpression;
 use indexmap::IndexMap;
@@ -144,7 +143,7 @@ fn resolve_model_predicate(
     model: &models::Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<ModelPredicate, Error> {
@@ -160,14 +159,14 @@ fn resolve_model_predicate(
             // TODO: resolve the "in" operator too (ndc_models::BinaryArrayComparisonOperator)
             if let Some(model_source) = &model.source {
                 // Get field mappings of model data type
-                let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
-                    model_source.type_mappings.get(&model.data_type).ok_or(
-                        Error::TypeMappingRequired {
-                            model_name: model.name.clone(),
-                            type_name: model.data_type.clone(),
-                            data_connector: model_source.data_connector.name.clone(),
-                        },
-                    )?;
+                let object_types::TypeMapping::Object { field_mappings, .. } = model_source
+                    .type_mappings
+                    .get(&model.data_type)
+                    .ok_or(Error::TypeMappingRequired {
+                        model_name: model.name.clone(),
+                        type_name: model.data_type.clone(),
+                        data_connector: model_source.data_connector.name.clone(),
+                    })?;
 
                 // Determine field_mapping for the predicate field
                 let field_mapping = field_mappings.get(field).ok_or_else(|| {
@@ -239,14 +238,14 @@ fn resolve_model_predicate(
         open_dds::permissions::ModelPredicate::FieldIsNull(FieldIsNullPredicate { field }) => {
             if let Some(model_source) = &model.source {
                 // Get field mappings of model data type
-                let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
-                    model_source.type_mappings.get(&model.data_type).ok_or(
-                        Error::TypeMappingRequired {
-                            model_name: model.name.clone(),
-                            type_name: model.data_type.clone(),
-                            data_connector: model_source.data_connector.name.clone(),
-                        },
-                    )?;
+                let object_types::TypeMapping::Object { field_mappings, .. } = model_source
+                    .type_mappings
+                    .get(&model.data_type)
+                    .ok_or(Error::TypeMappingRequired {
+                        model_name: model.name.clone(),
+                        type_name: model.data_type.clone(),
+                        data_connector: model_source.data_connector.name.clone(),
+                    })?;
                 // Determine field_mapping for the predicate field
                 let field_mapping = field_mappings.get(field).ok_or_else(|| {
                     Error::UnknownFieldInSelectPermissionsDefinition {
@@ -434,7 +433,7 @@ fn resolve_binary_operator_for_model(
     model_name: &Qualified<ModelName>,
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
-    fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,

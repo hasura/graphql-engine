@@ -14,8 +14,8 @@ use crate::metadata::resolved::helpers::type_mappings;
 use crate::metadata::resolved::helpers::types::NdcColumnForComparison;
 use crate::metadata::resolved::helpers::types::{mk_name, store_new_graphql_type};
 use crate::metadata::resolved::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connector_type_mappings,
-    data_connectors, graphql_config, scalar_types, type_permissions,
+    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    object_types, scalar_types, type_permissions,
 };
 use crate::metadata::resolved::types::subgraph::{
     mk_qualified_type_reference, ArgumentInfo, Qualified,
@@ -179,7 +179,7 @@ fn resolve_filter_expression_type(
 
 fn resolve_orderable_fields(
     model: &ModelV1,
-    type_fields: &IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    type_fields: &IndexMap<FieldName, object_types::FieldDefinition>,
 ) -> Result<Vec<OrderableField>, Error> {
     for field in &model.orderable_fields {
         // Check for unknown orderable field
@@ -452,16 +452,14 @@ fn resolve_model_graphql_api(
                 )?;
                 order_by_expression_type_name
                     .map(|order_by_type_name| {
-                        let data_connector_type_mappings::TypeMapping::Object {
-                            field_mappings,
-                            ..
-                        } = model_source.type_mappings.get(&model.data_type).ok_or(
-                            Error::TypeMappingRequired {
+                        let object_types::TypeMapping::Object { field_mappings, .. } = model_source
+                            .type_mappings
+                            .get(&model.data_type)
+                            .ok_or(Error::TypeMappingRequired {
                                 model_name: model_name.clone(),
                                 type_name: model.data_type.clone(),
                                 data_connector: model_source.data_connector.name.clone(),
-                            },
-                        )?;
+                            })?;
 
                         let mut order_by_fields = HashMap::new();
                         for (field_name, field_mapping) in field_mappings.iter() {
@@ -757,7 +755,7 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
     comparison_location: F,
 ) -> Result<NdcColumnForComparison, Error> {
     // Get field mappings of model data type
-    let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } = model_source
+    let object_types::TypeMapping::Object { field_mappings, .. } = model_source
         .type_mappings
         .get(model_data_type)
         .ok_or(Error::TypeMappingRequired {

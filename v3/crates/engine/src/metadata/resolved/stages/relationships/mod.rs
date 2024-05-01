@@ -16,8 +16,7 @@ use crate::metadata::resolved::types::subgraph::Qualified;
 
 use crate::metadata::resolved::helpers::types::mk_name;
 use crate::metadata::resolved::stages::{
-    commands, data_connector_scalar_types, data_connector_type_mappings, data_connectors, models,
-    type_permissions,
+    commands, data_connector_scalar_types, data_connectors, models, object_types, type_permissions,
 };
 
 use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
@@ -123,7 +122,7 @@ pub fn relationship_execution_category(
 fn resolve_relationship_source_mapping<'a>(
     relationship_name: &'a RelationshipName,
     source_type_name: &'a Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &object_types::ObjectTypeRepresentation,
     relationship_mapping: &'a open_dds::relationships::RelationshipMapping,
 ) -> Result<&'a FieldAccess, Error> {
     match &relationship_mapping.source {
@@ -160,7 +159,7 @@ fn resolve_relationship_source_mapping<'a>(
 fn resolve_relationship_mappings_model(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &object_types::ObjectTypeRepresentation,
     target_model: &models::Model,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
@@ -264,7 +263,7 @@ fn resolve_relationship_mappings_model(
 fn resolve_relationship_mappings_command(
     relationship: &RelationshipV1,
     source_type_name: &Qualified<CustomTypeName>,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &object_types::ObjectTypeRepresentation,
     target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
@@ -391,7 +390,7 @@ pub fn resolve_relationship(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    source_type: &data_connector_type_mappings::ObjectTypeRepresentation,
+    source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Relationship, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
     let (relationship_target, source_data_connector, target_name) = match &relationship.target {

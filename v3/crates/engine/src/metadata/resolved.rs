@@ -13,14 +13,14 @@ pub use stages::boolean_expressions::{
 };
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
-pub use stages::data_connector_type_mappings::{
-    FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
-};
 pub use stages::data_connectors::DataConnectorLink;
 pub use stages::model_permissions::{FilterPermission, ModelPredicate, ModelWithPermissions};
 pub use stages::models::{
     Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
     SelectUniqueGraphQlDefinition,
+};
+pub use stages::object_types::{
+    FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
 };
 pub use stages::relationships::{
     relationship_execution_category, ObjectTypeWithRelationships, Relationship,

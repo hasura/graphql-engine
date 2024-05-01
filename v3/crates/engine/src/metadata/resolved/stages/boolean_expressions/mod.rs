@@ -1,7 +1,7 @@
 pub mod types;
 use crate::metadata::resolved::stages::{
-    data_connector_scalar_types, data_connector_type_mappings, data_connectors, graphql_config,
-    scalar_types, type_permissions,
+    data_connector_scalar_types, data_connectors, graphql_config, object_types, scalar_types,
+    type_permissions,
 };
 use crate::metadata::resolved::types::error::{BooleanExpressionError, Error, GraphqlConfigError};
 
@@ -272,7 +272,7 @@ pub fn resolve_boolean_expression_info(
     where_type_name: ast::TypeName,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    type_mappings: &data_connector_type_mappings::TypeMapping,
+    type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionInfo, Error> {
     let mut scalar_fields = HashMap::new();
@@ -289,7 +289,7 @@ pub fn resolve_boolean_expression_info(
         })?
         .scalars;
 
-    let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } = type_mappings;
+    let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
     let filter_graphql_config = graphql_config
         .query

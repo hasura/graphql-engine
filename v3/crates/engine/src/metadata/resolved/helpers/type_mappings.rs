@@ -1,6 +1,4 @@
-use crate::metadata::resolved::stages::{
-    data_connector_type_mappings, scalar_types, type_permissions,
-};
+use crate::metadata::resolved::stages::{object_types, scalar_types, type_permissions};
 
 use crate::metadata::resolved::helpers::ndc_validation::{
     get_underlying_named_type, NDCValidationError,
@@ -53,10 +51,7 @@ pub(crate) fn collect_type_mapping_for_source(
     data_connector_name: &Qualified<DataConnectorName>,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    collected_mappings: &mut BTreeMap<
-        Qualified<CustomTypeName>,
-        data_connector_type_mappings::TypeMapping,
-    >,
+    collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     match object_types.get(mapping_to_collect.type_name) {
         Some(object_type_representation) => {
@@ -73,7 +68,7 @@ pub(crate) fn collect_type_mapping_for_source(
             if let Some(inserted_mapping) = collected_mappings
                 .insert(mapping_to_collect.type_name.clone(), type_mapping.clone())
             {
-                let data_connector_type_mappings::TypeMapping::Object {
+                let object_types::TypeMapping::Object {
                     ndc_object_type_name,
                     ..
                 } = inserted_mapping;
@@ -90,8 +85,7 @@ pub(crate) fn collect_type_mapping_for_source(
                 }
             }
 
-            let data_connector_type_mappings::TypeMapping::Object { field_mappings, .. } =
-                type_mapping;
+            let object_types::TypeMapping::Object { field_mappings, .. } = type_mapping;
             // For each field in the ObjectType, if that field is using an ObjectType in its type,
             // resolve the type mappings for that ObjectType too
             for (field_name, field_definition) in &object_type_representation.object_type.fields {

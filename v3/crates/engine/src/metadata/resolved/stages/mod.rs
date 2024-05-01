@@ -4,11 +4,11 @@ pub mod command_permissions;
 pub mod commands;
 /// This is where we'll be moving explicit metadata resolve stages
 pub mod data_connector_scalar_types;
-pub mod data_connector_type_mappings;
 pub mod data_connectors;
 pub mod graphql_config;
 pub mod model_permissions;
 pub mod models;
+pub mod object_types;
 pub mod relationships;
 pub mod roles;
 pub mod scalar_types;
@@ -31,12 +31,12 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
 
     let data_connectors = data_connectors::resolve(&metadata_accessor)?;
 
-    let data_connector_type_mappings::DataConnectorTypeMappingsOutput {
+    let object_types::DataConnectorTypeMappingsOutput {
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
         object_types,
-    } = data_connector_type_mappings::resolve(&metadata_accessor, &data_connectors)?;
+    } = object_types::resolve(&metadata_accessor, &data_connectors)?;
 
     let scalar_types::ScalarTypesOutput {
         scalar_types,

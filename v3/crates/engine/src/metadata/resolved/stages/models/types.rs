@@ -1,7 +1,5 @@
 use crate::metadata::resolved::helpers::types::NdcColumnForComparison;
-use crate::metadata::resolved::stages::{
-    boolean_expressions, data_connector_type_mappings, data_connectors,
-};
+use crate::metadata::resolved::stages::{boolean_expressions, data_connectors, object_types};
 use crate::metadata::resolved::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -95,8 +93,7 @@ pub struct ModelSource {
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
     )]
-    pub type_mappings:
-        BTreeMap<Qualified<CustomTypeName>, data_connector_type_mappings::TypeMapping>,
+    pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     pub argument_mappings: HashMap<ArgumentName, String>,
 }
 
@@ -104,7 +101,7 @@ pub struct ModelSource {
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,
-    pub type_fields: IndexMap<FieldName, data_connector_type_mappings::FieldDefinition>,
+    pub type_fields: IndexMap<FieldName, object_types::FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
     pub arguments: IndexMap<ArgumentName, ArgumentInfo>,
     pub graphql_api: ModelGraphQlApi,
