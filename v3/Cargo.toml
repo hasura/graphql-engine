@@ -6,7 +6,13 @@ package.edition = "2021"
 package.license = "Apache-2.0"
 
 members = [
-  "crates/*"
+  "crates/auth/*",
+  "crates/custom-connector",
+  "crates/engine",
+  "crates/lang-graphql",
+  "crates/metadata-schema-generator",
+  "crates/open-dds",
+  "crates/utils/*",
 ]
 
 [workspace.lints.clippy]

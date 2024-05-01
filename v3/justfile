@@ -3,7 +3,7 @@ set positional-arguments
 # This produces "-p engine -p lang-graphql -p ...".
 # See https://github.com/rust-lang/cargo/issues/4463 for why we build each
 # package explicitly instead of `cargo build --workspace --all-targets`.
-PACKAGE_SELECTOR := `ls crates | sed 's/^/-p /' | xargs echo`
+PACKAGE_SELECTOR := `find crates -name "Cargo.toml" -type f | xargs dirname | xargs -n 1 basename | sed 's/^/-p /' | xargs echo`
 
 default:
   just --list

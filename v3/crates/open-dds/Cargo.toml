@@ -8,7 +8,7 @@ license.workspace = true
 bench = false
 
 [dependencies]
-opendds-derive = { path = "../opendds-derive" }
+opendds-derive = { path = "../utils/opendds-derive" }
 
 derive_more = "0.99.17"
 indexmap = { version = "2", features = ["serde"] }

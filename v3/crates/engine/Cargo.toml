@@ -23,13 +23,13 @@ name = "generate_ir"
 harness = false
 
 [dependencies]
-hasura-authn-core = { path = "../hasura-authn-core" }
-hasura-authn-jwt = { path = "../hasura-authn-jwt" }
-hasura-authn-webhook = { path = "../hasura-authn-webhook" }
+hasura-authn-core = { path = "../auth/hasura-authn-core" }
+hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
+hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
-opendds-derive = { path = "../opendds-derive" }
-tracing-util = { path = "../tracing-util" }
+opendds-derive = { path = "../utils/opendds-derive" }
+tracing-util = { path = "../utils/tracing-util" }
 
 anyhow = "1"
 async-recursion = "1.0.5"

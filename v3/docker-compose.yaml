@@ -129,12 +129,12 @@ services:
       context: .
       target: builder
     volumes:
-      - ./crates/tracing-util:/app/tracing-util
+      - ./crates/utils/tracing-util:/app/tracing-util
       - ./crates/lang-graphql:/app/lang-graphql
       - ./crates/open-dds:/app/open-dds
       - ./crates/engine:/app/engine
-      - ./crates/hasura-authn-core:/app/hasura-authn-core
-      - ./crates/hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./crates/auth/hasura-authn-core:/app/hasura-authn-core
+      - ./crates/auth/hasura-authn-webhook:/app/hasura-authn-webhook
     ports:
       - 3000:3000
     depends_on:

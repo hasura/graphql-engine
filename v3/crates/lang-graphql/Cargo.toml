@@ -24,7 +24,7 @@ name = "schema_serde"
 harness = false
 
 [dependencies]
-recursion_limit_macro = { path = "../recursion_limit_macro" }
+recursion_limit_macro = { path = "../utils/recursion_limit_macro" }
 
 axum = "0.6.20"
 http = "0.2"

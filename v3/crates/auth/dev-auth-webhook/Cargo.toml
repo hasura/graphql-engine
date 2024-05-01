@@ -10,7 +10,7 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
-tracing-util = { path = "../tracing-util" }
+tracing-util = { path = "../../utils/tracing-util" }
 
 anyhow = "1"
 axum = "0.6.20"
