@@ -3,10 +3,9 @@ FROM rust:1.77 AS builder
 
 WORKDIR /app
 COPY ./Cargo.toml ./Cargo.toml
-COPY ./crates/utils/tracing-util ./crates/tracing-util
-COPY ./crates/auth/dev-auth-webhook ./crates/dev-auth-webhook
+COPY ./crates ./crates
 
-WORKDIR /app/crates/dev-auth-webhook
+WORKDIR /app/crates/auth/dev-auth-webhook
 RUN cargo build --release --package=dev-auth-webhook
 
 # copy
