@@ -49,6 +49,9 @@ alias fmt := format
 fix-local:
   cargo clippy --no-deps --fix --allow-no-vcs
   cargo fmt
+  just fix-format
+
+fix-format:
   prettier --write .
 
 # tests run by CI
@@ -68,6 +71,7 @@ test TESTNAME='':
 update-golden-files: docker-refresh
   docker compose -f ci.docker-compose.yaml run --rm -e REGENERATE_GOLDENFILES=1 test_setup \
     cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
+  just fix-format
 
 # Benchmarks run by CI
 ci-bench:
@@ -144,6 +148,7 @@ machete:
 # update golden tests
 update-golden-files-local: start-docker-test-deps
   REGENERATE_GOLDENFILES=1 cargo test
+  just fix-format
 
 # run the engine using schema from tests
 run-local: start-docker-test-deps start-docker-run-deps
