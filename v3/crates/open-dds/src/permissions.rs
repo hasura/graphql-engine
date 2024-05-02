@@ -1,4 +1,3 @@
-use derive_more::Display;
 use indexmap::IndexSet;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -23,7 +22,7 @@ use crate::{
     PartialEq,
     JsonSchema,
     Hash,
-    Display,
+    derive_more::Display,
     opendds_derive::OpenDd,
 )]
 pub struct Role(pub String);

@@ -73,8 +73,7 @@ pub struct DataConnectorTypeMappingsOutput {
     pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectTypeRepresentation {
     pub fields: IndexMap<FieldName, FieldDefinition>,
     pub global_id_fields: Vec<FieldName>,
@@ -97,14 +96,12 @@ pub struct FieldDefinition {
     pub deprecated: Option<Deprecated>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedObjectApolloFederationConfig {
     pub keys: nonempty::NonEmpty<ResolvedApolloFederationObjectKey>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ResolvedApolloFederationObjectKey {
     pub fields: nonempty::NonEmpty<FieldName>,
 }

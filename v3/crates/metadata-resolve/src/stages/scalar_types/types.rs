@@ -5,8 +5,7 @@ use std::collections::{HashMap, HashSet};
 
 use open_dds::types::CustomTypeName;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ScalarTypeRepresentation {
     pub graphql_type_name: Option<ast::TypeName>,
     pub description: Option<String>,

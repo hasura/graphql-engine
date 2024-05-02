@@ -1,4 +1,5 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::collections::BTreeMap;
+use std::fmt::Display;
 
 use open_dds::types::{BaseType, CustomTypeName, InbuiltType, TypeName, TypeReference};
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
@@ -19,11 +20,20 @@ impl<T: Display> Qualified<T> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, derive_more::Display, PartialEq, Hash, Eq)]
-#[display(fmt = "QualifiedBaseType")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash, Eq)]
 pub struct QualifiedTypeReference {
     pub underlying_type: QualifiedBaseType,
     pub nullable: bool,
+}
+
+impl Display for QualifiedTypeReference {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.underlying_type)?;
+        if !self.nullable {
+            write!(f, "!")?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

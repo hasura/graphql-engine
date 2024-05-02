@@ -1,8 +1,6 @@
 use std::borrow::Borrow;
-use std::fmt::Display;
 use std::ops::Deref;
 
-use derive_more::Display;
 use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{
@@ -93,14 +91,13 @@ pub struct TypeReference {
 
 impl_OpenDd_default_for!(TypeReference);
 
-impl Display for TypeReference {
+impl std::fmt::Display for TypeReference {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            self.underlying_type,
-            if self.nullable { "" } else { "!" }
-        )
+        write!(f, "{}", self.underlying_type)?;
+        if !self.nullable {
+            write!(f, "!")?;
+        }
+        Ok(())
     }
 }
 
@@ -641,7 +638,17 @@ pub struct ComparableField {
 }
 
 #[derive(
-    Display, Serialize, Deserialize, Clone, Debug, Eq, PartialEq, JsonSchema, PartialOrd, Ord, Hash,
+    derive_more::Display,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    Eq,
+    PartialEq,
+    JsonSchema,
+    PartialOrd,
+    Ord,
+    Hash,
 )]
 pub struct OperatorName(pub String);
 

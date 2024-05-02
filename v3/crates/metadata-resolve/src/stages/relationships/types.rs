@@ -13,8 +13,7 @@ use std::collections::HashMap;
 use open_dds::relationships::{FieldAccess, RelationshipName, RelationshipType};
 use open_dds::types::Deprecated;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, derive_more::Display)]
-#[display(fmt = "Display")]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectTypeWithRelationships {
     pub object_type: object_types::ObjectTypeRepresentation,
     /// permissions on this type, when it is used in an output context (e.g. as
