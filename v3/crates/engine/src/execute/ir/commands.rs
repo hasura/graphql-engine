@@ -20,13 +20,13 @@ use super::selection_set;
 use crate::execute::ir::error;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_command, UsagesCounts};
-use crate::metadata::resolved;
-use crate::metadata::resolved::{Qualified, QualifiedTypeReference};
 use crate::schema::types::ArgumentNameAndPath;
 use crate::schema::types::ArgumentPresets;
 use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::TypeKind;
 use crate::schema::GDS;
+use metadata_resolve;
+use metadata_resolve::{Qualified, QualifiedTypeReference};
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]
@@ -38,7 +38,7 @@ pub struct CommandInfo<'s> {
     pub field_name: ast::Name,
 
     /// The data connector backing this model.
-    pub data_connector: &'s resolved::DataConnectorLink,
+    pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     /// Arguments for the NDC table
     pub(crate) arguments: BTreeMap<String, json::Value>,

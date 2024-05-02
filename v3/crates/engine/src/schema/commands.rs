@@ -2,7 +2,6 @@
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
 
-use crate::metadata::resolved;
 use crate::schema::permissions;
 use crate::schema::types::{self, output_type::get_output_type, Annotation};
 use crate::schema::GDS;
@@ -10,6 +9,7 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
+use metadata_resolve;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
@@ -31,9 +31,9 @@ pub enum Response {
 pub(crate) fn generate_command_argument(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithPermissions,
     argument_name: &ArgumentName,
-    argument_type: &crate::schema::commands::resolved::ArgumentInfo,
+    argument_type: &crate::schema::commands::metadata_resolve::ArgumentInfo,
 ) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
     let field_name = ast::Name::new(argument_name.0.as_str())?;
     let input_type = types::input_type::get_input_type(gds, builder, &argument_type.argument_type)?;
@@ -75,7 +75,7 @@ pub(crate) fn generate_command_argument(
 pub(crate) fn command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     command_annotation: Annotation,
     deprecation_status: gql_schema::DeprecationStatus,
@@ -112,7 +112,7 @@ pub(crate) fn command_field(
 pub(crate) fn function_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<
@@ -165,7 +165,7 @@ pub(crate) fn function_command_field(
 pub(crate) fn procedure_command_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    command: &resolved::CommandWithPermissions,
+    command: &metadata_resolve::CommandWithPermissions,
     command_field_name: ast::Name,
     deprecation_status: gql_schema::DeprecationStatus,
 ) -> Result<

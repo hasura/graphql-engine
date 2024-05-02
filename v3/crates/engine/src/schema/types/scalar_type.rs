@@ -1,6 +1,7 @@
-use crate::{metadata::resolved::Qualified, schema::GDS};
+use crate::schema::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
+use metadata_resolve::Qualified;
 use open_dds::types::CustomTypeName;
 
 type Error = crate::schema::Error;

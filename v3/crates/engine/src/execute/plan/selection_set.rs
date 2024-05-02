@@ -12,7 +12,7 @@ use crate::execute::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::execute::remote_joins::types::{Location, RemoteJoin};
-use crate::metadata::resolved::FieldMapping;
+use metadata_resolve::FieldMapping;
 
 pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,

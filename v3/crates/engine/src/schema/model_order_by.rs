@@ -7,12 +7,12 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
-use crate::metadata::resolved;
-use crate::metadata::resolved::mk_name;
-use crate::metadata::resolved::Qualified;
 use crate::schema::permissions;
 use crate::schema::types;
 use crate::schema::GDS;
+use metadata_resolve;
+use metadata_resolve::mk_name;
+use metadata_resolve::Qualified;
 
 type Error = crate::schema::Error;
 
@@ -79,7 +79,7 @@ pub fn build_order_by_enum_type_schema(
 pub fn get_order_by_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model_name: Qualified<ModelName>,
-    order_by_expression_info: &resolved::ModelOrderByExpression,
+    order_by_expression_info: &metadata_resolve::ModelOrderByExpression,
 ) -> gql_schema::InputField<GDS> {
     gql_schema::InputField::new(
         order_by_expression_info.order_by_field_name.clone(),
@@ -157,7 +157,7 @@ pub fn build_model_order_by_input_schema(
         // relationship fields
         // TODO(naveen): Add support for command relationships.
         for (rel_name, relationship) in object_type_representation.relationships.iter() {
-            if let resolved::RelationshipTarget::Model {
+            if let metadata_resolve::RelationshipTarget::Model {
                 model_name,
                 relationship_type,
                 target_typename,
@@ -178,13 +178,14 @@ pub fn build_model_order_by_input_schema(
                 if let (Some(target_source), Some(model_source)) =
                     (&target_model.model.source, &model.model.source)
                 {
-                    let target_model_source = resolved::ModelTargetSource::from_model_source(
-                        target_source,
-                        relationship,
-                    )?;
+                    let target_model_source =
+                        metadata_resolve::ModelTargetSource::from_model_source(
+                            target_source,
+                            relationship,
+                        )?;
                     // order_by expression with relationships is currently only supported for local relationships
-                    if let resolved::RelationshipExecutionCategory::Local =
-                        resolved::relationship_execution_category(
+                    if let metadata_resolve::RelationshipExecutionCategory::Local =
+                        metadata_resolve::relationship_execution_category(
                             &model_source.data_connector,
                             &target_source.data_connector,
                             &target_model_source.capabilities,

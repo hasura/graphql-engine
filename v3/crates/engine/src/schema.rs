@@ -12,10 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 
-use crate::metadata::{
-    resolved::resolve, resolved::Error as ResolveMetadataError, resolved::Metadata,
-    resolved::Qualified,
-};
+use metadata_resolve::{resolve, Error as ResolveMetadataError, Metadata, Qualified};
 
 use self::types::{PossibleApolloFederationTypes, RootFieldAnnotation};
 

@@ -8,11 +8,11 @@ use open_dds::types::InbuiltType;
 
 use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved;
+use metadata_resolve;
 
-use crate::metadata::resolved::{QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 use crate::schema::types;
 use crate::schema::GDS;
+use metadata_resolve::{QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;
@@ -22,7 +22,7 @@ use super::selection_set::NDCRelationshipName;
 /// is not found, then an error will be thrown.
 pub(crate) fn get_select_filter_predicate<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
-) -> Result<&'s resolved::FilterPermission, error::Error> {
+) -> Result<&'s metadata_resolve::FilterPermission, error::Error> {
     field_call
         .info
         .namespaced
@@ -73,14 +73,14 @@ pub(crate) fn get_argument_presets(
 }
 
 pub(crate) fn process_model_predicate<'s>(
-    model_predicate: &'s resolved::ModelPredicate,
+    model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
     match model_predicate {
-        resolved::ModelPredicate::UnaryFieldComparison {
+        metadata_resolve::ModelPredicate::UnaryFieldComparison {
             field: _,
             ndc_column,
             operator,
@@ -89,7 +89,7 @@ pub(crate) fn process_model_predicate<'s>(
             *operator,
             &relationship_paths,
         )?),
-        resolved::ModelPredicate::BinaryFieldComparison {
+        metadata_resolve::ModelPredicate::BinaryFieldComparison {
             field: _,
             ndc_column,
             argument_type,
@@ -103,7 +103,7 @@ pub(crate) fn process_model_predicate<'s>(
             session_variables,
             &relationship_paths,
         )?),
-        resolved::ModelPredicate::Not(predicate) => {
+        metadata_resolve::ModelPredicate::Not(predicate) => {
             let expr = process_model_predicate(
                 predicate,
                 session_variables,
@@ -115,7 +115,7 @@ pub(crate) fn process_model_predicate<'s>(
                 expression: Box::new(expr),
             })
         }
-        resolved::ModelPredicate::And(predicates) => {
+        metadata_resolve::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
                 .map(|p| {
@@ -130,7 +130,7 @@ pub(crate) fn process_model_predicate<'s>(
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::And { expressions: exprs })
         }
-        resolved::ModelPredicate::Or(predicates) => {
+        metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
                 .map(|p| {
@@ -145,7 +145,7 @@ pub(crate) fn process_model_predicate<'s>(
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::Or { expressions: exprs })
         }
-        resolved::ModelPredicate::Relationship {
+        metadata_resolve::ModelPredicate::Relationship {
             relationship_info,
             predicate,
         } => {
@@ -187,7 +187,7 @@ fn make_permission_binary_boolean_expression(
     ndc_column: String,
     argument_type: &QualifiedTypeReference,
     operator: &str,
-    value_expression: &resolved::ValueExpression,
+    value_expression: &metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, error::Error> {
@@ -222,13 +222,13 @@ fn make_permission_unary_boolean_expression(
 }
 
 pub(crate) fn make_value_from_value_expression(
-    val_expr: &resolved::ValueExpression,
+    val_expr: &metadata_resolve::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
 ) -> Result<serde_json::Value, error::Error> {
     match val_expr {
-        resolved::ValueExpression::Literal(val) => Ok(val.clone()),
-        resolved::ValueExpression::SessionVariable(session_var) => {
+        metadata_resolve::ValueExpression::Literal(val) => Ok(val.clone()),
+        metadata_resolve::ValueExpression::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
                 error::InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.clone(),
@@ -237,7 +237,7 @@ pub(crate) fn make_value_from_value_expression(
 
             typecast_session_variable(value, value_type)
         }
-        resolved::ValueExpression::BooleanExpression(_model_predicate) => {
+        metadata_resolve::ValueExpression::BooleanExpression(_model_predicate) => {
             Err(error::InternalDeveloperError::BooleanExpressionNotImplemented.into())
         }
     }

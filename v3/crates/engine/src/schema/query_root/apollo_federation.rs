@@ -5,9 +5,9 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::{mk_name, schema as gql_schema};
 use open_dds::types::CustomTypeName;
 
-use crate::metadata::resolved;
-use crate::metadata::resolved::Qualified;
 use crate::schema::permissions::get_entities_field_namespace_permissions;
+use metadata_resolve;
+use metadata_resolve::Qualified;
 
 use crate::schema::types::output_type::{
     apollo_federation_entities_type, apollo_federation_service_type, get_custom_output_type,
@@ -36,7 +36,7 @@ pub(crate) fn apollo_federation_field(
 ) -> Result<ApolloFederationFieldOutput, crate::schema::Error> {
     let mut roles_type_permissions: HashMap<
         Role,
-        HashMap<Qualified<CustomTypeName>, resolved::FilterPermission>,
+        HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
     > = HashMap::new();
     let mut typename_mappings = HashMap::new();
     for model in gds.metadata.models.values() {

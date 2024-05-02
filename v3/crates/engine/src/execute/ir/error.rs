@@ -11,7 +11,7 @@ use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
 use crate::execute::types::{Annotation, NamespaceAnnotation};
-use crate::metadata::resolved::Qualified;
+use metadata_resolve::Qualified;
 
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, InternalError))]

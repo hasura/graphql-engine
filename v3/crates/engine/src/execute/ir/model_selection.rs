@@ -13,15 +13,15 @@ use super::permissions;
 use super::selection_set;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::metadata::resolved;
-use crate::metadata::resolved::Qualified;
 use crate::schema::GDS;
+use metadata_resolve;
+use metadata_resolve::Qualified;
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]
 pub struct ModelSelection<'s> {
     // The data connector backing this model.
-    pub data_connector: &'s resolved::DataConnectorLink,
+    pub data_connector: &'s metadata_resolve::DataConnectorLink,
 
     // Source collection in the data connector for this model
     pub(crate) collection: &'s String,
@@ -50,10 +50,10 @@ pub struct ModelSelection<'s> {
 pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
-    model_source: &'s resolved::ModelSource,
+    model_source: &'s metadata_resolve::ModelSource,
     arguments: BTreeMap<String, ndc_models::Argument>,
     mut filter_clauses: ResolvedFilterExpression<'s>,
-    permissions_predicate: &'s resolved::FilterPermission,
+    permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,
     offset: Option<u32>,
     order_by: Option<ResolvedOrderBy<'s>>,
@@ -61,8 +61,8 @@ pub(crate) fn model_selection_ir<'s>(
     usage_counts: &mut UsagesCounts,
 ) -> Result<ModelSelection<'s>, error::Error> {
     match permissions_predicate {
-        resolved::FilterPermission::AllowAll => {}
-        resolved::FilterPermission::Filter(predicate) => {
+        metadata_resolve::FilterPermission::AllowAll => {}
+        metadata_resolve::FilterPermission::Filter(predicate) => {
             let permissions_predicate_relationship_paths = Vec::new();
             let mut permissions_predicate_relationships = BTreeMap::new();
             let processed_model_perdicate = permissions::process_model_predicate(
@@ -87,7 +87,7 @@ pub(crate) fn model_selection_ir<'s>(
         .type_mappings
         .get(data_type)
         .map(|type_mapping| {
-            let resolved::TypeMapping::Object { field_mappings, .. } = type_mapping;
+            let metadata_resolve::TypeMapping::Object { field_mappings, .. } = type_mapping;
             field_mappings
         })
         .ok_or_else(|| error::InternalEngineError::InternalGeneric {

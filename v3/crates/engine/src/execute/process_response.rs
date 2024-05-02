@@ -16,11 +16,11 @@ use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::plan::ProcessResponseAs;
 use crate::execute::error;
-use crate::metadata::resolved::Qualified;
 use crate::schema::{
     types::{Annotation, GlobalID, OutputAnnotation},
     GDS,
 };
+use metadata_resolve::Qualified;
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;

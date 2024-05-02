@@ -19,10 +19,10 @@ use crate::execute::ir::model_selection;
 use crate::execute::ir::order_by::build_ndc_order_by;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved;
-use crate::metadata::resolved::Qualified;
 use crate::schema::types::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use crate::schema::GDS;
+use metadata_resolve;
+use metadata_resolve::Qualified;
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]
@@ -45,7 +45,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,
-    model_source: &'s resolved::ModelSource,
+    model_source: &'s metadata_resolve::ModelSource,
     session_variables: &SessionVariables,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectMany<'n, 's>, error::Error> {

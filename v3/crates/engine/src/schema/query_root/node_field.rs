@@ -4,8 +4,6 @@ use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved;
-use crate::metadata::resolved::Qualified;
 use crate::schema::permissions::get_node_field_namespace_permissions;
 use crate::schema::types::RelayInputAnnotation;
 use crate::schema::types::{
@@ -19,6 +17,8 @@ use crate::schema::types::{
 };
 use crate::schema::{Role, GDS};
 use crate::utils::HashMapWithJsonKey;
+use metadata_resolve;
+use metadata_resolve::Qualified;
 
 pub(crate) struct RelayNodeFieldOutput {
     pub relay_node_gql_field: gql_schema::Field<GDS>,
@@ -53,7 +53,7 @@ pub(crate) fn relay_node_field(
 
     let mut roles_type_permissions: HashMap<
         Role,
-        HashMap<Qualified<CustomTypeName>, resolved::FilterPermission>,
+        HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
     > = HashMap::new();
     for model in gds.metadata.models.values() {
         if let Some(global_id_source) = &model.model.global_id_source {

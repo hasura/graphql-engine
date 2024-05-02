@@ -9,15 +9,14 @@ use open_dds::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    metadata::resolved::{
-        self, deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
-        QualifiedTypeReference,
-    },
-    schema::{
-        self,
-        types::{CommandSourceDetail, TypeKind},
-    },
+use metadata_resolve::{
+    self, deserialize_qualified_btreemap, serialize_qualified_btreemap, Qualified,
+    QualifiedTypeReference,
+};
+
+use crate::schema::{
+    self,
+    types::{CommandSourceDetail, TypeKind},
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -25,10 +24,10 @@ pub struct ModelRelationshipAnnotation {
     pub source_type: Qualified<CustomTypeName>,
     pub relationship_name: RelationshipName,
     pub model_name: Qualified<ModelName>,
-    pub target_source: Option<resolved::ModelTargetSource>,
+    pub target_source: Option<metadata_resolve::ModelTargetSource>,
     pub target_type: Qualified<CustomTypeName>,
     pub relationship_type: RelationshipType,
-    pub mappings: Vec<resolved::RelationshipModelMapping>,
+    pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -36,16 +35,16 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::DataConnectorLink,
+    pub source_data_connector: metadata_resolve::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
     )]
-    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
-    pub target_source: resolved::ModelTargetSource,
+    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<resolved::RelationshipModelMapping>,
+    pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -53,16 +52,16 @@ pub struct OrderByRelationshipAnnotation {
     pub relationship_name: RelationshipName,
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
-    pub source_data_connector: resolved::DataConnectorLink,
+    pub source_data_connector: metadata_resolve::DataConnectorLink,
     #[serde(
         serialize_with = "serialize_qualified_btreemap",
         deserialize_with = "deserialize_qualified_btreemap"
     )]
-    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
-    pub target_source: resolved::ModelTargetSource,
+    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
-    pub mappings: Vec<resolved::RelationshipModelMapping>,
+    pub mappings: Vec<metadata_resolve::RelationshipModelMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -73,20 +72,20 @@ pub struct CommandRelationshipAnnotation {
     pub target_source: Option<CommandTargetSource>,
     pub target_type: QualifiedTypeReference,
     pub target_base_type_kind: TypeKind,
-    pub mappings: Vec<resolved::RelationshipCommandMapping>,
+    pub mappings: Vec<metadata_resolve::RelationshipCommandMapping>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CommandTargetSource {
     pub(crate) details: CommandSourceDetail,
     pub(crate) function_name: FunctionName,
-    pub(crate) capabilities: resolved::RelationshipCapabilities,
+    pub(crate) capabilities: metadata_resolve::RelationshipCapabilities,
 }
 
 impl CommandTargetSource {
     pub fn new(
-        command: &resolved::CommandWithPermissions,
-        relationship: &resolved::Relationship,
+        command: &metadata_resolve::CommandWithPermissions,
+        relationship: &metadata_resolve::Relationship,
     ) -> Result<Option<Self>, schema::Error> {
         command
             .command

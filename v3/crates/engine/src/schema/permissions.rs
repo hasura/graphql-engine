@@ -1,19 +1,22 @@
 use open_dds::types::{CustomTypeName, FieldName};
 use std::collections::{BTreeMap, HashMap};
 
-use crate::metadata::resolved::ValueExpression;
-use crate::metadata::resolved::{self};
-use crate::metadata::resolved::{object_type_exists, unwrap_custom_type_name};
-use crate::metadata::resolved::{Qualified, QualifiedTypeReference};
 use crate::schema::Role;
 use crate::schema::{self, types};
+use metadata_resolve::ValueExpression;
+use metadata_resolve::{self};
+use metadata_resolve::{object_type_exists, unwrap_custom_type_name};
+use metadata_resolve::{Qualified, QualifiedTypeReference};
 
 use super::types::ArgumentNameAndPath;
 
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
-    model: &resolved::ModelWithPermissions,
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    model: &metadata_resolve::ModelWithPermissions,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let mut permissions: HashMap<Role, Option<types::NamespaceAnnotation>> = model
         .select_permissions
@@ -96,10 +99,13 @@ pub(crate) fn get_select_permissions_namespace_annotations(
 /// This is different from generating permissions for select_many etc,
 /// as we need to check the permissions of the arguments used in the selection.
 pub(crate) fn get_select_one_namespace_annotations(
-    model: &resolved::ModelWithPermissions,
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
-    select_unique: &resolved::SelectUniqueGraphQlDefinition,
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    model: &metadata_resolve::ModelWithPermissions,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    select_unique: &metadata_resolve::SelectUniqueGraphQlDefinition,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let select_permissions = get_select_permissions_namespace_annotations(model, object_types)?;
 
@@ -119,11 +125,14 @@ pub(crate) fn get_select_one_namespace_annotations(
 /// We need to check the permissions of the source and target fields
 /// in the relationship mappings.
 pub(crate) fn get_model_relationship_namespace_annotations(
-    target_model: &resolved::ModelWithPermissions,
-    source_object_type_representation: &resolved::ObjectTypeWithRelationships,
-    target_object_type_representation: &resolved::ObjectTypeWithRelationships,
-    mappings: &[resolved::RelationshipModelMapping],
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    target_model: &metadata_resolve::ModelWithPermissions,
+    source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    target_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    mappings: &[metadata_resolve::RelationshipModelMapping],
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, schema::Error> {
     let select_permissions =
         get_select_permissions_namespace_annotations(target_model, object_types)?;
@@ -146,8 +155,11 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
-    command: &resolved::CommandWithPermissions,
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    command: &metadata_resolve::CommandWithPermissions,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
     let mut permissions = HashMap::new();
 
@@ -220,8 +232,11 @@ fn build_annotations_from_input_object_type_permissions(
     field_path: &mut [String],
     type_reference: &QualifiedTypeReference,
     ndc_argument_name: &Option<String>,
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
-    type_mappings: &BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     role_presets_map: &mut HashMap<Role, types::ArgumentPresets>,
 ) -> Result<(), schema::Error> {
     if let Some(object_type) = unwrap_custom_type_name(type_reference) {
@@ -231,7 +246,7 @@ fn build_annotations_from_input_object_type_permissions(
                     type_mappings
                         .get(object_type)
                         .map(|type_mapping| match type_mapping {
-                            resolved::TypeMapping::Object {
+                            metadata_resolve::TypeMapping::Object {
                                 ndc_object_type_name: _,
                                 field_mappings,
                             } => field_mappings,
@@ -288,14 +303,14 @@ fn build_annotations_from_input_object_type_permissions(
 /// Preset map we generate -
 ///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
 fn build_preset_map_from_input_object_type_permission(
-    permission: &resolved::TypeInputPermission,
-    field_mappings: Option<&BTreeMap<FieldName, resolved::FieldMapping>>,
+    permission: &metadata_resolve::TypeInputPermission,
+    field_mappings: Option<&BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[String],
     ndc_argument_name: &Option<String>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
-    BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, resolved::ValueExpression)>,
+    BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, metadata_resolve::ValueExpression)>,
     schema::Error,
 > {
     let preset_map = permission
@@ -348,10 +363,13 @@ fn build_preset_map_from_input_object_type_permission(
 /// We need to check the permissions of the source fields
 /// in the relationship mappings.
 pub(crate) fn get_command_relationship_namespace_annotations(
-    command: &resolved::CommandWithPermissions,
-    source_object_type_representation: &resolved::ObjectTypeWithRelationships,
-    mappings: &[resolved::RelationshipCommandMapping],
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    command: &metadata_resolve::CommandWithPermissions,
+    source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    mappings: &[metadata_resolve::RelationshipCommandMapping],
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<HashMap<Role, Option<types::NamespaceAnnotation>>, crate::schema::Error> {
     let select_permissions = get_command_namespace_annotations(command, object_types)?;
 
@@ -374,7 +392,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
 /// for a role if the role has access (select permissions)
 /// to all the Global ID fields.
 pub(crate) fn get_node_interface_annotations(
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
     let mut permissions = HashMap::new();
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
@@ -395,7 +413,7 @@ pub(crate) fn get_node_interface_annotations(
 /// for a role if the role has access (select permissions)
 /// to all the key fields.
 pub(crate) fn get_entity_union_permissions(
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> HashMap<Role, Option<types::NamespaceAnnotation>> {
     let mut permissions = HashMap::new();
     for (role, type_output_permission) in &object_type_representation.type_output_permissions {
@@ -413,7 +431,7 @@ pub(crate) fn get_entity_union_permissions(
 
 /// Build namespace annotations for each field based on the type permissions
 pub(crate) fn get_allowed_roles_for_field<'a>(
-    object_type_representation: &'a resolved::ObjectTypeWithRelationships,
+    object_type_representation: &'a metadata_resolve::ObjectTypeWithRelationships,
     field_name: &'a FieldName,
 ) -> impl Iterator<Item = &'a Role> {
     object_type_representation
@@ -430,9 +448,9 @@ pub(crate) fn get_allowed_roles_for_field<'a>(
 
 /// Builds namespace annotations for the `node` field.
 pub(crate) fn get_node_field_namespace_permissions(
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
-    model: &resolved::ModelWithPermissions,
-) -> HashMap<Role, resolved::FilterPermission> {
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    model: &metadata_resolve::ModelWithPermissions,
+) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 
     match &model.select_permissions {
@@ -469,9 +487,9 @@ pub(crate) fn get_node_field_namespace_permissions(
 
 /// Builds namespace annotations for the `_entities` field.
 pub(crate) fn get_entities_field_namespace_permissions(
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
-    model: &resolved::ModelWithPermissions,
-) -> HashMap<Role, resolved::FilterPermission> {
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    model: &metadata_resolve::ModelWithPermissions,
+) -> HashMap<Role, metadata_resolve::FilterPermission> {
     let mut permissions = HashMap::new();
 
     match &model.select_permissions {

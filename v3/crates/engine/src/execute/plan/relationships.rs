@@ -11,7 +11,7 @@ use crate::execute::ir::relationship::{
     self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo,
 };
 use crate::execute::ir::selection_set::FieldSelection;
-use crate::metadata::resolved;
+use metadata_resolve;
 
 /// collect relationships recursively from IR components containing relationships,
 /// and create NDC relationship definitions which will be added to the `relationships`
@@ -90,19 +90,19 @@ pub(crate) fn process_model_relationship_definition(
     } = relationship_info;
 
     let mut column_mapping = BTreeMap::new();
-    for resolved::RelationshipModelMapping {
+    for metadata_resolve::RelationshipModelMapping {
         source_field: source_field_path,
         target_field: _,
         target_ndc_column,
     } in mappings.iter()
     {
         if !matches!(
-            resolved::relationship_execution_category(
+            metadata_resolve::relationship_execution_category(
                 source_data_connector,
                 &target_source.model.data_connector,
                 &target_source.capabilities
             ),
-            resolved::RelationshipExecutionCategory::Local
+            metadata_resolve::RelationshipExecutionCategory::Local
         ) {
             Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
         } else {
@@ -160,18 +160,18 @@ pub(crate) fn process_command_relationship_definition(
     } = relationship_info;
 
     let mut arguments = BTreeMap::new();
-    for resolved::RelationshipCommandMapping {
+    for metadata_resolve::RelationshipCommandMapping {
         source_field: source_field_path,
         argument_name: target_argument,
     } in annotation.mappings.iter()
     {
         if !matches!(
-            resolved::relationship_execution_category(
+            metadata_resolve::relationship_execution_category(
                 source_data_connector,
                 &target_source.details.data_connector,
                 &target_source.capabilities
             ),
-            resolved::RelationshipExecutionCategory::Local
+            metadata_resolve::RelationshipExecutionCategory::Local
         ) {
             Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
         } else {

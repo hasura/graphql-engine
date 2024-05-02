@@ -15,14 +15,13 @@ use open_dds::{
     types::{self},
 };
 
-use crate::{
-    metadata::resolved::{
-        self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-        serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-        NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
-    },
-    utils::HashMapWithJsonKey,
+use metadata_resolve::{
+    self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
+    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
+    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
 };
+
+use crate::utils::HashMapWithJsonKey;
 use strum_macros::Display;
 
 use self::output_type::relationship::{
@@ -55,7 +54,7 @@ pub struct NodeFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<resolved::ModelSource>,
+    pub model_source: Option<metadata_resolve::ModelSource>,
     pub global_id_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -64,7 +63,7 @@ pub struct EntityFieldTypeNameMapping {
     pub type_name: Qualified<types::CustomTypeName>,
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
-    pub model_source: Option<resolved::ModelSource>,
+    pub model_source: Option<metadata_resolve::ModelSource>,
     pub key_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
 }
 
@@ -117,8 +116,8 @@ pub enum RootFieldAnnotation {
     },
     Model {
         data_type: Qualified<types::CustomTypeName>,
-        source: Option<resolved::ModelSource>,
-        // select_permissions: HashMap<Role, resolved::SelectPermission>,
+        source: Option<metadata_resolve::ModelSource>,
+        // select_permissions: HashMap<Role, metadata_resolve::SelectPermission>,
         kind: RootFieldKind,
         name: Qualified<models::ModelName>,
     },
@@ -298,21 +297,21 @@ pub enum NamespaceAnnotation {
     Command(ArgumentPresets),
     /// any filter and arguments for selecting from a model
     Model {
-        filter: resolved::FilterPermission,
+        filter: metadata_resolve::FilterPermission,
         argument_presets: ArgumentPresets,
     },
     /// The `NodeFieldTypeMappings` contains a Hashmap of typename to the filter permission.
     /// While executing the `node` field, the `id` field is supposed to be decoded and after
     /// decoding, a typename will be obtained. We need to use that typename to look up the
-    /// Hashmap to get the appropriate `resolved::model::FilterPermission`.
+    /// Hashmap to get the appropriate `metadata_resolve::model::FilterPermission`.
     NodeFieldTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::FilterPermission>,
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, metadata_resolve::FilterPermission>,
     ),
     /// `EntityTypeMappings` is similar to the `NodeFieldTypeMappings`. While executing the `_entities` field, the
     /// `representations` argument is used, which contains typename. We need to use that typename to look up the hashmap
-    /// to get the appropriate `resolved::model::FilterPermission`.
+    /// to get the appropriate `metadata_resolve::model::FilterPermission`.
     EntityTypeMappings(
-        HashMapWithJsonKey<Qualified<types::CustomTypeName>, resolved::FilterPermission>,
+        HashMapWithJsonKey<Qualified<types::CustomTypeName>, metadata_resolve::FilterPermission>,
     ),
 }
 

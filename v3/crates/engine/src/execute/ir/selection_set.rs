@@ -17,12 +17,12 @@ use super::relationship::{
 use crate::execute::global_id;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::metadata::resolved;
 use crate::schema::types::TypeKind;
 use crate::schema::{
     types::{Annotation, OutputAnnotation, RootFieldAnnotation},
     GDS,
 };
+use metadata_resolve;
 
 #[derive(Debug, Serialize)]
 pub(crate) enum NestedSelection<'s> {
@@ -83,7 +83,7 @@ pub struct NDCRelationshipName(pub(crate) String);
 
 impl NDCRelationshipName {
     pub fn new(
-        source_type: &resolved::Qualified<CustomTypeName>,
+        source_type: &metadata_resolve::Qualified<CustomTypeName>,
         relationship_name: &RelationshipName,
     ) -> Result<Self, error::Error> {
         let name = serde_json::to_string(&(source_type, relationship_name))?;
@@ -103,7 +103,7 @@ pub(crate) struct ResultSelectionSet<'s> {
 impl<'s> ResultSelectionSet<'s> {
     /// Takes a 'FieldMapping' and returns the alias, if the field is found in
     /// existing fields
-    pub(crate) fn contains(&self, other_field: &resolved::FieldMapping) -> Option<String> {
+    pub(crate) fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<String> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
                 if *column == other_field.column {
@@ -119,7 +119,7 @@ impl<'s> ResultSelectionSet<'s> {
 
 fn build_global_id_fields(
     global_id_fields: &Vec<FieldName>,
-    field_mappings: &BTreeMap<FieldName, resolved::FieldMapping>,
+    field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     field_alias: &Alias,
     fields: &mut IndexMap<String, FieldSelection>,
 ) -> Result<(), error::Error> {
@@ -147,16 +147,19 @@ fn build_global_id_fields(
 }
 
 pub(crate) fn generate_nested_selection<'s>(
-    qualified_type_reference: &resolved::QualifiedTypeReference,
+    qualified_type_reference: &metadata_resolve::QualifiedTypeReference,
     field_base_type_kind: TypeKind,
     field: &normalized_ast::Field<'s, GDS>,
-    data_connector: &'s resolved::DataConnectorLink,
-    type_mappings: &'s BTreeMap<resolved::Qualified<CustomTypeName>, resolved::TypeMapping>,
+    data_connector: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<Option<NestedSelection<'s>>, error::Error> {
     match &qualified_type_reference.underlying_type {
-        resolved::QualifiedBaseType::List(element_type) => {
+        metadata_resolve::QualifiedBaseType::List(element_type) => {
             let array_selection = generate_nested_selection(
                 element_type,
                 field_base_type_kind,
@@ -168,28 +171,33 @@ pub(crate) fn generate_nested_selection<'s>(
             )?;
             Ok(array_selection.map(|a| NestedSelection::Array(Box::new(a))))
         }
-        resolved::QualifiedBaseType::Named(qualified_type_name) => {
+        metadata_resolve::QualifiedBaseType::Named(qualified_type_name) => {
             match qualified_type_name {
-                resolved::QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
-                resolved::QualifiedTypeName::Custom(data_type) => match field_base_type_kind {
-                    TypeKind::Scalar => Ok(None),
-                    TypeKind::Object => {
-                        let resolved::TypeMapping::Object { field_mappings, .. } = type_mappings
-                            .get(data_type)
-                            .ok_or(error::InternalEngineError::InternalGeneric {
-                                description: format!("no type mapping found for type {data_type}"),
-                            })?;
-                        let nested_selection = generate_selection_set_ir(
-                            &field.selection_set,
-                            data_connector,
-                            type_mappings,
-                            field_mappings,
-                            session_variables,
-                            usage_counts,
-                        )?;
-                        Ok(Some(NestedSelection::Object(nested_selection)))
+                metadata_resolve::QualifiedTypeName::Inbuilt(_) => Ok(None), // Inbuilt types are all scalars so there should be no subselections.
+                metadata_resolve::QualifiedTypeName::Custom(data_type) => {
+                    match field_base_type_kind {
+                        TypeKind::Scalar => Ok(None),
+                        TypeKind::Object => {
+                            let metadata_resolve::TypeMapping::Object { field_mappings, .. } =
+                                type_mappings.get(data_type).ok_or(
+                                    error::InternalEngineError::InternalGeneric {
+                                        description: format!(
+                                            "no type mapping found for type {data_type}"
+                                        ),
+                                    },
+                                )?;
+                            let nested_selection = generate_selection_set_ir(
+                                &field.selection_set,
+                                data_connector,
+                                type_mappings,
+                                field_mappings,
+                                session_variables,
+                                usage_counts,
+                            )?;
+                            Ok(Some(NestedSelection::Object(nested_selection)))
+                        }
                     }
-                },
+                }
             }
         }
     }
@@ -201,9 +209,12 @@ pub(crate) fn generate_nested_selection<'s>(
 /// sources depending on the model being queried.
 pub(crate) fn generate_selection_set_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
-    data_connector: &'s resolved::DataConnectorLink,
-    type_mappings: &'s BTreeMap<resolved::Qualified<CustomTypeName>, resolved::TypeMapping>,
-    field_mappings: &BTreeMap<FieldName, resolved::FieldMapping>,
+    data_connector: &'s metadata_resolve::DataConnectorLink,
+    type_mappings: &'s BTreeMap<
+        metadata_resolve::Qualified<CustomTypeName>,
+        metadata_resolve::TypeMapping,
+    >,
+    field_mappings: &BTreeMap<FieldName, metadata_resolve::FieldMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResultSelectionSet<'s>, error::Error> {

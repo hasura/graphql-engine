@@ -1,20 +1,20 @@
 use lang_graphql::ast::common as ast;
 
-use crate::metadata::resolved;
 use crate::schema::GDS;
 use lang_graphql::schema as gql_schema;
+use metadata_resolve;
 use open_dds::models::ModelName;
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::input_type::get_input_type;
 use super::types::{Annotation, InputAnnotation, ModelInputAnnotation, TypeId};
-use crate::metadata::resolved::Qualified;
+use metadata_resolve::Qualified;
 
 /// Creates the `args` input object within which the model
 /// arguments fields will live.
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
     model
         .model
@@ -50,7 +50,7 @@ pub fn get_model_arguments_input_field(
 pub fn build_model_argument_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<
     BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,

@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::PathBuf;
 
-use engine::metadata::resolved::BooleanExpressionError;
-use engine::metadata::resolved::Error as ResolveError;
 use engine::schema::Error as SchemaError;
 use engine::schema::GDS;
+use metadata_resolve::BooleanExpressionError;
+use metadata_resolve::Error as ResolveError;
 
 #[test]
 fn test_select_many_model_arguments_without_arguments_input_type() -> anyhow::Result<()> {

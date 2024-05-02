@@ -13,15 +13,13 @@ use self::relationship::{
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
-use crate::metadata::resolved::{self, mk_name};
-use crate::metadata::resolved::{get_type_representation, TypeRepresentation};
-use crate::metadata::resolved::{
-    Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
-};
 use crate::schema::commands::generate_command_argument;
 use crate::schema::query_root::select_many::generate_select_many_arguments;
 use crate::schema::{mk_deprecation_status, permissions};
 use crate::schema::{Role, GDS};
+use metadata_resolve::{self, mk_name};
+use metadata_resolve::{get_type_representation, TypeRepresentation};
+use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
 type Error = crate::schema::Error;
 
@@ -188,8 +186,11 @@ fn object_type_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
-    object_types: &HashMap<Qualified<CustomTypeName>, resolved::ObjectTypeWithRelationships>,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
+    object_types: &HashMap<
+        Qualified<CustomTypeName>,
+        metadata_resolve::ObjectTypeWithRelationships,
+    >,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>>, Error> {
     let mut graphql_fields = object_type_representation
         .object_type
@@ -227,7 +228,7 @@ fn object_type_fields(
         let deprecation_status = mk_deprecation_status(&relationship.deprecated);
 
         let relationship_field = match &relationship.target {
-            resolved::RelationshipTarget::Command {
+            metadata_resolve::RelationshipTarget::Command {
                 command_name,
                 target_type,
                 mappings,
@@ -288,7 +289,7 @@ fn object_type_fields(
                     )?,
                 )
             }
-            resolved::RelationshipTarget::Model {
+            metadata_resolve::RelationshipTarget::Model {
                 model_name,
                 relationship_type,
                 target_typename,
@@ -339,7 +340,7 @@ fn object_type_fields(
                                 source_type: relationship.source.clone(),
                                 relationship_name: relationship.name.clone(),
                                 model_name: model_name.clone(),
-                                target_source: resolved::ModelTargetSource::new(
+                                target_source: metadata_resolve::ModelTargetSource::new(
                                     model,
                                     relationship,
                                 )?,
@@ -377,7 +378,7 @@ fn object_type_fields(
 }
 
 fn generate_apollo_federation_directives(
-    apollo_federation_config: &resolved::ResolvedObjectApolloFederationConfig,
+    apollo_federation_config: &metadata_resolve::ResolvedObjectApolloFederationConfig,
 ) -> Vec<Directive> {
     let mut directives = Vec::new();
     for key in &apollo_federation_config.keys {
@@ -515,7 +516,7 @@ pub fn output_type_schema(
 pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
-) -> Result<&'s resolved::ObjectTypeWithRelationships, crate::schema::Error> {
+) -> Result<&'s metadata_resolve::ObjectTypeWithRelationships, crate::schema::Error> {
     gds.metadata.object_types.get(gds_type).ok_or_else(|| {
         crate::schema::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),

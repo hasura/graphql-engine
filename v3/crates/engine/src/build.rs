@@ -1,13 +1,13 @@
-use crate::metadata;
 use crate::schema;
 use crate::schema::GDS;
 use lang_graphql::schema as gql_schema;
+use metadata_resolve;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum BuildError {
     #[error("invalid metadata: {0}")]
-    InvalidMetadata(#[from] metadata::resolved::Error),
+    InvalidMetadata(#[from] metadata_resolve::Error),
     #[error("unable to build schema: {0}")]
     UnableToBuildSchema(#[from] schema::Error),
     #[error("unable to encode schema: {0}")]

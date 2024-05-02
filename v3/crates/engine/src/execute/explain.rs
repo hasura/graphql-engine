@@ -4,12 +4,12 @@ use crate::execute::ndc::client as ndc_client;
 use crate::execute::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
 use crate::execute::{error, plan};
-use crate::metadata::resolved;
 use crate::schema::GDS;
 use async_recursion::async_recursion;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
 use lang_graphql::{http::RawRequest, schema::Schema};
+use metadata_resolve;
 use nonempty::NonEmpty;
 use tracing_util::SpanVisibility;
 pub mod types;
@@ -160,7 +160,7 @@ async fn get_execution_steps<'s>(
     process_response_as: &ProcessResponseAs<'s>,
     join_locations: JoinLocations<(RemoteJoin<'s, '_>, JoinId)>,
     ndc_request: types::NDCRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
 ) -> NonEmpty<Box<types::Step>> {
     let mut sequence_steps = match process_response_as {
         ProcessResponseAs::CommandResponse { .. } => {
@@ -278,7 +278,7 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
 async fn fetch_explain_from_data_connector(
     http_context: &HttpContext,
     ndc_request: &types::NDCRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
 ) -> types::NDCExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer

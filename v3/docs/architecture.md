@@ -17,12 +17,12 @@ crates
 │   │   ├── schema
 │   │   ├── introspection
 │   │   ├── validation
+├── metadata-resolve
 ├── engine
 │   ├── bin
 │   │   ├── engine
 │   ├── src
 │   │   ├── execute
-│   │   ├── metadata
 │   │   ├── schema
 │   │   │   ├── operations
 │   │   │   ├── types
@@ -72,6 +72,11 @@ Provides schema and type introspection for GraphQL schemas.
 Validates GraphQL requests vs a schema, and produces normalized ASTs, which
 contain additional relevant data from the schema.
 
+##### `metadata-resolve`
+
+Resolves and validates the input Open DDS metadata and creates intermediate
+structures that are used in the `engine` crate for schema generation.
+
 ### `engine`
 
 Responsible for the core operation of the engine in the context of a user
@@ -89,11 +94,6 @@ This crate implements the Open DDS specification on top of the GraphQL
 primitives provided by the `lang-graphql` crate. It is responsible for
 validating Open DDS metadata, creating a GraphQL schema from resolved Open DDS
 metadata, and implementing the GraphQL operations.
-
-##### `engine/src/metadata`
-
-Resolves and validates the input Open DDS metadata and creates intermediate
-structures that are used in the rest of the crate for schema generation.
 
 ##### `engine/src/schema`
 

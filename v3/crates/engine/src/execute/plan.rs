@@ -23,8 +23,8 @@ use super::remote_joins::types::{
 };
 use super::{HttpContext, ProjectId};
 use crate::execute::error::FieldError;
-use crate::metadata::resolved;
 use crate::schema::GDS;
+use metadata_resolve;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 
@@ -36,7 +36,7 @@ pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir
 /// Otherwise, we can just send them one-by-one (though still sequentially).
 pub struct MutationPlan<'n, 's, 'ir> {
     pub nodes: IndexMap<
-        resolved::DataConnectorLink,
+        metadata_resolve::DataConnectorLink,
         IndexMap<ast::Alias, NDCMutationExecution<'n, 's, 'ir>>,
     >,
     pub type_names: IndexMap<ast::Alias, ast::TypeName>,
@@ -101,7 +101,7 @@ pub enum ApolloFederationSelect<'n, 's, 'ir> {
 pub struct NDCMutationExecution<'n, 's, 'ir> {
     pub query: ndc_models::MutationRequest,
     pub join_locations: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
-    pub data_connector: &'s resolved::DataConnectorLink,
+    pub data_connector: &'s metadata_resolve::DataConnectorLink,
     pub execution_span_attribute: String,
     pub field_span_attribute: String,
     pub process_response_as: ProcessResponseAs<'ir>,
@@ -117,7 +117,7 @@ pub struct ExecutionTree<'s, 'ir> {
 #[derive(Debug)]
 pub struct ExecutionNode<'s> {
     pub query: ndc_models::QueryRequest,
-    pub data_connector: &'s resolved::DataConnectorLink,
+    pub data_connector: &'s metadata_resolve::DataConnectorLink,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -129,7 +129,7 @@ pub enum ProcessResponseAs<'ir> {
         is_nullable: bool,
     },
     CommandResponse {
-        command_name: &'ir resolved::Qualified<open_dds::commands::CommandName>,
+        command_name: &'ir metadata_resolve::Qualified<open_dds::commands::CommandName>,
         type_container: &'ir ast::TypeContainer<ast::TypeName>,
     },
 }

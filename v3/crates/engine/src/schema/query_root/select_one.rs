@@ -5,8 +5,6 @@
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use std::collections::BTreeMap;
 
-use crate::metadata::resolved;
-use crate::metadata::resolved::mk_name;
 use crate::schema::types::output_type::get_object_type_representation;
 use crate::schema::{mk_deprecation_status, GDS};
 use crate::schema::{
@@ -16,13 +14,15 @@ use crate::schema::{
         ModelInputAnnotation,
     },
 };
+use metadata_resolve;
+use metadata_resolve::mk_name;
 
 /// Generates schema for a 'select_one' operation
 pub(crate) fn select_one_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::ModelWithPermissions,
-    select_unique: &resolved::SelectUniqueGraphQlDefinition,
+    model: &metadata_resolve::ModelWithPermissions,
+    select_unique: &metadata_resolve::SelectUniqueGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
     (

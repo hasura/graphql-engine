@@ -11,7 +11,6 @@ use std::collections::HashMap;
 use super::commands;
 use super::error;
 use super::root_field;
-use crate::metadata::resolved;
 use crate::schema::types::ApolloFederationRootFields;
 use crate::schema::types::CommandSourceDetail;
 use crate::schema::types::EntityFieldTypeNameMapping;
@@ -21,6 +20,7 @@ use crate::schema::types::{
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
 use crate::schema::{mk_typename, GDS};
+use metadata_resolve;
 
 pub mod apollo_federation;
 pub mod node_field;
@@ -168,13 +168,13 @@ fn generate_type_field_ir<'n, 's>(
 #[allow(clippy::too_many_arguments)]
 fn generate_model_rootfield_ir<'n, 's>(
     type_name: &ast::TypeName,
-    source: &'s Option<resolved::ModelSource>,
-    data_type: &resolved::Qualified<CustomTypeName>,
+    source: &'s Option<metadata_resolve::ModelSource>,
+    data_type: &metadata_resolve::Qualified<CustomTypeName>,
     kind: &RootFieldKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session: &Session,
-    model_name: &'s resolved::Qualified<models::ModelName>,
+    model_name: &'s metadata_resolve::Qualified<models::ModelName>,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
     let source =
         source
@@ -211,11 +211,11 @@ fn generate_model_rootfield_ir<'n, 's>(
 }
 
 fn generate_command_rootfield_ir<'n, 's>(
-    name: &'s resolved::Qualified<CommandName>,
+    name: &'s metadata_resolve::Qualified<CommandName>,
     type_name: &ast::TypeName,
     function_name: &'s Option<open_dds::commands::FunctionName>,
     source: &'s Option<CommandSourceDetail>,
-    result_type: &'s resolved::QualifiedTypeReference,
+    result_type: &'s metadata_resolve::QualifiedTypeReference,
     result_base_type_kind: &'s TypeKind,
     field: &'n gql::normalized_ast::Field<'s, GDS>,
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,

@@ -10,12 +10,12 @@ use crate::execute::ir::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::metadata::resolved;
-use crate::metadata::resolved::mk_name;
-use crate::metadata::resolved::Qualified;
 use crate::schema::types::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 use crate::schema::GDS;
 use crate::utils::HashMapWithJsonKey;
+use metadata_resolve;
+use metadata_resolve::mk_name;
+use metadata_resolve::Qualified;
 
 /// IR for the '_entities' operation for a model
 #[derive(Serialize, Debug)]
@@ -38,7 +38,7 @@ pub struct EntitySelect<'n, 's> {
 fn get_entity_namespace_typename_mappings<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
 ) -> Result<
-    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, resolved::FilterPermission>,
+    &'s HashMapWithJsonKey<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
     error::Error,
 > {
     field_call
@@ -115,7 +115,7 @@ pub(crate) fn entities_ir<'n, 's>(
         // Get the permissions for the typename
         let typename_permissions: &'s HashMap<
             Qualified<CustomTypeName>,
-            resolved::FilterPermission,
+            metadata_resolve::FilterPermission,
         > = &get_entity_namespace_typename_mappings(field_call)?.0;
         let typename_mapping = typename_mappings.get(&typename).ok_or(
             error::InternalDeveloperError::TypenameMappingNotFound {

@@ -18,8 +18,8 @@ use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::metadata::resolved;
-use crate::metadata::resolved::Qualified;
+use metadata_resolve;
+use metadata_resolve::Qualified;
 
 use crate::schema::types::{self, Annotation, ModelInputAnnotation};
 use crate::schema::GDS;
@@ -45,7 +45,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     field: &'n normalized_ast::Field<'s, GDS>,
     field_call: &'s normalized_ast::FieldCall<'s, GDS>,
     data_type: &Qualified<open_dds::types::CustomTypeName>,
-    model_source: &'s resolved::ModelSource,
+    model_source: &'s metadata_resolve::ModelSource,
     session_variables: &SessionVariables,
     model_name: &'s Qualified<open_dds::models::ModelName>,
 ) -> Result<ModelSelectOne<'n, 's>, error::Error> {

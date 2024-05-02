@@ -13,8 +13,8 @@ use super::error;
 use super::plan::ProcessResponseAs;
 use super::process_response::process_command_mutation_response;
 use super::{HttpContext, ProjectId};
-use crate::metadata::resolved;
 use crate::schema::GDS;
+use metadata_resolve;
 
 pub mod client;
 
@@ -24,7 +24,7 @@ pub const FUNCTION_IR_VALUE_COLUMN_NAME: &str = "__value";
 pub async fn execute_ndc_query<'n, 's>(
     http_context: &HttpContext,
     query: &ndc_models::QueryRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
     execution_span_attribute: &'static str,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,
@@ -63,7 +63,7 @@ pub async fn execute_ndc_query<'n, 's>(
 pub(crate) async fn fetch_from_data_connector<'s>(
     http_context: &HttpContext,
     query_request: &ndc_models::QueryRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::QueryResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
@@ -113,7 +113,7 @@ pub fn append_project_id_to_headers(
 pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     http_context: &HttpContext,
     query: &ndc_models::MutationRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
     selection_set: &'n normalized_ast::SelectionSet<'s, GDS>,
     execution_span_attribute: String,
     field_span_attribute: String,
@@ -190,7 +190,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
 pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     http_context: &HttpContext,
     query_request: &ndc_models::MutationRequest,
-    data_connector: &resolved::DataConnectorLink,
+    data_connector: &metadata_resolve::DataConnectorLink,
     project_id: Option<&ProjectId>,
 ) -> Result<ndc_models::MutationResponse, client::Error> {
     let tracer = tracing_util::global_tracer();

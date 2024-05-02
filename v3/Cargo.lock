@@ -957,7 +957,7 @@ dependencies = [
  "indexmap 2.2.6",
  "json_value_merge",
  "lang-graphql",
- "lazy_static",
+ "metadata-resolve",
  "mockito",
  "ndc-models",
  "nonempty",
@@ -1779,6 +1779,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "metadata-resolve"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "hasura-authn-core",
+ "indexmap 2.2.6",
+ "lang-graphql",
+ "lazy_static",
+ "ndc-models",
+ "nonempty",
+ "open-dds",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "url",
 ]
 
 [[package]]

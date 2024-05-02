@@ -1,9 +1,9 @@
 //! Track the models that were used in query.
 
 use super::ir::root_field::{self, RootField};
-use crate::metadata::resolved::Qualified;
 use indexmap::IndexMap;
 use lang_graphql::ast::common::Alias;
+use metadata_resolve::Qualified;
 use open_dds::{commands::CommandName, models::ModelName};
 use serde::{Deserialize, Serialize};
 
@@ -171,14 +171,11 @@ pub fn count_command(command: &Qualified<CommandName>, all_usage_counts: &mut Us
 
 #[cfg(test)]
 mod tests {
-    use open_dds::{commands::CommandName, identifier, models::ModelName};
-
-    use crate::{
-        execute::model_tracking::{
-            count_command, count_model, extend_usage_count, CommandCount, ModelCount, UsagesCounts,
-        },
-        metadata::resolved::Qualified,
+    use crate::execute::model_tracking::{
+        count_command, count_model, extend_usage_count, CommandCount, ModelCount, UsagesCounts,
     };
+    use metadata_resolve::Qualified;
+    use open_dds::{commands::CommandName, identifier, models::ModelName};
 
     #[test]
     fn test_extend_usage_count() {

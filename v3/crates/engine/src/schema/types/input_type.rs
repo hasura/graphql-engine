@@ -1,10 +1,9 @@
-use crate::{
-    metadata::resolved::{
-        self, get_type_representation, mk_name, Qualified, QualifiedBaseType, QualifiedTypeName,
-        QualifiedTypeReference, TypeRepresentation,
-    },
-    schema::{types, Role, GDS},
+use metadata_resolve::{
+    self, get_type_representation, mk_name, Qualified, QualifiedBaseType, QualifiedTypeName,
+    QualifiedTypeReference, TypeRepresentation,
 };
+
+use crate::schema::{types, Role, GDS};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;
@@ -79,9 +78,9 @@ fn get_custom_input_type(
     .map_err(|_| crate::schema::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
     })? {
-        TypeRepresentation::Object(resolved::ObjectTypeWithRelationships {
+        TypeRepresentation::Object(metadata_resolve::ObjectTypeWithRelationships {
             object_type:
-                resolved::ObjectTypeRepresentation {
+                metadata_resolve::ObjectTypeRepresentation {
                     graphql_input_type_name,
                     ..
                 },
@@ -105,9 +104,10 @@ fn get_custom_input_type(
                 })?
                 .clone(),
         }),
-        TypeRepresentation::BooleanExpression(
-            crate::metadata::resolved::ObjectBooleanExpressionType { graphql, .. },
-        ) => Ok(super::TypeId::InputObjectBooleanExpressionType {
+        TypeRepresentation::BooleanExpression(metadata_resolve::ObjectBooleanExpressionType {
+            graphql,
+            ..
+        }) => Ok(super::TypeId::InputObjectBooleanExpressionType {
             gds_type_name: gds_type_name.clone(),
             graphql_type_name: graphql
                 .as_ref()
@@ -124,7 +124,7 @@ fn get_custom_input_type(
 fn input_object_type_input_fields(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    object_type_representation: &resolved::ObjectTypeWithRelationships,
+    object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
 ) -> Result<BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, Error> {
     object_type_representation
         .object_type

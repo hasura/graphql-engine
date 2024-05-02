@@ -7,7 +7,6 @@ use lang_graphql::ast::common::Name;
 use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
-use crate::metadata::resolved;
 use crate::schema::mk_deprecation_status;
 use crate::schema::{
     model_arguments,
@@ -17,12 +16,13 @@ use crate::schema::{
     types::{self, output_type::get_custom_output_type, Annotation, ModelInputAnnotation},
     GDS,
 };
+use metadata_resolve;
 
 /// Generates the schema for the arguments of a model selection, which includes
 /// limit, offset, order_by and where.
 pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::ModelWithPermissions,
+    model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<
     BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
     crate::schema::Error,
@@ -97,8 +97,8 @@ pub(crate) fn generate_select_many_arguments(
 pub(crate) fn select_many_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-    model: &resolved::ModelWithPermissions,
-    select_many: &resolved::SelectManyGraphQlDefinition,
+    model: &metadata_resolve::ModelWithPermissions,
+    select_many: &metadata_resolve::SelectManyGraphQlDefinition,
     parent_type: &ast::TypeName,
 ) -> Result<
     (
@@ -168,7 +168,7 @@ pub(crate) fn generate_int_input_argument(
     name: &str,
     annotation: Annotation,
 ) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
-    let input_field_name = resolved::mk_name(name)?;
+    let input_field_name = metadata_resolve::mk_name(name)?;
     Ok(gql_schema::InputField::new(
         input_field_name,
         None,
