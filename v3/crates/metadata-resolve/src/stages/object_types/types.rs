@@ -13,6 +13,7 @@ use crate::types::subgraph::Qualified;
 use lang_graphql::ast::common as ast;
 use open_dds::data_connector::DataConnectorName;
 
+/// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct DataConnectorTypeMappingsForObject(
     HashMap<Qualified<DataConnectorName>, HashMap<String, TypeMapping>>,
@@ -108,14 +109,17 @@ pub struct ResolvedApolloFederationObjectKey {
     pub fields: nonempty::NonEmpty<FieldName>,
 }
 
+/// Mapping from a column to its type.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FieldMapping {
     pub column: String,
     pub column_type: ndc_models::Type,
 }
 
+/// Mapping from an object to their fields, which contain types.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum TypeMapping {
+    /// Mapping from an object to their fields, which contain the types of fields.
     Object {
         ndc_object_type_name: String,
         field_mappings: BTreeMap<FieldName, FieldMapping>,

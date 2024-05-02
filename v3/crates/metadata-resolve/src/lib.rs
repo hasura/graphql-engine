@@ -1,4 +1,12 @@
-//! no modules outside this should know about it's internal structure
+//! Resolve is the process of taking the input metadata, validating it,
+//! and building structures that contain all of the relevant information
+//! necessary for the engine to function.
+//!
+//! `stages::resolve` is the function responsible for resolving the metadata,
+//! and it returns a resolved and validated `stages::Metadata` object.
+
+// No modules outside this should know about its internal structure.
+
 mod helpers;
 mod stages;
 mod types;

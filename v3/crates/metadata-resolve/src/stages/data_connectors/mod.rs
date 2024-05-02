@@ -8,7 +8,7 @@ pub use types::{
     DataConnectors,
 };
 
-/// resolve data connectors
+/// Resolve data connectors.
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
 ) -> Result<types::DataConnectors, Error> {

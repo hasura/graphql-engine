@@ -19,13 +19,13 @@ pub use types::Metadata;
 
 use crate::types::error::Error;
 
-/// this is where we take the input metadata and attempt to resolve a working `Metadata` object
-/// currently the bulk of this lives in the `resolve_metadata` function, we'll be slowly breaking
-/// it up and moving it into steps here
+/// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
 
+    // The graphql config represents the shape of the Hasura features in the graphql schema,
+    // and which features should be enabled or disabled. We check this structure is valid.
     let graphql_config =
         graphql_config::resolve(&metadata_accessor.graphql_config, &metadata_accessor.flags)?;
 

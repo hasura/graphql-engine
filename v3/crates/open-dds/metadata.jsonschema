@@ -3261,6 +3261,7 @@
         {
           "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfig",
           "title": "GraphqlConfig",
+          "description": "GraphqlConfig object tells us two things:\n\n1. How the Graphql schema should look like for the features (`where`, `order_by` etc) Hasura provides 2. What features should be enabled/disabled across the subgraphs",
           "oneOf": [
             {
               "type": "object",
@@ -3295,6 +3296,7 @@
     "GraphqlConfigV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/GraphqlConfigV1",
       "title": "GraphqlConfigV1",
+      "description": "GraphqlConfig object tells us two things:\n\n1. How the Graphql schema should look like for the features (`where`, `order_by` etc) Hasura provides 2. What features should be enabled/disabled across the subgraphs",
       "type": "object",
       "required": [
         "mutation",
@@ -3323,15 +3325,18 @@
     "QueryGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/QueryGraphqlConfig",
       "title": "QueryGraphqlConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for queries. `None` means disable the feature.",
       "type": "object",
       "required": [
         "rootOperationTypeName"
       ],
       "properties": {
         "rootOperationTypeName": {
+          "description": "The name of the root operation type name for queries. Usually `query`.",
           "type": "string"
         },
         "argumentsInput": {
+          "description": "Configuration for the arguments input.",
           "anyOf": [
             {
               "$ref": "#/definitions/ArgumentsInputGraphqlConfig"
@@ -3342,6 +3347,7 @@
           ]
         },
         "limitInput": {
+          "description": "Configuration for the limit operation.",
           "anyOf": [
             {
               "$ref": "#/definitions/LimitInputGraphqlConfig"
@@ -3352,6 +3358,7 @@
           ]
         },
         "offsetInput": {
+          "description": "Configuration for the offset operation.",
           "anyOf": [
             {
               "$ref": "#/definitions/OffsetInputGraphqlConfig"
@@ -3362,6 +3369,7 @@
           ]
         },
         "filterInput": {
+          "description": "Configuration for the filter operation.",
           "anyOf": [
             {
               "$ref": "#/definitions/FilterInputGraphqlConfig"
@@ -3372,6 +3380,7 @@
           ]
         },
         "orderByInput": {
+          "description": "Configuration for the sort operation.",
           "anyOf": [
             {
               "$ref": "#/definitions/OrderByInputGraphqlConfig"
@@ -3387,12 +3396,14 @@
     "ArgumentsInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/ArgumentsInputGraphqlConfig",
       "title": "ArgumentsInputGraphqlConfig",
+      "description": "Configuration for the arguments input.",
       "type": "object",
       "required": [
         "fieldName"
       ],
       "properties": {
         "fieldName": {
+          "description": "The name of arguments passing field. Usually `args`.",
           "type": "string"
         }
       },
@@ -3401,12 +3412,14 @@
     "LimitInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/LimitInputGraphqlConfig",
       "title": "LimitInputGraphqlConfig",
+      "description": "Configuration for the limit operation.",
       "type": "object",
       "required": [
         "fieldName"
       ],
       "properties": {
         "fieldName": {
+          "description": "The name of the limit operation field. Usually `limit`.",
           "type": "string"
         }
       },
@@ -3415,12 +3428,14 @@
     "OffsetInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/OffsetInputGraphqlConfig",
       "title": "OffsetInputGraphqlConfig",
+      "description": "Configuration for the offset operation.",
       "type": "object",
       "required": [
         "fieldName"
       ],
       "properties": {
         "fieldName": {
+          "description": "The name of the offset operation field. Usually `offset`.",
           "type": "string"
         }
       },
@@ -3429,6 +3444,7 @@
     "FilterInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/FilterInputGraphqlConfig",
       "title": "FilterInputGraphqlConfig",
+      "description": "Configuration for the filter operation.",
       "type": "object",
       "required": [
         "fieldName",
@@ -3436,10 +3452,16 @@
       ],
       "properties": {
         "fieldName": {
+          "description": "The name of the filter operation field. Usually `where`.",
           "type": "string"
         },
         "operatorNames": {
-          "$ref": "#/definitions/FilterInputOperatorNames"
+          "description": "The names of built-in filter operators.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/FilterInputOperatorNames"
+            }
+          ]
         }
       },
       "additionalProperties": false
@@ -3447,6 +3469,7 @@
     "FilterInputOperatorNames": {
       "$id": "https://hasura.io/jsonschemas/metadata/FilterInputOperatorNames",
       "title": "FilterInputOperatorNames",
+      "description": "The names of built-in filter operators.",
       "type": "object",
       "required": [
         "and",
@@ -3456,15 +3479,19 @@
       ],
       "properties": {
         "and": {
+          "description": "The name of the `and` operator. Usually `_and`.",
           "type": "string"
         },
         "or": {
+          "description": "The name of the `or` operator. Usually `_or`.",
           "type": "string"
         },
         "not": {
+          "description": "The name of the `not` operator. Usually `_not`.",
           "type": "string"
         },
         "isNull": {
+          "description": "The name of the `is null` operator. Usually `_is_null`.",
           "type": "string"
         }
       },
@@ -3473,6 +3500,7 @@
     "OrderByInputGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderByInputGraphqlConfig",
       "title": "OrderByInputGraphqlConfig",
+      "description": "Configuration for the sort operation.",
       "type": "object",
       "required": [
         "enumDirectionValues",
@@ -3481,10 +3509,16 @@
       ],
       "properties": {
         "fieldName": {
+          "description": "The name of the filter operation field. Usually `order_by`.",
           "type": "string"
         },
         "enumDirectionValues": {
-          "$ref": "#/definitions/OrderByDirectionValues"
+          "description": "The names of the direction parameters.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/OrderByDirectionValues"
+            }
+          ]
         },
         "enumTypeNames": {
           "type": "array",
@@ -3498,6 +3532,7 @@
     "OrderByDirectionValues": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirectionValues",
       "title": "OrderByDirectionValues",
+      "description": "The names of the direction parameters.",
       "type": "object",
       "required": [
         "asc",
@@ -3505,9 +3540,11 @@
       ],
       "properties": {
         "asc": {
+          "description": "The name of the ascending parameter. Usually `Asc`.",
           "type": "string"
         },
         "desc": {
+          "description": "The name of the descending parameter. Usually `Desc`.",
           "type": "string"
         }
       },
@@ -3537,21 +3574,35 @@
     "OrderByDirection2": {
       "$id": "https://hasura.io/jsonschemas/metadata/OrderByDirection2",
       "title": "OrderByDirection",
-      "type": "string",
-      "enum": [
-        "Asc",
-        "Desc"
+      "description": "Sort direction.",
+      "oneOf": [
+        {
+          "description": "Ascending.",
+          "type": "string",
+          "enum": [
+            "Asc"
+          ]
+        },
+        {
+          "description": "Descending.",
+          "type": "string",
+          "enum": [
+            "Desc"
+          ]
+        }
       ]
     },
     "MutationGraphqlConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/MutationGraphqlConfig",
       "title": "MutationGraphqlConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for mutations.",
       "type": "object",
       "required": [
         "rootOperationTypeName"
       ],
       "properties": {
         "rootOperationTypeName": {
+          "description": "The name of the root operation type name for mutations. Usually `mutation`.",
           "type": "string"
         }
       },
@@ -3560,12 +3611,14 @@
     "GraphqlApolloFederationConfig": {
       "$id": "https://hasura.io/jsonschemas/metadata/GraphqlApolloFederationConfig",
       "title": "GraphqlApolloFederationConfig",
+      "description": "Configuration for the GraphQL schema of Hasura features for Apollo Federation.",
       "type": "object",
       "required": [
         "enableRootFields"
       ],
       "properties": {
         "enableRootFields": {
+          "description": "Adds the `_entities` and `_services` root fields required for Apollo Federation.",
           "type": "boolean"
         }
       },

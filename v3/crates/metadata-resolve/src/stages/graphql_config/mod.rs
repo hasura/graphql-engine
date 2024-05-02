@@ -53,7 +53,9 @@ pub struct GraphqlConfig {
     pub global: GlobalGraphqlConfig,
 }
 
-/// Create a new graphql config object.
+/// Resolve and validate the GraphQL configuration.
+/// For example, make sure all names are valid GraphQL names.
+///
 /// `GraphqlConfig` is an optional metadata object introduced in V2 metadata
 /// that is associated with the flag `require_graphql_config`. This is done
 /// to ensure that we still accept older metadata which did not have this
@@ -127,6 +129,8 @@ pub struct FilterInputOperatorNames {
     pub is_null: ast::Name,
 }
 
+/// Resolve and validate the GraphQL configuration.
+/// For example, make sure all names are valid GraphQL names.
 pub fn resolve_graphql_config(
     graphql_config: &open_dds::graphql_config::GraphqlConfig,
 ) -> Result<GraphqlConfig, Error> {
