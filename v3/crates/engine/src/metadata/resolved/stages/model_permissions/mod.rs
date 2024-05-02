@@ -7,7 +7,10 @@ use crate::metadata::resolved::types::permission::ValueExpression;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
 use std::collections::{BTreeMap, HashMap};
-pub use types::{FilterPermission, ModelPredicate, ModelWithPermissions, SelectPermission};
+pub use types::{
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+    PredicateRelationshipInfo, SelectPermission,
+};
 
 use crate::metadata::resolved::helpers::argument::resolve_value_expression_for_argument;
 use crate::metadata::resolved::types::error::{Error, RelationshipError};
@@ -15,9 +18,6 @@ use crate::metadata::resolved::types::error::{Error, RelationshipError};
 use crate::metadata::resolved::helpers::types::mk_name;
 use crate::metadata::resolved::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
-};
-use crate::schema::types::output_type::relationship::{
-    ModelTargetSource, PredicateRelationshipAnnotation,
 };
 
 use ndc_models;
@@ -329,7 +329,7 @@ fn resolve_model_predicate(
                                         },
                                 })?;
 
-                                let annotation = PredicateRelationshipAnnotation {
+                                let annotation = PredicateRelationshipInfo {
                                     source_type: relationship.source.clone(),
                                     relationship_name: relationship.name.clone(),
                                     target_model_name: model_name.clone(),

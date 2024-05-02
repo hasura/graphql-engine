@@ -5,7 +5,7 @@ use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_object_type_representation;
-use super::types::output_type::relationship::{FilterRelationshipAnnotation, ModelTargetSource};
+use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
 use crate::metadata::resolved;
 use crate::metadata::resolved::mk_name;
@@ -160,8 +160,10 @@ pub fn build_boolean_expression_input_schema(
                 // Build relationship field in filter expression only when
                 // the target_model is backed by a source
                 if let Some(target_source) = &target_model.model.source {
-                    let target_model_source =
-                        ModelTargetSource::from_model_source(target_source, relationship)?;
+                    let target_model_source = resolved::ModelTargetSource::from_model_source(
+                        target_source,
+                        relationship,
+                    )?;
 
                     // filter expression with relationships is currently only supported for local relationships
                     if let resolved::RelationshipExecutionCategory::Local =

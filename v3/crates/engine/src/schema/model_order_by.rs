@@ -5,7 +5,7 @@ use open_dds::models::ModelName;
 use open_dds::relationships::RelationshipType;
 use std::collections::{BTreeMap, HashMap};
 
-use super::types::output_type::relationship::{ModelTargetSource, OrderByRelationshipAnnotation};
+use super::types::output_type::relationship::OrderByRelationshipAnnotation;
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
 use crate::metadata::resolved;
 use crate::metadata::resolved::mk_name;
@@ -178,8 +178,10 @@ pub fn build_model_order_by_input_schema(
                 if let (Some(target_source), Some(model_source)) =
                     (&target_model.model.source, &model.model.source)
                 {
-                    let target_model_source =
-                        ModelTargetSource::from_model_source(target_source, relationship)?;
+                    let target_model_source = resolved::ModelTargetSource::from_model_source(
+                        target_source,
+                        relationship,
+                    )?;
                     // order_by expression with relationships is currently only supported for local relationships
                     if let resolved::RelationshipExecutionCategory::Local =
                         resolved::relationship_execution_category(

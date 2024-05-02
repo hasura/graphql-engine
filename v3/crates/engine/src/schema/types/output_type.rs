@@ -10,7 +10,6 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use self::relationship::{
     CommandRelationshipAnnotation, CommandTargetSource, ModelRelationshipAnnotation,
-    ModelTargetSource,
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
@@ -340,7 +339,10 @@ fn object_type_fields(
                                 source_type: relationship.source.clone(),
                                 relationship_name: relationship.name.clone(),
                                 model_name: model_name.clone(),
-                                target_source: ModelTargetSource::new(model, relationship)?,
+                                target_source: resolved::ModelTargetSource::new(
+                                    model,
+                                    relationship,
+                                )?,
                                 target_type: target_typename.clone(),
                                 relationship_type: relationship_type.clone(),
                                 mappings: mappings.clone(),

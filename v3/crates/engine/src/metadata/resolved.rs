@@ -14,7 +14,9 @@ pub use stages::boolean_expressions::{
 pub use stages::command_permissions::CommandWithPermissions;
 pub use stages::commands::Command;
 pub use stages::data_connectors::DataConnectorLink;
-pub use stages::model_permissions::{FilterPermission, ModelPredicate, ModelWithPermissions};
+pub use stages::model_permissions::{
+    FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
+};
 pub use stages::models::{
     Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
     SelectUniqueGraphQlDefinition,

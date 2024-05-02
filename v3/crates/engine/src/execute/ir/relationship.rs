@@ -24,9 +24,7 @@ use super::{
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved::{serialize_qualified_btreemap, Qualified};
-use crate::schema::types::output_type::relationship::{
-    ModelRelationshipAnnotation, ModelTargetSource,
-};
+use crate::schema::types::output_type::relationship::ModelRelationshipAnnotation;
 use crate::{
     execute::{ir::error, model_tracking::count_command},
     schema::types::output_type::relationship::{
@@ -49,7 +47,7 @@ pub(crate) struct LocalModelRelationshipInfo<'s> {
     pub source_data_connector: &'s resolved::DataConnectorLink,
     #[serde(serialize_with = "serialize_qualified_btreemap")]
     pub source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
-    pub target_source: &'s ModelTargetSource,
+    pub target_source: &'s resolved::ModelTargetSource,
     pub target_type: &'s Qualified<CustomTypeName>,
     pub mappings: &'s Vec<resolved::RelationshipModelMapping>,
 }
@@ -257,7 +255,7 @@ pub(crate) fn build_local_model_relationship<'s>(
     annotation: &'s ModelRelationshipAnnotation,
     data_connector: &'s resolved::DataConnectorLink,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
-    target_source: &'s ModelTargetSource,
+    target_source: &'s resolved::ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
     offset: Option<u32>,
@@ -344,7 +342,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
     field_call: &'n normalized_ast::FieldCall<'s, GDS>,
     annotation: &'s ModelRelationshipAnnotation,
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
-    target_source: &'s ModelTargetSource,
+    target_source: &'s resolved::ModelTargetSource,
     filter_clause: ResolvedFilterExpression<'s>,
     limit: Option<u32>,
     offset: Option<u32>,
