@@ -6,7 +6,7 @@ use ndc_models;
 
 use open_dds::types::InbuiltType;
 
-use crate::execute::error::{Error, InternalDeveloperError, InternalEngineError, InternalError};
+use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::metadata::resolved;
 
@@ -22,7 +22,7 @@ use super::selection_set::NDCRelationshipName;
 /// is not found, then an error will be thrown.
 pub(crate) fn get_select_filter_predicate<'s>(
     field_call: &normalized_ast::FieldCall<'s, GDS>,
-) -> Result<&'s resolved::FilterPermission, Error> {
+) -> Result<&'s resolved::FilterPermission, error::Error> {
     field_call
         .info
         .namespaced
@@ -36,8 +36,8 @@ pub(crate) fn get_select_filter_predicate<'s>(
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
         // when the V3 engine metadata was built
-        .ok_or(Error::InternalError(InternalError::Engine(
-            InternalEngineError::ExpectedNamespaceAnnotationNotFound {
+        .ok_or(error::Error::InternalError(error::InternalError::Engine(
+            error::InternalEngineError::ExpectedNamespaceAnnotationNotFound {
                 namespace_annotation_type: "Filter".to_string(),
             },
         )))
@@ -48,7 +48,7 @@ pub(crate) fn get_select_filter_predicate<'s>(
 /// but if unexpected ones are found an error will be thrown.
 pub(crate) fn get_argument_presets(
     namespaced_info: &'_ Option<types::NamespaceAnnotation>,
-) -> Result<Option<&'_ types::ArgumentPresets>, Error> {
+) -> Result<Option<&'_ types::ArgumentPresets>, error::Error> {
     match namespaced_info.as_ref() {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {
@@ -61,8 +61,8 @@ pub(crate) fn get_argument_presets(
             // function expects an annotation containing argument presets, but it was not annotated
             // when the V3 engine metadata was built
             {
-                Err(Error::InternalError(InternalError::Engine(
-                    InternalEngineError::UnexpectedNamespaceAnnotation {
+                Err(error::Error::InternalError(error::InternalError::Engine(
+                    error::InternalEngineError::UnexpectedNamespaceAnnotation {
                         namespace_annotation: other_namespace_annotation.clone(),
                         expected_type: "ArgumentPresets".to_string(),
                     },
@@ -78,7 +78,7 @@ pub(crate) fn process_model_predicate<'s>(
     mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<ndc_models::Expression, Error> {
+) -> Result<ndc_models::Expression, error::Error> {
     match model_predicate {
         resolved::ModelPredicate::UnaryFieldComparison {
             field: _,
@@ -127,7 +127,7 @@ pub(crate) fn process_model_predicate<'s>(
                         usage_counts,
                     )
                 })
-                .collect::<Result<Vec<_>, Error>>()?;
+                .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::And { expressions: exprs })
         }
         resolved::ModelPredicate::Or(predicates) => {
@@ -142,7 +142,7 @@ pub(crate) fn process_model_predicate<'s>(
                         usage_counts,
                     )
                 })
-                .collect::<Result<Vec<_>, Error>>()?;
+                .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::Or { expressions: exprs })
         }
         resolved::ModelPredicate::Relationship {
@@ -190,7 +190,7 @@ fn make_permission_binary_boolean_expression(
     value_expression: &resolved::ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Result<ndc_models::Expression, Error> {
+) -> Result<ndc_models::Expression, error::Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
     let ndc_expression_value =
         make_value_from_value_expression(value_expression, argument_type, session_variables)?;
@@ -210,7 +210,7 @@ fn make_permission_unary_boolean_expression(
     ndc_column: String,
     operator: ndc_models::UnaryComparisonOperator,
     relationship_paths: &Vec<NDCRelationshipName>,
-) -> Result<ndc_models::Expression, Error> {
+) -> Result<ndc_models::Expression, error::Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
     Ok(ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
@@ -225,12 +225,12 @@ pub(crate) fn make_value_from_value_expression(
     val_expr: &resolved::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
-) -> Result<serde_json::Value, Error> {
+) -> Result<serde_json::Value, error::Error> {
     match val_expr {
         resolved::ValueExpression::Literal(val) => Ok(val.clone()),
         resolved::ValueExpression::SessionVariable(session_var) => {
             let value = session_variables.get(session_var).ok_or_else(|| {
-                InternalDeveloperError::MissingSessionVariable {
+                error::InternalDeveloperError::MissingSessionVariable {
                     session_variable: session_var.clone(),
                 }
             })?;
@@ -238,7 +238,7 @@ pub(crate) fn make_value_from_value_expression(
             typecast_session_variable(value, value_type)
         }
         resolved::ValueExpression::BooleanExpression(_model_predicate) => {
-            Err(InternalDeveloperError::BooleanExpressionNotImplemented.into())
+            Err(error::InternalDeveloperError::BooleanExpressionNotImplemented.into())
         }
     }
 }
@@ -247,7 +247,7 @@ pub(crate) fn make_value_from_value_expression(
 fn typecast_session_variable(
     session_var_value_wrapped: &SessionVariableValue,
     to_type: &QualifiedTypeReference,
-) -> Result<serde_json::Value, Error> {
+) -> Result<serde_json::Value, error::Error> {
     let session_var_value = &session_var_value_wrapped.0;
     match &to_type.underlying_type {
         QualifiedBaseType::Named(type_name) => {
@@ -255,7 +255,7 @@ fn typecast_session_variable(
                 QualifiedTypeName::Inbuilt(primitive) => match primitive {
                     InbuiltType::Int => {
                         let value: i32 = session_var_value.parse().map_err(|_| {
-                            InternalDeveloperError::VariableTypeCast {
+                            error::InternalDeveloperError::VariableTypeCast {
                                 expected: "int".into(),
                                 found: session_var_value.clone(),
                             }
@@ -264,7 +264,7 @@ fn typecast_session_variable(
                     }
                     InbuiltType::Float => {
                         let value: f32 = session_var_value.parse().map_err(|_| {
-                            InternalDeveloperError::VariableTypeCast {
+                            error::InternalDeveloperError::VariableTypeCast {
                                 expected: "float".into(),
                                 found: session_var_value.clone(),
                             }
@@ -274,7 +274,7 @@ fn typecast_session_variable(
                     InbuiltType::Boolean => match session_var_value.as_str() {
                         "true" => Ok(serde_json::Value::Bool(true)),
                         "false" => Ok(serde_json::Value::Bool(false)),
-                        _ => Err(InternalDeveloperError::VariableTypeCast {
+                        _ => Err(error::InternalDeveloperError::VariableTypeCast {
                             expected: "true or false".into(),
                             found: session_var_value.clone(),
                         })?,
@@ -296,6 +296,6 @@ fn typecast_session_variable(
                 }
             }
         }
-        QualifiedBaseType::List(_) => Err(InternalDeveloperError::VariableArrayTypeCast)?,
+        QualifiedBaseType::List(_) => Err(error::InternalDeveloperError::VariableArrayTypeCast)?,
     }
 }

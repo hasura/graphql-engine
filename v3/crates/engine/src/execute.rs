@@ -16,8 +16,6 @@ use tracing_util::{
     TraceableError,
 };
 
-use self::explain::types::RequestMode;
-
 pub mod error;
 pub mod explain;
 pub mod global_id;
@@ -71,22 +69,6 @@ impl Traceable for GraphQLResponse {
     }
 }
 
-pub enum ExecuteOrExplainResponse {
-    Execute(GraphQLResponse),
-    Explain(explain::types::ExplainResponse),
-}
-
-impl Traceable for ExecuteOrExplainResponse {
-    type ErrorType<'a> = GraphQLErrors<'a>;
-
-    fn get_error(&self) -> Option<GraphQLErrors<'_>> {
-        match self {
-            ExecuteOrExplainResponse::Execute(response) => response.get_error(),
-            ExecuteOrExplainResponse::Explain(response) => response.get_error(),
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct ProjectId(pub String);
 
@@ -99,7 +81,7 @@ pub async fn execute_query(
 ) -> GraphQLResponse {
     execute_query_internal(http_context, schema, session, request, project_id)
         .await
-        .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error(None))))
+        .unwrap_or_else(|e| GraphQLResponse(Response::error(e.to_graphql_error())))
 }
 
 #[derive(Error, Debug)]
@@ -128,49 +110,12 @@ pub async fn execute_query_internal(
     session: &Session,
     raw_request: gql::http::RawRequest,
     project_id: Option<&ProjectId>,
-) -> Result<GraphQLResponse, error::Error> {
-    let query_response = execute_request_internal(
-        http_context,
-        schema,
-        session,
-        raw_request,
-        explain::types::RequestMode::Execute,
-        project_id,
-    )
-    .await?;
-    match query_response {
-        ExecuteOrExplainResponse::Execute(response) => Ok(response),
-        ExecuteOrExplainResponse::Explain(_response) => Err(error::Error::InternalError(
-            error::InternalError::Developer(
-                error::InternalDeveloperError::ExecuteReturnedExplainResponse,
-            ),
-        )),
-    }
-}
-
-/// Executes or explains (query plan) a GraphQL query
-pub async fn execute_request_internal(
-    http_context: &HttpContext,
-    schema: &gql::schema::Schema<GDS>,
-    session: &Session,
-    raw_request: gql::http::RawRequest,
-    request_mode: explain::types::RequestMode,
-    project_id: Option<&ProjectId>,
-) -> Result<ExecuteOrExplainResponse, error::Error> {
+) -> Result<GraphQLResponse, error::RequestError> {
     let tracer = tracing_util::global_tracer();
-    let mode_query_span_name = match request_mode {
-        RequestMode::Execute => "execute_query",
-        RequestMode::Explain => "explain_query",
-    };
-    let mode_query_display_name = match request_mode {
-        RequestMode::Execute => "Execute query request",
-        RequestMode::Explain => "Execute explain request",
-    };
-
     tracer
         .in_span_async(
-            mode_query_span_name,
-            mode_query_display_name.to_string(),
+            "execute_query",
+            "Execute query request".to_string(),
             SpanVisibility::User,
             || {
                 tracing_util::set_attribute_on_active_span(
@@ -185,154 +130,58 @@ pub async fn execute_request_internal(
                 );
                 Box::pin(async {
                     // parse the raw request into a GQL query
-                    let query = tracer
-                        .in_span(
-                            "parse",
-                            "Parse the raw request into a GraphQL query".into(),
-                            SpanVisibility::Internal,
-                            || {
-                                gql::parser::Parser::new(&raw_request.query)
-                                    .parse_executable_document()
-                                    .map_err(GraphQlParseError)
-                            },
-                        )
-                        .map_err(|e| e.0)?;
+                    let query = parse_query(&raw_request.query)?;
 
                     // normalize the parsed GQL query
-                    let normalized_request = tracer
-                        .in_span(
-                            "validate",
-                            "Normalize the parsed GraphQL query".into(),
-                            SpanVisibility::Internal,
-                            || {
-                                // add the operation name even if validation fails
-                                if let Some(name) = &raw_request.operation_name {
-                                    set_attribute_on_active_span(
-                                        AttributeVisibility::Default,
-                                        "operation_name",
-                                        name.to_string(),
-                                    );
-                                }
-
-                                let request = gql::http::Request {
-                                    operation_name: raw_request.operation_name,
-                                    query,
-                                    variables: raw_request.variables.unwrap_or_default(),
-                                };
-                                gql::validation::normalize_request(&session.role, schema, &request)
-                                    .map_err(GraphQlValidationError)
-                            },
-                        )
-                        .map_err(|e| e.0)?;
+                    let normalized_request =
+                        normalize_request(schema, session, query, raw_request)?;
 
                     // generate IR
-                    let ir = tracer.in_span(
-                        "generate_ir",
-                        "Generate IR for the request".into(),
-                        SpanVisibility::Internal,
-                        || generate_ir(schema, session, &normalized_request),
-                    )?;
+                    let ir = build_ir(schema, session, &normalized_request)?;
 
                     // construct a plan to execute the request
-                    let request_plan = tracer.in_span(
-                        "plan",
-                        "Construct a plan to execute the request".into(),
-                        SpanVisibility::Internal,
-                        || plan::generate_request_plan(&ir),
-                    )?;
+                    let request_plan = build_request_plan(&ir)?;
 
                     let display_name = match normalized_request.name {
                         Some(ref name) => format!("Execute {}", name),
                         None => "Execute request plan".to_string(),
                     };
 
-                    // execute/explain the query plan
-                    let response = match request_mode {
-                        RequestMode::Execute => {
-                            tracer
-                                .in_span_async(
-                                    "execute",
-                                    display_name,
-                                    SpanVisibility::User,
-                                    || {
-                                        let all_usage_counts =
-                                            model_tracking::get_all_usage_counts_in_query(&ir);
-                                        let serialized_data =
-                                            serde_json::to_string(&all_usage_counts).unwrap();
-                                        set_attribute_on_active_span(
-                                            AttributeVisibility::Default,
-                                            "usage_counts",
-                                            serialized_data,
-                                        );
+                    // execute the query plan
+                    let response = tracer
+                        .in_span_async("execute", display_name, SpanVisibility::User, || {
+                            let all_usage_counts =
+                                model_tracking::get_all_usage_counts_in_query(&ir);
+                            let serialized_data = serde_json::to_string(&all_usage_counts).unwrap();
+                            set_attribute_on_active_span(
+                                AttributeVisibility::Default,
+                                "usage_counts",
+                                serialized_data,
+                            );
 
-                                        Box::pin(async {
-                                            let execute_query_result = match request_plan {
-                                                plan::RequestPlan::MutationPlan(mutation_plan) => {
-                                                    plan::execute_mutation_plan(
-                                                        http_context,
-                                                        mutation_plan,
-                                                        project_id,
-                                                    )
-                                                    .await
-                                                }
-                                                plan::RequestPlan::QueryPlan(query_plan) => {
-                                                    plan::execute_query_plan(
-                                                        http_context,
-                                                        query_plan,
-                                                        project_id,
-                                                    )
-                                                    .await
-                                                }
-                                            };
-
-                                            ExecuteOrExplainResponse::Execute(GraphQLResponse(
-                                                execute_query_result.to_graphql_response(),
-                                            ))
-                                        })
-                                    },
-                                )
-                                .await
-                        }
-                        RequestMode::Explain => {
-                            tracer
-                                .in_span_async(
-                                    "explain",
-                                    "Explain request plan".to_string(),
-                                    SpanVisibility::Internal,
-                                    || {
-                                        Box::pin(async {
-                                            let request_result = match request_plan {
-                                                plan::RequestPlan::MutationPlan(mutation_plan) => {
-                                                    crate::execute::explain::explain_mutation_plan(
-                                                        http_context,
-                                                        mutation_plan,
-                                                    )
-                                                    .await
-                                                }
-                                                plan::RequestPlan::QueryPlan(query_plan) => {
-                                                    crate::execute::explain::explain_query_plan(
-                                                        http_context,
-                                                        query_plan,
-                                                    )
-                                                    .await
-                                                }
-                                            };
-
-                                            // convert the query plan to explain step
-                                            let explain_response = match request_result {
-                                                Ok(step) => step.make_explain_response(),
-                                                Err(e) => explain::types::ExplainResponse::error(
-                                                    e.to_graphql_error(None),
-                                                ),
-                                            };
-
-                                            ExecuteOrExplainResponse::Explain(explain_response)
-                                        })
-                                    },
-                                )
-                                .await
-                        }
-                    };
+                            Box::pin(async {
+                                let execute_query_result = match request_plan {
+                                    plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                        plan::execute_mutation_plan(
+                                            http_context,
+                                            mutation_plan,
+                                            project_id,
+                                        )
+                                        .await
+                                    }
+                                    plan::RequestPlan::QueryPlan(query_plan) => {
+                                        plan::execute_query_plan(
+                                            http_context,
+                                            query_plan,
+                                            project_id,
+                                        )
+                                        .await
+                                    }
+                                };
+                                GraphQLResponse(execute_query_result.to_graphql_response())
+                            })
+                        })
+                        .await;
                     Ok(response)
                 })
             },
@@ -340,11 +189,180 @@ pub async fn execute_request_internal(
         .await
 }
 
+/// Explains (query plan) a GraphQL query
+pub async fn explain_query_internal(
+    http_context: &HttpContext,
+    schema: &gql::schema::Schema<GDS>,
+    session: &Session,
+    raw_request: gql::http::RawRequest,
+) -> Result<explain::types::ExplainResponse, error::RequestError> {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span_async(
+            "explain_query",
+            "Execute explain request".to_string(),
+            SpanVisibility::User,
+            || {
+                tracing_util::set_attribute_on_active_span(
+                    AttributeVisibility::Default,
+                    "session.role",
+                    session.role.to_string(),
+                );
+                tracing_util::set_attribute_on_active_span(
+                    AttributeVisibility::Default,
+                    "request.graphql_query",
+                    raw_request.query.to_string(),
+                );
+                Box::pin(async {
+                    // parse the raw request into a GQL query
+                    let query = parse_query(&raw_request.query)?;
+
+                    // normalize the parsed GQL query
+                    let normalized_request =
+                        normalize_request(schema, session, query, raw_request)?;
+
+                    // generate IR
+                    let ir = build_ir(schema, session, &normalized_request)?;
+
+                    // construct a plan to execute the request
+                    let request_plan = build_request_plan(&ir)?;
+
+                    // explain the query plan
+                    let response = tracer
+                        .in_span_async(
+                            "explain",
+                            "Explain request plan".to_string(),
+                            SpanVisibility::Internal,
+                            || {
+                                Box::pin(async {
+                                    let request_result = match request_plan {
+                                        plan::RequestPlan::MutationPlan(mutation_plan) => {
+                                            crate::execute::explain::explain_mutation_plan(
+                                                http_context,
+                                                mutation_plan,
+                                            )
+                                            .await
+                                        }
+                                        plan::RequestPlan::QueryPlan(query_plan) => {
+                                            crate::execute::explain::explain_query_plan(
+                                                http_context,
+                                                query_plan,
+                                            )
+                                            .await
+                                        }
+                                    };
+                                    // convert the query plan to explain step
+                                    match request_result {
+                                        Ok(step) => step.make_explain_response(),
+                                        Err(e) => explain::types::ExplainResponse::error(
+                                            e.to_graphql_error(),
+                                        ),
+                                    }
+                                })
+                            },
+                        )
+                        .await;
+                    Ok(response)
+                })
+            },
+        )
+        .await
+}
+
+/// Parses a raw GraphQL request into a GQL query AST
+pub(crate) fn parse_query(
+    query: &str,
+) -> Result<
+    gql::ast::executable::ExecutableDocument,
+    gql::ast::spanning::Positioned<gql::parser::Error>,
+> {
+    let tracer = tracing_util::global_tracer();
+    let query = tracer
+        .in_span(
+            "parse",
+            "Parse the raw request into a GraphQL query".into(),
+            SpanVisibility::Internal,
+            || {
+                gql::parser::Parser::new(query)
+                    .parse_executable_document()
+                    .map_err(GraphQlParseError)
+            },
+        )
+        .map_err(|e| e.0)?;
+    Ok(query)
+}
+
+/// Normalize the parsed GQL query
+pub(crate) fn normalize_request<'s>(
+    schema: &'s gql::schema::Schema<GDS>,
+    session: &Session,
+    query: gql::ast::executable::ExecutableDocument,
+    raw_request: gql::http::RawRequest,
+) -> Result<Operation<'s, GDS>, gql::validation::Error> {
+    let tracer = tracing_util::global_tracer();
+    let normalized_request = tracer
+        .in_span(
+            "validate",
+            "Normalize the parsed GraphQL query".into(),
+            SpanVisibility::Internal,
+            || {
+                // add the operation name even if validation fails
+                if let Some(name) = &raw_request.operation_name {
+                    set_attribute_on_active_span(
+                        AttributeVisibility::Default,
+                        "operation_name",
+                        name.to_string(),
+                    );
+                }
+
+                let request = gql::http::Request {
+                    operation_name: raw_request.operation_name,
+                    query,
+                    variables: raw_request.variables.unwrap_or_default(),
+                };
+                gql::validation::normalize_request(&session.role, schema, &request)
+                    .map_err(GraphQlValidationError)
+            },
+        )
+        .map_err(|e| e.0)?;
+    Ok(normalized_request)
+}
+
+/// Generate IR for the request
+pub(crate) fn build_ir<'n, 's>(
+    schema: &'s gql::schema::Schema<GDS>,
+    session: &Session,
+    normalized_request: &'s Operation<'s, GDS>,
+) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
+    let tracer = tracing_util::global_tracer();
+    let ir = tracer.in_span(
+        "generate_ir",
+        "Generate IR for the request".into(),
+        SpanVisibility::Internal,
+        || generate_ir(schema, session, normalized_request),
+    )?;
+    Ok(ir)
+}
+
+/// Build a plan to execute the request
+pub(crate) fn build_request_plan<'n, 's, 'ir>(
+    ir: &'ir IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>,
+) -> Result<plan::RequestPlan<'n, 's, 'ir>, plan::error::Error> {
+    let tracer = tracing_util::global_tracer();
+    let plan = tracer.in_span(
+        "plan",
+        "Construct a plan to execute the request".into(),
+        SpanVisibility::Internal,
+        || plan::generate_request_plan(ir),
+    )?;
+    Ok(plan)
+}
+
 pub fn generate_ir<'n, 's>(
     schema: &'s gql::schema::Schema<GDS>,
     session: &Session,
     normalized_request: &'s Operation<'s, GDS>,
-) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, error::Error> {
+) -> Result<IndexMap<ast::Alias, ir::root_field::RootField<'n, 's>>, ir::error::Error> {
     let ir = match &normalized_request.ty {
         ast::OperationType::Query => {
             ir::query_root::generate_ir(schema, session, &normalized_request.selection_set)?
@@ -353,7 +371,7 @@ pub fn generate_ir<'n, 's>(
             ir::mutation_root::generate_ir(&normalized_request.selection_set, &session.variables)?
         }
         ast::OperationType::Subscription => {
-            Err(error::InternalEngineError::SubscriptionsNotSupported)?
+            Err(ir::error::InternalEngineError::SubscriptionsNotSupported)?
         }
     };
     Ok(ir)

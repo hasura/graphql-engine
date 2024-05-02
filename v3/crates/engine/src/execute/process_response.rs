@@ -12,10 +12,10 @@ use ndc_models;
 use open_dds::commands::CommandName;
 use open_dds::types::FieldName;
 
-use super::error;
 use super::global_id::{global_id_col_format, GLOBAL_ID_VERSION};
 use super::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use super::plan::ProcessResponseAs;
+use crate::execute::error;
 use crate::metadata::resolved::Qualified;
 use crate::schema::{
     types::{Annotation, GlobalID, OutputAnnotation},
@@ -49,7 +49,7 @@ fn process_global_id_field<T>(
     global_id_fields: &Vec<FieldName>,
     field_alias: &Alias,
     type_name: &TypeName,
-) -> Result<json::Value, error::Error>
+) -> Result<json::Value, error::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -59,7 +59,7 @@ where
 
         let field_json_value_result =
             row.remove(global_id_ndc_field_name.as_str())
-                .ok_or_else(|| error::InternalDeveloperError::BadGDCResponse {
+                .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
                     summary: format!("missing field: {}", global_id_ndc_field_name.as_str()),
                 })?;
         global_id_cols.insert(field_name.clone(), field_json_value_result);
@@ -74,11 +74,11 @@ where
 }
 
 /// Processes a single NDC row and adds `__typename`
-/// wherever needed.
+/// wh needed.
 fn process_single_query_response_row<T>(
     mut row: T,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<IndexMap<ast::Alias, json::Value>, error::Error>
+) -> Result<IndexMap<ast::Alias, json::Value>, error::FieldError>
 where
     T: KeyValueResponse,
 {
@@ -100,9 +100,8 @@ where
                             }
                             OutputAnnotation::RelayNodeInterfaceID { typename_mappings } => {
                                 let global_id_fields = typename_mappings.get(type_name).ok_or(
-                                    error::InternalDeveloperError::TypenameMappingNotFound {
+                                    error::FieldInternalError::GlobalIdTypenameMappingNotFound {
                                         type_name: type_name.clone(),
-                                        mapping_kind: "Global ID",
                                     },
                                 )?;
 
@@ -116,7 +115,7 @@ where
                             OutputAnnotation::Field { .. } => {
                                 let value =
                                     row.remove(field.alias.0.as_str()).ok_or_else(|| {
-                                        error::InternalDeveloperError::BadGDCResponse {
+                                        error::NDCUnexpectedError::BadNDCResponse {
                                             summary: format!(
                                                 "missing field: {}",
                                                 field.alias.clone()
@@ -131,19 +130,15 @@ where
                                 }
                             }
                             OutputAnnotation::RelationshipToModel { .. } => {
-                                let field_json_value_result =
-                                    row.remove(field.alias.0.as_str()).ok_or_else(|| {
-                                        error::InternalDeveloperError::BadGDCResponse {
-                                            summary: format!(
-                                                "missing field: {}",
-                                                field.alias.clone()
-                                            ),
-                                        }
+                                let field_json_value_result = row
+                                    .remove(field.alias.0.as_str())
+                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("missing field: {}", field.alias.clone()),
                                     })?;
                                 let relationship_json_value_result =
                                     serde_json::from_value(field_json_value_result).ok();
                                 match relationship_json_value_result {
-                                    None => Err(error::InternalDeveloperError::BadGDCResponse {
+                                    None => Err(error::NDCUnexpectedError::BadNDCResponse {
                                         summary: "Unable to parse RowSet".into(),
                                     })?,
                                     Some(rows_set) => {
@@ -168,20 +163,16 @@ where
                             OutputAnnotation::RelationshipToCommand(
                                 command_relationship_annotation,
                             ) => {
-                                let field_json_value_result =
-                                    row.remove(field.alias.0.as_str()).ok_or_else(|| {
-                                        error::InternalDeveloperError::BadGDCResponse {
-                                            summary: format!(
-                                                "missing field: {}",
-                                                field.alias.clone()
-                                            ),
-                                        }
+                                let field_json_value_result = row
+                                    .remove(field.alias.0.as_str())
+                                    .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
+                                        summary: format!("missing field: {}", field.alias.clone()),
                                     })?;
                                 let relationship_json_value_result: Option<ndc_models::RowSet> =
                                     serde_json::from_value(field_json_value_result).ok();
 
                                 match relationship_json_value_result {
-                                    None => Err(error::InternalDeveloperError::BadGDCResponse {
+                                    None => Err(error::NDCUnexpectedError::BadNDCResponse {
                                         summary: "Unable to parse RowSet".into(),
                                     })?,
                                     Some(rows_set) => {
@@ -201,12 +192,12 @@ where
                                     }
                                 }
                             }
-                            _ => Err(error::InternalEngineError::UnexpectedAnnotation {
+                            _ => Err(error::FieldInternalError::UnexpectedAnnotation {
                                 annotation: annotation.clone(),
                             })?,
                         }
                     }
-                    annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
+                    annotation => Err(error::FieldInternalError::UnexpectedAnnotation {
                         annotation: annotation.clone(),
                     })?,
                 }
@@ -218,7 +209,7 @@ where
 pub fn process_selection_set_as_list(
     row_set: ndc_models::RowSet,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::Error> {
+) -> Result<Option<Vec<IndexMap<ast::Alias, json::Value>>>, error::FieldError> {
     let processed_response = row_set
         .rows
         .map(|rows| {
@@ -233,7 +224,7 @@ pub fn process_selection_set_as_list(
 pub fn process_selection_set_as_object(
     row_set: ndc_models::RowSet,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::Error> {
+) -> Result<Option<IndexMap<ast::Alias, json::Value>>, error::FieldError> {
     let processed_response = row_set
         .rows
         .and_then(|rows| rows.into_iter().next())
@@ -245,7 +236,7 @@ pub fn process_selection_set_as_object(
 pub fn process_field_selection_as_list(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
         // If the value is null we have nothing to process so we return null.
@@ -263,7 +254,7 @@ pub fn process_field_selection_as_list(
 pub fn process_field_selection_as_object(
     value: json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     if selection_set.fields.is_empty() || value.is_null() {
         // If selection set is empty we return the whole value without further processing.
         // If the value is null we have nothing to process so we return null.
@@ -280,9 +271,9 @@ pub fn process_command_rows(
     rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue, RandomState>>>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<Option<json::Value>, error::Error> {
+) -> Result<Option<json::Value>, error::FieldError> {
     match rows {
-        None => Err(error::InternalDeveloperError::BadGDCResponse {
+        None => Err(error::NDCUnexpectedError::BadNDCResponse {
             summary: format!(
                 "Expected one row in the response for command, but no rows present: {}",
                 command_name
@@ -290,7 +281,7 @@ pub fn process_command_rows(
         })?,
         Some(row_vector) => {
             if row_vector.len() > 1 {
-                Err(error::InternalDeveloperError::BadGDCResponse {
+                Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: format!(
                         "Expected only one row in the response for command: {}",
                         command_name
@@ -312,10 +303,10 @@ fn process_command_response_row(
     mut row: IndexMap<String, ndc_models::RowFieldValue>,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     let field_value_result = row
         .swap_remove(FUNCTION_IR_VALUE_COLUMN_NAME)
-        .ok_or_else(|| error::InternalDeveloperError::BadGDCResponse {
+        .ok_or_else(|| error::NDCUnexpectedError::BadNDCResponse {
             summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
         })?;
 
@@ -326,7 +317,7 @@ pub fn process_command_mutation_response(
     mutation_result: ndc_models::MutationOperationResults,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     match mutation_result {
         ndc_models::MutationOperationResults::Procedure { result } => {
             process_command_field_value(result, selection_set, type_container)
@@ -338,7 +329,7 @@ fn process_command_field_value(
     field_value_result: serde_json::Value,
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     // When no selection set for commands, return back the value from the
     // connector without any processing.
     if selection_set.fields.is_empty() {
@@ -353,14 +344,14 @@ fn process_command_field_value(
                 if type_container.nullable {
                     Ok(json::Value::Null)
                 } else {
-                    Err(error::InternalDeveloperError::BadGDCResponse {
+                    Err(error::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to parse response from NDC, null value expected".into(),
                     })?
                 }
             }
             json::Value::Object(result_map) => {
                 if type_container.is_list() {
-                    Err(error::InternalDeveloperError::BadGDCResponse {
+                    Err(error::NDCUnexpectedError::BadNDCResponse {
                         summary: "Unable to parse response from NDC, object value expected".into(),
                     })?
                 } else {
@@ -378,20 +369,21 @@ fn process_command_field_value(
                     let r: Vec<IndexMap<Alias, json::Value>> = array_values
                         .into_iter()
                         .map(|value| process_single_query_response_row(value, selection_set))
-                        .collect::<Result<Vec<IndexMap<ast::Alias, json::Value>>, error::Error>>(
+                        .collect::<Result<Vec<IndexMap<ast::Alias, json::Value>>, error::FieldError>>(
                         )?;
 
                     Ok(json::to_value(r)?)
                 } else {
-                    Err(error::InternalDeveloperError::BadGDCResponse {
-                        summary: "Unable to parse response from NDC, array value expected".into(),
+                    Err(error::NDCUnexpectedError::BadNDCResponse {
+                        summary: "Unable to parse response from NDC, array value expected"
+                            .to_string(),
                     })?
                 }
             }
-            _ => Err(error::InternalDeveloperError::BadGDCResponse {
+            _ => Err(error::NDCUnexpectedError::BadNDCResponse {
                 summary:
                     "Unable to parse response from NDC, either null, object or array value expected"
-                        .into(),
+                        .to_string(),
             })?,
         }
     }
@@ -401,7 +393,7 @@ pub fn process_response(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     rows_sets: Vec<ndc_models::RowSet>,
     process_response_as: &ProcessResponseAs,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     // Post process the response to add the `__typename` fields
     tracer.in_span(
@@ -413,11 +405,11 @@ pub fn process_response(
             match process_response_as {
                 ProcessResponseAs::Array { .. } => {
                     let result = process_selection_set_as_list(row_set, selection_set)?;
-                    json::to_value(result).map_err(error::Error::from)
+                    json::to_value(result).map_err(error::FieldError::from)
                 }
                 ProcessResponseAs::Object { .. } => {
                     let result = process_selection_set_as_object(row_set, selection_set)?;
-                    json::to_value(result).map_err(error::Error::from)
+                    json::to_value(result).map_err(error::FieldError::from)
                 }
                 ProcessResponseAs::CommandResponse {
                     command_name,
@@ -429,7 +421,7 @@ pub fn process_response(
                         selection_set,
                         type_container,
                     )?;
-                    json::to_value(result).map_err(error::Error::from)
+                    json::to_value(result).map_err(error::FieldError::from)
                 }
             }
         },
@@ -438,11 +430,11 @@ pub fn process_response(
 
 fn get_single_rowset(
     rows_sets: Vec<ndc_models::RowSet>,
-) -> Result<ndc_models::RowSet, error::Error> {
+) -> Result<ndc_models::RowSet, error::FieldError> {
     Ok(rows_sets
         .into_iter()
         .next()
-        .ok_or(error::InternalDeveloperError::BadGDCResponse {
+        .ok_or(error::NDCUnexpectedError::BadNDCResponse {
             summary: "missing rowset".into(),
         })?)
 }

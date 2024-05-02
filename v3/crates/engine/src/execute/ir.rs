@@ -1,5 +1,6 @@
 pub mod arguments;
 pub mod commands;
+pub mod error;
 pub mod filter;
 pub mod model_selection;
 pub mod mutation_root;

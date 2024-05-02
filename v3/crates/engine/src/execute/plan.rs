@@ -1,4 +1,5 @@
 mod commands;
+pub(crate) mod error;
 mod model_selection;
 mod relationships;
 pub(crate) mod selection_set;
@@ -12,7 +13,6 @@ use ndc_models;
 use serde_json as json;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, Traceable};
 
-use super::error;
 use super::ir::model_selection::ModelSelection;
 use super::ir::root_field;
 use super::ndc;
@@ -22,6 +22,7 @@ use super::remote_joins::types::{
     JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter, RemoteJoin,
 };
 use super::{HttpContext, ProjectId};
+use crate::execute::error::FieldError;
 use crate::metadata::resolved;
 use crate::schema::GDS;
 
@@ -155,13 +156,13 @@ pub fn generate_request_plan<'n, 's, 'ir>(
         match field {
             root_field::RootField::QueryRootField(field_ir) => {
                 let mut query_plan = match request_plan {
-                    Some(RequestPlan::MutationPlan(_)) => Err(error::Error::InternalError(
-                        error::InternalError::Engine(error::InternalEngineError::InternalGeneric {
+                    Some(RequestPlan::MutationPlan(_)) => {
+                        Err(error::InternalError::InternalGeneric {
                             description:
                                 "Parsed engine request contains mixed mutation/query operations"
                                     .to_string(),
-                        }),
-                    ))?,
+                        })?
+                    }
                     Some(RequestPlan::QueryPlan(query_plan)) => query_plan,
                     None => IndexMap::new(),
                 };
@@ -172,13 +173,13 @@ pub fn generate_request_plan<'n, 's, 'ir>(
 
             root_field::RootField::MutationRootField(field_ir) => {
                 let mut mutation_plan = match request_plan {
-                    Some(RequestPlan::QueryPlan(_)) => Err(error::Error::InternalError(
-                        error::InternalError::Engine(error::InternalEngineError::InternalGeneric {
+                    Some(RequestPlan::QueryPlan(_)) => {
+                        Err(error::InternalError::InternalGeneric {
                             description:
                                 "Parsed engine request contains mixed mutation/query operations"
                                     .to_string(),
-                        }),
-                    ))?,
+                        })?
+                    }
                     Some(RequestPlan::MutationPlan(mutation_plan)) => mutation_plan,
                     None => MutationPlan {
                         nodes: IndexMap::new(),
@@ -208,11 +209,11 @@ pub fn generate_request_plan<'n, 's, 'ir>(
         }
     }
 
-    request_plan.ok_or(error::Error::InternalError(error::InternalError::Engine(
-        error::InternalEngineError::InternalGeneric {
+    request_plan.ok_or(error::Error::Internal(
+        error::InternalError::InternalGeneric {
             description: "Parsed an empty request".to_string(),
         },
-    )))
+    ))
 }
 
 // Given a singular root field of a mutation, plan the execution of that root field.
@@ -390,11 +391,13 @@ fn zip_with_join_ids<'s, 'ir>(
 ) -> Result<JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>, error::Error> {
     let mut new_locations = IndexMap::new();
     for (key, location) in join_locations.locations {
-        let join_id_location = join_ids.locations.swap_remove(&key).ok_or(
-            error::InternalEngineError::InternalGeneric {
-                description: "unexpected; could not find {key} in join ids tree".to_string(),
-            },
-        )?;
+        let join_id_location =
+            join_ids
+                .locations
+                .swap_remove(&key)
+                .ok_or(error::InternalError::InternalGeneric {
+                    description: "unexpected; could not find {key} in join ids tree".to_string(),
+                })?;
         let new_node = match (location.join_node, join_id_location.join_node) {
             (JoinNode::Remote(rj), JoinNode::Remote(join_id)) => {
                 Ok(JoinNode::Remote((rj, join_id)))
@@ -407,7 +410,7 @@ fn zip_with_join_ids<'s, 'ir>(
                 JoinNode::Local(LocationKind::LocalRelationship),
                 JoinNode::Local(LocationKind::LocalRelationship),
             ) => Ok(JoinNode::Local(LocationKind::LocalRelationship)),
-            _ => Err(error::InternalEngineError::InternalGeneric {
+            _ => Err(error::InternalError::InternalGeneric {
                 description: "unexpected join node mismatch".to_string(),
             }),
         }?;
@@ -493,11 +496,11 @@ impl<'s, 'ir> RemoteJoinCounter<'s, 'ir> {
 #[derive(Debug)]
 pub struct RootFieldResult {
     pub is_nullable: bool,
-    pub result: Result<json::Value, error::Error>,
+    pub result: Result<json::Value, FieldError>,
 }
 
 impl Traceable for RootFieldResult {
-    type ErrorType<'a> = <Result<json::Value, error::Error> as Traceable>::ErrorType<'a>;
+    type ErrorType<'a> = <Result<json::Value, FieldError> as Traceable>::ErrorType<'a>;
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         Traceable::get_error(&self.result)
@@ -505,7 +508,7 @@ impl Traceable for RootFieldResult {
 }
 
 impl RootFieldResult {
-    pub fn new(is_nullable: &bool, result: Result<json::Value, error::Error>) -> Self {
+    pub fn new(is_nullable: &bool, result: Result<json::Value, FieldError>) -> Self {
         Self {
             is_nullable: *is_nullable,
             result,
@@ -677,7 +680,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                                         field_name => {
                                             return RootFieldResult::new(
                                                 &true,
-                                                Err(error::Error::FieldNotFoundInService {
+                                                Err(FieldError::FieldNotFoundInService {
                                                     field_name: field_name.to_string(),
                                                 }),
                                             )
@@ -792,7 +795,7 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
     ExecuteQueryResult { root_fields }
 }
 
-fn resolve_type_name(type_name: ast::TypeName) -> Result<json::Value, error::Error> {
+fn resolve_type_name(type_name: ast::TypeName) -> Result<json::Value, FieldError> {
     Ok(json::to_value(type_name)?)
 }
 
@@ -801,7 +804,7 @@ fn resolve_type_field(
     schema: &gql::schema::Schema<GDS>,
     type_name: &ast::TypeName,
     namespace: &Role,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, FieldError> {
     match schema.get_type(type_name) {
         Some(type_info) => Ok(json::to_value(gql::introspection::named_type(
             schema,
@@ -817,7 +820,7 @@ fn resolve_schema_field(
     selection_set: &normalized_ast::SelectionSet<'_, GDS>,
     schema: &gql::schema::Schema<GDS>,
     namespace: &Role,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, FieldError> {
     Ok(json::to_value(gql::introspection::schema_type(
         schema,
         namespace,
@@ -829,7 +832,7 @@ async fn resolve_ndc_query_execution(
     http_context: &HttpContext,
     ndc_query: &NDCQueryExecution<'_, '_>,
     project_id: Option<&ProjectId>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, FieldError> {
     let NDCQueryExecution {
         execution_tree,
         selection_set,
@@ -865,7 +868,7 @@ async fn resolve_ndc_mutation_execution(
     http_context: &HttpContext,
     ndc_query: NDCMutationExecution<'_, '_, '_>,
     project_id: Option<&ProjectId>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, FieldError> {
     let NDCMutationExecution {
         query,
         data_connector,
@@ -894,7 +897,7 @@ async fn resolve_optional_ndc_select(
     http_context: &HttpContext,
     optional_query: Option<NDCQueryExecution<'_, '_>>,
     project_id: Option<&ProjectId>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, FieldError> {
     match optional_query {
         None => Ok(json::Value::Null),
         Some(ndc_query) => resolve_ndc_query_execution(http_context, &ndc_query, project_id).await,

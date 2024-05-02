@@ -103,7 +103,7 @@ pub(crate) async fn execute_join_locations<'ir>(
     lhs_response_type: &ProcessResponseAs,
     join_locations: &JoinLocations<(RemoteJoin<'async_recursion, 'ir>, JoinId)>,
     project_id: Option<&ProjectId>,
-) -> Result<(), error::Error>
+) -> Result<(), error::FieldError>
 where
     'ir: 'async_recursion,
 {

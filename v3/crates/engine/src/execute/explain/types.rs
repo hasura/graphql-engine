@@ -6,14 +6,7 @@ use nonempty::NonEmpty;
 use serde::Serialize;
 use serde_json::json;
 use std::collections::BTreeMap;
-use strum_macros::Display;
 use tracing_util::Traceable;
-
-#[derive(Debug, Display)]
-pub enum RequestMode {
-    Explain,
-    Execute,
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -121,7 +114,7 @@ pub(crate) enum NDCRequest {
 }
 
 impl NDCExplainResponse {
-    pub(crate) fn error(error: error::Error) -> Self {
+    pub(crate) fn error(error: error::FieldError) -> Self {
         Self::Error(error.to_graphql_error(None))
     }
     pub(crate) fn success(response: ndc_models::ExplainResponse) -> Self {

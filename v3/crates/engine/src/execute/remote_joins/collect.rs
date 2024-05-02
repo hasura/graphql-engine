@@ -34,7 +34,7 @@ pub(crate) fn collect_arguments<'s, 'ir>(
     lhs_response_type: &ProcessResponseAs,
     key: &str,
     location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
-) -> Result<Option<CollectArgumentResult<'s, 'ir>>, error::Error> {
+) -> Result<Option<CollectArgumentResult<'s, 'ir>>, error::FieldError> {
     if lhs_response.is_empty() {
         return Ok(None);
     }
@@ -84,11 +84,9 @@ pub(crate) fn collect_arguments<'s, 'ir>(
     }
     match (remote_join, arguments.is_empty()) {
         (None, true) => Ok(None),
-        (None, false) => Err(error::Error::from(
-            error::InternalEngineError::InternalGeneric {
-                description: "unexpected: remote join empty".to_string(),
-            },
-        )),
+        (None, false) => Err(error::FieldInternalError::InternalGeneric {
+            description: "unexpected: remote join empty".to_string(),
+        })?,
         (Some(remote_join), _) => Ok(Some(CollectArgumentResult {
             arguments,
             join_node: remote_join,
@@ -108,13 +106,11 @@ fn collect_argument_from_row<'s, 'ir>(
     remote_join: &mut Option<RemoteJoin<'s, 'ir>>,
     sub_tree: &mut JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     remote_alias: &mut String,
-) -> Result<(), error::Error> {
+) -> Result<(), error::FieldError> {
     if location.join_node.is_local() && location.rest.locations.is_empty() {
-        return Err(error::Error::from(
-            error::InternalEngineError::InternalGeneric {
-                description: "unexpected: join_node and locations tree both are empty".to_string(),
-            },
-        ));
+        Err(error::FieldInternalError::InternalGeneric {
+            description: "unexpected: join_node and locations tree both are empty".to_string(),
+        })?
     }
     match &location.join_node {
         JoinNode::Remote((join_node, _join_id)) => {
@@ -132,7 +128,7 @@ fn collect_argument_from_row<'s, 'ir>(
         JoinNode::Local(location_kind) => {
             let nested_val = row
                 .get(key)
-                .ok_or(error::InternalEngineError::InternalGeneric {
+                .ok_or(error::FieldInternalError::InternalGeneric {
                     description: "invalid NDC response; could not find {key} in response"
                         .to_string(),
                 })?;
@@ -188,7 +184,7 @@ pub(crate) fn create_argument(
 fn rows_from_row_field_value(
     location_kind: LocationKind,
     nested_val: &ndc_models::RowFieldValue,
-) -> Result<Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>>, error::Error> {
+) -> Result<Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>>, error::FieldError> {
     let rows: Option<Vec<IndexMap<String, ndc_models::RowFieldValue>>> = match location_kind {
         LocationKind::NestedData => Some(
             {
@@ -202,7 +198,7 @@ fn rows_from_row_field_value(
                     _ => None,
                 }
             }
-            .ok_or(error::InternalEngineError::InternalGeneric {
+            .ok_or(error::FieldInternalError::InternalGeneric {
                 description: "unexpected: could not find rows in NDC nested response: ".to_string()
                     + &nested_val.0.to_string(),
             }),
@@ -215,7 +211,7 @@ fn rows_from_row_field_value(
                 // TODO: remove clone -> depends on ndc-client providing an API e.g. as_mut_rowset()
                 .clone()
                 .as_rowset()
-                .ok_or(error::InternalEngineError::InternalGeneric {
+                .ok_or(error::FieldInternalError::InternalGeneric {
                     description: "unexpected: could not find RowSet in NDC nested response: "
                         .to_string()
                         + &nested_val.0.to_string(),
@@ -240,9 +236,9 @@ pub(crate) fn get_value<'n>(
 fn resolve_command_response_row(
     row: &IndexMap<String, ndc_models::RowFieldValue>,
     type_container: &TypeContainer<TypeName>,
-) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::Error> {
+) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
-        error::InternalDeveloperError::BadGDCResponse {
+        error::NDCUnexpectedError::BadNDCResponse {
             summary: format!("missing field: {}", FUNCTION_IR_VALUE_COLUMN_NAME),
         }
     })?;
@@ -253,7 +249,7 @@ fn resolve_command_response_row(
     // value.
     match &field_value_result.0 {
         json::Value::String(_) | json::Value::Bool(_) | json::Value::Number(_) => {
-            Err(error::InternalDeveloperError::BadGDCResponse {
+            Err(error::NDCUnexpectedError::BadNDCResponse {
                 summary: "Unable to parse response from NDC, object or array value expected for relationship".into(),
             })?
         }
@@ -261,14 +257,14 @@ fn resolve_command_response_row(
             if type_container.nullable {
                 Ok(Vec::new())
             } else {
-                Err(error::InternalDeveloperError::BadGDCResponse {
+                Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, null value expected".into(),
                 })?
             }
         }
         json::Value::Object(result_map) => {
             if type_container.is_list() {
-                Err(error::InternalDeveloperError::BadGDCResponse {
+                Err(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, object value expected".into(),
                 })?
             } else {
@@ -292,7 +288,7 @@ fn resolve_command_response_row(
             if type_container.is_list(){
                 Ok(array_values)
             } else {
-                Ok(vec![array_values.into_iter().next().ok_or(error::InternalDeveloperError::BadGDCResponse {
+                Ok(vec![array_values.into_iter().next().ok_or(error::NDCUnexpectedError::BadNDCResponse {
                     summary: "Unable to parse response from NDC, rowset is empty".into(),
                 })?])
             }

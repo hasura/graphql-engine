@@ -9,9 +9,10 @@ use lang_graphql::ast::common as ast;
 use ndc_models;
 use tracing_util::{set_attribute_on_active_span, AttributeVisibility, SpanVisibility};
 
+use super::error;
 use super::plan::ProcessResponseAs;
 use super::process_response::process_command_mutation_response;
-use super::{error, HttpContext, ProjectId};
+use super::{HttpContext, ProjectId};
 use crate::metadata::resolved;
 use crate::schema::GDS;
 
@@ -27,7 +28,7 @@ pub async fn execute_ndc_query<'n, 's>(
     execution_span_attribute: &'static str,
     field_span_attribute: String,
     project_id: Option<&ProjectId>,
-) -> Result<Vec<ndc_models::RowSet>, error::Error> {
+) -> Result<Vec<ndc_models::RowSet>, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -64,7 +65,7 @@ pub(crate) async fn fetch_from_data_connector<'s>(
     query_request: &ndc_models::QueryRequest,
     data_connector: &resolved::DataConnectorLink,
     project_id: Option<&ProjectId>,
-) -> Result<ndc_models::QueryResponse, error::Error> {
+) -> Result<ndc_models::QueryResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -83,9 +84,8 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                         headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
-                    client::query_post(&ndc_config, query_request)
-                        .await
-                        .map_err(error::Error::from) // client::Error -> InternalError -> Error
+                    client::query_post(&ndc_config, query_request).await
+                    // .map_err(error::RequestError::from) // error::Error -> InternalError -> Error
                 })
             },
         )
@@ -96,14 +96,13 @@ pub(crate) async fn fetch_from_data_connector<'s>(
 pub fn append_project_id_to_headers(
     mut headers: HeaderMap,
     project_id: Option<&ProjectId>,
-) -> Result<HeaderMap, error::Error> {
+) -> Result<HeaderMap, client::Error> {
     match project_id {
         None => Ok(headers),
         Some(project_id) => {
             headers.append(
                 "project-id",
-                reqwest::header::HeaderValue::from_str(&project_id.0)
-                    .map_err(error::Error::ProjectIdConversionError)?,
+                reqwest::header::HeaderValue::from_str(&project_id.0)?,
             );
             Ok(headers)
         }
@@ -120,7 +119,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
     field_span_attribute: String,
     process_response_as: ProcessResponseAs<'ir>,
     project_id: Option<&ProjectId>,
-) -> Result<json::Value, error::Error> {
+) -> Result<json::Value, error::FieldError> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -162,9 +161,10 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                                 .operation_results
                                 .into_iter()
                                 .next()
-                                .ok_or(error::InternalDeveloperError::BadGDCResponse {
-                                    summary: "missing rowset".into(),
+                                .ok_or(error::NDCUnexpectedError::BadNDCResponse {
+                                    summary: "missing rowset".to_string(),
                                 })?;
+
                             match process_response_as {
                                 ProcessResponseAs::CommandResponse {
                                     command_name: _,
@@ -174,13 +174,10 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                                     selection_set,
                                     type_container,
                                 ),
-                                _ => Err(error::Error::from(
-                                    error::InternalEngineError::InternalGeneric {
-                                        description:
-                                            "mutations without commands are not supported yet"
-                                                .into(),
-                                    },
-                                )),
+                                _ => Err(error::FieldInternalError::InternalGeneric {
+                                    description: "Only commands are supported for mutations"
+                                        .to_string(),
+                                })?,
                             }
                         },
                     )
@@ -195,7 +192,7 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
     query_request: &ndc_models::MutationRequest,
     data_connector: &resolved::DataConnectorLink,
     project_id: Option<&ProjectId>,
-) -> Result<ndc_models::MutationResponse, error::Error> {
+) -> Result<ndc_models::MutationResponse, client::Error> {
     let tracer = tracing_util::global_tracer();
     tracer
         .in_span_async(
@@ -214,9 +211,7 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                         headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
-                    client::mutation_post(&ndc_config, query_request)
-                        .await
-                        .map_err(error::Error::from) // client::Error -> InternalError -> Error
+                    client::mutation_post(&ndc_config, query_request).await
                 })
             },
         )

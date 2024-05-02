@@ -2,9 +2,62 @@ use super::response::handle_response_with_size_limit;
 use ndc_models;
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
-use std::fmt;
 use thiserror::Error;
 use tracing_util::SpanVisibility;
+
+/// Error type for the NDC API client interactions
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error(
+        "request to connector failed with status code {}: {0}",
+        .0.status().map_or_else(|| "N/A".to_string(), |s| s.to_string())
+    )]
+    Reqwest(#[from] reqwest::Error),
+
+    #[error("unable to decode JSON response from connector: {0}")]
+    Serde(#[from] serde_json::Error),
+
+    #[error("internal IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("invalid connector base URL")]
+    InvalidBaseURL,
+
+    #[error("invalid header value characters in project_id: {0}")]
+    ProjectIdHeaderValueConversion(#[from] reqwest::header::InvalidHeaderValue),
+
+    #[error("response received from connector is too large: {0}")]
+    ResponseTooLarge(String),
+
+    #[error("connector error: {0}")]
+    ConnectorError(ConnectorError),
+
+    #[error("invalid connector error: {0}")]
+    InvalidConnectorError(InvalidConnectorError),
+
+    #[error("internal error: {description}")]
+    InternalGeneric { description: String },
+}
+
+impl tracing_util::TraceableError for Error {
+    fn visibility(&self) -> tracing_util::ErrorVisibility {
+        tracing_util::ErrorVisibility::Internal
+    }
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("connector returned status code {status} with message: {}", error_response.message)]
+pub struct ConnectorError {
+    pub status: reqwest::StatusCode,
+    pub error_response: ndc_models::ErrorResponse,
+}
+
+#[derive(Debug, Clone, Error)]
+#[error("invalid connector error with status {status} and {content}")]
+pub struct InvalidConnectorError {
+    pub status: reqwest::StatusCode,
+    pub content: serde_json::Value,
+}
 
 /// Configuration for the API client
 /// Contains all the information necessary to perform requests.
@@ -15,53 +68,6 @@ pub struct Configuration {
     pub client: reqwest::Client,
     pub headers: HeaderMap<HeaderValue>,
     pub response_size_limit: Option<usize>,
-}
-
-/// Error type for the NDC API client interactions
-#[derive(Debug, Error)]
-pub enum Error {
-    Reqwest(#[from] reqwest::Error),
-    Serde(#[from] serde_json::Error),
-    Io(#[from] std::io::Error),
-    ConnectorError(ConnectorError),
-    InvalidConnectorError(InvalidConnectorError),
-    InvalidBaseURL,
-    ResponseTooLarge(String),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (module, e) = match self {
-            Error::Reqwest(e) => ("reqwest", e.to_string()),
-            Error::Serde(e) => ("serde", e.to_string()),
-            Error::Io(e) => ("IO", e.to_string()),
-            Error::ConnectorError(e) => ("response", format!("status code {}", e.status)),
-            Error::InvalidConnectorError(e) => ("response", format!("status code {}", e.status)),
-            Error::InvalidBaseURL => ("url", "invalid base URL".into()),
-            Error::ResponseTooLarge(message) => ("response", format!("too large: {}", message)),
-        };
-        write!(f, "error in {}: {}", module, e)
-    }
-}
-
-impl tracing_util::TraceableError for Error {
-    fn visibility(&self) -> tracing_util::ErrorVisibility {
-        tracing_util::ErrorVisibility::Internal
-    }
-}
-
-#[derive(Debug, Clone, Error)]
-#[error("ConnectorError {{ status: {status}, error_response.message: {} }}", error_response.message)]
-pub struct ConnectorError {
-    pub status: reqwest::StatusCode,
-    pub error_response: ndc_models::ErrorResponse,
-}
-
-#[derive(Debug, Clone, Error)]
-#[error("InvalidConnectorError {{ status: {status}, content: {content} }}")]
-pub struct InvalidConnectorError {
-    pub status: reqwest::StatusCode,
-    pub content: serde_json::Value,
 }
 
 /// GET on /capabilities endpoint

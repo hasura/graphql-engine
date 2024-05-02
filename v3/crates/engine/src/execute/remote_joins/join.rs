@@ -22,7 +22,7 @@ pub(crate) fn join_responses(
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     lhs_response: &mut [ndc_models::RowSet],
     rhs_response: &HashMap<BTreeMap<String, ValueExt>, ndc_models::RowSet>,
-) -> Result<(), error::Error> {
+) -> Result<(), error::FieldError> {
     for row_set in lhs_response.iter_mut() {
         if let Some(rows) = row_set.rows.as_mut() {
             for row in rows.iter_mut() {
@@ -65,8 +65,8 @@ pub(crate) fn join_responses(
                             *x = ndc_models::RowFieldValue(json::to_value(command_row)?);
                         }
                         command_json_val => {
-                            return Err(error::Error::from(
-                                error::InternalEngineError::InternalGeneric {
+                            return Err(error::FieldError::from(
+                                error::FieldInternalError::InternalGeneric {
                                     description: format!(
                                         "unexpected command response: {}; expected Array or Object",
                                         command_json_val
@@ -99,7 +99,7 @@ fn follow_location_and_insert_value(
     remote_alias: String,
     key: &str,
     rhs_response: &HashMap<Argument, ndc_models::RowSet>,
-) -> Result<(), error::Error> {
+) -> Result<(), error::FieldError> {
     match &location.join_node {
         JoinNode::Remote((join_node, _join_id)) => {
             let argument = collect::create_argument(join_node, row);
@@ -110,7 +110,7 @@ fn follow_location_and_insert_value(
         JoinNode::Local(location_kind) => {
             let row_field_val =
                 row.get_mut(key)
-                    .ok_or(error::InternalEngineError::InternalGeneric {
+                    .ok_or(error::FieldInternalError::InternalGeneric {
                         description: "unexpected: could not find {key} in row".into(),
                     })?;
             match location_kind {
@@ -120,7 +120,7 @@ fn follow_location_and_insert_value(
                     let mut rows =
                         row_set
                             .rows
-                            .ok_or(error::InternalEngineError::InternalGeneric {
+                            .ok_or(error::FieldInternalError::InternalGeneric {
                                 description: "expected row; encountered null".into(),
                             })?;
 

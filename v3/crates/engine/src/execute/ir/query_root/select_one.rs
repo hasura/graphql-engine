@@ -12,8 +12,8 @@ use ndc_models;
 use open_dds;
 use serde::Serialize;
 
-use super::error;
 use crate::execute::ir::arguments;
+use crate::execute::ir::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::ir::permissions;

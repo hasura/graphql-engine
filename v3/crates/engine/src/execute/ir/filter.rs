@@ -6,7 +6,7 @@ use lang_graphql::normalized_ast;
 use ndc_models;
 use serde::Serialize;
 
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use crate::schema::types::output_type::relationship::FilterRelationshipAnnotation;
 use crate::schema::types::{self};

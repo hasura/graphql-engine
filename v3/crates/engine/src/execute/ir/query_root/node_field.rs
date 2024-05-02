@@ -9,7 +9,7 @@ use ndc_models;
 use open_dds::types::CustomTypeName;
 use serde::Serialize;
 
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;

@@ -2,8 +2,8 @@ use indexmap::IndexMap;
 use ndc_models;
 use std::collections::BTreeMap;
 
+use super::error;
 use super::selection_set;
-use crate::execute::error;
 use crate::execute::ir::commands::CommandInfo;
 use crate::execute::ir::commands::FunctionBasedCommand;
 use crate::execute::ir::commands::ProcedureBasedCommand;

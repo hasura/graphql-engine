@@ -14,9 +14,8 @@ use super::relationship::{
     self, LocalCommandRelationshipInfo, LocalModelRelationshipInfo, RemoteCommandRelationshipInfo,
     RemoteModelRelationshipInfo,
 };
-use crate::execute::error::{self};
-
 use crate::execute::global_id;
+use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
 use crate::schema::types::TypeKind;

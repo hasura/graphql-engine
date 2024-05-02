@@ -7,8 +7,8 @@ use ndc_models;
 use nonempty::NonEmpty;
 use open_dds::types::{CustomTypeName, InbuiltType};
 
-use crate::execute::error;
 use crate::execute::ir::arguments;
+use crate::execute::ir::error;
 use crate::metadata::resolved::TypeMapping;
 use crate::metadata::resolved::{
     Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
@@ -239,33 +239,42 @@ fn map_argument_value_to_ndc_type(
                 None => Ok(value.as_json()),
                 Some(TypeMapping::Object { field_mappings, .. }) => {
                     let object_value = value.as_object()?;
-                    let mapped_fields = object_value
-                .iter()
-                .map(|(_gql_field_name, field_value)| {
-                    let (field_name, field_type) = match field_value.info.generic {
-                        Annotation::Input(InputAnnotation::InputObjectField {
-                            field_name,
-                            field_type,
-                        }) => Ok((field_name, field_type)),
-                        annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
-                            annotation: annotation.clone(),
-                        }),
-                    }?;
+                    let mapped_fields =
+                        object_value
+                            .iter()
+                            .map(|(_gql_field_name, field_value)| {
+                                let (field_name, field_type) = match field_value.info.generic {
+                                    Annotation::Input(InputAnnotation::InputObjectField {
+                                        field_name,
+                                        field_type,
+                                    }) => Ok((field_name, field_type)),
+                                    annotation => {
+                                        Err(error::InternalEngineError::UnexpectedAnnotation {
+                                            annotation: annotation.clone(),
+                                        })
+                                    }
+                                }?;
 
-                    let field_mapping = field_mappings.get(field_name).ok_or_else(|| {
-                        error::InternalEngineError::InternalGeneric {
-                            description: format!("unable to find mapping for field {field_name:}"),
-                        }
-                    })?;
+                                let field_mapping =
+                                    field_mappings.get(field_name).ok_or_else(|| {
+                                        error::InternalEngineError::InternalGeneric {
+                                            description: format!(
+                                                "unable to find mapping for field {field_name:}"
+                                            ),
+                                        }
+                                    })?;
 
-                    let mapped_field_value = map_argument_value_to_ndc_type(
-                        field_type,
-                        &field_value.value,
-                        type_mappings,
-                    )?;
-                    Ok((field_mapping.column.to_string(), mapped_field_value))
-                })
-                .collect::<Result<serde_json::Map<String, serde_json::Value>, error::Error>>()?;
+                                let mapped_field_value = map_argument_value_to_ndc_type(
+                                    field_type,
+                                    &field_value.value,
+                                    type_mappings,
+                                )?;
+                                Ok((field_mapping.column.to_string(), mapped_field_value))
+                            })
+                            .collect::<Result<
+                                serde_json::Map<String, serde_json::Value>,
+                                error::Error,
+                            >>()?;
 
                     Ok(serde_json::Value::Object(mapped_fields))
                 }

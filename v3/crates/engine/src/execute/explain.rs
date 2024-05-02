@@ -1,5 +1,5 @@
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
-use super::{ExecuteOrExplainResponse, HttpContext};
+use super::HttpContext;
 use crate::execute::ndc::client as ndc_client;
 use crate::execute::plan::{ApolloFederationSelect, NodeQueryPlan, ProcessResponseAs};
 use crate::execute::remote_joins::types::{JoinId, JoinLocations, RemoteJoin};
@@ -21,42 +21,16 @@ pub async fn execute_explain(
     session: &Session,
     request: RawRequest,
 ) -> types::ExplainResponse {
-    execute_explain_internal(http_context, schema, session, request)
+    super::explain_query_internal(http_context, schema, session, request)
         .await
-        .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error(None)))
-}
-
-/// Explains a GraphQL query
-pub async fn execute_explain_internal(
-    http_context: &HttpContext,
-    schema: &gql::schema::Schema<GDS>,
-    session: &Session,
-    raw_request: gql::http::RawRequest,
-) -> Result<types::ExplainResponse, error::Error> {
-    let query_response = super::execute_request_internal(
-        http_context,
-        schema,
-        session,
-        raw_request,
-        types::RequestMode::Explain,
-        None,
-    )
-    .await?;
-    match query_response {
-        ExecuteOrExplainResponse::Explain(response) => Ok(response),
-        ExecuteOrExplainResponse::Execute(_response) => Err(error::Error::InternalError(
-            error::InternalError::Developer(
-                error::InternalDeveloperError::ExplainReturnedExecuteResponse,
-            ),
-        )),
-    }
+        .unwrap_or_else(|e| types::ExplainResponse::error(e.to_graphql_error()))
 }
 
 /// Produce an /explain plan for a given GraphQL query.
 pub(crate) async fn explain_query_plan(
     http_context: &HttpContext,
     query_plan: plan::QueryPlan<'_, '_, '_>,
-) -> Result<types::Step, error::Error> {
+) -> Result<types::Step, error::RequestError> {
     let mut parallel_root_steps = vec![];
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
@@ -116,12 +90,12 @@ pub(crate) async fn explain_query_plan(
             | NodeQueryPlan::ApolloFederationSelect(ApolloFederationSelect::ServiceField {
                 ..
             }) => {
-                return Err(error::Error::ExplainError(
+                return Err(error::RequestError::ExplainError(
                     "cannot explain introspection queries".to_string(),
                 ));
             }
             NodeQueryPlan::RelayNodeSelect(None) => {
-                return Err(error::Error::ExplainError(
+                return Err(error::RequestError::ExplainError(
                     "cannot explain relay queries with no execution plan".to_string(),
                 ));
             }
@@ -134,7 +108,7 @@ pub(crate) async fn explain_query_plan(
                 simplify_step(Box::new(types::Step::Parallel(parallel_root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(error::Error::ExplainError(
+        None => Err(error::RequestError::ExplainError(
             "cannot explain query as there are no explainable root field".to_string(),
         )),
     }
@@ -144,11 +118,11 @@ pub(crate) async fn explain_query_plan(
 pub(crate) async fn explain_mutation_plan(
     http_context: &HttpContext,
     mutation_plan: plan::MutationPlan<'_, '_, '_>,
-) -> Result<types::Step, error::Error> {
+) -> Result<types::Step, error::RequestError> {
     let mut root_steps = vec![];
 
     if !mutation_plan.type_names.is_empty() {
-        return Err(error::Error::ExplainError(
+        return Err(error::RequestError::ExplainError(
             "cannot explain introspection queries".to_string(),
         ));
     }
@@ -174,7 +148,7 @@ pub(crate) async fn explain_mutation_plan(
             let simplified_step = simplify_step(Box::new(types::Step::Sequence(root_steps)));
             Ok(*simplified_step)
         }
-        None => Err(error::Error::ExplainError(
+        None => Err(error::RequestError::ExplainError(
             "cannot explain mutation as there are no explainable root fields".to_string(),
         )),
     }
@@ -330,7 +304,7 @@ async fn fetch_explain_from_data_connector(
                                 ndc_client::explain_query_post(&ndc_config, query_request)
                                     .await
                                     .map(Some)
-                                    .map_err(error::Error::from)
+                                    .map_err(error::FieldError::from)
                             } else {
                                 Ok(None)
                             }
@@ -340,7 +314,7 @@ async fn fetch_explain_from_data_connector(
                                 ndc_client::explain_mutation_post(&ndc_config, mutation_request)
                                     .await
                                     .map(Some)
-                                    .map_err(error::Error::from)
+                                    .map_err(error::FieldError::from)
                             } else {
                                 Ok(None)
                             }

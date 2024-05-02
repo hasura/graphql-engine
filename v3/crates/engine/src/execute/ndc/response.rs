@@ -66,7 +66,7 @@ mod test {
             .unwrap_err();
         assert_eq!(
             err.to_string(),
-            "error in response: too large: Received content length 20 exceeds the limit 10"
+            "response received from connector is too large: Received content length 20 exceeds the limit 10"
         )
     }
 
@@ -87,7 +87,7 @@ mod test {
                 .unwrap_err();
         assert_eq!(
             err.to_string(),
-            "error in response: too large: Size exceeds the limit 5"
+            "response received from connector is too large: Size exceeds the limit 5"
         )
     }
 

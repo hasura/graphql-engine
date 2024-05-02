@@ -17,7 +17,7 @@ use std::collections::BTreeMap;
 
 use super::arguments;
 use super::selection_set;
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_command, UsagesCounts};
 use crate::metadata::resolved;

@@ -28,7 +28,7 @@ use crate::schema::types::output_type::relationship::{
     ModelRelationshipAnnotation, ModelTargetSource,
 };
 use crate::{
-    execute::{error, model_tracking::count_command},
+    execute::{ir::error, model_tracking::count_command},
     schema::types::output_type::relationship::{
         CommandRelationshipAnnotation, CommandTargetSource,
     },
@@ -81,133 +81,6 @@ pub(crate) struct RemoteCommandRelationshipInfo<'s> {
 
 pub type SourceField = (FieldName, resolved::FieldMapping);
 pub type TargetField = (FieldName, resolved::NdcColumnForComparison);
-
-pub(crate) fn process_model_relationship_definition(
-    relationship_info: &LocalModelRelationshipInfo,
-) -> Result<ndc_models::Relationship, error::Error> {
-    let &LocalModelRelationshipInfo {
-        relationship_name,
-        relationship_type,
-        source_type,
-        source_data_connector,
-        source_type_mappings,
-        target_source,
-        target_type: _,
-        mappings,
-    } = relationship_info;
-
-    let mut column_mapping = BTreeMap::new();
-    for resolved::RelationshipModelMapping {
-        source_field: source_field_path,
-        target_field: _,
-        target_ndc_column,
-    } in mappings.iter()
-    {
-        if !matches!(
-            resolved::relationship_execution_category(
-                source_data_connector,
-                &target_source.model.data_connector,
-                &target_source.capabilities
-            ),
-            resolved::RelationshipExecutionCategory::Local
-        ) {
-            Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
-        } else {
-            let target_column = target_ndc_column.as_ref().ok_or_else(|| {
-                error::InternalEngineError::InternalGeneric {
-                    description: format!(
-                        "No column mapping for relationship {relationship_name} on {source_type}"
-                    ),
-                }
-            })?;
-            let source_column = get_field_mapping_of_field_name(
-                source_type_mappings,
-                source_type,
-                relationship_name,
-                &source_field_path.field_name,
-            )?;
-            if column_mapping
-                .insert(source_column.column, target_column.column.clone())
-                .is_some()
-            {
-                Err(error::InternalEngineError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
-                    relationship_name: relationship_name.clone(),
-                })?
-            }
-        }
-    }
-    let ndc_relationship = ndc_models::Relationship {
-        column_mapping,
-        relationship_type: {
-            match relationship_type {
-                RelationshipType::Object => ndc_models::RelationshipType::Object,
-                RelationshipType::Array => ndc_models::RelationshipType::Array,
-            }
-        },
-        target_collection: target_source.model.collection.to_string(),
-        arguments: BTreeMap::new(),
-    };
-    Ok(ndc_relationship)
-}
-
-pub(crate) fn process_command_relationship_definition(
-    relationship_info: &LocalCommandRelationshipInfo,
-) -> Result<ndc_models::Relationship, error::Error> {
-    let &LocalCommandRelationshipInfo {
-        annotation,
-        source_data_connector,
-        source_type_mappings,
-        target_source,
-    } = relationship_info;
-
-    let mut arguments = BTreeMap::new();
-    for resolved::RelationshipCommandMapping {
-        source_field: source_field_path,
-        argument_name: target_argument,
-    } in annotation.mappings.iter()
-    {
-        if !matches!(
-            resolved::relationship_execution_category(
-                source_data_connector,
-                &target_source.details.data_connector,
-                &target_source.capabilities
-            ),
-            resolved::RelationshipExecutionCategory::Local
-        ) {
-            Err(error::InternalEngineError::RemoteRelationshipsAreNotSupported)?
-        } else {
-            let source_column = get_field_mapping_of_field_name(
-                source_type_mappings,
-                &annotation.source_type,
-                &annotation.relationship_name,
-                &source_field_path.field_name,
-            )?;
-
-            let relationship_argument = ndc_models::RelationshipArgument::Column {
-                name: source_column.column,
-            };
-
-            if arguments
-                .insert(target_argument.to_string(), relationship_argument)
-                .is_some()
-            {
-                Err(error::InternalEngineError::MappingExistsInRelationship {
-                    source_column: source_field_path.field_name.clone(),
-                    relationship_name: annotation.relationship_name.clone(),
-                })?
-            }
-        }
-    }
-
-    let ndc_relationship = ndc_models::Relationship {
-        column_mapping: BTreeMap::new(),
-        relationship_type: ndc_models::RelationshipType::Object,
-        target_collection: target_source.function_name.to_string(),
-        arguments,
-    };
-    Ok(ndc_relationship)
-}
 
 pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
@@ -604,7 +477,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     })
 }
 
-fn get_field_mapping_of_field_name(
+pub(crate) fn get_field_mapping_of_field_name(
     type_mappings: &BTreeMap<Qualified<CustomTypeName>, resolved::TypeMapping>,
     type_name: &Qualified<CustomTypeName>,
     relationship_name: &RelationshipName,

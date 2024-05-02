@@ -9,8 +9,8 @@ use open_dds::{commands::CommandName, models, types::CustomTypeName};
 use std::collections::HashMap;
 
 use super::commands;
+use super::error;
 use super::root_field;
-use crate::execute::error;
 use crate::metadata::resolved;
 use crate::schema::types::ApolloFederationRootFields;
 use crate::schema::types::CommandSourceDetail;

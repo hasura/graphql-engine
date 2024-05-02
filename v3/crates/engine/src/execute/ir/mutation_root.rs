@@ -10,7 +10,7 @@ use crate::schema::types::Annotation;
 use crate::schema::GDS;
 
 use super::{commands, root_field};
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::schema::types::{OutputAnnotation, RootFieldAnnotation};
 
 /// Generates IR for the selection set of type 'mutation root'

@@ -11,7 +11,7 @@ use super::filter::ResolvedFilterExpression;
 use super::order_by::ResolvedOrderBy;
 use super::permissions;
 use super::selection_set;
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::metadata::resolved;
 use crate::metadata::resolved::Qualified;

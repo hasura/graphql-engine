@@ -4,9 +4,9 @@ use std::collections::BTreeMap;
 
 use ndc_models;
 
+use super::error;
 use super::relationships;
 use super::selection_set;
-use crate::execute::error;
 use crate::execute::ir::model_selection::ModelSelection;
 use crate::execute::remote_joins::types::{JoinLocations, MonotonicCounter, RemoteJoin};
 

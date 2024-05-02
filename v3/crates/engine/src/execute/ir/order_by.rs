@@ -11,7 +11,7 @@ use crate::schema::types::{Annotation, InputAnnotation, ModelInputAnnotation};
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;
 
-use crate::execute::error;
+use crate::execute::ir::error;
 use crate::schema::types;
 use crate::schema::GDS;
 
@@ -40,9 +40,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                         // in a single input object and the server might interpret it arbitrarily
                         // since input objects values are unordered key-value pair lists.
                         if arguments.len() != 1 {
-                            Err(error::Error::ValidationFailed(
-                                    lang_graphql::validation::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair,
-                                ))?
+                            Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?
                         } else {
                             let argument = arguments
                                     .first()
