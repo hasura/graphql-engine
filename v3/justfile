@@ -158,13 +158,13 @@ run-local: start-docker-test-deps start-docker-run-deps
   --metadata-path crates/engine/tests/schema.json
 
 # check the docker build works
-build-docker-with-nix:
+build-docker-with-nix binary="engine":
   #!/usr/bin/env bash
-  echo "$(tput bold)nix build .#engine-docker | gunzip | docker load$(tput sgr0)"
-  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths '.#engine-docker')" | docker load
+  echo "$(tput bold)nix build .#{{ binary }}-docker | gunzip | docker load$(tput sgr0)"
+  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths '.#{{ binary }}-docker')" | docker load
 
-# check the Postgres arm64 docker build works
-build-aarch64-docker-with-nix:
+# check the arm64 docker build works
+build-aarch64-docker-with-nix binary="engine":
   #!/usr/bin/env bash
-  echo "$(tput bold)nix build .#engine-docker-aarch64-linux | gunzip | docker load$(tput sgr0)"
-  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths --system aarch64-linux '.#engine-docker-aarch64-linux')" | docker load
+  echo "$(tput bold)nix build .#{{ binary }}-docker-aarch64-linux | gunzip | docker load$(tput sgr0)"
+  gunzip < "$(nix build --no-warn-dirty --no-link --print-out-paths --system aarch64-linux '.#{{ binary }}-docker-aarch64-linux')" | docker load

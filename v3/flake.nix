@@ -93,6 +93,51 @@
               port = "8181";
             };
 
+            ###### DEV-AUTH-WEBHOOK
+
+            # dev-auth-webhook binary for whichever is the local machine
+            dev-auth-webhook = rust.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "dev-auth-webhook";
+            };
+
+            # dev-auth-webhook binary for x86_64-linux
+            dev-auth-webhook-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix
+              {
+                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+                pname = "dev-auth-webhook";
+              };
+
+            # dev-auth-webhook binary for x86_64-linux
+            dev-auth-webhook-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix
+              {
+                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+                pname = "dev-auth-webhook";
+              };
+
+            # dev-auth-webhook docker files for whichever is the local machine
+            dev-auth-webhook-docker = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.dev-auth-webhook;
+              image-name = "ghcr.io/hasura/v3-dev-auth-webhook";
+              tag = "dev";
+              port = "3050";
+            };
+
+            # dev-auth-webhook docker for x86_64-linux
+            dev-auth-webhook-docker-x86_64-linux = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.dev-auth-webhook-x86_64-linux;
+              architecture = "amd64";
+              image-name = "ghcr.io/hasura/v3-dev-auth-webhook";
+              port = "3050";
+            };
+
+            # dev-auth-webhook docker for aarch64-linux
+            dev-auth-webhook-docker-aarch64-linux = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.dev-auth-webhook-aarch64-linux;
+              architecture = "arm64";
+              image-name = "ghcr.io/hasura/v3-dev-auth-webhook";
+              port = "3050";
+            };
 
             ###### ENGINE
 
@@ -149,6 +194,10 @@
             engine = flake-utils.lib.mkApp {
               drv = self.packages.${localSystem}.engine;
               name = "engine";
+            };
+            dev-auth-webhook = flake-utils.lib.mkApp {
+              drv = self.packages.${localSystem}.dev-auth-webhook;
+              name = "dev-auth-webhook";
             };
             custom-connector = flake-utils.lib.mkApp {
               drv = self.packages.${localSystem}.custom-connector;
