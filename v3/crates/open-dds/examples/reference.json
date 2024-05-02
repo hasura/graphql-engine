@@ -393,7 +393,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "authors"
+              "collection": "author"
             },
             "filterExpressionType": "author_bool_exp",
             "orderableFields": [
@@ -439,7 +439,7 @@
             "globalIdSource": true,
             "source": {
               "dataConnectorName": "db",
-              "collection": "articles"
+              "collection": "article"
             },
             "filterExpressionType": "article_bool_exp",
             "orderableFields": [

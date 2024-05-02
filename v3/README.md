@@ -4,19 +4,19 @@
 
 Hasura V3 is the API execution engine, based over the Open Data Domain
 Specification (OpenDD spec) and Native Data Connector Specifications (NDC spec),
-which powers the Hasura Data Delivery Network (DDN). The engine expects to run
-against an OpenDDS metadata file and exposes a GraphQL endpoint according to the
-specified metadata. The engine needs a data connector to run alongside, for the
-execution of data source specific queries.
+which powers the Hasura Data Delivery Network (DDN). The v3-engine expects to
+run against an OpenDDS metadata file and exposes a GraphQL endpoint according to
+the specified metadata. The v3-engine needs a data connector to run alongside,
+for the execution of data source specific queries.
 
 ## Data connectors
 
-Hasura V3 engine does not execute queries directly - instead it sends IR
-(Abstracted, intermediate query) to NDC agents (aka data connectors). To run
+Hasura v3-engine does not execute queries directly - instead it sends IR
+(abstracted, intermediate query) to NDC agents (aka data connectors). To run
 queries on a database, we'll need to run the data connector that supports the
 database.
 
-Available Data connectors are listed at the
+Available data connectors are listed at the
 [Connector Hub](https://hasura.io/connectors)
 
 For local development, we use the reference agent implementation that is a part
@@ -31,20 +31,20 @@ docker compose up reference_agent
 and point the host name `reference_agent` to localhost in your `/etc/hosts`
 file.
 
-## Run V3 engine (with reference agent)
+## Run v3-engine (with reference agent)
 
-### Using `cargo`
+### Building locally using `cargo`
 
-Hasura V3 engine is written in rust, hence `cargo` is required to build and run
-V3 engine locally.
+Hasura v3-engine is written in Rust, hence `cargo` is required to build and run
+the v3-engine locally.
 
-To start the v3 engine locally, we need a `metadata.json` file and an auth
+To start the v3-engine locally, we need a `metadata.json` file and an auth
 config file.
 
-Following are steps to run V3 engine with a reference agent (read only, in
+Following are steps to run v3-engine with a reference agent (read only, in
 memory, relational database with sample tables), and an sample metadata file,
 exposing a fixed GraphQL schema. This can be used to understand the build setup
-and the new V3 engine concepts.
+and the new V3 concepts.
 
 ```sh
 RUST_LOG=DEBUG cargo run --release --bin engine -- \
@@ -52,9 +52,9 @@ RUST_LOG=DEBUG cargo run --release --bin engine -- \
  --authn-config-path auth_config.json
 ```
 
-A dev webhook implementation is provided in `dev-auth-webhook`, that exposes the
-`POST /validate-request` which accepts converts the headers present in the
-incoming request to a object containing session variables, note that only
+A dev webhook implementation is provided in `crates/auth/dev-auth-webhook`, that
+exposes the `POST /validate-request` which accepts converts the headers present
+in the incoming request to a object containing session variables, note that only
 headers that start with `x-hasura-` will be returned in the response.
 
 The dev webhook can be run using the following command:
@@ -76,17 +76,22 @@ RUST_LOG=DEBUG cargo run --release --bin engine -- \
 
 Now, open <http://localhost:8000> for GraphiQL.
 
-### With docker
+## Run v3-engine (with Postgres)
 
-You can also start Hasura V3 engine, reference_agent, dev Authentication webhook
-and jaegar for tracing (accessible at localhost:4002) using docker (without the
-need of using `cargo`)
+### Building with Docker
+
+You can also start v3-engine, along with a Postgres data connector and Jaeger
+for tracing using Docker:
 
 ```sh
-METADATA_PATH=crates/open-dds/examples/reference.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
+METADATA_PATH=crates/engine/tests/schema.json AUTHN_CONFIG_PATH=auth_config.json docker compose up
 ```
 
-## Run V3 engine (with Postgres)
+Open <http://localhost:3001> for GraphiQL, or <http://localhost:4002> to view
+traces in Jaeger.
+
+Note: you'll need to add `{"x-hasura-role": "admin"}` to the Headers section to
+run queries from GraphiQL.
 
 [NDC Postgres](https://github.com/hasura/ndc-postgres) is the official connector
 by Hasura for Postgres Database. For running V3 engine for GraphQL API on

@@ -1,4 +1,30 @@
+# this Docker Compose file is used for local testing
+
 services:
+  engine:
+    build:
+      dockerfile: debug.Dockerfile
+    entrypoint:
+      - ./bin/engine
+    environment:
+      - METADATA_PATH
+      - AUTHN_CONFIG_PATH
+      - OTLP_ENDPOINT=http://jaeger:4317
+    ports:
+      # Binding to localhost:3001 avoids conflict with dev_setup
+      - 3001:3000
+    depends_on:
+      reference_agent:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
+    volumes:
+      - ./auth_config.json:/app/auth_config.json
+      - ./crates/engine/tests/schema.json:/app/crates/engine/tests/schema.json
+      - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
+
   postgres:
     image: postgis/postgis:16-3.4
     platform: linux/amd64
@@ -103,26 +129,6 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
-
-  engine:
-    build:
-      dockerfile: debug.Dockerfile
-    entrypoint:
-      - ./bin/engine
-    environment:
-      - METADATA_PATH
-      - AUTHN_CONFIG_PATH
-      - OTLP_ENDPOINT=http://jaeger:4317
-    ports:
-      # Binding to localhost:3001 avoids conflict with dev_setup
-      - 3001:3000
-    depends_on:
-      reference_agent:
-        condition: service_started
-      jaeger:
-        condition: service_started
-      auth_hook:
-        condition: service_started
 
   dev_setup:
     build:
