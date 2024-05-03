@@ -25,10 +25,8 @@ pub fn resolve(
         }
     }
     for model in models.values() {
-        if let Some(select_permissions) = &model.select_permissions {
-            for role in select_permissions.keys() {
-                roles.push(role.clone());
-            }
+        for role in model.select_permissions.keys() {
+            roles.push(role.clone());
         }
     }
     for command in commands.values() {

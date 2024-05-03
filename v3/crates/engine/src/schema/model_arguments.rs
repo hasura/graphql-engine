@@ -84,27 +84,20 @@ pub fn build_model_argument_fields(
                 gql_schema::DeprecationStatus::NotDeprecated,
             );
 
-            // if we have select_permissions, then work out which arguments to include in the schema
-            match &model.select_permissions {
-                // if no permissions apply, allow the argument through
-                None => Ok((field_name, builder.allow_all_namespaced(input_field, None))),
-                Some(permissions_by_namespace) => {
-                    let mut namespaced_annotations = HashMap::new();
+            let mut namespaced_annotations = HashMap::new();
 
-                    for (namespace, permission) in permissions_by_namespace {
-                        // if there is a preset for this argument, remove it from the schema
-                        // so the user cannot provide one
-                        if permission.argument_presets.get(argument_name).is_none() {
-                            namespaced_annotations.insert(namespace.clone(), None);
-                        }
-                    }
-
-                    Ok((
-                        field_name,
-                        builder.conditional_namespaced(input_field, namespaced_annotations),
-                    ))
+            for (namespace, permission) in &model.select_permissions {
+                // if there is a preset for this argument, remove it from the schema
+                // so the user cannot provide one
+                if permission.argument_presets.get(argument_name).is_none() {
+                    namespaced_annotations.insert(namespace.clone(), None);
                 }
             }
+
+            Ok((
+                field_name,
+                builder.conditional_namespaced(input_field, namespaced_annotations),
+            ))
         })
         .collect()
 }

@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
     pub model: models::Model,
-    pub select_permissions: Option<HashMap<Role, SelectPermission>>,
+    pub select_permissions: HashMap<Role, SelectPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

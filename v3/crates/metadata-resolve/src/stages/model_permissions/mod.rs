@@ -46,7 +46,7 @@ pub fn resolve(
                 model_name.clone(),
                 ModelWithPermissions {
                     model: model.clone(),
-                    select_permissions: None,
+                    select_permissions: HashMap::new(),
                 },
             )
         })
@@ -67,8 +67,8 @@ pub fn resolve(
                 model_name: model_name.clone(),
             })?;
 
-        if model.select_permissions.is_none() {
-            let select_permissions = Some(resolve_model_select_permissions(
+        if model.select_permissions.is_empty() {
+            let select_permissions = resolve_model_select_permissions(
                 &model.model,
                 subgraph,
                 permissions,
@@ -76,7 +76,7 @@ pub fn resolve(
                 object_types,
                 models, // This is required to get the model for the relationship target
                 boolean_expression_types,
-            )?);
+            )?;
 
             model.select_permissions = select_permissions;
         } else {
