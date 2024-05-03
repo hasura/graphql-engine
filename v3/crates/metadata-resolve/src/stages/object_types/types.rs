@@ -11,12 +11,12 @@ use open_dds::models::ModelName;
 use crate::types::subgraph::Qualified;
 
 use lang_graphql::ast::common as ast;
-use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct DataConnectorTypeMappingsForObject(
-    HashMap<Qualified<DataConnectorName>, HashMap<String, TypeMapping>>,
+    HashMap<Qualified<DataConnectorName>, HashMap<DataConnectorObjectType, TypeMapping>>,
 );
 
 impl Default for DataConnectorTypeMappingsForObject {
@@ -33,7 +33,7 @@ impl DataConnectorTypeMappingsForObject {
     pub fn get(
         &self,
         data_connector_name: &Qualified<DataConnectorName>,
-        data_connector_object_type: &str,
+        data_connector_object_type: &DataConnectorObjectType,
     ) -> Option<&TypeMapping> {
         self.0
             .get(data_connector_name)
@@ -45,14 +45,14 @@ impl DataConnectorTypeMappingsForObject {
     pub fn insert(
         &mut self,
         data_connector_name: &Qualified<DataConnectorName>,
-        data_connector_object_type: &str,
+        data_connector_object_type: &DataConnectorObjectType,
         type_mapping: TypeMapping,
     ) -> Result<(), Error> {
         if self
             .0
             .entry(data_connector_name.clone())
             .or_default()
-            .insert(data_connector_object_type.to_string(), type_mapping)
+            .insert(data_connector_object_type.clone(), type_mapping)
             .is_some()
         {
             return Err(Error::DuplicateDataConnectorObjectTypeMapping {
@@ -118,7 +118,7 @@ pub struct FieldMapping {
 pub enum TypeMapping {
     /// Mapping from an object to their fields, which contain the types of fields.
     Object {
-        ndc_object_type_name: String,
+        ndc_object_type_name: DataConnectorObjectType,
         field_mappings: BTreeMap<FieldName, FieldMapping>,
     },
 }

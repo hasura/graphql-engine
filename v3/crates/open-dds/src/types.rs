@@ -9,8 +9,9 @@ use serde::{
 };
 
 use crate::{
-    data_connector::DataConnectorName, identifier::Identifier, impl_JsonSchema_with_OpenDd_for,
-    impl_OpenDd_default_for, models::EnableAllOrSpecific,
+    data_connector::DataConnectorName, data_connector::DataConnectorObjectType,
+    identifier::Identifier, impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
+    models::EnableAllOrSpecific,
 };
 
 #[derive(
@@ -361,7 +362,7 @@ pub struct ObjectTypeV1 {
 /// corresponding columns of an object type in a data connector.
 pub struct DataConnectorTypeMapping {
     pub data_connector_name: DataConnectorName,
-    pub data_connector_object_type: String,
+    pub data_connector_object_type: DataConnectorObjectType,
     #[opendd(default)]
     pub field_mapping: FieldMappings,
 }
@@ -668,7 +669,7 @@ pub struct ObjectBooleanExpressionTypeV1 {
     pub data_connector_name: DataConnectorName,
 
     /// The object type in the data connector's schema this boolean expression type is based on.
-    pub data_connector_object_type: String,
+    pub data_connector_object_type: DataConnectorObjectType,
 
     /// The list of fields of the object type that can be used for comparison when evaluating this boolean expression.
     pub comparable_fields: Vec<ComparableField>,

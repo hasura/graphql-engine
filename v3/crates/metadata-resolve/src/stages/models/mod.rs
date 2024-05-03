@@ -1,3 +1,4 @@
+use open_dds::data_connector::DataConnectorObjectType;
 pub use types::{
     LimitFieldGraphqlConfig, Model, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
     ModelOrderByExpression, ModelSource, ModelsOutput, NDCFieldSourceMapping,
@@ -21,6 +22,7 @@ use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualifie
 
 use indexmap::IndexMap;
 use lang_graphql::ast::common::{self as ast};
+use ref_cast::RefCast;
 
 use open_dds::{
     models::{
@@ -622,7 +624,7 @@ fn resolve_model_source(
     let mut type_mappings = BTreeMap::new();
     let source_collection_type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &model.data_type,
-        ndc_object_type_name: source_collection.collection_type.as_str(),
+        ndc_object_type_name: DataConnectorObjectType::ref_cast(&source_collection.collection_type),
     };
     for type_mapping_to_collect in iter::once(&source_collection_type_mapping_to_collect)
         .chain(argument_type_mappings_to_collect.iter())
@@ -650,10 +652,12 @@ fn resolve_model_source(
             });
         }
 
-        if filter_expression.data_connector_object_type != source_collection.collection_type {
+        let collection_type = DataConnectorObjectType::ref_cast(&source_collection.collection_type);
+
+        if filter_expression.data_connector_object_type != *collection_type {
             return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
                 model: model.name.clone(),
-                model_data_connector_object_type: source_collection.collection_type.clone(),
+                model_data_connector_object_type: collection_type.clone(),
                 filter_expression_type: filter_expression.name.clone(),
                 filter_expression_data_connector_object_type: filter_expression
                     .data_connector_object_type

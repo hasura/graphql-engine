@@ -4,15 +4,16 @@ use crate::helpers::ndc_validation::{get_underlying_named_type, NDCValidationErr
 use crate::helpers::types::{object_type_exists, unwrap_custom_type_name};
 use crate::types::subgraph::Qualified;
 
-use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, FieldName};
 
+use ref_cast::RefCast;
 use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug)]
 pub struct TypeMappingToCollect<'a> {
     pub type_name: &'a Qualified<CustomTypeName>,
-    pub ndc_object_type_name: &'a str,
+    pub ndc_object_type_name: &'a DataConnectorObjectType,
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -21,20 +22,20 @@ pub enum TypeMappingCollectionError {
     MappingNotDefined {
         type_name: Qualified<CustomTypeName>,
         data_connector: Qualified<DataConnectorName>,
-        ndc_type_name: String,
+        ndc_type_name: DataConnectorObjectType,
     },
     #[error("No support for using the same type {type_name:} against multiple data connector objects {ndc_type_1:} and {ndc_type_2:}")]
     MappingToMultipleDataConnectorObjectType {
         type_name: Qualified<CustomTypeName>,
-        ndc_type_1: String,
-        ndc_type_2: String,
+        ndc_type_1: DataConnectorObjectType,
+        ndc_type_2: DataConnectorObjectType,
     },
     #[error("Missing mapping for field {field_name:} when mapping type {type_name:} to object {ndc_type_name:} of data connector {data_connector:}")]
     MissingFieldMapping {
         type_name: Qualified<CustomTypeName>,
         field_name: FieldName,
         data_connector: Qualified<DataConnectorName>,
-        ndc_type_name: String,
+        ndc_type_name: DataConnectorObjectType,
     },
     #[error("Internal Error: Unknown type {type_name:} when collecting type mappings")]
     InternalUnknownType {
@@ -59,7 +60,7 @@ pub(crate) fn collect_type_mapping_for_source(
                 .ok_or_else(|| TypeMappingCollectionError::MappingNotDefined {
                     type_name: mapping_to_collect.type_name.clone(),
                     data_connector: data_connector_name.clone(),
-                    ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
+                    ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
                 })?;
 
             // If there is an existing mapping, make sure it maps to the same NDC object type.
@@ -70,12 +71,14 @@ pub(crate) fn collect_type_mapping_for_source(
                     ndc_object_type_name,
                     ..
                 } = inserted_mapping;
-                if ndc_object_type_name != mapping_to_collect.ndc_object_type_name {
+                if ndc_object_type_name != *mapping_to_collect.ndc_object_type_name {
                     return Err(
                         TypeMappingCollectionError::MappingToMultipleDataConnectorObjectType {
                             type_name: mapping_to_collect.type_name.clone(),
                             ndc_type_1: ndc_object_type_name,
-                            ndc_type_2: mapping_to_collect.ndc_object_type_name.to_string(),
+                            ndc_type_2: DataConnectorObjectType(
+                                mapping_to_collect.ndc_object_type_name.to_string(),
+                            ),
                         },
                     );
                 } else {
@@ -92,7 +95,7 @@ pub(crate) fn collect_type_mapping_for_source(
                         type_name: mapping_to_collect.type_name.clone(),
                         field_name: field_name.clone(),
                         data_connector: data_connector_name.clone(),
-                        ndc_type_name: mapping_to_collect.ndc_object_type_name.to_string(),
+                        ndc_type_name: mapping_to_collect.ndc_object_type_name.clone(),
                     }
                 })?;
 
@@ -105,7 +108,9 @@ pub(crate) fn collect_type_mapping_for_source(
 
                         let field_type_mapping_to_collect = TypeMappingToCollect {
                             type_name: object_type_name,
-                            ndc_object_type_name: underlying_ndc_field_named_type,
+                            ndc_object_type_name: DataConnectorObjectType::ref_cast(
+                                underlying_ndc_field_named_type,
+                            ),
                         };
 
                         collect_type_mapping_for_source(

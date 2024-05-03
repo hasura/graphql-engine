@@ -1120,7 +1120,7 @@
           "$ref": "#/definitions/DataConnectorName"
         },
         "dataConnectorObjectType": {
-          "type": "string"
+          "$ref": "#/definitions/DataConnectorObjectType"
         },
         "fieldMapping": {
           "default": {},
@@ -1132,6 +1132,12 @@
         }
       },
       "additionalProperties": false
+    },
+    "DataConnectorObjectType": {
+      "$id": "https://hasura.io/jsonschemas/metadata/DataConnectorObjectType",
+      "title": "DataConnectorObjectType",
+      "description": "The name of an object type in a data connector.",
+      "type": "string"
     },
     "FieldMappings": {
       "$id": "https://hasura.io/jsonschemas/metadata/FieldMappings",
@@ -1274,7 +1280,11 @@
         },
         "dataConnectorObjectType": {
           "description": "The object type in the data connector's schema this boolean expression type is based on.",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorObjectType"
+            }
+          ]
         },
         "comparableFields": {
           "description": "The list of fields of the object type that can be used for comparison when evaluating this boolean expression.",

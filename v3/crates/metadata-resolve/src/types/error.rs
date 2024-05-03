@@ -1,3 +1,4 @@
+use open_dds::data_connector::DataConnectorObjectType;
 use thiserror::Error;
 
 use crate::helpers::argument::ArgumentMappingError;
@@ -273,9 +274,9 @@ pub enum Error {
     #[error("Model {model:} has source data connector object type {model_data_connector_object_type:} but its filter expression type {filter_expression_type:} is backed by data connector {filter_expression_data_connector_object_type:}")]
     DifferentDataConnectorObjectTypeInFilterExpression {
         model: Qualified<ModelName>,
-        model_data_connector_object_type: String,
+        model_data_connector_object_type: DataConnectorObjectType,
         filter_expression_type: Qualified<CustomTypeName>,
-        filter_expression_data_connector_object_type: String,
+        filter_expression_data_connector_object_type: DataConnectorObjectType,
     },
     // Permission errors
     // Type Output Permissions
@@ -604,7 +605,7 @@ pub enum BooleanExpressionError {
     #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {boolean_expression_type:}")]
     UnknownDataConnectorTypeInObjectBooleanExpressionType {
         data_connector: Qualified<DataConnectorName>,
-        data_connector_object_type: String,
+        data_connector_object_type: DataConnectorObjectType,
         boolean_expression_type: Qualified<CustomTypeName>,
     },
     #[error("unknown field '{field_name:}' used in object boolean expression type {boolean_expression_type:}")]
@@ -616,7 +617,7 @@ pub enum BooleanExpressionError {
     NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
         object_type: Qualified<CustomTypeName>,
         boolean_expression_type: Qualified<CustomTypeName>,
-        data_connector_object_type: String,
+        data_connector_object_type: DataConnectorObjectType,
         data_connector: Qualified<DataConnectorName>,
     },
     #[error("{error:} in boolean expression type {boolean_expression_type:}")]
@@ -806,14 +807,14 @@ pub enum TypeMappingValidationError {
     DataConnectorTypeMappingNotFound {
         object_type_name: Qualified<CustomTypeName>,
         data_connector_name: Qualified<DataConnectorName>,
-        data_connector_object_type: String,
+        data_connector_object_type: DataConnectorObjectType,
     },
     #[error(
         "the type {unknown_ndc_type:} is not defined as an object type in the connector's schema. This type is being mapped to by the type {type_name:}"
     )]
     UnknownNdcType {
         type_name: Qualified<CustomTypeName>,
-        unknown_ndc_type: String,
+        unknown_ndc_type: DataConnectorObjectType,
     },
     #[error(
         "the type {unknown_ndc_field_type_name:} is not defined as an object type in the connector's schema. This type is referenced by the field {ndc_field_name:} in the connector's schema type {ndc_type_name:}, which is mapped to the field {field_name:} in the type {type_name:}"

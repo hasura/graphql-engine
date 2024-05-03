@@ -4,6 +4,7 @@ use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use std::collections::{BTreeMap, HashMap};
 
 use lang_graphql::ast::common::{self as ast};
+use open_dds::data_connector::DataConnectorObjectType;
 use std::collections::HashSet;
 
 use open_dds::{
@@ -23,7 +24,7 @@ pub struct ObjectBooleanExpressionType {
     pub object_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
     pub data_connector_link: data_connectors::DataConnectorLink,
-    pub data_connector_object_type: String,
+    pub data_connector_object_type: DataConnectorObjectType,
     pub type_mappings:
         BTreeMap<Qualified<open_dds::types::CustomTypeName>, object_types::TypeMapping>,
     pub graphql: Option<BooleanExpressionInfo>,

@@ -1793,6 +1793,7 @@ dependencies = [
  "ndc-models",
  "nonempty",
  "open-dds",
+ "ref-cast",
  "reqwest",
  "serde",
  "serde_json",
@@ -1995,6 +1996,7 @@ dependencies = [
  "ndc-models",
  "opendds-derive",
  "pretty_assertions",
+ "ref-cast",
  "schemars",
  "serde",
  "serde_json",
@@ -2480,6 +2482,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4722d768eff46b75989dd134e5c353f0d6296e5aaa3132e776cbdb56be7731aa"
 dependencies = [
  "bitflags 1.3.2",
+]
+
+[[package]]
+name = "ref-cast"
+version = "1.0.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4846d4c50d1721b1a3bef8af76924eef20d5e723647333798c1b519b3a9473f"
+dependencies = [
+ "ref-cast-impl",
+]
+
+[[package]]
+name = "ref-cast-impl"
+version = "1.0.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fddb4f8d99b0a2ebafc65a87a69a7b9875e4b1ae1f00db265d300ef7f28bccc"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.55",
 ]
 
 [[package]]

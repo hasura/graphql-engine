@@ -115,7 +115,7 @@ pub(crate) fn resolve_boolean_expression_type(
         .inner
         .schema
         .object_types
-        .contains_key(&object_boolean_expression.data_connector_object_type)
+        .contains_key(&object_boolean_expression.data_connector_object_type.0)
     {
         return Err(Error::from(
             BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
@@ -138,8 +138,7 @@ pub(crate) fn resolve_boolean_expression_type(
                         object_type: qualified_object_type_name.clone(),
                         boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
-                            .data_connector_object_type
-                            .clone(),
+                            .data_connector_object_type.clone(),
                         data_connector: qualified_data_connector_name.clone(),
                     })
                 })?;
@@ -198,9 +197,7 @@ pub(crate) fn resolve_boolean_expression_type(
 
     let type_mapping_to_collect = type_mappings::TypeMappingToCollect {
         type_name: &object_type,
-        ndc_object_type_name: object_boolean_expression
-            .data_connector_object_type
-            .as_str(),
+        ndc_object_type_name: &object_boolean_expression.data_connector_object_type,
     };
     type_mappings::collect_type_mapping_for_source(
         &type_mapping_to_collect,

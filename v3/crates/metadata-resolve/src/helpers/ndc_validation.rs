@@ -367,7 +367,7 @@ pub fn validate_ndc_command(
 
 pub fn get_underlying_named_type(
     result_type: &ndc_models::Type,
-) -> Result<&str, NDCValidationError> {
+) -> Result<&String, NDCValidationError> {
     match result_type {
         ndc_models::Type::Named { name } => Ok(name),
         ndc_models::Type::Array { element_type } => get_underlying_named_type(element_type),

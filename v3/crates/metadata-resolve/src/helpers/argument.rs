@@ -16,8 +16,10 @@ use indexmap::IndexMap;
 use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::DataConnectorObjectType;
 use open_dds::permissions;
 use open_dds::types::{CustomTypeName, FieldName, OperatorName};
+use ref_cast::RefCast;
 use std::collections::{BTreeMap, HashMap};
 
 use thiserror::Error;
@@ -127,7 +129,9 @@ pub fn get_argument_mappings<'a>(
 
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: object_type_name,
-                        ndc_object_type_name: underlying_ndc_argument_named_type,
+                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
+                            underlying_ndc_argument_named_type,
+                        ),
                     })
                 }
                 TypeRepresentation::Scalar(_) => (),
@@ -139,7 +143,9 @@ pub fn get_argument_mappings<'a>(
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
                         type_name: &boolean_expression_type.object_type,
-                        ndc_object_type_name: underlying_ndc_argument_named_type,
+                        ndc_object_type_name: DataConnectorObjectType::ref_cast(
+                            underlying_ndc_argument_named_type,
+                        ),
                     })
                 }
             }

@@ -266,7 +266,7 @@ pub fn resolve_data_connector_type_mapping(
         .inner
         .schema
         .object_types
-        .get(&data_connector_type_mapping.data_connector_object_type)
+        .get(&data_connector_type_mapping.data_connector_object_type.0)
         .ok_or_else(|| TypeMappingValidationError::UnknownNdcType {
             type_name: qualified_type_name.clone(),
             unknown_ndc_type: data_connector_type_mapping
@@ -326,7 +326,7 @@ pub fn resolve_data_connector_type_mapping(
     let resolved_type_mapping = TypeMapping::Object {
         ndc_object_type_name: data_connector_type_mapping
             .data_connector_object_type
-            .to_string(),
+            .clone(),
         field_mappings: resolved_field_mappings,
     };
 

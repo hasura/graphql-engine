@@ -12,8 +12,10 @@ use crate::stages::{
 use crate::types::error::Error;
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
 use indexmap::IndexMap;
+use ref_cast::RefCast;
 
 use open_dds::commands::{self, CommandName, CommandV1, DataConnectorCommand};
+use open_dds::data_connector::DataConnectorObjectType;
 pub use types::{Command, CommandGraphQlApi, CommandSource};
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
@@ -294,7 +296,7 @@ pub fn resolve_command_source(
 
             let source_result_type_mapping_to_resolve = type_mappings::TypeMappingToCollect {
                 type_name: custom_type_name,
-                ndc_object_type_name: source_result_type_name,
+                ndc_object_type_name: DataConnectorObjectType::ref_cast(source_result_type_name),
             };
 
             Ok::<_, Error>(source_result_type_mapping_to_resolve)
