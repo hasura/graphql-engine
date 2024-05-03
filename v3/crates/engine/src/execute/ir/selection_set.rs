@@ -17,11 +17,8 @@ use super::relationship::{
 use crate::execute::global_id;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::types::TypeKind;
-use crate::schema::{
-    types::{Annotation, OutputAnnotation, RootFieldAnnotation},
-    GDS,
-};
+use crate::schema::TypeKind;
+use crate::schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 use metadata_resolve;
 
 #[derive(Debug, Serialize)]

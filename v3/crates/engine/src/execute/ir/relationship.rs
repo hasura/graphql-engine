@@ -23,16 +23,13 @@ use super::{
 };
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::types::output_type::relationship::ModelRelationshipAnnotation;
+use crate::schema::ModelRelationshipAnnotation;
 use crate::schema::{
-    types::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation},
-    GDS,
+    Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, GDS,
 };
 use crate::{
     execute::{ir::error, model_tracking::count_command},
-    schema::types::output_type::relationship::{
-        CommandRelationshipAnnotation, CommandTargetSource,
-    },
+    schema::{CommandRelationshipAnnotation, CommandTargetSource},
 };
 use metadata_resolve;
 use metadata_resolve::{serialize_qualified_btreemap, Qualified};

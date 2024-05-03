@@ -10,7 +10,7 @@ use crate::execute::ndc::client as ndc_client;
 
 use super::ir;
 use super::plan;
-use super::types::Annotation;
+use crate::schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
 /// Ref: https://spec.graphql.org/October2021/#sec-Errors.Request-errors

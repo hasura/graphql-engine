@@ -21,8 +21,8 @@ use crate::execute::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
-use crate::schema::types::{self, Annotation, ModelInputAnnotation};
 use crate::schema::GDS;
+use crate::schema::{self, Annotation, ModelInputAnnotation};
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]
@@ -53,7 +53,7 @@ pub(crate) fn select_one_generate_ir<'n, 's>(
     let mut model_argument_fields = Vec::new();
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(types::InputAnnotation::Model(
+            annotation @ Annotation::Input(schema::InputAnnotation::Model(
                 model_input_argument_annotation,
             )) => match model_input_argument_annotation {
                 ModelInputAnnotation::ModelArgument { .. } => {

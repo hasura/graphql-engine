@@ -1,6 +1,5 @@
 use indexmap::IndexMap;
 
-use crate::schema::types;
 use crate::schema::GDS;
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;

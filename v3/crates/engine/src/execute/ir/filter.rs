@@ -8,10 +8,10 @@ use serde::Serialize;
 
 use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::types::output_type::relationship::FilterRelationshipAnnotation;
-use crate::schema::types::{self};
-use crate::schema::types::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
+use crate::schema::FilterRelationshipAnnotation;
 use crate::schema::GDS;
+use crate::schema::{self};
+use crate::schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
 use crate::execute::ir::selection_set::NDCRelationshipName;
@@ -58,9 +58,9 @@ pub(crate) fn build_filter_expression<'s>(
 ) -> Result<Vec<ndc_models::Expression>, error::Error> {
     match field.info.generic {
         // "_and"
-        types::Annotation::Input(InputAnnotation::BooleanExpression(
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: types::ModelFilterArgument::AndOp,
+                field: schema::ModelFilterArgument::AndOp,
             },
         )) => {
             let mut expressions = Vec::new();
@@ -78,9 +78,9 @@ pub(crate) fn build_filter_expression<'s>(
             Ok(vec![expression])
         }
         // "_or"
-        types::Annotation::Input(InputAnnotation::BooleanExpression(
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: types::ModelFilterArgument::OrOp,
+                field: schema::ModelFilterArgument::OrOp,
             },
         )) => {
             let mut expressions = Vec::new();
@@ -98,9 +98,9 @@ pub(crate) fn build_filter_expression<'s>(
             Ok(vec![expression])
         }
         // "_not"
-        types::Annotation::Input(InputAnnotation::BooleanExpression(
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: types::ModelFilterArgument::NotOp,
+                field: schema::ModelFilterArgument::NotOp,
             },
         )) => {
             let value = field.value.as_object()?;
@@ -120,15 +120,15 @@ pub(crate) fn build_filter_expression<'s>(
         // to be a relationship column, we'll have to join all the paths to
         // specify NDC, what relationships needs to be traversed to access this
         // column. The order decides how to access the column.
-        types::Annotation::Input(InputAnnotation::BooleanExpression(
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: types::ModelFilterArgument::Field { ndc_column: column },
+                field: schema::ModelFilterArgument::Field { ndc_column: column },
             },
         )) => {
             let mut expressions = Vec::new();
             for (_op_name, op_value) in field.value.as_object()? {
                 match op_value.info.generic {
-                    types::Annotation::Input(InputAnnotation::Model(
+                    schema::Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::IsNullOperation,
                     )) => {
                         let expression = build_is_null_expression(
@@ -138,7 +138,7 @@ pub(crate) fn build_filter_expression<'s>(
                         )?;
                         expressions.push(expression);
                     }
-                    types::Annotation::Input(InputAnnotation::Model(
+                    schema::Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::ComparisonOperation { operator },
                     )) => {
                         let expression = build_binary_comparison_expression(
@@ -158,10 +158,10 @@ pub(crate) fn build_filter_expression<'s>(
         }
         // Relationship field used for filtering.
         // This relationship can either point to another relationship or a column.
-        types::Annotation::Input(InputAnnotation::BooleanExpression(
+        schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field:
-                    types::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
+                    schema::ModelFilterArgument::RelationshipField(FilterRelationshipAnnotation {
                         relationship_name,
                         relationship_type,
                         source_type,

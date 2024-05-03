@@ -10,10 +10,10 @@ use open_dds::types::{CustomTypeName, InbuiltType};
 
 use crate::execute::ir::arguments;
 use crate::execute::ir::error;
-use crate::schema::types::{
+use crate::schema::GDS;
+use crate::schema::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
 };
-use crate::schema::GDS;
 use metadata_resolve::TypeMapping;
 use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 

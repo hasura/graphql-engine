@@ -5,14 +5,14 @@ use ndc_models;
 use serde::Serialize;
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::types::output_type::relationship::OrderByRelationshipAnnotation;
-use crate::schema::types::{Annotation, InputAnnotation, ModelInputAnnotation};
+use crate::schema::OrderByRelationshipAnnotation;
+use crate::schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;
 
 use crate::execute::ir::error;
-use crate::schema::types;
+use crate::schema;
 use crate::schema::GDS;
 
 #[derive(Debug, Serialize)]
@@ -114,15 +114,15 @@ pub(crate) fn build_ndc_order_by_element<'s>(
         // a relationship column, we'll have to join all the paths to specify NDC,
         // what relationships needs to be traversed to access this column
         Annotation::Input(InputAnnotation::Model(
-            types::ModelInputAnnotation::ModelOrderByArgument { ndc_column },
+            schema::ModelInputAnnotation::ModelOrderByArgument { ndc_column },
         )) => {
             let order_by_value = argument.value.as_enum()?;
             let order_direction = match &order_by_value.info.generic {
                 Annotation::Input(InputAnnotation::Model(
                     ModelInputAnnotation::ModelOrderByDirection { direction },
                 )) => match &direction {
-                    types::ModelOrderByDirection::Asc => ndc_models::OrderDirection::Asc,
-                    types::ModelOrderByDirection::Desc => ndc_models::OrderDirection::Desc,
+                    schema::ModelOrderByDirection::Asc => ndc_models::OrderDirection::Asc,
+                    schema::ModelOrderByDirection::Desc => ndc_models::OrderDirection::Desc,
                 },
                 &annotation => {
                     return Err(error::InternalEngineError::UnexpectedAnnotation {
@@ -180,7 +180,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
         // A relationship is being used to order the results. This relationship can
         // either point to another relationship or a column.
         Annotation::Input(InputAnnotation::Model(
-            types::ModelInputAnnotation::ModelOrderByRelationshipArgument(
+            schema::ModelInputAnnotation::ModelOrderByRelationshipArgument(
                 OrderByRelationshipAnnotation {
                     relationship_name,
                     relationship_type,

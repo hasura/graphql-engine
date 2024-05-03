@@ -14,19 +14,32 @@ use thiserror::Error;
 
 use metadata_resolve::{resolve, Error as ResolveMetadataError, Metadata, Qualified};
 
-use self::types::{PossibleApolloFederationTypes, RootFieldAnnotation};
+use self::types::PossibleApolloFederationTypes;
 
-pub mod apollo_federation;
-pub mod boolean_expression;
-pub mod commands;
-pub mod model_arguments;
-pub mod model_filter;
-pub mod model_order_by;
-pub mod mutation_root;
-pub mod permissions;
-pub mod query_root;
-pub mod relay;
-pub mod types;
+// we deliberately do not export these entire modules and instead explicitly export types below
+mod apollo_federation;
+mod boolean_expression;
+mod commands;
+mod model_arguments;
+mod model_filter;
+mod model_order_by;
+mod mutation_root;
+mod permissions;
+mod query_root;
+mod relay;
+mod types;
+
+pub use types::output_type::relationship::{
+    CommandRelationshipAnnotation, CommandTargetSource, FilterRelationshipAnnotation,
+    ModelRelationshipAnnotation, OrderByRelationshipAnnotation,
+};
+pub use types::{
+    Annotation, ApolloFederationRootFields, ArgumentNameAndPath, ArgumentPresets,
+    BooleanExpressionAnnotation, CommandSourceDetail, EntityFieldTypeNameMapping, GlobalID,
+    InputAnnotation, ModelFilterArgument, ModelInputAnnotation, ModelOrderByDirection,
+    NamespaceAnnotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
+    RootFieldKind, TypeKind,
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct GDS {

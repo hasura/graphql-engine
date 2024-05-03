@@ -10,7 +10,7 @@ use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
 
-use crate::schema::types;
+use crate::schema;
 use crate::schema::GDS;
 use metadata_resolve::{QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
@@ -28,10 +28,10 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .namespaced
         .as_ref()
         .and_then(|annotation| match annotation {
-            types::NamespaceAnnotation::Model { filter, .. } => Some(filter),
-            types::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
-            types::NamespaceAnnotation::EntityTypeMappings(_) => None,
-            types::NamespaceAnnotation::Command(_) => None,
+            schema::NamespaceAnnotation::Model { filter, .. } => Some(filter),
+            schema::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
+            schema::NamespaceAnnotation::EntityTypeMappings(_) => None,
+            schema::NamespaceAnnotation::Command(_) => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -47,13 +47,13 @@ pub(crate) fn get_select_filter_predicate<'s>(
 /// of the field call. If there are no annotations, this is fine,
 /// but if unexpected ones are found an error will be thrown.
 pub(crate) fn get_argument_presets(
-    namespaced_info: &'_ Option<types::NamespaceAnnotation>,
-) -> Result<Option<&'_ types::ArgumentPresets>, error::Error> {
+    namespaced_info: &'_ Option<schema::NamespaceAnnotation>,
+) -> Result<Option<&'_ schema::ArgumentPresets>, error::Error> {
     match namespaced_info.as_ref() {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {
-            types::NamespaceAnnotation::Command(argument_presets) => Ok(Some(argument_presets)),
-            types::NamespaceAnnotation::Model {
+            schema::NamespaceAnnotation::Command(argument_presets) => Ok(Some(argument_presets)),
+            schema::NamespaceAnnotation::Model {
                 argument_presets, ..
             } => Ok(Some(argument_presets)),
             other_namespace_annotation =>

@@ -103,14 +103,6 @@ pub fn apollo_federation_service_type(
     ))
 }
 
-pub fn apollo_federation_any_scalar(
-    builder: &mut gql_schema::Builder<GDS>,
-) -> gql_schema::RegisteredTypeName {
-    builder.register_type(super::TypeId::ApolloFederationType(
-        super::PossibleApolloFederationTypes::Any,
-    ))
-}
-
 pub fn get_custom_output_type(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,

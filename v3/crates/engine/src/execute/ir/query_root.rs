@@ -12,15 +12,13 @@ use std::collections::HashMap;
 use super::commands;
 use super::error;
 use super::root_field;
-use crate::schema::types::ApolloFederationRootFields;
-use crate::schema::types::CommandSourceDetail;
-use crate::schema::types::EntityFieldTypeNameMapping;
-use crate::schema::types::RootFieldKind;
-use crate::schema::types::TypeKind;
-use crate::schema::types::{
-    Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
-};
+use crate::schema::ApolloFederationRootFields;
+use crate::schema::CommandSourceDetail;
+use crate::schema::EntityFieldTypeNameMapping;
+use crate::schema::RootFieldKind;
+use crate::schema::TypeKind;
 use crate::schema::{mk_typename, GDS};
+use crate::schema::{Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation};
 use metadata_resolve;
 
 pub mod apollo_federation;

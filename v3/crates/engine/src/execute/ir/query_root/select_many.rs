@@ -19,8 +19,8 @@ use crate::execute::ir::model_selection;
 use crate::execute::ir::order_by::build_ndc_order_by;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::types::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use crate::schema::GDS;
+use crate::schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
@@ -64,7 +64,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
 
     for argument in field_call.arguments.values() {
         match argument.info.generic {
-            annotation @ Annotation::Input(types::InputAnnotation::Model(
+            annotation @ Annotation::Input(schema::InputAnnotation::Model(
                 model_argument_annotation,
             )) => match model_argument_annotation {
                 ModelInputAnnotation::ModelLimitArgument => {
@@ -108,7 +108,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                 }
             },
 
-            Annotation::Input(types::InputAnnotation::BooleanExpression(
+            Annotation::Input(schema::InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpression,
             )) => {
                 filter_clause = filter::resolve_filter_expression(

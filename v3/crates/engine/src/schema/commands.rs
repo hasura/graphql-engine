@@ -10,22 +10,12 @@ use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
 use metadata_resolve;
-use ndc_models;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
 
 use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::get_type_kind;
-
-pub enum Response {
-    QueryResponse {
-        response: ndc_models::QueryResponse,
-    },
-    MutationResponse {
-        response: ndc_models::MutationResponse,
-    },
-}
 
 // look at the permissions and remove arguments with presets for this role
 pub(crate) fn generate_command_argument(

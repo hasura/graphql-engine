@@ -10,7 +10,7 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use crate::execute::types::{Annotation, NamespaceAnnotation};
+use crate::schema::{Annotation, NamespaceAnnotation};
 use metadata_resolve::Qualified;
 
 #[derive(Error, Debug, Transitive)]
