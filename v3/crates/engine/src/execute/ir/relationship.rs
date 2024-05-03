@@ -236,6 +236,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
             type_mappings,
             target_source,
             session_variables,
+            usage_counts,
         ),
         metadata_resolve::RelationshipExecutionCategory::RemoteForEach => {
             build_remote_command_relationship(
@@ -245,6 +246,7 @@ pub(crate) fn generate_command_relationship_ir<'s>(
                 type_mappings,
                 target_source,
                 session_variables,
+                usage_counts,
             )
         }
     }
@@ -305,6 +307,7 @@ pub(crate) fn build_local_command_relationship<'s>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let relationships_ir = generate_function_based_command(
         &annotation.command_name,
@@ -315,6 +318,7 @@ pub(crate) fn build_local_command_relationship<'s>(
         annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
+        usage_counts,
     )?;
 
     let rel_info = LocalCommandRelationshipInfo {
@@ -431,6 +435,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     target_source: &'s CommandTargetSource,
     session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     let mut join_mapping: Vec<(SourceField, ArgumentName)> = vec![];
     for metadata_resolve::RelationshipCommandMapping {
@@ -457,6 +462,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
         annotation.target_base_type_kind,
         &target_source.details,
         session_variables,
+        usage_counts,
     )?;
 
     // Add the arguments on which the join is done to the command arguments

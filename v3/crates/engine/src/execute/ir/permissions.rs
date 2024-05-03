@@ -102,6 +102,7 @@ pub(crate) fn process_model_predicate<'s>(
             value,
             session_variables,
             &relationship_paths,
+            usage_counts,
         )?),
         metadata_resolve::ModelPredicate::Not(predicate) => {
             let expr = process_model_predicate(
@@ -190,10 +191,15 @@ fn make_permission_binary_boolean_expression(
     value_expression: &metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
     relationship_paths: &Vec<NDCRelationshipName>,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
     let path_elements = super::filter::build_path_elements(relationship_paths);
-    let ndc_expression_value =
-        make_value_from_value_expression(value_expression, argument_type, session_variables)?;
+    let ndc_expression_value = make_value_from_value_expression(
+        value_expression,
+        argument_type,
+        session_variables,
+        usage_counts,
+    )?;
     Ok(ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column,
@@ -225,6 +231,7 @@ pub(crate) fn make_value_from_value_expression(
     val_expr: &metadata_resolve::ValueExpression,
     value_type: &QualifiedTypeReference,
     session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<serde_json::Value, error::Error> {
     match val_expr {
         metadata_resolve::ValueExpression::Literal(val) => Ok(val.clone()),
@@ -237,8 +244,18 @@ pub(crate) fn make_value_from_value_expression(
 
             typecast_session_variable(value, value_type)
         }
-        metadata_resolve::ValueExpression::BooleanExpression(_model_predicate) => {
-            Err(error::InternalDeveloperError::BooleanExpressionNotImplemented.into())
+        metadata_resolve::ValueExpression::BooleanExpression(model_predicate) => {
+            let relationship_paths = Vec::new();
+            let mut relationships = BTreeMap::new();
+
+            let ndc_expression = process_model_predicate(
+                model_predicate,
+                session_variables,
+                relationship_paths,
+                &mut relationships,
+                usage_counts,
+            )?;
+            Ok(serde_json::to_value(ndc_expression)?)
         }
     }
 }

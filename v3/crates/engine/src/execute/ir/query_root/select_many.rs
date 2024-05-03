@@ -135,6 +135,7 @@ pub(crate) fn select_many_generate_ir<'n, 's>(
                 argument_presets,
                 session_variables,
                 &mut model_arguments,
+                &mut usage_counts,
             )?;
         }
     }

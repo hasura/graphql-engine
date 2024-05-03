@@ -6,6 +6,7 @@ use lang_graphql as gql;
 use lang_graphql::ast::common as ast;
 use open_dds::{commands::CommandName, models, types::CustomTypeName};
 
+use crate::execute::model_tracking::UsagesCounts;
 use std::collections::HashMap;
 
 use super::commands;
@@ -221,6 +222,7 @@ fn generate_command_rootfield_ir<'n, 's>(
     field_call: &'s gql::normalized_ast::FieldCall<'s, GDS>,
     session_variables: &SessionVariables,
 ) -> Result<root_field::QueryRootField<'n, 's>, error::Error> {
+    let mut usage_counts = UsagesCounts::new();
     let source =
         source
             .as_ref()
@@ -247,6 +249,7 @@ fn generate_command_rootfield_ir<'n, 's>(
             *result_base_type_kind,
             source,
             session_variables,
+            &mut usage_counts,
         )?,
     };
     Ok(ir)

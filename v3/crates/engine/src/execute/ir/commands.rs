@@ -87,6 +87,7 @@ pub(crate) fn generate_command_info<'n, 's>(
     result_base_type_kind: TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<CommandInfo<'s>, error::Error> {
     let mut command_arguments = BTreeMap::new();
 
@@ -122,6 +123,7 @@ pub(crate) fn generate_command_info<'n, 's>(
                 argument_value,
                 field_type,
                 session_variables,
+                usage_counts,
             )?;
 
             match NonEmpty::from_slice(field_path) {
@@ -181,6 +183,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
     result_base_type_kind: TypeKind,
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
+    usage_counts: &mut UsagesCounts,
 ) -> Result<FunctionBasedCommand<'s>, error::Error> {
     let command_info = generate_command_info(
         command_name,
@@ -190,6 +193,7 @@ pub(crate) fn generate_function_based_command<'n, 's>(
         result_base_type_kind,
         command_source,
         session_variables,
+        usage_counts,
     )?;
 
     Ok(FunctionBasedCommand {
@@ -210,6 +214,8 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
     command_source: &'s CommandSourceDetail,
     session_variables: &SessionVariables,
 ) -> Result<ProcedureBasedCommand<'s>, error::Error> {
+    let mut usage_counts = UsagesCounts::new();
+
     let command_info = generate_command_info(
         command_name,
         field,
@@ -218,6 +224,7 @@ pub(crate) fn generate_procedure_based_command<'n, 's>(
         result_base_type_kind,
         command_source,
         session_variables,
+        &mut usage_counts,
     )?;
 
     Ok(ProcedureBasedCommand {
