@@ -1,0 +1,90 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "update_actor_name_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "update_actor_name_by_id",
+            "arguments": [
+              {
+                "name": "id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "outputType": "commandActor",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "procedure": "update_actor_name_by_id"
+              },
+              "argumentMapping": {
+                "id": "id",
+                "name": "name"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "updateActorNameById",
+              "rootFieldKind": "Mutation"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

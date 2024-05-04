@@ -1,0 +1,19 @@
+[package]
+name = "opendds-derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+bench = false
+
+[dependencies]
+convert_case = "0.6"
+darling = "0.13"
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "1", features = ["full"] }
+thiserror = "1"
+
+[lints]
+workspace = true

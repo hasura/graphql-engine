@@ -1,0 +1,31 @@
+[package]
+name = "tracing-util"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+derive_more = "0.99.17"
+http = "0.2"
+opentelemetry = "0.22.0"
+opentelemetry-contrib = "0.14.0"
+opentelemetry-http = "0.11.0"
+opentelemetry-otlp = "0.15.0"
+opentelemetry_sdk = { version = "0.22.1", features = ["rt-tokio"] }
+opentelemetry-semantic-conventions = "0.14.0"
+opentelemetry-zipkin = "0.20.0"
+tracing-subscriber = "0.3.18"
+
+[dev-dependencies]
+axum = "0.6"
+
+[package.metadata.cargo-machete]
+ignored = [
+  "axum", # used in doc examples
+]
+
+[lints]
+workspace = true

@@ -1,0 +1,761 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hasura.io/jsonschemas/metadata/AuthConfig",
+  "title": "AuthConfig",
+  "description": "Definition of the authentication configuration used by the API server.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "definition",
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "enum": [
+            "v1"
+          ]
+        },
+        "definition": {
+          "$ref": "#/definitions/AuthConfigV1"
+        }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "definitions": {
+    "AuthConfigV1": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthConfigV1",
+      "title": "AuthConfigV1",
+      "description": "Definition of the authentication configuration used by the API server.",
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "allowRoleEmulationBy": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Role"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mode": {
+          "$ref": "#/definitions/AuthModeConfig"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/Role",
+      "title": "Role",
+      "type": "string"
+    },
+    "AuthModeConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthModeConfig",
+      "title": "AuthModeConfig",
+      "description": "The configuration for the authentication mode to use - webhook or JWT.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "webhook"
+          ],
+          "properties": {
+            "webhook": {
+              "$ref": "#/definitions/AuthHookConfig"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "jwt"
+          ],
+          "properties": {
+            "jwt": {
+              "$ref": "#/definitions/JWTConfig"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "AuthHookConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthHookConfig",
+      "title": "AuthHookConfig",
+      "description": "The configuration of the authentication webhook.",
+      "examples": [
+        {
+          "url": "http://auth_hook:3050/validate-request",
+          "method": "Post"
+        }
+      ],
+      "type": "object",
+      "required": [
+        "method",
+        "url"
+      ],
+      "properties": {
+        "url": {
+          "description": "The URL of the authentication webhook.",
+          "type": "string",
+          "format": "uri"
+        },
+        "method": {
+          "description": "The HTTP method to be used to make the request to the auth hook.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/AuthHookMethod"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "AuthHookMethod": {
+      "$id": "https://hasura.io/jsonschemas/metadata/AuthHookMethod",
+      "title": "AuthHookMethod",
+      "type": "string",
+      "enum": [
+        "Get",
+        "Post"
+      ]
+    },
+    "JWTConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTConfig",
+      "title": "JWTConfig",
+      "description": "JWT config according to which the incoming JWT will be verified and decoded to extract the session variable claims.",
+      "examples": [
+        {
+          "audience": null,
+          "issuer": null,
+          "allowedSkew": null,
+          "claimsConfig": {
+            "namespace": {
+              "claimsFormat": "Json",
+              "location": "/https:~1~1hasura.io~1jwt~1claims"
+            }
+          },
+          "tokenLocation": {
+            "type": "BearerAuthorization"
+          },
+          "key": {
+            "fixed": {
+              "algorithm": "HS256",
+              "key": {
+                "value": "token"
+              }
+            }
+          }
+        }
+      ],
+      "type": "object",
+      "required": [
+        "claimsConfig",
+        "key",
+        "tokenLocation"
+      ],
+      "properties": {
+        "audience": {
+          "description": "Optional validation to check that the `aud` field is a member of the `audience` received, otherwise will throw error.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "issuer": {
+          "description": "Optional validation to check that the `iss` field is a member of the `iss` received, otherwise will throw error.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "allowedSkew": {
+          "description": "Allowed leeway (in seconds) to the `exp` validation to account for clock skew.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "claimsConfig": {
+          "description": "Claims config. Either specified via `claims_mappings` or `claims_namespace_path`",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTClaimsConfig"
+            }
+          ]
+        },
+        "tokenLocation": {
+          "description": "Source of the JWT authentication token.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTTokenLocation"
+            }
+          ]
+        },
+        "key": {
+          "description": "Mode according to which the JWT auth is configured.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTKey"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "JWTClaimsConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsConfig",
+      "title": "JWTClaimsConfig",
+      "description": "Config to describe how/where the engine should look for the claims within the decoded token.",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "locations"
+          ],
+          "properties": {
+            "locations": {
+              "$ref": "#/definitions/JWTClaimsMap"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "namespace"
+          ],
+          "properties": {
+            "namespace": {
+              "$ref": "#/definitions/JWTClaimsNamespace"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "JWTClaimsMap": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMap",
+      "title": "JWTClaimsMap",
+      "description": "Can be used when Hasura claims are not all present in the single object, but individual claims are provided a JSON pointer within the decoded JWT and optionally a default value.",
+      "type": "object",
+      "required": [
+        "x-hasura-allowed-roles",
+        "x-hasura-default-role"
+      ],
+      "properties": {
+        "x-hasura-default-role": {
+          "description": "JSON pointer to lookup the default role within the decoded JWT.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTClaimsMappingEntry_for_Role"
+            }
+          ]
+        },
+        "x-hasura-allowed-roles": {
+          "description": "JSON pointer to lookup the allowed roles within the decoded JWT.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTClaimsMappingEntry_for_Array_of_Role"
+            }
+          ]
+        }
+      }
+    },
+    "JWTClaimsMappingEntry_for_Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingEntry_for_Role",
+      "title": "JWTClaimsMappingEntry",
+      "oneOf": [
+        {
+          "description": "Literal value of the claims mapping",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": {
+              "$ref": "#/definitions/Role2"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Look up the Hasura claims at the specified JSON Pointer and provide a default value if the lookup fails.",
+          "type": "object",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/definitions/JWTClaimsMappingPathEntry_for_Role"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Role2": {
+      "type": "string"
+    },
+    "JWTClaimsMappingPathEntry_for_Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Role",
+      "title": "JWTClaimsMappingPathEntry",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "JSON pointer to find the particular claim in the decoded JWT token.",
+          "type": "string",
+          "format": "JSON pointer"
+        },
+        "default": {
+          "description": "Default value to be used when no value is found when looking up the value using the `path`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Role2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "JWTClaimsMappingEntry_for_Array_of_Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingEntry_for_Array_of_Role",
+      "title": "JWTClaimsMappingEntry",
+      "oneOf": [
+        {
+          "description": "Literal value of the claims mapping",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Role2"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Look up the Hasura claims at the specified JSON Pointer and provide a default value if the lookup fails.",
+          "type": "object",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/definitions/JWTClaimsMappingPathEntry_for_Array_of_Role"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "JWTClaimsMappingPathEntry_for_Array_of_Role": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_Array_of_Role",
+      "title": "JWTClaimsMappingPathEntry",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "JSON pointer to find the particular claim in the decoded JWT token.",
+          "type": "string",
+          "format": "JSON pointer"
+        },
+        "default": {
+          "description": "Default value to be used when no value is found when looking up the value using the `path`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Role2"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "JWTClaimsMappingEntry_for_SessionVariableValue": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingEntry_for_SessionVariableValue",
+      "title": "JWTClaimsMappingEntry",
+      "oneOf": [
+        {
+          "description": "Literal value of the claims mapping",
+          "type": "object",
+          "required": [
+            "literal"
+          ],
+          "properties": {
+            "literal": {
+              "$ref": "#/definitions/SessionVariableValue"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "Look up the Hasura claims at the specified JSON Pointer and provide a default value if the lookup fails.",
+          "type": "object",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/definitions/JWTClaimsMappingPathEntry_for_SessionVariableValue"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "SessionVariableValue": {
+      "type": "string"
+    },
+    "JWTClaimsMappingPathEntry_for_SessionVariableValue": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsMappingPathEntry_for_SessionVariableValue",
+      "title": "JWTClaimsMappingPathEntry",
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "JSON pointer to find the particular claim in the decoded JWT token.",
+          "type": "string",
+          "format": "JSON pointer"
+        },
+        "default": {
+          "description": "Default value to be used when no value is found when looking up the value using the `path`.",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SessionVariableValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "JWTClaimsNamespace": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsNamespace",
+      "title": "JWTClaimsNamespace",
+      "description": "Used when all of the Hasura claims are present in a single object within the decoded JWT.",
+      "type": "object",
+      "required": [
+        "claimsFormat",
+        "location"
+      ],
+      "properties": {
+        "claimsFormat": {
+          "description": "Format in which the Hasura claims will be present.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/JWTClaimsFormat"
+            }
+          ]
+        },
+        "location": {
+          "description": "Pointer to lookup the Hasura claims within the decoded claims.",
+          "type": "string",
+          "format": "JSON pointer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "JWTClaimsFormat": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTClaimsFormat",
+      "title": "JWTClaimsFormat",
+      "oneOf": [
+        {
+          "description": "Claims will be in the JSON format.",
+          "type": "string",
+          "enum": [
+            "Json"
+          ]
+        },
+        {
+          "description": "Claims will be in the Stringified JSON format.",
+          "type": "string",
+          "enum": [
+            "StringifiedJson"
+          ]
+        }
+      ]
+    },
+    "JWTTokenLocation": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTTokenLocation",
+      "title": "JWTTokenLocation",
+      "description": "Source of the Authorization token",
+      "oneOf": [
+        {
+          "title": "JWTBearerAuthorizationLocation",
+          "description": "Get the bearer token from the `Authorization` header.",
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "BearerAuthorization"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "JWTCookieLocation",
+          "description": "Get the token from the Cookie header under the specified cookie name.",
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Cookie"
+              ]
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "title": "JWTHeaderLocation",
+          "description": "Custom header from where the header should be parsed from.",
+          "type": "object",
+          "required": [
+            "name",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Header"
+              ]
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "JWTKey": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTKey",
+      "title": "JWTKey",
+      "description": "JWT key configuration according to which the incoming JWT will be decoded.",
+      "oneOf": [
+        {
+          "description": "JWT mode when the algorithm `type` and `key` is known",
+          "type": "object",
+          "required": [
+            "fixed"
+          ],
+          "properties": {
+            "fixed": {
+              "$ref": "#/definitions/JWTKeyConfig"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "JWT mode where the `type` and `key` parameters are obtained dynamically through JWK.",
+          "type": "object",
+          "required": [
+            "jwkFromUrl"
+          ],
+          "properties": {
+            "jwkFromUrl": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "JWTKeyConfig": {
+      "$id": "https://hasura.io/jsonschemas/metadata/JWTKeyConfig",
+      "title": "JWTKeyConfig",
+      "description": "JWT Secret config according to which the incoming JWT will be decoded.",
+      "type": "object",
+      "required": [
+        "algorithm",
+        "key"
+      ],
+      "properties": {
+        "algorithm": {
+          "description": "The algorithm used to decode the JWT.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Algorithm"
+            }
+          ]
+        },
+        "key": {
+          "description": "The key to use for decoding the JWT.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/EnvironmentValue"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Algorithm": {
+      "$id": "https://hasura.io/jsonschemas/metadata/Algorithm",
+      "title": "JWTAlgorithm",
+      "description": "The algorithm used to decode the JWT.",
+      "oneOf": [
+        {
+          "description": "HMAC using SHA-256",
+          "type": "string",
+          "enum": [
+            "HS256"
+          ]
+        },
+        {
+          "description": "HMAC using SHA-384",
+          "type": "string",
+          "enum": [
+            "HS384"
+          ]
+        },
+        {
+          "description": "HMAC using SHA-512",
+          "type": "string",
+          "enum": [
+            "HS512"
+          ]
+        },
+        {
+          "description": "ECDSA using SHA-256",
+          "type": "string",
+          "enum": [
+            "ES256"
+          ]
+        },
+        {
+          "description": "ECDSA using SHA-384",
+          "type": "string",
+          "enum": [
+            "ES384"
+          ]
+        },
+        {
+          "description": "RSASSA-PKCS1-v1_5 using SHA-256",
+          "type": "string",
+          "enum": [
+            "RS256"
+          ]
+        },
+        {
+          "description": "RSASSA-PKCS1-v1_5 using SHA-384",
+          "type": "string",
+          "enum": [
+            "RS384"
+          ]
+        },
+        {
+          "description": "RSASSA-PKCS1-v1_5 using SHA-512",
+          "type": "string",
+          "enum": [
+            "RS512"
+          ]
+        },
+        {
+          "description": "RSASSA-PSS using SHA-256",
+          "type": "string",
+          "enum": [
+            "PS256"
+          ]
+        },
+        {
+          "description": "RSASSA-PSS using SHA-384",
+          "type": "string",
+          "enum": [
+            "PS384"
+          ]
+        },
+        {
+          "description": "RSASSA-PSS using SHA-512",
+          "type": "string",
+          "enum": [
+            "PS512"
+          ]
+        },
+        {
+          "description": "Edwards-curve Digital Signature Algorithm (EdDSA)",
+          "type": "string",
+          "enum": [
+            "EdDSA"
+          ]
+        }
+      ]
+    },
+    "EnvironmentValue": {
+      "$id": "https://hasura.io/jsonschemas/EnvironmentValue",
+      "title": "EnvironmentValue",
+      "description": "Either a literal string or a reference to a Hasura secret",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "valueFromEnv"
+          ],
+          "properties": {
+            "valueFromEnv": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

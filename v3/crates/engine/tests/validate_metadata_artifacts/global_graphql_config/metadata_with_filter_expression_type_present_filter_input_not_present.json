@@ -1,0 +1,269 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": [
+      {
+        "kind": "GraphqlConfig",
+        "version": "v1",
+        "definition": {
+          "query": {
+            "rootOperationTypeName": "Query"
+          },
+          "mutation": {
+            "rootOperationTypeName": "Mutation"
+          }
+        }
+      }
+    ]
+  },
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://custom_connector:8101"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "actor": {
+                    "description": "An actor",
+                    "fields": {
+                      "id": {
+                        "description": "The actor's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "movie_id": {
+                        "description": "The actor's movie ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The actor's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "actors",
+                    "description": "A collection of actors",
+                    "arguments": {},
+                    "type": "actor",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ActorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  },
+                  "mutation": {}
+                },
+                "version": "0.1.0"
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "actor",
+            "fields": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "movie_id",
+                "type": "String!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "actor",
+                "fieldMapping": {
+                  "actor_id": {
+                    "column": {
+                      "name": "id"
+                    }
+                  },
+                  "name": {
+                    "column": {
+                      "name": "name"
+                    }
+                  },
+                  "movie_id": {
+                    "column": {
+                      "name": "movie_id"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "actor_bool_exp",
+            "objectType": "actor",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "actor",
+            "comparableFields": [
+              {
+                "fieldName": "actor_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Actors",
+            "objectType": "actor",
+            "globalIdSource": false,
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "actors"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ActorByMovieId",
+                  "uniqueIdentifier": ["actor_id"]
+                }
+              ]
+            },
+            "filterExpressionType": "actor_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "actor_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

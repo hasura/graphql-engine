@@ -1,0 +1,20 @@
+[
+  {
+    "data": {
+      "noopProcedure": "Noop Procedure"
+    }
+  },
+  {
+    "data": {
+      "noopProcedure": "Noop Procedure"
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field noopProcedure on type Mutation is not allowed for user_2"
+      }
+    ]
+  }
+]

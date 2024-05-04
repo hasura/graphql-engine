@@ -1,7 +1,6 @@
 ---
-
 concurrency: 10
-base: 'http://localhost:3000'
+base: "http://localhost:3000"
 iterations: 10000
 
 plan:
@@ -11,7 +10,7 @@ plan:
       method: POST
       body: '{ "query": "query { __typename }" }'
       headers:
-        Content-Type: 'application/json'
+        Content-Type: "application/json"
         Host: example.hasura.app
   - name: AlbumByID query
     request:
@@ -19,5 +18,5 @@ plan:
       method: POST
       body: '{ "query": "query { AlbumByID(AlbumId: 1) { Title } }" }'
       headers:
-        Content-Type: 'application/json'
+        Content-Type: "application/json"
         Host: example.hasura.app

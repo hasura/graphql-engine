@@ -1,0 +1,152 @@
+{
+  "explain": {
+    "type": "sequence",
+    "value": [
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "Album",
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "Album",
+              "query": {
+                "fields": {
+                  "ArtistId": {
+                    "type": "column",
+                    "column": "ArtistId",
+                    "fields": null
+                  },
+                  "__hasura_phantom_field__AlbumId": {
+                    "type": "column",
+                    "column": "AlbumId",
+                    "fields": null
+                  }
+                }
+              },
+              "arguments": {},
+              "collection_relationships": {}
+            }
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "sequence",
+        "value": [
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "Artist",
+                "ndcRequest": {
+                  "type": "query",
+                  "value": {
+                    "collection": "Artist",
+                    "query": {
+                      "fields": {
+                        "ArtistId": {
+                          "type": "column",
+                          "column": "ArtistId",
+                          "fields": null
+                        },
+                        "Name": {
+                          "type": "column",
+                          "column": "Name",
+                          "fields": null
+                        }
+                      },
+                      "predicate": {
+                        "type": "binary_comparison_operator",
+                        "column": {
+                          "type": "column",
+                          "name": "ArtistId",
+                          "path": []
+                        },
+                        "operator": "_eq",
+                        "value": {
+                          "type": "variable",
+                          "name": "$ArtistId"
+                        }
+                      }
+                    },
+                    "arguments": {},
+                    "collection_relationships": {},
+                    "variables": []
+                  }
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "forEach",
+            "value": {
+              "type": "modelSelect",
+              "value": {
+                "modelName": "Tracks",
+                "ndcRequest": {
+                  "type": "query",
+                  "value": {
+                    "collection": "Track",
+                    "query": {
+                      "fields": {
+                        "TrackId": {
+                          "type": "column",
+                          "column": "TrackId",
+                          "fields": null
+                        }
+                      },
+                      "predicate": {
+                        "type": "binary_comparison_operator",
+                        "column": {
+                          "type": "column",
+                          "name": "AlbumId",
+                          "path": []
+                        },
+                        "operator": "_eq",
+                        "value": {
+                          "type": "variable",
+                          "name": "$AlbumId"
+                        }
+                      }
+                    },
+                    "arguments": {},
+                    "collection_relationships": {},
+                    "variables": []
+                  }
+                },
+                "ndcExplain": {
+                  "type": "response",
+                  "value": {
+                    "details": {
+                      "explain": "<redacted>"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "hashJoin"
+      }
+    ]
+  }
+}

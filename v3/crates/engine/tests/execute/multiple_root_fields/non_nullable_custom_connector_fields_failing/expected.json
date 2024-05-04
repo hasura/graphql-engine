@@ -1,0 +1,9 @@
+{
+  "data": null,
+  "errors": [
+    {
+      "message": "internal error",
+      "path": ["getActorById"]
+    }
+  ]
+}

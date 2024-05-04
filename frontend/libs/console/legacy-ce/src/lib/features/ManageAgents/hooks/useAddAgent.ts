@@ -11,14 +11,14 @@ type AddAgentConsoleProps = {
   // these are properties added to the response for console use
   error?: Error | null;
   name: string;
-  url: string;
+  url: string | { from_env: string };
   makeToast: () => void;
   status: 'unavailable' | 'error' | 'already-added' | 'added';
 };
 
 export type AddAgentResponse = AddAgentServerResponse & AddAgentConsoleProps;
 
-type AddAgentArgs = { name: string; url: string };
+type AddAgentArgs = { name: string; url: string | { from_env: string } };
 
 const AGENT_UNAVAILABLE_MESSAGE = 'Agent is not available';
 

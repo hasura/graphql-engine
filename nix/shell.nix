@@ -78,17 +78,12 @@ let
     pkgs.jq
   ];
 
-  consoleInputs = [
-    pkgs.google-cloud-sdk
-    pkgs."nodejs-${versions.nodejsVersion}_x"
-    pkgs."nodejs-${versions.nodejsVersion}_x".pkgs.typescript-language-server
-  ];
-
   docsInputs = [
     pkgs.yarn
   ];
 
   integrationTestInputs = [
+    pkgs.nodejs
     pkgs.python3
     pkgs.pyright # Python type checker
   ];
@@ -101,7 +96,7 @@ let
     hls
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
-    # pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
+    pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
     (pkgs.haskell.lib.dontCheck (pkgs.haskell.packages.${pkgs.ghcName}.ghcid))
     pkgs.haskell.packages.${pkgs.ghcName}.happy
@@ -163,7 +158,7 @@ let
     ++ integrationTestInputs;
 in
 pkgs.mkShell ({
-  buildInputs = baseInputs ++ consoleInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
+  buildInputs = baseInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
 } // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
   shellHook = ''
     export DYLD_LIBRARY_PATH='${dynamicLibraryPath}'

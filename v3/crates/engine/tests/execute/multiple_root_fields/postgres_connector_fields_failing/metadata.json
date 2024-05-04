@@ -1,0 +1,1122 @@
+{
+  "version": "V2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "custom",
+            "url": {
+              "singleUrl": {
+                "value": "http://custom_connector:8101"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {},
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "Actor_Name": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {},
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "actor": {
+                    "description": "An actor",
+                    "fields": {
+                      "id": {
+                        "description": "The actor's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "movie_id": {
+                        "description": "The actor's movie ID",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "The actor's name",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "movie": {
+                    "description": "A movie",
+                    "fields": {
+                      "id": {
+                        "description": "The movie's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "rating": {
+                        "description": "The movie's rating",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "title": {
+                        "description": "The movie's title",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "actors",
+                    "description": "A collection of actors",
+                    "arguments": {},
+                    "type": "actor",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ActorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "movies",
+                    "description": "A collection of movies",
+                    "arguments": {},
+                    "type": "movie",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "MovieByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "actors_by_movie",
+                    "description": "Actors parameterized by movie",
+                    "arguments": {
+                      "movie_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "actor",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_actor_id",
+                    "description": "Get the ID of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor_name",
+                    "description": "Get the name of the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Actor_Name"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_actor",
+                    "description": "Get the most recent actor",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_actor_by_id",
+                    "description": "Get actor by ID",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_actor",
+                    "description": "Insert or update an actor",
+                    "arguments": {
+                      "actor": {
+                        "description": "The actor to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "actor"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_actor_name_by_id",
+                    "description": "Update an actor name given the ID and new name",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the actor to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "name": {
+                        "description": "the new name of the actor",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "actor"
+                      }
+                    }
+                  },
+                  {
+                    "name": "noop_procedure",
+                    "description": "Procedure which does not perform any actual mutuations on the data",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "String"
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "capabilities": {
+              "versions": "*",
+              "capabilities": {
+                "query": {
+                  "aggregates": {},
+                  "variables": {}
+                },
+                "explain": {},
+                "relationships": {
+                  "relation_comparisons": {},
+                  "order_by_aggregate": {}
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "custom",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int"
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "movie",
+            "fields": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              },
+              {
+                "name": "title",
+                "type": "String!"
+              },
+              {
+                "name": "rating",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Movie"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Movies",
+            "objectType": "movie",
+            "source": {
+              "dataConnectorName": "custom",
+              "collection": "movies",
+              "typeMapping": {
+                "movie": {
+                  "fieldMapping": {
+                    "movie_id": {
+                      "column": "id"
+                    },
+                    "title": {
+                      "column": "title"
+                    },
+                    "rating": {
+                      "column": "rating"
+                    }
+                  }
+                }
+              }
+            },
+            "graphql": {
+              "selectUniques": [],
+              "selectMany": {
+                "queryRootField": "MovieMany"
+              }
+            },
+            "filterableFields": [
+              {
+                "fieldName": "movie_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "rating",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "movie_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "rating",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "movie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Movies",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "commandActor",
+            "fields": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              },
+              {
+                "name": "name",
+                "type": "String!"
+              },
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "graphql": {
+              "typeName": "CommandActor"
+            }
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actor_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actor_by_id",
+            "arguments": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandActor",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actor_by_id"
+              },
+              "typeMapping": {
+                "commandActor": {
+                  "fieldMapping": {
+                    "actor_id": {
+                      "column": "id"
+                    },
+                    "name": {
+                      "column": "name"
+                    },
+                    "movie_id": {
+                      "column": "movie_id"
+                    }
+                  }
+                }
+              },
+              "argumentMapping": {
+                "actor_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "Relationship",
+          "version": "v1",
+          "definition": {
+            "sourceType": "commandActor",
+            "name": "Movies",
+            "target": {
+              "model": {
+                "name": "Movies",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://invalid_url:8100"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "Int": {
+                    "aggregate_functions": {
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {},
+                    "update_operators": {}
+                  },
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "id": {
+                        "description": "The article's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "The article's title",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "author_id": {
+                        "description": "The article's author ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "last_name": {
+                        "description": "The author's last name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "first_name": {
+                        "description": "The author's first name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "id": {
+                        "description": "The author's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "test_nullable_and_array": {
+                    "description": "Testing nullable and array types",
+                    "fields": {
+                      "nullable_field": {
+                        "description": "Nullable types",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "description": "Non-nullable types",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_field": {
+                        "description": "Non-nullable array types [String!]!",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "description": "Nullable array types [String!]",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "description": "Array nullable types [String]!",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "description": "Nullable array nullable types [String]",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "article",
+                    "description": "A collection of articles",
+                    "arguments": {},
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "author",
+                    "description": "A collection of authors",
+                    "arguments": {},
+                    "type": "author",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "articles_by_author",
+                    "description": "Articles parameterized by author",
+                    "arguments": {
+                      "author_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "test_nullable_and_array_types",
+                    "description": "Testing nullable and array types (input and output)",
+                    "arguments": {
+                      "nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "type": "test_nullable_and_array",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_article_id",
+                    "description": "Get the ID of the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_article",
+                    "description": "Get the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_article_by_id",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_article",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "article"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_article_title_by_id",
+                    "description": "Update an article title given the ID and new title",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "the new title of the article",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "versions": "*",
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {}
+                  },
+                  "explain": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "author",
+            "fields": [
+              {
+                "name": "author_id",
+                "type": "CustomInt!"
+              },
+              {
+                "name": "first_name",
+                "type": "String!"
+              },
+              {
+                "name": "last_name",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Author"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "CustomInt",
+            "graphql": {
+              "typeName": "CustomInt"
+            }
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Authors",
+            "objectType": "author",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "author",
+              "typeMapping": {
+                "author": {
+                  "fieldMapping": {
+                    "author_id": {
+                      "column": "id"
+                    },
+                    "first_name": {
+                      "column": "first_name"
+                    }
+                  }
+                }
+              }
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AuthorByID",
+                  "uniqueIdentifier": ["author_id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "AuthorMany"
+              },
+              "filterExpressionType": "Author_Where_Exp",
+              "orderByExpressionType": "Author_Order_By"
+            },
+            "filterableFields": [
+              {
+                "fieldName": "author_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "orderableFields": [
+              {
+                "fieldName": "author_id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "first_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "last_name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "author",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["author_id", "first_name"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ModelPermissions",
+          "version": "v1",
+          "definition": {
+            "modelName": "Authors",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "Int",
+            "representation": "CustomInt"
+          }
+        }
+      ]
+    }
+  ]
+}

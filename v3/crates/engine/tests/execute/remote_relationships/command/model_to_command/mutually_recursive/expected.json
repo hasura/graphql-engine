@@ -1,0 +1,136 @@
+[
+  {
+    "data": {
+      "happy": {
+        "AnalyticsFromMovie": [
+          {
+            "MovieFromCommand": {
+              "AnalyticsFromMovie": [
+                {
+                  "MovieFromCommand": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "unhappy_1": {
+        "AnalyticsFromMovie": []
+      },
+      "unhappy_2": null,
+      "array": [
+        {
+          "AnalyticsFromMovie": [
+            {
+              "MovieFromCommand": {
+                "AnalyticsFromMovie": [
+                  {
+                    "MovieFromCommand": {
+                      "rating": 4,
+                      "title": "Titanic"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "AnalyticsFromMovie": [
+            {
+              "MovieFromCommand": {
+                "AnalyticsFromMovie": [
+                  {
+                    "MovieFromCommand": {
+                      "rating": 5,
+                      "title": "Slumdog Millionaire"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "AnalyticsFromMovie": [
+            {
+              "MovieFromCommand": {
+                "AnalyticsFromMovie": [
+                  {
+                    "MovieFromCommand": {
+                      "rating": 4,
+                      "title": "Godfather"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "AnalyticsFromMovie": []
+        },
+        {
+          "AnalyticsFromMovie": []
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "happy": {
+        "AnalyticsFromMovie": [
+          {
+            "MovieFromCommand": {
+              "AnalyticsFromMovie": [
+                {
+                  "MovieFromCommand": {
+                    "rating": 4,
+                    "title": "Titanic"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "unhappy_1": {
+        "AnalyticsFromMovie": []
+      },
+      "unhappy_2": null,
+      "array": [
+        {
+          "AnalyticsFromMovie": [
+            {
+              "MovieFromCommand": {
+                "AnalyticsFromMovie": [
+                  {
+                    "MovieFromCommand": {
+                      "rating": 4,
+                      "title": "Titanic"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "AnalyticsFromMovie": []
+        },
+        {
+          "AnalyticsFromMovie": []
+        },
+        {
+          "AnalyticsFromMovie": []
+        },
+        {
+          "AnalyticsFromMovie": []
+        }
+      ]
+    }
+  }
+]

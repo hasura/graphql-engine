@@ -1,0 +1,8 @@
+{
+  ...friendFields
+}
+
+fragment friendFields on User {
+  id
+  name
+}

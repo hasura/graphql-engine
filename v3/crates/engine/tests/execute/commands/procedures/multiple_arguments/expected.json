@@ -1,0 +1,28 @@
+[
+  {
+    "data": {
+      "updateActorNameById": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Chris Hemsworth"
+      }
+    }
+  },
+  {
+    "data": {
+      "updateActorNameById": {
+        "actor_id": 1,
+        "movie_id": 1,
+        "name": "Chris Hemsworth"
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field updateActorNameById on type Mutation is not allowed for user_2"
+      }
+    ]
+  }
+]

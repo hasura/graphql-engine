@@ -1,0 +1,8 @@
+"Missing separator"
+union SearchResult = Photo Person
+
+"Double separator"
+union SearchResult2 = Photo || Person
+
+"Dangling separator"
+union SearchResult3 = | Photo | Person |

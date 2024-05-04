@@ -90,8 +90,8 @@ to be exported to your observability platform using the appropriate log drivers.
 
 #### Metrics via Prometheus
 
-You can export metrics of your Hasura Enterprise project to Prometheus easily via enabling the `metrics` API. You can find
-more information on this [here](/observability/enterprise-edition/prometheus/integrate-prometheus-grafana.mdx).
+You can export metrics of your Hasura Enterprise project to Prometheus easily via enabling the `metrics` API. You can
+find more information on this [here](/observability/enterprise-edition/prometheus/integrate-prometheus-grafana.mdx).
 
 For security reasons, the metrics endpoint should not be leaked to the internet. Or if unavoidable, the Prometheus
 secret should be confidential to prevent misuse.
@@ -101,13 +101,13 @@ visualize Golden signal metrics that you will love for real-time monitoring.
 
 #### Metrics via OpenTelemetry
 
-Hasura Enterprise is open-telemetry compliant and can export metrics to third-party observability
-platforms which support OpenTelemetry. Check out [the OpenTelemetry page](/observability/opentelemetry.mdx) for more information.
+Hasura Enterprise is open-telemetry compliant and can export metrics to third-party observability platforms which
+support OpenTelemetry. Check out [the OpenTelemetry page](/observability/opentelemetry/index.mdx) for more information.
 
 #### Distributed traces
 
 Hasura Enterprise also can export distributed traces via OpenTelemetry. Read more at
-[here](/observability/opentelemetry.mdx) for more information.
+[here](/observability/opentelemetry/index.mdx) for more information.
 
 ## Database observability
 
@@ -130,8 +130,8 @@ be implemented:
 
 [Query Tags](/observability/query-tags.mdx) are SQL comments that consist of `key=value` pairs that are appended to
 generated SQL statements. When you issue a query or mutation with query tags, the generated SQL has some extra
-information. Database analytics tools can use that information (metadata) to analyze DB load and track
-or monitor performance.
+information. Database analytics tools can use that information (metadata) to analyze DB load and track or monitor
+performance.
 
 ### Using Query Tags and **pganalyze**
 

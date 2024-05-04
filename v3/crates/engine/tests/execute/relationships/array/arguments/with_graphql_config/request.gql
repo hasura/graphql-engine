@@ -1,0 +1,23 @@
+query MyQuery {
+  AuthorMany {
+    first_name
+    author_id
+    Articles(
+      limit_custom: 2
+      offset_custom: 1
+      order_by_custom: [{ title: Asc_custom }]
+      where_custom: { title: { _is_null_custom: false } }
+    ) {
+      title
+      article_id
+    }
+  }
+  AuthorByID(author_id: 2) {
+    Articles(
+      where_custom: { title: { _eq: "Why Functional Programming Matters" } }
+    ) {
+      title
+      article_id
+    }
+  }
+}

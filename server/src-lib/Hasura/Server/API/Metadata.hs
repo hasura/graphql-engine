@@ -517,7 +517,7 @@ runMetadataQueryV1M env schemaSampledFeatureFlags remoteSchemaPerms currentResou
   RMUpdateScopeOfCollectionInAllowlist q -> runUpdateScopeOfCollectionInAllowlist q
   RMCreateRestEndpoint q -> runCreateEndpoint q
   RMDropRestEndpoint q -> runDropEndpoint q
-  RMDCAddAgent q -> runAddDataConnectorAgent q
+  RMDCAddAgent q -> runAddDataConnectorAgent env q
   RMDCDeleteAgent q -> runDeleteDataConnectorAgent q
   RMSetCustomTypes q -> runSetCustomTypes q
   RMSetApiLimits q -> runSetApiLimits q

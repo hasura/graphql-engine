@@ -1,0 +1,90 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actors_by_movie_id_bounds",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true
+              },
+              {
+                "role": "user_2",
+                "allowExecution": false
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actors_by_movie_id_bounds",
+            "arguments": [
+              {
+                "name": "lower_bound",
+                "type": "Int!"
+              },
+              {
+                "name": "upper_bound",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "[commandActor]",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actors_by_movie_id_bounds"
+              },
+              "argumentMapping": {
+                "lower_bound": "lower_bound",
+                "upper_bound": "upper_bound"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorsByMovieIdBounds",
+              "rootFieldKind": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

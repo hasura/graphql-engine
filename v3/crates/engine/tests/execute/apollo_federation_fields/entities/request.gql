@@ -1,0 +1,14 @@
+query {
+  _entities(
+    representations: [
+      { __typename: "Author", author_id: 1 }
+      { __typename: "Author", author_id: 2 }
+    ]
+  ) {
+    ... on Author {
+      author_id
+      first_name
+      last_name
+    }
+  }
+}

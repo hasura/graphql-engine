@@ -1,0 +1,6 @@
+enum {
+    NORTH
+    EAST
+    SOUTH
+    WEST
+}

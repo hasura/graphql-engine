@@ -24,6 +24,7 @@ import Jsonb (specJsonb)
 import System.Environment qualified as Env
 import Test.Hspec (describe, hspec, it, shouldBe, shouldReturn)
 import Timeout (specTimeout)
+import URL (specURL)
 import Prelude
 
 -------------------------------------------------------------------------------
@@ -82,6 +83,7 @@ main = hspec $ do
   specInterrupt
   specTimeout
   specJsonb
+  specURL
 
 mkPool :: IO PGPool
 mkPool = do

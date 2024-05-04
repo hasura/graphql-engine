@@ -1,0 +1,36 @@
+[
+  {
+    "data": {
+      "uppercaseAllActorNamesReturnNames": [
+        "LEONARDO DICAPRIO",
+        "KATE WINSLET",
+        "IRFAN KHAN",
+        "AL PACINO",
+        "ROBERT DE NIRO",
+        "MORGAN FREEMAN",
+        "BEN KINGSLEY"
+      ]
+    }
+  },
+  {
+    "data": {
+      "uppercaseAllActorNamesReturnNames": [
+        "LEONARDO DICAPRIO",
+        "KATE WINSLET",
+        "IRFAN KHAN",
+        "AL PACINO",
+        "ROBERT DE NIRO",
+        "MORGAN FREEMAN",
+        "BEN KINGSLEY"
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field uppercaseAllActorNamesReturnNames on type Mutation is not allowed for user_2"
+      }
+    ]
+  }
+]

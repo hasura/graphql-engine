@@ -1,0 +1,7 @@
+mutation {
+  createStore(draft: {
+    name: [{ locale: "en", value: "my store }]
+  }) {
+    name(locale: "en")
+  }
+}

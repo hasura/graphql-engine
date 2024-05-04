@@ -1,0 +1,349 @@
+{
+  "ArticleMany": {
+    "QueryRootField": {
+      "ModelSelectMany": {
+        "selection_set": {
+          "fields": {
+            "id": {
+              "alias": "id",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "id",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "GlobalIDField": {
+                            "global_id_fields": ["article_id"]
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "ID"
+                },
+                "nullable": false
+              }
+            },
+            "title": {
+              "alias": "title",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "title",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "Field": {
+                            "name": "title",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "String"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "String"
+                },
+                "nullable": false
+              }
+            }
+          },
+          "type_name": "Article"
+        },
+        "ir": {
+          "field_name": "ArticleMany",
+          "model_selection": {
+            "data_connector": {
+              "name": {
+                "subgraph": "default",
+                "name": "db"
+              },
+              "url": {
+                "singleUrl": "http://postgres_connector:8080/"
+              },
+              "headers": {
+                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              }
+            },
+            "collection": "article",
+            "arguments": {},
+            "filter_clause": {
+              "expression": {
+                "type": "and",
+                "expressions": [
+                  {
+                    "type": "binary_comparison_operator",
+                    "column": {
+                      "type": "column",
+                      "name": "title",
+                      "path": []
+                    },
+                    "operator": "_like",
+                    "value": {
+                      "type": "scalar",
+                      "value": "random"
+                    }
+                  }
+                ]
+              },
+              "relationships": {}
+            },
+            "limit": 1,
+            "offset": null,
+            "order_by": null,
+            "selection": {
+              "fields": {
+                "hasura_global_id_col_id_article_id": {
+                  "Column": {
+                    "column": "id",
+                    "nested_selection": null
+                  }
+                },
+                "title": {
+                  "Column": {
+                    "column": "title",
+                    "nested_selection": null
+                  }
+                }
+              }
+            }
+          },
+          "type_container": {
+            "base": {
+              "List": {
+                "base": {
+                  "Named": "Article"
+                },
+                "nullable": false
+              }
+            },
+            "nullable": true
+          },
+          "usage_counts": {
+            "models_used": [
+              {
+                "model": {
+                  "subgraph": "default",
+                  "name": "Articles"
+                },
+                "count": 1
+              }
+            ],
+            "commands_used": []
+          }
+        }
+      }
+    }
+  },
+  "AuthorMany": {
+    "QueryRootField": {
+      "ModelSelectMany": {
+        "selection_set": {
+          "fields": {
+            "author_id": {
+              "alias": "author_id",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "author_id",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "Field": {
+                            "name": "author_id",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Custom": {
+                                    "subgraph": "default",
+                                    "name": "CustomInt"
+                                  }
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "CustomInt"
+                },
+                "nullable": false
+              }
+            },
+            "first_name": {
+              "alias": "first_name",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "first_name",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "Field": {
+                            "name": "first_name",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "String"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "String"
+                },
+                "nullable": false
+              }
+            }
+          },
+          "type_name": "Author"
+        },
+        "ir": {
+          "field_name": "AuthorMany",
+          "model_selection": {
+            "data_connector": {
+              "name": {
+                "subgraph": "default",
+                "name": "db"
+              },
+              "url": {
+                "singleUrl": "http://postgres_connector:8080/"
+              },
+              "headers": {
+                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              }
+            },
+            "collection": "author",
+            "arguments": {},
+            "filter_clause": {
+              "expression": {
+                "type": "and",
+                "expressions": [
+                  {
+                    "type": "not",
+                    "expression": {
+                      "type": "unary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "first_name",
+                        "path": []
+                      },
+                      "operator": "is_null"
+                    }
+                  }
+                ]
+              },
+              "relationships": {}
+            },
+            "limit": null,
+            "offset": null,
+            "order_by": null,
+            "selection": {
+              "fields": {
+                "author_id": {
+                  "Column": {
+                    "column": "id",
+                    "nested_selection": null
+                  }
+                },
+                "first_name": {
+                  "Column": {
+                    "column": "first_name",
+                    "nested_selection": null
+                  }
+                }
+              }
+            }
+          },
+          "type_container": {
+            "base": {
+              "List": {
+                "base": {
+                  "Named": "Author"
+                },
+                "nullable": false
+              }
+            },
+            "nullable": true
+          },
+          "usage_counts": {
+            "models_used": [
+              {
+                "model": {
+                  "subgraph": "default",
+                  "name": "Authors"
+                },
+                "count": 1
+              }
+            ],
+            "commands_used": []
+          }
+        }
+      }
+    }
+  }
+}

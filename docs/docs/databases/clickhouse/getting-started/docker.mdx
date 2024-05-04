@@ -33,8 +33,16 @@ When you use these to launch the services, you'll see three containers running i
 the ClickHouse GraphQL Connector agent. By navigating to the Hasura Console after execution, you'll find the ClickHouse
 data source as a type that can now be added to your Hasura GraphQL Service instance.
 
-You can follow the instructions from [this step](/databases/clickhouse/getting-started/cloud.mdx#step-22-next-choose-the-clickhouse-driver) onward to connect to your ClickHouse instance and begin using it with
-Hasura.
+You can check the health of the connector using the `/health` endpoint. The connector is available at the following
+endpoint:
+
+```bash
+http://localhost:8080/health
+```
+
+You can follow the instructions from
+[this step](/databases/clickhouse/getting-started/cloud.mdx#step-22-next-choose-the-clickhouse-driver) onward to connect
+to your ClickHouse instance and begin using it with Hasura.
 
 ## Keep up to date
 

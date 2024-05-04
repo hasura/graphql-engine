@@ -1,0 +1,11 @@
+query MyQuery {
+  getActorById(actor_id: 1) {
+    Movies(where_custom: { title: { _eq: "Titanic" } }) {
+      movie_id
+      rating
+      title
+    }
+    actor_id
+    name
+  }
+}

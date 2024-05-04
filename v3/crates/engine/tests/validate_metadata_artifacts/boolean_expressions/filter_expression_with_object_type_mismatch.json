@@ -1,0 +1,187 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "DataConnectorLink",
+          "version": "v1",
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://foo"
+              }
+            },
+            "headers": {},
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      }
+                    }
+                  }
+                },
+                "object_types": {
+                  "actor": {
+                    "description": "An actor",
+                    "fields": {
+                      "id": {
+                        "description": "The actor's primary key",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "actors",
+                    "description": "Collection of actors",
+                    "arguments": {},
+                    "type": "actor",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [],
+                "procedures": []
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "aggregates": {},
+                    "variables": {},
+                    "explain": {}
+                  },
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  },
+                  "mutation": {}
+                },
+                "version": "0.1.0"
+              }
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Actor",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectType",
+          "version": "v1",
+          "definition": {
+            "name": "Actor2",
+            "fields": [
+              {
+                "name": "id",
+                "type": "String!"
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor2"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "actor"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "ActorBoolExp",
+            "objectType": "Actor2",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "actor",
+            "comparableFields": [
+              {
+                "fieldName": "id",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Model",
+          "version": "v1",
+          "definition": {
+            "name": "Actors",
+            "objectType": "Actor",
+            "globalIdSource": false,
+            "filterExpressionType": "ActorBoolExp",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "actors"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "actorById",
+                  "uniqueIdentifier": ["id"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "actors"
+              }
+            },
+            "orderableFields": [
+              {
+                "fieldName": "id",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

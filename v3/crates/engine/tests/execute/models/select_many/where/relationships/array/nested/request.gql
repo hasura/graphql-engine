@@ -1,0 +1,45 @@
+query MyQuery {
+  Album(where: { Tracks: { TrackAlbums: { AlbumId: { _eq: 3 } } } }) {
+    AlbumId
+    Tracks {
+      TrackAlbums {
+        AlbumId
+        Title
+      }
+    }
+  }
+  AlbumAnd: Album(
+    where: {
+      _and: [
+        { Tracks: { TrackAlbums: { AlbumId: { _eq: 3 } } } }
+        { AlbumId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Tracks {
+      TrackId
+      TrackAlbums {
+        AlbumId
+        Title
+      }
+    }
+  }
+  AlbumOr: Album(
+    where: {
+      _or: [
+        { Tracks: { TrackAlbums: { AlbumId: { _eq: 3 } } } }
+        { AlbumId: { _eq: 2 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Tracks {
+      TrackId
+      TrackAlbums {
+        AlbumId
+        Title
+      }
+    }
+  }
+}

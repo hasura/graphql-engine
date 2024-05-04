@@ -1,0 +1,6 @@
+query {
+  article_author_match: ArticlesByAuthorMany(args: { author_id: 1 }) {
+    article_id
+    title
+  }
+}

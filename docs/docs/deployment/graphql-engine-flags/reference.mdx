@@ -44,15 +44,16 @@ the list of connected data sources.
 
 :::info Note
 
-This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. In versions `v2.0` and
-above, databases can be connected using any custom environment variables of your choice.
+This config option is supported to maintain backwards compatibility with `v1.x` Hasura instances. **In versions `v2.0`
+and above, databases can be connected using any custom environment variables of your choice. Our `docker-compose.yaml`
+files in the install manifests reference `PG_DATABASE_URL` as the environment variable to use for connecting to a
+database, but this can be any plaintext value which does not start with `HASURA_`.**
 
 :::
 
 ### Metadata Database URL
 
-This Postgres database URL is used to store Hasura's Metadata. By default, the database configured using
-`HASURA_GRAPHQL_DATABASE_URL` / `--database_url` will be used to store the Metadata. This can also be a URI of the form
+This Postgres database URL is used to store Hasura's Metadata. This can also be a URI of the form
 `dynamic-from-file:///path/to/file`, where the referenced file contains a postgres connection string, which will be read
 dynamically every time a new connection is established. This allows the server to be used in an environment where
 secrets are rotated frequently.
@@ -68,7 +69,7 @@ secrets are rotated frequently.
 
 :::info Note
 
-Either one of the Metadata Database URL or the Database URL needs to be provided for Hasura to start.
+THe metadata database URL needs to be set for Hasura to start.
 
 :::
 
@@ -235,6 +236,21 @@ that all clients reconnect to the latest metadata.
 | **Default**         | `true`                                               |
 | **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
+### Configured Header Precedence
+
+Whether the metadata configured headers are given higher precedence than client headers for
+[Actions](actions/action-handlers.mdx/#add-a-header-to-your-action) and
+[postgres input validations](schema/postgres/input-validations.mdx/#request).
+
+|                     |                                               |
+| ------------------- | --------------------------------------------- |
+| **Flag**            | `--configured-header-precedence`              |
+| **Env var**         | `HASURA_GRAPHQL_CONFIGURED_HEADER_PRECEDENCE` |
+| **Accepted values** | Boolean                                       |
+| **Options**         | `true` or `false`                             |
+| **Default**         | `false`                                       |
+| **Supported in**    | CE, Enterprise Edition, Cloud                 |
+
 ### Connections per Read-Replica
 
 The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be
@@ -371,17 +387,31 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
-### Header Size Limit
 
-Sets the maximum cumulative length of all headers in bytes.
+### Enable Automated Persisted Queries
 
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--max-total-header-length`              |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
-| **Accepted values** | Integer                                  |
-| **Default**         | `1024*1024` (1MB)                        |
-| **Supported in**    | CE, Enterprise Edition                   |
+Enables the [Automated Persisted Queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) feature.
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-persisted-queries`                     |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES`        |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | Enterprise Edition                               |
+
+### Set Automated Persisted Queries TTL
+
+Sets the query TTL in the cache store for Automated Persisted Queries.
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--persisted-queries-ttl`                        |
+| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL`           |
+| **Accepted values** | Integer                                          |
+| **Default**         | `5` (seconds)                                    |
+| **Supported in**    | Enterprise Edition                               |
+
 
 ### Enable Error Log Level for Trigger Errors
 
@@ -395,6 +425,7 @@ Sets the log-level as `error` for Trigger type error logs (Event Triggers, Sched
 | **Default**         | `false`                                          |
 | **Supported in**    | CE, Enterprise Edition                           |
 
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).
@@ -407,6 +438,19 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 | **Options**         | `true` or `false`                                                                  |
 | **Default**         | **CE**, **Enterprise Edition**: `false` <br />**Cloud**: Console is always enabled |
 | **Supported in**    | CE, Enterprise Edition                                                             |
+
+### Header Size Limit
+
+Sets the maximum cumulative length of all headers in bytes.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
+
 
 ### Enable High-cardinality Labels for Metrics
 
@@ -513,7 +557,7 @@ log types — can be found [here](/deployment/logging.mdx#log-types).
 | **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
 | **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
 | **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh`                                                                                                                                   |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                                   |
 | **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
@@ -551,7 +595,7 @@ Postgres.
 | **Env var**         | `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL`     |
 | **Accepted values** | Integer                                    |
 | **Default**         | `null`                                     |
-| **Supported in**    | CE, Enterprise Edition, Cloud              |
+| **Supported in**    | CE, Enterprise Edition                     |
 
 ### Experimental Features
 

@@ -1,0 +1,15 @@
+query RemoteObjectInLocalArrayRelationship {
+  MovieMany {
+    title
+    rating
+    Actors {
+      name
+      favourite_author_id
+      FavouriteAuthor {
+        author_id
+        first_name
+        last_name
+      }
+    }
+  }
+}

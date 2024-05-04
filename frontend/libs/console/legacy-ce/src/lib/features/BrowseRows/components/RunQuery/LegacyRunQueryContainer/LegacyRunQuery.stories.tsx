@@ -77,7 +77,7 @@ export const Primary: StoryObj<typeof LegacyRunQuery> = {
     expect(await canvas.findAllByDisplayValue('Select a column')).toHaveLength(
       2
     );
-    expect(await canvas.findByDisplayValue('Select an operator')).toBeVisible();
+    expect(await canvas.findByTestId('filters.0.operator')).toBeVisible();
     expect(await canvas.findByPlaceholderText('-- value --')).toBeVisible();
 
     // select the value "id" in the "column" select
@@ -88,7 +88,7 @@ export const Primary: StoryObj<typeof LegacyRunQuery> = {
 
     // select the value "_eq" in the "operator" select
     userEvent.selectOptions(
-      await canvas.findByDisplayValue('Select an operator'),
+      await canvas.findByTestId('filters.0.operator'),
       '_eq'
     );
 
@@ -108,8 +108,9 @@ export const Primary: StoryObj<typeof LegacyRunQuery> = {
     );
 
     // select the value "_neq" in the second "operator" select
+
     userEvent.selectOptions(
-      await canvas.findByDisplayValue('Select an operator'),
+      await canvas.findByTestId('filters.1.operator'),
       '_neq'
     );
 

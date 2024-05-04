@@ -1,0 +1,23 @@
+[
+  {
+    "data": {
+      "ArticleByID": {
+        "title": "The Mechanical Evaluation of Expressions",
+        "article_id": 4,
+        "Author": {
+          "author_id": 1,
+          "first_name": "Peter",
+          "last_name": "Landin"
+        }
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field Author on type Article is not allowed for user"
+      }
+    ]
+  }
+]

@@ -1,0 +1,56 @@
+query MyQuery {
+  Album(where: { Tracks: { TrackId: { _eq: 3 } } }) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+  AlbumAnd: Album(
+    where: {
+      _and: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+  AlbumOr: Album(
+    where: {
+      _or: [{ Tracks: { TrackId: { _eq: 3 } } }, { ArtistId: { _eq: 2 } }]
+    }
+  ) {
+    AlbumId
+    Title
+    ArtistId
+    Tracks {
+      AlbumId
+      Name
+      TrackId
+    }
+  }
+  AlbumTracksTwoRelationships: Album(
+    where: {
+      Tracks: { Album: { AlbumId: { _eq: 1 } }, Genre: { GenreId: { _eq: 1 } } }
+    }
+    limit: 1
+  ) {
+    Tracks(limit: 2) {
+      Genre {
+        GenreId
+      }
+      Album {
+        AlbumId
+      }
+      Name
+    }
+  }
+}

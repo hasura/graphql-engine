@@ -1,0 +1,242 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandMovie",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["movie_id", "title", "rating"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["movie_id", "title"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actor_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actor_by_id",
+            "arguments": [
+              {
+                "name": "actor_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandActor",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actor_by_id"
+              },
+              "argumentMapping": {
+                "actor_id": "id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_movie_by_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_movie_by_id",
+            "arguments": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "commandMovie",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_movie_by_id"
+              },
+              "argumentMapping": {
+                "movie_id": "movie_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getMovieById",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actors_by_movie_id",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true
+              },
+              {
+                "role": "user",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actors_by_movie_id",
+            "arguments": [
+              {
+                "name": "movie_id",
+                "type": "Int!"
+              }
+            ],
+            "outputType": "[commandActor]",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actors_by_movie_id"
+              },
+              "argumentMapping": {
+                "movie_id": "movie_id"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getAllActorsOfMovie",
+              "rootFieldKind": "Query"
+            }
+          }
+        },
+        {
+          "definition": {
+            "sourceType": "commandActor",
+            "name": "getMovieFromActor",
+            "target": {
+              "command": {
+                "name": "get_movie_by_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "movie_id"
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "sourceType": "commandMovie",
+            "name": "getActorsFromMovie",
+            "target": {
+              "command": {
+                "name": "get_actors_by_movie_id"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "movie_id"
+                    }
+                  ]
+                },
+                "target": {
+                  "argument": {
+                    "argumentName": "movie_id"
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        }
+      ]
+    }
+  ]
+}

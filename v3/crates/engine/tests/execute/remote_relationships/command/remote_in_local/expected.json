@@ -1,0 +1,107 @@
+[
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Titanic",
+          "Actors": [
+            {
+              "name": "Leonardo DiCaprio",
+              "MovieFromCommand": {
+                "title": "Titanic",
+                "rating": 4
+              }
+            },
+            {
+              "name": "Kate Winslet",
+              "MovieFromCommand": {
+                "title": "Titanic",
+                "rating": 4
+              }
+            }
+          ]
+        },
+        {
+          "title": "Slumdog Millionaire",
+          "Actors": [
+            {
+              "name": "Irfan Khan",
+              "MovieFromCommand": {
+                "title": "Slumdog Millionaire",
+                "rating": 5
+              }
+            }
+          ]
+        },
+        {
+          "title": "Godfather",
+          "Actors": [
+            {
+              "name": "Al Pacino",
+              "MovieFromCommand": {
+                "title": "Godfather",
+                "rating": 4
+              }
+            },
+            {
+              "name": "Robert De Niro",
+              "MovieFromCommand": {
+                "title": "Godfather",
+                "rating": 4
+              }
+            }
+          ]
+        },
+        {
+          "title": "Shawshank Redemption",
+          "Actors": [
+            {
+              "name": "Morgan Freeman",
+              "MovieFromCommand": {
+                "title": "Shawshank Redemption",
+                "rating": 5
+              }
+            }
+          ]
+        },
+        {
+          "title": "Schindler's List",
+          "Actors": [
+            {
+              "name": "Ben Kingsley",
+              "MovieFromCommand": {
+                "title": "Schindler's List",
+                "rating": 4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "MovieMany": [
+        {
+          "title": "Titanic",
+          "Actors": [
+            {
+              "name": "Leonardo DiCaprio",
+              "MovieFromCommand": {
+                "title": "Titanic",
+                "rating": 4
+              }
+            },
+            {
+              "name": "Kate Winslet",
+              "MovieFromCommand": {
+                "title": "Titanic",
+                "rating": 4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

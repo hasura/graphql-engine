@@ -1,0 +1,54 @@
+[
+  {
+    "data": {
+      "Article": [
+        {
+          "title": "The Next 700 Programming Languages",
+          "article_id": 1,
+          "MultiMappingCheckAuthor": null
+        },
+        {
+          "title": "Why Functional Programming Matters",
+          "article_id": 2,
+          "MultiMappingCheckAuthor": null
+        },
+        {
+          "title": "The Design And Implementation Of Programming Languages",
+          "article_id": 3,
+          "MultiMappingCheckAuthor": null
+        },
+        {
+          "title": "The Mechanical Evaluation of Expressions",
+          "article_id": 4,
+          "MultiMappingCheckAuthor": null
+        },
+        {
+          "title": "Generalizing monads to arrows",
+          "article_id": 5,
+          "MultiMappingCheckAuthor": null
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Article": [
+        {
+          "title": "Why Functional Programming Matters",
+          "article_id": 2,
+          "MultiMappingCheckAuthor": null
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Article": []
+    }
+  },
+  {
+    "data": {
+      "Article": []
+    }
+  }
+]

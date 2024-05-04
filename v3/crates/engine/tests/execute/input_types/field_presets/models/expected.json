@@ -1,0 +1,50 @@
+[
+  {
+    "data": {
+      "MoviesByActorNameMany": [
+        {
+          "movie_id": 4,
+          "title": "Shawshank Redemption",
+          "rating": 5
+        }
+      ],
+      "MoviesByActorNameById": {
+        "movie_id": 4,
+        "title": "Shawshank Redemption",
+        "rating": 5
+      }
+    }
+  },
+  {
+    "data": {
+      "MoviesByActorNameMany": [
+        {
+          "movie_id": 1,
+          "title": "Titanic",
+          "rating": 4
+        }
+      ],
+      "MoviesByActorNameById": {
+        "movie_id": 1,
+        "title": "Titanic",
+        "rating": 4
+      }
+    }
+  },
+  {
+    "data": {
+      "MoviesByActorNameMany": [
+        {
+          "movie_id": 3,
+          "title": "Godfather",
+          "rating": 4
+        }
+      ],
+      "MoviesByActorNameById": {
+        "movie_id": 3,
+        "title": "Godfather",
+        "rating": 4
+      }
+    }
+  }
+]

@@ -2,6 +2,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Top-level functions concerned specifically with operations on the schema cache, such as
 -- rebuilding it from the catalog and incorporating schema changes. See the module documentation for
@@ -610,7 +612,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let backendInvalidationKeys =
             Inc.selectMaybeD #unBackendInvalidationKeysWrapper
               $ BackendMap.lookupD @b backendInvalidationMap
-      backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
+      backendInfo <- resolveBackendInfo @b logger env -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
     resolveBackendCache ::
@@ -1401,7 +1403,14 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       _otiBatchSpanProcessorInfo <-
         withRecordAndDefaultM OtelSubobjectBatchSpanProcessor _ocBatchSpanProcessor defaultOtelBatchSpanProcessorInfo
           $ parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
-      case _ocStatus of
+
+      otelStatus <-
+        fmap (fromMaybe OtelDisabled)
+          $ withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectAll) (toJSON _ocStatus))
+          $ liftEither
+          $ mapLeft (err400 BadRequest . T.pack) (mkOtelStatusFromEnv _ocStatus env)
+
+      case otelStatus of
         OtelDisabled ->
           pure
             $
@@ -1591,7 +1600,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                         then do
                           recreateTriggerIfNeeded
                             -<
-                              ( dynamicConfig,
+                              ( (_cdcSQLGenCtx dynamicConfig),
                                 table,
                                 tableColumns,
                                 triggerName,
@@ -1627,7 +1636,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- computation will not be done again.
           Inc.cache
             proc
-              ( dynamicConfig,
+              ( sqlGenCtx,
                 tableName,
                 tableColumns,
                 triggerName,
@@ -1641,7 +1650,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 -< do
                   liftEitherM
                     $ createTableEventTrigger @b
-                      (_cdcSQLGenCtx dynamicConfig)
+                      sqlGenCtx
                       sourceConfig
                       tableName
                       tableColumns

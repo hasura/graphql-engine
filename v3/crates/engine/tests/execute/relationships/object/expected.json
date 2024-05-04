@@ -1,0 +1,106 @@
+[
+  {
+    "data": {
+      "Album": [
+        {
+          "Title": "For Those About To Rock We Salute You",
+          "Artist": {
+            "Name": "AC/DC"
+          }
+        },
+        {
+          "Title": "Balls to the Wall",
+          "Artist": {
+            "Name": "Accept"
+          }
+        },
+        {
+          "Title": "Restless and Wild",
+          "Artist": {
+            "Name": "Accept"
+          }
+        },
+        {
+          "Title": "Let There Be Rock",
+          "Artist": {
+            "Name": "AC/DC"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Album": [
+        {
+          "Title": "For Those About To Rock We Salute You",
+          "Artist": {
+            "Name": "AC/DC"
+          }
+        },
+        {
+          "Title": "Balls to the Wall",
+          "Artist": null
+        },
+        {
+          "Title": "Restless and Wild",
+          "Artist": null
+        },
+        {
+          "Title": "Let There Be Rock",
+          "Artist": {
+            "Name": "AC/DC"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Album": [
+        {
+          "Title": "For Those About To Rock We Salute You",
+          "Artist": null
+        },
+        {
+          "Title": "Balls to the Wall",
+          "Artist": null
+        },
+        {
+          "Title": "Restless and Wild",
+          "Artist": null
+        },
+        {
+          "Title": "Let There Be Rock",
+          "Artist": null
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Album": [
+        {
+          "Title": "For Those About To Rock We Salute You",
+          "Artist": null
+        },
+        {
+          "Title": "Balls to the Wall",
+          "Artist": {
+            "Name": "Accept"
+          }
+        },
+        {
+          "Title": "Restless and Wild",
+          "Artist": {
+            "Name": "Accept"
+          }
+        },
+        {
+          "Title": "Let There Be Rock",
+          "Artist": null
+        }
+      ]
+    }
+  }
+]

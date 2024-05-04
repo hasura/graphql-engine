@@ -64,7 +64,7 @@ instance (MonadIO m, MonadTrace m, MonadError QErr m) => RunClient (AgentClientT
 runRequestAcceptStatus' :: (MonadIO m, MonadTrace m, MonadError QErr m) => Maybe [Status] -> Request -> (AgentClientT m) Response
 runRequestAcceptStatus' acceptStatus req = do
   AgentClientContext {..} <- askClientContext
-  let transformableReq = defaultMakeClientRequest _accBaseUrl req
+  transformableReq <- liftIO $ defaultMakeClientRequest _accBaseUrl req
 
   -- Set the response timeout explicitly if it is provided
   let transformableReq' =

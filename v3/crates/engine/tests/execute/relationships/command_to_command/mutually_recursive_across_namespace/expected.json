@@ -1,0 +1,54 @@
+[
+  {
+    "data": {
+      "getMovieById": {
+        "getActorsFromMovie": [
+          {
+            "MovieFromActor": {
+              "getActorsFromMovie": [
+                {
+                  "MovieFromActor": {
+                    "movie_id": 1,
+                    "rating": 4
+                  }
+                },
+                {
+                  "MovieFromActor": {
+                    "movie_id": 1,
+                    "rating": 4
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "MovieFromActor": {
+              "getActorsFromMovie": [
+                {
+                  "MovieFromActor": {
+                    "movie_id": 1,
+                    "rating": 4
+                  }
+                },
+                {
+                  "MovieFromActor": {
+                    "movie_id": 1,
+                    "rating": 4
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field rating on type CommandMovie is not allowed for user"
+      }
+    ]
+  }
+]

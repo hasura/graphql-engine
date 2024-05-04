@@ -1,0 +1,39 @@
+query RootFields {
+  __type(name: "Query") {
+    fields {
+      name
+      type {
+        ...TypeRef
+        fields {
+          name
+          type {
+            ...TypeRef
+          }
+        }
+      }
+      args {
+        name
+        type {
+          ...TypeRef
+        }
+      }
+    }
+  }
+}
+
+fragment TypeRef on __Type {
+  kind
+  name
+  ofType {
+    kind
+    name
+    ofType {
+      kind
+      name
+      ofType {
+        kind
+        name
+      }
+    }
+  }
+}

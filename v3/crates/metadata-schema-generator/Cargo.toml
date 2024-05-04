@@ -1,0 +1,15 @@
+[package]
+name = "metadata-schema-generator"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "metadata-schema-generator"
+path = "src/main.rs"
+bench = false
+
+[dependencies]
+open-dds = { path = "../open-dds" }
+serde_json = "1.0.92"
+schemars = { version = "0.8.12", features = ["smol_str"] }

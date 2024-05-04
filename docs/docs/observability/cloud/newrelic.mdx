@@ -35,8 +35,8 @@ For Hasura Cloud projects, the New Relic Integration is only available on the `S
 
 :::tip More metrics on OpenTelemetry exporter
 
-Try the new [OpenTelemetry exporter](/observability/opentelemetry.mdx) to get advanced metrics and traces to connect
-with New Relic. This integration will export the metrics as detailed [here](#view-metrics).
+Try the new [OpenTelemetry exporter](/observability/opentelemetry/index.mdx) to get advanced metrics and traces to
+connect with New Relic. This integration will export the metrics as detailed [here](#view-metrics).
 
 :::
 
@@ -57,6 +57,12 @@ host, service name and custom attributes to associate with exported logs and met
 | Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                                                                                                                                                 |
 | Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                                                                                                                                                            |
 | Service Name      | The name of the application or service generating the log events.                                                                                                                                                                                                                                                                                                                        |
+
+:::info API Key type
+
+Your API key must be of type `License` in order to export logs and metrics to New Relic.
+
+:::
 
 <Thumbnail src="/img/observability/configure-newrelic.png" alt="Configure New Relic Integration" />
 

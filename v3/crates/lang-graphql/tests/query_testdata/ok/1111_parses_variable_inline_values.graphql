@@ -1,0 +1,1 @@
+{ field(complex: { a: { b: [ $var ] } }) }

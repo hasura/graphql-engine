@@ -1,0 +1,126 @@
+{
+  "explain": {
+    "type": "parallel",
+    "value": [
+      {
+        "type": "commandSelect",
+        "value": {
+          "commandName": "getActorById",
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "get_actor_by_id",
+              "query": {
+                "fields": {
+                  "__value": {
+                    "type": "column",
+                    "column": "__value",
+                    "fields": {
+                      "type": "object",
+                      "fields": {
+                        "name": {
+                          "type": "column",
+                          "column": "name",
+                          "fields": null
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "arguments": {
+                "id": {
+                  "type": "literal",
+                  "value": 1
+                }
+              },
+              "collection_relationships": {}
+            }
+          },
+          "ndcExplain": {
+            "type": "notSupported"
+          }
+        }
+      },
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "AuthorMany",
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "author",
+              "query": {
+                "fields": {
+                  "author_id": {
+                    "type": "column",
+                    "column": "id",
+                    "fields": null
+                  },
+                  "first_name": {
+                    "type": "column",
+                    "column": "first_name",
+                    "fields": null
+                  }
+                },
+                "order_by": {
+                  "elements": [
+                    {
+                      "order_direction": "desc",
+                      "target": {
+                        "type": "column",
+                        "name": "id",
+                        "path": []
+                      }
+                    }
+                  ]
+                }
+              },
+              "arguments": {},
+              "collection_relationships": {}
+            }
+          },
+          "ndcExplain": {
+            "type": "response",
+            "value": {
+              "details": {
+                "explain": "<redacted>"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "modelSelect",
+        "value": {
+          "modelName": "MovieMany",
+          "ndcRequest": {
+            "type": "query",
+            "value": {
+              "collection": "movies",
+              "query": {
+                "fields": {
+                  "title": {
+                    "type": "column",
+                    "column": "title",
+                    "fields": null
+                  },
+                  "rating": {
+                    "type": "column",
+                    "column": "rating",
+                    "fields": null
+                  }
+                }
+              },
+              "arguments": {},
+              "collection_relationships": {}
+            }
+          },
+          "ndcExplain": {
+            "type": "notSupported"
+          }
+        }
+      }
+    ]
+  }
+}

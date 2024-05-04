@@ -1,0 +1,24 @@
+query MyQuery {
+  TrackNameEq: Track(where: { TrackId: { _eq: 1 } }) {
+    AlbumId
+    Name
+    TrackId
+  }
+  TrackGtAndLt: Track(where: { TrackId: { _gt: 1, _lt: 3 } }) {
+    AlbumId
+    Name
+    TrackId
+  }
+  TrackGteAndLte: Track(where: { TrackId: { _gte: 1, _lte: 3 } }) {
+    AlbumId
+    Name
+    TrackId
+  }
+  TrackGteAndLteAndNeq: Track(
+    where: { TrackId: { _gte: 1, _lte: 3, _neq: 2 } }
+  ) {
+    AlbumId
+    Name
+    TrackId
+  }
+}

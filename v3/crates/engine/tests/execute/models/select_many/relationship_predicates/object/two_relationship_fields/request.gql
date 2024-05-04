@@ -1,0 +1,13 @@
+query MyQuery {
+  Album(limit: 1) {
+    Tracks(limit: 2) {
+      Album {
+        AlbumId
+      }
+      Genre {
+        GenreId
+      }
+      Name
+    }
+  }
+}

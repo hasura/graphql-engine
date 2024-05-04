@@ -1,0 +1,26 @@
+[
+  {
+    "data": {
+      "getActorById": {
+        "movie_id": 1,
+        "name": "Leonardo DiCaprio"
+      }
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field movie_id on type CommandActor is not allowed for user_1"
+      }
+    ]
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field name on type CommandActor is not allowed for user_2"
+      }
+    ]
+  }
+]

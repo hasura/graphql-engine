@@ -284,8 +284,10 @@ cd /etc/hasura
 vim docker-compose.yaml
 
 ...
-# change the url to use a different database
-HASURA_GRAPHQL_DATABASE_URL: <database-url>
+# change the url to use a different database for your metadata
+HASURA_METADATA_DATABASE_URL: <database-url>
+# and here for your data using the same or different database as above
+PG_DATABASE_URL: <database-url>
 ...
 
 # type ESC followed by :wq to save and quit

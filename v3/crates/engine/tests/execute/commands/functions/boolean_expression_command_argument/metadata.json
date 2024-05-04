@@ -1,0 +1,150 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "kind": "TypePermissions",
+          "version": "v1",
+          "definition": {
+            "typeName": "commandActor",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_1",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              },
+              {
+                "role": "user_2",
+                "output": {
+                  "allowedFields": ["actor_id", "name", "movie_id"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "CommandPermissions",
+          "version": "v1",
+          "definition": {
+            "commandName": "get_actors_by_bool_exp",
+            "permissions": [
+              {
+                "role": "admin",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "actor_boolean_expression",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "actor_id",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user_1",
+                "allowExecution": true,
+                "argumentPresets": [
+                  {
+                    "argument": "actor_boolean_expression",
+                    "value": {
+                      "booleanExpression": {
+                        "fieldComparison": {
+                          "field": "actor_id",
+                          "operator": "_eq",
+                          "value": {
+                            "literal": 2
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "role": "user_2",
+                "allowExecution": true
+              }
+            ]
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "ActorBoolExp",
+            "objectType": "commandActor",
+            "dataConnectorName": "custom",
+            "dataConnectorObjectType": "actor",
+            "comparableFields": [
+              {
+                "fieldName": "actor_id",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "movie_id",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Actor_bool_exp"
+            }
+          }
+        },
+        {
+          "kind": "Command",
+          "version": "v1",
+          "definition": {
+            "name": "get_actors_by_bool_exp",
+            "arguments": [
+              {
+                "name": "actor_boolean_expression",
+                "type": "ActorBoolExp!"
+              }
+            ],
+            "outputType": "[commandActor]",
+            "source": {
+              "dataConnectorName": "custom",
+              "dataConnectorCommand": {
+                "function": "get_actors_by_bool_exp"
+              },
+              "argumentMapping": {
+                "actor_boolean_expression": "actor_bool_exp"
+              }
+            },
+            "graphql": {
+              "rootFieldName": "getActorsByBoolExp",
+              "rootFieldKind": "Query"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

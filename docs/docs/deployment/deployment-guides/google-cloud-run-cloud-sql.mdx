@@ -1,0 +1,286 @@
+---
+description: Step-by-step guide to deploy Hasura GraphQL Engine on Google Cloud Run with Cloud SQL for Postgres
+title: 'Deploy Hasura GraphQL Engine on Google Cloud Run'
+keywords:
+  - hasura
+  - google cloud run
+  - cloud sql
+  - deployment
+  - graphql
+sidebar_position: 13
+sidebar_label: Using Google Cloud Run & Cloud SQL
+---
+
+# Deploying Hasura GraphQL Engine on Cloud Run
+
+To deploy Hasura GraphQL Engine on Google Cloud Run with a Cloud SQL (Postgres) instance and ensure secure communication
+via private IP, follow this detailed guide.
+
+:::info Prerequisites
+
+This guide assumes you have a [Google Cloud](https://cloud.google.com/?hl=en) account and `gcloud` [installed](https://cloud.google.com/sdk/docs/install). Additionally, you should be working within a Google Cloud Project, whether it's one you've newly created or an existing project you have access to.
+:::
+
+
+## Step 1: Setup Your Environment
+
+1. **Authenticate with Google Cloud:**
+
+```bash
+gcloud auth login
+```
+
+2. **Set your project ID:**
+
+Replace `<PROJECT_ID>` with your actual Google Cloud project ID.
+
+```bash
+gcloud config set project <PROJECT_ID>
+```
+
+## Step 2: Enable Required Google Cloud Services
+
+Enable Cloud Run, Cloud SQL, Cloud SQL Admin, Secret Manager, and the Service Networking APIs:
+
+
+```bash
+gcloud services enable run.googleapis.com sqladmin.googleapis.com servicenetworking.googleapis.com secretmanager.googleapis.com
+```
+
+:::caution Requires IAM permissions
+
+To execute the above command, your Google Cloud account needs to have the Service Usage Admin role (roles/serviceusage.serviceUsageAdmin) or an equivalent custom role with permissions to enable services. This role allows you to view, enable, and disable services in your GCP project.
+
+If you encounter permissions errors, contact your GCP administrator to ensure your account has the appropriate roles assigned, or to request the services be enabled on the project you are working with.
+
+:::
+
+## Step 3: Create a Cloud SQL (Postgres) Instance
+
+1. **Create the database instance:**
+
+```bash
+gcloud sql instances create hasura-postgres --database-version=POSTGRES_15 --cpu=2 --memory=7680MiB --region=us-central1
+```
+
+2. **Set the password** for the default postgres user:
+
+Replace `<PASSWORD>` with your desired password.
+
+```bash
+gcloud sql users set-password postgres --instance=hasura-postgres --password=<PASSWORD>
+```
+
+3. **Create a database**
+
+Replace `<DATABASE_NAME>` with your database name:
+
+```bash
+gcloud sql databases create <DATABASE_NAME> --instance=hasura-postgres
+```
+
+:::info Don't have a `default` network?
+
+The `default` network is normally created inside a Google Cloud Platform Project, however in some cases the `default` network might have been deleted or the project may have been set up with a specific network configuration without a default network.
+
+To see the networks you have available you can run:
+
+```bash
+gcloud compute networks list
+```
+
+If you find you do not have an appropriate network for your deployment, you can create a new VPC network by running the following command to create a network named `default`:
+
+```bash
+gcloud compute networks create default --subnet-mode=auto
+```
+
+:::
+
+
+## Step 4: Configure Service Networking for Private Connectivity
+
+1. **Allocate an IP range** for Google services in your VPC:
+
+```bash
+gcloud compute addresses create google-managed-services-default \
+    --global \
+    --purpose=VPC_PEERING \
+    --prefix-length=24 \
+    --network=default
+```
+
+2. **Connect your VPC to the Service Networking API:**
+
+Replace `<PROJECT_ID>` with your actual Google Cloud project ID.
+
+```bash
+gcloud services vpc-peerings connect \
+    --service=servicenetworking.googleapis.com \
+    --ranges=google-managed-services-default \
+    --network=default \
+    --project=<PROJECT_ID>
+```
+
+3. **Enable a private IP** for your CloudSQL instance:
+
+```bash
+gcloud sql instances patch hasura-postgres --network=default
+```
+
+## Step 5: Create your connection string
+
+1. **Find your Cloud SQL instance's connection name:**
+
+```bash
+gcloud sql instances describe hasura-postgres
+```
+
+:::info Note
+
+Take note of the `connectionName` field in the output of the above `describe` command. You will use the `connectionName` to deploy the GraphQL Engine to Cloud Run.
+
+:::
+
+2. **Construct your connection string**
+
+You can create the connection string by filling in the following template string. Replace `<CONNECTION_NAME>`, `<PASSWORD>`, and `<DATABASE_NAME>` with your actual connectionName, database password, and
+database name.
+
+```
+postgres://postgres:<PASSWORD>@/<DATABASE_NAME>?host=/cloudsql/<CONNECTION_NAME>
+```
+
+## Step 6: Store your connection string in the Secret Manager
+
+While you can put the connection string directly into the environment variables, it is recommended that you store it and any secrets or credentials inside of [Google's Secret Manager](https://cloud.google.com/security/products/secret-manager) for maximum security. This prevents secrets from being visible to administrators and from being accessible in other parts of the control/operations plane.
+
+1. **Store the constructed connection string as a secret** replacing `<CONNECTION_STRING>` with your actual connection string.
+
+```bash
+echo -n "<CONNECTION_STRING>" | gcloud secrets create hasura-db-connection-string --data-file=-
+```
+
+:::info Not using the `default` service account?
+
+The following steps assume that you are running the `gcloud deploy` command via the default service account used by compute engine. If you are not using the default service account, you will need to grant the service account you are using the `roles/secretmanager.secretAccessor` role.
+
+:::
+
+
+2. **To get the `<PROJECT_NUMBER>` associated with the default service account:**
+
+```bash
+echo "$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+```
+
+3. **Run the following command to grant the default service acount access to the secrets**, replacing `<PROJECT_NUMBER>` with your project number from the previous command: 
+
+ ```bash
+ gcloud projects add-iam-policy-binding <PROJECT_NUMBER> \
+    --member='serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com' \
+    --role='roles/secretmanager.secretAccessor'
+ ```
+
+## Step 7: Deploy Hasura to Cloud Run:
+
+1. **Run the following command** and replace `<CONNECTION_NAME>`, with your actual connectionName. 
+
+For additional information on configuring the Hasura GraphQL engine, please see the [Server configuration reference](https://hasura.io/docs/latest/deployment/graphql-engine-flags/reference/).
+
+```bash
+gcloud run deploy hasura-graphql-engine \
+    --image=hasura/graphql-engine:latest \
+    --add-cloudsql-instances=<CONNECTION_NAME> \
+    --update-env-vars='HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-secrets=HASURA_GRAPHQL_DATABASE_URL=hasura-db-connection-string:latest \
+    --region=us-central1 \
+    --cpu=1 \
+    --min-instances=1 \
+    --memory=2048Mi \
+    --port=8080 \
+    --allow-unauthenticated
+```
+
+
+## Step 8: Adding a VPC-Connector (Optional)
+
+To further enhance the connectivity and security of your Hasura GraphQL Engine deployment on Google Cloud Run,
+especially when connecting to other services within your Virtual Private Cloud (VPC), you might consider adding a
+Serverless VPC Access connector. This optional step is particularly useful when your architecture requires direct access
+from your serverless Cloud Run service to resources within your VPC, such as VMs, other databases, or private services
+that are not exposed to the public internet. For more information, please see [Google's official documentation for Serverless VPC Access](https://cloud.google.com/vpc/docs/serverless-vpc-access).
+
+1. **Enable the Serverless VPC Access API**
+
+First ensure that the Serverless VPC Access API is enabled:
+
+```bash
+gcloud services enable vpcaccess.googleapis.com
+```
+
+2. **Create a Serverless VPC Access Connector**
+
+Choose an IP range that does not overlap with existing ranges in your VPC. This range will be used by the connector to
+route traffic from your serverless application to your VPC. **It's important to ensure that the IP range does not overlap with other subnets to avoid routing conflicts.**
+
+```bash
+gcloud compute networks vpc-access connectors create hasura-connector \
+    --region=us-central1 \
+    --network=default \
+    --range=10.8.0.0/28
+```
+
+3. **Update the Cloud Run Deployment to use the VPC Connector**
+
+When deploying or updating your Hasura GraphQL Engine service, specify the VPC connector with the `--vpc-connector`
+flag:
+
+```bash
+gcloud run deploy hasura-graphql-engine \
+    --image=hasura/graphql-engine:latest \
+    --add-cloudsql-instances=<CONNECTION_NAME> \
+    --update-env-vars='HASURA_GRAPHQL_ENABLE_CONSOLE=true' \
+    --update-secrets=HASURA_GRAPHQL_DATABASE_URL=hasura-db-connection-string:latest \
+    --vpc-connector=hasura-connector \
+    --region=us-central1 \
+    --cpu=1 \
+    --min-instances=1 \
+    --memory=2048Mi \
+    --port=8080 \
+    --allow-unauthenticated
+```
+
+### When and Why to Use a VPC Connector
+
+* **Enhanced Security:** Utilize a VPC Connector when you need to ensure that traffic between your Cloud Run service and
+  internal Google Cloud resources does not traverse the public internet, enhancing security.
+* **Access to Internal Resources:** Use it when your serverless application needs access to resources within your VPC,
+  such
+  as internal APIs, databases, or services that are not publicly accessible.
+* **Compliance Requirements:** If your application is subject to compliance requirements that mandate data and network
+  traffic must remain within a private network, a VPC connector facilitates this by providing private access to your
+  cloud resources.
+* **Network Peering:** It's beneficial when accessing services in a peered VPC, allowing your Cloud Run services to
+  communicate with resources across VPC networks.
+
+Adding a VPC Connector to your Cloud Run deployment ensures that your Hasura GraphQL Engine can securely and privately
+access the necessary Google Cloud resources within your VPC, providing a robust and secure environment for your
+applications.
+
+## Tearing Down
+
+To avoid incurring charges, delete the resources once you're done:
+
+```bash
+gcloud sql instances delete hasura-postgres
+gcloud run services delete hasura-graphql-engine
+gcloud compute addresses delete google-managed-services-default --global
+gcloud secrets delete hasura-db-connection-string
+```
+
+If you performed the optional Step 8, you should also delete the VPC-connector resource:
+
+```bash
+gcloud compute networks vpc-access connectors delete hasura-connector --region=us-central1
+```

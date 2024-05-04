@@ -1,0 +1,12 @@
+{
+  getLatestArticle {
+    article {
+      Author {
+        Articles {
+          id
+          title
+        }
+      }
+    }
+  }
+}

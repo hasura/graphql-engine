@@ -1,0 +1,8 @@
+query MyQuery {
+  getLatestActorId
+  getLatestActorName
+  getActorById(actor_id: 1) {
+    movie_id
+    name
+  }
+}

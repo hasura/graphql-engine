@@ -1,0 +1,7 @@
+query MyQuery {
+  ActorsByMovieByID(actor_id: 5) {
+    actor_id
+    movie_id
+    name
+  }
+}

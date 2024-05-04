@@ -39,7 +39,7 @@ import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.Config (ResponseInternalErrorsConfig (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (MonadGetPolicies, RequestId (..))
+import Hasura.Server.Types (HeaderPrecedence, MonadGetPolicies, RequestId (..))
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
@@ -93,6 +93,7 @@ convertQuerySelSet ::
   -- | Graphql Operation Name
   Maybe G.Name ->
   ResponseInternalErrorsConfig ->
+  HeaderPrecedence ->
   m (ExecutionPlan, [QueryRootField UnpreparedValue], DirectiveMap, ParameterizedQueryHash, [ModelInfoPart])
 convertQuerySelSet
   env
@@ -110,7 +111,8 @@ convertQuerySelSet
   introspectionDisabledRoles
   reqId
   maybeOperationName
-  responseErrorsConfig = do
+  responseErrorsConfig
+  headerPrecedence = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
       Tracing.newSpan "Parse query IR" $ parseGraphQLQuery nullInNonNullableVariables gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
@@ -161,7 +163,8 @@ convertQuerySelSet
                         prometheusMetrics
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))
-                        (Just (GH._grQuery gqlUnparsed)),
+                        (Just (GH._grQuery gqlUnparsed))
+                        headerPrecedence,
                     _aaeName s,
                     _aaeForwardClientHeaders s
                   )

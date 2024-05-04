@@ -1,0 +1,160 @@
+---
+description:
+  'Learn how to configure Hasura to run behind a proxy for enhanced security and efficient API management. This guide
+  covers setup for Nginx, Caddy, Kong, and Traefik proxies.'
+keywords:
+  - hasura configuration
+  - proxy setup
+  - graphql engine
+  - ssl termination
+  - nginx hasura
+  - caddy proxy
+  - kong reverse proxy
+  - traefik configuration
+sidebar_position: 80
+seoFrontMatterUpdated: true
+---
+
+# Running Behind a Proxy
+
+## Introduction
+
+In environments where direct internet access is restricted or for enhanced security measures, running Hasura GraphQL
+Engine behind a proxy is often a necessity. This approach is essential for enterprises that control and monitor internet
+traffic through a proxy server. By configuring Hasura to run behind a proxy, you can manage and secure access to your
+API efficiently.
+
+While Hasura GraphQL Engine itself does not handle proxy settings, it can be configured to work seamlessly behind
+various popular proxy servers. This guide illustrates several examples for setting up a reverse proxy, such as Nginx,
+Caddy, Kong, or Traefik, to handle requests to and from your Hasura GraphQL Engine. You can find more solution-specific
+details on the proxy server's documentation.
+
+By using a reverse proxy, you can enforce security policies, perform SSL termination, and manage traffic effectively,
+ensuring that your Hasura API remains secure and accessible within your network infrastructure.
+
+## Setting up a proxy
+
+Configuring your Hasura GraphQL Engine to work behind a proxy involves setting up the proxy server to forward requests
+to Hasura and, optionally, handle SSL/TLS termination. Here are some sample configurations for popular proxies that you
+can use as a starting point:
+
+### [Nginx](https://nginx.org/en/docs/)
+
+Here is a sample `nginx.conf` to proxy requests to Hasura:
+
+```nginx
+server {
+  listen 80;
+  listen 443 ssl;
+  server_name hasura.<my-domain.com>;
+
+  location / {
+    proxy_pass http://localhost:8080/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}
+```
+
+The example above directs Nginx to listen on ports `80` and `443` for HTTP and HTTPS requests respectively on the
+subdomain `hasura.<my-domain.com>`. The `proxy_pass` directive forwards requests to Hasura GraphQL Engine running on
+port 8080.
+
+:::info Server via a URL prefix
+
+To serve Hasura with a URL prefix instead of a separate subdomain, use `location /hasura/` or similar.
+
+:::
+
+### [Caddy](https://caddyserver.com/)
+
+Here is a sample `Caddyfile` to proxy requests to Hasura:
+
+```bash
+hasura.<my-domain.com> {
+  reverse_proxy localhost:8080
+}
+```
+
+In order to serve at a URL prefix, use the following configuration:
+
+```bash
+<my-domain.com> {
+  handle_path /hasura* {
+    reverse_proxy localhost:8080
+  }
+}
+```
+
+### [Traefik](https://doc.traefik.io/traefik/)
+
+Here are sample `traefik.toml` and `traefik-dynamic.toml` files to proxy requests to Hasura:
+
+```toml
+#traefik.toml
+
+[providers]
+  [providers.file]
+    filename = "traefik-dynamic.toml"
+
+[api]
+  dashboard = true
+  debug = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+
+    [entryPoints.web.http]
+      [entryPoints.web.http.redirections]
+        [entryPoints.web.http.redirections.entryPoint]
+          to = "web-secure"
+          scheme = "https"
+
+  [entryPoints.web-secure]
+    address = ":443"
+
+[certificatesResolvers.sample.acme]
+  email = "myemail@example.com"
+  storage = "acme.json"
+
+  [certificatesResolvers.sample.acme.httpChallenge]
+    # used during the challenge
+    entryPoint = "web"
+```
+
+```toml
+#traefik-dynamic.toml
+
+[http]
+    [http.routers]
+       [http.routers.my-router]
+          rule = "Host(`hasura.example.com`)"
+          service = "hasura"
+          entryPoints = ["web-secure"]
+       [http.routers.my-router.tls]
+          certResolver = "sample"
+
+    [http.services]
+        [http.services.hasura.loadbalancer]
+            [[http.services.hasura.loadbalancer.servers]]
+                url = "http://127.0.0.1:5000"
+```
+
+In order to serve at a URL prefix, use the following configuration:
+
+```toml
+#traefik-dynamic.toml
+...
+
+    [http.routers]
+       [http.routers.my-router]
+          rule = "Host(`example.com`) && Path(`/hasura`))"
+          service = "hasura"
+          entryPoints = ["web-secure"]
+       [http.routers.my-router.tls]
+          certResolver = "sample"
+
+...
+```

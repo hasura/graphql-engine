@@ -6,12 +6,12 @@ import {
   useConsoleForm,
   InputField,
   CheckboxesField,
+  Radio,
 } from '../../../../../new-components/Form';
 import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
 import { formSchema, tracesPropagatorSchema } from './schema';
-import { Toggle } from './components/Toggle';
 import { useResetDefaultFormValues } from './hooks/useResetDefaultFormValues';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
 import { z } from 'zod';
@@ -44,6 +44,7 @@ export function Form(props: FormProps) {
 
   const dataType: z.infer<typeof formSchema>['dataType'] = watch('dataType');
 
+  const status: z.infer<typeof formSchema>['status'] = watch('status');
   const traceType = dataType.includes('traces');
   const metricsType = dataType.includes('metrics');
   const logsType = dataType.includes('logs');
@@ -58,12 +59,34 @@ export function Form(props: FormProps) {
         onSubmit(data);
       }}
     >
-      <Toggle
-        name="enabled"
+      <Radio
+        name="status"
         label="Status"
-        writtenStatus={{ true: 'Enabled', false: 'Disabled' }}
         loading={skeletonMode}
+        orientation="horizontal"
+        options={[
+          {
+            label: 'Enabled',
+            value: 'enabled',
+          },
+          {
+            label: 'Disabled',
+            value: 'disabled',
+          },
+          {
+            label: 'Variable',
+            value: 'env',
+          },
+        ]}
       />
+      {status === 'env' && (
+        <InputField
+          name="statusVariable"
+          placeholder="An environment variable for status"
+          clearButton
+          loading={skeletonMode}
+        />
+      )}
       {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
       <div>
         <InputField

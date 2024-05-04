@@ -49,6 +49,7 @@ import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.Server.Types (HeaderPrecedence)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -452,10 +453,11 @@ validateInsertRows ::
   Bool ->
   [HTTP.Header] ->
   [IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))] ->
+  HeaderPrecedence ->
   m ()
-validateInsertRows env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders rows = do
+validateInsertRows env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders rows headerPrecedence = do
   let inputData = J.object ["input" J..= map convertInsertRow rows]
-  PGE.validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+  PGE.validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData headerPrecedence
   where
     convertInsertRow :: IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) -> J.Value
     convertInsertRow fields = J.object $ flip mapMaybe fields $ \field ->

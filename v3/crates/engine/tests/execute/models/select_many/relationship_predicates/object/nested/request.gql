@@ -1,0 +1,27 @@
+query MyQuery {
+  Track(limit: 2) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+  TrackWithFilterAndPredicate: Track(
+    where: {
+      _and: [
+        { Album: { Artist: { ArtistId: { _eq: 2 } } } }
+        { TrackId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    TrackId
+    Album {
+      Artist {
+        ArtistId
+        Name
+      }
+    }
+  }
+}

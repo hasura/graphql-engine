@@ -1,0 +1,27 @@
+query MyQuery {
+  Track(
+    order_by: [{ Album: { Artist: { ArtistId: Asc } } }, { AlbumId: Asc }]
+    limit: 15
+  ) {
+    Album {
+      AlbumId
+      Artist {
+        ArtistId
+      }
+      Title
+    }
+  }
+  TrackOrderByWithFilter: Track(
+    order_by: [{ Album: { Artist: { ArtistId: Desc } } }, { AlbumId: Asc }]
+    where: { AlbumId: { _eq: 2 } }
+    limit: 15
+  ) {
+    Album {
+      AlbumId
+      Artist {
+        ArtistId
+      }
+      Title
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": {
+                    "relationship": {
+                      "name": "Album",
+                      "predicate": {
+                        "relationship": {
+                          "name": "Artist",
+                          "predicate": {
+                            "fieldComparison": {
+                              "field": "ArtistId",
+                              "operator": "_eq",
+                              "value": {
+                                "sessionVariable": "x-hasura-user-id"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Artists",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  Album {
+    AlbumId
+    ArtistId
+    Artist {
+      ArtistId
+    }
+    Tracks {
+      TrackId
+      Album {
+        AlbumId
+      }
+    }
+  }
+}

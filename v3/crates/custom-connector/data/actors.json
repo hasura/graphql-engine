@@ -1,0 +1,7 @@
+{ "id": 1, "name": "Leonardo DiCaprio", "movie_id": 1, "favourite_author_id": 1 }
+{ "id": 2, "name": "Kate Winslet", "movie_id": 1, "favourite_author_id": 2 }
+{ "id": 3, "name": "Irfan Khan", "movie_id": 2, "favourite_author_id": 1 }
+{ "id": 4, "name": "Al Pacino", "movie_id": 3, "favourite_author_id": 2 }
+{ "id": 5, "name": "Robert De Niro", "movie_id": 3, "favourite_author_id": 1 }
+{ "id": 6, "name": "Morgan Freeman", "movie_id": 4, "favourite_author_id": 2 }
+{ "id": 7, "name": "Ben Kingsley", "movie_id": 5, "favourite_author_id": 1 }

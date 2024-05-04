@@ -1,0 +1,34 @@
+[
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field id on type Author is not allowed for user"
+      }
+    ]
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImZpcnN0X25hbWUiOiJQZXRlciIsImxhc3RfbmFtZSI6IkxhbmRpbiJ9fQ==",
+          "first_name": "Peter"
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImZpcnN0X25hbWUiOiJKb2huIiwibGFzdF9uYW1lIjoiSHVnaGVzIn19",
+          "first_name": "John"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "AuthorMany": [
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImZpcnN0X25hbWUiOiJKb2huIiwibGFzdF9uYW1lIjoiSHVnaGVzIn19",
+          "first_name": "John"
+        }
+      ]
+    }
+  }
+]

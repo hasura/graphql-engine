@@ -1,0 +1,50 @@
+{
+  "version": "v2",
+  "supergraph": {
+    "objects": [
+      {
+        "kind": "GraphqlConfig",
+        "version": "v1",
+        "definition": {
+          "query": {
+            "rootOperationTypeName": "Query",
+            "argumentsInput": {
+              "fieldName": "args_custom"
+            },
+            "limitInput": {
+              "fieldName": "limit_custom"
+            },
+            "offsetInput": {
+              "fieldName": "offset_custom"
+            },
+            "filterInput": {
+              "fieldName": "where_custom",
+              "operatorNames": {
+                "and": "_and_custom",
+                "or": "_or_custom",
+                "not": "_not_custom",
+                "isNull": "_is_null_custom"
+              }
+            },
+            "orderByInput": {
+              "fieldName": "order_by_custom",
+              "enumDirectionValues": {
+                "asc": "Asc_custom",
+                "desc": "Desc_custom"
+              },
+              "enumTypeNames": [
+                {
+                  "directions": ["Asc", "Desc"],
+                  "typeName": "OrderByAscDesc"
+                }
+              ]
+            }
+          },
+          "mutation": {
+            "rootOperationTypeName": "Mutation"
+          }
+        }
+      }
+    ]
+  }
+}

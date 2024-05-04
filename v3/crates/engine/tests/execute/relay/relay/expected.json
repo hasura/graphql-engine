@@ -1,0 +1,24 @@
+[
+  {
+    "data": {
+      "AuthorWithGlobalId": [
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6MX19",
+          "first_name": "Peter"
+        },
+        {
+          "id": "eyJ2ZXJzaW9uIjoxLCJ0eXBlbmFtZSI6IkF1dGhvciIsImlkIjp7ImF1dGhvcl9pZCI6Mn19",
+          "first_name": "John"
+        }
+      ]
+    }
+  },
+  {
+    "data": null,
+    "errors": [
+      {
+        "message": "validation failed: field id on type Author is not allowed for user"
+      }
+    ]
+  }
+]

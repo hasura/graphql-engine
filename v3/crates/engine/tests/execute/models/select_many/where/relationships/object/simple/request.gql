@@ -1,0 +1,42 @@
+query MyQuery {
+  Track(where: { Album: { Title: { _eq: "Restless and Wild" } } }) {
+    AlbumId
+    Name
+    Album {
+      Title
+    }
+  }
+  TrackWithoutRelationshipField: Track(
+    where: { Album: { Title: { _eq: "Restless and Wild" } } }
+  ) {
+    Name
+  }
+  TrackAnd: Track(
+    where: {
+      _and: [
+        { Album: { Title: { _eq: "Restless and Wild" } } }
+        { AlbumId: { _eq: 3 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Name
+    Album {
+      Title
+    }
+  }
+  TrackOr: Track(
+    where: {
+      _or: [
+        { Album: { Title: { _eq: "Restless and Wild" } } }
+        { AlbumId: { _eq: 2 } }
+      ]
+    }
+  ) {
+    AlbumId
+    Name
+    Album {
+      Title
+    }
+  }
+}

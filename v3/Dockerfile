@@ -1,58 +1,65 @@
 # See https://github.com/LukeMathWalker/cargo-chef
-FROM rust:1.72.0 as chef
+# this should match the Rust version in rust-toolchain.yaml and the
+# dev-auth-webhook
+FROM rust:1.77.0 as chef
 
 WORKDIR app
 
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN set -ex;\
+    apt-get update; \
     apt-get install --no-install-recommends --assume-yes \
-      lld protobuf-compiler libssl-dev ssh git pkg-config curl jq
+      curl git jq pkg-config ssh \
+      libssl-dev lld protobuf-compiler
 
+# Set up a directory to store Cargo files.
 ENV CARGO_HOME=/app/.cargo
+ENV PATH="$PATH:$CARGO_HOME/bin"
+# Switch to `lld` as the linker.
+ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+# Building with build.rs requires the Git context to be available across volumes.
+ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
-RUN cargo install cargo-chef just grcov critcmp cargo-nextest
-
-RUN rustup component add clippy
-RUN rustup component add rustfmt
-# needed for coverage reporting
-RUN rustup component add llvm-tools-preview
-
-RUN mkdir -p -m 0700 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
+# Install Rust tools.
+RUN cargo install cargo-chef cargo-nextest critcmp grcov just
+COPY rust-toolchain.toml .
+RUN rustup show
 
 ###
 # Plan recipe
 FROM chef AS planner
 
-ENV CARGO_HOME=/app/.cargo
-ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
 
-COPY . .
-RUN --mount=type=ssh cargo chef prepare --recipe-path recipe.json
+# Prepare the recipe
+RUN cargo chef prepare --recipe-path recipe.json
 
 ###
 # Build recipe
 FROM chef AS builder
 
-# Use lld
-ENV CARGO_HOME=/app/.cargo
-ENV PATH="$PATH:$CARGO_HOME/bin"
-ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
-
 COPY --from=planner /app/recipe.json recipe.json
 COPY --from=planner /app/.cargo/config.toml /app/.cargo/config.toml
 
 # Build dependencies - this is the caching Docker layer!
-RUN --mount=type=ssh cargo chef cook --release --all-targets --recipe-path recipe.json
-RUN --mount=type=ssh cargo chef cook --all-targets --recipe-path recipe.json
-
-# Copies the source after building dependencies to allow caching
-COPY . .
+RUN cargo chef cook --release --all-targets --recipe-path recipe.json
 
 ###
 # Builds the application
 FROM builder AS built
+
+# Copy files
+COPY .cargo ./.cargo
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY .git ./.git
+
 # Build the app
-RUN cargo build --release
+RUN cargo build --release --all-targets
 
 ###
 # Ship the app in an image with `curl` and very little else
@@ -60,8 +67,8 @@ FROM ubuntu:jammy
 
 # Install `curl` for health checks
 RUN set -ex; \
-    apt-get update -q; \
-    apt-get install -q -y curl
+    apt-get update; \
+    apt-get install --assume-yes curl
 
 # Install the engine
 COPY --from=built /app/target/release/engine /usr/local/bin

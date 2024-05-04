@@ -19,10 +19,19 @@ const config = {
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
   customFields: {
-    docsBotEndpointURL:
-      process.env.NODE_ENV === 'development'
-        ? 'ws://localhost:8000/hasura-docs-ai'
-        : 'wss://website-api.hasura.io/chat-bot/hasura-docs-ai',
+    docsBotEndpointURL: (() => {
+      console.log('process.env.release_mode docs-bot', process.env.release_mode);
+      switch (process.env.release_mode) {
+        case 'development':
+          return 'ws://localhost:8000/hasura-docs-ai';
+        case 'production':
+          return 'wss://website-api.hasura.io/chat-bot/hasura-docs-ai';
+        case 'staging':
+          return 'wss://website-api.stage.hasura.io/chat-bot/hasura-docs-ai';
+        default:
+          return 'ws://localhost:8000/hasura-docs-ai'; // default to development if no match
+      }
+    })(),
     hasuraVersion: 2,
     DEV_TOKEN: process.env.DEV_TOKEN,
   },
@@ -164,10 +173,13 @@ const config = {
         // Optional: Algolia search parameters
         // searchParameters: {},
       },
-      // announcementBar: {
-      //   id: 'announcementBar-3', // Increment on change
-      //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
-      // },
+      announcementBar: {
+        id: 'announcementBar-1', // Increment on change
+        content: `Learn all about Hasura DDN and celebrate the launch with us at Dev Day on April 16. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/dev-day">Sign up here</a>.`,
+        // isCloseable: true,
+        // backgroundColor: '#fafbfc',
+        // textColor: '#091E42',
+      },
       // announcementBar: {
       //   id: 'announcement-bar-3',
       //   content:
@@ -223,6 +235,10 @@ const config = {
             position: 'right',
             dropdownActiveClassDisabled: true,
             dropdownItemsAfter: [
+              {
+                href: 'https://hasura.io/docs/3.0/index/',
+                label: 'v3.x',
+              },
               {
                 href: 'https://hasura.io/docs/1.0/graphql/core/index.html',
                 label: 'v1.x',

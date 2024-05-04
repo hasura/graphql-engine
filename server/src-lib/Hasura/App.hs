@@ -713,10 +713,10 @@ instance HttpLog AppM where
 
   buildExtraHttpLogMetadata _ _ = ()
 
-  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ _ =
+  logHttpError logger loggingSettings userInfoM reqId waiReq req qErr qTime cType headers _ _ =
     unLoggerTracing logger
       $ mkHttpLog
-      $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
+      $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr qTime cType headers
 
   logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) _ =
     unLoggerTracing logger
@@ -982,7 +982,8 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
       setForkIOWithMetrics = Warp.setFork \f -> do
         void
           $ C.forkIOWithUnmask
-            ( \unmask ->
+            ( \unmask -> do
+                labelMe "runHGEServer_warp_fork"
                 bracket_
                   ( do
                       EKG.Gauge.inc (smWarpThreads appEnvServerMetrics)
@@ -1343,6 +1344,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           (leActionEvents lockedEventsCtx)
           Nothing
           appEnvAsyncActionsFetchBatchSize
+          (acHeaderPrecedence <$> getAppContext appStateRef)
 
       -- start a background thread to handle async action live queries
       void

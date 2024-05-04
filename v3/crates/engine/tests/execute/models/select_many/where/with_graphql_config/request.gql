@@ -1,0 +1,20 @@
+query {
+  AuthorManyNot: AuthorMany(
+    where_custom: { _not_custom: { first_name: { _is_null_custom: true } } }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorManyOr: AuthorMany(
+    where_custom: { _or_custom: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+  AuthorManyAnd: AuthorMany(
+    where_custom: { _and_custom: [{ first_name: { _like: "Pet%" } }] }
+  ) {
+    author_id
+    first_name
+  }
+}

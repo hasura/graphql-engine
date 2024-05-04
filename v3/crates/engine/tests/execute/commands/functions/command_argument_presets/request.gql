@@ -1,0 +1,7 @@
+query MyQuery {
+  getActorsByMovieIdBounds(upper_bound: 4) {
+    actor_id
+    movie_id
+    name
+  }
+}

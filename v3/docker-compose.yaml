@@ -1,5 +1,30 @@
-version: "3.9"
+# this Docker Compose file is used for local testing
+
 services:
+  engine:
+    build:
+      dockerfile: debug.Dockerfile
+    entrypoint:
+      - ./bin/engine
+    environment:
+      - METADATA_PATH
+      - AUTHN_CONFIG_PATH
+      - OTLP_ENDPOINT=http://jaeger:4317
+    ports:
+      # Binding to localhost:3001 avoids conflict with dev_setup
+      - 3001:3000
+    depends_on:
+      reference_agent:
+        condition: service_started
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
+    volumes:
+      - ./auth_config.json:/app/auth_config.json
+      - ./crates/engine/tests/schema.json:/app/crates/engine/tests/schema.json
+      - ./crates/open-dds/examples/reference.json:/app/crates/open-dds/examples/reference.json
+
   postgres:
     image: postgis/postgis:16-3.4
     platform: linux/amd64
@@ -16,27 +41,45 @@ services:
         source: postgres
         target: /var/lib/postgresql/data
       - type: bind
-        source: ./engine/tests/db_definition.sql
-        target: /docker-entrypoint-initdb.d/db_definition.sql
+        source: ./crates/engine/tests/db_definition.sql
+        target: /docker-entrypoint-initdb.d/01-db_definition.sql
+        read_only: true
+      - type: bind
+        source: ./crates/engine/tests/chinook-postgres.sql
+        target: /docker-entrypoint-initdb.d/02-chinook.sql
+        read_only: true
+      - type: bind
+        source: ./crates/engine/tests/finish.sql
+        target: /docker-entrypoint-initdb.d/03-finish.sql
         read_only: true
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U "$${POSTGRES_USER:-postgres}" < /dev/null && sleep 5 && psql -U "$${POSTGRES_USER:-postgres}" < /dev/null
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
+        - psql -U "$${POSTGRES_USER:-postgres}" finished < /dev/null
+      start_period: 2s
+      interval: 2s
+      timeout: 1s
+      retries: 5
+
   reference_agent:
-    build: https://github.com/hasura/ndc-spec.git#v0.1.0-rc.11
+    build: https://github.com/hasura/ndc-spec.git#v0.1.2
     ports:
       - 8102:8100
+
   auth_hook:
+    build:
+      dockerfile: dev-auth-webhook.Dockerfile
+    environment:
+      OTLP_ENDPOINT: "http://jaeger:4317"
+      RUST_LOG: debug
     ports:
       - "3050:3050"
-    build: ./hasura-authn-webhook/dev-auth-webhook
+    depends_on:
+      jaeger:
+        condition: service_started
+
   jaeger:
-    image: jaegertracing/all-in-one:1.37
+    image: jaegertracing/all-in-one:1.55
     restart: always
     ports:
       - 5775:5775/udp
@@ -51,68 +94,66 @@ services:
       - 4318:4318 # OTLP HTTP
       - 9411:9411
     environment:
-      COLLECTOR_OTLP_ENABLED: 'true'
-      COLLECTOR_ZIPKIN_HOST_PORT: '9411'
+      COLLECTOR_OTLP_ENABLED: "true"
+      COLLECTOR_ZIPKIN_HOST_PORT: "9411"
+
   postgres_connector:
-    image: ghcr.io/hasura/ndc-postgres:dev-main-5aec135c1
+    image: ghcr.io/hasura/ndc-postgres:dev-main
     ports:
-      - 8100:8100
+      - 8080:8080
+    environment:
+      CONNECTION_URI: "postgresql://postgres:password@postgres"
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://jaeger:4317"
+      OTEL_SERVICE_NAME: "ndc-postgres"
     volumes:
-      - ./engine/tests/pg_ndc_config.json:/config.json
+      - type: bind
+        source: ./crates/engine/tests/ndc-postgres-configuration
+        target: /etc/connector
+        read_only: true
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["serve", "--configuration", "/config.json", "--otlp-endpoint", "http://jaeger:4317"]
+      jaeger:
+        condition: service_started
+
   custom_connector:
     build:
-      context: .
-      target: builder
+      dockerfile: debug.Dockerfile
+    entrypoint:
+      - ./bin/custom-connector
     ports:
       - 8101:8101
     healthcheck:
-      test: curl --fail http://localhost:8101/schema || exit 1
+      test: curl -fsS http://localhost:8101/schema
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
-    command: ["sh", "-c", "cargo run --bin agent"]
-  engine:
-    build:
-      context: .
-      target: builder
-      ssh:
-        - default
-    depends_on:
-      - reference_agent
-      - jaeger
-      - auth_hook
-
-    command: ["sh", "-c", "cargo run --bin engine -- --metadata-path $METADATA_PATH --otlp-endpoint http://jaeger:4317 --authn-config-path $AUTHN_CONFIG_PATH"]
-    ports:
-      # Binding to localhost:3001 avoids conflict with dev_setup
-      - 3001:3000
 
   dev_setup:
     build:
       context: .
       target: builder
-      ssh:
-        - default
-    depends_on:
-      - jaeger
-      - auth_hook
-      - postgres
-      - postgres_connector
-      - custom_connector
     volumes:
-      - ./tracing-util:/app/tracing-util
-      - ./lang-graphql:/app/lang-graphql
-      - ./open-dds:/app/open-dds
-      - ./engine:/app/engine
-      - ./hasura-authn-core:/app/hasura-authn-core
-      - ./hasura-authn-webhook:/app/hasura-authn-webhook
+      - ./crates/utils/tracing-util:/app/tracing-util
+      - ./crates/lang-graphql:/app/lang-graphql
+      - ./crates/open-dds:/app/open-dds
+      - ./crates/engine:/app/engine
+      - ./crates/auth/hasura-authn-core:/app/hasura-authn-core
+      - ./crates/auth/hasura-authn-webhook:/app/hasura-authn-webhook
     ports:
       - 3000:3000
+    depends_on:
+      jaeger:
+        condition: service_started
+      auth_hook:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      postgres_connector:
+        condition: service_healthy
+      custom_connector:
+        condition: service_healthy
 
 volumes:
   postgres:

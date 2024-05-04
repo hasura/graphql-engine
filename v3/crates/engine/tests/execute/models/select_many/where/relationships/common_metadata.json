@@ -1,0 +1,851 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "name": "Album",
+            "fields": [
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "Title",
+                "type": "String"
+              },
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Album"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Album",
+                "fieldMapping": {
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Title": {
+                    "column": {
+                      "name": "Title"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "album_bool_exp",
+            "objectType": "Album",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Album",
+            "comparableFields": [
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Album_Where_Exp"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Track",
+            "fields": [
+              {
+                "name": "TrackId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              },
+              {
+                "name": "AlbumId",
+                "type": "Int"
+              },
+              {
+                "name": "GenreId",
+                "type": "Int"
+              }
+            ],
+            "graphql": {
+              "typeName": "Track"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Track",
+                "fieldMapping": {
+                  "TrackId": {
+                    "column": {
+                      "name": "TrackId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  },
+                  "AlbumId": {
+                    "column": {
+                      "name": "AlbumId"
+                    }
+                  },
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "track_bool_exp",
+            "objectType": "Track",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Track",
+            "comparableFields": [
+              {
+                "fieldName": "AlbumId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "TrackId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Track_Where_Exp"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Genre",
+            "fields": [
+              {
+                "name": "GenreId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Genre"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Genre",
+                "fieldMapping": {
+                  "GenreId": {
+                    "column": {
+                      "name": "GenreId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "genre_bool_exp",
+            "objectType": "Genre",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Genre",
+            "comparableFields": [
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Genre_Where_Exp"
+            }
+          }
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "String",
+            "representation": "String",
+            "graphql": {
+              "comparisonExpressionTypeName": "String_Comparison_Exp"
+            }
+          }
+        },
+        {
+          "kind": "ScalarType",
+          "version": "v1",
+          "definition": {
+            "name": "CustomString",
+            "graphql": {
+              "typeName": "CustomString"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Albums",
+            "objectType": "Album",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Album"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "AlbumByID",
+                  "uniqueIdentifier": ["AlbumId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Album"
+              },
+              "orderByExpressionType": "Album_Order_By"
+            },
+            "filterExpressionType": "album_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Title",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "definition": {
+            "name": "Tracks",
+            "objectType": "Track",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Track"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "TrackByID",
+                  "uniqueIdentifier": ["TrackId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Track"
+              },
+              "orderByExpressionType": "Track_Order_By"
+            },
+            "filterExpressionType": "track_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "TrackId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "AlbumId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "definition": {
+            "name": "Genres",
+            "objectType": "Genre",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Genre"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "GenreByID",
+                  "uniqueIdentifier": ["GenreId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Genre"
+              },
+              "orderByExpressionType": "Genre_Order_By"
+            },
+            "filterExpressionType": "genre_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "GenreId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "definition": {
+            "typeName": "Album",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["AlbumId", "Title", "ArtistId"]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "TypePermissions"
+        },
+        {
+          "definition": {
+            "typeName": "Track",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["TrackId", "Name", "AlbumId", "GenreId"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["TrackId", "Name", "AlbumId", "GenreId"]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "TypePermissions"
+        },
+        {
+          "definition": {
+            "typeName": "Genre",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["GenreId", "Name"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["GenreId", "Name"]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "TypePermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Albums",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Tracks",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "modelName": "Genres",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "sourceType": "Album",
+            "name": "Tracks",
+            "target": {
+              "model": {
+                "name": "Tracks",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "sourceType": "Track",
+            "name": "Album",
+            "target": {
+              "model": {
+                "name": "Albums",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "sourceType": "Track",
+            "name": "Genre",
+            "target": {
+              "model": {
+                "name": "Genres",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "GenreId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "sourceType": "Track",
+            "name": "TrackAlbums",
+            "target": {
+              "model": {
+                "name": "Albums",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "AlbumId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
+            "name": "Artist",
+            "fields": [
+              {
+                "name": "ArtistId",
+                "type": "Int"
+              },
+              {
+                "name": "Name",
+                "type": "String"
+              }
+            ],
+            "graphql": {
+              "typeName": "Artist"
+            },
+            "dataConnectorTypeMapping": [
+              {
+                "dataConnectorName": "db",
+                "dataConnectorObjectType": "Artist",
+                "fieldMapping": {
+                  "ArtistId": {
+                    "column": {
+                      "name": "ArtistId"
+                    }
+                  },
+                  "Name": {
+                    "column": {
+                      "name": "Name"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ObjectType"
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
+            "name": "artist_bool_exp",
+            "objectType": "Artist",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Artist",
+            "comparableFields": [
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "Artist_Where_Exp"
+            }
+          }
+        },
+        {
+          "definition": {
+            "name": "Artists",
+            "objectType": "Artist",
+            "source": {
+              "dataConnectorName": "db",
+              "collection": "Artist"
+            },
+            "graphql": {
+              "selectUniques": [
+                {
+                  "queryRootField": "ArtistByID",
+                  "uniqueIdentifier": ["ArtistId"]
+                }
+              ],
+              "selectMany": {
+                "queryRootField": "Artist"
+              },
+              "orderByExpressionType": "Artist_Order_By"
+            },
+            "filterExpressionType": "artist_bool_exp",
+            "orderableFields": [
+              {
+                "fieldName": "ArtistId",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "orderByDirections": {
+                  "enableAll": true
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Model"
+        },
+        {
+          "definition": {
+            "modelName": "Artists",
+            "permissions": [
+              {
+                "role": "admin",
+                "select": {
+                  "filter": null
+                }
+              },
+              {
+                "role": "user",
+                "select": {
+                  "filter": null
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "ModelPermissions"
+        },
+        {
+          "definition": {
+            "typeName": "Artist",
+            "permissions": [
+              {
+                "role": "admin",
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                }
+              },
+              {
+                "role": "user",
+                "output": {
+                  "allowedFields": ["ArtistId", "Name"]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "TypePermissions"
+        },
+        {
+          "definition": {
+            "sourceType": "Album",
+            "name": "Artist",
+            "target": {
+              "model": {
+                "name": "Artists",
+                "relationshipType": "Object"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "kind": "DataConnectorScalarRepresentation",
+          "version": "v1",
+          "definition": {
+            "dataConnectorName": "db",
+            "dataConnectorScalarType": "Int",
+            "representation": "Int",
+            "graphql": {
+              "comparisonExpressionTypeName": "Int_comparison"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

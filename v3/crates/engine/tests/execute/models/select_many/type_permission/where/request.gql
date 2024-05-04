@@ -1,0 +1,6 @@
+query MyQuery {
+  AuthorMany(where: { last_name: { _eq: "Landin" } }) {
+    author_id
+    last_name
+  }
+}

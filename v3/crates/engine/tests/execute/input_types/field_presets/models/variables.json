@@ -1,0 +1,19 @@
+[
+  {
+    "actor_name_filter": {
+      "first_name": "Morgan",
+      "surname": "Freeman"
+    },
+    "movie_id": 4
+  },
+  {
+    "actor_name_filter": {
+      "first_name": "Leonardo"
+    },
+    "movie_id": 1
+  },
+  {
+    "actor_name_filter": {},
+    "movie_id": 3
+  }
+]

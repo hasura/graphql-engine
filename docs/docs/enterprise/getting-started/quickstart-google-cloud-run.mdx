@@ -131,7 +131,7 @@ gcloud run deploy hasura \
   --env-vars-file=env.yaml \
   --vpc-connector=<vpc-connector-name> \
   --allow-unauthenticated \
-  --max-instances=1 \
+  --min-instances=1 \
   --cpu=1 \
   --memory=2048Mi \
   --port=8080

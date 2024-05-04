@@ -54,7 +54,7 @@ export const BasicUserFlow: StoryObj<typeof StoredProcedureWidget> = {
         {},
         { timeout: 4000 }
       ),
-      'stored_procedure_1'
+      'dbo.stored_procedure_1'
     );
 
     fireEvent.click(await canvas.findByText('Add new argument'));
@@ -108,7 +108,7 @@ export const ErrorWhileSaving: StoryObj<typeof StoredProcedureWidget> = {
         {},
         { timeout: 4000 }
       ),
-      'stored_procedure_1'
+      'dbo.stored_procedure_1'
     );
 
     fireEvent.click(await canvas.findByText('Add new argument'));

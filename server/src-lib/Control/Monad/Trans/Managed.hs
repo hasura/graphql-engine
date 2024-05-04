@@ -1,3 +1,6 @@
+-- ghc 9.6 seems to be doing something screwy with...
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
+
 module Control.Monad.Trans.Managed
   ( ManagedT (..),
     allocate,

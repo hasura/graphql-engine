@@ -1,0 +1,849 @@
+{
+  "version": "v2",
+  "subgraphs": [
+    {
+      "name": "default",
+      "objects": [
+        {
+          "definition": {
+            "name": "db",
+            "url": {
+              "singleUrl": {
+                "value": "http://postgres_connector:8080"
+              }
+            },
+            "schema": {
+              "version": "v0.1",
+              "schema": {
+                "scalar_types": {
+                  "String": {
+                    "aggregate_functions": {},
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_like": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_ilike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_nlike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_nilike": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_regex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_iregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_nregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_niregex": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_similar": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      },
+                      "_nsimilar": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "String"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "Int": {
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "Int"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "Int"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int4": {
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int4"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int4"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  },
+                  "int8": {
+                    "aggregate_functions": {
+                      "min": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      },
+                      "max": {
+                        "result_type": {
+                          "type": "nullable",
+                          "underlying_type": {
+                            "type": "named",
+                            "name": "int8"
+                          }
+                        }
+                      }
+                    },
+                    "comparison_operators": {
+                      "_eq": {
+                        "type": "equal"
+                      },
+                      "_gt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_gte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lt": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_lte": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      },
+                      "_neq": {
+                        "argument_type": {
+                          "type": "named",
+                          "name": "int8"
+                        },
+                        "type": "custom"
+                      }
+                    },
+                    "update_operators": {}
+                  }
+                },
+                "object_types": {
+                  "article": {
+                    "description": "An article",
+                    "fields": {
+                      "id": {
+                        "description": "The article's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "The article's title",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "author_id": {
+                        "description": "The article's author ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "author": {
+                    "description": "An author",
+                    "fields": {
+                      "last_name": {
+                        "description": "The author's last name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "first_name": {
+                        "description": "The author's first name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "id": {
+                        "description": "The author's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "int4"
+                        }
+                      }
+                    }
+                  },
+                  "test_nullable_and_array": {
+                    "description": "Testing nullable and array types",
+                    "fields": {
+                      "nullable_field": {
+                        "description": "Nullable types",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "description": "Non-nullable types",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_field": {
+                        "description": "Non-nullable array types [String!]!",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "description": "Nullable array types [String!]",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "description": "Array nullable types [String]!",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "description": "Nullable array nullable types [String]",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "Artist": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "description": "The artist's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Name": {
+                        "description": "The artist's name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "Album": {
+                    "description": "An album",
+                    "fields": {
+                      "AlbumId": {
+                        "description": "The album's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Title": {
+                        "description": "The album's title",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "ArtistId": {
+                        "description": "The album's artist ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "Track": {
+                    "description": "A track",
+                    "fields": {
+                      "TrackId": {
+                        "description": "The track's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Name": {
+                        "description": "The track's name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "AlbumId": {
+                        "description": "The track's album ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "GenreId": {
+                        "description": "The track's genre ID",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    }
+                  },
+                  "artist_below_id": {
+                    "description": "An artist",
+                    "fields": {
+                      "ArtistId": {
+                        "description": "The artist's primary key",
+                        "arguments": {
+                          "id": {
+                            "description": "The cyling id",
+                            "type": {
+                              "type": "named",
+                              "name": "Int"
+                            }
+                          }
+                        },
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Name": {
+                        "description": "The artist's name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  },
+                  "Genre": {
+                    "description": "A Genre",
+                    "fields": {
+                      "GenreId": {
+                        "description": "The genre's primary key",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "Name": {
+                        "description": "The genre's name",
+                        "arguments": {},
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    }
+                  }
+                },
+                "collections": [
+                  {
+                    "name": "article",
+                    "description": "A collection of articles",
+                    "arguments": {},
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ArticleByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "author",
+                    "description": "A collection of authors",
+                    "arguments": {},
+                    "type": "author",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "AuthorByID": {
+                        "unique_columns": ["id"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "articles_by_author",
+                    "description": "Articles parameterized by author",
+                    "arguments": {
+                      "author_id": {
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "article",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "test_nullable_and_array_types",
+                    "description": "Testing nullable and array types (input and output)",
+                    "arguments": {
+                      "nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "non_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "array_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      },
+                      "nullable_array_nullable_field": {
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "type": "test_nullable_and_array",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Artist",
+                    "description": "A collection of artists",
+                    "arguments": {},
+                    "type": "Artist",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "ArtistById": {
+                        "unique_columns": ["ArtistId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Album",
+                    "description": "A collection of albums",
+                    "arguments": {},
+                    "type": "Album",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "AlbumById": {
+                        "unique_columns": ["AlbumId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Track",
+                    "description": "A collection of tracks",
+                    "arguments": {},
+                    "type": "Track",
+                    "deletable": false,
+                    "uniqueness_constraints": {
+                      "TrackById": {
+                        "unique_columns": ["TrackId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "artist_below_id",
+                    "description": "A collection of artists below a certain id",
+                    "arguments": {
+                      "id": {
+                        "description": "The ceiling id",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "type": "Artist",
+                    "deletable": false,
+                    "uniqueness_constraints": {},
+                    "foreign_keys": {}
+                  },
+                  {
+                    "name": "Genre",
+                    "arguments": {},
+                    "type": "Genre",
+                    "uniqueness_constraints": {
+                      "PK_Genre": {
+                        "unique_columns": ["GenreId"]
+                      }
+                    },
+                    "foreign_keys": {}
+                  }
+                ],
+                "functions": [
+                  {
+                    "name": "latest_article_id",
+                    "description": "Get the ID of the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "Int"
+                      }
+                    }
+                  },
+                  {
+                    "name": "latest_article",
+                    "description": "Get the most recent article",
+                    "arguments": {},
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "get_article_by_id",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to fetch",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ],
+                "procedures": [
+                  {
+                    "name": "upsert_article",
+                    "description": "Insert or update an article",
+                    "arguments": {
+                      "article": {
+                        "description": "The article to insert or update",
+                        "type": {
+                          "type": "named",
+                          "name": "article"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  },
+                  {
+                    "name": "update_article_title_by_id",
+                    "description": "Update an article title given the ID and new title",
+                    "arguments": {
+                      "id": {
+                        "description": "the id of the article to update",
+                        "type": {
+                          "type": "named",
+                          "name": "Int"
+                        }
+                      },
+                      "title": {
+                        "description": "the new title of the article",
+                        "type": {
+                          "type": "named",
+                          "name": "String"
+                        }
+                      }
+                    },
+                    "result_type": {
+                      "type": "nullable",
+                      "underlying_type": {
+                        "type": "named",
+                        "name": "article"
+                      }
+                    }
+                  }
+                ]
+              },
+              "capabilities": {
+                "capabilities": {
+                  "query": {
+                    "explain": {},
+                    "aggregates": {},
+                    "variables": {}
+                  },
+                  "mutation": {},
+                  "relationships": {
+                    "relation_comparisons": {},
+                    "order_by_aggregate": {}
+                  }
+                },
+                "version": "0.1.0"
+              }
+            }
+          },
+          "version": "v1",
+          "kind": "DataConnectorLink"
+        }
+      ]
+    }
+  ]
+}

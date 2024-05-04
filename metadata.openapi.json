@@ -3754,7 +3754,14 @@
                         "type": "string"
                     },
                     "uri": {
-                        "type": "string"
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "$ref": "#/components/schemas/FromEnv"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -6613,10 +6620,6 @@
                     },
                     "status": {
                         "default": "disabled",
-                        "enum": [
-                            "enabled",
-                            "disabled"
-                        ],
                         "type": "string"
                     }
                 },

@@ -1,0 +1,16 @@
+query MyQuery {
+  AuthorMany {
+    first_name
+    author_id
+    Articles(limit: 2, offset: 1, order_by: [{ title: Asc }]) {
+      title
+      article_id
+    }
+  }
+  AuthorByID(author_id: 2) {
+    Articles(where: { title: { _eq: "Why Functional Programming Matters" } }) {
+      title
+      article_id
+    }
+  }
+}

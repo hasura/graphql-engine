@@ -1,0 +1,3 @@
+extend schema @skip @example {
+    query: MyExtendedQueryType
+}

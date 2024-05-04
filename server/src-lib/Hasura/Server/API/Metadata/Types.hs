@@ -190,7 +190,7 @@ data RQLMetadataV1
     RMSetQueryTagsConfig !SetQueryTagsConfig
   | -- OpenTelemetry
     RMSetOpenTelemetryConfig !OpenTelemetryConfig
-  | RMSetOpenTelemetryStatus !OtelStatus
+  | RMSetOpenTelemetryStatus !OtelStatusConfig
   | -- Debug
     RMDumpInternalState !DumpInternalState
   | RMGetCatalogState !GetCatalogState

@@ -15,7 +15,7 @@ to data via a single, composable, secure API endpoint.
 [![Docs](https://img.shields.io/badge/docs-v2.x-yellow.svg?style=flat)](https://hasura.io/docs)
 
 Hasura V2 is the current stable version of the Hasura GraphQL Engine. Recommended for production use. Please find more 
-detailed information about the V2 Hasura Graphql Engine in the `v2` folder and this [README](v2/README.md).
+detailed information about the V2 Hasura Graphql Engine in the `v2` folder and this [README](V2-README.md).
 
 ## Hasura V3
 

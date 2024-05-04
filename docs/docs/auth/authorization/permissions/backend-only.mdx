@@ -17,34 +17,27 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-If a mutation permission is marked as "backend only", it is accessible to the given role only if the
-`x-hasura-use-backend-only-permissions` session variable exists on the request and is set to `true`. The
-`x-hasura-admin-secret` must also be present if any auth is configured.
-
-This is useful if you would like to hide a mutation from a public facing API but allow access to it via a trusted
-backend.
+Backend only permissions in Hasura allow certain mutations to be hidden from the public-facing API while still
+accessible via a trusted backend. This is useful for operations that should bypass standard client-side validation or
+business logic, ensuring that only authorized back-end services can perform these operations.
 
 Setting "backend only" is available for `insert`, `update` and `delete` mutations.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
-
-You can set a mutate permission for a role as backend only in the Hasura Console in **Data -> [table] -> Permissions ->
-[role] -> insert / update / delete -> Backend only **
-
+Set a mutation permission for a role as backend only in the Hasura Console under **Data -> [table] -> Permissions ->
+[role] -> insert / update / delete -> Backend only**
 <Thumbnail
   src="/img/auth/allow-backends-only_console_2.10.1.png"
   alt="Allow backends only in Hasura Console"
   width="600px"
 />
-
 </TabItem>
 <TabItem value="cli" label="CLI">
+Set a mutation permission for a role as backend only in the `metadata -> databases -> [database-name] -> tables ->
+[table-name].yaml` file, e.g., `public_users.yaml`:
 
-You can set a mutate permission for a role as backend only in the `metadata -> databases -> [database-name] -> tables ->
-[table-name].yaml` file, eg: `public_users.yaml`:
-
-```yaml {10,14}
+```yaml
 table:
   name: users
   schema: public
@@ -65,15 +58,14 @@ delete_permissions:
 </TabItem>
 <TabItem value="api" label="API">
 
-You can set a mutate permission for a role as backend only with the Metadata API and the 
-[insert](/api-reference/syntax-defs.mdx#insertpermission), [update](/api-reference/syntax-defs.mdx#updatepermission) or 
+Set a mutate permission for a role as backend only with the Metadata API using the
+[insert](/api-reference/syntax-defs.mdx#insertpermission), [update](/api-reference/syntax-defs.mdx#updatepermission), or
 [delete](/api-reference/syntax-defs.mdx#deletepermission) permissions.
 
-```http {19}
+```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
-
 {
   "type": "pg_create_insert_permission",
   "args": {
@@ -100,7 +92,47 @@ X-Hasura-Role: admin
 
 :::info Supported from
 
-Backend only permissions for `update` and `delete` mutations are supported in Hasura GraphQL Engine versions `v2.8.0`
-and above.
+Backend only permissions for update and delete mutations are supported in Hasura GraphQL Engine versions v2.8.0 and
+above.
 
 :::
+
+## How it Works
+
+### Scenarios
+
+Backend only permissions create two operation modes within Hasura:
+
+- Frontend Scenario: All mutation operations are visible when no backend-only permissions are set.
+- Backend Scenario: Specific mutations set with backend-only permissions become visible only when the
+  x-hasura-use-backend-only-permissions header is set to true.
+
+### Schema Generation
+
+Hasura maintains two GraphQL schemas per role per table:
+
+| Schema Type         | Description                                                       | Example                                                                                                                                           |
+| ------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend Schema** | Visible mutations without backend-only permissions.               | Given a role "public" and a table "user", mutations like `insert_user` and `delete_user` are visible by default.                                  |
+| **Backend Schema**  | Mutations visible only when backend-only permissions are enabled. | For the same role and table, the `update_user` mutation is only visible when the `x-hasura-use-backend-only-permissions` header is set to `true`. |
+
+All operations are visible by default.
+
+### Access Requirements
+
+For a mutation to be accessible under backend only permissions, the following conditions must be met:
+
+- `x-hasura-admin-secret` is present if authorization is configured.
+- `x-hasura-use-backend-only-permissions` must be set to `true`.
+- `x-hasura-role` is used to identify the role.
+
+This table outlines the visibility of mutations based on the `Backend Only` permission along with the presence of
+necessary headers:
+
+| Backend Only | `x-hasura-admin-secret` | `x-hasura-use-backend-only-permissions` | Result         |
+| ------------ | ----------------------- | --------------------------------------- | -------------- |
+| FALSE        | ANY                     | ANY                                     | Always Visible |
+| TRUE         | FALSE                   | ANY                                     | Always Hidden  |
+| FALSE        | TRUE                    | ANY                                     | Always Visible |
+| TRUE         | TRUE (OR NOT-SET)       | FALSE                                   | Hidden         |
+| TRUE         | TRUE (OR NOT-SET)       | TRUE                                    | Shown          |

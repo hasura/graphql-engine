@@ -390,3 +390,6 @@ instance FromEnv Server.Types.PersistedQueriesState where
 
 instance FromEnv Server.Types.RemoteSchemaResponsePriority where
   fromEnv = fmap (bool Server.Types.RemoteSchemaResponseErrors Server.Types.RemoteSchemaResponseData) . fromEnv @Bool
+
+instance FromEnv Server.Types.HeaderPrecedence where
+  fromEnv = fmap (bool Server.Types.ClientHeadersFirst Server.Types.ConfiguredHeadersFirst) . fromEnv @Bool

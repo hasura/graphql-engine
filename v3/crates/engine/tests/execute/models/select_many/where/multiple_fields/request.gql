@@ -1,0 +1,16 @@
+query MyQuery {
+  ArticleMany(
+    where: {
+      _or: [
+        {
+          article_id: { _eq: 4 }
+          title: { _eq: "The Mechanical Evaluation of Expressions" }
+        }
+        { article_id: { _eq: 1 } }
+      ]
+    }
+  ) {
+    article_id
+    title
+  }
+}

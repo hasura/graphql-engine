@@ -1,0 +1,15 @@
+
+{
+    pet {
+        name: nickname
+        birthday {
+            month
+            day
+        }
+        playmates {
+            name
+            faveSnack
+        }
+    }
+    faveSnack(quantity: 4)
+}

@@ -6,6 +6,7 @@
 module Hasura.Base.Instances () where
 
 import Autodocodec qualified as AC
+import Control.Monad.Fail
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)

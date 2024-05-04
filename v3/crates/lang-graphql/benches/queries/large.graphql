@@ -1,0 +1,292 @@
+query GetUser($gameID: smallint!, $id: Int, $link: String, $steamID: Int) {
+  users(
+    where: {
+      id: { _eq: $id }
+      link: { _eq: $link }
+      steam_id: { _eq: $steamID }
+    }
+    limit: 1
+  ) {
+    id
+    ...UserCommon
+    ...UserStats
+    ...UserBan
+    ...UserGeo
+    steamID: steam_id
+    blacklisted {
+      targetUserID: target_user_id
+      userID: user_id
+      __typename
+    }
+    # some comment
+    isMeBlacklisted {
+      targetUserID: target_user_id # some comment
+      userID: user_id
+      private {
+        reason
+        __typename
+      }
+      __typename
+    }
+    firstName: first_name
+    lastName: last_name
+    gender
+    birthday
+    lastActivity: last_activity
+    createdAt: created_at
+    friendsCount: friends_count
+    friends(
+      where: { state: { _eq: "ACCEPTED" } }
+      order_by: [{ date: desc }]
+      limit: 5
+    ) {
+      ...Friend
+      __typename
+    }
+    streams(where: { game_id: { _eq: $gameID } }, limit: 1) {
+      id
+      name
+      followers
+      views
+      viewers
+      online
+      service {
+        id
+        name
+        rawName: raw_name
+        __typename
+      }
+      source
+      chatID: chat_id
+      __typename
+    }
+    matchMemberships(
+      where: {
+        match: { status: { _in: ["CREATED", "LIVE"] } }
+        finished: { _eq: false }
+        game_id: { _eq: $gameID }
+      }
+      limit: 1
+    ) {
+      kills
+      deaths
+      assists
+      finished
+      match_id
+      match {
+        status
+        type
+        readiness_passed
+        game_status
+        teams(order_by: [{ id: asc }]) {
+          size
+          score
+          __typename
+        }
+        created_at
+        started_at
+        best_of
+        maps(order_by: [{ number: asc }]) {
+          map {
+            id
+            name
+            raw_name
+            __typename
+          }
+          game_status
+          __typename
+        }
+        serverInstance {
+          ip
+          tv_port
+          __typename
+        }
+        gameMode {
+          id
+          name_en
+          __typename
+        }
+        tv_address_hidden
+        __typename
+      }
+      __typename
+    }
+    teamMemberships(
+      where: {
+        game_id: { _eq: $gameID }
+        accepted_at: { _is_null: false }
+        finished_at: { _is_null: true }
+      }
+    ) {
+      team {
+        id
+        name
+        logo
+        tag
+        verified
+        country {
+          id
+          iso2
+          name_ru
+          name_uk
+          name_en
+          name_de
+          name_pl
+          name_pt
+          name_es
+          name_hbs
+          name_tr
+          __typename
+        }
+        members(
+          where: {
+            game_id: { _eq: $gameID }
+            accepted_at: { _is_null: false }
+            finished_at: { _is_null: true }
+          }
+        ) {
+          user {
+            ...UserCommon
+            ...UserStats
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    verified
+    vkID: vk_id
+    fbID: fb_id
+    twitchID: twitch_id
+    instagramID: instagram_id
+    privacyFeedWrite: privacy_feed_write
+    __typename
+  }
+}
+
+fragment UserCommon on users {
+  id
+  nickName: nick_name
+  avatar
+  online
+  isMobile: is_mobile
+  link
+  __typename
+}
+
+fragment UserStats on users {
+  stats(
+    where: {
+      game_id: { _eq: $gameID }
+      map_id: { _is_null: true }
+      game_mode_id: { _is_null: false }
+    }
+  ) {
+    gameModeID: game_mode_id
+    rating
+    place
+    kills
+    deaths
+    __typename
+  }
+  __typename
+}
+
+fragment UserBan on users {
+  bans(
+    where: { active: { _eq: true }, game_id: { _eq: $gameID } }
+    order_by: [{ until: desc }]
+  ) {
+    id
+    since
+    until
+    reason {
+      id
+      name_ru
+      name_uk
+      name_en
+      name_de
+      name_pl
+      name_pt
+      name_es
+      name_hbs
+      name_tr
+      description_ru
+      description_uk
+      description_en
+      description_de
+      description_pl
+      description_pt
+      description_es
+      description_hbs
+      description_tr
+      restrictions
+      __typename
+    }
+    comment
+    __typename
+  }
+  __typename
+}
+
+fragment Friend on friends {
+  userID: user_id
+  friendID: friend_id
+  date
+  state
+  user {
+    ...UserCommon
+    ...UserStats
+    ...UserLastActiveBan
+    __typename
+  }
+  __typename
+}
+
+fragment UserLastActiveBan on users {
+  bans(
+    where: { active: { _eq: true }, game_id: { _eq: $gameID } }
+    order_by: [{ length_minutes: desc }]
+    limit: 1
+  ) {
+    id
+    since
+    until
+    __typename
+  }
+  __typename
+}
+
+fragment UserGeo on users {
+  city {
+    id
+    regionID: region_id
+    name_ru
+    name_uk
+    name_en
+    name_de
+    name_pl
+    name_pt
+    name_es
+    name_hbs
+    name_tr
+    __typename
+  }
+  country {
+    id
+    name_ru
+    name_uk
+    name_en
+    name_de
+    name_pl
+    name_pt
+    name_es
+    name_hbs
+    name_tr
+    iso2
+    __typename
+  }
+  __typename
+}

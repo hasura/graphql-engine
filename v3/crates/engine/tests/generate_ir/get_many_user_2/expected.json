@@ -1,0 +1,191 @@
+{
+  "ArticleMany": {
+    "QueryRootField": {
+      "ModelSelectMany": {
+        "selection_set": {
+          "fields": {
+            "article_id": {
+              "alias": "article_id",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "article_id",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "Field": {
+                            "name": "article_id",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "Int"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "Int"
+                },
+                "nullable": false
+              }
+            },
+            "title": {
+              "alias": "title",
+              "field_calls": [
+                [
+                  [],
+                  {
+                    "name": "title",
+                    "info": {
+                      "generic": {
+                        "Output": {
+                          "Field": {
+                            "name": "title",
+                            "field_type": {
+                              "underlying_type": {
+                                "Named": {
+                                  "Inbuilt": "String"
+                                }
+                              },
+                              "nullable": false
+                            },
+                            "field_base_type_kind": "Scalar"
+                          }
+                        }
+                      },
+                      "namespaced": null
+                    },
+                    "arguments": {},
+                    "directives": {}
+                  }
+                ]
+              ],
+              "selection_set": {
+                "fields": {},
+                "type_name": null
+              },
+              "type_container": {
+                "base": {
+                  "Named": "String"
+                },
+                "nullable": false
+              }
+            }
+          },
+          "type_name": "Article"
+        },
+        "ir": {
+          "field_name": "ArticleMany",
+          "model_selection": {
+            "data_connector": {
+              "name": {
+                "subgraph": "default",
+                "name": "db"
+              },
+              "url": {
+                "singleUrl": "http://postgres_connector:8080/"
+              },
+              "headers": {
+                "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              }
+            },
+            "collection": "article",
+            "arguments": {},
+            "filter_clause": {
+              "expression": {
+                "type": "and",
+                "expressions": [
+                  {
+                    "type": "binary_comparison_operator",
+                    "column": {
+                      "type": "column",
+                      "name": "title",
+                      "path": []
+                    },
+                    "operator": "_like",
+                    "value": {
+                      "type": "scalar",
+                      "value": "%Functional%"
+                    }
+                  },
+                  {
+                    "type": "not",
+                    "expression": {
+                      "type": "unary_comparison_operator",
+                      "column": {
+                        "type": "column",
+                        "name": "author_id",
+                        "path": []
+                      },
+                      "operator": "is_null"
+                    }
+                  }
+                ]
+              },
+              "relationships": {}
+            },
+            "limit": null,
+            "offset": null,
+            "order_by": null,
+            "selection": {
+              "fields": {
+                "article_id": {
+                  "Column": {
+                    "column": "id",
+                    "nested_selection": null
+                  }
+                },
+                "title": {
+                  "Column": {
+                    "column": "title",
+                    "nested_selection": null
+                  }
+                }
+              }
+            }
+          },
+          "type_container": {
+            "base": {
+              "List": {
+                "base": {
+                  "Named": "Article"
+                },
+                "nullable": false
+              }
+            },
+            "nullable": true
+          },
+          "usage_counts": {
+            "models_used": [
+              {
+                "model": {
+                  "subgraph": "default",
+                  "name": "Articles"
+                },
+                "count": 1
+              }
+            ],
+            "commands_used": []
+          }
+        }
+      }
+    }
+  }
+}

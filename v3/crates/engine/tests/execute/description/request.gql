@@ -1,0 +1,27 @@
+query TypeIntrospectionDescription {
+  __schema {
+    types {
+      ...FullType
+    }
+  }
+}
+
+fragment FullType on __Type {
+  name
+  description
+  fields(includeDeprecated: true) {
+    name
+    description
+    args {
+      ...InputValue
+    }
+  }
+  inputFields {
+    ...InputValue
+  }
+}
+
+fragment InputValue on __InputValue {
+  name
+  description
+}

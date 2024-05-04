@@ -1,0 +1,25 @@
+[package]
+name = "custom-connector"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[[bin]]
+name = "custom-connector"
+path = "src/main.rs"
+bench = false
+
+[dependencies]
+anyhow = "1"
+axum = "0.6"
+indexmap = "2"
+ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }
+regex = "1"
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+
+[lints]
+workspace = true

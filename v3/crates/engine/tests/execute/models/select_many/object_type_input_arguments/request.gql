@@ -1,0 +1,17 @@
+query MyQuery {
+  MoviesByActorNameMany(
+    args: { actor_name_filter: { first_name: "Leonardo", surname: "DiCaprio" } }
+  ) {
+    movie_id
+    title
+    rating
+  }
+  MoviesByActorNameById(
+    actor_name_filter: { first_name: "Irfan", surname: "Khan" }
+    movie_id: 2
+  ) {
+    movie_id
+    title
+    rating
+  }
+}

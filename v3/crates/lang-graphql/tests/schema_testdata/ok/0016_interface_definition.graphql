@@ -1,0 +1,3 @@
+interface ValuedEntity {
+    value: Int
+}
