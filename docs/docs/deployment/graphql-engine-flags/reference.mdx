@@ -983,6 +983,18 @@ The [URL for a read replica](/databases/database-config/read-replicas.mdx#adding
 | **Default**         | `null`                                  |
 | **Supported in**    | Deprecated in versions > `v2.0.0`       |
 
+### Redis Timeout
+
+The timeout for redis queries while serving requests. The timeout is in seconds.
+
+|                     |                                               |
+| ------------------- | --------------------------------------------- |
+| **Flag**            | N/A                                           |
+| **Env var**         | `HASURA_GRAPHQL_REDIS_TIMEOUT`                |
+| **Accepted values** | Integer (Representing an interval in seconds) |
+| **Default**         | `null` (No timeout)                           |
+| **Supported in**    | Enterprise Edition only                       |
+
 ### Redis TLS Hostname
 
 The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/caching/enterprise-caching.mdx).
