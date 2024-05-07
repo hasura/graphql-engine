@@ -110,7 +110,9 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &metadata_accessor,
         &commands,
         &object_types_with_relationships,
+        &scalar_types,
         &boolean_expression_types,
+        &models,
         &data_connectors,
     )?;
 
@@ -118,6 +120,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &metadata_accessor,
         &data_connectors,
         &object_types_with_relationships,
+        &scalar_types,
         &models,
         &boolean_expression_types,
     )?;

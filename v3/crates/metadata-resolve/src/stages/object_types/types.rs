@@ -62,6 +62,16 @@ impl DataConnectorTypeMappingsForObject {
         }
         Ok(())
     }
+
+    pub fn object_types_for_data_connector(
+        &self,
+        data_connector_name: &Qualified<DataConnectorName>,
+    ) -> Vec<DataConnectorObjectType> {
+        match self.0.get(data_connector_name) {
+            Some(map) => map.keys().cloned().collect(),
+            None => vec![],
+        }
+    }
 }
 
 /// output of `object_types` step

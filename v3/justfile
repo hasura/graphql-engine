@@ -130,7 +130,7 @@ test-local: start-docker-test-deps
 watch-local: start-docker-test-deps start-docker-run-deps
   RUST_LOG=DEBUG \
   cargo watch \
-   -x 'test --message-format short' \
+   -x test \
    -x 'clippy --no-deps' \
    -x 'run --bin engine -- \
     --otlp-endpoint http://localhost:4317 \

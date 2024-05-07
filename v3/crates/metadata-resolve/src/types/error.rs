@@ -724,6 +724,48 @@ pub enum TypePredicateError {
     NestedPredicateInTypePredicate {
         type_name: Qualified<CustomTypeName>,
     },
+    #[error("relationship '{relationship_name:}' used in predicate for type '{type_name:}' does not exist")]
+    UnknownRelationshipInTypePredicate {
+        relationship_name: RelationshipName,
+        type_name: Qualified<CustomTypeName>,
+    },
+    #[error("The model '{target_model_name:}' corresponding to the  relationship '{relationship_name:}' used in predicate for type '{type_name:}' is not defined")]
+    UnknownModelUsedInRelationshipTypePredicate {
+        type_name: Qualified<CustomTypeName>,
+        target_model_name: Qualified<ModelName>,
+        relationship_name: RelationshipName,
+    },
+    #[error(
+        "target source for model '{target_model_name:}' is required to resolve predicate with relationships for {source_type_name:}"
+    )]
+    TargetSourceRequiredForRelationshipPredicate {
+        source_type_name: Qualified<CustomTypeName>,
+        target_model_name: Qualified<ModelName>,
+    },
+    #[error(
+        "no relationship predicate is defined for relationship '{relationship_name:}' in type '{type_name:}'"
+    )]
+    NoPredicateDefinedForRelationshipPredicate {
+        type_name: Qualified<CustomTypeName>,
+        relationship_name: RelationshipName,
+    },
+    #[error("{error:} in type {type_name:}")]
+    TypeMappingCollectionError {
+        type_name: Qualified<CustomTypeName>,
+        error: TypeMappingCollectionError,
+    },
+    #[error("object type {type_name:} not found")]
+    ObjectTypeNotFound {
+        type_name: Qualified<CustomTypeName>,
+    },
+}
+
+impl From<TypePredicateError> for Error {
+    fn from(val: TypePredicateError) -> Self {
+        Error::TypePredicateError {
+            type_predicate_error: val,
+        }
+    }
 }
 
 #[derive(Debug, Error)]

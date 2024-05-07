@@ -4,9 +4,11 @@ use std::collections::HashMap;
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 
-use open_dds::{commands::CommandName, types::CustomTypeName};
+use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
-use crate::stages::{boolean_expressions, commands, data_connector_scalar_types, relationships};
+use crate::stages::{
+    boolean_expressions, commands, data_connector_scalar_types, models, relationships, scalar_types,
+};
 use crate::types::error::Error;
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
@@ -37,10 +39,12 @@ pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<IndexMap<Qualified<CommandName>, CommandWithPermissions>, Error> {
     let mut commands_with_permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions> =
@@ -73,7 +77,9 @@ pub fn resolve(
                 &command.command,
                 command_permissions,
                 object_types,
+                scalar_types,
                 boolean_expression_types,
+                models,
                 data_connectors,
                 subgraph,
             )?;
@@ -90,10 +96,12 @@ pub fn resolve_command_permissions(
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
+    models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     subgraph: &str,
 ) -> Result<HashMap<Role, CommandPermission>, Error> {
@@ -117,7 +125,9 @@ pub fn resolve_command_permissions(
                         &argument.argument_type,
                         subgraph,
                         object_types,
+                        scalar_types,
                         boolean_expression_types,
+                        models,
                         data_connectors,
                     )?;
 
