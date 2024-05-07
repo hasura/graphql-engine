@@ -33,7 +33,7 @@ tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }
 
 anyhow = "1"
-async-recursion = "1.0.5"
+async-recursion = "1.1.1"
 axum = { version = "0.6.20" }
 base64 = "0.22.0"
 bincode = "1.3.3"
