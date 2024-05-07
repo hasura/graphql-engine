@@ -21,7 +21,7 @@ use metadata_resolve::{
     NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
 };
 
-use crate::utils::HashMapWithJsonKey;
+use json_ext::HashMapWithJsonKey;
 use strum_macros::Display;
 
 use self::output_type::relationship::{

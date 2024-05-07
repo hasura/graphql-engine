@@ -1,5 +1,6 @@
-pub mod json_ext;
+mod json_ext;
 
+pub use json_ext::ValueExt;
 use serde::{de::DeserializeOwned, ser::SerializeMap, Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 
@@ -56,7 +57,7 @@ mod tests {
 
     use serde::{Deserialize, Serialize};
 
-    use crate::utils::HashMapWithJsonKey;
+    use crate::HashMapWithJsonKey;
 
     #[test]
     fn test_hashmap_with_serializable_key() {

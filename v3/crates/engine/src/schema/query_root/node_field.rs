@@ -16,7 +16,7 @@ use crate::schema::types::{
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
 use crate::schema::{Role, GDS};
-use crate::utils::HashMapWithJsonKey;
+use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 

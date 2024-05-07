@@ -6,7 +6,7 @@ use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::utils::json_ext::ValueExt;
+use json_ext::ValueExt;
 
 use super::types::{Argument, JoinId, JoinNode, Location, LocationKind, RemoteJoin};
 use super::{collect, error};

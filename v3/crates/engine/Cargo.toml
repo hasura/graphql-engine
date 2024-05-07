@@ -26,6 +26,7 @@ harness = false
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 hasura-authn-jwt = { path = "../auth/hasura-authn-jwt" }
 hasura-authn-webhook = { path = "../auth/hasura-authn-webhook" }
+json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../utils/opendds-derive" }

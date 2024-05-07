@@ -18,7 +18,7 @@ use crate::schema::{
     types::{self, Annotation},
     GDS,
 };
-use crate::utils::HashMapWithJsonKey;
+use json_ext::HashMapWithJsonKey;
 
 pub(crate) struct ApolloFederationFieldOutput {
     /// The _entities field.

@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::execute::plan::ProcessResponseAs;
-use crate::utils::json_ext::ValueExt;
+use json_ext::ValueExt;
 
 use super::error;
 use super::types::{

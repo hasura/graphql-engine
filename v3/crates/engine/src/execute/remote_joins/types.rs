@@ -8,7 +8,7 @@ use open_dds::types::FieldName;
 use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::plan::ProcessResponseAs;
-use crate::utils::json_ext::ValueExt;
+use json_ext::ValueExt;
 use metadata_resolve;
 
 /// This tree structure captures all the locations (in the selection set IR) where
