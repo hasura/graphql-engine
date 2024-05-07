@@ -15,7 +15,7 @@ tracing-util = { path = "../../utils/tracing-util" }
 anyhow = "1"
 axum = "0.6.20"
 http = "0.2"
-serde_json = "1.0.108"
+serde_json = "1.0.116"
 tokio = { version = "1.34.0", features = ["full"] }
 tracing = "0.1.40"
 tower-http = { version = "0.4.4", features = ["trace"] }
