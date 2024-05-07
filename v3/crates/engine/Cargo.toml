@@ -35,7 +35,7 @@ metadata-resolve = {path = "../metadata-resolve" }
 anyhow = "1"
 async-recursion = "1.1.1"
 axum = { version = "0.6.20" }
-base64 = "0.22.0"
+base64 = "0.22.1"
 bincode = "1.3.3"
 bytes = "1.6.0"
 clap = { version = "4", features = ["derive", "env"] }
