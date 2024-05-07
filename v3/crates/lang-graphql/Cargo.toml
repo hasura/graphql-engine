@@ -34,7 +34,7 @@ nonempty = { version = "0.10", features = ["serialize"] }
 schemars = { version = "0.8.12", features = ["smol_str"] }
 serde = "1.0.152"
 serde_json = "1.0.92"
-serde_with = "2.2.0"
+serde_with = "3.8.1"
 smol_str = "0.1.23"
 thiserror = "1.0"
 
