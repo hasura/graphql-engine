@@ -65,6 +65,8 @@ To use this:
 1. Run `which rustc` to verify that the Rust compiler is being provided by Nix.
    You should see a path starting with `/nix/store/` and ending in `/bin/rustc`.
 
-## Architecture
+## Additional Reading
 
-See the [architecture document](docs/architecture.md).
+- [Architecture](docs/architecture.md)
+- [Roles and Annotations](docs/roles-and-annotations.md)
+- [Errors](docs/errors.md)
