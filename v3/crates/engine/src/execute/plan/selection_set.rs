@@ -8,6 +8,7 @@ use super::model_selection;
 use super::relationships;
 use super::ProcessResponseAs;
 use crate::execute::ir::selection_set::{FieldSelection, NestedSelection, ResultSelectionSet};
+use crate::execute::remote_joins::types::SourceFieldAlias;
 use crate::execute::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
@@ -243,7 +244,7 @@ fn process_remote_relationship_field_mapping(
     selection: &ResultSelectionSet<'_>,
     field: &FieldMapping,
     ndc_fields: &mut IndexMap<String, ndc_models::Field>,
-) -> String {
+) -> SourceFieldAlias {
     match selection.contains(field) {
         None => {
             let internal_alias = make_hasura_phantom_field(&field.column);
@@ -254,9 +255,9 @@ fn process_remote_relationship_field_mapping(
                     fields: None,
                 },
             );
-            internal_alias
+            SourceFieldAlias(internal_alias)
         }
-        Some(field_alias) => field_alias,
+        Some(field_alias) => SourceFieldAlias(field_alias),
     }
 }
 

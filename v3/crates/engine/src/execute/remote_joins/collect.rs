@@ -5,20 +5,20 @@
 //! relationship field mapping.
 
 use indexmap::IndexMap;
-use lang_graphql::ast::common::{TypeContainer, TypeName};
-use ndc_models;
+use lang_graphql::ast::common as ast;
 use serde_json as json;
 use std::collections::BTreeMap;
 
-use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
-use crate::execute::plan::ProcessResponseAs;
 use json_ext::ValueExt;
+use ndc_models;
 
 use super::error;
 use super::types::{
-    Argument, Arguments, JoinId, JoinLocations, JoinNode, Location, LocationKind, MonotonicCounter,
-    RemoteJoin, TargetField,
+    Argument, ArgumentId, Arguments, JoinId, JoinLocations, JoinNode, Location, LocationKind,
+    MonotonicCounter, RemoteJoin, SourceFieldAlias, TargetField, VariableName,
 };
+use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
+use crate::execute::plan::ProcessResponseAs;
 
 pub(crate) struct CollectArgumentResult<'s, 'ir> {
     pub(crate) arguments: Arguments,
@@ -117,7 +117,7 @@ fn collect_argument_from_row<'s, 'ir>(
             let argument = create_argument(join_node, row);
             // de-duplicate arguments
             if let std::collections::hash_map::Entry::Vacant(e) = arguments.entry(argument) {
-                let argument_id = argument_id_counter.get_next();
+                let argument_id = ArgumentId(argument_id_counter.get_next());
                 e.insert(argument_id);
             }
             *remote_join = Some(join_node.clone());
@@ -166,14 +166,14 @@ pub(crate) fn create_argument(
                 let val = get_value(src_alias, row);
                 // use the target field name here to create the variable
                 // name to be used in RHS
-                let variable_name = format!("${}", &field_mapping.column);
+                let variable_name = VariableName(format!("${}", &field_mapping.column));
                 argument.insert(variable_name, ValueExt::from(val.clone()));
             }
             TargetField::CommandField(argument_name) => {
                 let val = get_value(src_alias, row);
                 // use the target field name here to create the variable
                 // name to be used in RHS
-                let variable_name = format!("${}", &argument_name);
+                let variable_name = VariableName(format!("${}", &argument_name));
                 argument.insert(variable_name, ValueExt::from(val.clone()));
             }
         }
@@ -223,10 +223,10 @@ fn rows_from_row_field_value(
 }
 
 pub(crate) fn get_value<'n>(
-    pick_alias: &String,
+    pick_alias: &SourceFieldAlias,
     row: &'n IndexMap<String, ndc_models::RowFieldValue>,
 ) -> &'n json::Value {
-    match row.get(pick_alias) {
+    match row.get(&pick_alias.0) {
         Some(v) => &v.0,
         None => &json::Value::Null,
     }
@@ -235,7 +235,7 @@ pub(crate) fn get_value<'n>(
 /// resolve/process the command response for remote join execution
 fn resolve_command_response_row(
     row: &IndexMap<String, ndc_models::RowFieldValue>,
-    type_container: &TypeContainer<TypeName>,
+    type_container: &ast::TypeContainer<ast::TypeName>,
 ) -> Result<Vec<IndexMap<String, ndc_models::RowFieldValue>>, error::FieldError> {
     let field_value_result = row.get(FUNCTION_IR_VALUE_COLUMN_NAME).ok_or_else(|| {
         error::NDCUnexpectedError::BadNDCResponse {

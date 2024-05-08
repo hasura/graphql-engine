@@ -128,7 +128,11 @@ where
             let (join_variables_, _argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
             let join_variables: Vec<BTreeMap<String, json::Value>> = join_variables_
                 .iter()
-                .map(|bmap| bmap.iter().map(|(k, v)| (k.clone(), v.0.clone())).collect())
+                .map(|bmap| {
+                    bmap.iter()
+                        .map(|(k, v)| (k.0.clone(), v.0.clone()))
+                        .collect()
+                })
                 .collect();
             join_node.target_ndc_ir.variables = Some(join_variables);
 

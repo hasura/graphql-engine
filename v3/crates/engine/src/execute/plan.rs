@@ -471,7 +471,7 @@ fn assign_join_id<'s, 'ir>(
 
     match found {
         None => {
-            let next_id = state.counter.get_next();
+            let next_id = JoinId(state.counter.get_next());
             state.remote_joins.push((remote_join, next_id));
             next_id
         }

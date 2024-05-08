@@ -1,15 +1,16 @@
 //! Join tree and related types for remote joins.
 //!
 use indexmap::IndexMap;
+use std::collections::{BTreeMap, HashMap};
+
+use json_ext::ValueExt;
+use metadata_resolve;
 use ndc_models;
 use open_dds;
 use open_dds::arguments::ArgumentName;
 use open_dds::types::FieldName;
-use std::collections::{BTreeMap, HashMap};
 
 use crate::execute::plan::ProcessResponseAs;
-use json_ext::ValueExt;
-use metadata_resolve;
 
 /// This tree structure captures all the locations (in the selection set IR) where
 /// remote joins are found.
@@ -136,9 +137,16 @@ pub struct RemoteJoin<'s, 'ir> {
     pub remote_join_type: RemoteJoinType,
 }
 
+/// Name of the source field used in the join mapping
 pub type SourceFieldName = FieldName;
-pub type SourceFieldAlias = String;
 
+/// Alias of the source field used in the join mapping. This is basically a NDC
+/// field alias (which in the NDC IR is `String`). Change this when modifying
+/// the IR to have a newtype Alias.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SourceFieldAlias(pub String);
+
+/// Target field used in the join mapping
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetField {
     ModelField((FieldName, metadata_resolve::NdcColumnForComparison)),
@@ -152,14 +160,19 @@ pub enum RemoteJoinType {
 }
 
 /// For assigning a unique number to each unique join
-pub type JoinId = i16;
+#[derive(Debug, Clone, Copy)]
+pub struct JoinId(pub i16);
+
+/// Name of the variable used in the IR
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub struct VariableName(pub String);
 
 /// An 'Argument' is a map of variable name to it's value.
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
-pub type Argument = BTreeMap<String, ValueExt>;
+pub type Argument = BTreeMap<VariableName, ValueExt>;
 
 /// For assigning a unique number to each argument
-pub type ArgumentId = i16;
+pub struct ArgumentId(pub i16);
 
 /// A map of each argument to its argument id
 pub type Arguments = HashMap<Argument, ArgumentId>;

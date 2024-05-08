@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap};
 use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use json_ext::ValueExt;
 
-use super::types::{Argument, JoinId, JoinNode, Location, LocationKind, RemoteJoin};
+use super::types::{Argument, JoinId, JoinNode, Location, LocationKind, RemoteJoin, VariableName};
 use super::{collect, error};
 
 /// Inserts values in the LHS response from values in RHS response, based on the
@@ -21,7 +21,7 @@ pub(crate) fn join_responses(
     remote_alias: &str,
     location: &Location<(RemoteJoin<'_, '_>, JoinId)>,
     lhs_response: &mut [ndc_models::RowSet],
-    rhs_response: &HashMap<BTreeMap<String, ValueExt>, ndc_models::RowSet>,
+    rhs_response: &HashMap<BTreeMap<VariableName, ValueExt>, ndc_models::RowSet>,
 ) -> Result<(), error::FieldError> {
     for row_set in lhs_response.iter_mut() {
         if let Some(rows) = row_set.rows.as_mut() {
