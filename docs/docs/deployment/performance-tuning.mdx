@@ -70,8 +70,9 @@ connections of the Postgres instance.
 
 #### `HASURA_GRAPHQL_CONNECTIONS_PER_READ_REPLICA`
 
-With Read replicas, Hasura can load balance multiple databases. However, you will need to balance connections between
-database nodes too:
+With Read replicas, Hasura can route queries and subscriptions to multiple
+databases. However, you will need to balance connections between database nodes
+too:
 
 - Master connections (`HASURA_GRAPHQL_PG_CONNECTIONS`) are now used for writing only. You can decrease max connections
   lower if Hasura doesn't write much, or share connections with other Hasura nodes.
