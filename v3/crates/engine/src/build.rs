@@ -1,7 +1,7 @@
-use crate::schema;
-use crate::schema::GDS;
 use lang_graphql::schema as gql_schema;
 use metadata_resolve;
+use schema;
+use schema::GDS;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

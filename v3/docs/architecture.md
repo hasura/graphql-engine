@@ -18,14 +18,14 @@ crates
 │   │   ├── introspection
 │   │   ├── validation
 ├── metadata-resolve
+├── schema
+│   ├── operations
+│   ├── types
 ├── engine
 │   ├── bin
 │   │   ├── engine
 │   ├── src
 │   │   ├── execute
-│   │   ├── schema
-│   │   │   ├── operations
-│   │   │   ├── types
 ```
 
 ### `open-dds`
@@ -77,30 +77,12 @@ contain additional relevant data from the schema.
 Resolves and validates the input Open DDS metadata and creates intermediate
 structures that are used in the `engine` crate for schema generation.
 
-### `engine`
-
-Responsible for the core operation of the engine in the context of a user
-provided metadata, including the web server, requests processing, executing
-requests, etc.
-
-#### `engine/bin`
-
-Entry point to the program. The executable takes in a metadata file and starts
-the v3 engine according to that file.
-
-#### `engine/src`
-
-This crate implements the Open DDS specification on top of the GraphQL
-primitives provided by the `lang-graphql` crate. It is responsible for
-validating Open DDS metadata, creating a GraphQL schema from resolved Open DDS
-metadata, and implementing the GraphQL operations.
-
-##### `engine/src/schema`
+##### `schema`
 
 Provides functions to resolve the Open DDS metadata, generate the GraphQL scehma
 from it, and execute queries against the schema.
 
-##### `engine/src/schema/operations`
+##### `schema/operations`
 
 Contains the logic to define and execute the operations that would be defined by
 the Open DDS spec.
@@ -118,7 +100,7 @@ Each module under `operations` would roughly define the following:
 - Logic to parse a normalized field from the request into the defined IR format.
 - Logic to execute the operation.
 
-##### `engine/src/schema/types`
+##### `schema/types`
 
 TODO: This is a bit outdated, so we should fix this.
 
@@ -135,6 +117,24 @@ Each module under `types` defines the following:
 - Logic to generate schema for the given type using data from resolved metadata.
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
+
+### `engine`
+
+Responsible for the core operation of the engine in the context of a user
+provided metadata, including the web server, requests processing, executing
+requests, etc.
+
+#### `engine/bin`
+
+Entry point to the program. The executable takes in a metadata file and starts
+the v3 engine according to that file.
+
+#### `engine/src`
+
+This crate implements the Open DDS specification on top of the GraphQL
+primitives provided by the `lang-graphql` crate. It is responsible for
+validating Open DDS metadata, creating a GraphQL schema from resolved Open DDS
+metadata, and implementing the GraphQL operations.
 
 ## Design Principles
 

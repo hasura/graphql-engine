@@ -13,15 +13,15 @@ use self::relationship::{
 };
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 use super::{Annotation, PossibleApolloFederationTypes, TypeId};
-use crate::schema::commands::generate_command_argument;
-use crate::schema::query_root::select_many::generate_select_many_arguments;
-use crate::schema::{mk_deprecation_status, permissions};
-use crate::schema::{Role, GDS};
+use crate::commands::generate_command_argument;
+use crate::query_root::select_many::generate_select_many_arguments;
+use crate::{mk_deprecation_status, permissions};
+use crate::{Role, GDS};
 use metadata_resolve::{self, mk_name};
 use metadata_resolve::{get_type_representation, TypeRepresentation};
 use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 pub mod relationship;
 
@@ -114,7 +114,7 @@ pub fn get_custom_output_type(
         &gds.metadata.scalar_types,
         &gds.metadata.boolean_expression_types,
     )
-    .map_err(|_| crate::schema::Error::InternalTypeNotFound {
+    .map_err(|_| crate::Error::InternalTypeNotFound {
         type_name: gds_type.clone(),
     })? {
         TypeRepresentation::Object(object_type_representation) => {
@@ -508,12 +508,13 @@ pub fn output_type_schema(
 pub(crate) fn get_object_type_representation<'s>(
     gds: &'s GDS,
     gds_type: &Qualified<CustomTypeName>,
-) -> Result<&'s metadata_resolve::ObjectTypeWithRelationships, crate::schema::Error> {
-    gds.metadata.object_types.get(gds_type).ok_or_else(|| {
-        crate::schema::Error::InternalTypeNotFound {
+) -> Result<&'s metadata_resolve::ObjectTypeWithRelationships, crate::Error> {
+    gds.metadata
+        .object_types
+        .get(gds_type)
+        .ok_or_else(|| crate::Error::InternalTypeNotFound {
             type_name: gds_type.clone(),
-        }
-    })
+        })
 }
 
 pub(crate) fn representations_type_reference(

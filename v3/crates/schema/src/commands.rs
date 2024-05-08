@@ -2,14 +2,13 @@
 //!
 //! A 'command' executes a function/procedure and returns back the result of the execution.
 
-use crate::schema::permissions;
-use crate::schema::types::{self, output_type::get_output_type, Annotation};
-use crate::schema::GDS;
+use crate::permissions;
+use crate::types::{self, output_type::get_output_type, Annotation};
+use crate::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use lang_graphql::schema::InputField;
 use lang_graphql::schema::Namespaced;
-use metadata_resolve;
 use open_dds::arguments::ArgumentName;
 use open_dds::commands::DataConnectorCommand;
 
@@ -23,8 +22,8 @@ pub(crate) fn generate_command_argument(
     builder: &mut gql_schema::Builder<GDS>,
     command: &metadata_resolve::CommandWithPermissions,
     argument_name: &ArgumentName,
-    argument_type: &crate::schema::commands::metadata_resolve::ArgumentInfo,
-) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::schema::Error> {
+    argument_type: &metadata_resolve::ArgumentInfo,
+) -> Result<(ast::Name, Namespaced<GDS, InputField<GDS>>), crate::Error> {
     let field_name = ast::Name::new(argument_name.0.as_str())?;
     let input_type = types::input_type::get_input_type(gds, builder, &argument_type.argument_type)?;
 
@@ -74,7 +73,7 @@ pub(crate) fn command_field(
         ast::Name,
         gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>,
     ),
-    crate::schema::Error,
+    crate::Error,
 > {
     let output_typename = get_output_type(gds, builder, &command.command.output_type)?;
 
@@ -110,7 +109,7 @@ pub(crate) fn function_command_field(
         ast::Name,
         gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>,
     ),
-    crate::schema::Error,
+    crate::Error,
 > {
     let (command_source_detail, function_name) = match &command.command.source {
         Some(command_source) => {
@@ -122,7 +121,7 @@ pub(crate) fn function_command_field(
             let function_name = match &command_source.source {
                 DataConnectorCommand::Function(function_name) => function_name.clone(),
                 _ => {
-                    return Err(crate::schema::Error::IncorrectCommandBacking {
+                    return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
                     })
                 }
@@ -163,7 +162,7 @@ pub(crate) fn procedure_command_field(
         ast::Name,
         gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>,
     ),
-    crate::schema::Error,
+    crate::Error,
 > {
     let (command_source_detail, procedure_name) = match &command.command.source {
         Some(command_source) => {
@@ -175,7 +174,7 @@ pub(crate) fn procedure_command_field(
             let procedure_name = match &command_source.source {
                 DataConnectorCommand::Procedure(procedure_name) => procedure_name.clone(),
                 _ => {
-                    return Err(crate::schema::Error::IncorrectCommandBacking {
+                    return Err(crate::Error::IncorrectCommandBacking {
                         command_name: command.command.name.clone(),
                     })
                 }

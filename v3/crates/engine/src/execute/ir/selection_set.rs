@@ -17,9 +17,9 @@ use super::relationship::{
 use crate::execute::global_id;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::TypeKind;
-use crate::schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 use metadata_resolve;
+use schema::TypeKind;
+use schema::{Annotation, OutputAnnotation, RootFieldAnnotation, GDS};
 
 #[derive(Debug, Serialize)]
 pub(crate) enum NestedSelection<'s> {

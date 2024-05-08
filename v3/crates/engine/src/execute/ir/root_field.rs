@@ -8,7 +8,7 @@ use super::{
     commands,
     query_root::{apollo_federation, node_field, select_many, select_one},
 };
-use crate::schema::GDS;
+use schema::GDS;
 
 /// IR of a root field
 #[derive(Serialize, Debug)]

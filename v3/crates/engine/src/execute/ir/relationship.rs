@@ -23,16 +23,12 @@ use super::{
 };
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::ModelRelationshipAnnotation;
-use crate::schema::{
-    Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, GDS,
-};
-use crate::{
-    execute::{ir::error, model_tracking::count_command},
-    schema::{CommandRelationshipAnnotation, CommandTargetSource},
-};
+use crate::execute::{ir::error, model_tracking::count_command};
 use metadata_resolve;
 use metadata_resolve::{serialize_qualified_btreemap, Qualified};
+use schema::ModelRelationshipAnnotation;
+use schema::{Annotation, BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation, GDS};
+use schema::{CommandRelationshipAnnotation, CommandTargetSource};
 
 #[derive(Debug, Serialize)]
 pub(crate) struct LocalModelRelationshipInfo<'s> {

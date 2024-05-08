@@ -3,7 +3,7 @@ use metadata_resolve::{
     QualifiedTypeReference, TypeRepresentation,
 };
 
-use crate::schema::{types, Role, GDS};
+use crate::{types, Role, GDS};
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use open_dds::types::CustomTypeName;
@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::inbuilt_type::base_type_container_for_inbuilt_type;
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 pub fn get_base_type_container(
     gds: &GDS,
@@ -75,7 +75,7 @@ fn get_custom_input_type(
         &gds.metadata.scalar_types,
         &gds.metadata.boolean_expression_types,
     )
-    .map_err(|_| crate::schema::Error::InternalTypeNotFound {
+    .map_err(|_| crate::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),
     })? {
         TypeRepresentation::Object(metadata_resolve::ObjectTypeWithRelationships {

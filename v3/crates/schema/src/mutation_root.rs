@@ -4,14 +4,14 @@ use lang_graphql::ast::common::{self as ast, TypeName};
 use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
-use crate::schema::{commands, GDS};
+use crate::{commands, GDS};
 
 /// Generates schema for the query root type
 pub fn mutation_root_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
     mutation_root_type_name: &TypeName,
-) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::Object<GDS>, crate::Error> {
     let mut fields = BTreeMap::new();
 
     // Add node field for only the commands which have a mutation root field

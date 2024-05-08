@@ -1,6 +1,5 @@
 use indexmap::IndexMap;
 
-use crate::schema::GDS;
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
@@ -9,6 +8,7 @@ use lang_graphql::{
     http::{RawRequest, Response},
     schema::Schema,
 };
+use schema::GDS;
 use thiserror::Error;
 use tracing_util::{
     set_attribute_on_active_span, AttributeVisibility, ErrorVisibility, SpanVisibility, Traceable,
@@ -392,7 +392,7 @@ mod tests {
     };
 
     use super::generate_ir;
-    use crate::schema::GDS;
+    use schema::GDS;
 
     #[test]
     fn test_generate_ir() {

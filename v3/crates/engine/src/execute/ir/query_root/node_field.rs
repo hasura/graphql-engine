@@ -13,11 +13,11 @@ use crate::execute::ir::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::GDS;
-use crate::schema::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use schema::GDS;
+use schema::{GlobalID, NamespaceAnnotation, NodeFieldTypeNameMapping};
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]

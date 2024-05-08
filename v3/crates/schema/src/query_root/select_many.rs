@@ -7,8 +7,8 @@ use lang_graphql::ast::common::Name;
 use lang_graphql::schema as gql_schema;
 use std::collections::BTreeMap;
 
-use crate::schema::mk_deprecation_status;
-use crate::schema::{
+use crate::mk_deprecation_status;
+use crate::{
     model_arguments,
     model_filter::get_where_expression_input_field,
     model_order_by::get_order_by_expression_input_field,
@@ -23,10 +23,8 @@ use metadata_resolve;
 pub(crate) fn generate_select_many_arguments(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-) -> Result<
-    BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
-    crate::schema::Error,
-> {
+) -> Result<BTreeMap<Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>, crate::Error>
+{
     let mut arguments = BTreeMap::new();
 
     // insert limit argument
@@ -105,7 +103,7 @@ pub(crate) fn select_many_field(
         ast::Name,
         gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>,
     ),
-    crate::schema::Error,
+    crate::Error,
 > {
     let query_root_field = select_many.query_root_field.clone();
     let mut arguments = generate_select_many_arguments(builder, model)?;
@@ -127,7 +125,7 @@ pub(crate) fn select_many_field(
         );
 
         if arguments.insert(name.clone(), model_arguments).is_some() {
-            return Err(crate::schema::Error::GraphQlArgumentConflict {
+            return Err(crate::Error::GraphQlArgumentConflict {
                 argument_name: name,
                 field_name: query_root_field,
                 type_name: parent_type.clone(),
@@ -167,7 +165,7 @@ pub(crate) fn select_many_field(
 pub(crate) fn generate_int_input_argument(
     name: &str,
     annotation: Annotation,
-) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::InputField<GDS>, crate::Error> {
     let input_field_name = metadata_resolve::mk_name(name)?;
     Ok(gql_schema::InputField::new(
         input_field_name,

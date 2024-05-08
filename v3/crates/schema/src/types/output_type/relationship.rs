@@ -14,10 +14,7 @@ use metadata_resolve::{
     QualifiedTypeReference,
 };
 
-use crate::schema::{
-    self,
-    types::{CommandSourceDetail, TypeKind},
-};
+use crate::types::{CommandSourceDetail, TypeKind};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct ModelRelationshipAnnotation {
@@ -77,16 +74,16 @@ pub struct CommandRelationshipAnnotation {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct CommandTargetSource {
-    pub(crate) details: CommandSourceDetail,
-    pub(crate) function_name: FunctionName,
-    pub(crate) capabilities: metadata_resolve::RelationshipCapabilities,
+    pub details: CommandSourceDetail,
+    pub function_name: FunctionName,
+    pub capabilities: metadata_resolve::RelationshipCapabilities,
 }
 
 impl CommandTargetSource {
     pub fn new(
         command: &metadata_resolve::CommandWithPermissions,
         relationship: &metadata_resolve::Relationship,
-    ) -> Result<Option<Self>, schema::Error> {
+    ) -> Result<Option<Self>, crate::Error> {
         command
             .command
             .source
@@ -99,17 +96,17 @@ impl CommandTargetSource {
                         argument_mappings: command_source.argument_mappings.clone(),
                     },
                     function_name: match &command_source.source {
-                        schema::types::output_type::DataConnectorCommand::Function(
+                        crate::types::output_type::DataConnectorCommand::Function(
                             function_name,
                         ) => function_name.clone(),
-                        schema::types::output_type::DataConnectorCommand::Procedure(_) => Err(
-                            schema::Error::RelationshipsToProcedureBasedCommandsAreNotSupported,
-                        )?,
+                        crate::types::output_type::DataConnectorCommand::Procedure(_) => {
+                            Err(crate::Error::RelationshipsToProcedureBasedCommandsAreNotSupported)?
+                        }
                     },
                     capabilities: relationship
                         .target_capabilities
                         .as_ref()
-                        .ok_or_else(|| schema::Error::InternalMissingRelationshipCapabilities {
+                        .ok_or_else(|| crate::Error::InternalMissingRelationshipCapabilities {
                             type_name: relationship.source.clone(),
                             relationship: relationship.name.clone(),
                         })?

@@ -4,9 +4,9 @@ use lang_graphql::{ast::common as ast, schema as gql_schema};
 use open_dds::types::CustomTypeName;
 use std::collections::{BTreeMap, HashMap};
 
-use crate::schema::permissions::get_node_field_namespace_permissions;
-use crate::schema::types::RelayInputAnnotation;
-use crate::schema::types::{
+use crate::permissions::get_node_field_namespace_permissions;
+use crate::types::RelayInputAnnotation;
+use crate::types::{
     self,
     input_type::get_input_type,
     output_type::{
@@ -15,7 +15,7 @@ use crate::schema::types::{
     },
     Annotation, NodeFieldTypeNameMapping, OutputAnnotation, RootFieldAnnotation,
 };
-use crate::schema::{Role, GDS};
+use crate::{Role, GDS};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::Qualified;
@@ -34,7 +34,7 @@ pub(crate) struct RelayNodeFieldOutput {
 pub(crate) fn relay_node_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-) -> Result<RelayNodeFieldOutput, crate::schema::Error> {
+) -> Result<RelayNodeFieldOutput, crate::Error> {
     let mut arguments = BTreeMap::new();
     let mut typename_mappings = HashMap::new();
     // The node field should only be accessible to a role, if
@@ -84,11 +84,9 @@ pub(crate) fn relay_node_field(
             {
                 // This is declared as an internal error because this error should
                 // never happen, because this is validated while resolving the metadata.
-                return Err(
-                    crate::schema::Error::InternalErrorDuplicateGlobalIdSourceFound {
-                        type_name: output_typename.type_name().clone(),
-                    },
-                );
+                return Err(crate::Error::InternalErrorDuplicateGlobalIdSourceFound {
+                    type_name: output_typename.type_name().clone(),
+                });
             };
         }
     }

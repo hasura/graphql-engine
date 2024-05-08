@@ -1,8 +1,7 @@
 use lang_graphql::ast::common as ast;
 
-use crate::schema::GDS;
+use crate::GDS;
 use lang_graphql::schema as gql_schema;
-use metadata_resolve;
 use open_dds::models::ModelName;
 use std::collections::{BTreeMap, HashMap};
 
@@ -15,13 +14,13 @@ use metadata_resolve::Qualified;
 pub fn get_model_arguments_input_field(
     builder: &mut gql_schema::Builder<GDS>,
     model: &metadata_resolve::ModelWithPermissions,
-) -> Result<gql_schema::InputField<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::InputField<GDS>, crate::Error> {
     model
         .model
         .graphql_api
         .arguments_input_config
         .as_ref()
-        .ok_or(crate::schema::Error::NoArgumentsInputConfigForSelectMany {
+        .ok_or(crate::Error::NoArgumentsInputConfigForSelectMany {
             model_name: model.model.name.clone(),
         })
         .map(|arguments_input_config| {
@@ -53,7 +52,7 @@ pub fn build_model_argument_fields(
     model: &metadata_resolve::ModelWithPermissions,
 ) -> Result<
     BTreeMap<ast::Name, gql_schema::Namespaced<GDS, gql_schema::InputField<GDS>>>,
-    crate::schema::Error,
+    crate::Error,
 > {
     model
         .model
@@ -107,12 +106,14 @@ pub fn build_model_arguments_input_schema(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &ast::TypeName,
     model_name: &Qualified<ModelName>,
-) -> Result<gql_schema::TypeInfo<GDS>, crate::schema::Error> {
-    let model = gds.metadata.models.get(model_name).ok_or_else(|| {
-        crate::schema::Error::InternalModelNotFound {
-            model_name: model_name.clone(),
-        }
-    })?;
+) -> Result<gql_schema::TypeInfo<GDS>, crate::Error> {
+    let model =
+        gds.metadata
+            .models
+            .get(model_name)
+            .ok_or_else(|| crate::Error::InternalModelNotFound {
+                model_name: model_name.clone(),
+            })?;
 
     Ok(gql_schema::TypeInfo::InputObject(
         gql_schema::InputObject::new(

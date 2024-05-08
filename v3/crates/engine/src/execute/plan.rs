@@ -23,8 +23,8 @@ use super::remote_joins::types::{
 };
 use super::{HttpContext, ProjectId};
 use crate::execute::error::FieldError;
-use crate::schema::GDS;
 use metadata_resolve;
+use schema::GDS;
 
 pub type QueryPlan<'n, 's, 'ir> = IndexMap<ast::Alias, NodeQueryPlan<'n, 's, 'ir>>;
 

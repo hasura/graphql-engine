@@ -13,6 +13,7 @@ members = [
   "crates/metadata-resolve",
   "crates/metadata-schema-generator",
   "crates/open-dds",
+  "crates/schema",
   "crates/utils/*",
 ]
 

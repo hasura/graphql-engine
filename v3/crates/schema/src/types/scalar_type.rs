@@ -1,10 +1,10 @@
-use crate::schema::GDS;
+use crate::GDS;
 use lang_graphql::ast::common as ast;
 use lang_graphql::schema as gql_schema;
 use metadata_resolve::Qualified;
 use open_dds::types::CustomTypeName;
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 pub fn scalar_type_schema(
     gds: &GDS,

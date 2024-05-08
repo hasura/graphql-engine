@@ -13,7 +13,7 @@ use std::{
 };
 
 use engine::execute::{execute_query, HttpContext};
-use engine::schema::GDS;
+use schema::GDS;
 
 extern crate json_value_merge;
 use json_value_merge::Merge;

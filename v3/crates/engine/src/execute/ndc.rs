@@ -13,8 +13,8 @@ use super::error;
 use super::plan::ProcessResponseAs;
 use super::process_response::process_command_mutation_response;
 use super::{HttpContext, ProjectId};
-use crate::schema::GDS;
 use metadata_resolve;
+use schema::GDS;
 
 pub mod client;
 

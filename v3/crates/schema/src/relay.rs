@@ -4,19 +4,19 @@ use lang_graphql::schema as gql_schema;
 use std::collections::{BTreeMap, HashMap};
 
 use super::permissions;
-use crate::schema::types::{
+use crate::types::{
     self,
     output_type::{
         get_custom_output_type, get_object_type_representation, get_output_type, ID_TYPE_REFERENCE,
     },
     Annotation, OutputAnnotation,
 };
-use crate::schema::{mk_typename, Role, GDS};
+use crate::{mk_typename, Role, GDS};
 
 pub fn node_interface_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
-) -> Result<gql_schema::Interface<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::Interface<GDS>, crate::Error> {
     let mut fields = BTreeMap::new();
     let mut implemented_by = BTreeMap::new();
     let mut typename_global_id_mappings = HashMap::new();

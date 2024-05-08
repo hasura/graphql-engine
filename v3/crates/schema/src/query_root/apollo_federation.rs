@@ -5,16 +5,16 @@ use lang_graphql::ast::common as ast;
 use lang_graphql::{mk_name, schema as gql_schema};
 use open_dds::types::CustomTypeName;
 
-use crate::schema::permissions::get_entities_field_namespace_permissions;
+use crate::permissions::get_entities_field_namespace_permissions;
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
-use crate::schema::types::output_type::{
+use crate::types::output_type::{
     apollo_federation_entities_type, apollo_federation_service_type, get_custom_output_type,
     get_object_type_representation, representations_type_reference,
 };
-use crate::schema::types::EntityFieldTypeNameMapping;
-use crate::schema::{
+use crate::types::EntityFieldTypeNameMapping;
+use crate::{
     types::{self, Annotation},
     GDS,
 };
@@ -33,7 +33,7 @@ pub(crate) struct ApolloFederationFieldOutput {
 pub(crate) fn apollo_federation_field(
     gds: &GDS,
     builder: &mut gql_schema::Builder<GDS>,
-) -> Result<ApolloFederationFieldOutput, crate::schema::Error> {
+) -> Result<ApolloFederationFieldOutput, crate::Error> {
     let mut roles_type_permissions: HashMap<
         Role,
         HashMap<Qualified<CustomTypeName>, metadata_resolve::FilterPermission>,
@@ -68,11 +68,9 @@ pub(crate) fn apollo_federation_field(
             {
                 // This is declared as an internal error because this error should
                 // never happen, because this is validated while resolving the metadata.
-                return Err(
-                    crate::schema::Error::InternalErrorDuplicateEntitySourceFound {
-                        type_name: output_typename.type_name().clone(),
-                    },
-                );
+                return Err(crate::Error::InternalErrorDuplicateEntitySourceFound {
+                    type_name: output_typename.type_name().clone(),
+                });
             };
         }
     }

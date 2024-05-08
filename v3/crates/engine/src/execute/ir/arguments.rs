@@ -3,10 +3,6 @@ use std::collections::BTreeMap;
 use crate::execute::ir::arguments;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::GDS;
-use crate::schema::{
-    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
-};
 use hasura_authn_core::SessionVariables;
 use lang_graphql::ast::common::Name;
 use lang_graphql::normalized_ast::{InputField, Value};
@@ -17,6 +13,10 @@ use metadata_resolve::{
 use ndc_models;
 use nonempty::NonEmpty;
 use open_dds::types::{CustomTypeName, InbuiltType};
+use schema::GDS;
+use schema::{
+    Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
+};
 
 use super::permissions;
 

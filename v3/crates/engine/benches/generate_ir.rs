@@ -1,11 +1,11 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
 use engine::execute;
-use engine::schema::GDS;
 use hasura_authn_core::Identity;
 use lang_graphql::http::Request;
 use lang_graphql::parser::Parser;
 use lang_graphql::validation::normalize_request;
 use open_dds::permissions::Role;
+use schema::GDS;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;

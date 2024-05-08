@@ -7,15 +7,14 @@ use std::collections::{BTreeMap, HashMap};
 use super::types::output_type::get_object_type_representation;
 use super::types::output_type::relationship::FilterRelationshipAnnotation;
 use super::types::{BooleanExpressionAnnotation, InputAnnotation, TypeId};
-use metadata_resolve;
 use metadata_resolve::mk_name;
 use metadata_resolve::Qualified;
 
-use crate::schema::permissions;
-use crate::schema::types;
-use crate::schema::GDS;
+use crate::permissions;
+use crate::types;
+use crate::GDS;
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 pub fn build_boolean_expression_input_schema(
     gds: &GDS,
@@ -27,7 +26,7 @@ pub fn build_boolean_expression_input_schema(
         .metadata
         .boolean_expression_types
         .get(gds_type_name)
-        .ok_or_else(|| crate::schema::Error::InternalTypeNotFound {
+        .ok_or_else(|| Error::InternalTypeNotFound {
             type_name: gds_type_name.clone(),
         })?;
 
@@ -149,7 +148,7 @@ pub fn build_boolean_expression_input_schema(
             } = &relationship.target
             {
                 let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
-                    crate::schema::Error::InternalModelNotFound {
+                    Error::InternalModelNotFound {
                         model_name: model_name.clone(),
                     }
                 })?;
@@ -250,7 +249,7 @@ pub fn build_boolean_expression_input_schema(
             gql_schema::InputObject::new(type_name.clone(), None, input_fields, Vec::new()),
         ))
     } else {
-        Err(crate::schema::Error::InternalBooleanExpressionNotFound {
+        Err(Error::InternalBooleanExpressionNotFound {
             type_name: gds_type_name.clone(),
         })
     }

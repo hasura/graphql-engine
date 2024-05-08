@@ -5,9 +5,9 @@
 use lang_graphql::{ast::common as ast, schema as gql_schema};
 use std::collections::BTreeMap;
 
-use crate::schema::types::output_type::get_object_type_representation;
-use crate::schema::{mk_deprecation_status, GDS};
-use crate::schema::{
+use crate::types::output_type::get_object_type_representation;
+use crate::{mk_deprecation_status, GDS};
+use crate::{
     model_arguments, permissions,
     types::{
         self, input_type::get_input_type, output_type::get_custom_output_type, Annotation,
@@ -29,7 +29,7 @@ pub(crate) fn select_one_field(
         ast::Name,
         gql_schema::Namespaced<GDS, gql_schema::Field<GDS>>,
     ),
-    crate::schema::Error,
+    crate::Error,
 > {
     let query_root_field = select_unique.query_root_field.clone();
 
@@ -62,7 +62,7 @@ pub(crate) fn select_one_field(
             .insert(argument_field_name.clone(), argument_field)
             .is_some()
         {
-            return Err(crate::schema::Error::GraphQlArgumentConflict {
+            return Err(crate::Error::GraphQlArgumentConflict {
                 argument_name: argument_field_name,
                 field_name: query_root_field,
                 type_name: parent_type.clone(),

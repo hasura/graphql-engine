@@ -20,16 +20,17 @@ use tracing_util::{
 };
 
 use base64::engine::Engine;
+use engine::VERSION;
 use engine::{
     authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig},
     execute::HttpContext,
 };
-use engine::{schema::GDS, VERSION};
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
 use hasura_authn_webhook::webhook;
 use lang_graphql as gql;
+use schema::GDS;
 use std::hash;
 use std::hash::{Hash, Hasher};
 

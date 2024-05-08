@@ -7,14 +7,13 @@ use std::collections::{BTreeMap, HashMap};
 
 use super::types::output_type::relationship::OrderByRelationshipAnnotation;
 use super::types::{output_type::get_object_type_representation, Annotation, TypeId};
-use crate::schema::permissions;
-use crate::schema::types;
-use crate::schema::GDS;
-use metadata_resolve;
+use crate::permissions;
+use crate::types;
+use crate::GDS;
 use metadata_resolve::mk_name;
 use metadata_resolve::Qualified;
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 // Generates the schema for 'order_by' arguments: Asc/Desc
 pub fn build_order_by_enum_type_schema(
@@ -165,7 +164,7 @@ pub fn build_model_order_by_input_schema(
             } = &relationship.target
             {
                 let target_model = gds.metadata.models.get(model_name).ok_or_else(|| {
-                    crate::schema::Error::InternalModelNotFound {
+                    crate::Error::InternalModelNotFound {
                         model_name: model_name.clone(),
                     }
                 })?;

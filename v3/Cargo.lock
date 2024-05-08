@@ -966,12 +966,12 @@ dependencies = [
  "opendds-derive",
  "pretty_assertions",
  "reqwest",
+ "schema",
  "schemars",
  "serde",
  "serde_json",
  "serde_path_to_error",
  "strum",
- "strum_macros",
  "thiserror",
  "tokio",
  "tokio-test",
@@ -2763,6 +2763,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbc91545643bcf3a0bbb6569265615222618bdf33ce4ffbbd13c4bbd4c093534"
 dependencies = [
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "schema"
+version = "0.1.0"
+dependencies = [
+ "hasura-authn-core",
+ "json-ext",
+ "lang-graphql",
+ "metadata-resolve",
+ "open-dds",
+ "serde",
+ "serde_json",
+ "strum_macros",
+ "thiserror",
 ]
 
 [[package]]

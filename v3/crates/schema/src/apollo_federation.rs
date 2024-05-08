@@ -10,7 +10,7 @@ use super::{
     permissions,
     types::{self, output_type::get_object_type_representation, Annotation},
 };
-use crate::schema::{mk_typename, GDS};
+use crate::{mk_typename, GDS};
 use lang_graphql::ast::common as ast;
 
 use super::types::output_type::get_custom_output_type;
@@ -18,7 +18,7 @@ use super::types::output_type::get_custom_output_type;
 pub fn apollo_federation_entities_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
-) -> Result<gql_schema::Union<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::Union<GDS>, crate::Error> {
     let entity_typename = mk_typename("_Entity")?;
     let mut entity_members = BTreeMap::new();
     for model in gds.metadata.models.values() {
@@ -46,7 +46,7 @@ pub fn apollo_federation_entities_schema(
 
 pub fn apollo_federation_service_schema(
     builder: &mut gql_schema::Builder<GDS>,
-) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::Object<GDS>, crate::Error> {
     let service_typename = mk_typename("_Service")?;
     let sdl_name = mk_name!("sdl");
     let sdl_field = gql_schema::Field::new(

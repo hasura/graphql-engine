@@ -19,10 +19,10 @@ use crate::execute::ir::model_selection;
 use crate::execute::ir::order_by::build_ndc_order_by;
 use crate::execute::ir::permissions;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::GDS;
-use crate::schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 use metadata_resolve;
 use metadata_resolve::Qualified;
+use schema::GDS;
+use schema::{self, Annotation, BooleanExpressionAnnotation, ModelInputAnnotation};
 
 /// IR for the 'select_many' operation on a model
 #[derive(Debug, Serialize)]

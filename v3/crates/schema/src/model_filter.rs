@@ -4,14 +4,13 @@ use open_dds::types::CustomTypeName;
 use std::collections::BTreeMap;
 
 use super::types::input_type;
-use metadata_resolve;
 
 use metadata_resolve::{Qualified, QualifiedTypeReference};
 
-use crate::schema::types;
-use crate::schema::GDS;
+use crate::types;
+use crate::GDS;
 
-type Error = crate::schema::Error;
+use crate::Error;
 
 pub fn get_where_expression_input_field(
     builder: &mut gql_schema::Builder<GDS>,

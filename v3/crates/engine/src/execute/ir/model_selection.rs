@@ -13,9 +13,9 @@ use super::permissions;
 use super::selection_set;
 use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::GDS;
 use metadata_resolve;
 use metadata_resolve::{ConnectorArgumentName, Qualified};
+use schema::GDS;
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]

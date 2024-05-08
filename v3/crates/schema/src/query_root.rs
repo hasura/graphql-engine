@@ -5,9 +5,9 @@ use lang_graphql::schema as gql_schema;
 use open_dds::commands::GraphQlRootFieldKind;
 use std::collections::BTreeMap;
 
-use crate::schema::commands;
-use crate::schema::query_root::node_field::relay_node_field;
-use crate::schema::GDS;
+use crate::commands;
+use crate::query_root::node_field::relay_node_field;
+use crate::GDS;
 
 use self::node_field::RelayNodeFieldOutput;
 
@@ -21,7 +21,7 @@ pub fn query_root_schema(
     builder: &mut gql_schema::Builder<GDS>,
     gds: &GDS,
     query_root_type_name: &TypeName,
-) -> Result<gql_schema::Object<GDS>, crate::schema::Error> {
+) -> Result<gql_schema::Object<GDS>, crate::Error> {
     let mut fields = BTreeMap::new();
     for model in gds.metadata.models.values() {
         for select_unique in model.model.graphql_api.select_uniques.iter() {
@@ -82,7 +82,7 @@ pub fn query_root_schema(
         )
         .is_some()
     {
-        return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+        return Err(crate::Error::DuplicateFieldInQueryRoot {
             field_name: relay_node_gql_field.name,
         });
     };
@@ -105,7 +105,7 @@ pub fn query_root_schema(
             )
             .is_some()
         {
-            return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+            return Err(crate::Error::DuplicateFieldInQueryRoot {
                 field_name: apollo_federation_entities_field.name,
             });
         };
@@ -117,7 +117,7 @@ pub fn query_root_schema(
             )
             .is_some()
         {
-            return Err(crate::schema::Error::DuplicateFieldInQueryRoot {
+            return Err(crate::Error::DuplicateFieldInQueryRoot {
                 field_name: apollo_federation_service_field.name,
             });
         };

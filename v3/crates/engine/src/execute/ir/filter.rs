@@ -8,10 +8,10 @@ use serde::Serialize;
 
 use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::FilterRelationshipAnnotation;
-use crate::schema::GDS;
-use crate::schema::{self};
-use crate::schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
+use schema::FilterRelationshipAnnotation;
+use schema::GDS;
+use schema::{self};
+use schema::{BooleanExpressionAnnotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
 use crate::execute::ir::selection_set::NDCRelationshipName;

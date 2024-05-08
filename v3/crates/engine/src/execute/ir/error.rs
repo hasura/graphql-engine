@@ -11,8 +11,8 @@ use thiserror::Error;
 use tracing_util::{ErrorVisibility, TraceableError};
 use transitive::Transitive;
 
-use crate::schema::{Annotation, NamespaceAnnotation};
 use metadata_resolve::Qualified;
+use schema::{Annotation, NamespaceAnnotation};
 
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, InternalError))]

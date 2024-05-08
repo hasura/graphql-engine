@@ -21,8 +21,8 @@ use crate::execute::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
 use metadata_resolve::Qualified;
 
-use crate::schema::GDS;
-use crate::schema::{self, Annotation, ModelInputAnnotation};
+use schema::GDS;
+use schema::{self, Annotation, ModelInputAnnotation};
 
 /// IR for the 'select_one' operation on a model
 #[derive(Serialize, Debug)]

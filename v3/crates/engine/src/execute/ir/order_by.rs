@@ -5,15 +5,15 @@ use ndc_models;
 use serde::Serialize;
 
 use crate::execute::model_tracking::{count_model, UsagesCounts};
-use crate::schema::OrderByRelationshipAnnotation;
-use crate::schema::{Annotation, InputAnnotation, ModelInputAnnotation};
+use schema::OrderByRelationshipAnnotation;
+use schema::{Annotation, InputAnnotation, ModelInputAnnotation};
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;
 
 use crate::execute::ir::error;
-use crate::schema;
-use crate::schema::GDS;
+use schema;
+use schema::GDS;
 
 #[derive(Debug, Serialize)]
 pub(crate) struct ResolvedOrderBy<'s> {

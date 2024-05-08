@@ -10,9 +10,9 @@ use crate::execute::ir::error;
 use crate::execute::model_tracking::{count_model, UsagesCounts};
 use metadata_resolve;
 
-use crate::schema;
-use crate::schema::GDS;
 use metadata_resolve::{QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use schema;
+use schema::GDS;
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;

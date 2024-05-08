@@ -10,12 +10,12 @@ use crate::execute::ir::error;
 use crate::execute::ir::filter::ResolvedFilterExpression;
 use crate::execute::ir::model_selection;
 use crate::execute::model_tracking::UsagesCounts;
-use crate::schema::GDS;
-use crate::schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 use json_ext::HashMapWithJsonKey;
 use metadata_resolve;
 use metadata_resolve::mk_name;
 use metadata_resolve::Qualified;
+use schema::GDS;
+use schema::{EntityFieldTypeNameMapping, NamespaceAnnotation};
 
 /// IR for the '_entities' operation for a model
 #[derive(Serialize, Debug)]

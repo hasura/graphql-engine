@@ -30,6 +30,7 @@ json-ext = { path = "../utils/json-ext" }
 lang-graphql = { path = "../lang-graphql" }
 open-dds = { path = "../open-dds" }
 opendds-derive = { path = "../utils/opendds-derive" }
+schema = { path = "../schema" }
 tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }
 
@@ -52,7 +53,6 @@ serde = "1.0.152"
 serde_json = "1.0.116"
 serde_path_to_error = "0.1.14"
 strum = "0.26.2"
-strum_macros = "0.26.2"
 thiserror = "1.0"
 tokio = { version = "1.26.0", features = [
   "macros",
