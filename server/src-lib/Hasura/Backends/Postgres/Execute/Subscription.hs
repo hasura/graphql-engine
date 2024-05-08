@@ -358,6 +358,16 @@ mkStreamingMultiplexedQuery userInfo (fieldAlias, resolvedAST) = do
         [resultIdAlias, resultVarsAlias]
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
+    -- json_build_object should not be used without array https://postgrespro.com/list/thread-id/2486891
+    -- Please someone with proper Haskel knowledge change this) 
+    -- Postgres has a limitation of maximum 100 function arguments
+    -- If you have a table with 50 columns this code produces 100 arguments in the  json_build_object and postgres throws error
+     -- And you can't increase this limit in Postgres, the only way is to compile your own version of postgres which is stupid to do otherwise such configuraton can't be done
+     -- Same change needs to be done not just in subscription but in othe rplaces as well where json_build is used
+     -- From what I understood to fix this should be enough to do something like json_object(array[..,..,..])
+     --- Found this in this discussion https://postgrespro.com/list/thread-id/2486891
+     -- At the moment Hasura just can't be used with tables with more that 50 columns which is a huge limitation
+     -- And you have to unecessarelly split tables, I don't even talk about adding computed fields which these also counts as arguments
     rootFieldJsonAggregate = S.SEFnApp "json_build_object" rootFieldJsonPair Nothing
     rootFieldJsonPair =
       [ S.SELit (G.unName fieldAlias),
