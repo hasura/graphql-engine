@@ -1,0 +1,231 @@
+# Authorization Rules in V3
+
+## Motivation
+
+Currently, Hasura uses role based access control, where you define the entire set of permissions per-role. However, this doesn't scale well because:
+- It's not always possible to capture all possible states in the authorization system as separate roles.
+- It's not possible to reuse permissions (allowed fields, model predicate) across roles.
+- For complicated permissions, it's hard to verify the correctness of a model's permissions predicate at a glance.
+
+## Proposal
+
+This RFC proposes a new rule-based mechanism for defining permissions for types, models, and commands in the metadata. The following requirements have been considered as a part of this proposal:
+- Composability: The ability to define multiple simple rules that compose automatically instead of one big expression.
+- Performance: The time it takes to evaluate the permissions for a particular GraphQL request should only depend on the metadata objects being queried and not on the total size of the metadata.
+- Validation: We should be able to statically validate any references to the entities in the metadata (eg: fields, relationships, commands, etc.).
+
+For a given resource (type / model / command), instead of defining permissions for a given role, you would define multiple rules, where each rule contains:
+- One or more composable permission primitives corresponding to the resource.
+- A condition which must evaluate to true at runtime for this rule to apply.
+
+The final permissions for that resource are a composition of the permission primitives defined across rules whose condition evaluated to true.
+
+### Condition
+
+The condition that may be attached to a rule is a boolean expression built using the following primitives.
+
+#### Boolean Operators
+
+The condition must start at a boolean operator. These are the available boolean operators:
+- `and`: array of boolean expressions which are ANDed together.
+- `or`: array of boolean expressions which are ORed together.
+- `not`: boolean exrepssion which is negated.
+- `comparison`: Compares two value expressions with the given operator.
+  - Available operators: `==`, `!=`, `>`, `<`, `>=`, `<=`, 
+
+#### Value Expressions
+
+The left and right side of a comparison expression are value expressions which can either be:
+- Literals
+- Session Variable references
+
+In the future, these may be expanded to include the output from an invoked command or invoke an external policy engine like Open Policy Agent (OPA).
+
+#### Example
+
+Here is a rule that descriebs the condition to enable an authorization rule if the user is an admin or is an unbanned user in the PRO tier.
+
+```yaml
+or:
+  - and:
+    - equal:
+        left:
+          sessionVariable: customer_tier
+        right:
+          literal: PRO_TIER
+    - not:
+        equal:
+          left:
+            sessionVariable: is_banned
+          right:
+            literal: true
+  - equal:
+      left:
+        sessionVariable: is_admin
+      right:
+        literal: true
+```
+
+### Type Permissions
+
+The following permission primitives are available when defining a permissions rule for a type.
+- Allow access to certain fields
+- Deny access to certain fields
+
+If a field is both allowed and denied, it will be denied.
+
+#### Example
+
+```yaml
+kind: TypePermissions
+version: v2
+definition:
+  typeName: Order
+  authorizationRules:
+    # Rule 1: Allow all fields by default
+    - allowFields: "*"
+      condition:
+        literal: true
+    # Rule 2: Deny internal_order_notes to non-admins. Deny always takes precedence over allow.
+    - denyFields:
+        - internal_order_notes
+      condition:
+        not:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: admin
+```
+
+### Model Permissions
+
+The following permission primitives are available when defining a permissions rule for a model.
+- Allow access to certain objects or "rows" (defined by a predicate)
+- Deny access to certain objects or "rows" (defined by a predicate)
+
+If an object/row is both allowed and denied, it will be denied.
+
+#### Example
+
+```yaml
+kind: ModelPermissions
+version: v2
+definition:
+  modelName: Orders
+  authorizationRules:
+    # Rule 1: Allow users to see their own orders
+    - allowObjects:
+        fieldComparison:
+          fieldName: user_id
+          operator: _eq
+          value:
+            sessionVariable: x-hasura-user-id
+      condition:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: user
+    # Rule 2: Disallow anyone except admins to see hidden orders
+    - denyObjects:
+        fieldComparison:
+          fieldName: is_hidden
+          operator: _eq
+          value: 
+            literal: true
+      condition:
+        not:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: admin
+```
+
+### Command Permissions
+
+TODO: Explain command permission primitives
+
+#### Example
+
+```yaml
+kind: CommandPermissions
+version: v2
+definition:
+  commandName: GetProductRecommendations
+  mergeRules:
+    argumentPresets:
+      # Merge Rule: If a caller is allowed multiple number of recommendations, use the higher number
+      - argumentName: num_recommendations
+        merge: MAX
+  authorizationRules:
+    # Rule 1, all non-anonymous roles can execute the command
+    - allowExecution: true
+      condition:
+        not:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: anonymous
+    # Rule 2, maximum 5 recommendations allowed for basic_tier
+    - presetArguments:
+        - argumentName: limit
+          value:
+            literal: 5
+      condition:
+        # Information about whether the user has access to the basic tier is available in OPA
+        equals:
+          - opa:
+            path: /v1/data/product_reommendations/basic_tier
+            input:
+              - fieldName: user_id
+                value:
+                  sessionVariable: x-hasura-user-id
+          - literal: true
+    # Rule 3, maximum 10 recommendations allowed for pro_tier
+    - presetArguments:
+        - argumentName: limit
+          value:
+            literal: 10
+      condition:
+        # Information whether the user has access to the pro tier is available in OPA
+        equals:
+          - left:
+              opa:
+              path: /v1/data/product_reommendations/pro_tier
+              input:
+                - fieldName: user_id
+                  value:
+                    sessionVariable: x-hasura-user-id
+          - right: literal: true
+
+
+kind: CommandPermissions
+version: v2
+definition:
+  commandName: DeleteReviews
+  authorizationRules:
+    # Rule 1: Allow users to only delete their own reviews
+    - presetArguments:
+      - argumentName: restriction
+        value:
+          includeBooleanExpression:
+            fieldComparison:
+              fieldName: user_id
+              operator: _eq
+              value:
+                sessionVariable: x-hasura-user-id
+      condition:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: user
+    # Rule 2: Do not allow anyone except admins to delete flagged reviews
+    - presetArguments:
+      - argumentName: restriction
+        value:
+          excludeBooleanExpression:
+            fieldComparison:
+              fieldName: is_flagged
+              operator: _eq
+              value:
+                literal: true
+      condition:
+          not:
+            equals:
+              left: sessionVariable: x-hasura-role
+              right: literal: admin
+```
