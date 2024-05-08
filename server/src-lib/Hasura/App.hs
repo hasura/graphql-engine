@@ -1134,7 +1134,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   -- initialise the websocket connection reaper thread
   _websocketConnectionReaperThread <-
-    C.forkManagedT "websocket connection reaper thread" logger
+    C.forkManagedT "websocketConnectionReaper" logger
       $ liftIO
       $ WS.websocketConnectionReaper getLatestConfigForWSServer getSchemaCache' (_wseServer wsServerEnv)
 
@@ -1157,7 +1157,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
   -- set by the user and update the JWK accordingly. This will help in applying the
   -- updates without restarting HGE.
   _ <-
-    C.forkManagedT "update JWK" logger
+    C.forkManagedT "updateJWK" logger
       $ updateJwkCtxThread (getAppContext appStateRef) appEnvManager logger
 
   -- These cleanup actions are not directly associated with any
@@ -1508,7 +1508,8 @@ mkPgSourceResolver pgLogger env sourceName config = runExceptT do
   let context = J.object [("source" J..= sourceName)]
   pgPool <- liftIO $ Q.initPGPool connInfo context connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (pccExtensionsSchema config) mempty ConnTemplate_NotApplicable
+  connInfoWithFinalizer <- liftIO $ mkConnInfoWithFinalizer connInfo (pure ())
+  pure $ PGSourceConfig pgExecCtx connInfoWithFinalizer Nothing mempty (pccExtensionsSchema config) mempty ConnTemplate_NotApplicable
 
 mkMSSQLSourceResolver :: SourceResolver 'MSSQL
 mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT do

@@ -665,7 +665,7 @@ v1Alpha1PGDumpHandler b = do
       sourceName = PGD.prbSource b
       sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< HashMap.lookup sourceName sources
   ci <-
-    fmap _pscConnInfo sourceConfig
+    fmap getConnInfo sourceConfig
       `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
   output <- PGD.execPGDump b ci
   return $ RawResp $ HttpResponse output [sqlHeader]

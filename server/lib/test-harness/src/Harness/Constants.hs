@@ -8,6 +8,9 @@ module Harness.Constants
     postgresDb,
     postgresHost,
     postgresPort,
+    postgresPrimaryPort,
+    postgresReplica1Port,
+    postgresReplica2Port,
     postgresqlMetadataConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
@@ -122,6 +125,17 @@ defaultPostgresPort = 5432
 -- | return a unique database name from our TestEnvironment's uniqueTestId
 uniqueDbName :: UniqueTestId -> Text
 uniqueDbName uniqueTestId = "test" <> tshow uniqueTestId
+
+-- * Postgres read replicas
+
+postgresPrimaryPort :: Word16
+postgresPrimaryPort = 65032
+
+postgresReplica1Port :: Word16
+postgresReplica1Port = 65033
+
+postgresReplica2Port :: Word16
+postgresReplica2Port = 65034
 
 -- * Citus
 
