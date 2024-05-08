@@ -29,6 +29,11 @@ import ProductBadge from '@site/src/components/ProductBadge';
 Hasura Cloud and Hasura Enterprise can route queries and subscriptions across _read replicas_ while sending all
 mutations and Metadata API calls to the primary.
 
+This works by selecting a read replica instance at random. Hasura does not
+perform any kind of load balancing across the replicas. The random function used
+has a uniform distribution, and so over time, queries will distribute uniformly
+across all replica instances.
+
 ## Adding read replica URLs
 
 ### Postgres
