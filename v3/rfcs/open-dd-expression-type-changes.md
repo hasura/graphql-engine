@@ -102,7 +102,9 @@ definition:
           operatorMapping:
             _within: int_within
   # whether to enable _is_null
-  enableIsNull: true
+  isNull:
+    # This is nested to allow for renaming of is_null here in the future
+    enable: true
   graphql:
     typeName: Int_comparison_exp_with_eq_within_and_is_null
 ```
@@ -132,9 +134,13 @@ definition:
           # This is optional for relationships to models, and defaults to the filterExpressionType of the model
           booleanExpressionType: Artist_bool_exp
   # whether to enable _and / _or / _not
-  enableLogicalOperators: true
+  logicalOperators:
+    # This is nested to allow for renaming of logical operators here in the future
+    enable: true
   # whether to enable _is_null
-  enableIsNull: true
+  isNull:
+    # This is nested to allow for renaming of is_null here in the future
+    enable: true
   graphql:
     typeName: App_Album_bool_exp
 ```
