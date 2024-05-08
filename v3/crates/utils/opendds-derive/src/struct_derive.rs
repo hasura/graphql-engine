@@ -147,30 +147,42 @@ fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::Toke
                     }
                 });
             quote! {
-                default: Some(#default_exp),
+                metadata.default = Some(#default_exp);
             }
         } else {
             proc_macro2::TokenStream::new()
         };
 
-        let description = field
-            .description
-            .as_ref()
-            .map(|d| {
-                quote! {
-                    description: Some(#d.to_string()),
-                }
-            })
-            .unwrap_or_default();
+        let description = if let Some(d) = field.description.as_ref() {
+            quote! {
+                metadata.description = Some(#d.to_string());
+            }
+        } else {
+            proc_macro2::TokenStream::new()
+        };
+
+        // We only modify the schema if necessary, as doing so adds extra levels
+        // of nesting for the `$ref` value. (According to JSON Schema, `$ref`
+        // cannot be mixed with other properties, and so `schemars` will nest
+        // it inside an `allOf` field.)
+        let schema_with_metadata = if default_prop.is_empty() && description.is_empty() {
+            quote! {
+                schema
+            }
+        } else {
+            quote! {
+                let mut schema_object = schema.into_object();
+                let metadata = schema_object.metadata();
+                #default_prop
+                #description
+                schemars::schema::Schema::Object(schema_object)
+            }
+        };
 
         let field_schema_exp = quote! {
             {
                 let schema = open_dds::traits::gen_subschema_for::<#ty>(gen);
-                schemars::_private::apply_metadata(schema, schemars::schema::Metadata{
-                    #default_prop
-                    #description
-                    ..Default::default()
-                })
+                #schema_with_metadata
             }
         };
         let properties_insert = quote! {

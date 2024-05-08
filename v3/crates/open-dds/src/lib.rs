@@ -133,7 +133,7 @@ impl traits::OpenDd for Metadata {
     }
 
     fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let schema = schemars::schema::Schema::Object(schemars::schema::SchemaObject {
+        let mut schema_object = schemars::schema::SchemaObject {
             subschemas: Some(Box::new(schemars::schema::SubschemaValidation {
                 any_of: Some(vec![
                     traits::gen_subschema_for::<Vec<OpenDdSubgraphObject>>(gen),
@@ -142,17 +142,12 @@ impl traits::OpenDd for Metadata {
                 ..Default::default()
             })),
             ..Default::default()
-        });
-        schemars::_private::apply_metadata(
-            schema,
-            schemars::schema::Metadata {
-                title: Some(Self::_schema_name()),
-                description: Some(
-                    "All of the metadata required to run Hasura v3 engine.".to_owned(),
-                ),
-                ..Default::default()
-            },
-        )
+        };
+        let metadata = schema_object.metadata();
+        metadata.title = Some(Self::_schema_name());
+        metadata.description =
+            Some("All of the metadata required to run Hasura v3 engine.".to_owned());
+        schemars::schema::Schema::Object(schema_object)
     }
 
     fn _schema_name() -> String {

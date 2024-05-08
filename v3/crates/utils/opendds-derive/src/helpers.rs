@@ -91,29 +91,25 @@ pub fn apply_schema_metadata(
     let description = json_schema_metadata
         .description
         .as_ref()
-        .map(|s| quote! {description: Some(#s.to_owned()),})
+        .map(|s| quote! { metadata.description = Some(#s.to_owned()); })
         .unwrap_or_default();
 
     let examples = json_schema_metadata
         .example
         .as_ref()
-        .map(|eg| {
-            quote! {
-                examples: [#eg()].to_vec(),
-            }
-        })
+        .map(|eg| quote! { metadata.examples = [#eg()].to_vec(); })
         .unwrap_or_default();
     quote! {
         let schema = {
             #schema_expr
         };
-        schemars::_private::apply_metadata(schema, schemars::schema::Metadata {
-            title: Some(#title.to_owned()),
-            id: Some(format!("https://hasura.io/jsonschemas/metadata/{}", Self::_schema_name())),
-            #description
-            #examples
-            ..Default::default()
-        })
+        let mut schema_object = schema.into_object();
+        let metadata = schema_object.metadata();
+        metadata.title = Some(#title.to_owned());
+        metadata.id = Some(format!("https://hasura.io/jsonschemas/metadata/{}", Self::_schema_name()));
+        #description
+        #examples
+        schemars::schema::Schema::Object(schema_object)
     }
 }
 
