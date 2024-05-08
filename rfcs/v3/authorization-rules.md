@@ -30,8 +30,15 @@ The condition must start at a boolean operator. These are the available boolean 
 - `and`: array of boolean expressions which are ANDed together.
 - `or`: array of boolean expressions which are ORed together.
 - `not`: boolean exrepssion which is negated.
-- `comparison`: Compares two value expressions with the given operator.
-  - Available operators: `==`, `!=`, `>`, `<`, `>=`, `<=`, 
+- `equal`: Compares two value expressions are the same.
+- `greaterThan`: Compares left > right.
+- `lessThan`: Compares left < right.
+- `greaterThanOrEqual`: Compares left >= right
+- `lessThanOrEqual`: Compares left <= right
+
+In the future, these may be expanded to:
+- `regexMatch`: Whether a given value matches the given regular expression
+- `contains`: Whether a given value is contained within a given array of values
 
 #### Value Expressions
 
@@ -39,7 +46,9 @@ The left and right side of a comparison expression are value expressions which c
 - Literals
 - Session Variable references
 
-In the future, these may be expanded to include the output from an invoked command or invoke an external policy engine like Open Policy Agent (OPA).
+In the future, these may be expanded to:
+- The output from an invoked command
+- The result of invoking an external policy engine like Open Policy Agent (OPA).
 
 #### Example
 
@@ -139,7 +148,12 @@ definition:
 
 ### Command Permissions
 
-TODO: Explain command permission primitives
+The following primitives are available when defining command permissions:
+- Allow / deny command execution. Deny takes precedence over allow.
+- Preset a command argument to a fixed value computable at request time.
+  - For boolean expression arguments, presets can be composed by using `includeBooleanExpression`, `excludeBooleanExpression` and the final preset is a merge of all applicable rules.
+  - For non-boolean expression arguments, if there are multiple rules that are enabled, and both use specify presets, then the rule defined later in the order takes precedence.
+- Validation of command inputs. If there are multiple rules with different validations, all validations will be enforced.
 
 #### Example
 
@@ -147,12 +161,8 @@ TODO: Explain command permission primitives
 kind: CommandPermissions
 version: v2
 definition:
+  # Command takes two inputs, "query" and "limit". 
   commandName: GetProductRecommendations
-  mergeRules:
-    argumentPresets:
-      # Merge Rule: If a caller is allowed multiple number of recommendations, use the higher number
-      - argumentName: num_recommendations
-        merge: MAX
   authorizationRules:
     # Rule 1, all non-anonymous roles can execute the command
     - allowExecution: true
@@ -192,7 +202,18 @@ definition:
                   value:
                     sessionVariable: x-hasura-user-id
           - right: literal: true
-
+    # Rule 4, run a custom command to validate the "query" argument
+    - validate: 
+        equals:
+          left:
+            runCommand:
+              name: is_valid_recommendation_query
+              arguments:
+                - name: query_to_validate
+                  value:
+                    fromInputArgument: query
+          right:
+            literal: true
 
 kind: CommandPermissions
 version: v2
