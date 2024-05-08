@@ -26,7 +26,7 @@ pub use stages::model_permissions::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
 };
 pub use stages::models::{
-    Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
+    ConnectorArgumentName, Model, ModelOrderByExpression, ModelSource, SelectManyGraphQlDefinition,
     SelectUniqueGraphQlDefinition,
 };
 pub use stages::object_types::{

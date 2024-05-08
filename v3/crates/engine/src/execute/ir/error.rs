@@ -1,6 +1,7 @@
 use gql::ast::common as ast;
 use lang_graphql as gql;
 use open_dds::{
+    arguments::ArgumentName,
     relationships::RelationshipName,
     session_variables::SessionVariable,
     types::{CustomTypeName, FieldName},
@@ -129,6 +130,12 @@ pub enum InternalDeveloperError {
         type_name: Qualified<CustomTypeName>,
         relationship_name: RelationshipName,
         field_name: FieldName,
+    },
+
+    #[error("Argument mapping not found for the argument {argument_name:} while executing the relationship {relationship_name:}")]
+    ArgumentMappingNotFoundForRelationship {
+        relationship_name: RelationshipName,
+        argument_name: ArgumentName,
     },
 
     // we'll be adding them shortly, and not advertising the feature until they are complete

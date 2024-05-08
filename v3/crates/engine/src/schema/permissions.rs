@@ -3,9 +3,9 @@ use std::collections::{BTreeMap, HashMap};
 
 use crate::schema::Role;
 use crate::schema::{self, types};
-use metadata_resolve::ValueExpression;
 use metadata_resolve::{self};
 use metadata_resolve::{object_type_exists, unwrap_custom_type_name};
+use metadata_resolve::{ConnectorArgumentName, ValueExpression};
 use metadata_resolve::{Qualified, QualifiedTypeReference};
 
 use super::types::ArgumentNameAndPath;
@@ -226,7 +226,7 @@ pub(crate) fn get_command_namespace_annotations(
 fn build_annotations_from_input_object_type_permissions(
     field_path: &mut [String],
     type_reference: &QualifiedTypeReference,
-    ndc_argument_name: &Option<String>,
+    ndc_argument_name: &Option<ConnectorArgumentName>,
     object_types: &HashMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
@@ -302,7 +302,7 @@ fn build_preset_map_from_input_object_type_permission(
     field_mappings: Option<&BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
     field_path: &[String],
-    ndc_argument_name: &Option<String>,
+    ndc_argument_name: &Option<ConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<
     BTreeMap<ArgumentNameAndPath, (QualifiedTypeReference, metadata_resolve::ValueExpression)>,

@@ -18,6 +18,23 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+#[derive(
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    derive_more::Display,
+    ref_cast::RefCast,
+)]
+/// The name of an argument as defined by a data connector
+#[repr(transparent)]
+pub struct ConnectorArgumentName(pub String);
+
 pub struct ModelsOutput {
     pub models: IndexMap<Qualified<ModelName>, Model>,
     pub graphql_types: HashSet<ast::TypeName>,
@@ -94,7 +111,7 @@ pub struct ModelSource {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, String>,
+    pub argument_mappings: HashMap<ArgumentName, ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

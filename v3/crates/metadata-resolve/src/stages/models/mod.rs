@@ -1,9 +1,9 @@
 use open_dds::data_connector::DataConnectorObjectType;
 pub use types::{
-    LimitFieldGraphqlConfig, Model, ModelGraphQlApi, ModelGraphqlApiArgumentsConfig,
-    ModelOrderByExpression, ModelSource, ModelsOutput, NDCFieldSourceMapping,
-    OffsetFieldGraphqlConfig, OrderByExpressionInfo, SelectManyGraphQlDefinition,
-    SelectUniqueGraphQlDefinition, UniqueIdentifierField,
+    ConnectorArgumentName, LimitFieldGraphqlConfig, Model, ModelGraphQlApi,
+    ModelGraphqlApiArgumentsConfig, ModelOrderByExpression, ModelSource, ModelsOutput,
+    NDCFieldSourceMapping, OffsetFieldGraphqlConfig, OrderByExpressionInfo,
+    SelectManyGraphQlDefinition, SelectUniqueGraphQlDefinition, UniqueIdentifierField,
 };
 mod types;
 

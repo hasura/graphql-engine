@@ -17,8 +17,9 @@ use open_dds::{
 
 use metadata_resolve::{
     self, deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,
-    serialize_non_string_key_btreemap, serialize_qualified_btreemap, DataConnectorLink,
-    NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping, ValueExpression,
+    serialize_non_string_key_btreemap, serialize_qualified_btreemap, ConnectorArgumentName,
+    DataConnectorLink, NdcColumnForComparison, Qualified, QualifiedTypeReference, TypeMapping,
+    ValueExpression,
 };
 
 use json_ext::HashMapWithJsonKey;
@@ -97,7 +98,7 @@ pub struct CommandSourceDetail {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, String>,
+    pub argument_mappings: HashMap<ArgumentName, ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]
@@ -188,7 +189,7 @@ pub enum ModelInputAnnotation {
     ModelArgumentsExpression,
     ModelArgument {
         argument_type: QualifiedTypeReference,
-        ndc_table_argument: Option<String>,
+        ndc_table_argument: Option<ConnectorArgumentName>,
     },
     ComparisonOperation {
         operator: String,
@@ -241,7 +242,7 @@ pub enum InputAnnotation {
     BooleanExpression(BooleanExpressionAnnotation),
     CommandArgument {
         argument_type: QualifiedTypeReference,
-        ndc_func_proc_argument: Option<String>,
+        ndc_func_proc_argument: Option<ConnectorArgumentName>,
     },
     Relay(RelayInputAnnotation),
     ApolloFederationRepresentationsInput(ApolloFederationInputAnnotation),
@@ -285,7 +286,7 @@ impl Display for ArgumentPresets {
 /// preset
 pub struct ArgumentNameAndPath {
     /// Name of the ndc function/procedure argument
-    pub ndc_argument_name: Option<String>,
+    pub ndc_argument_name: Option<ConnectorArgumentName>,
     /// Optional path of field names to traverse to get to a field, in case of
     /// complex input object types
     pub field_path: Vec<String>,

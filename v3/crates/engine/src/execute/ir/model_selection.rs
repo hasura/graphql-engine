@@ -15,7 +15,7 @@ use crate::execute::ir::error;
 use crate::execute::model_tracking::UsagesCounts;
 use crate::schema::GDS;
 use metadata_resolve;
-use metadata_resolve::Qualified;
+use metadata_resolve::{ConnectorArgumentName, Qualified};
 
 /// IR fragment for any 'select' operation on a model
 #[derive(Debug, Serialize)]
@@ -27,7 +27,7 @@ pub struct ModelSelection<'s> {
     pub(crate) collection: &'s String,
 
     // Arguments for the NDC collection
-    pub(crate) arguments: BTreeMap<String, ndc_models::Argument>,
+    pub(crate) arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
 
     // The boolean expression that would fetch a single row from this model
     pub(crate) filter_clause: ResolvedFilterExpression<'s>,
@@ -51,7 +51,7 @@ pub(crate) fn model_selection_ir<'s>(
     selection_set: &normalized_ast::SelectionSet<'s, GDS>,
     data_type: &Qualified<CustomTypeName>,
     model_source: &'s metadata_resolve::ModelSource,
-    arguments: BTreeMap<String, ndc_models::Argument>,
+    arguments: BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
     mut filter_clauses: ResolvedFilterExpression<'s>,
     permissions_predicate: &'s metadata_resolve::FilterPermission,
     limit: Option<u32>,

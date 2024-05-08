@@ -26,7 +26,7 @@ use crate::schema::CommandSourceDetail;
 use crate::schema::TypeKind;
 use crate::schema::GDS;
 use metadata_resolve;
-use metadata_resolve::{Qualified, QualifiedTypeReference};
+use metadata_resolve::{ConnectorArgumentName, Qualified, QualifiedTypeReference};
 
 /// IR for the 'command' operations
 #[derive(Serialize, Debug)]
@@ -64,7 +64,7 @@ pub struct FunctionBasedCommand<'s> {
     pub function_name: &'s FunctionName,
 
     /// Variable arguments to be used for remote joins
-    pub variable_arguments: BTreeMap<String, String>,
+    pub variable_arguments: BTreeMap<ConnectorArgumentName, String>,
 }
 
 /// IR for the 'procedure based command' operations

@@ -26,7 +26,7 @@ pub enum NDCValidationError {
     NoSuchArgument {
         db_name: Qualified<DataConnectorName>,
         collection_name: String,
-        argument_name: String,
+        argument_name: models::ConnectorArgumentName,
     },
     #[error(
         "argument {argument_name} is not defined for function/procedure {func_proc_name} in data connector {db_name}"
@@ -34,7 +34,7 @@ pub enum NDCValidationError {
     NoSuchArgumentForCommand {
         db_name: Qualified<DataConnectorName>,
         func_proc_name: String,
-        argument_name: String,
+        argument_name: models::ConnectorArgumentName,
     },
     #[error(
         "column {column_name} is not defined in collection {collection_name} in data connector {db_name}"
@@ -154,7 +154,7 @@ pub fn validate_ndc(
         })?;
 
     for mapped_argument_name in model_source.argument_mappings.values() {
-        if !collection.arguments.contains_key(mapped_argument_name) {
+        if !collection.arguments.contains_key(&mapped_argument_name.0) {
             return Err(NDCValidationError::NoSuchArgument {
                 db_name: db.name.clone(),
                 collection_name: collection_name.clone(),
@@ -294,7 +294,7 @@ pub fn validate_ndc_command(
 
     // Check if the arguments are correctly mapped
     for mapped_argument_name in command_source.argument_mappings.values() {
-        if !command_source_ndc_arguments.contains_key(mapped_argument_name) {
+        if !command_source_ndc_arguments.contains_key(&mapped_argument_name.0) {
             return Err(NDCValidationError::NoSuchArgumentForCommand {
                 db_name: db.name.clone(),
                 func_proc_name: command_source_func_proc_name.clone(),

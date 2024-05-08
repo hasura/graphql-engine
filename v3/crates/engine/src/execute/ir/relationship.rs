@@ -466,7 +466,18 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     let mut variable_arguments = BTreeMap::new();
     for (_source, target_argument_name) in &join_mapping {
         let target_value_variable = format!("${}", target_argument_name);
-        variable_arguments.insert(target_argument_name.to_string(), target_value_variable);
+        let ndc_argument_name = target_source
+            .details
+            .argument_mappings
+            .get(target_argument_name)
+            .ok_or_else(|| {
+                error::InternalDeveloperError::ArgumentMappingNotFoundForRelationship {
+                    relationship_name: annotation.relationship_name.clone(),
+                    argument_name: target_argument_name.clone(),
+                }
+            })?;
+
+        variable_arguments.insert(ndc_argument_name.clone(), target_value_variable);
     }
     remote_relationships_ir.variable_arguments = variable_arguments;
 

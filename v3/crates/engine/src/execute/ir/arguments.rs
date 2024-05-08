@@ -1,21 +1,22 @@
 use std::collections::BTreeMap;
 
-use crate::execute::model_tracking::UsagesCounts;
-use hasura_authn_core::SessionVariables;
-use lang_graphql::ast::common::Name;
-use lang_graphql::normalized_ast::{InputField, Value};
-use ndc_models;
-use nonempty::NonEmpty;
-use open_dds::types::{CustomTypeName, InbuiltType};
-
 use crate::execute::ir::arguments;
 use crate::execute::ir::error;
+use crate::execute::model_tracking::UsagesCounts;
 use crate::schema::GDS;
 use crate::schema::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
 };
+use hasura_authn_core::SessionVariables;
+use lang_graphql::ast::common::Name;
+use lang_graphql::normalized_ast::{InputField, Value};
 use metadata_resolve::TypeMapping;
-use metadata_resolve::{Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference};
+use metadata_resolve::{
+    ConnectorArgumentName, Qualified, QualifiedBaseType, QualifiedTypeName, QualifiedTypeReference,
+};
+use ndc_models;
+use nonempty::NonEmpty;
+use open_dds::types::{CustomTypeName, InbuiltType};
 
 use super::permissions;
 
@@ -70,7 +71,7 @@ pub(crate) fn follow_field_path_and_insert_value(
 pub(crate) fn process_model_arguments_presets(
     argument_presets: &ArgumentPresets,
     session_variables: &SessionVariables,
-    model_arguments: &mut BTreeMap<String, ndc_models::Argument>,
+    model_arguments: &mut BTreeMap<ConnectorArgumentName, ndc_models::Argument>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<(), error::Error> {
     let ArgumentPresets { argument_presets } = argument_presets;
@@ -99,7 +100,7 @@ pub(crate) fn process_model_arguments_presets(
             // if field path is empty, then the entire argument has to preset
             None => {
                 model_arguments.insert(
-                    argument_name.to_string(),
+                    argument_name.clone(),
                     ndc_models::Argument::Literal {
                         value: actual_value,
                     },
@@ -107,7 +108,7 @@ pub(crate) fn process_model_arguments_presets(
             }
             // if there is some field path, preset the argument partially based on the field path
             Some(field_path) => {
-                if let Some(current_arg) = model_arguments.get_mut(&argument_name.to_string()) {
+                if let Some(current_arg) = model_arguments.get_mut(&argument_name.clone()) {
                     let current_arg = match current_arg {
                         ndc_models::Argument::Variable { name: _ } => {
                             Err(error::InternalEngineError::ArgumentPresetExecution {
@@ -152,7 +153,7 @@ pub fn build_ndc_command_arguments_as_value(
                 &argument.value,
                 command_type_mappings,
             )?;
-            return Ok((ndc_func_proc_argument, mapped_argument_value));
+            return Ok((ndc_func_proc_argument.to_string(), mapped_argument_value));
         }
         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
             annotation: annotation.clone(),
@@ -164,7 +165,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
     model_operation_field: &Name,
     arguments: TInputFieldIter,
     model_type_mappings: &BTreeMap<Qualified<CustomTypeName>, TypeMapping>,
-) -> Result<BTreeMap<String, ndc_models::Argument>, error::Error> {
+) -> Result<BTreeMap<ConnectorArgumentName, ndc_models::Argument>, error::Error> {
     let mut ndc_arguments = BTreeMap::new();
     for argument in arguments {
         match argument.info.generic {
@@ -184,7 +185,7 @@ pub fn build_ndc_model_arguments<'a, TInputFieldIter: Iterator<Item = &'a InputF
                     model_type_mappings,
                 )?;
                 ndc_arguments.insert(
-                    ndc_table_argument,
+                    ndc_table_argument.clone(),
                     ndc_models::Argument::Literal {
                         value: mapped_argument_value,
                     },

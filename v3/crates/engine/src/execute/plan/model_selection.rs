@@ -39,7 +39,11 @@ pub(crate) fn ndc_ir<'s, 'ir>(
     let query_request = ndc_models::QueryRequest {
         query,
         collection: ir.collection.clone(),
-        arguments: ir.arguments.clone(),
+        arguments: ir
+            .arguments
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect(),
         collection_relationships,
         variables: None,
     };

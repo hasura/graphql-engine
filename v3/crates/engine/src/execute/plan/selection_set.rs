@@ -193,6 +193,7 @@ pub(crate) fn process_selection_set_ir<'s, 'ir>(
                 relationship_info,
             } => {
                 let mut join_mapping = HashMap::new();
+
                 for ((src_field_alias, src_field), target_field) in &relationship_info.join_mapping
                 {
                     let ndc_field_alias = process_remote_relationship_field_mapping(

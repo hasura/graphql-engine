@@ -197,6 +197,14 @@ fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_remote_relationships_model_to_multiple_commands() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/remote_relationships/command/model_to_command/multiple_commands";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+}
+
+#[test]
 fn test_remote_mutually_recursive_relationships_model_to_command() -> anyhow::Result<()> {
     let test_path_string =
         "execute/remote_relationships/command/model_to_command/mutually_recursive";

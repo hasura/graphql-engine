@@ -117,7 +117,7 @@
             "name": "get_movie_by_id",
             "arguments": [
               {
-                "name": "movie_id",
+                "name": "target_argument_movie_id",
                 "type": "Int!"
               }
             ],
@@ -128,7 +128,7 @@
                 "function": "get_movie_by_id"
               },
               "argumentMapping": {
-                "movie_id": "id"
+                "target_argument_movie_id": "movie_id"
               }
             },
             "graphql": {
@@ -288,7 +288,7 @@
                 },
                 "target": {
                   "argument": {
-                    "argumentName": "movie_id"
+                    "argumentName": "target_argument_movie_id"
                   }
                 }
               }

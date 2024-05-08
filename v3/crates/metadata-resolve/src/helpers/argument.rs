@@ -40,7 +40,7 @@ pub enum ArgumentMappingError {
     #[error("argument {argument_name:} is mapped to an unknown argument {ndc_argument_name:}")]
     UnknownNdcArgument {
         argument_name: ArgumentName,
-        ndc_argument_name: String,
+        ndc_argument_name: models::ConnectorArgumentName,
     },
     #[error("the mapping for argument {argument_name:} has been defined more than once")]
     DuplicateCommandArgumentMapping { argument_name: ArgumentName },
@@ -54,7 +54,7 @@ pub enum ArgumentMappingError {
     )]
     UnknownNdcType {
         argument_name: ArgumentName,
-        ndc_argument_name: String,
+        ndc_argument_name: models::ConnectorArgumentName,
         type_name: Qualified<CustomTypeName>,
         unknown_ndc_type: String,
     },
@@ -77,15 +77,23 @@ pub fn get_argument_mappings<'a>(
     >,
 ) -> Result<
     (
-        HashMap<ArgumentName, String>,
+        HashMap<ArgumentName, models::ConnectorArgumentName>,
         Vec<type_mappings::TypeMappingToCollect<'a>>,
     ),
     ArgumentMappingError,
 > {
-    let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &String> =
-        HashMap::from_iter(argument_mapping.iter());
-    let mut resolved_argument_mappings = HashMap::<ArgumentName, String>::new();
+    let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &models::ConnectorArgumentName> =
+        HashMap::from_iter(
+            argument_mapping
+                .iter()
+                .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(v))),
+        );
+
+    let mut resolved_argument_mappings =
+        HashMap::<ArgumentName, models::ConnectorArgumentName>::new();
+
     let mut type_mappings_to_collect = Vec::<type_mappings::TypeMappingToCollect>::new();
+
     for (argument_name, argument_type) in arguments {
         let mapped_to_ndc_argument_name = if let Some(mapped_to_ndc_argument_name) =
             unconsumed_argument_mappings.remove(&argument_name)
@@ -94,16 +102,16 @@ pub fn get_argument_mappings<'a>(
         } else {
             // If there's no mapping defined for an argument, assume that it
             // implicitly maps to the same name
-            argument_name.to_string()
+            let ArgumentName(inner) = argument_name;
+            models::ConnectorArgumentName(inner.to_string())
         };
 
-        let ndc_argument_info =
-            ndc_arguments
-                .get(&mapped_to_ndc_argument_name)
-                .ok_or_else(|| ArgumentMappingError::UnknownNdcArgument {
-                    argument_name: argument_name.clone(),
-                    ndc_argument_name: mapped_to_ndc_argument_name.clone(),
-                })?;
+        let ndc_argument_info = ndc_arguments
+            .get(&mapped_to_ndc_argument_name.to_string())
+            .ok_or_else(|| ArgumentMappingError::UnknownNdcArgument {
+                argument_name: argument_name.clone(),
+                ndc_argument_name: mapped_to_ndc_argument_name.clone(),
+            })?;
 
         let existing_mapping = resolved_argument_mappings
             .insert(argument_name.clone(), mapped_to_ndc_argument_name.clone());

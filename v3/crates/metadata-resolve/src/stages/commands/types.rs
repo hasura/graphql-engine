@@ -1,4 +1,4 @@
-use crate::stages::{data_connectors, object_types};
+use crate::stages::{data_connectors, models, object_types};
 use crate::types::subgraph::{
     deserialize_qualified_btreemap, serialize_qualified_btreemap, ArgumentInfo, Qualified,
     QualifiedTypeReference,
@@ -29,7 +29,7 @@ pub struct CommandSource {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, String>,
+    pub argument_mappings: HashMap<ArgumentName, models::ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

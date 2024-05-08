@@ -344,7 +344,7 @@
                     "name": "get_movie_by_id",
                     "description": "Get movie by ID",
                     "arguments": {
-                      "id": {
+                      "movie_id": {
                         "description": "the id of the movie to fetch",
                         "type": {
                           "type": "named",
