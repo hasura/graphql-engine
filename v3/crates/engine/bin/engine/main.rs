@@ -217,13 +217,6 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         .merge(health_route)
         .layer(DefaultBodyLimit::max(10 * MB)); // Set request payload limit to 10 MB
 
-    // If `--enable-cors` is specified, we add a CORS layer to the app.
-    let app = if server.enable_cors {
-        cors::add_cors_layer(app, &server.cors_allow_origin)
-    } else {
-        app
-    };
-
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
     // and its hash on `/metadata-hash`.
     let app = match &server.introspection_metadata {
@@ -235,6 +228,15 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let log = format!("starting server on {address}");
     println!("{log}");
     add_event_on_active_span(log);
+
+    // If `--enable-cors` is specified, we add a CORS layer to the app.
+    // It is important that this layer is added last, since it only affects the layers that precede
+    // it.
+    let app = if server.enable_cors {
+        cors::add_cors_layer(app, &server.cors_allow_origin)
+    } else {
+        app
+    };
 
     // run it with hyper on `addr`
     axum::Server::bind(&address)
