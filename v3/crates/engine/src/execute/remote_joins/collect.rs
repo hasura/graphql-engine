@@ -41,24 +41,24 @@ pub(crate) fn collect_arguments<'s, 'ir>(
     let mut arguments = Arguments::new();
     let mut argument_id_counter = MonotonicCounter::new();
     let mut remote_join = None;
-    let mut sub_tree = JoinLocations::new();
-    let mut remote_alias = String::new();
 
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
             for row in rows.iter() {
                 match lhs_response_type {
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
-                        collect_argument_from_row(
+                        let new_remote_join = collect_argument_from_row(
                             row,
                             key,
                             location,
                             &mut arguments,
                             &mut argument_id_counter,
-                            &mut remote_join,
-                            &mut sub_tree,
-                            &mut remote_alias,
                         )?;
+
+                        // we only ever hold onto the last remote join we see
+                        if new_remote_join.is_some() {
+                            remote_join = new_remote_join
+                        }
                     }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
@@ -66,16 +66,18 @@ pub(crate) fn collect_arguments<'s, 'ir>(
                     } => {
                         let mut command_rows = resolve_command_response_row(row, type_container)?;
                         for command_row in command_rows.iter_mut() {
-                            collect_argument_from_row(
+                            let new_remote_join = collect_argument_from_row(
                                 command_row,
                                 key,
                                 location,
                                 &mut arguments,
                                 &mut argument_id_counter,
-                                &mut remote_join,
-                                &mut sub_tree,
-                                &mut remote_alias,
                             )?;
+
+                            // we only ever hold onto the last remote join we see
+                            if new_remote_join.is_some() {
+                                remote_join = new_remote_join
+                            }
                         }
                     }
                 }
@@ -87,13 +89,26 @@ pub(crate) fn collect_arguments<'s, 'ir>(
         (None, false) => Err(error::FieldInternalError::InternalGeneric {
             description: "unexpected: remote join empty".to_string(),
         })?,
-        (Some(remote_join), _) => Ok(Some(CollectArgumentResult {
+        (
+            Some(CollectArgumentRemoteJoin {
+                join_node,
+                sub_tree,
+                remote_alias,
+            }),
+            _,
+        ) => Ok(Some(CollectArgumentResult {
             arguments,
-            join_node: remote_join,
+            join_node,
             sub_tree,
             remote_alias,
         })),
     }
+}
+
+struct CollectArgumentRemoteJoin<'s, 'ir> {
+    join_node: RemoteJoin<'s, 'ir>,
+    sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
+    remote_alias: String,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -103,10 +118,7 @@ fn collect_argument_from_row<'s, 'ir>(
     location: &Location<(RemoteJoin<'s, 'ir>, JoinId)>,
     arguments: &mut Arguments,
     argument_id_counter: &mut MonotonicCounter,
-    remote_join: &mut Option<RemoteJoin<'s, 'ir>>,
-    sub_tree: &mut JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
-    remote_alias: &mut String,
-) -> Result<(), error::FieldError> {
+) -> Result<Option<CollectArgumentRemoteJoin<'s, 'ir>>, error::FieldError> {
     if location.join_node.is_local() && location.rest.locations.is_empty() {
         Err(error::FieldInternalError::InternalGeneric {
             description: "unexpected: join_node and locations tree both are empty".to_string(),
@@ -120,10 +132,11 @@ fn collect_argument_from_row<'s, 'ir>(
                 let argument_id = ArgumentId(argument_id_counter.get_next());
                 e.insert(argument_id);
             }
-            *remote_join = Some(join_node.clone());
-            *sub_tree = location.rest.clone();
-            *remote_alias = key.to_string();
-            Ok(())
+            Ok(Some(CollectArgumentRemoteJoin {
+                join_node: join_node.clone(),
+                sub_tree: location.rest.clone(),
+                remote_alias: key.to_string(),
+            }))
         }
         JoinNode::Local(location_kind) => {
             let nested_val = row
@@ -134,23 +147,26 @@ fn collect_argument_from_row<'s, 'ir>(
                 })?;
 
             let rows = rows_from_row_field_value(*location_kind, nested_val)?;
+            let mut remote_join = None;
             if let Some(mut rows) = rows {
                 for (sub_key, sub_location) in &location.rest.locations {
                     for row in rows.iter_mut() {
-                        collect_argument_from_row(
+                        let new_remote_join = collect_argument_from_row(
                             row,
                             sub_key,
                             sub_location,
                             arguments,
                             argument_id_counter,
-                            remote_join,
-                            sub_tree,
-                            remote_alias,
                         )?;
+
+                        // we only ever hold onto the last remote join we see
+                        if new_remote_join.is_some() {
+                            remote_join = new_remote_join
+                        }
                     }
                 }
             }
-            Ok(())
+            Ok(remote_join)
         }
     }
 }
