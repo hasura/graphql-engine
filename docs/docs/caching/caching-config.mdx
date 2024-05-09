@@ -24,8 +24,7 @@ Cached responses are stored for a period of time in a LRU (least-recently used) 
 a user-specified TTL (time-to-live) which defaults to 60 seconds.
 
 For self-hosted Enterprise Edition, refer to the [enable caching](/caching/enterprise-caching.mdx) documentation
-configure
-various parameters.
+configure various parameters.
 
 ## Getting started
 
@@ -44,7 +43,6 @@ query MyCachedQuery @cached {
 If the response was cached successfully, the HTTP response will include a `Cache-Control` header, whose value
 (`max-age={SECONDS}`) indicates the maximum number of seconds for the returned response to remain in the cache.
 
-
 ## Controlling cache lifetime
 
 The maximum lifetime of an entry in the cache can be controlled using the `ttl` argument to the `@cached` query
@@ -62,6 +60,13 @@ query MyCachedQuery @cached(ttl: 120) {
 By default, a response will be cached with a maximum lifetime of 60 seconds. The maximum allowed value is 300 seconds (5
 minutes).
 
+:::info Limits for Hasura Cloud projects
+
+As stated above, for any Hasura Cloud project, the maximum allowed value is 300 seconds (5 minutes). Should you need a
+longer cache lifetime, please [contact sales](mailto:sales@hasura.io).
+
+:::
+
 ## Forcing the cache to refresh
 
 The cache entry can be forced to refresh, regardless of the maximum lifetime using the `refresh` argument to `@cached`.
@@ -78,9 +83,8 @@ query MyCachedQuery @cached(refresh: true) {
 
 :::info Use a literal boolean value for refresh
 
-`refresh` must be provided with literal boolean value and not as a variable to
-have the desired effect. If the value of this refresh argument is provided via a
-GraphQL variable, then there would be a cache miss, as it is considered a
+`refresh` must be provided with literal boolean value and not as a variable to have the desired effect. If the value of
+this refresh argument is provided via a GraphQL variable, then there would be a cache miss, as it is considered a
 different query and will generate a new cache key.
 
 :::

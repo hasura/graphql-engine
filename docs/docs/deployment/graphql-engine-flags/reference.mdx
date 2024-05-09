@@ -222,6 +222,18 @@ for JSON encoding-decoding.
 | **Default**         | `false`                                        |
 | **Supported in**    | CE, Enterprise Edition                         |
 
+### Cache Max Entry TTL
+
+The maximum Query Cache TTL value in seconds, defaulting to 3600 seconds (1 hour).
+
+|                     |                                      |
+| ------------------- | ------------------------------------ |
+| **Flag**            | `--query-cache-max-ttl`              |
+| **Env var**         | `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL` |
+| **Accepted values** | Integer                              |
+| **Default**         | `3600`                               |
+| **Supported in**    | Enterprise Edition only              |
+
 ### Close WebSocket connections on metadata change
 
 When metadata changes, close all WebSocket connections (with error code `1012`). This is useful when you want to ensure
@@ -387,31 +399,29 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
-
 ### Enable Automated Persisted Queries
 
 Enables the [Automated Persisted Queries](https://www.apollographql.com/docs/apollo-server/performance/apq/) feature.
 
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--enable-persisted-queries`                     |
-| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES`        |
-| **Accepted values** | Boolean                                          |
-| **Default**         | `false`                                          |
-| **Supported in**    | Enterprise Edition                               |
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--enable-persisted-queries`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_PERSISTED_QUERIES` |
+| **Accepted values** | Boolean                                   |
+| **Default**         | `false`                                   |
+| **Supported in**    | Enterprise Edition                        |
 
 ### Set Automated Persisted Queries TTL
 
 Sets the query TTL in the cache store for Automated Persisted Queries.
 
-|                     |                                                  |
-| ------------------- | ------------------------------------------------ |
-| **Flag**            | `--persisted-queries-ttl`                        |
-| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL`           |
-| **Accepted values** | Integer                                          |
-| **Default**         | `5` (seconds)                                    |
-| **Supported in**    | Enterprise Edition                               |
-
+|                     |                                        |
+| ------------------- | -------------------------------------- |
+| **Flag**            | `--persisted-queries-ttl`              |
+| **Env var**         | `HASURA_GRAPHQL_PERSISTED_QUERIES_TTL` |
+| **Accepted values** | Integer                                |
+| **Default**         | `5` (seconds)                          |
+| **Supported in**    | Enterprise Edition                     |
 
 ### Enable Error Log Level for Trigger Errors
 
@@ -424,7 +434,6 @@ Sets the log-level as `error` for Trigger type error logs (Event Triggers, Sched
 | **Accepted values** | Boolean                                          |
 | **Default**         | `false`                                          |
 | **Supported in**    | CE, Enterprise Edition                           |
-
 
 ### Enable Console
 
@@ -450,7 +459,6 @@ Sets the maximum cumulative length of all headers in bytes.
 | **Accepted values** | Integer                                  |
 | **Default**         | `1024*1024` (1MB)                        |
 | **Supported in**    | CE, Enterprise Edition                   |
-
 
 ### Enable High-cardinality Labels for Metrics
 
@@ -557,7 +565,7 @@ log types — can be found [here](/deployment/logging.mdx#log-types).
 | **Env var**         | `HASURA_GRAPHQL_ENABLED_LOG_TYPES`                                                                                                                                                               |
 | **Accepted values** | String (Comma-separated)                                                                                                                                                                         |
 | **Options**         | `startup`, `http-log`, `webhook-log`, `websocket-log`, `query-log`, `execution-log`, `livequery-poller-log`, `action-handler-log`, `data-connector-log`, `jwk-refresh-log`, `validate-input-log` |
-| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                                   |
+| **Default**         | `startup, http-log, webhook-log, websocket-log`, `jwk-refresh-log`                                                                                                                               |
 | **Supported in**    | CE, Enterprise Edition                                                                                                                                                                           |
 
 ### Events HTTP Pool Size
