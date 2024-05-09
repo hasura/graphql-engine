@@ -31,14 +31,14 @@ The condition must start at a boolean operator. These are the available boolean 
 - `or`: array of boolean expressions which are ORed together.
 - `not`: boolean exrepssion which is negated.
 - `equal`: Compares two value expressions are the same.
+- `contains`: Whether a given value is contained within a given array of values
 - `greaterThan`: Compares left > right.
 - `lessThan`: Compares left < right.
 - `greaterThanOrEqual`: Compares left >= right
 - `lessThanOrEqual`: Compares left <= right
 
-In the future, these may be expanded to:
+In the future, these may be expanded to more boolean operators. For example:
 - `regexMatch`: Whether a given value matches the given regular expression
-- `contains`: Whether a given value is contained within a given array of values
 
 #### Value Expressions
 
@@ -250,3 +250,43 @@ definition:
               left: sessionVariable: x-hasura-role
               right: literal: admin
 ```
+
+### Reusing Relationship Permissions
+
+In the existing authorization system, the entire permissions predicate needs to be specified for a model's permission. For related models, however, this can result in a duplicate and very nested permission predicates.
+
+For example, if I have models for `Channels`, `Threads`, `Replies`. Then my predicates would be as follows:
+- `Channels`: `members._contains(x-hasura-user-id)`
+- `Threads`: `channel.members._contains(x-hasura-user-id`
+- `Replies`: `thread.channel.members._contains(x-hasura-user-id)`.
+
+Ideally, you would be able to express the fact that an object should be selectable if the related object is also selectable.
+
+Hence, we propose the following addition to the permissions predicate:
+```
+allowObjects:
+  relationship:
+    name: 'my_relationship'
+    relatedObjectAllowed: true
+```
+
+
+## FAQs
+
+1. **Will existing metadata continue to be work?**  
+    
+    Yes, existing metadata (using the `v1` version of permissions objects) will continue to work and trivially maps to the new system where the condition is an equality check on the `x-hasura-role` session variable.
+
+2. **Does this subsume the inherited roles feature in v2?**
+    
+    Yes, this is the intended replacement for inherited roles in v2. So, instead of defining multiple base roles and an inherited you would simply define multiple rules which can activated by arbitrary conditions.
+
+    Note, however, that cell-level authorization will not be supported by this system, since you define type (column) permissions and model (row) permissions independently.
+
+3. **Are any changes required to the NDC protocol?**
+   
+   No.
+
+4. **Are any changes required to the user's authentication system?**
+
+   No changes are required to existing authentication systems. However, to fully utilize the power of authorization rules you would want to inject more granular claims (instead of simply roles) during authentication.
