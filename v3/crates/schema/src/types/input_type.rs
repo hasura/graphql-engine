@@ -73,7 +73,7 @@ fn get_custom_input_type(
         gds_type_name,
         &gds.metadata.object_types,
         &gds.metadata.scalar_types,
-        &gds.metadata.boolean_expression_types,
+        &gds.metadata.object_boolean_expression_types,
     )
     .map_err(|_| crate::Error::InternalTypeNotFound {
         type_name: gds_type_name.clone(),

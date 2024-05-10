@@ -44,12 +44,12 @@ pub enum TypeRepresentation<'a, ObjectType> {
 }
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
-/// `boolean_expression_types`
+/// `object_boolean_expression_types`
 pub fn get_type_representation<'a, ObjectType>(
     custom_type_name: &Qualified<CustomTypeName>,
     object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectType>,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &'a HashMap<
+    object_boolean_expression_types: &'a HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -62,9 +62,9 @@ pub fn get_type_representation<'a, ObjectType>(
             Some(scalar_type_representation) => {
                 Ok(TypeRepresentation::Scalar(scalar_type_representation))
             }
-            None => match boolean_expression_types.get(custom_type_name) {
-                Some(boolean_expression_type) => Ok(TypeRepresentation::BooleanExpression(
-                    boolean_expression_type,
+            None => match object_boolean_expression_types.get(custom_type_name) {
+                Some(object_boolean_expression_type) => Ok(TypeRepresentation::BooleanExpression(
+                    object_boolean_expression_type,
                 )),
                 None => Err(Error::UnknownType {
                     data_type: custom_type_name.clone(),
@@ -75,17 +75,17 @@ pub fn get_type_representation<'a, ObjectType>(
 }
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(
-    boolean_expression_type: &boolean_expressions::ObjectBooleanExpressionType,
+    object_boolean_expression_type: &boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a HashMap<
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,
     >,
 ) -> Result<&'a relationships::ObjectTypeWithRelationships, Error> {
     object_types
-        .get(&boolean_expression_type.object_type)
+        .get(&object_boolean_expression_type.object_type)
         .ok_or(Error::from(
             BooleanExpressionError::UnsupportedTypeInObjectBooleanExpressionType {
-                type_name: boolean_expression_type.object_type.clone(),
+                type_name: object_boolean_expression_type.object_type.clone(),
             },
         ))
 }

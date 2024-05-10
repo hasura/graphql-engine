@@ -57,7 +57,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         type_permissions::resolve(&metadata_accessor, &object_types)?;
 
     let boolean_expressions::BooleanExpressionsOutput {
-        boolean_expression_types,
+        object_boolean_expression_types,
         graphql_types,
     } = boolean_expressions::resolve(
         &metadata_accessor,
@@ -81,7 +81,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &apollo_federation_entity_enabled_types,
         &object_types_with_permissions,
         &scalar_types,
-        &boolean_expression_types,
+        &object_boolean_expression_types,
         &graphql_config,
     )?;
 
@@ -90,7 +90,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &data_connectors,
         &object_types_with_permissions,
         &scalar_types,
-        &boolean_expression_types,
+        &object_boolean_expression_types,
     )?;
 
     apollo::resolve(
@@ -111,7 +111,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &commands,
         &object_types_with_relationships,
         &scalar_types,
-        &boolean_expression_types,
+        &object_boolean_expression_types,
         &models,
         &data_connectors,
     )?;
@@ -122,7 +122,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         &object_types_with_relationships,
         &scalar_types,
         &models,
-        &boolean_expression_types,
+        &object_boolean_expression_types,
     )?;
 
     let roles = roles::resolve(
@@ -136,7 +136,7 @@ pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
         object_types: object_types_with_relationships,
         models: models_with_permissions,
         commands: commands_with_permissions,
-        boolean_expression_types,
+        object_boolean_expression_types,
         graphql_config: graphql_config.global,
         roles,
     })

@@ -46,7 +46,7 @@ pub fn resolve(
     >,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -71,7 +71,7 @@ pub fn resolve(
             object_types,
             &mut global_id_enabled_types,
             &mut apollo_federation_entity_enabled_types,
-            boolean_expression_types,
+            object_boolean_expression_types,
         )?;
         if resolved_model.global_id_source.is_some() {
             match global_id_models.insert(
@@ -97,7 +97,7 @@ pub fn resolve(
                 data_connectors,
                 object_types,
                 scalar_types,
-                boolean_expression_types,
+                object_boolean_expression_types,
             )?;
         }
         if let Some(model_graphql_definition) = &model.graphql {
@@ -132,7 +132,7 @@ fn resolve_filter_expression_type(
     model: &ModelV1,
     model_data_type: &Qualified<CustomTypeName>,
     subgraph: &str,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -141,23 +141,25 @@ fn resolve_filter_expression_type(
         .filter_expression_type
         .as_ref()
         .map(|filter_expression_type| {
-            let boolean_expression_type_name =
+            let object_boolean_expression_type_name =
                 Qualified::new(subgraph.to_string(), filter_expression_type.clone());
-            let boolean_expression_type = boolean_expression_types
-                .get(&boolean_expression_type_name)
+            let object_boolean_expression_type = object_boolean_expression_types
+                .get(&object_boolean_expression_type_name)
                 .ok_or_else(|| {
                     Error::from(
                         BooleanExpressionError::UnknownBooleanExpressionTypeInModel {
-                            name: boolean_expression_type_name.clone(),
+                            name: object_boolean_expression_type_name.clone(),
                             model: Qualified::new(subgraph.to_string(), model.name.clone()),
                         },
                     )
                 })?;
-            if boolean_expression_type.object_type != *model_data_type {
+            if object_boolean_expression_type.object_type != *model_data_type {
                 return Err(Error::from(
                     BooleanExpressionError::BooleanExpressionTypeForInvalidObjectTypeInModel {
-                        name: boolean_expression_type_name.clone(),
-                        boolean_expression_object_type: boolean_expression_type.object_type.clone(),
+                        name: object_boolean_expression_type_name.clone(),
+                        boolean_expression_object_type: object_boolean_expression_type
+                            .object_type
+                            .clone(),
                         model: Qualified::new(subgraph.to_string(), model.name.clone()),
                         model_object_type: model_data_type.clone(),
                     },
@@ -172,7 +174,7 @@ fn resolve_filter_expression_type(
                 // TODO: Compatibility of model source and the boolean expression type is checked in
                 // resolve_model_source. Figure out a way to make this logic not scattered.
             }
-            Ok(boolean_expression_type.clone())
+            Ok(object_boolean_expression_type.clone())
         })
         .transpose()
 }
@@ -217,7 +219,7 @@ fn resolve_model(
         Qualified<CustomTypeName>,
         Option<Qualified<ModelName>>,
     >,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -340,7 +342,7 @@ fn resolve_model(
         model,
         &qualified_object_type_name,
         subgraph,
-        boolean_expression_types,
+        object_boolean_expression_types,
     )?;
 
     Ok(Model {
@@ -570,7 +572,7 @@ fn resolve_model_source(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -611,7 +613,7 @@ fn resolve_model_source(
         &source_collection.arguments,
         object_types,
         scalar_types,
-        boolean_expression_types,
+        object_boolean_expression_types,
     )
     .map_err(|err| Error::ModelCollectionArgumentMappingError {
         data_connector_name: qualified_data_connector_name.clone(),

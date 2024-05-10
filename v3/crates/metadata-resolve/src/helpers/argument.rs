@@ -71,7 +71,7 @@ pub fn get_argument_mappings<'a>(
         type_permissions::ObjectTypeWithPermissions,
     >,
     scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &'a HashMap<
+    object_boolean_expression_types: &'a HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -128,7 +128,7 @@ pub fn get_argument_mappings<'a>(
                 object_type_name,
                 object_types,
                 scalar_types,
-                boolean_expression_types,
+                object_boolean_expression_types,
             )
             .map_err(|_| ArgumentMappingError::UnknownType {
                 argument_name: argument_name.clone(),
@@ -147,14 +147,14 @@ pub fn get_argument_mappings<'a>(
                     })
                 }
                 TypeRepresentation::Scalar(_) => (),
-                TypeRepresentation::BooleanExpression(boolean_expression_type) => {
+                TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
                     let underlying_ndc_argument_named_type =
                         ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
                             .map_err(ArgumentMappingError::NDCValidationError)?;
 
                     // resolve the object type the boolean expression refers to
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
-                        type_name: &boolean_expression_type.object_type,
+                        type_name: &object_boolean_expression_type.object_type,
                         ndc_object_type_name: DataConnectorObjectType::ref_cast(
                             underlying_ndc_argument_named_type,
                         ),
@@ -189,7 +189,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -215,24 +215,25 @@ pub(crate) fn resolve_value_expression_for_argument(
                 })?;
 
             // lookup the relevant ObjectBooleanExpressionType
-            let boolean_expression_type =
-                boolean_expression_types
-                    .get(base_type)
-                    .ok_or_else(|| Error::UnknownType {
-                        data_type: base_type.clone(),
-                    })?;
+            let object_boolean_expression_type = object_boolean_expression_types
+                .get(base_type)
+                .ok_or_else(|| Error::UnknownType {
+                    data_type: base_type.clone(),
+                })?;
 
             // get the type that the expression is based on
-            let object_type_representation =
-                get_object_type_for_boolean_expression(boolean_expression_type, object_types)?;
+            let object_type_representation = get_object_type_for_boolean_expression(
+                object_boolean_expression_type,
+                object_types,
+            )?;
 
             // look up this type in the context of it's data connector
             // so that we use the correct column names for the data source
             let data_connector_field_mappings = object_type_representation
                 .type_mappings
                 .get(
-                    &boolean_expression_type.data_connector_name,
-                    &boolean_expression_type.data_connector_object_type,
+                    &object_boolean_expression_type.data_connector_name,
+                    &object_boolean_expression_type.data_connector_object_type,
                 )
                 .map(|type_mapping| match type_mapping {
                     object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
@@ -241,8 +242,10 @@ pub(crate) fn resolve_value_expression_for_argument(
                     type_name: base_type.clone(),
                     error: TypeMappingValidationError::DataConnectorTypeMappingNotFound {
                         object_type_name: base_type.clone(),
-                        data_connector_name: boolean_expression_type.data_connector_name.clone(),
-                        data_connector_object_type: boolean_expression_type
+                        data_connector_name: object_boolean_expression_type
+                            .data_connector_name
+                            .clone(),
+                        data_connector_object_type: object_boolean_expression_type
                             .data_connector_object_type
                             .clone(),
                     },
@@ -253,7 +256,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                 base_type,
                 object_type_representation,
                 data_connector_field_mappings,
-                &boolean_expression_type.data_connector_name,
+                &object_boolean_expression_type.data_connector_name,
                 subgraph,
                 data_connectors,
                 object_types,

@@ -21,7 +21,7 @@ pub struct Metadata {
     pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     pub commands: IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
-    pub boolean_expression_types:
+    pub object_boolean_expression_types:
         HashMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub roles: Vec<Role>,

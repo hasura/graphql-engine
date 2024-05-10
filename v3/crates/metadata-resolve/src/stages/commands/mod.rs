@@ -30,7 +30,7 @@ pub fn resolve(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -46,7 +46,7 @@ pub fn resolve(
             subgraph,
             object_types,
             scalar_types,
-            boolean_expression_types,
+            object_boolean_expression_types,
         )?;
         if let Some(command_source) = &command.source {
             resolve_command_source(
@@ -56,7 +56,7 @@ pub fn resolve(
                 data_connectors,
                 object_types,
                 scalar_types,
-                boolean_expression_types,
+                object_boolean_expression_types,
             )?;
         }
         let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
@@ -77,7 +77,7 @@ fn type_exists(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -88,7 +88,7 @@ fn type_exists(
             subgraph,
             object_types,
             scalar_types,
-            boolean_expression_types,
+            object_boolean_expression_types,
         ),
         BaseType::Named(type_name) => match type_name {
             TypeName::Inbuilt(_) => true,
@@ -100,7 +100,7 @@ fn type_exists(
                     &qualified_type_name,
                     object_types,
                     scalar_types,
-                    boolean_expression_types,
+                    object_boolean_expression_types,
                 )
                 .is_ok()
             }
@@ -113,7 +113,7 @@ pub fn resolve_command(
     subgraph: &str,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -128,7 +128,7 @@ pub fn resolve_command(
             subgraph,
             object_types,
             scalar_types,
-            boolean_expression_types,
+            object_boolean_expression_types,
         ) {
             if arguments
                 .insert(
@@ -187,7 +187,7 @@ pub fn resolve_command_source(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -254,7 +254,7 @@ pub fn resolve_command_source(
         ndc_arguments,
         object_types,
         scalar_types,
-        boolean_expression_types,
+        object_boolean_expression_types,
     )
     .map_err(|err| match &command_source.data_connector_command {
         DataConnectorCommand::Function(function_name) => {

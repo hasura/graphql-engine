@@ -26,7 +26,7 @@ lazy_static::lazy_static! {
 pub struct MetadataAccessor {
     pub data_connectors: Vec<QualifiedObject<data_connector::DataConnectorLinkV1>>,
     pub object_types: Vec<QualifiedObject<types::ObjectTypeV1>>,
-    pub boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
+    pub object_boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
     pub scalar_types: Vec<QualifiedObject<types::ScalarTypeV1>>,
     pub data_connector_scalar_representations:
         Vec<QualifiedObject<types::DataConnectorScalarRepresentationV1>>,
@@ -63,11 +63,13 @@ fn load_metadata_objects(
                     .scalar_types
                     .push(QualifiedObject::new(subgraph, scalar_type.upgrade()));
             }
-            OpenDdSubgraphObject::ObjectBooleanExpressionType(boolean_expression_type) => {
-                accessor.boolean_expression_types.push(QualifiedObject::new(
-                    subgraph,
-                    boolean_expression_type.upgrade(),
-                ));
+            OpenDdSubgraphObject::ObjectBooleanExpressionType(object_boolean_expression_type) => {
+                accessor
+                    .object_boolean_expression_types
+                    .push(QualifiedObject::new(
+                        subgraph,
+                        object_boolean_expression_type.upgrade(),
+                    ));
             }
             OpenDdSubgraphObject::DataConnectorScalarRepresentation(scalar_representation) => {
                 accessor
@@ -158,7 +160,7 @@ impl MetadataAccessor {
             data_connectors: vec![],
             object_types: vec![],
             scalar_types: vec![],
-            boolean_expression_types: vec![],
+            object_boolean_expression_types: vec![],
             data_connector_scalar_representations: vec![],
             models: vec![],
             type_permissions: vec![],

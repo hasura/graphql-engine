@@ -40,7 +40,7 @@ pub fn resolve(
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -78,7 +78,7 @@ pub fn resolve(
                 command_permissions,
                 object_types,
                 scalar_types,
-                boolean_expression_types,
+                object_boolean_expression_types,
                 models,
                 data_connectors,
                 subgraph,
@@ -97,7 +97,7 @@ pub fn resolve_command_permissions(
     permissions: &CommandPermissionsV1,
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -126,7 +126,7 @@ pub fn resolve_command_permissions(
                         subgraph,
                         object_types,
                         scalar_types,
-                        boolean_expression_types,
+                        object_boolean_expression_types,
                         models,
                         data_connectors,
                     )?;

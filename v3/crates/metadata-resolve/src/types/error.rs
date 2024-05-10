@@ -597,32 +597,32 @@ pub enum BooleanExpressionError {
     UnsupportedTypeInObjectBooleanExpressionType {
         type_name: Qualified<CustomTypeName>,
     },
-    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {boolean_expression_type:}")]
+    #[error("unknown data connector {data_connector:} referenced in object boolean expression type {object_boolean_expression_type:}")]
     UnknownDataConnectorInObjectBooleanExpressionType {
         data_connector: Qualified<DataConnectorName>,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
     },
-    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {boolean_expression_type:}")]
+    #[error("unknown data connector object type {data_connector_object_type:} (in data connector {data_connector:}) referenced in object boolean expression type {object_boolean_expression_type:}")]
     UnknownDataConnectorTypeInObjectBooleanExpressionType {
         data_connector: Qualified<DataConnectorName>,
         data_connector_object_type: DataConnectorObjectType,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
     },
-    #[error("unknown field '{field_name:}' used in object boolean expression type {boolean_expression_type:}")]
+    #[error("unknown field '{field_name:}' used in object boolean expression type {object_boolean_expression_type:}")]
     UnknownFieldInObjectBooleanExpressionType {
         field_name: FieldName,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
     },
-    #[error("the object type '{object_type:}' used in boolean expression type {boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
+    #[error("the object type '{object_type:}' used in boolean expression type {object_boolean_expression_type:} does not have a mapping to object {data_connector_object_type:} of data connector {data_connector:}")]
     NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
         object_type: Qualified<CustomTypeName>,
-        boolean_expression_type: Qualified<CustomTypeName>,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
         data_connector_object_type: DataConnectorObjectType,
         data_connector: Qualified<DataConnectorName>,
     },
-    #[error("{error:} in boolean expression type {boolean_expression_type:}")]
+    #[error("{error:} in boolean expression type {object_boolean_expression_type:}")]
     BooleanExpressionTypeMappingCollectionError {
-        boolean_expression_type: Qualified<CustomTypeName>,
+        object_boolean_expression_type: Qualified<CustomTypeName>,
         error: TypeMappingCollectionError,
     },
     #[error("the following object boolean expression type is defined more than once: {name:}")]

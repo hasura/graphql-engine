@@ -27,16 +27,16 @@ pub fn resolve(
     existing_graphql_types: &HashSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionsOutput, Error> {
-    let mut boolean_expression_types = HashMap::new();
+    let mut object_boolean_expression_types = HashMap::new();
     let mut graphql_types = existing_graphql_types.clone();
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
-        object: boolean_expression_type,
-    } in &metadata_accessor.boolean_expression_types
+        object: object_boolean_expression_type,
+    } in &metadata_accessor.object_boolean_expression_types
     {
-        let resolved_boolean_expression = resolve_boolean_expression_type(
-            boolean_expression_type,
+        let resolved_boolean_expression = resolve_object_boolean_expression_type(
+            object_boolean_expression_type,
             subgraph,
             data_connectors,
             object_types,
@@ -44,7 +44,7 @@ pub fn resolve(
             &mut graphql_types,
             graphql_config,
         )?;
-        if let Some(existing) = boolean_expression_types.insert(
+        if let Some(existing) = object_boolean_expression_types.insert(
             resolved_boolean_expression.name.clone(),
             resolved_boolean_expression,
         ) {
@@ -56,13 +56,13 @@ pub fn resolve(
         }
     }
     Ok(BooleanExpressionsOutput {
-        boolean_expression_types,
+        object_boolean_expression_types,
         graphql_types,
     })
 }
 
 /// Resolves a given object boolean expression type
-pub(crate) fn resolve_boolean_expression_type(
+pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &open_dds::types::ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
@@ -105,7 +105,7 @@ pub(crate) fn resolve_boolean_expression_type(
             Error::from(
                 BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
                     data_connector: qualified_data_connector_name.clone(),
-                    boolean_expression_type: qualified_name.clone(),
+                    object_boolean_expression_type: qualified_name.clone(),
                 },
             )
         })?;
@@ -120,7 +120,7 @@ pub(crate) fn resolve_boolean_expression_type(
         return Err(Error::from(
             BooleanExpressionError::UnknownDataConnectorTypeInObjectBooleanExpressionType {
                 data_connector: qualified_data_connector_name.clone(),
-                boolean_expression_type: qualified_name.clone(),
+                object_boolean_expression_type: qualified_name.clone(),
                 data_connector_object_type: object_boolean_expression
                     .data_connector_object_type
                     .clone(),
@@ -136,7 +136,7 @@ pub(crate) fn resolve_boolean_expression_type(
                 .ok_or_else(|| {
                     Error::from(BooleanExpressionError::NoDataConnectorTypeMappingForObjectTypeInBooleanExpression {
                         object_type: qualified_object_type_name.clone(),
-                        boolean_expression_type: qualified_name.clone(),
+                        object_boolean_expression_type: qualified_name.clone(),
                         data_connector_object_type: object_boolean_expression
                             .data_connector_object_type.clone(),
                         data_connector: qualified_data_connector_name.clone(),
@@ -153,7 +153,7 @@ pub(crate) fn resolve_boolean_expression_type(
             return Err(
                 BooleanExpressionError::UnknownFieldInObjectBooleanExpressionType {
                     field_name: comparable_field.field_name.clone(),
-                    boolean_expression_type: qualified_name.clone(),
+                    object_boolean_expression_type: qualified_name.clone(),
                 }
                 .into(),
             );
@@ -179,7 +179,7 @@ pub(crate) fn resolve_boolean_expression_type(
                 });
     }
 
-    let boolean_expression_type =
+    let object_boolean_expression_type =
         Qualified::new(subgraph.to_string(), object_boolean_expression.name.clone());
 
     let object_type = Qualified::new(
@@ -209,7 +209,7 @@ pub(crate) fn resolve_boolean_expression_type(
     .map_err(|error| {
         Error::from(
             BooleanExpressionError::BooleanExpressionTypeMappingCollectionError {
-                boolean_expression_type: boolean_expression_type.clone(),
+                object_boolean_expression_type: object_boolean_expression_type.clone(),
                 error,
             },
         )
@@ -233,7 +233,7 @@ pub(crate) fn resolve_boolean_expression_type(
                 .unwrap();
 
             resolve_boolean_expression_info(
-                &boolean_expression_type,
+                &object_boolean_expression_type,
                 &data_connector_name,
                 graphql_type_name.clone(),
                 subgraph,
@@ -280,7 +280,7 @@ pub fn resolve_boolean_expression_info(
         .ok_or(Error::BooleanExpressionError {
             boolean_expression_error:
                 BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
-                    boolean_expression_type: name.clone(),
+                    object_boolean_expression_type: name.clone(),
                     data_connector: data_connector_name.clone(),
                 },
         })?

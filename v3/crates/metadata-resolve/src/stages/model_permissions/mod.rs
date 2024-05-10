@@ -36,7 +36,7 @@ pub fn resolve(
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -78,7 +78,7 @@ pub fn resolve(
                 object_types,
                 scalar_types,
                 models, // This is required to get the model for the relationship target
-                boolean_expression_types,
+                object_boolean_expression_types,
             )?;
 
             model.select_permissions = select_permissions;
@@ -503,7 +503,7 @@ pub fn resolve_model_select_permissions(
     object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &HashMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -544,7 +544,7 @@ pub fn resolve_model_select_permissions(
                             subgraph,
                             object_types,
                             scalar_types,
-                            boolean_expression_types,
+                            object_boolean_expression_types,
                             models,
                             data_connectors,
                         )?;

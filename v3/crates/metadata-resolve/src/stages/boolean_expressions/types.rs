@@ -14,7 +14,8 @@ use open_dds::{
 use serde::{Deserialize, Serialize};
 
 pub struct BooleanExpressionsOutput {
-    pub boolean_expression_types: HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    pub object_boolean_expression_types:
+        HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
     pub graphql_types: HashSet<ast::TypeName>,
 }
 
