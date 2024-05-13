@@ -2099,9 +2099,9 @@ dependencies = [
 
 [[package]]
 name = "opentelemetry-http"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cbfa5308166ca861434f0b0913569579b8e587430a3d6bcd7fd671921ec145a"
+checksum = "7690dc77bf776713848c4faa6501157469017eaf332baccd4eb1cea928743d94"
 dependencies = [
  "async-trait",
  "bytes",
