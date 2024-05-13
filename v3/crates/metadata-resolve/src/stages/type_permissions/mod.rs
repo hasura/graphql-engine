@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use open_dds::permissions::{
     FieldPreset, Role, TypeOutputPermission, TypePermissionsV1, ValueExpression,
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TypeInputPermission {
-    pub field_presets: HashMap<FieldName, ValueExpression>,
+    pub field_presets: BTreeMap<FieldName, ValueExpression>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -24,10 +24,10 @@ pub struct ObjectTypeWithPermissions {
     pub object_type: object_types::ObjectTypeRepresentation,
     /// permissions on this type, when it is used in an output context (e.g. as
     /// a return type of Model or Command)
-    pub type_output_permissions: HashMap<Role, TypeOutputPermission>,
+    pub type_output_permissions: BTreeMap<Role, TypeOutputPermission>,
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
-    pub type_input_permissions: HashMap<Role, TypeInputPermission>,
+    pub type_input_permissions: BTreeMap<Role, TypeInputPermission>,
     /// type mappings for each data connector
     pub type_mappings: object_types::DataConnectorTypeMappingsForObject,
 }
@@ -35,17 +35,17 @@ pub struct ObjectTypeWithPermissions {
 /// resolve type permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    object_types: &HashMap<Qualified<CustomTypeName>, object_types::ObjectTypeWithTypeMappings>,
-) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>, Error> {
-    let mut object_types_with_permissions = HashMap::new();
+    object_types: &BTreeMap<Qualified<CustomTypeName>, object_types::ObjectTypeWithTypeMappings>,
+) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithPermissions>, Error> {
+    let mut object_types_with_permissions = BTreeMap::new();
     for (object_type_name, object_type) in object_types {
         object_types_with_permissions.insert(
             object_type_name.clone(),
             ObjectTypeWithPermissions {
                 object_type: object_type.object_type.clone(),
                 type_mappings: object_type.type_mappings.clone(),
-                type_input_permissions: HashMap::new(),
-                type_output_permissions: HashMap::new(),
+                type_input_permissions: BTreeMap::new(),
+                type_output_permissions: BTreeMap::new(),
             },
         );
     }
@@ -84,8 +84,8 @@ pub fn resolve(
 pub fn resolve_output_type_permission(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
-) -> Result<HashMap<Role, TypeOutputPermission>, Error> {
-    let mut resolved_type_permissions = HashMap::new();
+) -> Result<BTreeMap<Role, TypeOutputPermission>, Error> {
+    let mut resolved_type_permissions = BTreeMap::new();
 
     // validate all the fields definied in output permissions actually
     // exist in this type definition
@@ -115,12 +115,12 @@ pub fn resolve_output_type_permission(
 pub(crate) fn resolve_input_type_permission(
     object_type_representation: &object_types::ObjectTypeRepresentation,
     type_permissions: &TypePermissionsV1,
-) -> Result<HashMap<Role, TypeInputPermission>, Error> {
-    let mut resolved_type_permissions = HashMap::new();
+) -> Result<BTreeMap<Role, TypeInputPermission>, Error> {
+    let mut resolved_type_permissions = BTreeMap::new();
 
     for type_permission in &type_permissions.permissions {
         if let Some(input) = &type_permission.input {
-            let mut resolved_field_presets = HashMap::new();
+            let mut resolved_field_presets = BTreeMap::new();
             for FieldPreset {
                 field: field_name,
                 value,

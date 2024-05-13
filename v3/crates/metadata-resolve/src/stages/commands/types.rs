@@ -11,7 +11,7 @@ use open_dds::commands::{CommandName, DataConnectorCommand, GraphQlRootFieldKind
 
 use open_dds::types::{CustomTypeName, Deprecated};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandGraphQlApi {
@@ -29,7 +29,7 @@ pub struct CommandSource {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, models::ConnectorArgumentName>,
+    pub argument_mappings: BTreeMap<ArgumentName, models::ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

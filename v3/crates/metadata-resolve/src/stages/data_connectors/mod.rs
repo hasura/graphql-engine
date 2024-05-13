@@ -2,7 +2,7 @@ use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
 pub mod types;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 pub use types::{
     ComparisonOperators, DataConnectorContext, DataConnectorCoreInfo, DataConnectorLink,
     DataConnectors,
@@ -12,7 +12,7 @@ pub use types::{
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
 ) -> Result<types::DataConnectors, Error> {
-    let mut data_connectors = HashMap::new();
+    let mut data_connectors = BTreeMap::new();
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: data_connector,

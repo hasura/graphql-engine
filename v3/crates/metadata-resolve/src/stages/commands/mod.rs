@@ -20,7 +20,7 @@ pub use types::{Command, CommandGraphQlApi, CommandSource};
 
 use open_dds::types::{BaseType, CustomTypeName, TypeName, TypeReference};
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use crate::helpers::type_mappings;
 
@@ -28,9 +28,9 @@ use crate::helpers::type_mappings;
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -75,9 +75,9 @@ pub fn resolve(
 fn type_exists(
     type_obj: &TypeReference,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -111,9 +111,9 @@ fn type_exists(
 pub fn resolve_command(
     command: &CommandV1,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -185,9 +185,9 @@ pub fn resolve_command_source(
     command: &mut Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,

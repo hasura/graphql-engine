@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::helpers::types::NdcColumnForComparison;
 use lang_graphql::ast::common as ast;
 use open_dds::arguments::ArgumentName;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use open_dds::relationships::{FieldAccess, RelationshipName, RelationshipType};
 use open_dds::types::Deprecated;
@@ -18,10 +18,10 @@ pub struct ObjectTypeWithRelationships {
     pub object_type: object_types::ObjectTypeRepresentation,
     /// permissions on this type, when it is used in an output context (e.g. as
     /// a return type of Model or Command)
-    pub type_output_permissions: HashMap<Role, open_dds::permissions::TypeOutputPermission>,
+    pub type_output_permissions: BTreeMap<Role, open_dds::permissions::TypeOutputPermission>,
     /// permissions on this type, when it is used in an input context (e.g. in
     /// an argument type of Model or Command)
-    pub type_input_permissions: HashMap<Role, type_permissions::TypeInputPermission>,
+    pub type_input_permissions: BTreeMap<Role, type_permissions::TypeInputPermission>,
     /// any relationships defined on this object
     pub relationships: IndexMap<ast::Name, Relationship>,
     /// type mappings for each data connector

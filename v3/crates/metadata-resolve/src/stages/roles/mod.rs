@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -11,7 +11,7 @@ use crate::stages::{command_permissions, model_permissions, relationships};
 
 /// Gather all roles from various permission objects.
 pub fn resolve(
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     commands: &IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
 ) -> Vec<Role> {

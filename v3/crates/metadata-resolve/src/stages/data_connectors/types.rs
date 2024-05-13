@@ -18,7 +18,7 @@ use serde::{
     de::Error as DeError,
     ser::{Error as SerError, SerializeMap},
 };
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::BTreeMap, str::FromStr};
 
 /// information that does not change between resolver stages
 #[derive(Clone, Copy)]
@@ -33,7 +33,7 @@ pub struct DataConnectorCoreInfo<'a> {
 /// currently this contains partial ScalarTypeInfo, which we add to later
 pub struct DataConnectorContext<'a> {
     pub inner: DataConnectorCoreInfo<'a>,
-    pub scalars: HashMap<&'a str, ScalarTypeInfo<'a>>,
+    pub scalars: BTreeMap<&'a str, ScalarTypeInfo<'a>>,
 }
 
 impl<'a> DataConnectorContext<'a> {
@@ -95,7 +95,7 @@ impl<'a> ScalarTypeInfo<'a> {
 }
 
 pub struct DataConnectors<'a> {
-    pub data_connectors: HashMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>,
+    pub data_connectors: BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -265,7 +265,7 @@ impl<'de> Deserialize<'de> for SerializableHeaderMap {
     where
         D: serde::Deserializer<'de>,
     {
-        let hash_map = HashMap::<String, String>::deserialize(deserializer)?;
+        let hash_map = BTreeMap::<String, String>::deserialize(deserializer)?;
         let header_map: HeaderMap = hash_map
             .into_iter()
             .map(|(k, v)| {

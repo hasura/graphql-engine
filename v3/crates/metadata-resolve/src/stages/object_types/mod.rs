@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 pub mod types;
 use open_dds::types::CustomTypeName;
 pub use types::{
@@ -22,10 +22,10 @@ pub(crate) fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<DataConnectorTypeMappingsOutput, Error> {
-    let mut object_types = HashMap::new();
-    let mut graphql_types = HashSet::new();
-    let mut global_id_enabled_types = HashMap::new();
-    let mut apollo_federation_entity_enabled_types = HashMap::new();
+    let mut object_types = BTreeMap::new();
+    let mut graphql_types = BTreeSet::new();
+    let mut global_id_enabled_types = BTreeMap::new();
+    let mut apollo_federation_entity_enabled_types = BTreeMap::new();
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -111,14 +111,14 @@ fn resolve_field(
 
 pub fn resolve_object_type(
     object_type_definition: &open_dds::types::ObjectTypeV1,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     qualified_type_name: &Qualified<CustomTypeName>,
     subgraph: &str,
-    global_id_enabled_types: &mut HashMap<
+    global_id_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
         Vec<Qualified<open_dds::models::ModelName>>,
     >,
-    apollo_federation_entity_enabled_types: &mut HashMap<
+    apollo_federation_entity_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
@@ -282,7 +282,7 @@ pub fn resolve_data_connector_type_mapping(
         .field_mapping
         .0
         .iter()
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
     let mut resolved_field_mappings = BTreeMap::new();
     for field_name in type_representation.fields.keys() {
         let resolved_field_mapping_column: &str =

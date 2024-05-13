@@ -31,22 +31,22 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::iter;
 
 /// resolve models
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    existing_graphql_types: &HashSet<ast::TypeName>,
-    global_id_enabled_types: &HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &HashMap<
+    existing_graphql_types: &BTreeSet<ast::TypeName>,
+    global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -55,7 +55,7 @@ pub fn resolve(
     // resolve models
     // TODO: validate types
     let mut models = IndexMap::new();
-    let mut global_id_models = HashMap::new();
+    let mut global_id_models = BTreeMap::new();
     let mut graphql_types = existing_graphql_types.clone();
     let mut global_id_enabled_types = global_id_enabled_types.clone();
     let mut apollo_federation_entity_enabled_types = apollo_federation_entity_enabled_types.clone();
@@ -132,7 +132,7 @@ fn resolve_filter_expression_type(
     model: &ModelV1,
     model_data_type: &Qualified<CustomTypeName>,
     subgraph: &str,
-    object_boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -213,13 +213,13 @@ fn resolve_orderable_fields(
 fn resolve_model(
     subgraph: &str,
     model: &ModelV1,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    global_id_enabled_types: &mut HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &mut HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    global_id_enabled_types: &mut BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &mut BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<ModelName>>,
     >,
-    object_boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -251,7 +251,7 @@ fn resolve_model(
                 model_name: qualified_model_name,
             });
         }
-        // model has `global_id_source`; insert into the hashmap of `global_id_enabled_types`
+        // model has `global_id_source`; insert into the BTreeMap of `global_id_enabled_types`
         match global_id_enabled_types.get_mut(&qualified_object_type_name) {
             None => {
                 // this shouldn't happen; but for some reason the object type
@@ -266,7 +266,7 @@ fn resolve_model(
             }
         }
         global_id_source = Some(NDCFieldSourceMapping {
-            ndc_mapping: HashMap::new(),
+            ndc_mapping: BTreeMap::new(),
         });
     };
     let mut apollo_federation_key_source = None;
@@ -288,7 +288,7 @@ fn resolve_model(
                     model_name: qualified_model_name,
                 });
             }
-            // model has `apollo_federation_entity_source`; insert into the hashmap of
+            // model has `apollo_federation_entity_source`; insert into the BTreeMap of
             // `apollo_federation_entity_enabled_types`
             match apollo_federation_entity_enabled_types.get_mut(&qualified_object_type_name) {
                 None => {
@@ -314,7 +314,7 @@ fn resolve_model(
                 }
             }
             apollo_federation_key_source = Some(NDCFieldSourceMapping {
-                ndc_mapping: HashMap::new(),
+                ndc_mapping: BTreeMap::new(),
             });
         }
     }
@@ -369,7 +369,7 @@ fn resolve_model(
 fn resolve_model_graphql_api(
     model_graphql_definition: &ModelGraphQlDefinition,
     model: &mut Model,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     model_description: &Option<String>,
     graphql_config: &graphql_config::GraphqlConfig,
@@ -463,7 +463,7 @@ fn resolve_model_graphql_api(
                                 data_connector: model_source.data_connector.name.clone(),
                             })?;
 
-                        let mut order_by_fields = HashMap::new();
+                        let mut order_by_fields = BTreeMap::new();
                         for (field_name, field_mapping) in field_mappings.iter() {
                             order_by_fields.insert(
                                 field_name.clone(),
@@ -570,9 +570,9 @@ fn resolve_model_source(
     model: &mut Model,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -734,7 +734,7 @@ fn resolve_model_source(
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 fn get_model_object_type_representation<'s>(
-    object_types: &'s HashMap<
+    object_types: &'s BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
     >,

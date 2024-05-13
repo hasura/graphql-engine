@@ -179,7 +179,7 @@ fn object_type_fields(
     builder: &mut gql_schema::Builder<GDS>,
     type_name: &Qualified<CustomTypeName>,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,

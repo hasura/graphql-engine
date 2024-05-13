@@ -16,7 +16,7 @@ use open_dds::{
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(
     Serialize,
@@ -37,10 +37,10 @@ pub struct ConnectorArgumentName(pub String);
 
 pub struct ModelsOutput {
     pub models: IndexMap<Qualified<ModelName>, Model>,
-    pub graphql_types: HashSet<ast::TypeName>,
-    pub global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    pub graphql_types: BTreeSet<ast::TypeName>,
+    pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
-        HashMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
+        BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -74,7 +74,7 @@ pub struct OrderByExpressionInfo {
 pub struct ModelOrderByExpression {
     pub data_connector_name: Qualified<DataConnectorName>,
     pub order_by_type_name: ast::TypeName,
-    pub order_by_fields: HashMap<FieldName, OrderByExpressionInfo>,
+    pub order_by_fields: BTreeMap<FieldName, OrderByExpressionInfo>,
     pub order_by_field_name: ast::Name,
 }
 
@@ -111,7 +111,7 @@ pub struct ModelSource {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, ConnectorArgumentName>,
+    pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -131,5 +131,5 @@ pub struct Model {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct NDCFieldSourceMapping {
-    pub ndc_mapping: HashMap<FieldName, NdcColumnForComparison>,
+    pub ndc_mapping: BTreeMap<FieldName, NdcColumnForComparison>,
 }

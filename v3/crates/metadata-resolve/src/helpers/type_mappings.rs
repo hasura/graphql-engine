@@ -8,7 +8,7 @@ use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 use open_dds::types::{CustomTypeName, FieldName};
 
 use ref_cast::RefCast;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct TypeMappingToCollect<'a> {
@@ -48,8 +48,8 @@ pub enum TypeMappingCollectionError {
 pub(crate) fn collect_type_mapping_for_source(
     mapping_to_collect: &TypeMappingToCollect,
     data_connector_name: &Qualified<DataConnectorName>,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     collected_mappings: &mut BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
 ) -> Result<(), TypeMappingCollectionError> {
     match object_types.get(mapping_to_collect.type_name) {

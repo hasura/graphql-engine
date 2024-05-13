@@ -9,13 +9,13 @@ use crate::types::subgraph::{
 use ndc_models;
 
 use open_dds::data_connector::DataConnectorName;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // helper function to resolve ndc types to dds type based on scalar type representations
 pub(crate) fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     subgraph: &str,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {

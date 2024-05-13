@@ -7,7 +7,7 @@ use crate::stages::{
 use crate::types::permission::ValueExpression;
 use indexmap::IndexMap;
 use open_dds::{models::ModelName, types::CustomTypeName};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 pub use types::{
     FilterPermission, ModelPredicate, ModelTargetSource, ModelWithPermissions,
     PredicateRelationshipInfo, SelectPermission,
@@ -33,10 +33,10 @@ use open_dds::{
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    object_boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -48,7 +48,7 @@ pub fn resolve(
                 model_name.clone(),
                 ModelWithPermissions {
                     model: model.clone(),
-                    select_permissions: HashMap::new(),
+                    select_permissions: BTreeMap::new(),
                 },
             )
         })
@@ -95,7 +95,7 @@ pub fn resolve(
 pub(crate) fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     subgraph: &str,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
@@ -147,7 +147,7 @@ fn resolve_model_predicate(
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
 ) -> Result<ModelPredicate, Error> {
     match model_predicate {
@@ -437,7 +437,7 @@ fn resolve_binary_operator_for_model(
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
 ) -> Result<(String, QualifiedTypeReference), Error> {
@@ -479,7 +479,7 @@ fn resolve_binary_operator_for_model(
 /// `data_type`, it will throw an error if the type is not found to be an object
 /// or if the model has an unknown data type.
 fn get_model_object_type_representation<'s>(
-    object_types: &'s HashMap<
+    object_types: &'s BTreeMap<
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,
     >,
@@ -500,15 +500,15 @@ pub fn resolve_model_select_permissions(
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    object_boolean_expression_types: &HashMap<
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
-) -> Result<HashMap<Role, SelectPermission>, Error> {
-    let mut validated_permissions = HashMap::new();
+) -> Result<BTreeMap<Role, SelectPermission>, Error> {
+    let mut validated_permissions = BTreeMap::new();
     for model_permission in &model_permissions.permissions {
         if let Some(select) = &model_permission.select {
             let resolved_predicate = match &select.filter {

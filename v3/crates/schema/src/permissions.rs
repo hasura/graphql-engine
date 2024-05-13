@@ -13,7 +13,7 @@ use super::types::ArgumentNameAndPath;
 /// Build namespace annotation for select permissions
 pub(crate) fn get_select_permissions_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
@@ -97,7 +97,7 @@ pub(crate) fn get_select_one_namespace_annotations(
     model: &metadata_resolve::ModelWithPermissions,
     object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     select_unique: &metadata_resolve::SelectUniqueGraphQlDefinition,
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
@@ -124,7 +124,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     target_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipModelMapping],
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
@@ -151,7 +151,7 @@ pub(crate) fn get_model_relationship_namespace_annotations(
 /// Build namespace annotation for commands
 pub(crate) fn get_command_namespace_annotations(
     command: &metadata_resolve::CommandWithPermissions,
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
@@ -227,7 +227,7 @@ fn build_annotations_from_input_object_type_permissions(
     field_path: &mut [String],
     type_reference: &QualifiedTypeReference,
     ndc_argument_name: &Option<ConnectorArgumentName>,
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,
@@ -361,7 +361,7 @@ pub(crate) fn get_command_relationship_namespace_annotations(
     command: &metadata_resolve::CommandWithPermissions,
     source_object_type_representation: &metadata_resolve::ObjectTypeWithRelationships,
     mappings: &[metadata_resolve::RelationshipCommandMapping],
-    object_types: &HashMap<
+    object_types: &BTreeMap<
         Qualified<CustomTypeName>,
         metadata_resolve::ObjectTypeWithRelationships,
     >,

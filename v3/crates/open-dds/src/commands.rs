@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::BTreeMap, ops::Deref};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -125,10 +125,10 @@ pub struct CommandV1 {
 /// is the argument name used in the data connector.
 // We wrap maps into newtype structs so that we have a type and title for them in the JSONSchema which
 // makes it easier to auto-generate documentation.
-pub struct ArgumentMapping(pub HashMap<ArgumentName, String>);
+pub struct ArgumentMapping(pub BTreeMap<ArgumentName, String>);
 
 impl Deref for ArgumentMapping {
-    type Target = HashMap<ArgumentName, String>;
+    type Target = BTreeMap<ArgumentName, String>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

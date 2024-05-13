@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use lang_graphql::ast::common as ast;
 
@@ -12,9 +12,9 @@ pub use types::{ScalarTypeRepresentation, ScalarTypesOutput};
 /// resolve scalar types
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    existing_graphql_types: &HashSet<ast::TypeName>,
+    existing_graphql_types: &BTreeSet<ast::TypeName>,
 ) -> Result<ScalarTypesOutput, Error> {
-    let mut scalar_types = HashMap::new();
+    let mut scalar_types = BTreeMap::new();
     let mut graphql_types = existing_graphql_types.clone();
 
     for open_dds::accessor::QualifiedObject {

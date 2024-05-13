@@ -56,7 +56,7 @@ pub struct NodeFieldTypeNameMapping {
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<metadata_resolve::ModelSource>,
-    pub global_id_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
+    pub global_id_fields_ndc_mapping: BTreeMap<types::FieldName, NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -65,7 +65,7 @@ pub struct EntityFieldTypeNameMapping {
     // `model_source` is are optional because we allow building schema without specifying a data source
     // In such a case, `global_id_fields_ndc_mapping` will also be empty
     pub model_source: Option<metadata_resolve::ModelSource>,
-    pub key_fields_ndc_mapping: HashMap<types::FieldName, NdcColumnForComparison>,
+    pub key_fields_ndc_mapping: BTreeMap<types::FieldName, NdcColumnForComparison>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -98,7 +98,7 @@ pub struct CommandSourceDetail {
         deserialize_with = "deserialize_qualified_btreemap"
     )]
     pub type_mappings: BTreeMap<Qualified<types::CustomTypeName>, TypeMapping>,
-    pub argument_mappings: HashMap<ArgumentName, ConnectorArgumentName>,
+    pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]

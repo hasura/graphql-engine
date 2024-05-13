@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -25,7 +24,7 @@ use crate::helpers::typecheck;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CommandWithPermissions {
     pub command: commands::Command,
-    pub permissions: HashMap<Role, CommandPermission>,
+    pub permissions: BTreeMap<Role, CommandPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -38,9 +37,9 @@ pub struct CommandPermission {
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -55,7 +54,7 @@ pub fn resolve(
                     command_name.clone(),
                     CommandWithPermissions {
                         command: command.clone(),
-                        permissions: HashMap::new(),
+                        permissions: BTreeMap::new(),
                     },
                 )
             })
@@ -95,17 +94,17 @@ pub fn resolve(
 pub fn resolve_command_permissions(
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     subgraph: &str,
-) -> Result<HashMap<Role, CommandPermission>, Error> {
-    let mut validated_permissions = HashMap::new();
+) -> Result<BTreeMap<Role, CommandPermission>, Error> {
+    let mut validated_permissions = BTreeMap::new();
     for command_permission in &permissions.permissions {
         let mut argument_presets = BTreeMap::new();
 

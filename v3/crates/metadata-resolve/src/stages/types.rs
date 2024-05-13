@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
@@ -17,12 +17,12 @@ use crate::stages::{
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Metadata {
     pub object_types:
-        HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    pub scalar_types: HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+        BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    pub scalar_types: BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     pub commands: IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
     pub object_boolean_expression_types:
-        HashMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
+        BTreeMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub roles: Vec<Role>,
 }

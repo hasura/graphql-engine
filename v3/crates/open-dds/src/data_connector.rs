@@ -16,6 +16,8 @@ use crate::{identifier::Identifier, impl_OpenDd_default_for};
     Debug,
     PartialEq,
     Eq,
+    PartialOrd,
+    Ord,
     Hash,
     JsonSchema,
     derive_more::Display,

@@ -24,7 +24,7 @@ use open_dds::models::ModelName;
 use open_dds::permissions;
 use open_dds::types::{CustomTypeName, FieldName, OperatorName};
 use ref_cast::RefCast;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use thiserror::Error;
 
@@ -64,33 +64,33 @@ pub enum ArgumentMappingError {
 
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
-    argument_mapping: &HashMap<ArgumentName, String>,
+    argument_mapping: &BTreeMap<ArgumentName, String>,
     ndc_arguments: &'a BTreeMap<String, ndc_models::ArgumentInfo>,
-    object_types: &'a HashMap<
+    object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
     >,
-    scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &'a HashMap<
+    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<
     (
-        HashMap<ArgumentName, models::ConnectorArgumentName>,
+        BTreeMap<ArgumentName, models::ConnectorArgumentName>,
         Vec<type_mappings::TypeMappingToCollect<'a>>,
     ),
     ArgumentMappingError,
 > {
-    let mut unconsumed_argument_mappings: HashMap<&ArgumentName, &models::ConnectorArgumentName> =
-        HashMap::from_iter(
+    let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &models::ConnectorArgumentName> =
+        BTreeMap::from_iter(
             argument_mapping
                 .iter()
                 .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(v))),
         );
 
     let mut resolved_argument_mappings =
-        HashMap::<ArgumentName, models::ConnectorArgumentName>::new();
+        BTreeMap::<ArgumentName, models::ConnectorArgumentName>::new();
 
     let mut type_mappings_to_collect = Vec::<type_mappings::TypeMappingToCollect>::new();
 
@@ -187,9 +187,9 @@ pub(crate) fn resolve_value_expression_for_argument(
     value_expression: &open_dds::permissions::ValueExpression,
     argument_type: &QualifiedTypeReference,
     subgraph: &str,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &HashMap<
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -284,8 +284,8 @@ pub(crate) fn resolve_model_predicate_with_type(
     data_connector_name: &Qualified<DataConnectorName>,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
 
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
@@ -650,7 +650,7 @@ fn resolve_binary_operator_for_type(
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
-    scalars: &HashMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
 ) -> Result<(String, QualifiedTypeReference), Error> {
@@ -692,11 +692,11 @@ fn resolve_binary_operator_for_type(
 }
 
 fn remove_object_relationships(
-    object_types_with_relationships: &HashMap<
+    object_types_with_relationships: &BTreeMap<
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,
     >,
-) -> HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions> {
+) -> BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions> {
     object_types_with_relationships
         .iter()
         .map(

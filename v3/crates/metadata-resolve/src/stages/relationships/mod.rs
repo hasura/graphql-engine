@@ -5,7 +5,7 @@ pub use types::{
     RelationshipTarget, RelationshipTargetName,
 };
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 
@@ -21,21 +21,21 @@ use crate::stages::{
 
 use open_dds::relationships::{self, FieldAccess, RelationshipName, RelationshipV1};
 
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 /// resolve relationships
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types_with_permissions: &HashMap<
+    object_types_with_permissions: &BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-) -> Result<HashMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
-    let mut object_types_with_relationships = HashMap::new();
+) -> Result<BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithRelationships>, Error> {
+    let mut object_types_with_relationships = BTreeMap::new();
     for (
         object_type_name,
         type_permissions::ObjectTypeWithPermissions {
@@ -164,7 +164,7 @@ fn resolve_relationship_mappings_model(
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_hashset_for_validation: HashSet<&String> = HashSet::new();
+    let mut field_mapping_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
             &relationship.name,
@@ -217,7 +217,7 @@ fn resolve_relationship_mappings_model(
 
         // Check if the source field is already mapped to a target field
         let resolved_relationship_mapping = {
-            if field_mapping_hashset_for_validation
+            if field_mapping_btree_set_for_validation
                 .insert(&resolved_relationship_source_mapping.field_name.0)
             {
                 let target_ndc_column = target_model
@@ -267,8 +267,8 @@ fn resolve_relationship_mappings_command(
     target_command: &commands::Command,
 ) -> Result<Vec<RelationshipCommandMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
-    let mut field_mapping_hashset_for_validation: HashSet<&String> = HashSet::new();
-    let mut target_command_arguments_hashset_for_validation: HashSet<&String> = HashSet::new();
+    let mut field_mapping_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
+    let mut target_command_arguments_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
 
     for relationship_mapping in &relationship.mapping {
         let resolved_relationship_source_mapping = resolve_relationship_source_mapping(
@@ -302,7 +302,7 @@ fn resolve_relationship_mappings_command(
         }
 
         // Check if the target argument is already mapped to a field in the source type.
-        if !target_command_arguments_hashset_for_validation.insert(&target_argument_name.0) {
+        if !target_command_arguments_btree_set_for_validation.insert(&target_argument_name.0) {
             return Err(Error::RelationshipError {
                 relationship_error: RelationshipError::ArgumentMappingExistsInRelationship {
                     argument_name: target_argument_name.clone(),
@@ -315,7 +315,7 @@ fn resolve_relationship_mappings_command(
 
         // Check if the source field is already mapped to a target argument
         let resolved_relationship_mapping = {
-            if field_mapping_hashset_for_validation
+            if field_mapping_btree_set_for_validation
                 .insert(&resolved_relationship_source_mapping.field_name.0)
             {
                 Ok(RelationshipCommandMapping {

@@ -12,7 +12,7 @@ use crate::types::subgraph::Qualified;
 use crate::helpers::type_mappings;
 use lang_graphql::ast::common as ast;
 use open_dds::types::CustomTypeName;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     BooleanExpressionGraphqlConfig, BooleanExpressionInfo, BooleanExpressionsOutput,
     ComparisonExpressionInfo, ObjectBooleanExpressionType,
@@ -22,12 +22,12 @@ pub use types::{
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &HashSet<ast::TypeName>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionsOutput, Error> {
-    let mut object_boolean_expression_types = HashMap::new();
+    let mut object_boolean_expression_types = BTreeMap::new();
     let mut graphql_types = existing_graphql_types.clone();
 
     for open_dds::accessor::QualifiedObject {
@@ -66,9 +66,9 @@ pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &open_dds::types::ObjectBooleanExpressionTypeV1,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
-    object_types: &HashMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
-    scalar_types: &HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
+    scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ObjectBooleanExpressionType, Error> {
     // name of the boolean expression
@@ -272,7 +272,7 @@ pub fn resolve_boolean_expression_info(
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionInfo, Error> {
-    let mut scalar_fields = HashMap::new();
+    let mut scalar_fields = BTreeMap::new();
 
     let scalar_types = &data_connectors
         .data_connectors_with_scalars

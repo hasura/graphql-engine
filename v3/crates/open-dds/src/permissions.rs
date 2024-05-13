@@ -20,6 +20,8 @@ use crate::{
     Debug,
     Eq,
     PartialEq,
+    PartialOrd,
+    Ord,
     JsonSchema,
     Hash,
     derive_more::Display,

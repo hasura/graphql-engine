@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 
 use open_dds::types::{CustomTypeName, Deprecated, FieldName};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 
 use open_dds::models::ModelName;
 
@@ -16,7 +16,7 @@ use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct DataConnectorTypeMappingsForObject(
-    HashMap<Qualified<DataConnectorName>, HashMap<DataConnectorObjectType, TypeMapping>>,
+    BTreeMap<Qualified<DataConnectorName>, BTreeMap<DataConnectorObjectType, TypeMapping>>,
 );
 
 impl Default for DataConnectorTypeMappingsForObject {
@@ -27,7 +27,7 @@ impl Default for DataConnectorTypeMappingsForObject {
 
 impl DataConnectorTypeMappingsForObject {
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(BTreeMap::new())
     }
 
     pub fn get(
@@ -76,11 +76,11 @@ impl DataConnectorTypeMappingsForObject {
 
 /// output of `object_types` step
 pub struct DataConnectorTypeMappingsOutput {
-    pub graphql_types: HashSet<ast::TypeName>,
-    pub global_id_enabled_types: HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    pub graphql_types: BTreeSet<ast::TypeName>,
+    pub global_id_enabled_types: BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     pub apollo_federation_entity_enabled_types:
-        HashMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
-    pub object_types: HashMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
+        BTreeMap<Qualified<CustomTypeName>, Option<Qualified<open_dds::models::ModelName>>>,
+    pub object_types: BTreeMap<Qualified<CustomTypeName>, ObjectTypeWithTypeMappings>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

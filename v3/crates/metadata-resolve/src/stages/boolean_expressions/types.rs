@@ -1,11 +1,11 @@
 use crate::stages::{data_connectors, object_types};
 
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use lang_graphql::ast::common::{self as ast};
 use open_dds::data_connector::DataConnectorObjectType;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use open_dds::{
     data_connector::DataConnectorName,
@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 
 pub struct BooleanExpressionsOutput {
     pub object_boolean_expression_types:
-        HashMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
-    pub graphql_types: HashSet<ast::TypeName>,
+        BTreeMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
+    pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -52,6 +52,6 @@ pub struct BooleanExpressionGraphqlConfig {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct BooleanExpressionInfo {
     pub type_name: ast::TypeName,
-    pub scalar_fields: HashMap<FieldName, ComparisonExpressionInfo>,
+    pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
     pub graphql_config: BooleanExpressionGraphqlConfig,
 }

@@ -8,7 +8,7 @@ use lang_graphql::ast::common as ast;
 
 use open_dds::types::CustomTypeName;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
@@ -20,7 +20,7 @@ pub struct NdcColumnForComparison {
 /// try to add `new_graphql_type` to `existing_graphql_types`, returning an error
 /// if there is a name conflict
 pub fn store_new_graphql_type(
-    existing_graphql_types: &mut HashSet<ast::TypeName>,
+    existing_graphql_types: &mut BTreeSet<ast::TypeName>,
     new_graphql_type: Option<&ast::TypeName>,
 ) -> Result<(), Error> {
     if let Some(new_graphql_type) = new_graphql_type {
@@ -47,9 +47,9 @@ pub enum TypeRepresentation<'a, ObjectType> {
 /// `object_boolean_expression_types`
 pub fn get_type_representation<'a, ObjectType>(
     custom_type_name: &Qualified<CustomTypeName>,
-    object_types: &'a HashMap<Qualified<CustomTypeName>, ObjectType>,
-    scalar_types: &'a HashMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
-    object_boolean_expression_types: &'a HashMap<
+    object_types: &'a BTreeMap<Qualified<CustomTypeName>, ObjectType>,
+    scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
+    object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
@@ -76,7 +76,7 @@ pub fn get_type_representation<'a, ObjectType>(
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(
     object_boolean_expression_type: &boolean_expressions::ObjectBooleanExpressionType,
-    object_types: &'a HashMap<
+    object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,
     >,
@@ -95,7 +95,7 @@ pub(crate) fn get_object_type_for_boolean_expression<'a>(
 // check that `custom_type_name` exists in `object_types`
 pub fn object_type_exists<ObjectType>(
     custom_type_name: &Qualified<CustomTypeName>,
-    object_types: &HashMap<Qualified<CustomTypeName>, ObjectType>,
+    object_types: &BTreeMap<Qualified<CustomTypeName>, ObjectType>,
 ) -> Result<Qualified<CustomTypeName>, Error> {
     object_types
         .get(custom_type_name)

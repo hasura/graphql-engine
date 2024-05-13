@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use open_dds::{models::ModelName, types::CustomTypeName};
 
@@ -11,8 +11,8 @@ use crate::types::subgraph::Qualified;
 /// Ideally, we could move more Apollo-based resolving into this discreet step, haven't
 /// investigated this too deeply yet.
 pub fn resolve(
-    global_id_enabled_types: &HashMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
-    apollo_federation_entity_enabled_types: &HashMap<
+    global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
+    apollo_federation_entity_enabled_types: &BTreeMap<
         Qualified<CustomTypeName>,
         Option<Qualified<open_dds::models::ModelName>>,
     >,

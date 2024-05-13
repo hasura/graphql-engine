@@ -8,7 +8,7 @@ use open_dds::{
     types::CustomTypeName,
 };
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 
@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ModelWithPermissions {
     pub model: models::Model,
-    pub select_permissions: HashMap<Role, SelectPermission>,
+    pub select_permissions: BTreeMap<Role, SelectPermission>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
