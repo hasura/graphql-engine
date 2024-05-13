@@ -16,6 +16,19 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <ProductBadge self />
 
+Hasura exports three types of prometheus metrics:
+- Histogram: Represents the distribution of a set of values across a set of buckets. Please note that the histogram
+  buckets are [cumulative](https://en.wikipedia.org/wiki/Histogram#Cumulative_histogram). You can read more about the
+  histogram metric type [here](https://prometheus.io/docs/concepts/metric_types/#histogram). For example
+  `hasura_event_webhook_processing_time_seconds` is a histogram metric.
+- Counter: Represents a cumulative metric that represents a single monotonically increasing counter whose value can only
+  increase or be reset to zero on restart. You can read more about the counter metric type
+  [here](https://prometheus.io/docs/concepts/metric_types/#counter). For example `hasura_graphql_requests_total` is a
+  counter metric.
+- Gauge: Represents a single numerical value that can arbitrarily go up and down. You can read more about the gauge
+  metric type [here](https://prometheus.io/docs/concepts/metric_types/#gauge). For example `hasura_active_subscriptions`
+  is a gauge metric.
+
 ## Metrics exported
 
 The following metrics are exported by Hasura GraphQL Engine:
@@ -32,6 +45,7 @@ buckets, you should consider [tuning the performance](/deployment/performance-tu
 | Name   | `hasura_graphql_execution_time_seconds`                      |
 | Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
 | Labels | `operation_type`: query \| mutation                          |
+| Unit   | seconds                                                      |
 
 :::info GraphQL request execution time
 
@@ -71,6 +85,7 @@ of your database.
 | Name   | `hasura_event_fetch_time_per_batch_seconds`                                                |
 | Type   | Histogram<br /><br />Buckets: 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
 | Labels | none                                                                                       |
+| Unit   | seconds                                                                                    |
 
 #### Event invocations total
 
@@ -101,6 +116,7 @@ Time taken for an event to be processed.
 | Name   | `hasura_event_processing_time_seconds`                                |
 | Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
 | Labels | `trigger_name`, `source_name`                                         |
+| Unit   | seconds                                                               |
 
 The processing of an event involves the following steps:
 
@@ -148,6 +164,7 @@ server.
 | Name   | `hasura_event_queue_time_seconds`                                     |
 | Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
 | Labels | `trigger_name`, `source_name`                                         |
+| Unit   | seconds                                                               |
 
 #### Event Triggers HTTP Workers
 
@@ -172,6 +189,7 @@ A higher processing time indicates slow webhook, you should try to optimize the 
 | Name   | `hasura_event_webhook_processing_time_seconds`               |
 | Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
 | Labels | `trigger_name`, `source_name`                                |
+| Unit   | seconds                                                      |
 
 #### Events fetched per batch
 
@@ -283,6 +301,7 @@ some extra process time for other tasks the poller does during a single poll. In
 | Name   | `hasura_subscription_total_time_seconds`                                                   |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
 | Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+| Unit   | seconds                                                                                    |
 
 #### Subscription Database Execution Time
 
@@ -302,6 +321,7 @@ consider investigating the subscription query and see if indexes can help improv
 | Name   | `hasura_subscription_db_execution_time_seconds`                                            |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
 | Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+| Unit   | seconds                                                                                    |
 
 #### WebSocket Egress
 
@@ -312,6 +332,7 @@ The total size of WebSocket messages sent in bytes.
 | Name   | `hasura_websocket_messages_sent_bytes_total` |
 | Type   | Counter                                      |
 | Labels | `operation_name`, `parameterized_query_hash` |
+| Unit   | bytes                                        |
 
 #### WebSocket Ingress
 
@@ -322,6 +343,7 @@ The total size of WebSocket messages received in bytes.
 | Name   | `hasura_websocket_messages_received_bytes_total` |
 | Type   | Counter                                          |
 | Labels | none                                             |
+| Unit   | bytes                                        |
 
 #### Websocket Message Queue Time
 
@@ -332,6 +354,7 @@ The time for which a websocket message remains queued in the GraphQL engine's we
 | Name   | `hasura_websocket_message_queue_time`                                             |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100 |
 | Labels | none                                                                              |
+| Unit   | seconds                                                                           |
 
 #### Websocket Message Write Time
 
@@ -342,6 +365,7 @@ The time taken to write a websocket message into the TCP send buffer.
 | Name   | `hasura_websocket_message_write_time`                                             |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100 |
 | Labels | none                                                                              |
+| Unit   | seconds                                                                           |
 
 ### Cache metrics
 
@@ -349,7 +373,7 @@ See more details on caching metrics [here](/caching/caching-metrics.mdx)
 
 #### Hasura cache request count
 
-Tracks cache hit and miss requests, which helps in monitoring and optimizing cache utilization.
+Total number of cache hit and miss requests. This helps in monitoring and optimizing cache utilization.
 
 |        |                              |
 | ------ | ---------------------------- |
@@ -448,6 +472,7 @@ The time taken to establish and initialize a PostgreSQL connection.
 | Name   | `hasura_postgres_connection_init_time`                                                                                                                                            |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
 | Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+| Unit   | seconds                                                                                                                                                                           |
 
 ### Hasura Postgres Pool Wait Time
 
@@ -458,6 +483,7 @@ The time taken to acquire a connection from the pool.
 | Name   | `hasura_postgres_pool_wait_time`                                                                                                                                                  |
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
 | Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+| Unit   | seconds                                                                                                                                                                           |
 
 ### Hasura source health
 
@@ -481,6 +507,7 @@ and `/v1/version` endpoints or any other undefined resource/endpoint (for exampl
 | Name   | `hasura_http_response_bytes_total` |
 | Type   | Counter                            |
 | Labels | none                               |
+| Unit   | bytes                              |
 
 ### HTTP Ingress
 
@@ -492,6 +519,7 @@ Total size of HTTP request bodies received via the HTTP server excluding request
 | Name   | `hasura_http_request_bytes_total` |
 | Type   | Counter                           |
 | Labels | none                              |
+| Unit   | bytes                             |
 
 ### OpenTelemetry OTLP Export Metrics
 
