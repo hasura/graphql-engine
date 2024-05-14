@@ -212,7 +212,7 @@ async fn make_auth_hook_request(
     let response = tracer
         .in_span_async(
             "request_to_webhook",
-            "Send request to webhook".to_string(),
+            "Send request to webhook",
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
@@ -292,7 +292,7 @@ pub async fn authenticate_request(
     tracer
         .in_span_async(
             "webhook_authenticate_request",
-            "Webhook authenticate request".to_string(),
+            "Webhook authenticate request",
             SpanVisibility::Internal,
             || {
                 Box::pin(make_auth_hook_request(

@@ -21,7 +21,7 @@ pub fn generate_ir<'n, 's>(
     let tracer = tracing_util::global_tracer();
     tracer.in_span(
         "generate_ir",
-        "Generate IR for request".into(),
+        "Generate IR for request",
         SpanVisibility::Internal,
         || {
             let type_name = selection_set

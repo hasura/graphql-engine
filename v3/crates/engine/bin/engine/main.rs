@@ -96,7 +96,7 @@ async fn main() {
     if let Err(e) = tracer
         .in_span_async(
             "app init",
-            "App initialization".to_string(),
+            "App initialization",
             SpanVisibility::Internal,
             || Box::pin(start_engine(&server)),
         )
@@ -267,7 +267,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
     tracer
         .in_span_async_with_parent_context(
             path,
-            path.to_string(),
+            path,
             SpanVisibility::User,
             &request.headers().clone(),
             || {
@@ -299,7 +299,7 @@ async fn explain_request_tracing_middleware<B: Send>(
     tracer
         .in_span_async_with_parent_context(
             path,
-            path.to_string(),
+            path,
             SpanVisibility::User,
             &request.headers().clone(),
             || {
@@ -358,7 +358,7 @@ where
     let resolved_identity = tracer
         .in_span_async(
             "authentication_middleware",
-            "Authentication middleware".to_string(),
+            "Authentication middleware",
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
@@ -408,7 +408,7 @@ async fn handle_request(
     let response = tracer
         .in_span_async(
             "handle_request",
-            "Handle request".to_string(),
+            "Handle request",
             SpanVisibility::User,
             || {
                 Box::pin(engine::execute::execute_query(
@@ -441,7 +441,7 @@ async fn handle_explain_request(
     let response = tracer
         .in_span_async(
             "handle_explain_request",
-            "Handle explain request".to_string(),
+            "Handle explain request",
             SpanVisibility::User,
             || {
                 Box::pin(engine::execute::explain::execute_explain(

@@ -113,7 +113,7 @@ where
         // the replacement tokens
         let collect_arg_res = tracer.in_span(
             "collect_arguments",
-            "Collect arguments for join".into(),
+            "Collect arguments for join",
             SpanVisibility::Internal,
             || collect::collect_arguments(lhs_response, lhs_response_type, key, location),
         )?;
@@ -140,7 +140,7 @@ where
             let mut target_response = tracer
                 .in_span_async(
                     "execute_remote_join_query",
-                    "Execute remote query for join".to_string(),
+                    "Execute remote query for join",
                     SpanVisibility::Internal,
                     || {
                         Box::pin(execute_ndc_query(
@@ -171,7 +171,7 @@ where
 
             tracer.in_span(
                 "response_join",
-                "Join responses for remote query".into(),
+                "Join responses for remote query",
                 SpanVisibility::Internal,
                 || {
                     // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`

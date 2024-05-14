@@ -708,7 +708,7 @@ async fn execute_mutation_field_plan<'n, 's, 'ir>(
     tracer
         .in_span_async(
             "execute_mutation_field_plan",
-            "Execute request plan for mutation field".to_string(),
+            "Execute request plan for mutation field",
             tracing_util::SpanVisibility::User,
             || {
                 Box::pin(async {

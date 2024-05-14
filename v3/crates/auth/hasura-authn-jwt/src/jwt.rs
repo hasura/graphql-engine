@@ -447,47 +447,42 @@ async fn get_decoding_key_from_jwk_url(
 ) -> Result<(jwt::Algorithm, jwt::DecodingKey), Error> {
     let tracer = tracing_util::global_tracer();
     tracer
-        .in_span_async(
-            "fetch_jwk",
-            "Fetch JWK".to_string(),
-            SpanVisibility::Internal,
-            || {
-                Box::pin(async {
-                    let jwk_request = http_client
-                        .get(jwk_url)
-                        .headers(tracing_util::get_trace_headers())
-                        .timeout(Duration::from_secs(60))
-                        .build()
-                        .map_err(InternalError::ReqwestError)?;
+        .in_span_async("fetch_jwk", "Fetch JWK", SpanVisibility::Internal, || {
+            Box::pin(async {
+                let jwk_request = http_client
+                    .get(jwk_url)
+                    .headers(tracing_util::get_trace_headers())
+                    .timeout(Duration::from_secs(60))
+                    .build()
+                    .map_err(InternalError::ReqwestError)?;
 
-                    let jwk_response = http_client
-                        .execute(jwk_request)
+                let jwk_response = http_client
+                    .execute(jwk_request)
+                    .await
+                    .map_err(InternalError::ErrorFetchingJWKSet)?;
+                if jwk_response.status().is_success() {
+                    let jwk_set: jwt::jwk::JwkSet = jwk_response
+                        .json()
                         .await
-                        .map_err(InternalError::ErrorFetchingJWKSet)?;
-                    if jwk_response.status().is_success() {
-                        let jwk_set: jwt::jwk::JwkSet = jwk_response
-                            .json()
-                            .await
-                            .map_err(InternalError::ReqwestError)?;
-                        let decoded_header = decode_header(jwt_authorization_header)
-                            .map_err(Error::ErrorDecodingAuthorizationHeader)?;
-                        let kid = decoded_header.kid.ok_or(Error::KidHeaderNotFound)?;
-                        let jwk = jwk_set
-                            .find(kid.as_str())
-                            .ok_or(InternalError::NoMatchingJWKFound { kid })?;
-                        let decoding_key = jwt::DecodingKey::from_jwk(jwk)
-                            .map_err(InternalError::JWTDecodingKeyError)?;
-                        let algorithm = jwk
-                            .common
-                            .algorithm
-                            .ok_or(InternalError::AlgorithmNotFoundInJWK)?;
-                        Ok((algorithm, decoding_key))
-                    } else {
-                        Err(InternalError::UnsuccessfulJWKFetch(jwk_response.status()))?
-                    }
-                })
-            },
-        )
+                        .map_err(InternalError::ReqwestError)?;
+                    let decoded_header = decode_header(jwt_authorization_header)
+                        .map_err(Error::ErrorDecodingAuthorizationHeader)?;
+                    let kid = decoded_header.kid.ok_or(Error::KidHeaderNotFound)?;
+                    let jwk = jwk_set
+                        .find(kid.as_str())
+                        .ok_or(InternalError::NoMatchingJWKFound { kid })?;
+                    let decoding_key = jwt::DecodingKey::from_jwk(jwk)
+                        .map_err(InternalError::JWTDecodingKeyError)?;
+                    let algorithm = jwk
+                        .common
+                        .algorithm
+                        .ok_or(InternalError::AlgorithmNotFoundInJWK)?;
+                    Ok((algorithm, decoding_key))
+                } else {
+                    Err(InternalError::UnsuccessfulJWKFetch(jwk_response.status()))?
+                }
+            })
+        })
         .await
 }
 

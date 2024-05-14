@@ -395,7 +395,7 @@ pub fn process_response(
     // Post process the response to add the `__typename` fields
     tracer.in_span(
         "process_response",
-        "Process response".into(),
+        "Process response",
         SpanVisibility::Internal,
         || {
             let row_set = get_single_rowset(rows_sets)?;

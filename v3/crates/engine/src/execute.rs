@@ -1,4 +1,15 @@
+pub mod error;
+pub mod explain;
+pub mod global_id;
+pub mod ir;
+pub mod model_tracking;
+pub mod ndc;
+pub mod plan;
+pub mod process_response;
+pub mod remote_joins;
+
 use indexmap::IndexMap;
+use thiserror::Error;
 
 use gql::normalized_ast::Operation;
 use hasura_authn_core::Session;
@@ -9,21 +20,10 @@ use lang_graphql::{
     schema::Schema,
 };
 use schema::GDS;
-use thiserror::Error;
 use tracing_util::{
     set_attribute_on_active_span, AttributeVisibility, ErrorVisibility, SpanVisibility, Traceable,
     TraceableError,
 };
-
-pub mod error;
-pub mod explain;
-pub mod global_id;
-pub mod ir;
-pub mod model_tracking;
-pub mod ndc;
-pub mod plan;
-pub mod process_response;
-pub mod remote_joins;
 
 /// Context for making HTTP requests
 pub struct HttpContext {
@@ -114,7 +114,7 @@ pub async fn execute_query_internal(
     tracer
         .in_span_async(
             "execute_query",
-            "Execute query request".to_string(),
+            "Execute query request",
             SpanVisibility::User,
             || {
                 tracing_util::set_attribute_on_active_span(
@@ -125,7 +125,7 @@ pub async fn execute_query_internal(
                 tracing_util::set_attribute_on_active_span(
                     AttributeVisibility::Default,
                     "request.graphql_query",
-                    raw_request.query.to_string(),
+                    raw_request.query.clone(),
                 );
                 Box::pin(async {
                     // parse the raw request into a GQL query
@@ -142,8 +142,8 @@ pub async fn execute_query_internal(
                     let request_plan = build_request_plan(&ir)?;
 
                     let display_name = match normalized_request.name {
-                        Some(ref name) => format!("Execute {}", name),
-                        None => "Execute request plan".to_string(),
+                        Some(ref name) => std::borrow::Cow::Owned(format!("Execute {}", name)),
+                        None => std::borrow::Cow::Borrowed("Execute request plan"),
                     };
 
                     // execute the query plan
@@ -199,7 +199,7 @@ pub async fn explain_query_internal(
     tracer
         .in_span_async(
             "explain_query",
-            "Execute explain request".to_string(),
+            "Execute explain request",
             SpanVisibility::User,
             || {
                 tracing_util::set_attribute_on_active_span(
@@ -230,7 +230,7 @@ pub async fn explain_query_internal(
                     let response = tracer
                         .in_span_async(
                             "explain",
-                            "Explain request plan".to_string(),
+                            "Explain request plan",
                             SpanVisibility::Internal,
                             || {
                                 Box::pin(async {
@@ -279,7 +279,7 @@ pub(crate) fn parse_query(
     let query = tracer
         .in_span(
             "parse",
-            "Parse the raw request into a GraphQL query".into(),
+            "Parse the raw request into a GraphQL query",
             SpanVisibility::Internal,
             || {
                 gql::parser::Parser::new(query)
@@ -302,7 +302,7 @@ pub(crate) fn normalize_request<'s>(
     let normalized_request = tracer
         .in_span(
             "validate",
-            "Normalize the parsed GraphQL query".into(),
+            "Normalize the parsed GraphQL query",
             SpanVisibility::Internal,
             || {
                 // add the operation name even if validation fails
@@ -336,7 +336,7 @@ pub(crate) fn build_ir<'n, 's>(
     let tracer = tracing_util::global_tracer();
     let ir = tracer.in_span(
         "generate_ir",
-        "Generate IR for the request".into(),
+        "Generate IR for the request",
         SpanVisibility::Internal,
         || generate_ir(schema, session, normalized_request),
     )?;
@@ -350,7 +350,7 @@ pub(crate) fn build_request_plan<'n, 's, 'ir>(
     let tracer = tracing_util::global_tracer();
     let plan = tracer.in_span(
         "plan",
-        "Construct a plan to execute the request".into(),
+        "Construct a plan to execute the request",
         SpanVisibility::Internal,
         || plan::generate_request_plan(ir),
     )?;

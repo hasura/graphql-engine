@@ -43,7 +43,7 @@ pub async fn authenticate_request(
     tracer
         .in_span_async(
             "jwt_authenticate_request",
-            "Authenticate request using JSON Web Token".to_string(),
+            "Authenticate request using JSON Web Token",
             SpanVisibility::Internal,
             || {
                 Box::pin({
@@ -53,7 +53,7 @@ pub async fn authenticate_request(
                         let hasura_claims = tracer
                             .in_span_async(
                                 "decode_and_parse_hasura_claims",
-                                "Decode and parse Hasura claims".to_string(),
+                                "Decode and parse Hasura claims",
                                 SpanVisibility::Internal,
                                 || {
                                     Box::pin(decode_and_parse_hasura_claims(

@@ -70,7 +70,7 @@ pub(crate) async fn fetch_from_data_connector<'s>(
     tracer
         .in_span_async(
             "fetch_from_data_connector",
-            "Fetch from data connector".to_string(),
+            "Fetch from data connector",
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
@@ -151,7 +151,7 @@ pub(crate) async fn execute_ndc_mutation<'n, 's, 'ir>(
                     // Post process the response to add the `__typename` fields
                     tracer.in_span(
                         "process_response",
-                        "Process NDC response".into(),
+                        "Process NDC response",
                         SpanVisibility::Internal,
                         || {
                             // NOTE: NDC returns a `Vec<RowSet>` (to account for

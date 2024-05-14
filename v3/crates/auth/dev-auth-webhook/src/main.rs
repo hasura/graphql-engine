@@ -89,7 +89,7 @@ async fn graphql_request_tracing_middleware<B: Send>(
     let traceable = global_tracer()
         .in_span_async_with_parent_context(
             "request",
-            "request".to_string(),
+            "request",
             SpanVisibility::User,
             &request.headers().clone(),
             || {

@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -75,14 +74,14 @@ where
     }
 }
 
-fn set_attribute_on_span<V>(
+pub type AttributeValue = opentelemetry::Value;
+
+fn set_attribute_on_span(
     span: &SpanRef,
     visibility: AttributeVisibility,
     key: &'static str,
-    value: V,
-) where
-    V: Into<opentelemetry::Value>,
-{
+    value: impl Into<AttributeValue>,
+) {
     let key_with_visibility: Key = match visibility {
         AttributeVisibility::Default => key.into(),
         AttributeVisibility::Internal => format!("internal.{}", key).into(),
@@ -92,10 +91,11 @@ fn set_attribute_on_span<V>(
 }
 
 /// Sets an attribute on the active span, prefixing the `key` with `internal.` if `visibility` is `Internal`.
-pub fn set_attribute_on_active_span<V>(visibility: AttributeVisibility, key: &'static str, value: V)
-where
-    V: Into<opentelemetry::Value>,
-{
+pub fn set_attribute_on_active_span(
+    visibility: AttributeVisibility,
+    key: &'static str,
+    value: impl Into<AttributeValue>,
+) {
     get_active_span(|span| set_attribute_on_span(&span, visibility, key, value))
 }
 
@@ -122,7 +122,7 @@ impl Tracer {
     pub fn in_span<R, F>(
         &self,
         name: &'static str,
-        display_name: Cow<'static, str>,
+        display_name: impl Into<AttributeValue>,
         visibility: SpanVisibility,
         f: F,
     ) -> R
@@ -148,7 +148,7 @@ impl Tracer {
     pub async fn in_span_async<'a, R, F>(
         &'a self,
         name: &'static str,
-        display_name: String,
+        display_name: impl Into<AttributeValue>,
         visibility: SpanVisibility,
         f: F,
     ) -> R
@@ -181,7 +181,7 @@ impl Tracer {
     pub async fn in_span_async_with_parent_context<'a, R, F>(
         &'a self,
         name: &'static str,
-        display_name: String,
+        display_name: impl Into<AttributeValue>,
         visibility: SpanVisibility,
         parent_headers: &HeaderMap<http::HeaderValue>,
         f: F,

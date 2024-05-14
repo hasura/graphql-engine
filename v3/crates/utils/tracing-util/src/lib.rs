@@ -11,7 +11,7 @@ pub use setup::{shutdown_tracer, start_tracer};
 pub use traceable::{ErrorVisibility, Traceable, TraceableError};
 pub use tracer::{
     add_event_on_active_span, get_trace_context, global_tracer, set_attribute_on_active_span,
-    set_status_on_current_span, AttributeVisibility, SpanVisibility,
+    set_status_on_current_span, AttributeValue, AttributeVisibility, SpanVisibility,
 };
 
 // re-export things from OpenTelemetry to avoid library users importing their own version and
