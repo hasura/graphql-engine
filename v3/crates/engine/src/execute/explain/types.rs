@@ -1,12 +1,14 @@
-use crate::execute::error;
-use crate::execute::GraphQLErrors;
-use lang_graphql::http::GraphQLError;
+use std::collections::BTreeMap;
+
 use ndc_models;
 use nonempty::NonEmpty;
 use serde::Serialize;
-use serde_json::json;
-use std::collections::BTreeMap;
+
+use lang_graphql::http::GraphQLError;
 use tracing_util::Traceable;
+
+use crate::execute::error;
+use crate::execute::GraphQLErrors;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,23 +33,11 @@ impl ExplainResponse {
             errors: Some(nonempty::nonempty![error]),
         }
     }
-
-    pub fn does_contain_error(&self) -> bool {
-        self.errors.is_some()
-    }
 }
 
 impl axum::response::IntoResponse for ExplainResponse {
     fn into_response(self) -> axum::response::Response {
-        let response = match &self.errors {
-            None => {
-                json!({ "explain": self.explain })
-            }
-            Some(errors) => {
-                json!({ "explain": self.explain, "errors": errors })
-            }
-        };
-        axum::Json(response).into_response()
+        axum::Json(self).into_response()
     }
 }
 

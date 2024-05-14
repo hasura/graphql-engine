@@ -1,11 +1,11 @@
-use crate::ast::common as ast;
-use crate::ast::executable;
+use std::collections::HashMap;
+
 use indexmap::IndexMap;
 use nonempty::{nonempty, NonEmpty};
 use serde::{Deserialize, Serialize};
-use serde_json;
-use serde_json::json;
-use std::collections::HashMap;
+
+use crate::ast::common as ast;
+use crate::ast::executable;
 
 /// The request as we receive it from the client, before we
 /// parse the query string
@@ -160,15 +160,7 @@ impl Response {
 
 impl axum::response::IntoResponse for Response {
     fn into_response(self) -> axum::response::Response {
-        let response = match &self.errors {
-            None => {
-                json!({ "data": self.data })
-            }
-            Some(errors) => {
-                json!({ "data": self.data, "errors": errors })
-            }
-        };
-        (self.status_code, axum::Json(response)).into_response()
+        (self.status_code, axum::Json(self)).into_response()
     }
 }
 
