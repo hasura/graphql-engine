@@ -9,10 +9,10 @@ bench = false
 
 [dependencies]
 convert_case = "0.6"
-darling = "0.13"
+darling = "0.20"
 proc-macro2 = "1"
 quote = "1"
-syn = { version = "1", features = ["full"] }
+syn = { version = "2", features = ["full"] }
 thiserror = "1"
 
 [lints]

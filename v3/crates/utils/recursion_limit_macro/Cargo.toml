@@ -8,8 +8,8 @@ proc-macro = true
 bench = false
 
 [dependencies]
-syn = { version = "1.0", features = ["full"] }
-quote = "1.0"
+quote = "1"
+syn = { version = "2", features = ["full"] }
 
 [lints]
 workspace = true

@@ -1,8 +1,7 @@
 use super::container::JsonSchemaMetadata;
 use quote::quote;
-use syn::{Attribute, Lit::Str, Meta::NameValue, MetaNameValue};
 
-pub fn get_title_and_desc_from_doc(attrs: &[Attribute]) -> (Option<String>, Option<String>) {
+pub fn get_title_and_desc_from_doc(attrs: &[syn::Attribute]) -> (Option<String>, Option<String>) {
     let doc = match get_doc(attrs) {
         None => return (None, None),
         Some(doc) => doc,
@@ -33,20 +32,27 @@ fn merge_description_lines(doc: &str) -> Option<String> {
     none_if_empty(desc)
 }
 
-fn get_doc(attrs: &[Attribute]) -> Option<String> {
+fn get_doc(attrs: &[syn::Attribute]) -> Option<String> {
     let attrs = attrs
         .iter()
         .filter_map(|attr| {
-            if !attr.path.is_ident("doc") {
-                return None;
+            if attr.path().is_ident("doc") {
+                if let syn::Meta::NameValue(syn::MetaNameValue {
+                    value:
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Str(ref lit_str),
+                            ..
+                        }),
+                    ..
+                }) = attr.meta
+                {
+                    Some(lit_str.value())
+                } else {
+                    None
+                }
+            } else {
+                None
             }
-
-            let meta = attr.parse_meta().ok()?;
-            if let NameValue(MetaNameValue { lit: Str(s), .. }) = meta {
-                return Some(s.value());
-            }
-
-            None
         })
         .collect::<Vec<_>>();
 
