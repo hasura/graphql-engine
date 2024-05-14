@@ -14,7 +14,8 @@ bench = false
 
 [dependencies]
 anyhow = "1"
-axum = "0.6"
+axum = { version = "0.6", features = ["http2"] }
+env_logger = "0.11"
 indexmap = "2"
 ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }
 regex = "1"

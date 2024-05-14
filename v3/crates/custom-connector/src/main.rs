@@ -15,6 +15,8 @@ type Result<A> = std::result::Result<A, (StatusCode, Json<ndc_models::ErrorRespo
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    env_logger::init();
+
     let app_state = Arc::new(custom_connector::state::init_app_state()?);
 
     let app = Router::new()
