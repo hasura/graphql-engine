@@ -57,7 +57,6 @@
           "type": "Int"
         }
       ],
-      "globalIdFields": ["analytics_id"],
       "graphql": {
         "typeName": "MovieAnalytics"
       },
@@ -117,7 +116,6 @@
     "definition": {
       "name": "MovieAnalytics",
       "objectType": "movie_analytics",
-      "globalIdSource": true,
       "source": {
         "dataConnectorName": "db",
         "collection": "movie_analytics"
@@ -616,5 +614,69 @@
       ]
     },
     "version": "v1"
+  },
+  {
+    "kind": "Relationship",
+    "version": "v1",
+    "definition": {
+      "name": "Analytics",
+      "sourceType": "commandMovie",
+      "target": {
+        "model": {
+          "name": "MovieAnalytics",
+          "relationshipType": "Array"
+        }
+      },
+      "mapping": [
+        {
+          "source": {
+            "fieldPath": [
+              {
+                "fieldName": "movie_id"
+              }
+            ]
+          },
+          "target": {
+            "modelField": [
+              {
+                "fieldName": "movie_id"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "kind": "Relationship",
+    "version": "v1",
+    "definition": {
+      "name": "analytics",
+      "sourceType": "movie_analytics",
+      "target": {
+        "model": {
+          "name": "MovieAnalytics",
+          "relationshipType": "Object"
+        }
+      },
+      "mapping": [
+        {
+          "source": {
+            "fieldPath": [
+              {
+                "fieldName": "analytics_id"
+              }
+            ]
+          },
+          "target": {
+            "modelField": [
+              {
+                "fieldName": "analytics_id"
+              }
+            ]
+          }
+        }
+      ]
+    }
   }
 ]

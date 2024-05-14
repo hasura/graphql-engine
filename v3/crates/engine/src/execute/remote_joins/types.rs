@@ -164,7 +164,7 @@ pub enum RemoteJoinType {
 pub struct JoinId(pub i16);
 
 /// Name of the variable used in the IR
-#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd, Clone)]
 pub struct VariableName(pub String);
 
 /// An 'Argument' is a map of variable name to it's value.
@@ -172,6 +172,7 @@ pub struct VariableName(pub String);
 pub type Argument = BTreeMap<VariableName, ValueExt>;
 
 /// For assigning a unique number to each argument
+#[derive(Debug)]
 pub struct ArgumentId(pub i16);
 
 /// A map of each argument to its argument id

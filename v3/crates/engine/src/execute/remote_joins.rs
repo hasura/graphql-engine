@@ -78,6 +78,7 @@
 
 use async_recursion::async_recursion;
 use ndc_models;
+
 use serde_json as json;
 use std::collections::{BTreeMap, HashMap};
 use tracing_util::SpanVisibility;
@@ -108,80 +109,101 @@ where
     'ir: 'async_recursion,
 {
     let tracer = tracing_util::global_tracer();
-    for (key, location) in &join_locations.locations {
-        // collect the join column arguments from the LHS response, also get
-        // the replacement tokens
-        let collect_arg_res = tracer.in_span(
-            "collect_arguments",
-            "Collect arguments for join",
-            SpanVisibility::Internal,
-            || collect::collect_arguments(lhs_response, lhs_response_type, key, location),
-        )?;
-        if let Some(CollectArgumentResult {
+
+    // collect the join column arguments from the LHS response
+    let mut location_path = Vec::new();
+    let arguments_results = tracer.in_span(
+        "collect_arguments",
+        "Collect arguments for join",
+        SpanVisibility::Internal,
+        || {
+            collect::collect_arguments(
+                lhs_response,
+                lhs_response_type,
+                join_locations,
+                &mut location_path,
+            )
+        },
+    )?;
+
+    for arguments_result in arguments_results {
+        let CollectArgumentResult {
             arguments,
+            location_path,
             mut join_node,
             sub_tree,
             remote_alias,
-        }) = collect_arg_res
-        {
-            // patch the target/RHS IR with variable values
-            let (join_variables_, _argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
-            let join_variables: Vec<BTreeMap<String, json::Value>> = join_variables_
-                .iter()
-                .map(|bmap| {
-                    bmap.iter()
-                        .map(|(k, v)| (k.0.clone(), v.0.clone()))
-                        .collect()
-                })
-                .collect();
-            join_node.target_ndc_ir.variables = Some(join_variables);
+        } = arguments_result;
 
-            // execute the remote query
-            let mut target_response = tracer
-                .in_span_async(
-                    "execute_remote_join_query",
-                    "Execute remote query for join",
-                    SpanVisibility::Internal,
-                    || {
-                        Box::pin(execute_ndc_query(
-                            http_context,
-                            &join_node.target_ndc_ir,
-                            join_node.target_data_connector,
-                            execution_span_attribute,
-                            remote_alias.clone(),
-                            project_id,
-                        ))
-                    },
-                )
-                .await?;
+        // if we do not get any join arguments back, we have nothing on the RHS
+        // to execute. Skip execution.
+        if arguments.is_empty() {
+            continue;
+        }
+        // patch the target/RHS IR with variable values
+        let (foreach_variables_, _argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
+        let foreach_variables: Vec<BTreeMap<String, json::Value>> = foreach_variables_
+            .iter()
+            .map(|bmap| {
+                bmap.iter()
+                    .map(|(k, v)| (k.0.clone(), v.0.clone()))
+                    .collect()
+            })
+            .collect();
+        join_node.target_ndc_ir.variables = Some(foreach_variables);
 
-            // if there is a `location.rest`, recursively process the tree; which
-            // will modify the `target_response` with all joins down the tree
-            if !location.rest.locations.is_empty() {
-                execute_join_locations(
-                    http_context,
-                    execution_span_attribute,
-                    &mut target_response,
-                    &join_node.process_response_as,
-                    &sub_tree,
-                    project_id,
-                )
-                .await?;
-            }
-
-            tracer.in_span(
-                "response_join",
-                "Join responses for remote query",
+        // execute the remote query
+        let mut target_response = tracer
+            .in_span_async(
+                "execute_remote_join_query",
+                "Execute remote query for join",
                 SpanVisibility::Internal,
                 || {
-                    // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                    let rhs_response: HashMap<Argument, ndc_models::RowSet> =
-                        join_variables_.into_iter().zip(target_response).collect();
-
-                    join::join_responses(key, &remote_alias, location, lhs_response, &rhs_response)
+                    Box::pin(execute_ndc_query(
+                        http_context,
+                        &join_node.target_ndc_ir,
+                        join_node.target_data_connector,
+                        execution_span_attribute,
+                        remote_alias.clone(),
+                        project_id,
+                    ))
                 },
-            )?;
+            )
+            .await?;
+
+        // if the sub-tree is not empty, recursively process the sub-tree; which
+        // will modify the `target_response` with all joins down the tree
+        if !sub_tree.locations.is_empty() {
+            execute_join_locations(
+                http_context,
+                execution_span_attribute,
+                &mut target_response,
+                &join_node.process_response_as,
+                &sub_tree,
+                project_id,
+            )
+            .await?;
         }
+        tracer.in_span(
+            "response_join",
+            "Join responses for remote query",
+            SpanVisibility::Internal,
+            || {
+                // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
+                let rhs_response: HashMap<Argument, ndc_models::RowSet> = foreach_variables_
+                    .into_iter()
+                    .zip(target_response)
+                    .collect();
+
+                join::join_responses(
+                    &location_path,
+                    &join_node,
+                    &remote_alias,
+                    lhs_response,
+                    &rhs_response,
+                )
+            },
+        )?;
     }
     Ok(())
 }

@@ -1,11 +1,11 @@
 query MyQuery {
   Analytics {
+    ActorFromCommand {
+      name
+    }
     MovieFromCommand {
       title
       rating
-    }
-    ActorFromCommand {
-      name
     }
     analytics_id
     movie_id

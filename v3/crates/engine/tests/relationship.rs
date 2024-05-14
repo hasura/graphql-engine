@@ -197,11 +197,45 @@ fn test_remote_relationships_model_to_command_array() -> anyhow::Result<()> {
 }
 
 #[test]
-fn test_remote_relationships_model_to_multiple_commands() -> anyhow::Result<()> {
+fn test_remote_relationships_model_to_multiple_commands_not_nested() -> anyhow::Result<()> {
     let test_path_string =
-        "execute/remote_relationships/command/model_to_command/multiple_commands";
+        "execute/remote_relationships/command/model_to_command/multiple_commands/not_nested";
     let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
-    common::test_execution_expectation(test_path_string, &[common_metadata_path_string])
+    let multiple_commands_metadata =
+        "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[multiple_commands_metadata, common_metadata_path_string],
+    )
+}
+
+#[test]
+fn test_remote_relationships_model_to_multiple_commands_nested() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/remote_relationships/command/model_to_command/multiple_commands/nested";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    let multiple_commands_metadata =
+        "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[multiple_commands_metadata, common_metadata_path_string],
+    )
+}
+
+#[test]
+fn test_remote_relationships_model_to_multiple_commands_very_nested() -> anyhow::Result<()> {
+    let test_path_string =
+        "execute/remote_relationships/command/model_to_command/multiple_commands/very_nested";
+    let common_metadata_path_string = "execute/common_metadata/two_connectors_schema.json";
+    let multiple_commands_metadata =
+        "execute/remote_relationships/command/model_to_command/multiple_commands/metadata.json";
+
+    common::test_execution_expectation(
+        test_path_string,
+        &[multiple_commands_metadata, common_metadata_path_string],
+    )
 }
 
 #[test]

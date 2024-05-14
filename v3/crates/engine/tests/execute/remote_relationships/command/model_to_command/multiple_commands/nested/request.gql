@@ -1,0 +1,16 @@
+query MyQuery {
+  Analytics {
+    analytics {
+      ActorFromCommand {
+        name
+      }
+      MovieFromCommand {
+        title
+        rating
+      }
+    }
+    analytics_id
+    movie_id
+    total_votes
+  }
+}
