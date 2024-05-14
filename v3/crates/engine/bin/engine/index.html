@@ -68,7 +68,7 @@
       const fetcher = GraphiQL.createFetcher({
         url: "/graphql",
         // default header so that we don't have to add it manually in local dev
-        // headers: { 'x-hasura-role': 'admin' },
+        headers: { "x-hasura-role": "admin" },
       });
       const explorerPlugin = GraphiQLPluginExplorer.explorerPlugin();
       root.render(
