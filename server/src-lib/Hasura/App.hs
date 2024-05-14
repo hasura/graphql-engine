@@ -1178,7 +1178,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
     getSchemaCache' = getSchemaCache appStateRef
 
     prepareScheduledEvents (LoggerTracing logger) = do
-      logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
+      logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "unlocking all locked scheduled events"
       res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return unlockAllLockedScheduledEvents)
       onLeft res (\err -> logger $ mkGenericLog @String LevelError "scheduled_triggers" (show $ qeError err))
 
