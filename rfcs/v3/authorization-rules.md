@@ -7,6 +7,11 @@ Currently, Hasura uses role based access control, where you define the entire se
 - It's not possible to reuse permissions (allowed fields, model predicate) across roles.
 - For complicated permissions, it's hard to verify the correctness of a model's permissions predicate at a glance.
 
+Some Github issues addressed in this RFC:
+- https://github.com/hasura/graphql-engine/issues/3685
+- https://github.com/hasura/graphql-engine/issues/1919
+- https://github.com/hasura/graphql-engine/issues/3544
+
 ## Proposal
 
 This RFC proposes a new rule-based mechanism for defining permissions for types, models, and commands in the metadata. The following requirements have been considered as a part of this proposal:
@@ -26,18 +31,17 @@ The condition that may be attached to a rule is a boolean expression built using
 
 #### Boolean Operators
 
-The condition must start at a boolean operator. These are the available boolean operators:
+The condition must start at a boolean operator. These are some potential boolean operators:
 - `and`: array of boolean expressions which are ANDed together.
 - `or`: array of boolean expressions which are ORed together.
 - `not`: boolean exrepssion which is negated.
 - `equal`: Compares two value expressions are the same.
+- `isNull`: whether a given value is null
 - `contains`: Whether a given value is contained within a given array of values
 - `greaterThan`: Compares left > right.
 - `lessThan`: Compares left < right.
 - `greaterThanOrEqual`: Compares left >= right
 - `lessThanOrEqual`: Compares left <= right
-
-In the future, these may be expanded to more boolean operators. For example:
 - `regexMatch`: Whether a given value matches the given regular expression
 
 #### Value Expressions
@@ -178,6 +182,8 @@ definition:
             literal: 5
       condition:
         # Information about whether the user has access to the basic tier is available in OPA
+        # This is meant to illustrate how external systems might be brought in and calling OPA
+        # is not actually being proposed in this RFC.
         equals:
           - opa:
             path: /v1/data/product_reommendations/basic_tier
@@ -193,6 +199,8 @@ definition:
             literal: 10
       condition:
         # Information whether the user has access to the pro tier is available in OPA
+        # This is meant to illustrate how external systems might be brought in and calling OPA
+        # is not actually being proposed in this RFC.
         equals:
           - left:
               opa:
@@ -206,11 +214,14 @@ definition:
     - validate: 
         equals:
           left:
+            # This is meant to illustrate how an external command may be invoked
+            # and is not actually being proposed in this RFC.
             runCommand:
               name: is_valid_recommendation_query
               arguments:
                 - name: query_to_validate
                   value:
+                    # Name of the command argument to validate
                     fromInputArgument: query
           right:
             literal: true
@@ -263,13 +274,37 @@ For example, if I have models for `Channels`, `Threads`, `Replies`. Then my pred
 Ideally, you would be able to express the fact that an object should be selectable if the related object is also selectable.
 
 Hence, we propose the following addition to the permissions predicate:
-```
+```yaml
 allowObjects:
   relationship:
     name: 'my_relationship'
     relatedObjectAllowed: true
 ```
 
+### AuthConfig
+
+The notion of roles will be removed from AuthConfig. In particular, the `allow_role_emulation_by` key will be replaced by a `allow_session_emulation_if` key which specifies a condition which needs to evaluate to true for the request to allow emulating session variables.
+
+No `x-hasura-` session variables will now be required in the webhook response or in JWT claims. Users can choose arbitrary names for session variables.
+
+### Implementation
+
+The above proposal has major implications for engine, the `lang-graphql` crate in particular. Currently, `lang-graphql` allows constructing a single graphql schema with information about all roles embedded into the schema and allows query validation / IR generation to happen in the context of a particular role only. However, with the above proposal, there is no notion of roles anymore. So, `lang-graphql` will need to move to an architecture where when trying to access a graphql field, instead of looking up an allowed set of roles, it can evaluate an arbitrary expression that evaluates to a boolean. The details of this architecture are out of scope for this RFC.
+
+#### Milestones
+
+- Milestone 1: Refactor the internal engine implementation to support the new permissions system without any metadata changes. Internally, the role-based definitions would be mapped to the new system.
+- Milestone 2: Make the metadata changes for the new system with the following primitives:
+  - Conditional activation of rules. Conditions support a basic set of operators (`equals`, `isNull`, and logical operators at least).
+  - Value expressions can either be literals or session variables only.
+  - Support only field permissions / model select predicates / argument presets. No input validation.
+  - Composability of rules.
+- New features (in no particular order):
+  - Reusing relationship permissions
+  - Arguments input validation
+  - Calling external systems
+  - Accessing sub-fields in value expressions
+  - Advanced boolean operators
 
 ## FAQs
 
