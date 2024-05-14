@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 pub enum ErrorVisibility {
     Internal,
     User,
@@ -15,11 +17,50 @@ pub trait TraceableError: core::fmt::Display + core::fmt::Debug {
     }
 }
 
+// `Infallible` is used for errors that can never happen. It is therefore
+// trivially traceable, as it will never occur.
+impl TraceableError for Infallible {
+    fn visibility(&self) -> ErrorVisibility {
+        match *self {}
+    }
+}
+
+/// An abstraction over values that can return an error, so that the error can
+/// automatically be traced.
+///
+/// If the operation is guaranteed never to error, you can use [`Successful`].
 pub trait Traceable {
     type ErrorType<'a>: TraceableError
     where
         Self: 'a;
     fn get_error(&self) -> Option<Self::ErrorType<'_>>;
+}
+
+/// A value which is always successful.
+pub struct Successful<T>(T);
+
+impl<T> Successful<T> {
+    pub fn new(value: T) -> Self {
+        Self(value)
+    }
+
+    pub fn into_inner(self) -> T {
+        self.0
+    }
+}
+
+impl<T> From<T> for Successful<T> {
+    fn from(value: T) -> Self {
+        Self(value)
+    }
+}
+
+impl<T> Traceable for Successful<T> {
+    type ErrorType<'a> = Infallible where Self: 'a;
+
+    fn get_error(&self) -> Option<Self::ErrorType<'_>> {
+        None
+    }
 }
 
 /// A helper type to wrap a reference to `E` from [`Result<T, E>`].

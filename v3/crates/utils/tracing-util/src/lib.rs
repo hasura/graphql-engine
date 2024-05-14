@@ -8,9 +8,9 @@ mod tracer;
 pub use crate::http::TraceableHttpResponse;
 pub use request::get_trace_headers;
 pub use setup::{shutdown_tracer, start_tracer};
-pub use traceable::{ErrorVisibility, Traceable, TraceableError};
+pub use traceable::{ErrorVisibility, Successful, Traceable, TraceableError};
 pub use tracer::{
-    add_event_on_active_span, get_trace_context, global_tracer, set_attribute_on_active_span,
+    add_event_on_active_span, global_tracer, set_attribute_on_active_span,
     set_status_on_current_span, AttributeValue, AttributeVisibility, SpanVisibility,
 };
 

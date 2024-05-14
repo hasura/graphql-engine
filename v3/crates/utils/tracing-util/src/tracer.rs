@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
@@ -7,7 +6,7 @@ use opentelemetry::global::{self, BoxedTracer};
 use opentelemetry::trace::{
     get_active_span, FutureExt, SpanRef, TraceContextExt, Tracer as OtelTracer,
 };
-use opentelemetry::{Context, Key};
+use opentelemetry::Key;
 use opentelemetry_http::HeaderExtractor;
 
 use crate::traceable::{ErrorVisibility, Traceable, TraceableError};
@@ -206,16 +205,6 @@ impl Tracer {
             self.in_span_async(name, display_name, visibility, f).await
         }
     }
-}
-
-/// Return the current trace context, useful for including it HTTP requests etc
-pub fn get_trace_context() -> HashMap<String, String> {
-    let ctx = Context::current();
-    let mut trace_headers = HashMap::new();
-    global::get_text_map_propagator(|propagator| {
-        propagator.inject_context(&ctx, &mut trace_headers);
-    });
-    trace_headers
 }
 
 /// Util for accessing the globally installed tracer

@@ -1,9 +1,12 @@
-use super::response::handle_response_with_size_limit;
-use ndc_models;
+use std::convert::identity;
+
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
-use tracing_util::SpanVisibility;
+
+use tracing_util::{SpanVisibility, Successful};
+
+use crate::execute::ndc::response::handle_response_with_size_limit;
 
 /// Error type for the NDC API client interactions
 #[derive(Debug, Error)]
@@ -84,13 +87,10 @@ pub async fn capabilities_get(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let client = &configuration.client;
-
-                    let uri = append_path(&configuration.base_path, &["capabilities"])
-                        .map_err(|_| Error::InvalidBaseURL)?;
-                    let req_builder = client.request(reqwest::Method::GET, uri);
-
-                    execute_request(configuration, req_builder).await
+                    let url = append_path(&configuration.base_path, &["capabilities"])?;
+                    let request =
+                        construct_request(configuration, reqwest::Method::GET, url, identity);
+                    execute_request(configuration, request).await
                 })
             },
         )
@@ -112,13 +112,12 @@ pub async fn explain_query_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let client = &configuration.client;
-
-                    let uri = append_path(&configuration.base_path, &["query", "explain"])
-                        .map_err(|_| Error::InvalidBaseURL)?;
-                    let req_builder = client.request(reqwest::Method::POST, uri);
-
-                    execute_request(configuration, req_builder.json(query_request)).await
+                    let url = append_path(&configuration.base_path, &["query", "explain"])?;
+                    let request =
+                        construct_request(configuration, reqwest::Method::POST, url, |r| {
+                            r.json(query_request)
+                        });
+                    execute_request(configuration, request).await
                 })
             },
         )
@@ -140,13 +139,12 @@ pub async fn explain_mutation_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let client = &configuration.client;
-
-                    let uri = append_path(&configuration.base_path, &["mutation", "explain"])
-                        .map_err(|_| Error::InvalidBaseURL)?;
-                    let req_builder = client.request(reqwest::Method::POST, uri);
-
-                    execute_request(configuration, req_builder.json(mutation_request)).await
+                    let url = append_path(&configuration.base_path, &["mutation", "explain"])?;
+                    let request =
+                        construct_request(configuration, reqwest::Method::POST, url, |r| {
+                            r.json(mutation_request)
+                        });
+                    execute_request(configuration, request).await
                 })
             },
         )
@@ -168,13 +166,12 @@ pub async fn mutation_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let client = &configuration.client;
-
-                    let uri = append_path(&configuration.base_path, &["mutation"])
-                        .map_err(|_| Error::InvalidBaseURL)?;
-                    let req_builder = client.request(reqwest::Method::POST, uri);
-
-                    execute_request(configuration, req_builder.json(mutation_request)).await
+                    let url = append_path(&configuration.base_path, &["mutation"])?;
+                    let request =
+                        construct_request(configuration, reqwest::Method::POST, url, |r| {
+                            r.json(mutation_request)
+                        });
+                    execute_request(configuration, request).await
                 })
             },
         )
@@ -196,13 +193,12 @@ pub async fn query_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let client = &configuration.client;
-
-                    let uri = append_path(&configuration.base_path, &["query"])
-                        .map_err(|_| Error::InvalidBaseURL)?;
-                    let req_builder = client.request(reqwest::Method::POST, uri);
-
-                    execute_request(configuration, req_builder.json(query_request)).await
+                    let url = append_path(&configuration.base_path, &["query"])?;
+                    let request =
+                        construct_request(configuration, reqwest::Method::POST, url, |r| {
+                            r.json(query_request)
+                        });
+                    execute_request(configuration, request).await
                 })
             },
         )
@@ -219,13 +215,9 @@ pub async fn schema_get(
     tracer
         .in_span_async("schema_get", "Get schema", SpanVisibility::Internal, || {
             Box::pin(async {
-                let client = &configuration.client;
-
-                let uri = append_path(&configuration.base_path, &["schema"])
-                    .map_err(|_| Error::InvalidBaseURL)?;
-                let req_builder = client.request(reqwest::Method::GET, uri);
-
-                execute_request(configuration, req_builder).await
+                let url = append_path(&configuration.base_path, &["schema"])?;
+                let request = construct_request(configuration, reqwest::Method::GET, url, identity);
+                execute_request(configuration, request).await
             })
         })
         .await
@@ -233,51 +225,94 @@ pub async fn schema_get(
 
 // Private utility functions
 
-/// Inject trace context into the request via headers
-fn inject_trace_context(mut request_builder: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-    let trace_headers = tracing_util::get_trace_context();
-    for (key, value) in trace_headers {
-        request_builder = request_builder.header(key, value);
-    }
-    request_builder
+/// Append a path to a URL
+fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, Error> {
+    let mut url = url.clone();
+    url.path_segments_mut()
+        .map_err(|_| Error::InvalidBaseURL)?
+        .pop_if_empty()
+        .extend(path);
+    Ok(url)
 }
 
-/// Append a path to a URL
-fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, ()> {
-    let mut url = url.clone();
-    url.path_segments_mut()?.pop_if_empty().extend(path);
-    Ok(url)
+fn construct_request(
+    configuration: &Configuration,
+    method: reqwest::Method,
+    url: reqwest::Url,
+    modify: impl FnOnce(reqwest::RequestBuilder) -> reqwest::RequestBuilder,
+) -> reqwest::RequestBuilder {
+    let tracer = tracing_util::global_tracer();
+    tracer
+        .in_span(
+            "construct_request",
+            "Construct request",
+            SpanVisibility::Internal,
+            || {
+                let mut request_builder = configuration.client.request(method, url);
+                // Apply customizations
+                request_builder = modify(request_builder);
+                // Set user agent if provided
+                if let Some(ref user_agent) = configuration.user_agent {
+                    request_builder =
+                        request_builder.header(reqwest::header::USER_AGENT, user_agent);
+                }
+                // Set headers from configuration
+                request_builder = request_builder.headers(configuration.headers.clone());
+                // Return the prepared request
+                Successful::new(request_builder)
+            },
+        )
+        .into_inner()
 }
 
 /// Execute a request and deserialize the JSON response
 async fn execute_request<T: DeserializeOwned>(
     configuration: &Configuration,
-    mut request_builder: reqwest::RequestBuilder,
+    request: reqwest::RequestBuilder,
 ) -> Result<T, Error> {
-    // Inject trace context into the request
-    request_builder = inject_trace_context(request_builder);
-    // Set user agent if provided
-    if let Some(ref user_agent) = configuration.user_agent {
-        request_builder = request_builder.header(reqwest::header::USER_AGENT, user_agent);
-    }
-    // Set headers from configuration
-    // Note: The headers will be merged in to any already set.
-    request_builder = request_builder.headers(configuration.headers.clone());
+    let tracer = tracing_util::global_tracer();
 
-    // Build and execute the request
-    let request = request_builder.build()?;
-    let response = configuration.client.execute(request).await?;
+    let response = tracer
+        .in_span_async(
+            "send_request",
+            "Send request",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    // We inject the trace headers here so they are a child of this span.
+                    request
+                        .headers(tracing_util::get_trace_headers())
+                        .send()
+                        .await
+                        .map_err(Error::from)
+                })
+            },
+        )
+        .await?;
 
-    let response_status = response.status();
-    if !response_status.is_client_error() && !response_status.is_server_error() {
-        let result = match configuration.response_size_limit {
-            None => response.json().await?,
-            Some(size_limit) => handle_response_with_size_limit(response, size_limit).await?,
-        };
-        Ok(result)
-    } else {
-        Err(construct_error(response).await)
-    }
+    tracer
+        .in_span_async(
+            "deserialize_response",
+            "Deserialize response",
+            SpanVisibility::Internal,
+            || {
+                Box::pin(async {
+                    let response_status = response.status();
+                    if !response_status.is_client_error() && !response_status.is_server_error() {
+                        let result = match configuration.response_size_limit {
+                            None => response.json().await?,
+                            Some(size_limit) => {
+                                handle_response_with_size_limit(response, size_limit).await?
+                            }
+                        };
+                        Ok(result)
+                    } else {
+                        Err(construct_error(response).await)
+                    }
+                })
+            },
+        )
+        .await
 }
 
 /// Build an error from the response status and content
