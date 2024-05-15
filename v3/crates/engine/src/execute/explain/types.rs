@@ -33,6 +33,9 @@ impl ExplainResponse {
             errors: Some(nonempty::nonempty![error]),
         }
     }
+    pub fn does_contain_error(&self) -> bool {
+        self.errors.is_some()
+    }
 }
 
 impl axum::response::IntoResponse for ExplainResponse {
