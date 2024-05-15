@@ -21,13 +21,13 @@ use std::collections::BTreeMap;
 
 use crate::helpers::typecheck;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandWithPermissions {
     pub command: commands::Command,
     pub permissions: BTreeMap<Role, CommandPermission>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandPermission {
     pub allow_execution: bool,
     pub argument_presets: BTreeMap<ArgumentName, (QualifiedTypeReference, ValueExpression)>,
@@ -91,6 +91,23 @@ pub fn resolve(
     Ok(commands_with_permissions)
 }
 
+// get the ndc_models::Type for an argument if it is available
+fn get_command_source_argument<'a>(
+    argument_name: &'a ArgumentName,
+    command: &'a commands::Command,
+) -> Option<&'a ndc_models::Type> {
+    command
+        .source
+        .as_ref()
+        .and_then(|source| {
+            source
+                .argument_mappings
+                .get(argument_name)
+                .map(|connector_argument_name| source.source_arguments.get(connector_argument_name))
+        })
+        .flatten()
+}
+
 pub fn resolve_command_permissions(
     command: &commands::Command,
     permissions: &CommandPermissionsV1,
@@ -116,12 +133,16 @@ pub fn resolve_command_permissions(
                 });
             }
 
+            let source_argument_type =
+                get_command_source_argument(&argument_preset.argument, command);
+
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     let value_expression = resolve_value_expression_for_argument(
                         &argument_preset.argument,
                         &argument_preset.value,
                         &argument.argument_type,
+                        source_argument_type,
                         subgraph,
                         object_types,
                         scalar_types,

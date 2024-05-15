@@ -6,7 +6,7 @@ use crate::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, scalar_types,
+    boolean_expressions, data_connector_scalar_types, data_connectors, models, scalar_types,
     type_permissions,
 };
 use crate::types::error::Error;
@@ -49,15 +49,16 @@ pub fn resolve(
             object_boolean_expression_types,
         )?;
         if let Some(command_source) = &command.source {
-            resolve_command_source(
+            let command_source = resolve_command_source(
                 command_source,
-                &mut resolved_command,
+                &resolved_command,
                 subgraph,
                 data_connectors,
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,
             )?;
+            resolved_command.source = Some(command_source);
         }
         let qualified_command_name = Qualified::new(subgraph.to_string(), command.name.clone());
         if commands
@@ -180,9 +181,14 @@ pub fn resolve_command(
     })
 }
 
+struct CommandSourceResponse {
+    result_type: ndc_models::Type,
+    arguments: BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
+}
+
 pub fn resolve_command_source(
     command_source: &commands::CommandSource,
-    command: &mut Command,
+    command: &Command,
     subgraph: &str,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
@@ -191,7 +197,7 @@ pub fn resolve_command_source(
         Qualified<CustomTypeName>,
         boolean_expressions::ObjectBooleanExpressionType,
     >,
-) -> Result<(), Error> {
+) -> Result<CommandSource, Error> {
     if command.source.is_some() {
         return Err(Error::DuplicateCommandSourceDefinition {
             command_name: command.name.clone(),
@@ -214,36 +220,58 @@ pub fn resolve_command_source(
 
     // Get the result type and arguments of the function or procedure used as the ndc source for commands
     // object type
-    let (source_result_type, ndc_arguments) = match &command_source.data_connector_command {
+    let command_source_response = match &command_source.data_connector_command {
         DataConnectorCommand::Procedure(procedure) => {
             let source_procedure = data_connector_context
                 .inner
                 .schema
                 .procedures
-                .iter()
-                .find(|proc| proc.name == *procedure.0)
+                .get(procedure)
                 .ok_or_else(|| Error::UnknownCommandProcedure {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),
                     procedure: procedure.clone(),
                 })?;
 
-            (&source_procedure.result_type, &source_procedure.arguments)
+            CommandSourceResponse {
+                result_type: source_procedure.result_type.clone(),
+                arguments: source_procedure
+                    .arguments
+                    .iter()
+                    .map(|(k, v)| {
+                        (
+                            models::ConnectorArgumentName(k.clone()),
+                            v.argument_type.clone(),
+                        )
+                    })
+                    .collect(),
+            }
         }
         DataConnectorCommand::Function(function) => {
             let source_function = data_connector_context
                 .inner
                 .schema
                 .functions
-                .iter()
-                .find(|func| func.name == *function.0)
+                .get(function)
                 .ok_or_else(|| Error::UnknownCommandFunction {
                     command_name: command.name.clone(),
                     data_connector: qualified_data_connector_name.clone(),
                     function: function.clone(),
                 })?;
 
-            (&source_function.result_type, &source_function.arguments)
+            CommandSourceResponse {
+                result_type: source_function.result_type.clone(),
+                arguments: source_function
+                    .arguments
+                    .iter()
+                    .map(|(k, v)| {
+                        (
+                            models::ConnectorArgumentName(k.clone()),
+                            v.argument_type.clone(),
+                        )
+                    })
+                    .collect(),
+            }
         }
     };
 
@@ -251,7 +279,7 @@ pub fn resolve_command_source(
     let (argument_mappings, argument_type_mappings_to_resolve) = get_argument_mappings(
         &command.arguments,
         &command_source.argument_mapping,
-        ndc_arguments,
+        &command_source_response.arguments,
         object_types,
         scalar_types,
         object_boolean_expression_types,
@@ -287,12 +315,11 @@ pub fn resolve_command_source(
         .map(|custom_type_name| {
             // Get the corresponding object_type (data_connector.object_type) associated with the result_type for the source
             let source_result_type_name =
-                ndc_validation::get_underlying_named_type(source_result_type).map_err(|e| {
-                    Error::CommandTypeMappingCollectionError {
+                ndc_validation::get_underlying_named_type(&command_source_response.result_type)
+                    .map_err(|e| Error::CommandTypeMappingCollectionError {
                         command_name: command.name.clone(),
                         error: type_mappings::TypeMappingCollectionError::NDCValidationError(e),
-                    }
-                })?;
+                    })?;
 
             let source_result_type_mapping_to_resolve = type_mappings::TypeMappingToCollect {
                 type_name: custom_type_name,
@@ -320,7 +347,7 @@ pub fn resolve_command_source(
         })?;
     }
 
-    command.source = Some(CommandSource {
+    let command_source = CommandSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
             data_connector_context.inner.url.clone(),
@@ -329,13 +356,14 @@ pub fn resolve_command_source(
         source: command_source.data_connector_command.clone(),
         type_mappings,
         argument_mappings,
-    });
+        source_arguments: command_source_response.arguments,
+    };
 
     ndc_validation::validate_ndc_command(
         &command.name,
         command,
-        data_connector_context.inner.schema,
+        &data_connector_context.inner.schema,
     )?;
 
-    Ok(())
+    Ok(command_source)
 }

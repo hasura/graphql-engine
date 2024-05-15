@@ -112,9 +112,10 @@ pub struct ModelSource {
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, ConnectorArgumentName>,
+    pub source_arguments: BTreeMap<ConnectorArgumentName, ndc_models::Type>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Model {
     pub name: Qualified<ModelName>,
     pub data_type: Qualified<CustomTypeName>,

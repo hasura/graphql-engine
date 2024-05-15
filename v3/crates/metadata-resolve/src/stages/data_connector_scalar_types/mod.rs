@@ -140,7 +140,7 @@ fn convert_data_connectors_contexts<'a>(
         data_connectors_with_scalars.insert(
             data_connector_name.clone(),
             DataConnectorWithScalarsContext {
-                inner: *inner,
+                inner: inner.clone(),
                 scalars: new_scalars,
             },
         );

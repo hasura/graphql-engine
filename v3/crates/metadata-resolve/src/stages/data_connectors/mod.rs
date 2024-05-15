@@ -1,11 +1,11 @@
 use crate::types::error::Error;
 use crate::types::subgraph::Qualified;
 
-pub mod types;
+mod types;
 use std::collections::BTreeMap;
 pub use types::{
     ComparisonOperators, DataConnectorContext, DataConnectorCoreInfo, DataConnectorLink,
-    DataConnectors,
+    DataConnectorSchema, DataConnectors,
 };
 
 /// Resolve data connectors.

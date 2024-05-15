@@ -20,7 +20,7 @@ pub struct CommandGraphQlApi {
     pub deprecated: Option<Deprecated>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct CommandSource {
     pub data_connector: data_connectors::DataConnectorLink,
     pub source: DataConnectorCommand,
@@ -30,9 +30,10 @@ pub struct CommandSource {
     )]
     pub type_mappings: BTreeMap<Qualified<CustomTypeName>, object_types::TypeMapping>,
     pub argument_mappings: BTreeMap<ArgumentName, models::ConnectorArgumentName>,
+    pub source_arguments: BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Command {
     pub name: Qualified<CommandName>,
     pub output_type: QualifiedTypeReference,

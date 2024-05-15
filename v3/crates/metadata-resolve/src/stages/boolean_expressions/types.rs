@@ -4,11 +4,10 @@ use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use std::collections::BTreeMap;
 
 use lang_graphql::ast::common::{self as ast};
-use open_dds::data_connector::DataConnectorObjectType;
 use std::collections::BTreeSet;
 
 use open_dds::{
-    data_connector::DataConnectorName,
+    data_connector::{DataConnectorName, DataConnectorObjectType},
     types::{CustomTypeName, FieldName},
 };
 use serde::{Deserialize, Serialize};
@@ -25,7 +24,10 @@ pub struct ObjectBooleanExpressionType {
     pub object_type: Qualified<CustomTypeName>,
     pub data_connector_name: Qualified<DataConnectorName>,
     pub data_connector_link: data_connectors::DataConnectorLink,
-    pub data_connector_object_type: DataConnectorObjectType,
+    // this will be removed in future and we'll work this type out from elsewhere
+    // made optional to make it harder to use, but we still want to use it for throwing errors if
+    // the user provides something nonsensical
+    pub data_connector_object_type_dont_use_please: Option<DataConnectorObjectType>,
     pub type_mappings:
         BTreeMap<Qualified<open_dds::types::CustomTypeName>, object_types::TypeMapping>,
     pub graphql: Option<BooleanExpressionInfo>,

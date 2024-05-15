@@ -24,6 +24,7 @@ use crate::types::subgraph::{
 use ndc_models;
 use open_dds::permissions::{FieldIsNullPredicate, NullableModelPredicate, RelationshipPredicate};
 use open_dds::{
+    arguments::ArgumentName,
     data_connector::DataConnectorName,
     permissions::{ModelPermissionsV1, Role},
     types::{FieldName, OperatorName},
@@ -495,6 +496,23 @@ fn get_model_object_type_representation<'s>(
     }
 }
 
+// get the ndc_models::Type for an argument if it is available
+fn get_model_source_argument<'a>(
+    argument_name: &'a ArgumentName,
+    model: &'a models::Model,
+) -> Option<&'a ndc_models::Type> {
+    model
+        .source
+        .as_ref()
+        .and_then(|source| {
+            source
+                .argument_mappings
+                .get(argument_name)
+                .map(|connector_argument_name| source.source_arguments.get(connector_argument_name))
+        })
+        .flatten()
+}
+
 pub fn resolve_model_select_permissions(
     model: &models::Model,
     subgraph: &str,
@@ -535,12 +553,16 @@ pub fn resolve_model_select_permissions(
                     });
                 }
 
+                let source_argument_type =
+                    get_model_source_argument(&argument_preset.argument, model);
+
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
                         let value_expression = resolve_value_expression_for_argument(
                             &argument_preset.argument,
                             &argument_preset.value,
                             &argument.argument_type,
+                            source_argument_type,
                             subgraph,
                             object_types,
                             scalar_types,

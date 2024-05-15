@@ -1,4 +1,4 @@
-use crate::stages::{commands, models, object_types};
+use crate::stages::{commands, data_connectors, models, object_types};
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
@@ -131,7 +131,7 @@ fn get_underlying_type_name(output_type: &QualifiedTypeReference) -> &QualifiedT
 pub fn validate_ndc(
     model_name: &Qualified<ModelName>,
     model: &models::Model,
-    schema: &ndc_models::SchemaResponse,
+    schema: &data_connectors::DataConnectorSchema,
 ) -> std::result::Result<(), NDCValidationError> {
     let model_source = match &model.source {
         Some(model_source) => model_source,
@@ -143,15 +143,13 @@ pub fn validate_ndc(
 
     let collection_name = &model_source.collection;
 
-    let collection = schema
-        .collections
-        .iter()
-        .find(|collection| collection.name == *collection_name)
-        .ok_or_else(|| NDCValidationError::NoSuchCollection {
+    let collection = schema.collections.get(collection_name).ok_or_else(|| {
+        NDCValidationError::NoSuchCollection {
             db_name: db.name.clone(),
             model_name: model_name.clone(),
             collection_name: collection_name.clone(),
-        })?;
+        }
+    })?;
 
     for mapped_argument_name in model_source.argument_mappings.values() {
         if !collection.arguments.contains_key(&mapped_argument_name.0) {
@@ -238,7 +236,7 @@ pub fn validate_ndc(
 pub fn validate_ndc_command(
     command_name: &Qualified<CommandName>,
     command: &commands::Command,
-    schema: &ndc_models::SchemaResponse,
+    schema: &data_connectors::DataConnectorSchema,
 ) -> std::result::Result<(), NDCValidationError> {
     // Check if the command source exists for the command
     let command_source = match &command.source {
@@ -256,15 +254,13 @@ pub fn validate_ndc_command(
         command_source_ndc_result_type,
     ) = match &command_source.source {
         DataConnectorCommand::Procedure(procedure) => {
-            let command_source_ndc = schema
-                .procedures
-                .iter()
-                .find(|proc| proc.name == *procedure.0)
-                .ok_or_else(|| NDCValidationError::NoSuchProcedure {
+            let command_source_ndc = schema.procedures.get(procedure).ok_or_else(|| {
+                NDCValidationError::NoSuchProcedure {
                     db_name: db.name.clone(),
                     command_name: command_name.clone(),
                     procedure_name: procedure.clone(),
-                })?;
+                }
+            })?;
 
             (
                 &procedure.0,
@@ -274,15 +270,13 @@ pub fn validate_ndc_command(
         }
 
         DataConnectorCommand::Function(function) => {
-            let command_source_ndc = schema
-                .functions
-                .iter()
-                .find(|func| func.name == *function.0)
-                .ok_or_else(|| NDCValidationError::NoSuchFunction {
+            let command_source_ndc = schema.functions.get(function).ok_or_else(|| {
+                NDCValidationError::NoSuchFunction {
                     db_name: db.name.clone(),
                     command_name: command_name.clone(),
                     function_name: function.clone(),
-                })?;
+                }
+            })?;
 
             (
                 &function.0,

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use indexmap::IndexMap;
 
 use open_dds::{
+    commands::{FunctionName, ProcedureName},
     data_connector::{
         self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
     },
@@ -21,12 +22,29 @@ use serde::{
 use std::{collections::BTreeMap, str::FromStr};
 
 /// information that does not change between resolver stages
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct DataConnectorCoreInfo<'a> {
     pub url: &'a data_connector::DataConnectorUrl,
     pub headers: &'a IndexMap<String, open_dds::EnvironmentValue>,
-    pub schema: &'a ndc_models::SchemaResponse,
+    pub schema: DataConnectorSchema,
     pub capabilities: &'a ndc_models::CapabilitiesResponse,
+}
+
+/// information provided in the `ndc_models::SchemaResponse`, processed to make it easier to work
+/// with
+#[derive(Clone)]
+pub struct DataConnectorSchema {
+    /// A list of scalar types which will be used as the types of collection columns
+    pub scalar_types: BTreeMap<String, ndc_models::ScalarType>,
+    /// A list of object types which can be used as the types of arguments, or return types of procedures.
+    /// Names should not overlap with scalar type names.
+    pub object_types: BTreeMap<String, ndc_models::ObjectType>,
+    /// Collections which are available for queries
+    pub collections: BTreeMap<String, ndc_models::CollectionInfo>,
+    /// Functions (i.e. collections which return a single column and row)
+    pub functions: BTreeMap<FunctionName, ndc_models::FunctionInfo>,
+    /// Procedures which are available for execution as part of mutations
+    pub procedures: BTreeMap<ProcedureName, ndc_models::ProcedureInfo>,
 }
 
 /// information about a data connector
@@ -36,14 +54,48 @@ pub struct DataConnectorContext<'a> {
     pub scalars: BTreeMap<&'a str, ScalarTypeInfo<'a>>,
 }
 
+fn create_data_connector_schema(schema: &ndc_models::SchemaResponse) -> DataConnectorSchema {
+    DataConnectorSchema {
+        scalar_types: schema.scalar_types.clone(),
+        object_types: schema.object_types.clone(),
+        collections: schema
+            .collections
+            .iter()
+            .map(|collection_info| (collection_info.name.clone(), collection_info.clone()))
+            .collect(),
+        functions: schema
+            .functions
+            .iter()
+            .map(|function_info| {
+                (
+                    FunctionName(function_info.name.clone()),
+                    function_info.clone(),
+                )
+            })
+            .collect(),
+        procedures: schema
+            .procedures
+            .iter()
+            .map(|procedure_info| {
+                (
+                    ProcedureName(procedure_info.name.clone()),
+                    procedure_info.clone(),
+                )
+            })
+            .collect(),
+    }
+}
+
 impl<'a> DataConnectorContext<'a> {
     pub fn new(data_connector: &'a data_connector::DataConnectorLinkV1) -> Result<Self, Error> {
         let VersionedSchemaAndCapabilities::V01(schema_and_capabilities) = &data_connector.schema;
+        let resolved_schema = create_data_connector_schema(&schema_and_capabilities.schema);
+
         Ok(DataConnectorContext {
             inner: DataConnectorCoreInfo {
                 url: &data_connector.url,
                 headers: &data_connector.headers,
-                schema: &schema_and_capabilities.schema,
+                schema: resolved_schema,
                 capabilities: &schema_and_capabilities.capabilities,
             },
             scalars: schema_and_capabilities

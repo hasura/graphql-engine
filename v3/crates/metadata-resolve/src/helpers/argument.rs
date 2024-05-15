@@ -65,7 +65,7 @@ pub enum ArgumentMappingError {
 pub fn get_argument_mappings<'a>(
     arguments: &'a IndexMap<ArgumentName, ArgumentInfo>,
     argument_mapping: &BTreeMap<ArgumentName, String>,
-    ndc_arguments: &'a BTreeMap<String, ndc_models::ArgumentInfo>,
+    ndc_arguments_types: &'a BTreeMap<models::ConnectorArgumentName, ndc_models::Type>,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -106,8 +106,8 @@ pub fn get_argument_mappings<'a>(
             models::ConnectorArgumentName(inner.to_string())
         };
 
-        let ndc_argument_info = ndc_arguments
-            .get(&mapped_to_ndc_argument_name.to_string())
+        let ndc_argument_type = ndc_arguments_types
+            .get(&mapped_to_ndc_argument_name)
             .ok_or_else(|| ArgumentMappingError::UnknownNdcArgument {
                 argument_name: argument_name.clone(),
                 ndc_argument_name: mapped_to_ndc_argument_name.clone(),
@@ -136,7 +136,7 @@ pub fn get_argument_mappings<'a>(
             })? {
                 TypeRepresentation::Object(_) => {
                     let underlying_ndc_argument_named_type =
-                        ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
+                        ndc_validation::get_underlying_named_type(ndc_argument_type)
                             .map_err(ArgumentMappingError::NDCValidationError)?;
 
                     type_mappings_to_collect.push(type_mappings::TypeMappingToCollect {
@@ -149,7 +149,7 @@ pub fn get_argument_mappings<'a>(
                 TypeRepresentation::Scalar(_) => (),
                 TypeRepresentation::BooleanExpression(object_boolean_expression_type) => {
                     let underlying_ndc_argument_named_type =
-                        ndc_validation::get_underlying_named_type(&ndc_argument_info.argument_type)
+                        ndc_validation::get_underlying_named_type(ndc_argument_type)
                             .map_err(ArgumentMappingError::NDCValidationError)?;
 
                     // resolve the object type the boolean expression refers to
@@ -186,6 +186,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     argument_name: &open_dds::arguments::ArgumentName,
     value_expression: &open_dds::permissions::ValueExpression,
     argument_type: &QualifiedTypeReference,
+    source_argument_type: Option<&ndc_models::Type>,
     subgraph: &str,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -227,13 +228,28 @@ pub(crate) fn resolve_value_expression_for_argument(
                 object_types,
             )?;
 
+            // get the data_connector_object_type from the NDC command argument type
+            // or explode
+            let data_connector_object_type = match &source_argument_type {
+                Some(ndc_models::Type::Predicate { object_type_name }) => {
+                    Some(DataConnectorObjectType(object_type_name.clone()))
+                }
+                _ => None,
+            }
+            .ok_or_else(|| Error::DataConnectorTypeMappingValidationError {
+                type_name: base_type.clone(),
+                error: TypeMappingValidationError::PredicateTypeNotFound {
+                    argument_name: argument_name.clone(),
+                },
+            })?;
+
             // look up this type in the context of it's data connector
             // so that we use the correct column names for the data source
             let data_connector_field_mappings = object_type_representation
                 .type_mappings
                 .get(
                     &object_boolean_expression_type.data_connector_name,
-                    &object_boolean_expression_type.data_connector_object_type,
+                    &data_connector_object_type,
                 )
                 .map(|type_mapping| match type_mapping {
                     object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
@@ -245,9 +261,7 @@ pub(crate) fn resolve_value_expression_for_argument(
                         data_connector_name: object_boolean_expression_type
                             .data_connector_name
                             .clone(),
-                        data_connector_object_type: object_boolean_expression_type
-                            .data_connector_object_type
-                            .clone(),
+                        data_connector_object_type: data_connector_object_type.clone(),
                     },
                 })?;
 

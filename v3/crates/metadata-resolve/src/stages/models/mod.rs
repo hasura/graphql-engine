@@ -598,19 +598,25 @@ fn resolve_model_source(
         .inner
         .schema
         .collections
-        .iter()
-        .find(|collection_info| collection_info.name == *model_source.collection)
+        .get(&model_source.collection)
         .ok_or_else(|| Error::UnknownModelCollection {
             model_name: model.name.clone(),
             data_connector: qualified_data_connector_name.clone(),
             collection: model_source.collection.clone(),
         })?;
 
+    let source_arguments = source_collection
+        .clone()
+        .arguments
+        .into_iter()
+        .map(|(k, v)| (ConnectorArgumentName(k), v.argument_type))
+        .collect();
+
     // Get the mappings of arguments and any type mappings that need resolving from the arguments
     let (argument_mappings, argument_type_mappings_to_collect) = get_argument_mappings(
         &model.arguments,
         &model_source.argument_mapping,
-        &source_collection.arguments,
+        &source_arguments,
         object_types,
         scalar_types,
         object_boolean_expression_types,
@@ -654,17 +660,25 @@ fn resolve_model_source(
             });
         }
 
-        let collection_type = DataConnectorObjectType::ref_cast(&source_collection.collection_type);
+        // The `ObjectBooleanExpressionType` allows specifying the `DataConnectorObjectType`, so we
+        // must check it against the type specified in the models source. In future, we'll use
+        // `BooleanExpressionType` which will defer to the model's choice of object by default, and
+        // we can delete this check
+        if let Some(data_connector_object_type) =
+            &filter_expression.data_connector_object_type_dont_use_please
+        {
+            let collection_type =
+                DataConnectorObjectType::ref_cast(&source_collection.collection_type);
 
-        if filter_expression.data_connector_object_type != *collection_type {
-            return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
-                model: model.name.clone(),
-                model_data_connector_object_type: collection_type.clone(),
-                filter_expression_type: filter_expression.name.clone(),
-                filter_expression_data_connector_object_type: filter_expression
-                    .data_connector_object_type
-                    .clone(),
-            });
+            if data_connector_object_type != collection_type {
+                return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
+                    model: model.name.clone(),
+                    model_data_connector_object_type: collection_type.clone(),
+                    filter_expression_type: filter_expression.name.clone(),
+                    filter_expression_data_connector_object_type: data_connector_object_type
+                        .clone(),
+                });
+            }
         }
     }
 
@@ -677,6 +691,7 @@ fn resolve_model_source(
         collection: model_source.collection.clone(),
         type_mappings,
         argument_mappings,
+        source_arguments,
     };
 
     let model_object_type =
@@ -726,7 +741,7 @@ fn resolve_model_source(
     }
 
     model.source = Some(resolved_model_source);
-    ndc_validation::validate_ndc(&model.name, model, data_connector_context.inner.schema)?;
+    ndc_validation::validate_ndc(&model.name, model, &data_connector_context.inner.schema)?;
     Ok(())
 }
 

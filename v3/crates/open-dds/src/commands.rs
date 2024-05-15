@@ -29,13 +29,33 @@ impl_JsonSchema_with_OpenDd_for!(CommandName);
 
 /// The name of a function backing the command.
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, JsonSchema,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    derive_more::Display,
+    JsonSchema,
 )]
 pub struct FunctionName(pub String);
 
 /// The name of a procedure backing the command.
 #[derive(
-    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, derive_more::Display, JsonSchema,
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    derive_more::Display,
+    JsonSchema,
 )]
 pub struct ProcedureName(pub String);
 

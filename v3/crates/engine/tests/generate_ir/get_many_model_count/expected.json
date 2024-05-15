@@ -69,7 +69,8 @@
                                     }
                                   }
                                 },
-                                "argument_mappings": {}
+                                "argument_mappings": {},
+                                "source_arguments": {}
                               },
                               "capabilities": {
                                 "foreach": null,
@@ -179,7 +180,8 @@
                                           }
                                         }
                                       },
-                                      "argument_mappings": {}
+                                      "argument_mappings": {},
+                                      "source_arguments": {}
                                     },
                                     "capabilities": {
                                       "foreach": null,
@@ -289,7 +291,8 @@
                                                 }
                                               }
                                             },
-                                            "argument_mappings": {}
+                                            "argument_mappings": {},
+                                            "source_arguments": {}
                                           },
                                           "capabilities": {
                                             "foreach": null,
@@ -658,7 +661,8 @@
                                                     }
                                                   }
                                                 },
-                                                "argument_mappings": {}
+                                                "argument_mappings": {},
+                                                "source_arguments": {}
                                               },
                                               "capabilities": {
                                                 "foreach": null,
@@ -784,7 +788,8 @@
                                           }
                                         }
                                       },
-                                      "argument_mappings": {}
+                                      "argument_mappings": {},
+                                      "source_arguments": {}
                                     },
                                     "capabilities": {
                                       "foreach": null,
@@ -910,7 +915,8 @@
                                 }
                               }
                             },
-                            "argument_mappings": {}
+                            "argument_mappings": {},
+                            "source_arguments": {}
                           },
                           "capabilities": {
                             "foreach": null,
