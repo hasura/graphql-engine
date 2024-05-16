@@ -1,4 +1,4 @@
-use crate::stages::{boolean_expressions, relationships, scalar_types};
+use crate::stages::{object_boolean_expressions, relationships, scalar_types};
 use crate::types::error::{BooleanExpressionError, Error};
 
 use crate::types::subgraph::{
@@ -40,7 +40,7 @@ pub fn store_new_graphql_type(
 pub enum TypeRepresentation<'a, ObjectType> {
     Scalar(&'a scalar_types::ScalarTypeRepresentation),
     Object(&'a ObjectType),
-    BooleanExpression(&'a boolean_expressions::ObjectBooleanExpressionType),
+    BooleanExpression(&'a object_boolean_expressions::ObjectBooleanExpressionType),
 }
 
 /// validate whether a given CustomTypeName exists within `object_types`, `scalar_types` or
@@ -51,7 +51,7 @@ pub fn get_type_representation<'a, ObjectType>(
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<TypeRepresentation<'a, ObjectType>, Error> {
     match object_types.get(custom_type_name) {
@@ -75,7 +75,7 @@ pub fn get_type_representation<'a, ObjectType>(
 }
 
 pub(crate) fn get_object_type_for_boolean_expression<'a>(
-    object_boolean_expression_type: &boolean_expressions::ObjectBooleanExpressionType,
+    object_boolean_expression_type: &object_boolean_expressions::ObjectBooleanExpressionType,
     object_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
         relationships::ObjectTypeWithRelationships,

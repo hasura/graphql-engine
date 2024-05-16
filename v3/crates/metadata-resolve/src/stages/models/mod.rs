@@ -15,7 +15,7 @@ use crate::helpers::type_mappings;
 use crate::helpers::types::NdcColumnForComparison;
 use crate::helpers::types::{mk_name, store_new_graphql_type};
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, graphql_config,
+    data_connector_scalar_types, data_connectors, graphql_config, object_boolean_expressions,
     object_types, scalar_types, type_permissions,
 };
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
@@ -48,7 +48,7 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<ModelsOutput, Error> {
@@ -134,9 +134,9 @@ fn resolve_filter_expression_type(
     subgraph: &str,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
-) -> Result<Option<boolean_expressions::ObjectBooleanExpressionType>, Error> {
+) -> Result<Option<object_boolean_expressions::ObjectBooleanExpressionType>, Error> {
     model
         .filter_expression_type
         .as_ref()
@@ -221,7 +221,7 @@ fn resolve_model(
     >,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<Model, Error> {
     let qualified_object_type_name =
@@ -574,7 +574,7 @@ fn resolve_model_source(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<(), Error> {
     if model.source.is_some() {

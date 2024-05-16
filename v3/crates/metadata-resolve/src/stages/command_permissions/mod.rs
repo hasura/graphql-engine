@@ -6,7 +6,8 @@ use indexmap::IndexMap;
 use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 
 use crate::stages::{
-    boolean_expressions, commands, data_connector_scalar_types, models, relationships, scalar_types,
+    commands, data_connector_scalar_types, models, object_boolean_expressions, relationships,
+    scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::permission::ValueExpression;
@@ -41,7 +42,7 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
@@ -115,7 +116,7 @@ pub fn resolve_command_permissions(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,

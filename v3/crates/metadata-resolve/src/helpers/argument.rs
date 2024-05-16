@@ -6,8 +6,8 @@ use crate::helpers::types::{
     unwrap_custom_type_name, TypeRepresentation,
 };
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, model_permissions, models,
-    object_types, relationships, scalar_types, type_permissions,
+    data_connector_scalar_types, data_connectors, model_permissions, models,
+    object_boolean_expressions, object_types, relationships, scalar_types, type_permissions,
 };
 use crate::types::error::{
     Error, RelationshipError, TypeError, TypeMappingValidationError, TypePredicateError,
@@ -73,7 +73,7 @@ pub fn get_argument_mappings<'a>(
     scalar_types: &'a BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &'a BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<
     (
@@ -192,7 +192,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,

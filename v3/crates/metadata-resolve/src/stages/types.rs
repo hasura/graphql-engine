@@ -9,8 +9,8 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
-    boolean_expressions, command_permissions, graphql_config, model_permissions, relationships,
-    scalar_types,
+    command_permissions, graphql_config, model_permissions, object_boolean_expressions,
+    relationships, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -21,8 +21,10 @@ pub struct Metadata {
     pub scalar_types: BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     pub models: IndexMap<Qualified<ModelName>, model_permissions::ModelWithPermissions>,
     pub commands: IndexMap<Qualified<CommandName>, command_permissions::CommandWithPermissions>,
-    pub object_boolean_expression_types:
-        BTreeMap<Qualified<CustomTypeName>, boolean_expressions::ObjectBooleanExpressionType>,
+    pub object_boolean_expression_types: BTreeMap<
+        Qualified<CustomTypeName>,
+        object_boolean_expressions::ObjectBooleanExpressionType,
+    >,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub roles: Vec<Role>,
 }

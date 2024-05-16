@@ -6,7 +6,7 @@ use crate::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, data_connectors, models, scalar_types,
+    data_connector_scalar_types, data_connectors, models, object_boolean_expressions, scalar_types,
     type_permissions,
 };
 use crate::types::error::Error;
@@ -32,7 +32,7 @@ pub fn resolve(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<IndexMap<Qualified<CommandName>, Command>, Error> {
     let mut commands: IndexMap<Qualified<CommandName>, Command> = IndexMap::new();
@@ -80,7 +80,7 @@ fn type_exists(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> bool {
     match &type_obj.underlying_type {
@@ -116,7 +116,7 @@ pub fn resolve_command(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<Command, Error> {
     let mut arguments = IndexMap::new();
@@ -195,7 +195,7 @@ pub fn resolve_command_source(
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<CommandSource, Error> {
     if command.source.is_some() {

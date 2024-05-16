@@ -1,7 +1,7 @@
 mod types;
 use crate::helpers::typecheck;
 use crate::stages::{
-    boolean_expressions, data_connector_scalar_types, models, object_types, relationships,
+    data_connector_scalar_types, models, object_boolean_expressions, object_types, relationships,
     scalar_types,
 };
 use crate::types::permission::ValueExpression;
@@ -39,7 +39,7 @@ pub fn resolve(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<IndexMap<Qualified<ModelName>, ModelWithPermissions>, Error> {
     let mut models_with_permissions: IndexMap<Qualified<ModelName>, ModelWithPermissions> = models
@@ -523,7 +523,7 @@ pub fn resolve_model_select_permissions(
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     object_boolean_expression_types: &BTreeMap<
         Qualified<CustomTypeName>,
-        boolean_expressions::ObjectBooleanExpressionType,
+        object_boolean_expressions::ObjectBooleanExpressionType,
     >,
 ) -> Result<BTreeMap<Role, SelectPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
