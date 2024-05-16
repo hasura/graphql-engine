@@ -62,3 +62,6 @@ unnested_or_patterns = "allow"
 unreadable_literal = "allow"
 unused_async = "allow"
 used_underscore_binding = "allow"
+
+[workspace.lints.rustdoc]
+private_intra_doc_links = "allow"

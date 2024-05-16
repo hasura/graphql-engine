@@ -30,7 +30,7 @@ macro_rules! impl_OpenDd_default_for {
 }
 
 /// Macro to implement OpenDd for sequence like type containers
-/// Ref: https://docs.rs/serde/latest/src/serde/de/impls.rs.html#885
+/// Ref: <https://docs.rs/serde/latest/src/serde/de/impls.rs.html#885>
 #[macro_export]
 macro_rules! seq_impl {
     ($ty:ident <T $(: $tbound1:ident $(+ $tbound2:ident)*)* $(, $typaram:ident : $bound1:ident $(+ $bound2:ident)*)*>, $is_unique:literal) => {
@@ -82,7 +82,7 @@ macro_rules! seq_impl {
 }
 
 /// Macro to implement OpenDd for map like type containers
-/// Ref: https://docs.rs/serde/latest/src/serde/de/impls.rs.html#1387
+/// Ref: <https://docs.rs/serde/latest/src/serde/de/impls.rs.html#1387>
 #[macro_export]
 macro_rules! map_impl {
     ($ty:ident <K $(: $kbound1:ident $(+ $kbound2:ident)*)*, V $(, $typaram:ident : $bound1:ident $(+ $bound2:ident)*)*>) => {

@@ -75,7 +75,7 @@ pub struct Configuration {
 
 /// GET on /capabilities endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/capabilities.html
+/// <https://hasura.github.io/ndc-spec/specification/capabilities.html>
 pub async fn capabilities_get(
     configuration: &Configuration,
 ) -> Result<ndc_models::CapabilitiesResponse, Error> {
@@ -99,7 +99,7 @@ pub async fn capabilities_get(
 
 /// POST on /query/explain endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request
+/// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request>
 pub async fn explain_query_post(
     configuration: &Configuration,
     query_request: &ndc_models::QueryRequest,
@@ -126,7 +126,7 @@ pub async fn explain_query_post(
 
 /// POST on /mutation/explain endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1
+/// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1>
 pub async fn explain_mutation_post(
     configuration: &Configuration,
     mutation_request: &ndc_models::MutationRequest,
@@ -153,7 +153,7 @@ pub async fn explain_mutation_post(
 
 /// POST on /mutation endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/mutations/index.html
+/// <https://hasura.github.io/ndc-spec/specification/mutations/index.html>
 pub async fn mutation_post(
     configuration: &Configuration,
     mutation_request: &ndc_models::MutationRequest,
@@ -180,7 +180,7 @@ pub async fn mutation_post(
 
 /// POST on /query endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/queries/index.html
+/// <https://hasura.github.io/ndc-spec/specification/queries/index.html>
 pub async fn query_post(
     configuration: &Configuration,
     query_request: &ndc_models::QueryRequest,
@@ -207,7 +207,7 @@ pub async fn query_post(
 
 /// GET on /schema endpoint
 ///
-/// https://hasura.github.io/ndc-spec/specification/schema/index.html
+/// <https://hasura.github.io/ndc-spec/specification/schema/index.html>
 pub async fn schema_get(
     configuration: &Configuration,
 ) -> Result<ndc_models::SchemaResponse, Error> {

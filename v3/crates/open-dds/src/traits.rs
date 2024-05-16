@@ -18,7 +18,7 @@ mod macros;
 /// of serde. This trait is a workaround for that limitation.
 /// Use `opendds_derive::OpenDd` derive macro to implement this trait for your types.
 /// See the README.md in `opendds-derive` crate for more details.
-/// Refs: https://github.com/serde-rs/serde/issues/1183, https://github.com/serde-rs/serde/issues/1495
+/// Refs: <https://github.com/serde-rs/serde/issues/1183>, <https://github.com/serde-rs/serde/issues/1495>
 pub trait OpenDd: Sized {
     fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError>;
 

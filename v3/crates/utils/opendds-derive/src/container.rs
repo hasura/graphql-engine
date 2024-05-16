@@ -277,7 +277,7 @@ impl<'a> EnumVariant<'a> {
     }
 }
 
-/// Check whether the type is Option<T>
+/// Check whether the type is `Option<T>`
 fn is_option_type(ty: &syn::Type) -> bool {
     if let syn::Type::Path(syn::TypePath { path, .. }) = ty {
         if path.segments.len() == 1 {

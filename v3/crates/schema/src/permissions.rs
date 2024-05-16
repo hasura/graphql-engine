@@ -288,13 +288,15 @@ fn build_annotations_from_input_object_type_permissions(
 ///
 /// Example of a preset annotation -
 /// Command and types -
+/// ```ignore
 ///    createPerson(person: Person) -> Result<PersonOutput>
 ///    Person { name: Name, address: Address }
 ///    Name { first_name: String, last_name: String }
 ///    Address { street: String, city: String, country: String, zip_code: String }
+/// ```
 /// Field preset metadata -
 ///   on type Address -
-///     ("user", fieldPreset: {country: {sessionVariable: "x-hasura-user-country"}})
+///     `("user", fieldPreset: {country: {sessionVariable: "x-hasura-user-country"}})`
 /// Preset map we generate -
 ///   `Map<("person", ["address", "country"]), ValueExpression(SessionVariable("x-hasura-user-country"))>`
 fn build_preset_map_from_input_object_type_permission(

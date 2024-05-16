@@ -13,7 +13,7 @@ use super::plan;
 use schema::Annotation;
 
 /// Request errors are raised before execution of root fields begins.
-/// Ref: https://spec.graphql.org/October2021/#sec-Errors.Request-errors
+/// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Request-errors>
 #[derive(Error, Debug)]
 pub enum RequestError {
     #[error("parsing failed: {0}")]
@@ -62,7 +62,7 @@ impl TraceableError for RequestError {
 }
 
 /// Field errors are raised during execution from a root field
-/// Ref: https://spec.graphql.org/October2021/#sec-Errors.Field-errors
+/// Ref: <https://spec.graphql.org/October2021/#sec-Errors.Field-errors>
 #[derive(Error, Debug, Transitive)]
 #[transitive(from(json::Error, FieldInternalError))]
 #[transitive(from(NDCUnexpectedError, FieldInternalError))]
