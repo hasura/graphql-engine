@@ -56,6 +56,13 @@ pub(crate) fn join_responses(
     Ok(())
 }
 
+/// In case of a command response, the response tree traversing is different.
+/// This helper function handles only that case.
+///
+/// NDC returns response to a command in a special column name
+/// 'FUNCTION_IR_VALUE_COLUMN_NAME', which is a serde::json::Value. We
+/// destructure the serde value, handle the Object and Array case to insert the
+/// RHS response appropriately.
 fn join_command_response(
     location_path: &[LocationInfo],
     join_node: &RemoteJoin,
@@ -107,8 +114,8 @@ fn join_command_response(
     Ok(())
 }
 
-/// Traverse 'LocationInfo' and insert corresponding `rhs_response` value in the
-/// `row`
+/// Traverse 'LocationInfo' and insert corresponding RHS response value in a LHS
+/// response row.
 fn insert_value_into_row(
     location_path: &[LocationInfo],
     join_node: &RemoteJoin,
@@ -153,6 +160,9 @@ fn insert_value_into_row(
     }
 }
 
+/// If there is a location path (i.e. the remote join is nested in a
+/// relationship or nested selection), traverse the location path of LHS row,
+/// and insert the RHS response.
 fn visit_location_path_and_insert_value(
     location_kind: LocationKind,
     row_field_val: &mut ndc_models::RowFieldValue,

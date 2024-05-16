@@ -8,28 +8,28 @@ use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use nonempty::NonEmpty;
 use serde_json as json;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use json_ext::ValueExt;
 use ndc_models;
 
 use super::error;
 use super::types::{
-    Argument, ArgumentId, Arguments, JoinId, JoinLocations, JoinNode, LocationKind,
-    MonotonicCounter, RemoteJoin, SourceFieldAlias, TargetField, VariableName,
+    Argument, JoinId, JoinLocations, JoinNode, LocationKind, RemoteJoin, SourceFieldAlias,
+    TargetField, VariableName,
 };
 use crate::execute::ndc::FUNCTION_IR_VALUE_COLUMN_NAME;
 use crate::execute::plan::ProcessResponseAs;
 
+/// An executable join node is a remote join node, it's collected join values
+/// from a LHS response, and the rest of the join sub-tree
 #[derive(Debug)]
-/// Result of collected join arguments, and other related data which are
-/// processed together
-pub(crate) struct CollectArgumentResult<'s, 'ir> {
-    pub(crate) arguments: Arguments,
-    pub(crate) location_path: Vec<LocationInfo>,
+pub(crate) struct ExecutableJoinNode<'s, 'ir> {
     pub(crate) join_node: RemoteJoin<'s, 'ir>,
-    pub(crate) sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     pub(crate) remote_alias: String,
+    pub(crate) location_path: Vec<LocationInfo>,
+    pub(crate) arguments: HashSet<Argument>,
+    pub(crate) sub_tree: JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
 }
 
 /// Indicates a field alias which might have more nesting inside
@@ -39,24 +39,22 @@ pub(crate) struct LocationInfo {
     pub(crate) location_kind: LocationKind,
 }
 
-/// Given a LHS response and `JoinLocations`, extract the join values from the
-/// response and return it as the `Arguments` data structure.
-pub(crate) fn collect_arguments<'s, 'ir>(
+/// Given a LHS response and `JoinLocations` tree, get the next executable join
+/// nodes down the tree. Also, extract the join values from the response.
+pub(crate) fn collect_next_join_nodes<'s, 'ir>(
     lhs_response: &Vec<ndc_models::RowSet>,
     lhs_response_type: &ProcessResponseAs,
     join_locations: &JoinLocations<(RemoteJoin<'s, 'ir>, JoinId)>,
     path: &mut [LocationInfo],
-) -> Result<Vec<CollectArgumentResult<'s, 'ir>>, error::FieldError> {
-    let mut arguments_by_remote = Vec::new();
+) -> Result<Vec<ExecutableJoinNode<'s, 'ir>>, error::FieldError> {
+    let mut arguments_results = Vec::new();
 
-    // if lhs_response is empty, there are no rows to collect arguments from,
-    // and no further remote joins to execute
+    // if lhs_response is empty, there are no rows to collect arguments from
     if lhs_response.is_empty() {
-        return Ok(arguments_by_remote);
+        return Ok(arguments_results);
     }
 
     for (alias, location) in &join_locations.locations {
-        let mut new_path = path.to_owned();
         match &location.join_node {
             JoinNode::Remote((join_node, _join_id)) => {
                 let join_fields = get_join_fields(join_node);
@@ -64,9 +62,9 @@ pub(crate) fn collect_arguments<'s, 'ir>(
                     lhs_response,
                     lhs_response_type,
                     &join_fields,
-                    &new_path,
+                    path,
                 )?;
-                arguments_by_remote.push(CollectArgumentResult {
+                arguments_results.push(ExecutableJoinNode {
                     arguments,
                     location_path: path.to_owned(),
                     join_node: join_node.clone(),
@@ -75,21 +73,22 @@ pub(crate) fn collect_arguments<'s, 'ir>(
                 });
             }
             JoinNode::Local(location_kind) => {
+                let mut new_path = path.to_owned();
                 new_path.push(LocationInfo {
                     alias: alias.clone(),
                     location_kind: *location_kind,
                 });
-                let inner_arguments_by_remote = collect_arguments(
+                let inner_arguments_by_remote = collect_next_join_nodes(
                     lhs_response,
                     lhs_response_type,
                     &location.rest,
                     &mut new_path,
                 )?;
-                arguments_by_remote.extend(inner_arguments_by_remote);
+                arguments_results.extend(inner_arguments_by_remote);
             }
         }
     }
-    Ok(arguments_by_remote)
+    Ok(arguments_results)
 }
 
 /// Iterate over the `Vec<RowSet>` structure to get to each row, and collect
@@ -99,21 +98,14 @@ fn collect_argument_from_rows(
     lhs_response_type: &ProcessResponseAs,
     join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
     path: &[LocationInfo],
-) -> Result<Arguments, error::FieldError> {
-    let mut arguments = Arguments::new();
-    let mut argument_id_counter = MonotonicCounter::new();
+) -> Result<HashSet<Argument>, error::FieldError> {
+    let mut arguments = HashSet::new();
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
             for row in rows.iter() {
                 match lhs_response_type {
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
-                        collect_argument_from_row(
-                            row,
-                            join_fields,
-                            path,
-                            &mut arguments,
-                            &mut argument_id_counter,
-                        )?;
+                        collect_argument_from_row(row, join_fields, path, &mut arguments)?;
                     }
                     ProcessResponseAs::CommandResponse {
                         command_name: _,
@@ -126,7 +118,6 @@ fn collect_argument_from_rows(
                                 join_fields,
                                 path,
                                 &mut arguments,
-                                &mut argument_id_counter,
                             )?;
                         }
                     }
@@ -142,17 +133,13 @@ fn collect_argument_from_row(
     row: &IndexMap<String, ndc_models::RowFieldValue>,
     join_fields: &Vec<(&SourceFieldAlias, VariableName)>,
     path: &[LocationInfo],
-    arguments: &mut Arguments,
-    argument_id_counter: &mut MonotonicCounter,
+    arguments: &mut HashSet<Argument>,
 ) -> Result<(), error::FieldError> {
     match NonEmpty::from_slice(path) {
         None => {
             let argument = create_argument(join_fields, row);
             // de-duplicate arguments
-            if let std::collections::hash_map::Entry::Vacant(e) = arguments.entry(argument) {
-                let argument_id = ArgumentId(argument_id_counter.get_next());
-                e.insert(argument_id);
-            }
+            arguments.insert(argument);
         }
         Some(nonempty_path) => {
             let (
@@ -170,13 +157,7 @@ fn collect_argument_from_row(
                 })?;
             if let Some(parsed_rows) = rows_from_row_field_value(*location_kind, nested_val)? {
                 for inner_row in parsed_rows {
-                    collect_argument_from_row(
-                        &inner_row,
-                        join_fields,
-                        path_tail,
-                        arguments,
-                        argument_id_counter,
-                    )?;
+                    collect_argument_from_row(&inner_row, join_fields, path_tail, arguments)?;
                 }
             }
         }

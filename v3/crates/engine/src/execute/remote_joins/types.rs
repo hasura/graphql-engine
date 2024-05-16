@@ -175,9 +175,6 @@ pub type Argument = BTreeMap<VariableName, ValueExt>;
 #[derive(Debug)]
 pub struct ArgumentId(pub i16);
 
-/// A map of each argument to its argument id
-pub type Arguments = HashMap<Argument, ArgumentId>;
-
 /// Monotonically increasing counter with i16 value
 pub(crate) struct MonotonicCounter {
     id: i16,

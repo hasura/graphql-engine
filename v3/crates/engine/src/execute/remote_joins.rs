@@ -87,7 +87,7 @@ use super::ndc::execute_ndc_query;
 use super::plan::ProcessResponseAs;
 use super::{error, HttpContext, ProjectId};
 
-use self::collect::CollectArgumentResult;
+use self::collect::ExecutableJoinNode;
 use types::{Argument, JoinId, JoinLocations, RemoteJoin};
 
 pub(crate) mod collect;
@@ -112,12 +112,12 @@ where
 
     // collect the join column arguments from the LHS response
     let mut location_path = Vec::new();
-    let arguments_results = tracer.in_span(
+    let next_join_nodes = tracer.in_span(
         "collect_arguments",
         "Collect arguments for join",
         SpanVisibility::Internal,
         || {
-            collect::collect_arguments(
+            collect::collect_next_join_nodes(
                 lhs_response,
                 lhs_response_type,
                 join_locations,
@@ -126,14 +126,14 @@ where
         },
     )?;
 
-    for arguments_result in arguments_results {
-        let CollectArgumentResult {
+    for executable_join_node in next_join_nodes {
+        let ExecutableJoinNode {
             arguments,
             location_path,
             mut join_node,
             sub_tree,
             remote_alias,
-        } = arguments_result;
+        } = executable_join_node;
 
         // if we do not get any join arguments back, we have nothing on the RHS
         // to execute. Skip execution.
@@ -141,8 +141,7 @@ where
             continue;
         }
         // patch the target/RHS IR with variable values
-        let (foreach_variables_, _argument_ids): (Vec<_>, Vec<_>) = arguments.into_iter().unzip();
-        let foreach_variables: Vec<BTreeMap<String, json::Value>> = foreach_variables_
+        let foreach_variables: Vec<BTreeMap<String, json::Value>> = arguments
             .iter()
             .map(|bmap| {
                 bmap.iter()
@@ -190,10 +189,8 @@ where
             SpanVisibility::Internal,
             || {
                 // from `Vec<RowSet>` create `HashMap<Argument, RowSet>`
-                let rhs_response: HashMap<Argument, ndc_models::RowSet> = foreach_variables_
-                    .into_iter()
-                    .zip(target_response)
-                    .collect();
+                let rhs_response: HashMap<Argument, ndc_models::RowSet> =
+                    arguments.into_iter().zip(target_response).collect();
 
                 join::join_responses(
                     &location_path,
