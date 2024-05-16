@@ -61,11 +61,8 @@ const config = {
         docs: {
           routeBasePath: '/',
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: ({ docPath }) =>
-            `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
-          docItemComponent: require.resolve(
-            './src/components/CustomDocItem/index.tsx'
-          ),
+          editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
+          docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
           exclude: ['**/*.wip'],
           breadcrumbs: true,
           // showLastUpdateAuthor: true,
@@ -94,12 +91,9 @@ const config = {
         id: 'wiki',
         path: 'wiki',
         routeBasePath: 'wiki',
-        editUrl: ({ docPath }) =>
-          `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
+        editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
         editCurrentVersion: true,
-        docItemComponent: require.resolve(
-          './src/components/CustomDocItem/CustomDocItemWiki.tsx'
-        ),
+        docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItemWiki.tsx'),
         // disableVersioning: true,
         breadcrumbs: false,
         sidebarPath: require.resolve('./sidebarsWiki.js'),
@@ -108,10 +102,7 @@ const config = {
       }),
     ],
     [
-      path.resolve(
-        __dirname,
-        './src/plugins/docusaurus-plugin-segment-analytics'
-      ),
+      path.resolve(__dirname, './src/plugins/docusaurus-plugin-segment-analytics'),
       {
         prodKey: 'RQXoHRpNcmBKllUDihjDjupGv4AHn5TB',
         devKey: 'FRKElp5cyMax6GAdM8OVyNMIFVppgEgp',
@@ -145,20 +136,11 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: true,
       },
-      image:
-        'https://graphql-engine-cdn.hasura.io/assets/hge-docs/og-image.png',
+      image: 'https://graphql-engine-cdn.hasura.io/assets/hge-docs/og-image.png',
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
-        additionalLanguages: [
-          'rest',
-          'http',
-          'haskell',
-          'plsql',
-          'docker',
-          'nginx',
-          'markdown',
-        ],
+        additionalLanguages: ['rest', 'http', 'haskell', 'plsql', 'docker', 'nginx', 'markdown'],
       },
       algolia: {
         // If Algolia did not provide you any appId, use 'BH4D9OD16A'
@@ -175,7 +157,7 @@ const config = {
       },
       announcementBar: {
         id: 'announcementBar-1', // Increment on change
-        content: `Learn all about Hasura DDN and celebrate the launch with us at Dev Day on April 16. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/dev-day">Sign up here</a>.`,
+        content: `This is the documentation for Hasura v2. <a target="_blank" rel="noopener noreferrer" href="https://hasura.io/docs/3.0/index/">Click here for the Hasura DDN docs</a>, the future of data delivery.`,
         // isCloseable: true,
         // backgroundColor: '#fafbfc',
         // textColor: '#091E42',
