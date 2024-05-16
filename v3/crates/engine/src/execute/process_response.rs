@@ -21,23 +21,16 @@ use schema::{Annotation, GlobalID, OutputAnnotation, GDS};
 
 trait KeyValueResponse {
     fn remove(&mut self, key: &str) -> Option<json::Value>;
-    fn contains_key(&self, key: &str) -> bool;
 }
 impl KeyValueResponse for IndexMap<String, json::Value> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         self.swap_remove(key)
-    }
-    fn contains_key(&self, key: &str) -> bool {
-        self.contains_key(key)
     }
 }
 impl KeyValueResponse for IndexMap<String, ndc_models::RowFieldValue> {
     fn remove(&mut self, key: &str) -> Option<json::Value> {
         // Convert a ndc_models::RowFieldValue to json::Value if exits
         self.swap_remove(key).map(|row_field| row_field.0)
-    }
-    fn contains_key(&self, key: &str) -> bool {
-        self.contains_key(key)
     }
 }
 

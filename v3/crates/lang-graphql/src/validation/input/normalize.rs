@@ -33,7 +33,6 @@ pub fn normalize<'q, 's, S: schema::SchemaContext, V: ValueSource<'q, 's, S>>(
 ) -> Result<normalized::Value<'s, S>>
 where
     's: 'q,
-    V: std::fmt::Debug,
 {
     let normalized_value = match &location_type.type_().base {
         ast::BaseType::Named(_) => {
@@ -192,7 +191,6 @@ fn normalize_input_object<'q, 's, S: schema::SchemaContext, V: ValueSource<'q, '
 ) -> Result<normalized::Value<'s, S>>
 where
     's: 'q,
-    V: std::fmt::Debug,
 {
     // let (normalized_object, required_field_count) = value.fold_key_values(
     let normalized_object = value.fold_key_values(

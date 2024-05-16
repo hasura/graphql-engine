@@ -1,7 +1,7 @@
 # See https://github.com/LukeMathWalker/cargo-chef
 # this should match the Rust version in rust-toolchain.yaml and the
 # dev-auth-webhook
-FROM rust:1.77.0 as chef
+FROM rust:1.78.0 as chef
 
 WORKDIR app
 

@@ -88,7 +88,7 @@ pub fn build_model_argument_fields(
             for (namespace, permission) in &model.select_permissions {
                 // if there is a preset for this argument, remove it from the schema
                 // so the user cannot provide one
-                if permission.argument_presets.get(argument_name).is_none() {
+                if !permission.argument_presets.contains_key(argument_name) {
                     namespaced_annotations.insert(namespace.clone(), None);
                 }
             }

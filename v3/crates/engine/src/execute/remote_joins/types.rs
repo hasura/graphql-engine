@@ -171,10 +171,6 @@ pub struct VariableName(pub String);
 /// For example, `{"first_name": "John", "last_name": "Doe"}`
 pub type Argument = BTreeMap<VariableName, ValueExt>;
 
-/// For assigning a unique number to each argument
-#[derive(Debug)]
-pub struct ArgumentId(pub i16);
-
 /// Monotonically increasing counter with i16 value
 pub(crate) struct MonotonicCounter {
     id: i16,
