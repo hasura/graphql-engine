@@ -78,7 +78,8 @@ ci-bench:
   # Only bench what is required
   just docker_with_test_env cargo bench \
        -p lang-graphql --bench validation --bench parser \
-       -p engine --bench generate_ir --bench execute
+       -p engine --bench generate_ir \
+       -p execute --bench generate_ir
 
 drill:
   just docker_with_test_env drill --benchmark drill.yml -s -q

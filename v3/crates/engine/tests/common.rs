@@ -12,7 +12,7 @@ use std::{
     path::PathBuf,
 };
 
-use engine::execute::{execute_query, HttpContext};
+use execute::{execute_query, HttpContext};
 use schema::GDS;
 
 extern crate json_value_merge;
@@ -406,15 +406,10 @@ pub fn test_execute_explain(
             query,
             variables: None,
         };
-        let raw_response = engine::execute::explain::execute_explain(
-            &test_ctx.http_context,
-            &schema,
-            &session,
-            raw_request,
-        )
-        .await;
+        let raw_response =
+            execute::execute_explain(&test_ctx.http_context, &schema, &session, raw_request).await;
 
-        let response = engine::execute::explain::types::redact_ndc_explain(raw_response);
+        let response = execute::redact_ndc_explain(raw_response);
 
         let mut expected = test_ctx.mint.new_goldenfile_with_differ(
             expected_response_file,

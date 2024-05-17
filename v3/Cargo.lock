@@ -906,28 +906,21 @@ name = "engine"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-recursion",
  "axum",
  "base64 0.22.1",
  "bincode",
  "build-data",
- "bytes",
  "clap",
  "criterion",
- "derive_more",
- "futures-util",
+ "execute",
  "goldenfile",
  "hasura-authn-core",
  "hasura-authn-jwt",
  "hasura-authn-webhook",
- "indexmap 2.2.6",
  "json-ext",
  "json_value_merge",
  "lang-graphql",
  "metadata-resolve",
- "mockito",
- "ndc-models",
- "nonempty",
  "open-dds",
  "opendds-derive",
  "pretty_assertions",
@@ -937,15 +930,12 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
- "strum",
  "thiserror",
  "tokio",
  "tokio-test",
  "tower",
  "tower-http",
  "tracing-util",
- "transitive",
- "url",
 ]
 
 [[package]]
@@ -985,6 +975,40 @@ checksum = "a258e46cdc063eb8519c00b9fc845fc47bcfca4130e2f08e88665ceda8474245"
 dependencies = [
  "libc",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "execute"
+version = "0.1.0"
+dependencies = [
+ "async-recursion",
+ "axum",
+ "base64 0.22.1",
+ "bytes",
+ "criterion",
+ "derive_more",
+ "futures-util",
+ "goldenfile",
+ "hasura-authn-core",
+ "indexmap 2.2.6",
+ "json-ext",
+ "lang-graphql",
+ "metadata-resolve",
+ "mockito",
+ "ndc-models",
+ "nonempty",
+ "open-dds",
+ "pretty_assertions",
+ "reqwest",
+ "schema",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing-util",
+ "transitive",
+ "url",
 ]
 
 [[package]]

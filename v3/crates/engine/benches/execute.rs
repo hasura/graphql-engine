@@ -1,7 +1,7 @@
 use core::time::Duration;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, SamplingMode};
-use engine::execute::plan::{execute_mutation_plan, execute_query_plan, generate_request_plan};
-use engine::execute::{execute_query_internal, generate_ir, HttpContext};
+use execute::{execute_mutation_plan, execute_query_plan, generate_request_plan};
+use execute::{execute_query_internal, generate_ir, HttpContext};
 use hasura_authn_core::Identity;
 use lang_graphql::http::RawRequest;
 use open_dds::permissions::Role;
@@ -139,10 +139,10 @@ pub fn bench_execute(
         |b, runtime| {
             b.to_async(*runtime).iter(|| async {
                 match generate_request_plan(&ir).unwrap() {
-                    engine::execute::plan::RequestPlan::QueryPlan(query_plan) => {
+                    execute::RequestPlan::QueryPlan(query_plan) => {
                         execute_query_plan(&http_context, query_plan, None).await
                     }
-                    engine::execute::plan::RequestPlan::MutationPlan(mutation_plan) => {
+                    execute::RequestPlan::MutationPlan(mutation_plan) => {
                         execute_mutation_plan(&http_context, mutation_plan, None).await
                     }
                 }

@@ -21,11 +21,10 @@ crates
 ├── schema
 │   ├── operations
 │   ├── types
+├── execute
 ├── engine
 │   ├── bin
 │   │   ├── engine
-│   ├── src
-│   │   ├── execute
 ```
 
 ### `open-dds`
@@ -118,7 +117,7 @@ Each module under `types` defines the following:
 - Logic to parse a normalized object (selection set or input value) from the
   request into the defined IR format.
 
-### `engine`
+### `execute`
 
 Responsible for the core operation of the engine in the context of a user
 provided metadata, including the web server, requests processing, executing
@@ -128,13 +127,6 @@ requests, etc.
 
 Entry point to the program. The executable takes in a metadata file and starts
 the v3 engine according to that file.
-
-#### `engine/src`
-
-This crate implements the Open DDS specification on top of the GraphQL
-primitives provided by the `lang-graphql` crate. It is responsible for
-validating Open DDS metadata, creating a GraphQL schema from resolved Open DDS
-metadata, and implementing the GraphQL operations.
 
 ## Design Principles
 

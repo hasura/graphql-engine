@@ -20,11 +20,9 @@ use tracing_util::{
 };
 
 use base64::engine::Engine;
+use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
 use engine::VERSION;
-use engine::{
-    authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig},
-    execute::HttpContext,
-};
+use execute::HttpContext;
 use hasura_authn_core::Session;
 use hasura_authn_jwt::auth as jwt_auth;
 use hasura_authn_jwt::jwt;
@@ -411,7 +409,7 @@ async fn handle_request(
             "Handle request",
             SpanVisibility::User,
             || {
-                Box::pin(engine::execute::execute_query(
+                Box::pin(execute::execute_query(
                     &state.http_context,
                     &state.schema,
                     &session,
@@ -436,7 +434,7 @@ async fn handle_explain_request(
     State(state): State<Arc<EngineState>>,
     Extension(session): Extension<Session>,
     Json(request): Json<gql::http::RawRequest>,
-) -> engine::execute::explain::types::ExplainResponse {
+) -> execute::ExplainResponse {
     let tracer = tracing_util::global_tracer();
     let response = tracer
         .in_span_async(
@@ -444,7 +442,7 @@ async fn handle_explain_request(
             "Handle explain request",
             SpanVisibility::User,
             || {
-                Box::pin(engine::execute::explain::execute_explain(
+                Box::pin(execute::execute_explain(
                     &state.http_context,
                     &state.schema,
                     &session,
