@@ -86,8 +86,8 @@ data WSServerEnv impl = WSServerEnv
   }
 
 data SubscriberType
-  = LiveQuerySubscriber !ES.LiveQuerySubscriberDetails
-  | StreamingQuerySubscriber !ES.StreamingSubscriberDetails
+  = LiveQuerySubscriber !ES.SubscriberDetails
+  | StreamingQuerySubscriber !ES.SubscriberDetails
 
 type OperationMap =
   STMMap.Map OperationId (SubscriberType, Maybe OperationName)
