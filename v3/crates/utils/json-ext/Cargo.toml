@@ -9,7 +9,7 @@ bench = false
 
 [dependencies]
 
-serde = "1.0.201"
+serde = "1.0.202"
 serde_json = "1.0.116"
 
 [lints]
