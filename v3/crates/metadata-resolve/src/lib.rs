@@ -40,6 +40,7 @@ pub use stages::relationships::{
 pub use stages::type_permissions::TypeInputPermission;
 pub use stages::{resolve, Metadata};
 pub use types::error::{BooleanExpressionError, Error};
+pub use types::internal_flags::MetadataResolveFlagsInternal;
 pub use types::permission::ValueExpression;
 pub use types::subgraph::{
     deserialize_non_string_key_btreemap, deserialize_qualified_btreemap,

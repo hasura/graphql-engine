@@ -17,9 +17,13 @@ mod types;
 pub use types::Metadata;
 
 use crate::types::error::Error;
+use crate::types::internal_flags::MetadataResolveFlagsInternal;
 
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
-pub fn resolve(metadata: open_dds::Metadata) -> Result<Metadata, Error> {
+pub fn resolve(
+    metadata: open_dds::Metadata,
+    _flags: &MetadataResolveFlagsInternal,
+) -> Result<Metadata, Error> {
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
 

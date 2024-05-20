@@ -48,7 +48,7 @@ pub struct GDS {
 
 impl GDS {
     pub fn new(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
-        let resolved_metadata = resolve(user_metadata)?;
+        let resolved_metadata = resolve(user_metadata, &Default::default())?;
         Ok(GDS {
             metadata: resolved_metadata,
         })
