@@ -917,7 +917,6 @@ dependencies = [
  "hasura-authn-core",
  "hasura-authn-jwt",
  "hasura-authn-webhook",
- "json-ext",
  "json_value_merge",
  "lang-graphql",
  "metadata-resolve",
