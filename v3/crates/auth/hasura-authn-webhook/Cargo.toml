@@ -16,7 +16,7 @@ tracing-util = { path = "../../utils/tracing-util" }
 axum = "0.6.9"
 lazy_static = "1.4.0"
 reqwest = { version = "0.11.8",  features = ["json"] }
-schemars = { version = "0.8.12", features = ["smol_str", "url"] }
+schemars = { version = "0.8.20", features = ["smol_str", "url"] }
 serde = "1.0.202"
 serde_json = "1.0.116"
 thiserror = "1.0"

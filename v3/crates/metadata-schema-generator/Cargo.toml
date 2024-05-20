@@ -12,4 +12,4 @@ bench = false
 [dependencies]
 open-dds = { path = "../open-dds" }
 serde_json = "1.0.116"
-schemars = { version = "0.8.12", features = ["smol_str"] }
+schemars = { version = "0.8.20", features = ["smol_str"] }

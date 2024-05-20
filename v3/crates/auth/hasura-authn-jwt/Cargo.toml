@@ -19,7 +19,7 @@ jsonptr = { version = "0.4.0" }
 jsonwebtoken = "8.3.0"
 lazy_static = "1.4.0"
 reqwest = { version = "0.11.8",  features = ["json"] }
-schemars = { version = "0.8.12", features = ["url"] }
+schemars = { version = "0.8.20", features = ["url"] }
 serde = { version = "1.0.202", features = ["derive"] }
 serde_json = "1.0.116"
 thiserror = "1.0"

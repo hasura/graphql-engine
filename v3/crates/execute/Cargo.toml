@@ -30,7 +30,7 @@ indexmap = { version = "2", features = ["serde"] }
 ndc-models = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.2" }
 nonempty = "0.10"
 reqwest = { version = "0.11", features = ["json", "multipart"] }
-schemars = { version = "0.8.12", features = ["smol_str"] }
+schemars = { version = "0.8.20", features = ["smol_str"] }
 serde = "1.0.202"
 serde_json = "1.0.116"
 thiserror = "1.0"
