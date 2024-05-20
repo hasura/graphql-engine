@@ -45,7 +45,6 @@ fn impl_opendd(input: &DeriveInput) -> MacroResult<proc_macro2::TokenStream> {
             }
 
             fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-
                 #impl_json_schema
             }
 

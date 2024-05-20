@@ -291,6 +291,11 @@ attributes.
 
   Deserialize this variant from the given name _or_ from derived Rust name.
 
+- `[opendd(hidden = true)]`
+
+  Hide this variant from the json schema, useful for keeping work in progress
+  out of the public API.
+
 ## Common JSON Schema attributes
 
 The following json schema related attributes are applicable for both structs and

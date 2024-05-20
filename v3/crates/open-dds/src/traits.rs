@@ -700,4 +700,98 @@ mod tests {
             serde_json::to_string_pretty(&root_schema).unwrap()
         );
     }
+
+    #[test]
+    fn test_json_schema_enum_with_hidden_item() {
+        #[derive(PartialEq, opendds_derive::OpenDd)]
+        #[opendd(json_schema(title = "Dog"))]
+        // a dog
+        struct Dog {
+            name: String,
+        }
+
+        #[derive(PartialEq, opendds_derive::OpenDd)]
+        #[opendd(json_schema(title = "Cat"))]
+        // a cat
+        struct Cat {
+            name: String,
+        }
+
+        #[derive(PartialEq, opendds_derive::OpenDd)]
+        #[opendd(json_schema(title = "Horse"))]
+        // a horse
+        struct Horse {
+            name: String,
+        }
+
+        #[derive(PartialEq, opendds_derive::OpenDd)]
+        #[opendd(as_kind, json_schema(title = "Animal"))]
+        /// The name of some kind of animal.
+        enum Animal {
+            Dog(Dog),
+            Cat(Cat),
+            #[opendd(hidden = true)]
+            Horse(Horse),
+        }
+
+        let mut gen = schemars::gen::SchemaGenerator::default();
+        let root_schema = traits::gen_root_schema_for::<Animal>(&mut gen);
+        let exp = serde_json::json!(
+            {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "$id": "https://hasura.io/jsonschemas/metadata/Animal",
+                "title": "Animal",
+                "description": "The name of some kind of animal.",
+                "oneOf": [
+                    {
+                        "$id": "https://hasura.io/jsonschemas/metadata/Dog",
+                        "title": "Dog",
+                        "type": "object",
+                        "required": [
+                            "kind",
+                            "name"
+                        ],
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "enum": [
+                                    "Dog"
+                                ]
+                            },
+                            "name": {
+                                "type":"string"
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    {
+                        "$id": "https://hasura.io/jsonschemas/metadata/Cat",
+                        "title": "Cat",
+                        "type": "object",
+                        "required": [
+                            "kind",
+                            "name"
+                        ],
+                        "properties": {
+                            "kind": {
+                                "type": "string",
+                                "enum": [
+                                    "Cat"
+                                ]
+                            },
+                            "name": {
+                                "type":"string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                ]
+            }
+        );
+
+        assert_eq!(
+            serde_json::to_string_pretty(&exp).unwrap(),
+            serde_json::to_string_pretty(&root_schema).unwrap()
+        );
+    }
 }

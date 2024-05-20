@@ -52,11 +52,12 @@ struct EnumOpts {
 }
 
 /// Variant attributes
-#[derive(FromAttributes, Default)]
+#[derive(FromAttributes, Debug, Default)]
 #[darling(default, attributes(opendd))]
 struct VariantOpts {
     rename: Option<String>,
     alias: Option<String>,
+    hidden: Option<bool>,
 }
 
 pub struct Container<'a> {
@@ -100,6 +101,7 @@ impl<'a> Container<'a> {
             .or(doc_title)
             .unwrap_or(schema_name.to_string());
         let schema_example = json_schema_opts.example;
+
         let json_schema_metadata = JsonSchemaMetadata {
             schema_name,
             title: schema_title,
@@ -239,12 +241,14 @@ pub struct EnumVariant<'a> {
     pub renamed_variant: String,
     pub alias: Option<String>,
     pub field: &'a syn::Field,
+    pub hidden: bool,
 }
 
 impl<'a> EnumVariant<'a> {
     fn from_variant(variant: &'a syn::Variant, style: &EnumImplStyle) -> MacroResult<Self> {
         let variant_name = &variant.ident;
         let variant_opts = VariantOpts::from_attributes(&variant.attrs)?;
+
         let renamed_variant = variant_opts.rename.unwrap_or_else(|| {
             match style {
                 EnumImplStyle::UntaggedWithKind => variant_name.to_string(),
@@ -257,6 +261,7 @@ impl<'a> EnumVariant<'a> {
                 },
             }
         });
+
         let alias = variant_opts.alias;
         let field = match &variant.fields {
             syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => &fields.unnamed[0],
@@ -268,11 +273,14 @@ impl<'a> EnumVariant<'a> {
                 .into())
             }
         };
+        let hidden = variant_opts.hidden == Some(true);
+
         Ok(Self {
             name: variant_name,
             renamed_variant,
             alias,
             field,
+            hidden,
         })
     }
 }

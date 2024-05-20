@@ -222,11 +222,14 @@ fn unexpected_variant_error(tag: &str, known_variants: &[String]) -> proc_macro2
 fn impl_json_schema_untagged(variants: &[EnumVariant<'_>]) -> proc_macro2::TokenStream {
     let schemas = variants
         .iter()
-        .map(|variant| {
-            let ty = &variant.field.ty.clone();
-            quote! {
-                open_dds::traits::gen_subschema_for::<#ty>(gen)
+        .filter_map(|variant| {
+            if variant.hidden {
+                return None;
             }
+            let ty = &variant.field.ty.clone();
+            Some(quote! {
+                open_dds::traits::gen_subschema_for::<#ty>(gen)
+            })
         })
         .collect::<Vec<_>>();
     helpers::variant_subschemas(false, &schemas)
@@ -242,14 +245,17 @@ fn impl_json_schema_tagged(
             let mut count = 0;
             let variant_schemas = variants
                 .iter()
-                .map(|variant| {
+                .filter_map(|variant| {
+                    if variant.hidden {
+                        return None;
+                    }
+
                     unique_names.insert(variant.renamed_variant.to_string());
                     count += 1;
 
                     let name = &variant.renamed_variant;
                     let ty = &variant.field.ty.clone();
-
-                    quote! {{
+                    Some(quote! {{
                         let mut schema = <#ty as open_dds::traits::OpenDd>::json_schema(gen);
 
                         fn add_tag_to_json_schema(schema_internal: &mut schemars::schema::Schema) {
@@ -300,7 +306,7 @@ fn impl_json_schema_tagged(
                             panic!("Unexpected schema");
                         }
                         schema
-                    }}
+                    }})
 
                 })
                 .collect::<Vec<_>>();

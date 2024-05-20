@@ -105,6 +105,7 @@ pub fn apply_schema_metadata(
         .as_ref()
         .map(|eg| quote! { metadata.examples = [#eg()].to_vec(); })
         .unwrap_or_default();
+
     quote! {
         let schema = {
             #schema_expr
