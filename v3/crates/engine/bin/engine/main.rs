@@ -13,6 +13,7 @@ use axum::{
     Extension, Json, Router,
 };
 use clap::Parser;
+use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use tracing_util::{
     add_event_on_active_span, set_status_on_current_span, ErrorVisibility, SpanVisibility,
@@ -155,6 +156,117 @@ impl TraceableError for StartupError {
     }
 }
 
+/// The main router for the engine.
+struct EngineRouter {
+    /// The base router for the engine.
+    /// Contains /, /graphql, /v1/explain and /health routes.
+    base_router: Router,
+    /// The metadata routes for the introspection metadata file.
+    /// Contains /metadata and /metadata-hash routes.
+    metadata_routes: Option<Router>,
+    /// The CORS layer for the engine.
+    cors_layer: Option<CorsLayer>,
+}
+
+impl EngineRouter {
+    fn new(state: Arc<EngineState>) -> Self {
+        let graphql_route = Router::new()
+            .route("/graphql", post(handle_request))
+            .layer(axum::middleware::from_fn(
+                hasura_authn_core::resolve_session,
+            ))
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                authentication_middleware,
+            ))
+            .layer(axum::middleware::from_fn(
+                graphql_request_tracing_middleware,
+            ))
+            // *PLEASE DO NOT ADD ANY MIDDLEWARE
+            // BEFORE THE `graphql_request_tracing_middleware`*
+            // Refer to it for more details.
+            .layer(TraceLayer::new_for_http())
+            .with_state(state.clone());
+
+        let explain_route = Router::new()
+            .route("/v1/explain", post(handle_explain_request))
+            .layer(axum::middleware::from_fn(
+                hasura_authn_core::resolve_session,
+            ))
+            .layer(axum::middleware::from_fn_with_state(
+                state.clone(),
+                authentication_middleware,
+            ))
+            .layer(axum::middleware::from_fn(
+                explain_request_tracing_middleware,
+            ))
+            // *PLEASE DO NOT ADD ANY MIDDLEWARE
+            // BEFORE THE `explain_request_tracing_middleware`*
+            // Refer to it for more details.
+            .layer(TraceLayer::new_for_http())
+            .with_state(state);
+
+        let health_route = Router::new().route("/health", get(handle_health));
+
+        let base_routes = Router::new()
+            // serve graphiql at root
+            .route("/", get(graphiql))
+            // The '/graphql' route
+            .merge(graphql_route)
+            // The '/v1/explain' route
+            .merge(explain_route)
+            // The '/health' route
+            .merge(health_route)
+            // Set request payload limit to 10 MB
+            .layer(DefaultBodyLimit::max(10 * MB));
+
+        Self {
+            base_router: base_routes,
+            metadata_routes: None,
+            cors_layer: None,
+        }
+    }
+
+    /// Serve the introspection metadata file and its hash at `/metadata` and `/metadata-hash` respectively.
+    /// This is a temporary workaround to enable the console to interact with an engine process running locally.
+    async fn add_metadata_routes(
+        &mut self,
+        introspection_metadata_path: &PathBuf,
+    ) -> Result<(), StartupError> {
+        let file_contents = tokio::fs::read_to_string(introspection_metadata_path)
+            .await
+            .map_err(|err| StartupError::ReadSchema(err.into()))?;
+        let mut hasher = hash::DefaultHasher::new();
+        file_contents.hash(&mut hasher);
+        let hash = hasher.finish();
+        let base64_hash = base64::engine::general_purpose::STANDARD.encode(hash.to_ne_bytes());
+        let metadata_routes = Router::new()
+            .route("/metadata", get(|| async { file_contents }))
+            .route("/metadata-hash", get(|| async { base64_hash }));
+        self.metadata_routes = Some(metadata_routes);
+        Ok(())
+    }
+
+    fn add_cors_layer(&mut self, allow_origin: &[String]) {
+        self.cors_layer = Some(cors::build_cors_layer(allow_origin));
+    }
+
+    fn into_make_service(self) -> axum::routing::IntoMakeService<Router> {
+        let mut app = self.base_router;
+        // Merge the metadata routes if they exist.
+        if let Some(metadata_routes) = self.metadata_routes {
+            app = app.merge(metadata_routes);
+        }
+        // Add the CORS layer if it exists.
+        if let Some(cors_layer) = self.cors_layer {
+            // It is important that this layer is added last, since it only affects
+            // the layers that precede it.
+            app = app.layer(cors_layer);
+        }
+        app.into_make_service()
+    }
+}
+
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
@@ -169,76 +281,27 @@ async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
         auth_config,
     });
 
-    let graphql_route = Router::new()
-        .route("/graphql", post(handle_request))
-        .layer(axum::middleware::from_fn(
-            hasura_authn_core::resolve_session,
-        ))
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            authentication_middleware,
-        ))
-        .layer(axum::middleware::from_fn(
-            graphql_request_tracing_middleware,
-        ))
-        // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `graphql_request_tracing_middleware`*
-        // Refer to it for more details.
-        .layer(TraceLayer::new_for_http())
-        .with_state(state.clone());
-
-    let explain_route = Router::new()
-        .route("/v1/explain", post(handle_explain_request))
-        .layer(axum::middleware::from_fn(
-            hasura_authn_core::resolve_session,
-        ))
-        .layer(axum::middleware::from_fn_with_state(
-            state.clone(),
-            authentication_middleware,
-        ))
-        .layer(axum::middleware::from_fn(
-            explain_request_tracing_middleware,
-        ))
-        // *PLEASE DO NOT ADD ANY MIDDLEWARE
-        // BEFORE THE `explain_request_tracing_middleware`*
-        // Refer to it for more details.
-        .layer(TraceLayer::new_for_http())
-        .with_state(state.clone());
-
-    let health_route = Router::new().route("/health", get(handle_health));
-
-    let app = Router::new()
-        // serve graphiql at root
-        .route("/", get(graphiql))
-        .merge(graphql_route)
-        .merge(explain_route)
-        .merge(health_route)
-        .layer(DefaultBodyLimit::max(10 * MB)); // Set request payload limit to 10 MB
+    let mut engine_router = EngineRouter::new(state);
 
     // If `--introspection-metadata` is specified we also serve the file indicated on `/metadata`
     // and its hash on `/metadata-hash`.
-    let app = match &server.introspection_metadata {
-        None => app,
-        Some(path) => add_metadata_routes(app, path).await?,
-    };
+    if let Some(path) = &server.introspection_metadata {
+        engine_router.add_metadata_routes(path).await?;
+    }
+
+    // If `--enable-cors` is specified, we add a CORS layer to the app.
+    if server.enable_cors {
+        engine_router.add_cors_layer(&server.cors_allow_origin);
+    }
 
     let address = net::SocketAddr::new(server.host, server.port);
     let log = format!("starting server on {address}");
     println!("{log}");
     add_event_on_active_span(log);
 
-    // If `--enable-cors` is specified, we add a CORS layer to the app.
-    // It is important that this layer is added last, since it only affects the layers that precede
-    // it.
-    let app = if server.enable_cors {
-        cors::add_cors_layer(app, &server.cors_allow_origin)
-    } else {
-        app
-    };
-
     // run it with hyper on `addr`
     axum::Server::bind(&address)
-        .serve(app.into_make_service())
+        .serve(engine_router.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
@@ -468,23 +531,4 @@ fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {
     Ok(open_dds::traits::OpenDd::deserialize(
         serde_json::from_str(&raw_auth_config)?,
     )?)
-}
-
-/// Serve the introspection metadata file and its hash at `/metadata` and `/metadata-hash` respectively.
-/// This is a temporary workaround to enable the console to interact with an engine process running locally.
-async fn add_metadata_routes(
-    app: Router,
-    introspection_metadata_path: &PathBuf,
-) -> Result<Router, StartupError> {
-    let file_contents = tokio::fs::read_to_string(introspection_metadata_path)
-        .await
-        .map_err(|err| StartupError::ReadSchema(err.into()))?;
-    let mut hasher = hash::DefaultHasher::new();
-    file_contents.hash(&mut hasher);
-    let hash = hasher.finish();
-    let base64_hash = base64::engine::general_purpose::STANDARD.encode(hash.to_ne_bytes());
-    let new_app = app
-        .merge(Router::new().route("/metadata", get(|| async { file_contents })))
-        .merge(Router::new().route("/metadata-hash", get(|| async { base64_hash })));
-    Ok(new_app)
 }

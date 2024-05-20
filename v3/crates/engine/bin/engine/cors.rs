@@ -1,10 +1,9 @@
-use axum::Router;
 use reqwest::Method;
 use std::time::Duration;
 use tower_http::cors;
 
 /// Add CORS layer to the app.
-pub fn add_cors_layer(app: Router, cors_allow_origin: &[String]) -> Router {
+pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
     let cors_allow_origin = if cors_allow_origin.is_empty() {
         // Allow all origins and mirror the request origin in 'Access-Control-Allow-Origin'
         cors::AllowOrigin::mirror_request()
@@ -20,14 +19,12 @@ pub fn add_cors_layer(app: Router, cors_allow_origin: &[String]) -> Router {
         })
     };
 
-    let cors = cors::CorsLayer::new()
+    cors::CorsLayer::new()
         .max_age(Duration::from_secs(24 * 60 * 60)) // 24 hours
         .allow_headers(cors::AllowHeaders::mirror_request())
         .allow_origin(cors_allow_origin)
         .allow_credentials(true)
-        .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS]);
-
-    app.layer(cors)
+        .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
 }
 
 #[cfg(test)]
@@ -62,8 +59,7 @@ mod test {
 
     #[tokio::test]
     async fn test_cors_allow_all_origins() {
-        let app = Router::new();
-        let app = super::add_cors_layer(app, &[]);
+        let app = Router::new().layer(super::build_cors_layer(&[]));
         // Preflight CORS request
         let response = app
             .oneshot(
@@ -87,8 +83,7 @@ mod test {
 
     #[tokio::test]
     async fn test_cors_restrict_origin() {
-        let app = Router::new();
-        let app = super::add_cors_layer(app, &["http://example.com".to_string()]);
+        let app = Router::new().layer(super::build_cors_layer(&["http://example.com".to_string()]));
         // Preflight CORS request
         let response = app
             .oneshot(
@@ -112,14 +107,10 @@ mod test {
 
     #[tokio::test]
     async fn test_cors_allow_origin() {
-        let app = Router::new();
-        let app = super::add_cors_layer(
-            app,
-            &[
-                "http://localhost:8080".to_string(),
-                "http://example.com".to_string(),
-            ],
-        );
+        let app = Router::new().layer(super::build_cors_layer(&[
+            "http://localhost:8080".to_string(),
+            "http://example.com".to_string(),
+        ]));
         // Preflight CORS request
         let response = app
             .oneshot(
