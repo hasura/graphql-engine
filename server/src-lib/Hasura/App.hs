@@ -1353,8 +1353,6 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
     startScheduledEventsPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
-      -- prepare scheduled triggers
-      lift $ prepareScheduledEvents logger
 
       -- Create logger for logging the statistics of scheduled events fetched
       scheduledEventsStatsLogger <-
@@ -1363,7 +1361,6 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           (closeFetchedScheduledEventsStatsLogger logger)
 
       -- start a background thread to deliver the scheduled events
-      -- _scheduledEventsThread <- do
       let scheduledEventsGracefulShutdownAction =
             ( liftWithStateless \lowerIO ->
                 ( waitForProcessingAction
@@ -1380,15 +1377,22 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           "processScheduledTriggers"
           logger
           (C.ThreadShutdown scheduledEventsGracefulShutdownAction)
-        $ processScheduledTriggers
-          (acEnvironment <$> getAppContext appStateRef)
-          logger
-          scheduledEventsStatsLogger
-          appEnvManager
-          (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
-          (getSchemaCache appStateRef)
-          lockedEventsCtx
-          appEnvTriggersErrorLogLevelStatus
+        $ do
+          -- prepare scheduled triggers
+          -- this can take a while if `ndb_scheduled_events` is big
+          -- so we do this off the main thread
+          prepareScheduledEvents logger
+
+          -- start processing loop
+          processScheduledTriggers
+            (acEnvironment <$> getAppContext appStateRef)
+            logger
+            scheduledEventsStatsLogger
+            appEnvManager
+            (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
+            (getSchemaCache appStateRef)
+            lockedEventsCtx
+            appEnvTriggersErrorLogLevelStatus
 
 runInSeparateTx ::
   PG.TxE QErr a ->
