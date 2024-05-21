@@ -22,7 +22,7 @@ fn test_matching_output_metadata(comparison_folder_path: PathBuf) -> anyhow::Res
     let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
 
     // get metadata shared between all tests
-    let mut common_metadata_paths: Vec<PathBuf> = vec!["examples/postgres-metadata.json"]
+    let mut common_metadata_paths: Vec<PathBuf> = ["examples/postgres-metadata.json"]
         .iter()
         .map(|path| root_test_dir.join(path))
         .collect();
