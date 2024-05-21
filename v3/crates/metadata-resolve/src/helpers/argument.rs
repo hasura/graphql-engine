@@ -247,8 +247,6 @@ pub(crate) fn resolve_value_expression_for_argument(
                 },
             })?;
 
-            // look up this type in the context of it's data connector
-            // so that we use the correct column names for the data source
             let data_connector_field_mappings = object_type_representation
                 .type_mappings
                 .get(
@@ -409,6 +407,7 @@ pub(crate) fn resolve_model_predicate_with_type(
         }) => {
             if let Some(nested_predicate) = predicate {
                 let relationship_field_name = mk_name(&name.0)?;
+
                 let relationship = &object_type_representation
                     .relationships
                     .get(&relationship_field_name)
@@ -463,6 +462,12 @@ pub(crate) fn resolve_model_predicate_with_type(
                                 }
                                     })?;
 
+                                let target_object_type_representation = object_types
+                                    .get(&target_model.data_type)
+                                    .ok_or(Error::UnknownType {
+                                        data_type: target_model.data_type.clone(),
+                                    })?;
+
                                 // validate data connector name
                                 let data_connector_context = data_connectors
                                     .0
@@ -482,7 +487,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
                                 // look up this type in the context of it's data connector
                                 // so that we use the correct column names for the data source
-                                let data_connector_field_mappings = object_type_representation.type_mappings.get(
+                                let data_connector_field_mappings = target_object_type_representation.type_mappings.get(
                                     &target_source.model.data_connector.name,
                                     DataConnectorObjectType::ref_cast(&target_source.model.collection)
                                 )
