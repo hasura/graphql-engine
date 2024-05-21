@@ -101,6 +101,10 @@ definition:
           # defaults to the same operator name (e.g. "_eq: _eq") if no explicit mapping is present.
           operatorMapping:
             _within: int_within
+  # whether to enable _and / _or / _not
+  logicalOperators:
+    # This is nested to allow for renaming of logical operators here in the future
+    enable: true
   # whether to enable _is_null
   isNull:
     # This is nested to allow for renaming of is_null here in the future

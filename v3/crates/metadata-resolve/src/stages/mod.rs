@@ -1,4 +1,5 @@
 mod apollo;
+mod check_boolean_expressions_flag;
 pub mod command_permissions;
 pub mod commands;
 pub mod data_connector_scalar_types;
@@ -22,10 +23,13 @@ use crate::types::internal_flags::MetadataResolveFlagsInternal;
 /// This is where we take the input metadata and attempt to resolve a working `Metadata` object.
 pub fn resolve(
     metadata: open_dds::Metadata,
-    _flags: &MetadataResolveFlagsInternal,
+    flags: &MetadataResolveFlagsInternal,
 ) -> Result<Metadata, Error> {
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
+
+    // check if metadata contains fancy new kinds that are hidden behind a feature flag
+    check_boolean_expressions_flag::resolve(&metadata_accessor, flags)?;
 
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.

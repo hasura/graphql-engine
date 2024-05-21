@@ -1,8 +1,8 @@
 use crate::{graphql_config, MetadataWithVersion, OpenDdSupergraphObject};
 
 use super::{
-    commands, data_connector, flags, models, permissions, relationships, types, Metadata,
-    OpenDdSubgraphObject,
+    boolean_expression, commands, data_connector, flags, models, permissions, relationships, types,
+    Metadata, OpenDdSubgraphObject,
 };
 
 pub struct QualifiedObject<T> {
@@ -28,6 +28,7 @@ pub struct MetadataAccessor {
     pub object_types: Vec<QualifiedObject<types::ObjectTypeV1>>,
     pub object_boolean_expression_types: Vec<QualifiedObject<types::ObjectBooleanExpressionTypeV1>>,
     pub scalar_types: Vec<QualifiedObject<types::ScalarTypeV1>>,
+    pub boolean_expression_types: Vec<QualifiedObject<boolean_expression::BooleanExpressionTypeV1>>,
     pub data_connector_scalar_representations:
         Vec<QualifiedObject<types::DataConnectorScalarRepresentationV1>>,
     pub models: Vec<QualifiedObject<models::ModelV1>>,
@@ -70,6 +71,12 @@ fn load_metadata_objects(
                         subgraph,
                         object_boolean_expression_type.upgrade(),
                     ));
+            }
+            OpenDdSubgraphObject::BooleanExpressionType(boolean_expression_type) => {
+                accessor.boolean_expression_types.push(QualifiedObject::new(
+                    subgraph,
+                    boolean_expression_type.upgrade(),
+                ));
             }
             OpenDdSubgraphObject::DataConnectorScalarRepresentation(scalar_representation) => {
                 accessor
@@ -161,6 +168,7 @@ impl MetadataAccessor {
             object_types: vec![],
             scalar_types: vec![],
             object_boolean_expression_types: vec![],
+            boolean_expression_types: vec![],
             data_connector_scalar_representations: vec![],
             models: vec![],
             type_permissions: vec![],

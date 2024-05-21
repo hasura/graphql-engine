@@ -640,6 +640,7 @@ pub struct ComparableField {
 
 #[derive(
     derive_more::Display,
+    opendds_derive::OpenDd,
     Serialize,
     Deserialize,
     Clone,

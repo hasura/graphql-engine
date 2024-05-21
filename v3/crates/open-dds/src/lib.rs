@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod accessor;
 pub mod arguments;
+pub mod boolean_expression;
 pub mod commands;
 pub mod data_connector;
 pub mod flags;
@@ -81,6 +82,8 @@ pub enum OpenDdSubgraphObject {
     ObjectType(types::ObjectType),
     ScalarType(types::ScalarType),
     ObjectBooleanExpressionType(types::ObjectBooleanExpressionType),
+    #[opendd(hidden = true)]
+    BooleanExpressionType(boolean_expression::BooleanExpressionType),
 
     // Data Connector Scalar Representation
     DataConnectorScalarRepresentation(types::DataConnectorScalarRepresentation),

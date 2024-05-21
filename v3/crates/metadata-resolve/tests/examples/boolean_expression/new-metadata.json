@@ -1,0 +1,95 @@
+[
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "Album_bool_exp",
+      "operand": {
+        "object": {
+          "type": "Album",
+          "comparableFields": [
+            {
+              "fieldName": "AlbumId",
+              "booleanExpressionType": "pg_Int_Comparison_exp"
+            },
+            {
+              "fieldName": "ArtistId",
+              "booleanExpressionType": "pg_Int_Comparison_exp_with_is_null"
+            },
+            {
+              "fieldName": "Address",
+              "booleanExpressionType": "Address_bool_exp"
+            }
+          ],
+          "comparableRelationships": [
+            {
+              "relationshipName": "artist",
+              "booleanExpressionType": "Artist_bool_exp"
+            }
+          ]
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": {
+        "typeName": "App_Album_bool_exp"
+      }
+    }
+  },
+  {
+    "kind": "BooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "Int_comparison_exp_with_eq_within_and_is_null",
+      "operand": {
+        "scalar": {
+          "type": "Int",
+          "comparisonOperators": [
+            {
+              "name": "_eq",
+              "argumentType": "Int!"
+            },
+            {
+              "name": "_within",
+              "argumentType": "WithinInput!"
+            },
+            {
+              "name": "_in",
+              "argumentType": "[Int!]!"
+            }
+          ],
+          "dataConnectorOperatorMapping": [
+            {
+              "dataConnectorName": "pg_1",
+              "dataConnectorScalarType": "int8",
+              "operatorMapping": {
+                "_within": "int_within",
+                "_eq": "_eq"
+              }
+            },
+            {
+              "dataConnectorName": "pg_2",
+              "dataConnectorScalarType": "int8",
+              "operatorMapping": {
+                "_within": "int_within"
+              }
+            }
+          ]
+        }
+      },
+      "logicalOperators": {
+        "enable": true
+      },
+      "isNull": {
+        "enable": true
+      },
+      "graphql": {
+        "typeName": "Int_comparison_exp_with_eq_within_and_is_null"
+      }
+    }
+  }
+]

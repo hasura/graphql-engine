@@ -224,6 +224,7 @@ fn check_no_arbitrary_additional_properties(schema: &Schema, config: &JsonSchema
                     .additional_properties
                     .as_ref()
                     .is_some_and(|property_schema| matches!(**property_schema, Schema::Bool(true)));
+
             let is_allowed = schema_object.metadata.as_ref().is_some_and(|metadata| {
                 metadata.title.as_ref().is_some_and(|title| {
                     config

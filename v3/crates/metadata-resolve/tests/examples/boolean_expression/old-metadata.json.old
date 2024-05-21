@@ -1,0 +1,35 @@
+[
+  {
+    "kind": "ObjectBooleanExpressionType",
+    "version": "v1",
+    "definition": {
+      "name": "author_bool_exp",
+      "objectType": "author",
+      "dataConnectorName": "db",
+      "dataConnectorObjectType": "author",
+      "comparableFields": [
+        {
+          "fieldName": "author_id",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "first_name",
+          "operators": {
+            "enableAll": true
+          }
+        },
+        {
+          "fieldName": "last_name",
+          "operators": {
+            "enableAll": true
+          }
+        }
+      ],
+      "graphql": {
+        "typeName": "Author_bool_exp"
+      }
+    }
+  }
+]
