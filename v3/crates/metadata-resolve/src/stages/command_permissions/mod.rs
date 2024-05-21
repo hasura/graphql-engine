@@ -3,11 +3,14 @@ use serde::{Deserialize, Serialize};
 use hasura_authn_core::Role;
 use indexmap::IndexMap;
 
-use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
+use open_dds::{
+    commands::CommandName, data_connector::DataConnectorName, models::ModelName,
+    types::CustomTypeName,
+};
 
 use crate::stages::{
-    commands, data_connector_scalar_types, models, object_boolean_expressions, relationships,
-    scalar_types,
+    commands, data_connector_scalar_types, data_connectors, models, object_boolean_expressions,
+    relationships, scalar_types,
 };
 use crate::types::error::Error;
 use crate::types::permission::ValueExpression;
@@ -45,7 +48,11 @@ pub fn resolve(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
 ) -> Result<IndexMap<Qualified<CommandName>, CommandWithPermissions>, Error> {
     let mut commands_with_permissions: IndexMap<Qualified<CommandName>, CommandWithPermissions> =
         commands
@@ -60,6 +67,7 @@ pub fn resolve(
                 )
             })
             .collect();
+
     for open_dds::accessor::QualifiedObject {
         subgraph,
         object: command_permissions,
@@ -81,6 +89,7 @@ pub fn resolve(
                 object_boolean_expression_types,
                 models,
                 data_connectors,
+                data_connector_scalars,
                 subgraph,
             )?;
         } else {
@@ -119,7 +128,11 @@ pub fn resolve_command_permissions(
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     subgraph: &str,
 ) -> Result<BTreeMap<Role, CommandPermission>, Error> {
     let mut validated_permissions = BTreeMap::new();
@@ -150,6 +163,7 @@ pub fn resolve_command_permissions(
                         object_boolean_expression_types,
                         models,
                         data_connectors,
+                        data_connector_scalars,
                     )?;
 
                     // additionally typecheck literals

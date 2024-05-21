@@ -11,7 +11,7 @@ use crate::types::subgraph::Qualified;
 
 use crate::helpers::type_mappings;
 use lang_graphql::ast::common as ast;
-use open_dds::types::CustomTypeName;
+use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     BooleanExpressionGraphqlConfig, BooleanExpressionInfo, BooleanExpressionsOutput,
@@ -21,7 +21,11 @@ pub use types::{
 /// resolve object boolean expression types
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
@@ -39,6 +43,7 @@ pub fn resolve(
             object_boolean_expression_type,
             subgraph,
             data_connectors,
+            data_connector_scalars,
             object_types,
             scalar_types,
             &mut graphql_types,
@@ -65,7 +70,11 @@ pub fn resolve(
 pub(crate) fn resolve_object_boolean_expression_type(
     object_boolean_expression: &open_dds::types::ObjectBooleanExpressionTypeV1,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
@@ -99,7 +108,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     // validate data connector name
     let data_connector_context = data_connectors
-        .data_connectors_with_scalars
+        .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| {
             Error::from(
@@ -232,12 +241,22 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 ))
                 .unwrap();
 
+            let scalars =
+                data_connector_scalars
+                    .get(&data_connector_name)
+                    .ok_or(Error::BooleanExpressionError {
+                    boolean_expression_error:
+                        BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
+                            object_boolean_expression_type: object_boolean_expression_type.clone(),
+                            data_connector: data_connector_name.clone(),
+                        },
+                })?;
+
             resolve_boolean_expression_info(
-                &object_boolean_expression_type,
                 &data_connector_name,
                 graphql_type_name.clone(),
                 subgraph,
-                data_connectors,
+                scalars,
                 type_mapping,
                 graphql_config,
             )
@@ -266,27 +285,14 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
 // record filter expression info
 pub fn resolve_boolean_expression_info(
-    name: &Qualified<CustomTypeName>,
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
     where_type_name: ast::TypeName,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<BooleanExpressionInfo, Error> {
     let mut scalar_fields = BTreeMap::new();
-
-    let scalar_types = &data_connectors
-        .data_connectors_with_scalars
-        .get(data_connector_name)
-        .ok_or(Error::BooleanExpressionError {
-            boolean_expression_error:
-                BooleanExpressionError::UnknownDataConnectorInObjectBooleanExpressionType {
-                    object_boolean_expression_type: name.clone(),
-                    data_connector: data_connector_name.clone(),
-                },
-        })?
-        .scalars;
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
 
@@ -303,7 +309,7 @@ pub fn resolve_boolean_expression_info(
         if let Some((scalar_type_name, scalar_type_info)) =
             data_connector_scalar_types::get_simple_scalar(
                 field_mapping.column_type.clone(),
-                scalar_types,
+                scalars,
             )
         {
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
@@ -316,7 +322,7 @@ pub fn resolve_boolean_expression_info(
                         resolve_ndc_type(
                             data_connector_name,
                             &get_argument_type(op_definition, &field_mapping.column_type),
-                            scalar_types,
+                            scalars,
                             subgraph,
                         )?,
                     );

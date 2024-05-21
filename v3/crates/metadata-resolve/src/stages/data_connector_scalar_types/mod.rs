@@ -1,9 +1,7 @@
 pub mod types;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use types::{
-    DataConnectorWithScalarsContext, DataConnectorsWithScalars, ScalarTypeWithRepresentationInfo,
-};
+pub use types::{ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap};
 
 use lang_graphql::ast::common as ast;
 
@@ -18,7 +16,8 @@ use crate::types::subgraph::Qualified;
 use crate::stages::{data_connectors, scalar_types};
 
 pub struct DataConnectorWithScalarsOutput<'a> {
-    pub data_connectors: DataConnectorsWithScalars<'a>,
+    pub data_connector_scalars:
+        BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>>,
     pub graphql_types: BTreeSet<ast::TypeName>,
 }
 
@@ -34,7 +33,7 @@ pub fn resolve<'a>(
     // we convert data from the old types to the new types and then start mutating everything
     // there is no doubt room for improvement here, but at least we are keeping the mutation
     // contained to this resolving stage
-    let mut data_connectors_with_scalars = convert_data_connectors_contexts(data_connectors);
+    let mut data_connector_scalars = convert_data_connectors_contexts(data_connectors);
 
     for open_dds::accessor::QualifiedObject {
         subgraph,
@@ -48,15 +47,15 @@ pub fn resolve<'a>(
             scalar_type_representation.data_connector_name.to_owned(),
         );
 
-        let data_connector = data_connectors_with_scalars
+        let scalars = data_connector_scalars
             .get_mut(&qualified_data_connector_name)
             .ok_or_else(|| Error::ScalarTypeFromUnknownDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
             })?;
 
-        let scalar_type = data_connector
-            .scalars
+        let scalar_type = scalars
+            .0
             .get_mut(
                 scalar_type_representation
                     .data_connector_scalar_type
@@ -109,21 +108,19 @@ pub fn resolve<'a>(
     }
 
     Ok(DataConnectorWithScalarsOutput {
-        data_connectors: types::DataConnectorsWithScalars {
-            data_connectors_with_scalars,
-        },
+        data_connector_scalars,
         graphql_types,
     })
 }
 
 // convert from types in previous stage to this stage
 fn convert_data_connectors_contexts<'a>(
-    data_connectors: &data_connectors::DataConnectors<'a>,
-) -> BTreeMap<Qualified<DataConnectorName>, DataConnectorWithScalarsContext<'a>> {
-    let mut data_connectors_with_scalars = BTreeMap::new();
+    old_data_connectors: &data_connectors::DataConnectors<'a>,
+) -> BTreeMap<Qualified<DataConnectorName>, ScalarTypeWithRepresentationInfoMap<'a>> {
+    let mut data_connector_scalars = BTreeMap::new();
 
-    for (data_connector_name, data_connectors::DataConnectorContext { scalars, inner }) in
-        &data_connectors.data_connectors
+    for (data_connector_name, data_connectors::DataConnectorContext { scalars, .. }) in
+        &old_data_connectors.0
     {
         let mut new_scalars = BTreeMap::new();
         for (scalar_name, scalar) in scalars {
@@ -137,24 +134,22 @@ fn convert_data_connectors_contexts<'a>(
                 },
             );
         }
-        data_connectors_with_scalars.insert(
+
+        data_connector_scalars.insert(
             data_connector_name.clone(),
-            DataConnectorWithScalarsContext {
-                inner: inner.clone(),
-                scalars: new_scalars,
-            },
+            ScalarTypeWithRepresentationInfoMap(new_scalars),
         );
     }
-    data_connectors_with_scalars
+    data_connector_scalars
 }
 
 // helper function to determine whether a ndc type is a simple scalar
-pub fn get_simple_scalar<'a, 'b>(
+pub fn get_simple_scalar<'a>(
     t: ndc_models::Type,
-    scalars: &'a BTreeMap<&str, ScalarTypeWithRepresentationInfo<'b>>,
-) -> Option<(String, &'a ScalarTypeWithRepresentationInfo<'b>)> {
+    scalars: &'a ScalarTypeWithRepresentationInfoMap<'a>,
+) -> Option<(String, &'a ScalarTypeWithRepresentationInfo<'a>)> {
     match t {
-        ndc_models::Type::Named { name } => scalars.get(name.as_str()).map(|info| (name, info)),
+        ndc_models::Type::Named { name } => scalars.0.get(name.as_str()).map(|info| (name, info)),
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }

@@ -255,13 +255,15 @@ pub fn resolve_data_connector_type_mapping(
         subgraph.to_string(),
         data_connector_type_mapping.data_connector_name.clone(),
     );
+
     let data_connector_context = data_connectors
-        .data_connectors
+        .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| TypeMappingValidationError::UnknownDataConnector {
             data_connector: qualified_data_connector_name.clone(),
             type_name: qualified_type_name.clone(),
         })?;
+
     let ndc_object_type = data_connector_context
         .inner
         .schema

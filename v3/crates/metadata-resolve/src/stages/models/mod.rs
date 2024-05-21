@@ -1,4 +1,4 @@
-use open_dds::data_connector::DataConnectorObjectType;
+use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
 pub use types::{
     ConnectorArgumentName, LimitFieldGraphqlConfig, Model, ModelGraphQlApi,
     ModelGraphqlApiArgumentsConfig, ModelOrderByExpression, ModelSource, ModelsOutput,
@@ -37,7 +37,12 @@ use std::iter;
 /// resolve models
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
+
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     global_id_enabled_types: &BTreeMap<Qualified<CustomTypeName>, Vec<Qualified<ModelName>>>,
     apollo_federation_entity_enabled_types: &BTreeMap<
@@ -95,6 +100,7 @@ pub fn resolve(
                 &mut resolved_model,
                 subgraph,
                 data_connectors,
+                data_connector_scalars,
                 object_types,
                 scalar_types,
                 object_boolean_expression_types,
@@ -105,7 +111,7 @@ pub fn resolve(
                 model_graphql_definition,
                 &mut resolved_model,
                 &mut graphql_types,
-                data_connectors,
+                data_connector_scalars,
                 &model.description,
                 graphql_config,
             )?;
@@ -370,7 +376,11 @@ fn resolve_model_graphql_api(
     model_graphql_definition: &ModelGraphQlDefinition,
     model: &mut Model,
     existing_graphql_types: &mut BTreeSet<ast::TypeName>,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
+
     model_description: &Option<String>,
     graphql_config: &graphql_config::GraphqlConfig,
 ) -> Result<(), Error> {
@@ -395,7 +405,7 @@ fn resolve_model_graphql_api(
                         &model.data_type,
                         model_source,
                         field_name,
-                        data_connectors,
+                        data_connector_scalars,
                         || "the unique identifier for select unique".to_string(),
                     )
                 })
@@ -569,7 +579,11 @@ fn resolve_model_source(
     model_source: &models::ModelSource,
     model: &mut Model,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -586,8 +600,9 @@ fn resolve_model_source(
         subgraph.to_string(),
         model_source.data_connector_name.clone(),
     );
+
     let data_connector_context = data_connectors
-        .data_connectors_with_scalars
+        .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| Error::UnknownModelDataConnector {
             model_name: model.name.clone(),
@@ -706,7 +721,7 @@ fn resolve_model_source(
                     &model.data_type,
                     &resolved_model_source,
                     global_id_field,
-                    data_connectors,
+                    data_connector_scalars,
                     || format!("the global ID fields of type {}", model.data_type),
                 )?,
             );
@@ -726,7 +741,7 @@ fn resolve_model_source(
                             &model.data_type,
                             &resolved_model_source,
                             field,
-                            data_connectors,
+                            data_connector_scalars,
                             || {
                                 format!(
                                     "the apollo federation key fields of type {}",
@@ -770,7 +785,11 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
     model_data_type: &Qualified<CustomTypeName>,
     model_source: &ModelSource,
     field: &FieldName,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
+
     comparison_location: F,
 ) -> Result<NdcColumnForComparison, Error> {
     // Get field mappings of model data type
@@ -797,14 +816,13 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
     let field_ndc_type = &field_mapping.column_type;
 
     // Get available scalars defined in the data connector
-    let scalars = &data_connectors
-        .data_connectors_with_scalars
+    let scalars = &data_connector_scalars
         .get(&model_source.data_connector.name)
         .ok_or(Error::UnknownModelDataConnector {
             model_name: model_name.clone(),
             data_connector: model_source.data_connector.name.clone(),
-        })?
-        .scalars;
+        })?;
+
     // Determine whether the ndc type is a simple scalar and get scalar type info
     let (_field_ndc_type_scalar, scalar_type_info) =
         data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)

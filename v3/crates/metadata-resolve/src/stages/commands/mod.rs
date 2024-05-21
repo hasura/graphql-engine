@@ -6,8 +6,7 @@ use crate::helpers::types::{
     get_type_representation, mk_name, object_type_exists, unwrap_custom_type_name,
 };
 use crate::stages::{
-    data_connector_scalar_types, data_connectors, models, object_boolean_expressions, scalar_types,
-    type_permissions,
+    data_connectors, models, object_boolean_expressions, scalar_types, type_permissions,
 };
 use crate::types::error::Error;
 use crate::types::subgraph::{mk_qualified_type_reference, ArgumentInfo, Qualified};
@@ -27,7 +26,7 @@ use crate::helpers::type_mappings;
 /// resolve commands
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -190,7 +189,7 @@ pub fn resolve_command_source(
     command_source: &commands::CommandSource,
     command: &Command,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     object_boolean_expression_types: &BTreeMap<
@@ -211,7 +210,7 @@ pub fn resolve_command_source(
     );
 
     let data_connector_context = data_connectors
-        .data_connectors_with_scalars
+        .0
         .get(&qualified_data_connector_name)
         .ok_or_else(|| Error::UnknownCommandDataConnector {
             command_name: command.name.clone(),

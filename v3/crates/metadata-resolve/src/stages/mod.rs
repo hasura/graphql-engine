@@ -51,7 +51,7 @@ pub fn resolve(
     } = scalar_types::resolve(&metadata_accessor, &graphql_types)?;
 
     let data_connector_scalar_types::DataConnectorWithScalarsOutput {
-        data_connectors,
+        data_connector_scalars,
         graphql_types,
     } = data_connector_scalar_types::resolve(
         &metadata_accessor,
@@ -69,6 +69,7 @@ pub fn resolve(
     } = object_boolean_expressions::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &object_types_with_permissions,
         &scalar_types,
         &graphql_types,
@@ -83,6 +84,7 @@ pub fn resolve(
     } = models::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &graphql_types,
         &global_id_enabled_types,
         &apollo_federation_entity_enabled_types,
@@ -108,6 +110,7 @@ pub fn resolve(
     let object_types_with_relationships = relationships::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &object_types_with_permissions,
         &models,
         &commands,
@@ -121,11 +124,13 @@ pub fn resolve(
         &object_boolean_expression_types,
         &models,
         &data_connectors,
+        &data_connector_scalars,
     )?;
 
     let models_with_permissions = model_permissions::resolve(
         &metadata_accessor,
         &data_connectors,
+        &data_connector_scalars,
         &object_types_with_relationships,
         &scalar_types,
         &models,

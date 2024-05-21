@@ -1,8 +1,8 @@
 mod types;
 use crate::helpers::typecheck;
 use crate::stages::{
-    data_connector_scalar_types, models, object_boolean_expressions, object_types, relationships,
-    scalar_types,
+    data_connector_scalar_types, data_connectors, models, object_boolean_expressions, object_types,
+    relationships, scalar_types,
 };
 use crate::types::permission::ValueExpression;
 use indexmap::IndexMap;
@@ -33,7 +33,13 @@ use open_dds::{
 /// resolve model permissions
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
+
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
@@ -76,6 +82,7 @@ pub fn resolve(
                 subgraph,
                 permissions,
                 data_connectors,
+                data_connector_scalars,
                 object_types,
                 scalar_types,
                 models, // This is required to get the model for the relationship target
@@ -96,13 +103,14 @@ pub fn resolve(
 pub(crate) fn resolve_ndc_type(
     data_connector: &Qualified<DataConnectorName>,
     source_type: &ndc_models::Type,
-    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     subgraph: &str,
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
         ndc_models::Type::Named { name } => {
             let scalar_type =
                 scalars
+                    .0
                     .get(name.as_str())
                     .ok_or(Error::UnknownScalarTypeInDataConnector {
                         data_connector: data_connector.clone(),
@@ -146,7 +154,10 @@ fn resolve_model_predicate(
     model_predicate: &open_dds::permissions::ModelPredicate,
     model: &models::Model,
     subgraph: &str,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
@@ -184,14 +195,12 @@ fn resolve_model_predicate(
 
                 // Determine whether the ndc type is a simple scalar
                 // Get available scalars defined in the data connector
-                let scalars = &data_connectors
-                    .data_connectors_with_scalars
+                let scalars = &data_connector_scalars
                     .get(&model_source.data_connector.name)
                     .ok_or(Error::UnknownModelDataConnector {
                         model_name: model.name.clone(),
                         data_connector: model_source.data_connector.name.clone(),
-                    })?
-                    .scalars;
+                    })?;
 
                 // Get scalar type info from the data connector
                 let (_, scalar_type_info) =
@@ -350,7 +359,7 @@ fn resolve_model_predicate(
                                     target_model,
                                     // local relationships exists in the same subgraph as the source model
                                     subgraph,
-                                    data_connectors,
+                                    data_connector_scalars,
                                     &target_model.type_fields,
                                     object_types,
                                     models,
@@ -388,7 +397,7 @@ fn resolve_model_predicate(
                 predicate,
                 model,
                 subgraph,
-                data_connectors,
+                data_connector_scalars,
                 fields,
                 object_types,
                 models,
@@ -402,7 +411,7 @@ fn resolve_model_predicate(
                     predicate,
                     model,
                     subgraph,
-                    data_connectors,
+                    data_connector_scalars,
                     fields,
                     object_types,
                     models,
@@ -417,7 +426,7 @@ fn resolve_model_predicate(
                     predicate,
                     model,
                     subgraph,
-                    data_connectors,
+                    data_connector_scalars,
                     fields,
                     object_types,
                     models,
@@ -438,7 +447,7 @@ fn resolve_binary_operator_for_model(
     data_connector: &Qualified<DataConnectorName>,
     field_name: &FieldName,
     fields: &IndexMap<FieldName, object_types::FieldDefinition>,
-    scalars: &BTreeMap<&str, data_connector_scalar_types::ScalarTypeWithRepresentationInfo>,
+    scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     ndc_scalar_type: &ndc_models::ScalarType,
     subgraph: &str,
 ) -> Result<(String, QualifiedTypeReference), Error> {
@@ -517,7 +526,11 @@ pub fn resolve_model_select_permissions(
     model: &models::Model,
     subgraph: &str,
     model_permissions: &ModelPermissionsV1,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
@@ -534,7 +547,7 @@ pub fn resolve_model_select_permissions(
                     model_predicate,
                     model,
                     subgraph,
-                    data_connectors,
+                    data_connector_scalars,
                     &model.type_fields,
                     object_types,
                     models,
@@ -569,6 +582,7 @@ pub fn resolve_model_select_permissions(
                             object_boolean_expression_types,
                             models,
                             data_connectors,
+                            data_connector_scalars,
                         )?;
 
                         // additionally typecheck literals

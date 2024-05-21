@@ -9,7 +9,10 @@ use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
 
-use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
+use open_dds::{
+    commands::CommandName, data_connector::DataConnectorName, models::ModelName,
+    types::CustomTypeName,
+};
 
 use crate::types::error::{Error, RelationshipError};
 use crate::types::subgraph::Qualified;
@@ -27,7 +30,11 @@ use std::collections::BTreeSet;
 /// returns updated `types` value
 pub fn resolve(
     metadata_accessor: &open_dds::accessor::MetadataAccessor,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     object_types_with_permissions: &BTreeMap<
         Qualified<CustomTypeName>,
         type_permissions::ObjectTypeWithPermissions,
@@ -77,6 +84,7 @@ pub fn resolve(
             models,
             commands,
             data_connectors,
+            data_connector_scalars,
             &object_representation.object_type,
         )?;
 
@@ -161,7 +169,10 @@ fn resolve_relationship_mappings_model(
     source_type_name: &Qualified<CustomTypeName>,
     source_type: &object_types::ObjectTypeRepresentation,
     target_model: &models::Model,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
 ) -> Result<Vec<RelationshipModelMapping>, Error> {
     let mut resolved_relationship_mappings = Vec::new();
     let mut field_mapping_btree_set_for_validation: BTreeSet<&String> = BTreeSet::new();
@@ -229,7 +240,7 @@ fn resolve_relationship_mappings_model(
                             &target_model.data_type,
                             target_model_source,
                             &resolved_relationship_target_mapping.field_name,
-                            data_connectors,
+                            data_connector_scalars,
                             || {
                                 format!(
                                     "the mapping for relationship {} on type {}",
@@ -343,7 +354,7 @@ fn get_relationship_capabilities(
     relationship_name: &RelationshipName,
     source_data_connector: &Option<data_connectors::DataConnectorLink>,
     target_name: &RelationshipTargetName,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
     let data_connector = if let Some(data_connector) = &source_data_connector {
         data_connector
@@ -351,19 +362,23 @@ fn get_relationship_capabilities(
         return Ok(None);
     };
 
-    let resolved_data_connector = data_connectors
-        .data_connectors_with_scalars
-        .get(&data_connector.name)
-        .ok_or_else(|| match target_name {
-            RelationshipTargetName::Model(model_name) => Error::UnknownModelDataConnector {
-                model_name: model_name.clone(),
-                data_connector: data_connector.name.clone(),
-            },
-            RelationshipTargetName::Command(command_name) => Error::UnknownCommandDataConnector {
-                command_name: command_name.clone(),
-                data_connector: data_connector.name.clone(),
-            },
-        })?;
+    let resolved_data_connector =
+        data_connectors
+            .0
+            .get(&data_connector.name)
+            .ok_or_else(|| match target_name {
+                RelationshipTargetName::Model(model_name) => Error::UnknownModelDataConnector {
+                    model_name: model_name.clone(),
+                    data_connector: data_connector.name.clone(),
+                },
+                RelationshipTargetName::Command(command_name) => {
+                    Error::UnknownCommandDataConnector {
+                        command_name: command_name.clone(),
+                        data_connector: data_connector.name.clone(),
+                    }
+                }
+            })?;
+
     let capabilities = &resolved_data_connector.inner.capabilities.capabilities;
 
     if capabilities.query.variables.is_none() {
@@ -389,7 +404,11 @@ pub fn resolve_relationship(
     subgraph: &str,
     models: &IndexMap<Qualified<ModelName>, models::Model>,
     commands: &IndexMap<Qualified<CommandName>, commands::Command>,
-    data_connectors: &data_connector_scalar_types::DataConnectorsWithScalars,
+    data_connectors: &data_connectors::DataConnectors,
+    data_connector_scalars: &BTreeMap<
+        Qualified<DataConnectorName>,
+        data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
+    >,
     source_type: &object_types::ObjectTypeRepresentation,
 ) -> Result<Relationship, Error> {
     let source_type_name = Qualified::new(subgraph.to_string(), relationship.source_type.clone());
@@ -425,7 +444,7 @@ pub fn resolve_relationship(
                         &source_type_name,
                         source_type,
                         resolved_target_model,
-                        data_connectors,
+                        data_connector_scalars,
                     )?,
                 },
                 source_data_connector,

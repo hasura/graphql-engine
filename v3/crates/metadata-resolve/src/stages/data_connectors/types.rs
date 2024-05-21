@@ -146,9 +146,7 @@ impl<'a> ScalarTypeInfo<'a> {
     }
 }
 
-pub struct DataConnectors<'a> {
-    pub data_connectors: BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>,
-}
+pub struct DataConnectors<'a>(pub BTreeMap<Qualified<DataConnectorName>, DataConnectorContext<'a>>);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct DataConnectorLink {
