@@ -157,8 +157,13 @@ pub fn build_boolean_expression_input_schema(
                     get_object_type_representation(gds, &target_model.model.data_type)?;
 
                 // Build relationship field in filter expression only when
-                // the target_model is backed by a source
-                if let Some(target_source) = &target_model.model.source {
+                // both the source boolean expression and target_model are backed by a source
+                // We'll need to find a way of getting this information for BooleanExpressionTypes
+                // that are uncoupled from their data connector source
+                if let (Some(local_data_connector), Some(target_source)) = (
+                    &object_boolean_expression_type.data_connector,
+                    &target_model.model.source,
+                ) {
                     let target_model_source =
                         metadata_resolve::ModelTargetSource::from_model_source(
                             target_source,
@@ -168,14 +173,12 @@ pub fn build_boolean_expression_input_schema(
                     // filter expression with relationships is currently only supported for local relationships
                     if let metadata_resolve::RelationshipExecutionCategory::Local =
                         metadata_resolve::relationship_execution_category(
-                            &object_boolean_expression_type.data_connector_link,
+                            &local_data_connector.link,
                             &target_source.data_connector,
                             &target_model_source.capabilities,
                         )
                     {
-                        if target_source.data_connector.name
-                            == object_boolean_expression_type.data_connector_name
-                        {
+                        if target_source.data_connector.name == local_data_connector.name {
                             // If the relationship target model does not have filterExpressionType do not include
                             // it in the source model filter expression input type.
                             if let Some(ref target_model_filter_expression) =
@@ -196,9 +199,7 @@ pub fn build_boolean_expression_input_schema(
                                     target_model_name: target_model.model.name.clone(),
                                     relationship_type: relationship_type.clone(),
                                     mappings: mappings.clone(),
-                                    source_data_connector: object_boolean_expression_type
-                                        .data_connector_link
-                                        .clone(),
+                                    source_data_connector: local_data_connector.link.clone(),
                                     source_type_mappings: object_boolean_expression_type
                                         .type_mappings
                                         .clone(),

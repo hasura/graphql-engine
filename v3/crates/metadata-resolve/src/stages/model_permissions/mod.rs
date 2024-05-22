@@ -232,6 +232,14 @@ pub fn resolve_model_select_permissions(
                 let source_argument_type =
                     get_model_source_argument(&argument_preset.argument, model);
 
+                let data_connector_name = model
+                    .source
+                    .as_ref()
+                    .map(|source| &source.data_connector.name)
+                    .ok_or(Error::ModelSourceRequiredForPredicate {
+                        model_name: model.name.clone(),
+                    })?;
+
                 match model.arguments.get(&argument_preset.argument) {
                     Some(argument) => {
                         let value_expression = resolve_value_expression_for_argument(
@@ -239,6 +247,7 @@ pub fn resolve_model_select_permissions(
                             &argument_preset.value,
                             &argument.argument_type,
                             source_argument_type,
+                            data_connector_name,
                             subgraph,
                             object_types,
                             scalar_types,

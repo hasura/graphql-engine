@@ -187,6 +187,7 @@ pub(crate) fn resolve_value_expression_for_argument(
     value_expression: &open_dds::permissions::ValueExpression,
     argument_type: &QualifiedTypeReference,
     source_argument_type: Option<&ndc_models::Type>,
+    data_connector_name: &Qualified<DataConnectorName>,
     subgraph: &str,
     object_types: &BTreeMap<Qualified<CustomTypeName>, relationships::ObjectTypeWithRelationships>,
     scalar_types: &BTreeMap<Qualified<CustomTypeName>, scalar_types::ScalarTypeRepresentation>,
@@ -249,10 +250,7 @@ pub(crate) fn resolve_value_expression_for_argument(
 
             let data_connector_field_mappings = object_type_representation
                 .type_mappings
-                .get(
-                    &object_boolean_expression_type.data_connector_name,
-                    &data_connector_object_type,
-                )
+                .get(data_connector_name, &data_connector_object_type)
                 .map(|type_mapping| match type_mapping {
                     object_types::TypeMapping::Object { field_mappings, .. } => field_mappings,
                 })
@@ -260,29 +258,27 @@ pub(crate) fn resolve_value_expression_for_argument(
                     type_name: base_type.clone(),
                     error: TypeMappingValidationError::DataConnectorTypeMappingNotFound {
                         object_type_name: base_type.clone(),
-                        data_connector_name: object_boolean_expression_type
-                            .data_connector_name
-                            .clone(),
+                        data_connector_name: data_connector_name.clone(),
                         data_connector_object_type: data_connector_object_type.clone(),
                     },
                 })?;
 
             // Get available scalars defined for this data connector
             let specific_data_connector_scalars = data_connector_scalars
-                .get(&object_boolean_expression_type.data_connector_name)
+                .get(data_connector_name)
                 .ok_or(Error::TypePredicateError {
-                    type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
-                        type_name: base_type.clone(),
-                        data_connector: object_boolean_expression_type.data_connector_name.clone(),
-                    },
-                })?;
+                type_predicate_error: TypePredicateError::UnknownTypeDataConnector {
+                    type_name: base_type.clone(),
+                    data_connector: data_connector_name.clone(),
+                },
+            })?;
 
             let resolved_model_predicate = resolve_model_predicate_with_type(
                 bool_exp,
                 base_type,
                 object_type_representation,
                 data_connector_field_mappings,
-                &object_boolean_expression_type.data_connector_name,
+                data_connector_name,
                 subgraph,
                 data_connectors,
                 specific_data_connector_scalars,

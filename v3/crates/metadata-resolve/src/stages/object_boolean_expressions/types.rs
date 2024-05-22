@@ -19,18 +19,23 @@ pub struct BooleanExpressionsOutput {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct ObjectBooleanExpressionDataConnector {
+    pub name: Qualified<DataConnectorName>,
+    pub link: data_connectors::DataConnectorLink,
+    pub object_type: DataConnectorObjectType,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
-    pub data_connector_name: Qualified<DataConnectorName>,
-    pub data_connector_link: data_connectors::DataConnectorLink,
-    // this will be removed in future and we'll work this type out from elsewhere
-    // made optional to make it harder to use, but we still want to use it for throwing errors if
-    // the user provides something nonsensical
-    pub data_connector_object_type_dont_use_please: Option<DataConnectorObjectType>,
     pub type_mappings:
         BTreeMap<Qualified<open_dds::types::CustomTypeName>, object_types::TypeMapping>,
     pub graphql: Option<BooleanExpressionInfo>,
+
+    /// in future we'll not be using this at all, for now it is here, and we use it only to check
+    /// the user has not included something that does not make sense
+    pub data_connector: Option<ObjectBooleanExpressionDataConnector>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

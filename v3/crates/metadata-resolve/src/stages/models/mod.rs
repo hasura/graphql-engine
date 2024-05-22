@@ -665,32 +665,32 @@ fn resolve_model_source(
         })?;
     }
 
+    // The `ObjectBooleanExpressionType` allows specifying Data Connector related information
+    // however this is something we are decoupling. For now, if it is included, we should
+    // still check it againt the type specified in the models source.
+    // In future, we'll use `BooleanExpressionType` which will defer to the model's choice of object by default, and
+    // we can delete this check
     if let Some(filter_expression) = &model.filter_expression_type {
-        if filter_expression.data_connector_name != qualified_data_connector_name {
-            return Err(Error::DifferentDataConnectorInFilterExpression {
-                model: model.name.clone(),
-                model_data_connector: qualified_data_connector_name.clone(),
-                filter_expression_type: filter_expression.name.clone(),
-                filter_expression_data_connector: filter_expression.data_connector_name.clone(),
-            });
-        }
+        if let Some(data_connector) = &filter_expression.data_connector {
+            if data_connector.name != qualified_data_connector_name {
+                return Err(Error::DifferentDataConnectorInFilterExpression {
+                    model: model.name.clone(),
+                    model_data_connector: qualified_data_connector_name.clone(),
+                    filter_expression_type: filter_expression.name.clone(),
+                    filter_expression_data_connector: data_connector.name.clone(),
+                });
+            }
 
-        // The `ObjectBooleanExpressionType` allows specifying the `DataConnectorObjectType`, so we
-        // must check it against the type specified in the models source. In future, we'll use
-        // `BooleanExpressionType` which will defer to the model's choice of object by default, and
-        // we can delete this check
-        if let Some(data_connector_object_type) =
-            &filter_expression.data_connector_object_type_dont_use_please
-        {
             let collection_type =
                 DataConnectorObjectType::ref_cast(&source_collection.collection_type);
 
-            if data_connector_object_type != collection_type {
+            if data_connector.object_type != *collection_type {
                 return Err(Error::DifferentDataConnectorObjectTypeInFilterExpression {
                     model: model.name.clone(),
                     model_data_connector_object_type: collection_type.clone(),
                     filter_expression_type: filter_expression.name.clone(),
-                    filter_expression_data_connector_object_type: data_connector_object_type
+                    filter_expression_data_connector_object_type: data_connector
+                        .object_type
                         .clone(),
                 });
             }

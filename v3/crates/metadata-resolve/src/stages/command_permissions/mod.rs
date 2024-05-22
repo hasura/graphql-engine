@@ -150,6 +150,14 @@ pub fn resolve_command_permissions(
             let source_argument_type =
                 get_command_source_argument(&argument_preset.argument, command);
 
+            let data_connector_name = command
+                .source
+                .as_ref()
+                .map(|source| &source.data_connector.name)
+                .ok_or(Error::CommandSourceRequiredForPredicate {
+                    command_name: command.name.clone(),
+                })?;
+
             match command.arguments.get(&argument_preset.argument) {
                 Some(argument) => {
                     let value_expression = resolve_value_expression_for_argument(
@@ -157,6 +165,7 @@ pub fn resolve_command_permissions(
                         &argument_preset.value,
                         &argument.argument_type,
                         source_argument_type,
+                        data_connector_name,
                         subgraph,
                         object_types,
                         scalar_types,

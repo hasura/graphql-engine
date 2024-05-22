@@ -117,6 +117,10 @@ pub enum Error {
         command_name: Qualified<CommandName>,
         argument_name: ArgumentName,
     },
+    #[error("command source is required for command '{command_name:}' to resolve predicate")]
+    CommandSourceRequiredForPredicate {
+        command_name: Qualified<CommandName>,
+    },
     #[error(
         "the mapping for argument {argument_name:} of command {command_name:} has been defined more than once"
     )]
@@ -320,9 +324,7 @@ pub enum Error {
     UnknownModelInModelSelectPermissions { model_name: Qualified<ModelName> },
     #[error("multiple select permissions defined for model: {model_name:}")]
     DuplicateModelSelectPermission { model_name: Qualified<ModelName> },
-    #[error(
-        "model source is required for model '{model_name:}' to resolve select permission predicate"
-    )]
+    #[error("model source is required for model '{model_name:}' to resolve predicate")]
     ModelSourceRequiredForPredicate { model_name: Qualified<ModelName> },
     #[error(
         "both model source for model '{source_model_name:}' and target source for model '{target_model_name}' are required  to resolve select permission predicate with relationships"

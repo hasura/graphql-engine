@@ -15,7 +15,7 @@ use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     BooleanExpressionGraphqlConfig, BooleanExpressionInfo, BooleanExpressionsOutput,
-    ComparisonExpressionInfo, ObjectBooleanExpressionType,
+    ComparisonExpressionInfo, ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
 };
 
 /// resolve object boolean expression types
@@ -273,11 +273,11 @@ pub(crate) fn resolve_object_boolean_expression_type(
         name: qualified_name.clone(),
         type_mappings,
         object_type: qualified_object_type_name.clone(),
-        data_connector_object_type_dont_use_please: Some(
-            object_boolean_expression.data_connector_object_type.clone(),
-        ),
-        data_connector_name: qualified_data_connector_name,
-        data_connector_link,
+        data_connector: Some(ObjectBooleanExpressionDataConnector {
+            object_type: object_boolean_expression.data_connector_object_type.clone(),
+            name: qualified_data_connector_name,
+            link: data_connector_link,
+        }),
         graphql: boolean_expression_graphql_config,
     };
     Ok(resolved_boolean_expression)
