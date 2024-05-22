@@ -205,7 +205,7 @@ buildGQLContext
         case res of
           Left err ->
             pure $ \_ _ _ ->
-              unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
+              unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("Failed to fetch the time from metadata db correctly: " <> showQErr err)
           Right now -> do
             let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
                 projectSchemaInfo = \metadataResourceVersion inconsistentMetadata metadata ->
