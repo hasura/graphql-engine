@@ -448,18 +448,6 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 | **Default**         | **CE**, **Enterprise Edition**: `false` <br />**Cloud**: Console is always enabled |
 | **Supported in**    | CE, Enterprise Edition                                                             |
 
-### Header Size Limit
-
-Sets the maximum cumulative length of all headers in bytes.
-
-|                     |                                          |
-| ------------------- | ---------------------------------------- |
-| **Flag**            | `--max-total-header-length`              |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
-| **Accepted values** | Integer                                  |
-| **Default**         | `1024*1024` (1MB)                        |
-| **Supported in**    | CE, Enterprise Edition                   |
-
 ### Enable High-cardinality Labels for Metrics
 
 Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx).
@@ -474,6 +462,21 @@ metrics).
 | **Options**         | `true` or `false`                                       |
 | **Default**         | `true`                                                  |
 | **Supported in**    | Enterprise Edition                                      |
+
+The list of affected metrics are:
+
+| Metric                                                                                                                                         | High Cardinality enabled                                                  | High Cardinality disabled       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------- |
+| [hasura_event_queue_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-queue-time)                                  | trigger_name, source_name                                                 | None                            |
+| [hasura_event_processed_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processed-total)                                | trigger_name, source_name                                                 | None                            |
+| [hasura_event_webhook_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-webhook-processing-time)        | trigger_name, source_name                                                 | None                            |
+| [hasura_event_processing_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx/#event-processing-time)                        | trigger_name, source_name                                                 | None                            |
+| [hasura_event_invocations_total](/observability/enterprise-edition/prometheus/metrics.mdx/#event-invocations-total)                            | trigger_name, source_name                                                 | None                            |
+| [hasura_graphql_requests_total](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-graphql-requests-total)                       | operation_type, response_status, parameterized_query_hash, operation_name | operation_type, response_status |
+| [hasura_websocket_messages_sent_bytes_total](/observability/enterprise-edition/prometheus/metrics.mdx/#websocket-egress)                       | parameterized_query_hash, operation_name                                  | None                            |
+| [hasura_subscription_total_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-total-time)                     | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
+| [hasura_subscription_db_execution_time_seconds](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-database-execution-time) | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
+| [hasura_active_subscriptions](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscriptions)                                   | subscription_kind, parameterized_query_hash, operation_name               | subscription_kind               |
 
 ### Enable Log Compression
 
@@ -617,6 +620,18 @@ List of experimental features to be enabled.
 | **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
 | **Default**         | `null`                                                                                                                                                                                                                                                            |
 | **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
+
+### Header Size Limit
+
+Sets the maximum cumulative length of all headers in bytes.
+
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
 
 ### Graceful Shutdown Timeout
 
