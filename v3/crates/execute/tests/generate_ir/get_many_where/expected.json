@@ -104,17 +104,22 @@
                 "type": "and",
                 "expressions": [
                   {
-                    "type": "binary_comparison_operator",
-                    "column": {
-                      "type": "column",
-                      "name": "title",
-                      "path": []
-                    },
-                    "operator": "_like",
-                    "value": {
-                      "type": "scalar",
-                      "value": "random"
-                    }
+                    "type": "and",
+                    "expressions": [
+                      {
+                        "type": "binary_comparison_operator",
+                        "column": {
+                          "type": "column",
+                          "name": "title",
+                          "path": []
+                        },
+                        "operator": "_like",
+                        "value": {
+                          "type": "scalar",
+                          "value": "random"
+                        }
+                      }
+                    ]
                   }
                 ]
               },
@@ -284,16 +289,21 @@
                 "type": "and",
                 "expressions": [
                   {
-                    "type": "not",
-                    "expression": {
-                      "type": "unary_comparison_operator",
-                      "column": {
-                        "type": "column",
-                        "name": "first_name",
-                        "path": []
-                      },
-                      "operator": "is_null"
-                    }
+                    "type": "and",
+                    "expressions": [
+                      {
+                        "type": "not",
+                        "expression": {
+                          "type": "unary_comparison_operator",
+                          "column": {
+                            "type": "column",
+                            "name": "first_name",
+                            "path": []
+                          },
+                          "operator": "is_null"
+                        }
+                      }
+                    ]
                   }
                 ]
               },

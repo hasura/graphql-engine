@@ -32,10 +32,9 @@ pub(crate) fn resolve_filter_expression<'s>(
     let mut expressions = Vec::new();
     let mut relationships = BTreeMap::new();
     for field in fields.values() {
-        let relationship_paths = Vec::new();
-        let expression =
-            build_filter_expression(field, relationship_paths, &mut relationships, usage_counts)?;
-        expressions.extend(expression);
+        let field_filter_expression =
+            build_filter_expression(field, &mut relationships, usage_counts)?;
+        expressions.push(field_filter_expression);
     }
     let expression = ndc_models::Expression::And { expressions };
     let resolved_filter_expression = ResolvedFilterExpression {
@@ -46,16 +45,11 @@ pub(crate) fn resolve_filter_expression<'s>(
 }
 
 // Build the NDC filter expression by traversing the relationships when present
-pub(crate) fn build_filter_expression<'s>(
+fn build_filter_expression<'s>(
     field: &normalized_ast::InputField<'s, GDS>,
-    // The path to access the relationship column. If the column is a
-    // non-relationship column, this will be empty. The paths contains the names
-    // of relationships (in order) that needs to be traversed to access the
-    // column.
-    mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
-) -> Result<Vec<ndc_models::Expression>, error::Error> {
+) -> Result<ndc_models::Expression, error::Error> {
     match field.info.generic {
         // "_and"
         schema::Annotation::Input(InputAnnotation::BooleanExpression(
@@ -63,19 +57,22 @@ pub(crate) fn build_filter_expression<'s>(
                 field: schema::ModelFilterArgument::AndOp,
             },
         )) => {
-            let mut expressions = Vec::new();
-            let values = field.value.as_list()?;
+            let mut and_expressions = Vec::new();
+            // The "_and" field value should be a list
+            let and_values = field.value.as_list()?;
 
-            for value in values.iter() {
-                let resolved_filter_expression =
-                    resolve_filter_expression(value.as_object()?, usage_counts)?;
-                expressions.extend(resolved_filter_expression.expression);
-                relationships.extend(resolved_filter_expression.relationships);
+            for value in and_values.iter() {
+                // Each value in the list should be an object
+                let value_object = value.as_object()?;
+                and_expressions.push(resolve_filter_object(
+                    value_object,
+                    relationships,
+                    usage_counts,
+                )?);
             }
-
-            let expression = ndc_models::Expression::And { expressions };
-
-            Ok(vec![expression])
+            Ok(ndc_models::Expression::And {
+                expressions: and_expressions,
+            })
         }
         // "_or"
         schema::Annotation::Input(InputAnnotation::BooleanExpression(
@@ -83,19 +80,22 @@ pub(crate) fn build_filter_expression<'s>(
                 field: schema::ModelFilterArgument::OrOp,
             },
         )) => {
-            let mut expressions = Vec::new();
-            let values = field.value.as_list()?;
+            let mut or_expressions = Vec::new();
+            // The "_or" field value should be a list
+            let or_values = field.value.as_list()?;
 
-            for value in values.iter() {
-                let resolved_filter_expression =
-                    resolve_filter_expression(value.as_object()?, usage_counts)?;
-                expressions.extend(resolved_filter_expression.expression);
-                relationships.extend(resolved_filter_expression.relationships);
+            for value in or_values.iter() {
+                let value_object = value.as_object()?;
+                or_expressions.push(resolve_filter_object(
+                    value_object,
+                    relationships,
+                    usage_counts,
+                )?);
             }
 
-            let expression = ndc_models::Expression::Or { expressions };
-
-            Ok(vec![expression])
+            Ok(ndc_models::Expression::Or {
+                expressions: or_expressions,
+            })
         }
         // "_not"
         schema::Annotation::Input(InputAnnotation::BooleanExpression(
@@ -103,23 +103,16 @@ pub(crate) fn build_filter_expression<'s>(
                 field: schema::ModelFilterArgument::NotOp,
             },
         )) => {
-            let value = field.value.as_object()?;
+            // The "_not" field value should be an object
+            let not_value = field.value.as_object()?;
 
-            let resolved_filter_expression = resolve_filter_expression(value, usage_counts)?;
-            relationships.extend(resolved_filter_expression.relationships);
-
-            let expressions = match resolved_filter_expression.expression {
-                Some(expression) => vec![ndc_models::Expression::Not {
-                    expression: Box::new(expression),
-                }],
-                None => Vec::new(),
-            };
-            Ok(expressions)
+            let not_filter_expression =
+                resolve_filter_object(not_value, relationships, usage_counts)?;
+            Ok(ndc_models::Expression::Not {
+                expression: Box::new(not_filter_expression),
+            })
         }
-        // The column that we want to use for filtering. If the column happens
-        // to be a relationship column, we'll have to join all the paths to
-        // specify NDC, what relationships needs to be traversed to access this
-        // column. The order decides how to access the column.
+        // The column that we want to use for filtering.
         schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
                 field: schema::ModelFilterArgument::Field { ndc_column: column },
@@ -131,11 +124,7 @@ pub(crate) fn build_filter_expression<'s>(
                     schema::Annotation::Input(InputAnnotation::Model(
                         ModelInputAnnotation::IsNullOperation,
                     )) => {
-                        let expression = build_is_null_expression(
-                            column.clone(),
-                            &op_value.value,
-                            &relationship_paths,
-                        )?;
+                        let expression = build_is_null_expression(column.clone(), &op_value.value)?;
                         expressions.push(expression);
                     }
                     schema::Annotation::Input(InputAnnotation::Model(
@@ -145,7 +134,6 @@ pub(crate) fn build_filter_expression<'s>(
                             operator,
                             column.clone(),
                             &op_value.value,
-                            &relationship_paths,
                         );
                         expressions.push(expression)
                     }
@@ -154,7 +142,7 @@ pub(crate) fn build_filter_expression<'s>(
                     })?,
                 }
             }
-            Ok(expressions)
+            Ok(ndc_models::Expression::And { expressions })
         }
         // Relationship field used for filtering.
         // This relationship can either point to another relationship or a column.
@@ -192,25 +180,28 @@ pub(crate) fn build_filter_expression<'s>(
                 },
             );
 
-            let mut expressions = Vec::new();
-
             // This map contains the relationships or the columns of the
             // relationship that needs to be used for ordering.
-            let argument_value_map = field.value.as_object()?;
-            // Add the current relationship to the relationship paths.
-            relationship_paths.push(ndc_relationship_name);
-            // Keep track of relationship paths as we keep traversing down the
-            // relationships.
-            for argument in argument_value_map.values() {
-                let expression = build_filter_expression(
-                    argument,
-                    relationship_paths.clone(),
-                    relationships,
-                    usage_counts,
-                )?;
-                expressions.extend(expression);
+            let filter_object = field.value.as_object()?;
+
+            let mut expressions = Vec::new();
+
+            for field in filter_object.values() {
+                let field_filter_expression =
+                    build_filter_expression(field, relationships, usage_counts)?;
+                expressions.push(field_filter_expression);
             }
-            Ok(expressions)
+
+            // Using exists clause to build the filter expression for relationship fields.
+            let exists_filter_clause = ndc_models::Expression::And { expressions };
+            let exists_in_relationship = ndc_models::ExistsInCollection::Related {
+                relationship: ndc_relationship_name.0,
+                arguments: BTreeMap::new(),
+            };
+            Ok(ndc_models::Expression::Exists {
+                in_collection: exists_in_relationship,
+                predicate: Some(Box::new(exists_filter_clause)),
+            })
         }
         annotation => Err(error::InternalEngineError::UnexpectedAnnotation {
             annotation: annotation.clone(),
@@ -218,19 +209,30 @@ pub(crate) fn build_filter_expression<'s>(
     }
 }
 
+/// Generate a filter expression from an input object fields
+fn resolve_filter_object<'s>(
+    fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
+    relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    usage_counts: &mut UsagesCounts,
+) -> Result<ndc_models::Expression, error::Error> {
+    let mut expressions = Vec::new();
+
+    for field in fields.values() {
+        expressions.push(build_filter_expression(field, relationships, usage_counts)?)
+    }
+    Ok(ndc_models::Expression::And { expressions })
+}
+
 /// Generate a binary comparison operator
 fn build_binary_comparison_expression(
     operator: &str,
     column: String,
     value: &normalized_ast::Value<'_, GDS>,
-    relationship_paths: &Vec<NDCRelationshipName>,
 ) -> ndc_models::Expression {
-    let path_elements = build_path_elements(relationship_paths);
-
     ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: column,
-            path: path_elements,
+            path: Vec::new(),
         },
         operator: operator.to_string(),
         value: ndc_models::ComparisonValue::Scalar {
@@ -243,15 +245,12 @@ fn build_binary_comparison_expression(
 fn build_is_null_expression(
     column: String,
     value: &normalized_ast::Value<'_, GDS>,
-    relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, error::Error> {
-    let path_elements = build_path_elements(relationship_paths);
-
     // Build an 'IsNull' unary comparison expression
     let unary_comparison_expression = ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: column,
-            path: path_elements,
+            path: Vec::new(),
         },
         operator: ndc_models::UnaryComparisonOperator::IsNull,
     };

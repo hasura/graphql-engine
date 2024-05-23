@@ -42,4 +42,27 @@ query MyQuery {
       }
     }
   }
+  ArtistAlbumAndTrackNotNested: Artist(
+    where: {
+      _and: [
+        { Albums: { Title: { _ilike: "%Rock%" } } }
+        { Albums: { Tracks: { Name: { _ilike: "%Rock%" } } } }
+      ]
+    }
+  ) {
+    Name
+  }
+
+  ArtistAlbumAndTrackNested: Artist(
+    where: {
+      Albums: {
+        _and: [
+          { Title: { _ilike: "%Rock%" } }
+          { Tracks: { Name: { _ilike: "%Rock%" } } }
+        ]
+      }
+    }
+  ) {
+    Name
+  }
 }

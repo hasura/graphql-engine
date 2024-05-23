@@ -113,6 +113,19 @@
             }
           ]
         }
+      ],
+      "ArtistAlbumAndTrackNotNested": [
+        {
+          "Name": "AC/DC"
+        },
+        {
+          "Name": "The Rolling Stones"
+        }
+      ],
+      "ArtistAlbumAndTrackNested": [
+        {
+          "Name": "AC/DC"
+        }
       ]
     }
   },
@@ -229,6 +242,19 @@
               ]
             }
           ]
+        }
+      ],
+      "ArtistAlbumAndTrackNotNested": [
+        {
+          "Name": "AC/DC"
+        },
+        {
+          "Name": "The Rolling Stones"
+        }
+      ],
+      "ArtistAlbumAndTrackNested": [
+        {
+          "Name": "AC/DC"
         }
       ]
     }
