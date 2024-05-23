@@ -776,10 +776,11 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
     for (alias, field_plan) in query_plan.into_iter() {
         // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
         // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
-        let execute_plan =
-            execute_query_field_plan(&alias, http_context, field_plan, project_id).await;
-
-        let task = async { (alias, execute_plan) };
+        let task = async {
+            let plan_result =
+                execute_query_field_plan(&alias, http_context, field_plan, project_id).await;
+            (alias, plan_result)
+        };
 
         tasks.push(task);
     }
