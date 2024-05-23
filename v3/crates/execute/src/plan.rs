@@ -771,21 +771,15 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
 ) -> ExecuteQueryResult {
     let mut root_fields = IndexMap::new();
 
-    let mut tasks: Vec<_> = Vec::with_capacity(query_plan.capacity());
-
-    for (alias, field_plan) in query_plan.into_iter() {
-        // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
-        // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
-        let task = async {
+    // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
+    // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
+    let executed_root_fields =
+        futures_ext::execute_concurrently(query_plan.into_iter(), |(alias, field_plan)| async {
             let plan_result =
                 execute_query_field_plan(&alias, http_context, field_plan, project_id).await;
             (alias, plan_result)
-        };
-
-        tasks.push(task);
-    }
-
-    let executed_root_fields = futures_util::future::join_all(tasks).await;
+        })
+        .await;
 
     for executed_root_field in executed_root_fields.into_iter() {
         let (alias, root_field) = executed_root_field;

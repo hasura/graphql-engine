@@ -1,0 +1,19 @@
+[package]
+name = "futures-ext"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+futures-util = "0.3"
+tokio = { version = "1.26.0", features = [
+  "macros",
+  "rt-multi-thread",
+  "time",
+] }
+
+[lints]
+workspace = true

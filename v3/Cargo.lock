@@ -986,6 +986,7 @@ dependencies = [
  "bytes",
  "criterion",
  "derive_more",
+ "futures-ext",
  "futures-util",
  "goldenfile",
  "hasura-authn-core",
@@ -1120,6 +1121,14 @@ dependencies = [
  "futures-core",
  "futures-task",
  "futures-util",
+]
+
+[[package]]
+name = "futures-ext"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "tokio",
 ]
 
 [[package]]

@@ -19,6 +19,7 @@ open-dds = { path = "../open-dds" }
 schema = { path = "../schema" }
 tracing-util = { path = "../utils/tracing-util" }
 metadata-resolve = {path = "../metadata-resolve" }
+futures-ext = { path = "../utils/futures-ext" }
 
 async-recursion = "1.1.1"
 axum = { version = "0.6.20" }
