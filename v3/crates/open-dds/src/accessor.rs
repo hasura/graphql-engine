@@ -54,6 +54,10 @@ fn load_metadata_objects(
                     .data_connectors
                     .push(QualifiedObject::new(subgraph, data_connector.upgrade()));
             }
+            OpenDdSubgraphObject::GraphqlConfig(graphql_config) => {
+                // TODO: we need to map this into a "virtual subgraph"
+                accessor.graphql_config.push(graphql_config);
+            }
             OpenDdSubgraphObject::ObjectType(object_type) => {
                 accessor
                     .object_types

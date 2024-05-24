@@ -78,6 +78,10 @@ pub enum OpenDdSubgraphObject {
     // Data connector
     DataConnectorLink(data_connector::DataConnectorLink),
 
+    // GraphQL "super-graph" level config
+    #[opendd(hidden = true)]
+    GraphqlConfig(graphql_config::GraphqlConfig),
+
     // Types
     ObjectType(types::ObjectType),
     ScalarType(types::ScalarType),
