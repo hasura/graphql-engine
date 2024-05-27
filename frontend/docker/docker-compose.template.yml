@@ -18,7 +18,7 @@ services:
     volumes:
       - ./DataSources/postgres.sql:/docker-entrypoint-initdb.d/postgres.sql
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.33
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=pass
