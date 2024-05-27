@@ -102,7 +102,7 @@ services:
       retries: 20
 
   mysql:
-    image: mysql
+    image: mysql:8.0.33
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
