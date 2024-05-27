@@ -908,6 +908,24 @@ fn test_model_select_many_relationship_predicate_array_nested() -> anyhow::Resul
     )
 }
 
+// Nested Array relationship with multiple fields
+#[test]
+fn test_model_select_many_relationship_predicate_array_nested_multiple_fields() -> anyhow::Result<()>
+{
+    let test_path_string =
+        "execute/models/select_many/relationship_predicates/array/nested_multiple_fields";
+    let common_metadata_path_string = "execute/common_metadata/postgres_connector_schema.json";
+    let boolean_exp_rel_metadata_path_string =
+        "execute/models/select_many/relationship_predicates/common_metadata.json";
+    common::test_execution_expectation(
+        test_path_string,
+        &[
+            common_metadata_path_string,
+            boolean_exp_rel_metadata_path_string,
+        ],
+    )
+}
+
 // Tests using relationships in predicates
 // Object relationship
 #[test]

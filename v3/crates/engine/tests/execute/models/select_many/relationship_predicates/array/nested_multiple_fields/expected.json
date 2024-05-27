@@ -1,0 +1,23 @@
+[
+  {
+    "data": {
+      "Artist": [
+        {
+          "Name": "AC/DC"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "Artist": [
+        {
+          "Name": "AC/DC"
+        },
+        {
+          "Name": "The Rolling Stones"
+        }
+      ]
+    }
+  }
+]

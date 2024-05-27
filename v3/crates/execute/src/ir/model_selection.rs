@@ -63,12 +63,10 @@ pub(crate) fn model_selection_ir<'s>(
     match permissions_predicate {
         metadata_resolve::FilterPermission::AllowAll => {}
         metadata_resolve::FilterPermission::Filter(predicate) => {
-            let permissions_predicate_relationship_paths = Vec::new();
             let mut permissions_predicate_relationships = BTreeMap::new();
             let processed_model_perdicate = permissions::process_model_predicate(
                 predicate,
                 session_variables,
-                permissions_predicate_relationship_paths,
                 &mut permissions_predicate_relationships,
                 usage_counts,
             )?;

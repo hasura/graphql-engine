@@ -75,7 +75,6 @@ pub(crate) fn get_argument_presets(
 pub(crate) fn process_model_predicate<'s>(
     model_predicate: &'s metadata_resolve::ModelPredicate,
     session_variables: &SessionVariables,
-    mut relationship_paths: Vec<NDCRelationshipName>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
@@ -87,7 +86,6 @@ pub(crate) fn process_model_predicate<'s>(
         } => Ok(make_permission_unary_boolean_expression(
             ndc_column.clone(),
             *operator,
-            &relationship_paths,
         )?),
         metadata_resolve::ModelPredicate::BinaryFieldComparison {
             field: _,
@@ -101,17 +99,11 @@ pub(crate) fn process_model_predicate<'s>(
             operator,
             value,
             session_variables,
-            &relationship_paths,
             usage_counts,
         )?),
         metadata_resolve::ModelPredicate::Not(predicate) => {
-            let expr = process_model_predicate(
-                predicate,
-                session_variables,
-                relationship_paths,
-                relationships,
-                usage_counts,
-            )?;
+            let expr =
+                process_model_predicate(predicate, session_variables, relationships, usage_counts)?;
             Ok(ndc_models::Expression::Not {
                 expression: Box::new(expr),
             })
@@ -119,30 +111,14 @@ pub(crate) fn process_model_predicate<'s>(
         metadata_resolve::ModelPredicate::And(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| {
-                    process_model_predicate(
-                        p,
-                        session_variables,
-                        relationship_paths.clone(),
-                        relationships,
-                        usage_counts,
-                    )
-                })
+                .map(|p| process_model_predicate(p, session_variables, relationships, usage_counts))
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::And { expressions: exprs })
         }
         metadata_resolve::ModelPredicate::Or(predicates) => {
             let exprs = predicates
                 .iter()
-                .map(|p| {
-                    process_model_predicate(
-                        p,
-                        session_variables,
-                        relationship_paths.clone(),
-                        relationships,
-                        usage_counts,
-                    )
-                })
+                .map(|p| process_model_predicate(p, session_variables, relationships, usage_counts))
                 .collect::<Result<Vec<_>, error::Error>>()?;
             Ok(ndc_models::Expression::Or { expressions: exprs })
         }
@@ -150,12 +126,14 @@ pub(crate) fn process_model_predicate<'s>(
             relationship_info,
             predicate,
         } => {
+            // Add the target model being used in the usage counts
+            count_model(&relationship_info.target_model_name, usage_counts);
+
             let relationship_name = (NDCRelationshipName::new(
                 &relationship_info.source_type,
                 &relationship_info.relationship_name,
             ))?;
 
-            relationship_paths.push(relationship_name.clone());
             relationships.insert(
                 relationship_name.clone(),
                 LocalModelRelationshipInfo {
@@ -170,16 +148,18 @@ pub(crate) fn process_model_predicate<'s>(
                 },
             );
 
-            // Add the target model being used in the usage counts
-            count_model(&relationship_info.target_model_name, usage_counts);
+            let relationship_predicate =
+                process_model_predicate(predicate, session_variables, relationships, usage_counts)?;
 
-            process_model_predicate(
-                predicate,
-                session_variables,
-                relationship_paths,
-                relationships,
-                usage_counts,
-            )
+            let exists_in_relationship = ndc_models::ExistsInCollection::Related {
+                relationship: relationship_name.0,
+                arguments: BTreeMap::new(),
+            };
+
+            Ok(ndc_models::Expression::Exists {
+                in_collection: exists_in_relationship,
+                predicate: Some(Box::new(relationship_predicate)),
+            })
         }
     }
 }
@@ -190,10 +170,8 @@ fn make_permission_binary_boolean_expression(
     operator: &str,
     value_expression: &metadata_resolve::ValueExpression,
     session_variables: &SessionVariables,
-    relationship_paths: &Vec<NDCRelationshipName>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
-    let path_elements = super::filter::build_path_elements(relationship_paths);
     let ndc_expression_value = make_value_from_value_expression(
         value_expression,
         argument_type,
@@ -203,7 +181,7 @@ fn make_permission_binary_boolean_expression(
     Ok(ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column,
-            path: path_elements,
+            path: Vec::new(),
         },
         operator: operator.to_owned(),
         value: ndc_models::ComparisonValue::Scalar {
@@ -215,13 +193,11 @@ fn make_permission_binary_boolean_expression(
 fn make_permission_unary_boolean_expression(
     ndc_column: String,
     operator: ndc_models::UnaryComparisonOperator,
-    relationship_paths: &Vec<NDCRelationshipName>,
 ) -> Result<ndc_models::Expression, error::Error> {
-    let path_elements = super::filter::build_path_elements(relationship_paths);
     Ok(ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
             name: ndc_column,
-            path: path_elements,
+            path: Vec::new(),
         },
         operator,
     })
@@ -245,13 +221,11 @@ pub(crate) fn make_value_from_value_expression(
             typecast_session_variable(value, value_type)
         }
         metadata_resolve::ValueExpression::BooleanExpression(model_predicate) => {
-            let relationship_paths = Vec::new();
             let mut relationships = BTreeMap::new();
 
             let ndc_expression = process_model_predicate(
                 model_predicate,
                 session_variables,
-                relationship_paths,
                 &mut relationships,
                 usage_counts,
             )?;

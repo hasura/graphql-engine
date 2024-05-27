@@ -266,21 +266,3 @@ fn build_is_null_expression(
         })
     }
 }
-
-pub fn build_path_elements(
-    relationship_paths: &Vec<NDCRelationshipName>,
-) -> Vec<ndc_models::PathElement> {
-    let mut path_elements = Vec::new();
-    for path in relationship_paths {
-        path_elements.push(ndc_models::PathElement {
-            relationship: path.0.clone(),
-            arguments: BTreeMap::new(),
-            // 'AND' predicate indicates that the column can be accessed
-            // by joining all the relationships paths provided
-            predicate: Some(Box::new(ndc_models::Expression::And {
-                expressions: Vec::new(),
-            })),
-        })
-    }
-    path_elements
-}

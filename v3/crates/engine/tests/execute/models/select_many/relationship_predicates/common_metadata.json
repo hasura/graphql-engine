@@ -719,6 +719,38 @@
         },
         {
           "definition": {
+            "sourceType": "Artist",
+            "name": "Albums",
+            "target": {
+              "model": {
+                "name": "Albums",
+                "relationshipType": "Array"
+              }
+            },
+            "mapping": [
+              {
+                "source": {
+                  "fieldPath": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                },
+                "target": {
+                  "modelField": [
+                    {
+                      "fieldName": "ArtistId"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "version": "v1",
+          "kind": "Relationship"
+        },
+        {
+          "definition": {
             "sourceType": "Album",
             "name": "Artist",
             "target": {
