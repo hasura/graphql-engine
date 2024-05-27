@@ -39,7 +39,7 @@ pub struct MetadataAccessor {
     pub command_permissions: Vec<QualifiedObject<permissions::CommandPermissionsV1>>,
     pub flags: flags::Flags,
     // `graphql_config` is a vector because we want to do some validation depending on the presence of the object
-    pub graphql_config: Vec<graphql_config::GraphqlConfig>,
+    pub graphql_config: Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
 }
 
 fn load_metadata_objects(
@@ -55,8 +55,9 @@ fn load_metadata_objects(
                     .push(QualifiedObject::new(subgraph, data_connector.upgrade()));
             }
             OpenDdSubgraphObject::GraphqlConfig(graphql_config) => {
-                // TODO: we need to map this into a "virtual subgraph"
-                accessor.graphql_config.push(graphql_config);
+                accessor
+                    .graphql_config
+                    .push(QualifiedObject::new(subgraph, graphql_config));
             }
             OpenDdSubgraphObject::ObjectType(object_type) => {
                 accessor
@@ -130,7 +131,9 @@ fn load_metadata_supergraph_object(
 ) {
     match supergraph_object {
         OpenDdSupergraphObject::GraphqlConfig(graphql_config) => {
-            accessor.graphql_config.push(graphql_config);
+            accessor
+                .graphql_config
+                .push(QualifiedObject::new("__globals", graphql_config));
         }
     }
 }

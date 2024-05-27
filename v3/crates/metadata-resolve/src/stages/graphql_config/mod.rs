@@ -1,7 +1,9 @@
+//! This is where we will resolve graphql configuration
+
 use crate::helpers::types::mk_name;
-/// this is where we will resolve graphql configuration
 use crate::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
+use open_dds::accessor::QualifiedObject;
 use open_dds::graphql_config::{self, OrderByDirection};
 use serde::{Deserialize, Serialize};
 
@@ -68,7 +70,7 @@ pub struct GraphqlConfig {
 ///       that that object is mandatory) throw an error
 ///     * if the flag is not set, use the fallback object
 pub fn resolve(
-    graphql_configs: &Vec<graphql_config::GraphqlConfig>,
+    graphql_configs: &Vec<QualifiedObject<graphql_config::GraphqlConfig>>,
     flags: &open_dds::flags::Flags,
 ) -> Result<GraphqlConfig, Error> {
     if graphql_configs.is_empty() {
@@ -82,7 +84,9 @@ pub fn resolve(
     } else {
         match graphql_configs.as_slice() {
             // There should only be one graphql config in supergraph
-            [graphql_config] => resolve_graphql_config(graphql_config),
+            // Because this config can only be defined in once in a supergraph, it doesn't actually
+            // matter which subgraph defines it: the outcome will be the same.
+            [graphql_config] => resolve_graphql_config(&graphql_config.object),
             _ => Err(Error::GraphqlConfigError {
                 graphql_config_error: GraphqlConfigError::MultipleGraphqlConfigDefinition,
             }),
