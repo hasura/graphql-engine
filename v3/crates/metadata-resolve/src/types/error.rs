@@ -791,7 +791,7 @@ pub enum GraphqlConfigError {
     #[error("only one enumTypeNames can be defined in GraphqlConfig, whose direction values are both 'asc' and 'desc'.")]
     MultipleOrderByEnumTypeNamesInGraphqlConfig,
     #[error(
-            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
+            "invalid directions: {directions} defined in orderByInput of GraphqlConfig , currently there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
         )]
     InvalidOrderByDirection { directions: String },
     #[error("the fieldName for argumentsInput need to be defined in GraphqlConfig, when models have argumentsInputType")]

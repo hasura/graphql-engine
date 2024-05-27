@@ -165,7 +165,7 @@ fn test_order_by_error_order_by_expression_type_present_and_only_asc_in_enum_typ
 
     assert_eq!(
         gds.unwrap_err().to_string(),
-        "metadata is not consistent: invalid directions: Asc defined in orderByInput of GraphqlConfig , currenlty there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
+        "metadata is not consistent: invalid directions: Asc defined in orderByInput of GraphqlConfig , currently there is no support for partial directions. Please specify a type which has both 'asc' and 'desc' directions"
     );
     Ok(())
 }
