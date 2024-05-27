@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | The RQL IR representation of an invocation of a stored procedure.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.StoredProcedure.IR</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier">StoredProcedure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.IR.html"><span class="hs-identifier">Hasura.LogicalModel.IR</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html"><span class="hs-identifier">Hasura.StoredProcedure.Metadata</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="annot"><span class="hs-comment">-- | The RQL IR representation of an invocation of a stored procedure.</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedure"><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-var">StoredProcedure</span></a></span></span><span> </span><span id="local-6989586621687749099"><span class="annot"><a href="#local-6989586621687749099"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687749100"><span class="annot"><a href="#local-6989586621687749100"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StoredProcedure"><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-var">StoredProcedure</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | The SQL name of the stored procedure.</span></span><span>
+</span><span id="line-16"></span><span>    </span><span id="spStoredProcedure"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+StoredProcedure b field -&gt; FunctionName b
+</span><a href="Hasura.StoredProcedure.IR.html#spStoredProcedure"><span class="hs-identifier hs-var hs-var">spStoredProcedure</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749099"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The graphql name of the stored procedure.</span></span><span>
+</span><span id="line-18"></span><span>    </span><span id="spGraphqlName"><span class="annot"><span class="annottext">forall (b :: BackendType) field. StoredProcedure b field -&gt; Name
+</span><a href="Hasura.StoredProcedure.IR.html#spGraphqlName"><span class="hs-identifier hs-var hs-var">spGraphqlName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The arguments passed to the query, if any.</span></span><span>
+</span><span id="line-20"></span><span>    </span><span id="spArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+StoredProcedure b field
+-&gt; HashMap ArgumentName (ScalarType b, field)
+</span><a href="Hasura.StoredProcedure.IR.html#spArgs"><span class="hs-identifier hs-var hs-var">spArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749099"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621687749100"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The return type of the stored procedure</span></span><span>
+</span><span id="line-22"></span><span>    </span><span id="spLogicalModel"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
+StoredProcedure b field -&gt; LogicalModel b
+</span><a href="Hasura.StoredProcedure.IR.html#spLogicalModel"><span class="hs-identifier hs-var hs-var">spLogicalModel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.IR.html#LogicalModel"><span class="hs-identifier hs-type">LogicalModel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749099"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687749203"><span id="local-6989586621687749207"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; StoredProcedure b a -&gt; StoredProcedure b b)
+-&gt; (forall a b. a -&gt; StoredProcedure b b -&gt; StoredProcedure b a)
+-&gt; Functor (StoredProcedure b)
+forall a b. a -&gt; StoredProcedure b b -&gt; StoredProcedure b a
+forall a b. (a -&gt; b) -&gt; StoredProcedure b a -&gt; StoredProcedure b b
+forall (b :: BackendType) a b.
+a -&gt; StoredProcedure b b -&gt; StoredProcedure b a
+forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; StoredProcedure b a -&gt; StoredProcedure b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+(a -&gt; b) -&gt; StoredProcedure b a -&gt; StoredProcedure b b
+fmap :: forall a b. (a -&gt; b) -&gt; StoredProcedure b a -&gt; StoredProcedure b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+a -&gt; StoredProcedure b b -&gt; StoredProcedure b a
+&lt;$ :: forall a b. a -&gt; StoredProcedure b b -&gt; StoredProcedure b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687749212"><span id="local-6989586621687749218"><span id="local-6989586621687749224"><span id="local-6989586621687749229"><span id="local-6989586621687749232"><span id="local-6989586621687749235"><span id="local-6989586621687749238"><span id="local-6989586621687749241"><span id="local-6989586621687749244"><span id="local-6989586621687749247"><span id="local-6989586621687749250"><span id="local-6989586621687749253"><span id="local-6989586621687749256"><span id="local-6989586621687749261"><span id="local-6989586621687749266"><span id="local-6989586621687749271"><span id="local-6989586621687749276"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; StoredProcedure b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StoredProcedure b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StoredProcedure b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a)
+-&gt; (forall a. StoredProcedure b a -&gt; [a])
+-&gt; (forall a. StoredProcedure b a -&gt; Bool)
+-&gt; (forall a. StoredProcedure b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; StoredProcedure b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; StoredProcedure b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; StoredProcedure b a -&gt; a)
+-&gt; (forall a. Num a =&gt; StoredProcedure b a -&gt; a)
+-&gt; (forall a. Num a =&gt; StoredProcedure b a -&gt; a)
+-&gt; Foldable (StoredProcedure b)
+forall a. Eq a =&gt; a -&gt; StoredProcedure b a -&gt; Bool
+forall a. Num a =&gt; StoredProcedure b a -&gt; a
+forall a. Ord a =&gt; StoredProcedure b a -&gt; a
+forall m. Monoid m =&gt; StoredProcedure b m -&gt; m
+forall a. StoredProcedure b a -&gt; Bool
+forall a. StoredProcedure b a -&gt; Int
+forall a. StoredProcedure b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; StoredProcedure b a -&gt; Bool
+forall (b :: BackendType) a. Num a =&gt; StoredProcedure b a -&gt; a
+forall (b :: BackendType) a. Ord a =&gt; StoredProcedure b a -&gt; a
+forall (b :: BackendType) m. Monoid m =&gt; StoredProcedure b m -&gt; m
+forall (b :: BackendType) a. StoredProcedure b a -&gt; Bool
+forall (b :: BackendType) a. StoredProcedure b a -&gt; Int
+forall (b :: BackendType) a. StoredProcedure b a -&gt; [a]
+forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m. Monoid m =&gt; StoredProcedure b m -&gt; m
+fold :: forall m. Monoid m =&gt; StoredProcedure b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; StoredProcedure b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; StoredProcedure b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+(a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; StoredProcedure b a -&gt; a
+$ctoList :: forall (b :: BackendType) a. StoredProcedure b a -&gt; [a]
+toList :: forall a. StoredProcedure b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a. StoredProcedure b a -&gt; Bool
+null :: forall a. StoredProcedure b a -&gt; Bool
+$clength :: forall (b :: BackendType) a. StoredProcedure b a -&gt; Int
+length :: forall a. StoredProcedure b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+Eq a =&gt;
+a -&gt; StoredProcedure b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; StoredProcedure b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a. Ord a =&gt; StoredProcedure b a -&gt; a
+maximum :: forall a. Ord a =&gt; StoredProcedure b a -&gt; a
+$cminimum :: forall (b :: BackendType) a. Ord a =&gt; StoredProcedure b a -&gt; a
+minimum :: forall a. Ord a =&gt; StoredProcedure b a -&gt; a
+$csum :: forall (b :: BackendType) a. Num a =&gt; StoredProcedure b a -&gt; a
+sum :: forall a. Num a =&gt; StoredProcedure b a -&gt; a
+$cproduct :: forall (b :: BackendType) a. Num a =&gt; StoredProcedure b a -&gt; a
+product :: forall a. Num a =&gt; StoredProcedure b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687749286"><span id="local-6989586621687749295"><span id="local-6989586621687749301"><span id="local-6989586621687749306"><span class="annot"><span class="annottext">Functor (StoredProcedure b)
+Foldable (StoredProcedure b)
+Functor (StoredProcedure b)
+-&gt; Foldable (StoredProcedure b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; StoredProcedure b a -&gt; f (StoredProcedure b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    StoredProcedure b (f a) -&gt; f (StoredProcedure b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; StoredProcedure b a -&gt; m (StoredProcedure b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    StoredProcedure b (m a) -&gt; m (StoredProcedure b a))
+-&gt; Traversable (StoredProcedure b)
+forall (b :: BackendType). Functor (StoredProcedure b)
+forall (b :: BackendType). Foldable (StoredProcedure b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+StoredProcedure b (m a) -&gt; m (StoredProcedure b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+StoredProcedure b (f a) -&gt; f (StoredProcedure b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StoredProcedure b a -&gt; m (StoredProcedure b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StoredProcedure b a -&gt; f (StoredProcedure b b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StoredProcedure b (m a) -&gt; m (StoredProcedure b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+StoredProcedure b (f a) -&gt; f (StoredProcedure b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StoredProcedure b a -&gt; m (StoredProcedure b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StoredProcedure b a -&gt; f (StoredProcedure b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StoredProcedure b a -&gt; f (StoredProcedure b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; StoredProcedure b a -&gt; f (StoredProcedure b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+Applicative f =&gt;
+StoredProcedure b (f a) -&gt; f (StoredProcedure b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+StoredProcedure b (f a) -&gt; f (StoredProcedure b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StoredProcedure b a -&gt; m (StoredProcedure b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; StoredProcedure b a -&gt; m (StoredProcedure b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+StoredProcedure b (m a) -&gt; m (StoredProcedure b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+StoredProcedure b (m a) -&gt; m (StoredProcedure b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span id="local-6989586621687749184"><span id="local-6989586621687749185"><span id="local-6989586621687749315"><span id="local-6989586621687749327"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749184"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687749185"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-type">StoredProcedure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749184"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749185"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span id="local-6989586621687749195"><span id="local-6989586621687749196"><span id="local-6989586621687749341"><span id="local-6989586621687749355"><span id="local-6989586621687749359"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749195"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687749196"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-type">StoredProcedure</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749195"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687749196"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-29"></span></pre></body></html>

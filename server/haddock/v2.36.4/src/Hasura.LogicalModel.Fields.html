@@ -1,0 +1,575 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.LogicalModel.Fields</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier">LogicalModelFieldsRM</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookup"><span class="hs-identifier">runLogicalModelFieldsLookup</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html"><span class="hs-identifier">Hasura.LogicalModel.Types</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Session.html"><span class="hs-identifier">Hasura.RQL.Types.Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfoM"><span class="hs-identifier">UserInfoM</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier">TraceT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="annot"><span class="hs-comment">-- | Class for looking up Logical Models</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687769270"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="LogicalModelFieldsRM"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-var">LogicalModelFieldsRM</span></a></span></span><span> </span><span id="local-6989586621687769269"><span class="annot"><a href="#local-6989586621687769269"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687769270"><span class="annot"><a href="#local-6989586621687769270"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>  </span><span id="lookupLogicalModelFields"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-type">lookupLogicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687769270"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelFields"><span class="hs-identifier hs-type">LogicalModelFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769269"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>  </span><span id="getLogicalModelFieldsLookup"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-type">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687769270"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-type">LogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769269"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769281"><span id="local-6989586621687769282"><span id="local-6989586621687769283"><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769281"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769282"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769281"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621687769283"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769282"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621687769524"><span class="annot"><span class="annottext">lookupLogicalModelFields :: LogicalModelName -&gt; ReaderT r m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookupLogicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Maybe (LogicalModelFields b))
+-&gt; ReaderT r m (Maybe (LogicalModelFields b))
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (LogicalModelFields b))
+ -&gt; ReaderT r m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelName -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelName
+-&gt; ReaderT r m (Maybe (LogicalModelFields b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var">lookupLogicalModelFields</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621687769530"><span class="annot"><span class="annottext">getLogicalModelFieldsLookup :: ReaderT r m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var hs-var hs-var">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+-&gt; ReaderT r m (LogicalModelFieldsLookup b)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var">getLogicalModelFieldsLookup</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769298"><span id="local-6989586621687769299"><span id="local-6989586621687769300"><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769298"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769299"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769298"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="#local-6989586621687769300"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769299"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621687769543"><span class="annot"><span class="annottext">lookupLogicalModelFields :: LogicalModelName -&gt; StateT s m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookupLogicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Maybe (LogicalModelFields b))
+-&gt; StateT s m (Maybe (LogicalModelFields b))
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; StateT s m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (LogicalModelFields b))
+ -&gt; StateT s m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelName -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelName
+-&gt; StateT s m (Maybe (LogicalModelFields b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var">lookupLogicalModelFields</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621687769547"><span class="annot"><span class="annottext">getLogicalModelFieldsLookup :: StateT s m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var hs-var hs-var">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+-&gt; StateT s m (LogicalModelFieldsLookup b)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; StateT s m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var">getLogicalModelFieldsLookup</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769308"><span id="local-6989586621687769309"><span id="local-6989586621687769310"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621687769308"><span class="hs-identifier hs-type">w</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769309"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769310"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769309"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">WriterT</span></span><span> </span><span class="annot"><a href="#local-6989586621687769308"><span class="hs-identifier hs-type">w</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769310"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621687769561"><span class="annot"><span class="annottext">lookupLogicalModelFields :: LogicalModelName -&gt; WriterT w m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookupLogicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Maybe (LogicalModelFields b))
+-&gt; WriterT w m (Maybe (LogicalModelFields b))
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; WriterT w m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (LogicalModelFields b))
+ -&gt; WriterT w m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelName -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelName
+-&gt; WriterT w m (Maybe (LogicalModelFields b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var">lookupLogicalModelFields</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621687769565"><span class="annot"><span class="annottext">getLogicalModelFieldsLookup :: WriterT w m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var hs-var hs-var">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+-&gt; WriterT w m (LogicalModelFieldsLookup b)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; WriterT w m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var">getLogicalModelFieldsLookup</span></a></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769316"><span id="local-6989586621687769317"><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769316"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769317"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769316"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769317"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621687769578"><span class="annot"><span class="annottext">lookupLogicalModelFields :: LogicalModelName -&gt; TraceT m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookupLogicalModelFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Maybe (LogicalModelFields b))
+-&gt; TraceT m (Maybe (LogicalModelFields b))
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (LogicalModelFields b))
+ -&gt; TraceT m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelName -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelName
+-&gt; TraceT m (Maybe (LogicalModelFields b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+LogicalModelName -&gt; m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var">lookupLogicalModelFields</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621687769582"><span class="annot"><span class="annottext">getLogicalModelFieldsLookup :: TraceT m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var hs-var hs-var">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+-&gt; TraceT m (LogicalModelFieldsLookup b)
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m (LogicalModelFieldsLookup b)
+forall (b :: BackendType) (m :: * -&gt; *).
+LogicalModelFieldsRM b m =&gt;
+m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var">getLogicalModelFieldsLookup</span></a></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">type</span><span> </span><span id="LogicalModelFieldsLookup"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-var">LogicalModelFieldsLookup</span></a></span></span><span> </span><span id="local-6989586621687769583"><span class="annot"><a href="#local-6989586621687769583"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelFields"><span class="hs-identifier hs-type">LogicalModelFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769583"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621687769318"><span id="local-6989586621687769319"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#toLogicalModelFieldsLookup"><span class="hs-identifier hs-type">toLogicalModelFieldsLookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687769318"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelFields"><span class="hs-identifier hs-type">LogicalModelFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769319"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769318"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-type">LogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769319"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-36"></span><span id="toLogicalModelFieldsLookup"><span class="annot"><span class="annottext">toLogicalModelFieldsLookup :: forall a (b :: BackendType).
+(a -&gt; LogicalModelFields b)
+-&gt; HashMap LogicalModelName a -&gt; LogicalModelFieldsLookup b
+</span><a href="Hasura.LogicalModel.Fields.html#toLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var">toLogicalModelFieldsLookup</span></a></span></span><span> </span><span id="local-6989586621687769591"><span class="annot"><span class="annottext">a -&gt; LogicalModelFields b
+</span><a href="#local-6989586621687769591"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687769592"><span class="annot"><span class="annottext">HashMap LogicalModelName a
+</span><a href="#local-6989586621687769592"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span id="local-6989586621687769593"><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621687769593"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; LogicalModelFields b
+</span><a href="#local-6989586621687769591"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; LogicalModelFields b)
+-&gt; Maybe a -&gt; Maybe (LogicalModelFields b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; HashMap LogicalModelName a -&gt; Maybe a
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621687769593"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap LogicalModelName a
+</span><a href="#local-6989586621687769592"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">newtype</span><span> </span><span id="LogicalModelFieldsLookupRT"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">LogicalModelFieldsLookupRT</span></a></span></span><span> </span><span id="local-6989586621687769329"><span class="annot"><a href="#local-6989586621687769329"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687769330"><span class="annot"><a href="#local-6989586621687769330"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687769331"><span class="annot"><a href="#local-6989586621687769331"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelFieldsLookupRT"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">LogicalModelFieldsLookupRT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runLogicalModelFieldsLookupRT"><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) a.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+</span><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookupRT"><span class="hs-identifier hs-var hs-var">runLogicalModelFieldsLookupRT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-type">LogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769329"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687769330"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769331"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687769600"><span id="local-6989586621687769605"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; LogicalModelFieldsLookupRT b m a
+ -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; (forall a b.
+    a
+    -&gt; LogicalModelFieldsLookupRT b m b
+    -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; Functor (LogicalModelFieldsLookupRT b m)
+forall a b.
+a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+forall a b.
+(a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Functor m =&gt;
+a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+$c&lt;$ :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Functor m =&gt;
+a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+&lt;$ :: forall a b.
+a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769615"><span id="local-6989586621687769620"><span id="local-6989586621687769624"><span id="local-6989586621687769628"><span id="local-6989586621687769632"><span class="annot"><span class="annottext">Functor (LogicalModelFieldsLookupRT b m)
+Functor (LogicalModelFieldsLookupRT b m)
+-&gt; (forall a. a -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; (forall a b.
+    LogicalModelFieldsLookupRT b m (a -&gt; b)
+    -&gt; LogicalModelFieldsLookupRT b m a
+    -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c)
+    -&gt; LogicalModelFieldsLookupRT b m a
+    -&gt; LogicalModelFieldsLookupRT b m b
+    -&gt; LogicalModelFieldsLookupRT b m c)
+-&gt; (forall a b.
+    LogicalModelFieldsLookupRT b m a
+    -&gt; LogicalModelFieldsLookupRT b m b
+    -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; (forall a b.
+    LogicalModelFieldsLookupRT b m a
+    -&gt; LogicalModelFieldsLookupRT b m b
+    -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; Applicative (LogicalModelFieldsLookupRT b m)
+forall a. a -&gt; LogicalModelFieldsLookupRT b m a
+forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+forall a b.
+LogicalModelFieldsLookupRT b m (a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m c
+forall {b :: BackendType} {m :: * -&gt; *}.
+Applicative m =&gt;
+Functor (LogicalModelFieldsLookupRT b m)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Applicative m =&gt;
+a -&gt; LogicalModelFieldsLookupRT b m a
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m (a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (b :: BackendType) (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+$cpure :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Applicative m =&gt;
+a -&gt; LogicalModelFieldsLookupRT b m a
+pure :: forall a. a -&gt; LogicalModelFieldsLookupRT b m a
+$c&lt;*&gt; :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m (a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+&lt;*&gt; :: forall a b.
+LogicalModelFieldsLookupRT b m (a -&gt; b)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+$cliftA2 :: forall (b :: BackendType) (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m c
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m c
+$c*&gt; :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+*&gt; :: forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+$c&lt;* :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Applicative m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+&lt;* :: forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769643"><span id="local-6989586621687769647"><span id="local-6989586621687769651"><span class="annot"><span class="annottext">Applicative (LogicalModelFieldsLookupRT b m)
+Applicative (LogicalModelFieldsLookupRT b m)
+-&gt; (forall a b.
+    LogicalModelFieldsLookupRT b m a
+    -&gt; (a -&gt; LogicalModelFieldsLookupRT b m b)
+    -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; (forall a b.
+    LogicalModelFieldsLookupRT b m a
+    -&gt; LogicalModelFieldsLookupRT b m b
+    -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; (forall a. a -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; Monad (LogicalModelFieldsLookupRT b m)
+forall a. a -&gt; LogicalModelFieldsLookupRT b m a
+forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; (a -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; LogicalModelFieldsLookupRT b m b
+forall {b :: BackendType} {m :: * -&gt; *}.
+Monad m =&gt;
+Applicative (LogicalModelFieldsLookupRT b m)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+a -&gt; LogicalModelFieldsLookupRT b m a
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; (a -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; LogicalModelFieldsLookupRT b m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+$c&gt;&gt;= :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; (a -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; LogicalModelFieldsLookupRT b m b
+&gt;&gt;= :: forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; (a -&gt; LogicalModelFieldsLookupRT b m b)
+-&gt; LogicalModelFieldsLookupRT b m b
+$c&gt;&gt; :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+Monad m =&gt;
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+&gt;&gt; :: forall a b.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m b
+-&gt; LogicalModelFieldsLookupRT b m b
+$creturn :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+a -&gt; LogicalModelFieldsLookupRT b m a
+return :: forall a. a -&gt; LogicalModelFieldsLookupRT b m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769662"><span class="annot"><span class="annottext">Monad (LogicalModelFieldsLookupRT b m)
+Monad (LogicalModelFieldsLookupRT b m)
+-&gt; (forall a. IO a -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; MonadIO (LogicalModelFieldsLookupRT b m)
+forall a. IO a -&gt; LogicalModelFieldsLookupRT b m a
+forall {b :: BackendType} {m :: * -&gt; *}.
+MonadIO m =&gt;
+Monad (LogicalModelFieldsLookupRT b m)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+MonadIO m =&gt;
+IO a -&gt; LogicalModelFieldsLookupRT b m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+$cliftIO :: forall (b :: BackendType) (m :: * -&gt; *) a.
+MonadIO m =&gt;
+IO a -&gt; LogicalModelFieldsLookupRT b m a
+liftIO :: forall a. IO a -&gt; LogicalModelFieldsLookupRT b m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769669"><span id="local-6989586621687769675"><span id="local-6989586621687769680"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621687769669"><span class="hs-identifier hs-type">e</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769686"><span id="local-6989586621687769692"><span id="local-6989586621687769697"><span id="local-6989586621687769701"><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="#local-6989586621687769686"><span class="hs-identifier hs-type">s</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769707"><span id="local-6989586621687769716"><span id="local-6989586621687769721"><span id="local-6989586621687769725"><span id="local-6989586621687769729"><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="#local-6989586621687769707"><span class="hs-identifier hs-type">w</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769741"><span class="annot"><span class="annottext">MonadError QErr (LogicalModelFieldsLookupRT b m)
+MonadError QErr (LogicalModelFieldsLookupRT b m)
+-&gt; (forall a. TxE QErr a -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; MonadTx (LogicalModelFieldsLookupRT b m)
+forall a. TxE QErr a -&gt; LogicalModelFieldsLookupRT b m a
+forall {b :: BackendType} {m :: * -&gt; *}.
+MonadTx m =&gt;
+MonadError QErr (LogicalModelFieldsLookupRT b m)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+MonadTx m =&gt;
+TxE QErr a -&gt; LogicalModelFieldsLookupRT b m a
+forall (m :: * -&gt; *).
+MonadError QErr m -&gt; (forall a. TxE QErr a -&gt; m a) -&gt; MonadTx m
+$cliftTx :: forall (b :: BackendType) (m :: * -&gt; *) a.
+MonadTx m =&gt;
+TxE QErr a -&gt; LogicalModelFieldsLookupRT b m a
+liftTx :: forall a. TxE QErr a -&gt; LogicalModelFieldsLookupRT b m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Postgres.MonadTx</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687769753"><span class="annot"><span class="annottext">Monad (LogicalModelFieldsLookupRT b m)
+LogicalModelFieldsLookupRT b m UserInfo
+Monad (LogicalModelFieldsLookupRT b m)
+-&gt; LogicalModelFieldsLookupRT b m UserInfo
+-&gt; UserInfoM (LogicalModelFieldsLookupRT b m)
+forall {b :: BackendType} {m :: * -&gt; *}.
+UserInfoM m =&gt;
+Monad (LogicalModelFieldsLookupRT b m)
+forall (b :: BackendType) (m :: * -&gt; *).
+UserInfoM m =&gt;
+LogicalModelFieldsLookupRT b m UserInfo
+forall (m :: * -&gt; *). Monad m -&gt; m UserInfo -&gt; UserInfoM m
+$caskUserInfo :: forall (b :: BackendType) (m :: * -&gt; *).
+UserInfoM m =&gt;
+LogicalModelFieldsLookupRT b m UserInfo
+askUserInfo :: LogicalModelFieldsLookupRT b m UserInfo
+</span><a href="Hasura.RQL.Types.Session.html#UserInfoM"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">UserInfoM</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-type">LogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769329"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687769330"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687769763"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *) a.
+ Monad m =&gt;
+ m a -&gt; LogicalModelFieldsLookupRT b m a)
+-&gt; MonadTrans (LogicalModelFieldsLookupRT b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; LogicalModelFieldsLookupRT b m a
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; LogicalModelFieldsLookupRT b m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *).
+(forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; t m a) -&gt; MonadTrans t
+$clift :: forall (b :: BackendType) (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; LogicalModelFieldsLookupRT b m a
+lift :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; LogicalModelFieldsLookupRT b m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">MonadTrans</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookup"><span class="hs-identifier hs-type">LogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769329"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621687769480"><span id="local-6989586621687769481"><span id="local-6989586621687769482"><span id="local-6989586621687769483"><span class="annot"><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookup"><span class="hs-identifier hs-type">runLogicalModelFieldsLookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621687769480"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelFields"><span class="hs-identifier hs-type">LogicalModelFields</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769481"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769480"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-type">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769481"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769482"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769483"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687769482"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769483"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-45"></span><span id="runLogicalModelFieldsLookup"><span class="annot"><span class="annottext">runLogicalModelFieldsLookup :: forall x (b :: BackendType) (m :: * -&gt; *) a.
+(x -&gt; LogicalModelFields b)
+-&gt; HashMap LogicalModelName x
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; m a
+</span><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var">runLogicalModelFieldsLookup</span></a></span></span><span> </span><span id="local-6989586621687769770"><span class="annot"><span class="annottext">x -&gt; LogicalModelFields b
+</span><a href="#local-6989586621687769770"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687769771"><span class="annot"><span class="annottext">HashMap LogicalModelName x
+</span><a href="#local-6989586621687769771"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span id="local-6989586621687769772"><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+</span><a href="#local-6989586621687769772"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+forall (b :: BackendType) (m :: * -&gt; *) a.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+</span><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">runLogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+</span><a href="#local-6989586621687769772"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">(LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(x -&gt; LogicalModelFields b)
+-&gt; HashMap LogicalModelName x -&gt; LogicalModelFieldsLookup b
+forall a (b :: BackendType).
+(a -&gt; LogicalModelFields b)
+-&gt; HashMap LogicalModelName a -&gt; LogicalModelFieldsLookup b
+</span><a href="Hasura.LogicalModel.Fields.html#toLogicalModelFieldsLookup"><span class="hs-identifier hs-var">toLogicalModelFieldsLookup</span></a></span><span> </span><span class="annot"><span class="annottext">x -&gt; LogicalModelFields b
+</span><a href="#local-6989586621687769770"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap LogicalModelName x
+</span><a href="#local-6989586621687769771"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769499"><span id="local-6989586621687769500"><span id="local-6989586621687769501"><span id="local-6989586621687769780"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687769499"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769500"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687769499"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-type">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769501"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769500"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621687769788"><span class="annot"><span class="annottext">ask :: LogicalModelFieldsLookupRT b m r
+</span><a href="#local-6989586621687769788"><span class="hs-identifier hs-var hs-var hs-var hs-var">ask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m r -&gt; LogicalModelFieldsLookupRT b m r
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+m a -&gt; LogicalModelFieldsLookupRT b m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m r
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621687769791"><span class="annot"><span class="annottext">local :: forall a.
+(r -&gt; r)
+-&gt; LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><a href="#local-6989586621687769791"><span class="hs-identifier hs-var hs-var hs-var hs-var">local</span></a></span></span><span> </span><span id="local-6989586621687769793"><span class="annot"><span class="annottext">r -&gt; r
+</span><a href="#local-6989586621687769793"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687769794"><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+</span><a href="#local-6989586621687769794"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookupRT b m a
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(r -&gt; r) -&gt; m a -&gt; m a
+forall a. (r -&gt; r) -&gt; m a -&gt; m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; r
+</span><a href="#local-6989586621687769793"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a)
+-&gt; (LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookup b
+-&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+forall (b :: BackendType) (m :: * -&gt; *) a.
+LogicalModelFieldsLookupRT b m a
+-&gt; LogicalModelFieldsLookup b -&gt; m a
+</span><a href="Hasura.LogicalModel.Fields.html#runLogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">runLogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelFieldsLookupRT b m a
+</span><a href="#local-6989586621687769794"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687769505"><span id="local-6989586621687769506"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687769505"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsRM"><span class="hs-identifier hs-type">LogicalModelFieldsRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769506"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-type">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769506"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687769505"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621687769803"><span class="annot"><span class="annottext">lookupLogicalModelFields :: LogicalModelName
+-&gt; LogicalModelFieldsLookupRT b m (Maybe (LogicalModelFields b))
+</span><a href="Hasura.LogicalModel.Fields.html#lookupLogicalModelFields"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookupLogicalModelFields</span></a></span></span><span> </span><span id="local-6989586621687769804"><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621687769804"><span class="hs-identifier hs-var">logicalModelName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">(LogicalModelFieldsLookup b -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelFieldsLookupRT b m (Maybe (LogicalModelFields b))
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><span class="annottext">((LogicalModelFieldsLookup b -&gt; m (Maybe (LogicalModelFields b)))
+ -&gt; LogicalModelFieldsLookupRT b m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelFieldsLookup b -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; LogicalModelFieldsLookupRT b m (Maybe (LogicalModelFields b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe (LogicalModelFields b) -&gt; m (Maybe (LogicalModelFields b))
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (LogicalModelFields b) -&gt; m (Maybe (LogicalModelFields b)))
+-&gt; (LogicalModelFieldsLookup b -&gt; Maybe (LogicalModelFields b))
+-&gt; LogicalModelFieldsLookup b
+-&gt; m (Maybe (LogicalModelFields b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogicalModelFieldsLookup b -&gt; LogicalModelFieldsLookup b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="#local-6989586621687769804"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621687769806"><span class="annot"><span class="annottext">getLogicalModelFieldsLookup :: LogicalModelFieldsLookupRT b m (LogicalModelFieldsLookup b)
+</span><a href="Hasura.LogicalModel.Fields.html#getLogicalModelFieldsLookup"><span class="hs-identifier hs-var hs-var hs-var hs-var">getLogicalModelFieldsLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(LogicalModelFieldsLookup b -&gt; m (LogicalModelFieldsLookup b))
+-&gt; LogicalModelFieldsLookupRT b m (LogicalModelFieldsLookup b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(LogicalModelFieldsLookup b -&gt; m a)
+-&gt; LogicalModelFieldsLookupRT b m a
+</span><a href="Hasura.LogicalModel.Fields.html#LogicalModelFieldsLookupRT"><span class="hs-identifier hs-var">LogicalModelFieldsLookupRT</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelFieldsLookup b -&gt; m (LogicalModelFieldsLookup b)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-56"></span></pre></body></html>

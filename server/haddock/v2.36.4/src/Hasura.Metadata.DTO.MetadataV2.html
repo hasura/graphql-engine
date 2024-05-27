@@ -1,0 +1,445 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV2</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier">MetadataV2</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier">object</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier">optionalField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier">requiredField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html"><span class="hs-identifier">Autodocodec.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#versionField"><span class="hs-identifier">versionField</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-ffd048296e9e601b73d5619778b477a2c277243891eb6a91ff0eba8f7e629145/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-692c687fe6f7ef9c7705ffa060ba747f929fc96db04a375fa1c0be28ccebd317/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html"><span class="hs-identifier">Hasura.Metadata.DTO.Placeholder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier">PlaceholderArray</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier">PlaceholderObject</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- | Revision 2 of the Metadata export format. Note that values of the types,</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- eventually be expanded to represent more detail.</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV2Actions"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Actions"><span class="hs-identifier hs-var hs-var">metaV2Actions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span id="metaV2Allowlist"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Allowlist"><span class="hs-identifier hs-var hs-var">metaV2Allowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span id="metaV2CronTriggers"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2CronTriggers"><span class="hs-identifier hs-var hs-var">metaV2CronTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span id="metaV2CustomTypes"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderObject
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2CustomTypes"><span class="hs-identifier hs-var hs-var">metaV2CustomTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span id="metaV2Functions"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Functions"><span class="hs-identifier hs-var hs-var">metaV2Functions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span id="metaV2QueryCollections"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2QueryCollections"><span class="hs-identifier hs-var hs-var">metaV2QueryCollections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span id="metaV2RemoteSchemas"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2RemoteSchemas"><span class="hs-identifier hs-var hs-var">metaV2RemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span id="metaV2Tables"><span class="annot"><span class="annottext">MetadataV2 -&gt; PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Tables"><span class="hs-identifier hs-var hs-var">metaV2Tables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687560657"><span id="local-6989586621687560672"><span id="local-6989586621687560676"><span class="annot"><span class="annottext">Int -&gt; MetadataV2 -&gt; ShowS
+[MetadataV2] -&gt; ShowS
+MetadataV2 -&gt; String
+(Int -&gt; MetadataV2 -&gt; ShowS)
+-&gt; (MetadataV2 -&gt; String)
+-&gt; ([MetadataV2] -&gt; ShowS)
+-&gt; Show MetadataV2
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; MetadataV2 -&gt; ShowS
+showsPrec :: Int -&gt; MetadataV2 -&gt; ShowS
+$cshow :: MetadataV2 -&gt; String
+show :: MetadataV2 -&gt; String
+$cshowList :: [MetadataV2] -&gt; ShowS
+showList :: [MetadataV2] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687560682"><span id="local-6989586621687560695"><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataV2 -&gt; Bool
+(MetadataV2 -&gt; MetadataV2 -&gt; Bool)
+-&gt; (MetadataV2 -&gt; MetadataV2 -&gt; Bool) -&gt; Eq MetadataV2
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
+== :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
+$c/= :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
+/= :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687560702"><span id="local-6989586621687560704"><span class="annot"><span class="annottext">(forall x. MetadataV2 -&gt; Rep MetadataV2 x)
+-&gt; (forall x. Rep MetadataV2 x -&gt; MetadataV2) -&gt; Generic MetadataV2
+forall x. Rep MetadataV2 x -&gt; MetadataV2
+forall x. MetadataV2 -&gt; Rep MetadataV2 x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. MetadataV2 -&gt; Rep MetadataV2 x
+from :: forall x. MetadataV2 -&gt; Rep MetadataV2 x
+$cto :: forall x. Rep MetadataV2 x -&gt; MetadataV2
+to :: forall x. Rep MetadataV2 x -&gt; MetadataV2
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687560708"><span id="local-6989586621687560714"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV2]
+Value -&gt; Parser MetadataV2
+(Value -&gt; Parser MetadataV2)
+-&gt; (Value -&gt; Parser [MetadataV2]) -&gt; FromJSON MetadataV2
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser MetadataV2
+parseJSON :: Value -&gt; Parser MetadataV2
+$cparseJSONList :: Value -&gt; Parser [MetadataV2]
+parseJSONList :: Value -&gt; Parser [MetadataV2]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687560722"><span id="local-6989586621687560728"><span id="local-6989586621687560733"><span id="local-6989586621687560738"><span class="annot"><span class="annottext">[MetadataV2] -&gt; Value
+[MetadataV2] -&gt; Encoding
+MetadataV2 -&gt; Value
+MetadataV2 -&gt; Encoding
+(MetadataV2 -&gt; Value)
+-&gt; (MetadataV2 -&gt; Encoding)
+-&gt; ([MetadataV2] -&gt; Value)
+-&gt; ([MetadataV2] -&gt; Encoding)
+-&gt; ToJSON MetadataV2
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: MetadataV2 -&gt; Value
+toJSON :: MetadataV2 -&gt; Value
+$ctoEncoding :: MetadataV2 -&gt; Encoding
+toEncoding :: MetadataV2 -&gt; Encoding
+$ctoJSONList :: [MetadataV2] -&gt; Value
+toJSONList :: [MetadataV2] -&gt; Value
+$ctoEncodingList :: [MetadataV2] -&gt; Encoding
+toEncodingList :: [MetadataV2] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687560747"><span class="annot"><span class="annottext">Typeable MetadataV2
+Typeable MetadataV2
+-&gt; (Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema MetadataV2
+Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+$cdeclareNamedSchema :: Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-692c687fe6f7ef9c7705ffa060ba747f929fc96db04a375fa1c0be28ccebd317/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687560757"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621687560799"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV2
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec MetadataV2 MetadataV2 -&gt; JSONCodec MetadataV2
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;MetadataV2&quot;</span></span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec MetadataV2 MetadataV2 -&gt; JSONCodec MetadataV2)
+-&gt; ObjectCodec MetadataV2 MetadataV2 -&gt; JSONCodec MetadataV2
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe PlaceholderArray
+-&gt; Maybe PlaceholderArray
+-&gt; Maybe PlaceholderArray
+-&gt; Maybe PlaceholderObject
+-&gt; Maybe PlaceholderArray
+-&gt; Maybe PlaceholderArray
+-&gt; Maybe PlaceholderArray
+-&gt; PlaceholderArray
+-&gt; MetadataV2
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">(Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderObject
+ -&gt; Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderArray
+ -&gt; Maybe PlaceholderArray
+ -&gt; PlaceholderArray
+ -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 Scientific
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderObject
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; PlaceholderArray
+      -&gt; MetadataV2)
+forall a b.
+a -&gt; Codec Object MetadataV2 b -&gt; Codec Object MetadataV2 a
+forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Codec Object MetadataV2 Scientific
+forall a. Integer -&gt; ObjectCodec a Scientific
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#versionField"><span class="hs-identifier hs-var">versionField</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderObject
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; PlaceholderArray
+   -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderObject
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; PlaceholderArray
+      -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;actions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;action definitions which extend Hasura's schema with custom business logic using custom queries and mutations&quot;</span></span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Actions"><span class="hs-identifier hs-var">metaV2Actions</span></a></span><span>
+</span><span id="line-34"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderObject
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; PlaceholderArray
+   -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderObject
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; PlaceholderArray
+      -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;allowlist&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;safe GraphQL operations - when allow lists are enabled only these operations are allowed&quot;</span></span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Allowlist"><span class="hs-identifier hs-var">metaV2Allowlist</span></a></span><span>
+</span><span id="line-36"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderObject
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; PlaceholderArray
+   -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderObject
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; PlaceholderArray
+      -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cron_triggers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule&quot;</span></span><span>
+</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2CronTriggers"><span class="hs-identifier hs-var">metaV2CronTriggers</span></a></span><span>
+</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderObject
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; PlaceholderArray
+   -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderObject)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray
+      -&gt; PlaceholderArray
+      -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderObject) (Maybe PlaceholderObject)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;custom_types&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;custom type definitions&quot;</span></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderObject) (Maybe PlaceholderObject)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderObject)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderObject)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderObject
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2CustomTypes"><span class="hs-identifier hs-var">metaV2CustomTypes</span></a></span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray
+   -&gt; PlaceholderArray
+   -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray
+      -&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;functions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;user-defined SQL functions&quot;</span></span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Functions"><span class="hs-identifier hs-var">metaV2Functions</span></a></span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray
+   -&gt; Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec
+     Object
+     MetadataV2
+     (Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;query_collections&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;group queries using query collections&quot;</span></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2QueryCollections"><span class="hs-identifier hs-var">metaV2QueryCollections</span></a></span><span>
+</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  MetadataV2
+  (Maybe PlaceholderArray -&gt; PlaceholderArray -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (PlaceholderArray -&gt; MetadataV2)
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote_schemas&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;merge remote GraphQL schemas and provide a unified GraphQL API&quot;</span></span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe PlaceholderArray) (Maybe PlaceholderArray)
+-&gt; (MetadataV2 -&gt; Maybe PlaceholderArray)
+-&gt; Codec Object MetadataV2 (Maybe PlaceholderArray)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2RemoteSchemas"><span class="hs-identifier hs-var">metaV2RemoteSchemas</span></a></span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">Codec Object MetadataV2 (PlaceholderArray -&gt; MetadataV2)
+-&gt; Codec Object MetadataV2 PlaceholderArray
+-&gt; ObjectCodec MetadataV2 MetadataV2
+forall a b.
+Codec Object MetadataV2 (a -&gt; b)
+-&gt; Codec Object MetadataV2 a -&gt; Codec Object MetadataV2 b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec PlaceholderArray PlaceholderArray
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;tables&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;configured database tables&quot;</span></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec PlaceholderArray PlaceholderArray
+-&gt; (MetadataV2 -&gt; PlaceholderArray)
+-&gt; Codec Object MetadataV2 PlaceholderArray
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; PlaceholderArray
+</span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Tables"><span class="hs-identifier hs-var">metaV2Tables</span></a></span><span>
+</span><span id="line-48"></span></pre></body></html>
