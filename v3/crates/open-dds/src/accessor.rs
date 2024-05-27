@@ -140,7 +140,7 @@ impl MetadataAccessor {
         match metadata {
             Metadata::WithoutNamespaces(metadata) => {
                 let mut accessor: MetadataAccessor = MetadataAccessor::new_empty(None);
-                load_metadata_objects(metadata, "unknown_namespace", &mut accessor);
+                load_metadata_objects(metadata, "__unknown_namespace", &mut accessor);
                 accessor
             }
             Metadata::Versioned(MetadataWithVersion::V1(metadata)) => {

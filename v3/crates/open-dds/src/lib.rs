@@ -258,7 +258,7 @@ impl Supergraph {
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[opendd(json_schema(rename = "OpenDdSubgraph"))]
 pub struct Subgraph {
-    pub name: identifier::Identifier,
+    pub name: identifier::SubgraphIdentifier,
     pub objects: Vec<OpenDdSubgraphObject>,
 }
 

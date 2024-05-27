@@ -101,3 +101,80 @@ impl<'de> Deserialize<'de> for Identifier {
         OpenDd::deserialize(serde_json::Value::deserialize(deserializer)?).map_err(D::Error::custom)
     }
 }
+
+// Macro to produce a validated subgraph identifier using a string literal that crashes if the
+// literal is invalid. Does not work for non-literal strings to avoid use on user supplied input.
+#[macro_export]
+macro_rules! subgraph_identifier {
+    ($name:literal) => {
+        open_dds::identifier::SubgraphIdentifier::new($name.to_string()).unwrap()
+    };
+}
+
+/// Type capturing a subgraph identifier used within the metadata. The wrapped String
+/// is guaranteed to be a valid identifier, i.e.
+/// - does not start with __
+/// - starts with an alphabet or underscore
+/// - all characters are either alphanumeric or underscore
+#[derive(Serialize, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::Display)]
+pub struct SubgraphIdentifier(pub String);
+
+impl SubgraphIdentifier {
+    pub fn new(string: String) -> Result<SubgraphIdentifier, &'static str> {
+        let Identifier(string) = Identifier::new(string)?;
+
+        if string.starts_with("__") {
+            return Err("__ is a reserved prefix for subgraph names");
+        }
+
+        Ok(SubgraphIdentifier(string))
+    }
+
+    pub fn as_str(&self) -> &str {
+        self.0.as_str()
+    }
+}
+
+impl Deref for SubgraphIdentifier {
+    type Target = String;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl OpenDd for SubgraphIdentifier {
+    fn deserialize(json: serde_json::Value) -> Result<Self, OpenDdDeserializeError> {
+        let string: String =
+            serde_json::from_value(json).map_err(|error| OpenDdDeserializeError {
+                error,
+                path: Default::default(),
+            })?;
+        SubgraphIdentifier::new(string).map_err(|e| OpenDdDeserializeError {
+            error: serde_json::Error::custom(e),
+            path: Default::default(),
+        })
+    }
+
+    fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        SchemaObjectVariant(SchemaObject {
+            instance_type: Some(schemars::schema::SingleOrVec::Single(Box::new(
+                schemars::schema::InstanceType::String,
+            ))),
+            string: Some(Box::new(StringValidation {
+                pattern: Some("^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$".to_string()),
+                ..Default::default()
+            })),
+            ..Default::default()
+        })
+    }
+
+    fn _schema_name() -> String {
+        "SubgraphIdentifier".to_string()
+    }
+
+    fn _schema_is_referenceable() -> bool {
+        // This is a tiny leaf schema so just make it non-referenceable to avoid a layer of
+        // indirection in the overall JSONSchema.
+        false
+    }
+}

@@ -3645,7 +3645,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "pattern": "^[_a-zA-Z][_a-zA-Z0-9]*$"
+          "pattern": "^(?!__)[_a-zA-Z][_a-zA-Z0-9]*$"
         },
         "objects": {
           "type": "array",
