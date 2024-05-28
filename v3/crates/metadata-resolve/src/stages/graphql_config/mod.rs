@@ -1,5 +1,7 @@
 //! This is where we will resolve graphql configuration
 
+use std::collections::HashSet;
+
 use crate::helpers::types::mk_name;
 use crate::types::error::{Error, GraphqlConfigError};
 use lang_graphql::ast::common as ast;
@@ -206,8 +208,8 @@ pub fn resolve_graphql_config(
                             // TODO: Naveen: Currently we do not allow enabling a specific direction
                             // for orderableField. In future when we support this, we would like to
                             // build different enum types for different variations of directions.
-                            if order_by_enum_type.directions
-                                != vec![OrderByDirection::Asc, OrderByDirection::Desc]
+                            if HashSet::from_iter(order_by_enum_type.directions.iter().cloned())
+                                != HashSet::from([OrderByDirection::Asc, OrderByDirection::Desc])
                             {
                                 let invalid_directions = order_by_enum_type
                                     .directions
