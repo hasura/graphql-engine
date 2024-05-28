@@ -1,5 +1,5 @@
-# build
-FROM rust:1.78 AS builder
+# This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
+FROM rust:1.78.0 AS builder
 
 WORKDIR /app
 COPY ./Cargo.toml ./Cargo.toml

@@ -1,6 +1,4 @@
-# See https://github.com/LukeMathWalker/cargo-chef
-# this should match the Rust version in rust-toolchain.yaml and the
-# dev-auth-webhook
+# This should match the Rust version in rust-toolchain.yaml and the other Dockerfiles.
 FROM rust:1.78.0 as chef
 
 WORKDIR app
@@ -22,9 +20,9 @@ ENV RUSTFLAGS="-C link-arg=-fuse-ld=lld"
 ENV GIT_DISCOVERY_ACROSS_FILESYSTEM=1
 
 # Install Rust tools.
-RUN cargo install cargo-chef cargo-nextest critcmp grcov just
 COPY rust-toolchain.toml .
 RUN rustup show
+RUN cargo install cargo-chef
 
 ###
 # Plan recipe
