@@ -36,10 +36,10 @@ build-local:
 # linting run by CI
 ci-lint:
   just docker_with_source_only sh -c \
-    "RUSTFLAGS='-D warnings' cargo clippy --no-deps"
+    "RUSTFLAGS='-D warnings' cargo clippy --all-targets --no-deps"
 
 fix:
-  just docker_with_source_only sh -c "cargo clippy --no-deps --fix --allow-no-vcs; cargo fmt"
+  just docker_with_source_only sh -c "cargo clippy --all-targets --no-deps --fix --allow-no-vcs; cargo fmt"
 
 format:
   cargo fmt --check
@@ -47,7 +47,7 @@ format:
 alias fmt := format
 
 fix-local:
-  cargo clippy --no-deps --fix --allow-no-vcs
+  cargo clippy --all-targets --no-deps --fix --allow-no-vcs
   cargo fmt
   just fix-format
 
@@ -140,7 +140,7 @@ watch-local: start-docker-test-deps start-docker-run-deps
 
 # check the code is fine
 lint-local:
-  cargo clippy --no-deps
+  cargo clippy --all-targets --no-deps
 
 # ensure we don't have unused dependencies:
 machete:

@@ -13,11 +13,12 @@ extern crate json_value_merge;
 use json_value_merge::Merge;
 use metadata_resolve::MetadataResolveFlagsInternal;
 
-#[test_each::path(glob = "crates/metadata-resolve/tests/examples/*/", name(segments = 2))]
 // given an old-metadata.json and a new-metadata.json, do they both result in the same resolved
 // metadata?
 // this may stop working if we start tagging resolved Metadata with the paths to the input items
 // in which case we'll need to look at removing those before comparing the output
+#[test_each::path(glob = "crates/metadata-resolve/tests/examples/*/", name(segments = 2))]
+#[allow(clippy::needless_pass_by_value)] // must receive a `PathBuf`
 fn test_matching_output_metadata(comparison_folder_path: PathBuf) -> anyhow::Result<()> {
     let root_test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
 
