@@ -166,6 +166,14 @@ impl MetadataAccessor {
                 }
                 accessor
             }
+            Metadata::Versioned(MetadataWithVersion::V3(metadata)) => {
+                let mut accessor: MetadataAccessor =
+                    MetadataAccessor::new_empty(Some(metadata.flags));
+                for subgraph in metadata.subgraphs {
+                    load_metadata_objects(subgraph.objects, &subgraph.name, &mut accessor);
+                }
+                accessor
+            }
         }
     }
 

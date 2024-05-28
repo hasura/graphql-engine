@@ -3213,6 +3213,40 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "$id": "https://hasura.io/jsonschemas/metadata/OpenDdMetadataV3",
+          "title": "OpenDdMetadataV3",
+          "type": "object",
+          "required": [
+            "version"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "enum": [
+                "v3"
+              ]
+            },
+            "subgraphs": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OpenDdSubgraph"
+              }
+            },
+            "flags": {
+              "default": {
+                "require_graphql_config": false
+              },
+              "allOf": [
+                {
+                  "$ref": "#/definitions/OpenDdFlags"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },

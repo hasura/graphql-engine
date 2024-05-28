@@ -203,6 +203,9 @@ pub enum MetadataWithVersion {
     #[serde(alias = "V2")]
     #[opendd(alias = "V2")]
     V2(MetadataV2),
+    #[serde(alias = "V3")]
+    #[opendd(alias = "V3")]
+    V3(MetadataV3),
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
@@ -224,6 +227,15 @@ pub struct NamespacedObjects {
 pub struct MetadataV2 {
     #[opendd(default, json_schema(default_exp = "Supergraph::default_json()"))]
     pub supergraph: Supergraph,
+    #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
+    pub subgraphs: Vec<Subgraph>,
+    #[opendd(default, json_schema(default_exp = "flags::Flags::default_json()"))]
+    pub flags: flags::Flags,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
+#[opendd(json_schema(rename = "OpenDdMetadataV3"))]
+pub struct MetadataV3 {
     #[opendd(default, json_schema(default_exp = "serde_json::json!([])"))]
     pub subgraphs: Vec<Subgraph>,
     #[opendd(default, json_schema(default_exp = "flags::Flags::default_json()"))]
