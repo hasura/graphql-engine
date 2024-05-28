@@ -3,7 +3,6 @@
 import pytest
 
 from conftest import extract_server_address_from
-from context import PytestConf
 from remote_server import NodeGraphQL
 from validate import check_query_f
 
@@ -115,7 +114,7 @@ class TestRemoteSchemaPermissionsExecution:
         hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
 
-    @pytest.mark.skipif(not PytestConf.config.getoption('--redis-url'), reason="Must enable redis")
+    @pytest.mark.usefixtures('pro_tests_fixtures', 'flush_redis')
     def test_execution_with_subset_of_fields_exposed_to_role_with_caching(self, hge_ctx):
         hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role_cached.yaml')

@@ -376,6 +376,7 @@ data RemoteSchemaResponsePriority
     RemoteSchemaResponseData
   | -- | Errors from the remote schema is sent
     RemoteSchemaResponseErrors
+  deriving stock (Show)
 
 -- | The precedence of the headers when delivering payload to the webhook for actions.
 -- Default is `ClientHeadersFirst` to preserve the old behaviour where client headers are

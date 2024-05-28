@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Types and classes related to configuration when the server is initialised
@@ -126,6 +127,7 @@ data HGEOptionsRaw impl = HGEOptionsRaw
     _horMetadataDbUrl :: Maybe String,
     _horCommand :: HGECommand impl
   }
+  deriving stock (Show)
 
 horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 horDatabaseUrl = Lens.lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
@@ -333,6 +335,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoHeaderPrecedence :: Maybe Server.Types.HeaderPrecedence
   }
 
+deriving stock instance (Show (Logging.EngineLogType impl)) => Show (ServeOptionsRaw impl)
+
 -- | Whether or not to serve Console assets.
 data ConsoleStatus = ConsoleEnabled | ConsoleDisabled
   deriving stock (Show, Eq, Ord, Generic)
@@ -512,6 +516,7 @@ data AuthHookRaw = AuthHookRaw
     ahrType :: Maybe Auth.AuthHookType,
     ahrSendRequestBody :: Maybe Bool
   }
+  deriving stock (Show)
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
 --   Presently 'msToOptionalInterval' interprets `0` as Skip.
