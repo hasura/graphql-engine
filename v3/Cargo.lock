@@ -2450,6 +2450,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "query-usage-analytics"
+version = "0.1.0"
+dependencies = [
+ "metadata-resolve",
+ "open-dds",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"

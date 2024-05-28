@@ -1,0 +1,18 @@
+[package]
+name = "query-usage-analytics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+
+[dependencies]
+open-dds = { path = "../open-dds" }
+metadata-resolve = { path = "../metadata-resolve" }
+
+serde = "1.0.202"
+serde_json = "1.0.116"
+
+[lints]
+workspace = true

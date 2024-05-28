@@ -14,6 +14,7 @@ members = [
   "crates/metadata-resolve",
   "crates/metadata-schema-generator",
   "crates/open-dds",
+  "crates/query-usage-analytics",
   "crates/schema",
   "crates/utils/*",
 ]
