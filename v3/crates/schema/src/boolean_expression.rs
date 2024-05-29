@@ -263,7 +263,7 @@ fn get_scalar_comparison_input_type(
     let graphql_type_name = comparison_expression.type_name.clone();
     let mut operators = Vec::new();
     for (op_name, input_type) in &comparison_expression.operators {
-        let op_name = mk_name(op_name.as_str())?;
+        let op_name = mk_name(op_name.0.as_str())?;
         operators.push((op_name, input_type.clone()))
     }
     Ok(
@@ -271,7 +271,7 @@ fn get_scalar_comparison_input_type(
             scalar_type_name: comparison_expression.scalar_type_name.clone(),
             graphql_type_name,
             operators,
-            is_null_operator_name: mk_name(&comparison_expression.is_null_operator_name)?,
+            is_null_operator_name: comparison_expression.is_null_operator_name.clone(),
         }),
     )
 }

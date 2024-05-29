@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 
 use open_dds::{
     data_connector::{DataConnectorName, DataConnectorObjectType},
-    types::{CustomTypeName, FieldName},
+    types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
 
@@ -44,8 +44,8 @@ pub struct ComparisonExpressionInfo {
     pub scalar_type_name: String,
     pub type_name: ast::TypeName,
     pub ndc_column: String,
-    pub operators: BTreeMap<String, QualifiedTypeReference>,
-    pub is_null_operator_name: String,
+    pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
+    pub is_null_operator_name: ast::Name,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

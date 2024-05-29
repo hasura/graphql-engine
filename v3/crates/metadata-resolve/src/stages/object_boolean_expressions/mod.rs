@@ -11,7 +11,10 @@ use crate::types::subgraph::Qualified;
 
 use crate::helpers::type_mappings;
 use lang_graphql::ast::common as ast;
-use open_dds::{data_connector::DataConnectorName, types::CustomTypeName};
+use open_dds::{
+    data_connector::DataConnectorName,
+    types::{CustomTypeName, OperatorName},
+};
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
     BooleanExpressionGraphqlConfig, BooleanExpressionInfo, BooleanExpressionsOutput,
@@ -318,7 +321,7 @@ pub fn resolve_boolean_expression_info(
                     scalar_type_info.scalar_type.comparison_operators.iter()
                 {
                     operators.insert(
-                        op_name.clone(),
+                        OperatorName(op_name.clone()),
                         resolve_ndc_type(
                             data_connector_name,
                             &get_argument_type(op_definition, &field_mapping.column_type),
@@ -341,7 +344,7 @@ pub fn resolve_boolean_expression_info(
                             is_null_operator_name: filter_graphql_config
                                 .operator_names
                                 .is_null
-                                .to_string(),
+                                .clone(),
                         },
                     );
                 };
