@@ -7,7 +7,8 @@ use indexmap::IndexMap;
 use open_dds::{
     commands::{FunctionName, ProcedureName},
     data_connector::{
-        self, DataConnectorName, DataConnectorUrl, ReadWriteUrls, VersionedSchemaAndCapabilities,
+        self, DataConnectorName, DataConnectorScalarType, DataConnectorUrl, ReadWriteUrls,
+        VersionedSchemaAndCapabilities,
     },
     EnvironmentValue,
 };
@@ -51,7 +52,7 @@ pub struct DataConnectorSchema {
 /// currently this contains partial ScalarTypeInfo, which we add to later
 pub struct DataConnectorContext<'a> {
     pub inner: DataConnectorCoreInfo<'a>,
-    pub scalars: BTreeMap<&'a str, ScalarTypeInfo<'a>>,
+    pub scalars: BTreeMap<DataConnectorScalarType, ScalarTypeInfo<'a>>,
 }
 
 fn create_data_connector_schema(schema: &ndc_models::SchemaResponse) -> DataConnectorSchema {
@@ -102,7 +103,7 @@ impl<'a> DataConnectorContext<'a> {
                 .schema
                 .scalar_types
                 .iter()
-                .map(|(k, v)| (k.as_str(), ScalarTypeInfo::new(v)))
+                .map(|(k, v)| (DataConnectorScalarType(k.clone()), ScalarTypeInfo::new(v)))
                 .collect(),
         })
     }

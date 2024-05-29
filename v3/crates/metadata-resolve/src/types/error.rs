@@ -7,7 +7,7 @@ use lang_graphql::ast::common as ast;
 use open_dds::{
     arguments::ArgumentName,
     commands::{CommandName, FunctionName, ProcedureName},
-    data_connector::DataConnectorName,
+    data_connector::{DataConnectorName, DataConnectorScalarType},
     models::ModelName,
     relationships::RelationshipName,
     types::{CustomTypeName, FieldName, OperatorName, TypeReference},
@@ -429,22 +429,22 @@ pub enum Error {
     #[error("unknown data connector {data_connector:} referenced in scalar type representation of {scalar_type:}")]
     ScalarTypeFromUnknownDataConnector {
         data_connector: Qualified<DataConnectorName>,
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
     },
     #[error("cannot find scalar type {scalar_type:} in data connector {data_connector:}")]
     UnknownScalarTypeInDataConnector {
         data_connector: Qualified<DataConnectorName>,
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
     },
     #[error("unknown type represented for scalar type {scalar_type:}: {type_name:}")]
     ScalarTypeUnknownRepresentation {
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
         type_name: Qualified<CustomTypeName>,
     },
     #[error("multiple type representations defined for scalar {scalar_type:} from data connector {data_connector:}")]
     DuplicateDataConnectorScalarRepresentation {
         data_connector: Qualified<DataConnectorName>,
-        scalar_type: String,
+        scalar_type: DataConnectorScalarType,
     },
     #[error(
         "scalar type representation required for type {scalar_type:} in data connector {data_connector:}"

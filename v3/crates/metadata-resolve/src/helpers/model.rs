@@ -1,6 +1,6 @@
 use crate::stages::data_connector_scalar_types;
-
 use crate::types::error::Error;
+use ref_cast::RefCast;
 
 use crate::types::subgraph::{
     mk_qualified_type_name, Qualified, QualifiedBaseType, QualifiedTypeReference,
@@ -8,7 +8,7 @@ use crate::types::subgraph::{
 
 use ndc_models;
 
-use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
 // helper function to resolve ndc types to dds type based on scalar type representations
 pub(crate) fn resolve_ndc_type(
@@ -19,13 +19,14 @@ pub(crate) fn resolve_ndc_type(
 ) -> Result<QualifiedTypeReference, Error> {
     match source_type {
         ndc_models::Type::Named { name } => {
+            let scalar_type_name = DataConnectorScalarType::ref_cast(name);
             let scalar_type =
                 scalars
                     .0
-                    .get(name.as_str())
+                    .get(scalar_type_name)
                     .ok_or(Error::UnknownScalarTypeInDataConnector {
                         data_connector: data_connector.clone(),
-                        scalar_type: name.clone(),
+                        scalar_type: scalar_type_name.clone(),
                     })?;
             scalar_type
                 .representation

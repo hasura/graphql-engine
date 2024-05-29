@@ -9,8 +9,9 @@ use serde::{
 };
 
 use crate::{
-    data_connector::DataConnectorName, data_connector::DataConnectorObjectType,
-    identifier::Identifier, impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
+    data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorScalarType},
+    identifier::Identifier,
+    impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
     models::EnableAllOrSpecific,
 };
 
@@ -547,7 +548,7 @@ pub struct DataConnectorScalarRepresentationV1 {
     /// The name of the data connector that this scalar type comes from.
     pub data_connector_name: DataConnectorName,
     /// The name of the scalar type coming from the data connector.
-    pub data_connector_scalar_type: String,
+    pub data_connector_scalar_type: DataConnectorScalarType,
     /// The name of the Open DD type that this data connector scalar type should be represented as.
     pub representation: TypeName,
     /// Configuration for how this scalar's operators should appear in the GraphQL schema.

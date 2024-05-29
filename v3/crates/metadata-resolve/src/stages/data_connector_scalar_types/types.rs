@@ -2,6 +2,7 @@ use crate::stages::data_connectors;
 use lang_graphql::ast::common as ast;
 
 use ndc_models;
+use open_dds::data_connector::DataConnectorScalarType;
 use open_dds::types::TypeName;
 use std::collections::BTreeMap;
 
@@ -14,5 +15,5 @@ pub struct ScalarTypeWithRepresentationInfo<'a> {
 }
 
 pub struct ScalarTypeWithRepresentationInfoMap<'a>(
-    pub BTreeMap<&'a str, ScalarTypeWithRepresentationInfo<'a>>,
+    pub BTreeMap<DataConnectorScalarType, ScalarTypeWithRepresentationInfo<'a>>,
 );

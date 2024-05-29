@@ -1,13 +1,13 @@
 pub mod types;
+use ref_cast::RefCast;
 use std::collections::{BTreeMap, BTreeSet};
-
 pub use types::{ScalarTypeWithRepresentationInfo, ScalarTypeWithRepresentationInfoMap};
 
 use lang_graphql::ast::common as ast;
 
 use open_dds::types::{CustomTypeName, TypeName};
 
-use open_dds::data_connector::DataConnectorName;
+use open_dds::data_connector::{DataConnectorName, DataConnectorScalarType};
 
 use crate::helpers::types::mk_name;
 use crate::types::error::Error;
@@ -40,7 +40,7 @@ pub fn resolve<'a>(
         object: scalar_type_representation,
     } in &metadata_accessor.data_connector_scalar_representations
     {
-        let scalar_type_name: &String = &scalar_type_representation.data_connector_scalar_type;
+        let scalar_type_name = &scalar_type_representation.data_connector_scalar_type;
 
         let qualified_data_connector_name = Qualified::new(
             subgraph.to_string(),
@@ -56,11 +56,7 @@ pub fn resolve<'a>(
 
         let scalar_type = scalars
             .0
-            .get_mut(
-                scalar_type_representation
-                    .data_connector_scalar_type
-                    .as_str(),
-            )
+            .get_mut(&scalar_type_representation.data_connector_scalar_type)
             .ok_or_else(|| Error::UnknownScalarTypeInDataConnector {
                 scalar_type: scalar_type_name.clone(),
                 data_connector: qualified_data_connector_name.clone(),
@@ -125,7 +121,7 @@ fn convert_data_connectors_contexts<'a>(
         let mut new_scalars = BTreeMap::new();
         for (scalar_name, scalar) in scalars {
             new_scalars.insert(
-                *scalar_name,
+                scalar_name.clone(),
                 ScalarTypeWithRepresentationInfo {
                     scalar_type: scalar.scalar_type,
                     comparison_expression_name: None,
@@ -149,7 +145,10 @@ pub fn get_simple_scalar<'a>(
     scalars: &'a ScalarTypeWithRepresentationInfoMap<'a>,
 ) -> Option<(String, &'a ScalarTypeWithRepresentationInfo<'a>)> {
     match t {
-        ndc_models::Type::Named { name } => scalars.0.get(name.as_str()).map(|info| (name, info)),
+        ndc_models::Type::Named { name } => scalars
+            .0
+            .get(DataConnectorScalarType::ref_cast(&name))
+            .map(|info| (name, info)),
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }
