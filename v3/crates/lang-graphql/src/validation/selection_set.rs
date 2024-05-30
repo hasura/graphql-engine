@@ -91,7 +91,7 @@ where
         acc
     });
     let mut normalized_fields = IndexMap::new();
-    for (alias, (alias_type, typed_fields)) in field_map.into_iter() {
+    for (alias, (alias_type, typed_fields)) in field_map {
         let alias = ast::Alias(alias.clone());
         let (field_calls, selection_set) = merge_fields(
             namespace,
@@ -162,7 +162,7 @@ where
 
     let mut alias_selection_sets = Vec::new();
     let mut field_calls = HashMap::new();
-    for (reachability, fields) in typed_fields.into_iter() {
+    for (reachability, fields) in typed_fields {
         let cannonical_field = fields.head;
 
         let arguments = normalize_arguments(

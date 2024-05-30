@@ -10,7 +10,7 @@ fn build_allowed_roles(
     hasura_claims: &HasuraClaims,
 ) -> Result<HashMap<Role, auth_base::RoleAuthorization>, Error> {
     let mut allowed_roles = HashMap::new();
-    for role in hasura_claims.allowed_roles.iter() {
+    for role in &hasura_claims.allowed_roles {
         let role_authorization = auth_base::RoleAuthorization {
             role: role.clone(),
             // Note: The same `custom_claims` is being cloned

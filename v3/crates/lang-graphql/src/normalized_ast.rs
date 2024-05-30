@@ -291,10 +291,10 @@ impl<'s, S: SchemaContext> SelectionSet<'s, S> {
     ///  be retained and also the `title` field's `FieldCalls` key will now be an empty vector.
     pub fn filter_field_calls_by_typename(&self, type_name: ast::TypeName) -> SelectionSet<'s, S> {
         let mut filtered_selection_set_fields = IndexMap::new();
-        for (alias, field) in self.fields.iter() {
+        for (alias, field) in &self.fields {
             let mut field_calls = HashMap::new();
             let mut should_retain = false;
-            for (type_name_path, field_call) in field.field_calls.iter() {
+            for (type_name_path, field_call) in &field.field_calls {
                 match type_name_path.as_slice() {
                     [] => {
                         field_calls.insert(vec![], field_call.clone());

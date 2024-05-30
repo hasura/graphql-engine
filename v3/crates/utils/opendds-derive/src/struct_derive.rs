@@ -78,7 +78,7 @@ fn generate_named_fields_value<'a>(
     fields: &[NamedField<'a>],
 ) -> proc_macro2::TokenStream {
     let mut field_deserializations = Vec::new();
-    for field in fields.iter() {
+    for field in fields {
         let field_name = field.field_name;
         let field_name_str = field.renamed_field.as_str();
 
@@ -132,7 +132,7 @@ fn generate_named_fields_value<'a>(
 
 fn impl_json_schema_named_fields(fields: &[NamedField<'_>]) -> proc_macro2::TokenStream {
     let mut fields_gen = Vec::new();
-    for field in fields.iter() {
+    for field in fields {
         let field_name = field.renamed_field.as_str();
         let ty = field.field_type.clone();
 

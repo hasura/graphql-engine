@@ -474,7 +474,7 @@ fn resolve_model_graphql_api(
                             })?;
 
                         let mut order_by_fields = BTreeMap::new();
-                        for (field_name, field_mapping) in field_mappings.iter() {
+                        for (field_name, field_mapping) in field_mappings {
                             order_by_fields.insert(
                                 field_name.clone(),
                                 OrderByExpressionInfo {

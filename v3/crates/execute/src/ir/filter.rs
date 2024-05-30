@@ -61,7 +61,7 @@ fn build_filter_expression<'s>(
             // The "_and" field value should be a list
             let and_values = field.value.as_list()?;
 
-            for value in and_values.iter() {
+            for value in and_values {
                 // Each value in the list should be an object
                 let value_object = value.as_object()?;
                 and_expressions.push(resolve_filter_object(
@@ -84,7 +84,7 @@ fn build_filter_expression<'s>(
             // The "_or" field value should be a list
             let or_values = field.value.as_list()?;
 
-            for value in or_values.iter() {
+            for value in or_values {
                 let value_object = value.as_object()?;
                 or_expressions.push(resolve_filter_object(
                     value_object,

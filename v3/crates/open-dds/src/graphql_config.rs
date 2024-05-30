@@ -132,6 +132,7 @@ pub struct OrderByDirectionValues {
     Serialize,
     Deserialize,
     Clone,
+    Copy,
     Debug,
     PartialEq,
     JsonSchema,

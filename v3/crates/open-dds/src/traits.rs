@@ -148,7 +148,7 @@ pub fn gen_root_schema_for<T: OpenDd>(
 
     let mut root_schema = gen.root_schema_for::<Wrapper<T>>();
     // Generate `$id` metadata field for subschemas
-    for (schema_name, schema) in root_schema.definitions.iter_mut() {
+    for (schema_name, schema) in &mut root_schema.definitions {
         if let schemars::schema::Schema::Object(ref mut object) = schema {
             // Don't set $id for references, the $id should be set on the referenced schema
             if !object.is_ref() {

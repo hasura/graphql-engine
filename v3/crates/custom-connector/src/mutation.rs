@@ -13,7 +13,7 @@ pub fn execute_mutation_request(
 ) -> Result<ndc_models::MutationResponse> {
     let mut operation_results = vec![];
 
-    for operation in request.operations.iter() {
+    for operation in &request.operations {
         let operation_result =
             execute_mutation_operation(state, &request.collection_relationships, operation)?;
         operation_results.push(operation_result);

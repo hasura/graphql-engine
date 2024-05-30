@@ -58,7 +58,7 @@ pub(crate) fn ndc_query_ir<'s, 'ir>(
         .collect();
 
     // Add the variable arguments which are used for remote joins
-    for (variable_name, variable_argument) in ir.variable_arguments.iter() {
+    for (variable_name, variable_argument) in &ir.variable_arguments {
         arguments.insert(
             variable_name.to_string(),
             ndc_models::Argument::Variable {

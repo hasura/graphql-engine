@@ -180,7 +180,7 @@ fn visit_location_path_and_insert_value(
                     description: "expected row; encountered null".into(),
                 })?;
 
-            for inner_row in rows.iter_mut() {
+            for inner_row in &mut rows {
                 insert_value_into_row(
                     path_tail,
                     join_node,
@@ -199,7 +199,7 @@ fn visit_location_path_and_insert_value(
                         Vec<IndexMap<String, ndc_models::RowFieldValue>>,
                     >(row_field_val.0.clone())
                     {
-                        for inner_row in rows.iter_mut() {
+                        for inner_row in &mut rows {
                             insert_value_into_row(
                                 path_tail,
                                 join_node,

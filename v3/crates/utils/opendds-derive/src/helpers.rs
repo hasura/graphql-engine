@@ -70,7 +70,7 @@ fn get_doc(attrs: &[syn::Attribute]) -> Option<String> {
     // Added for backward-compatibility, but perhaps we shouldn't do this
     // https://github.com/rust-lang/rust/issues/32088
     if lines.iter().all(|l| l.starts_with('*')) {
-        for line in lines.iter_mut() {
+        for line in &mut lines {
             *line = line[1..].trim()
         }
         while let Some(&"") = lines.first() {

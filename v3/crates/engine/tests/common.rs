@@ -191,7 +191,7 @@ pub(crate) fn test_introspection_expectation(
 
         // Execute the test
         let mut responses = Vec::new();
-        for session in sessions.iter() {
+        for session in &sessions {
             let response = execute_query(
                 &test_ctx.http_context,
                 &schema,
@@ -303,7 +303,7 @@ pub fn test_execution_expectation(
                     query,
                     variables: None,
                 };
-                for session in sessions.iter() {
+                for session in &sessions {
                     let response = execute_query(
                         &test_ctx.http_context,
                         &schema,

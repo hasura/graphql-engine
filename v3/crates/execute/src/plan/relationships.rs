@@ -55,14 +55,14 @@ pub(crate) fn collect_relationships(
     }
 
     // from filter clause
-    for (name, relationship) in ir.filter_clause.relationships.iter() {
+    for (name, relationship) in &ir.filter_clause.relationships {
         let result = process_model_relationship_definition(relationship)?;
         relationships.insert(name.to_string(), result);
     }
 
     // from order by clause
     if let Some(order_by) = &ir.order_by {
-        for (name, relationship) in order_by.relationships.iter() {
+        for (name, relationship) in &order_by.relationships {
             let result = process_model_relationship_definition(relationship)?;
             relationships.insert(name.to_string(), result);
         }
@@ -90,7 +90,7 @@ pub(crate) fn process_model_relationship_definition(
         source_field: source_field_path,
         target_field: _,
         target_ndc_column,
-    } in mappings.iter()
+    } in mappings
     {
         if !matches!(
             metadata_resolve::relationship_execution_category(
@@ -159,7 +159,7 @@ pub(crate) fn process_command_relationship_definition(
     for metadata_resolve::RelationshipCommandMapping {
         source_field: source_field_path,
         argument_name: target_argument,
-    } in annotation.mappings.iter()
+    } in &annotation.mappings
     {
         if !matches!(
             metadata_resolve::relationship_execution_category(

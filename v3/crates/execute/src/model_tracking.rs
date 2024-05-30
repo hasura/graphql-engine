@@ -99,7 +99,7 @@ pub fn get_all_usage_counts_in_query(ir: &IndexMap<Alias, RootField<'_, '_>>) ->
 }
 
 fn extend_usage_count(usage_counts: UsagesCounts, all_usage_counts: &mut UsagesCounts) {
-    for model_count in usage_counts.models_used.into_iter() {
+    for model_count in usage_counts.models_used {
         let countable_model = &model_count.model;
         match all_usage_counts
             .models_used
@@ -114,7 +114,7 @@ fn extend_usage_count(usage_counts: UsagesCounts, all_usage_counts: &mut UsagesC
             }
         }
     }
-    for command_count in usage_counts.commands_used.into_iter() {
+    for command_count in usage_counts.commands_used {
         let countable_model = &command_count.command;
         match all_usage_counts
             .commands_used

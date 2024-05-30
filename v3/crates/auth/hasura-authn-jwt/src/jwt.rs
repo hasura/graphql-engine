@@ -584,7 +584,7 @@ pub(crate) async fn decode_and_parse_hasura_claims(
             let mut custom_claims = HashMap::new();
 
             claims_mappings.custom_claims.map(|custom_claim_mappings| {
-                for (claim_name, claims_mapping_entry) in custom_claim_mappings.into_iter() {
+                for (claim_name, claims_mapping_entry) in custom_claim_mappings {
                     let claim_value = get_claims_mapping_entry_value(
                         claim_name.to_string(),
                         claims_mapping_entry,

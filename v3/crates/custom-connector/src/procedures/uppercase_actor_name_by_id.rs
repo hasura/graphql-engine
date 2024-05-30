@@ -60,8 +60,7 @@ pub(crate) fn execute(
             ))?;
             let actor_name_uppercase = actor_name_str.to_uppercase();
             let actor_name_uppercase_value = serde_json::Value::String(actor_name_uppercase);
-            let mut new_row =
-                BTreeMap::from_iter(actor_obj.iter().map(|(k, v)| (k.clone(), v.clone())));
+            let mut new_row = (*actor_obj).clone();
             new_row.insert("name".into(), actor_name_uppercase_value.clone());
             state.actors.insert(id_int, new_row);
             let old_row = state.actors.get(&id_int);

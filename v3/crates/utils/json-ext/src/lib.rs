@@ -26,7 +26,7 @@ impl<K: Serialize + for<'a> Deserialize<'a> + Eq + Hash, V: Serialize> Serialize
         S: serde::Serializer,
     {
         let mut map = serializer.serialize_map(Some(self.0.len()))?;
-        for (k, v) in self.0.iter() {
+        for (k, v) in &self.0 {
             let stringified_key = serde_json::to_string(k).map_err(serde::ser::Error::custom)?;
             map.serialize_entry(&stringified_key, v)?;
         }
@@ -43,7 +43,7 @@ impl<'de, K: DeserializeOwned + Hash + Eq + Serialize, V: Deserialize<'de>> Dese
     {
         let map: HashMap<String, V> = Deserialize::deserialize(deserializer)?;
         let mut result = HashMap::new();
-        for (k, v) in map.into_iter() {
+        for (k, v) in map {
             let k_str = serde_json::from_str(&k).map_err(serde::de::Error::custom)?;
             result.insert(k_str, v);
         }

@@ -150,7 +150,7 @@ pub fn generate_request_plan<'n, 's, 'ir>(
 ) -> Result<RequestPlan<'n, 's, 'ir>, error::Error> {
     let mut request_plan = None;
 
-    for (alias, field) in ir.into_iter() {
+    for (alias, field) in ir {
         match field {
             root_field::RootField::QueryRootField(field_ir) => {
                 let mut query_plan = match request_plan {
@@ -525,7 +525,7 @@ impl ExecuteQueryResult {
     pub fn to_graphql_response(self) -> gql::http::Response {
         let mut data = IndexMap::new();
         let mut errors = Vec::new();
-        for (alias, field_result) in self.root_fields.into_iter() {
+        for (alias, field_result) in self.root_fields {
             let result = match field_result.result {
                 Ok(value) => value,
                 Err(e) => {
@@ -622,7 +622,7 @@ async fn execute_query_field_plan<'n, 's, 'ir>(
                         ) => {
                             let mut tasks: Vec<_> =
                                 Vec::with_capacity(entity_execution_plans.capacity());
-                            for query in entity_execution_plans.into_iter() {
+                            for query in entity_execution_plans {
                                 // We are not running the field plans parallely here, we are just running them concurrently on a single thread.
                                 // To run the field plans parallely, we will need to use tokio::spawn for each field plan.
                                 let task = async {
@@ -754,7 +754,7 @@ pub async fn execute_mutation_plan<'n, 's, 'ir>(
         }
     }
 
-    for executed_root_field in executed_root_fields.into_iter() {
+    for executed_root_field in executed_root_fields {
         let (alias, root_field) = executed_root_field;
         root_fields.insert(alias, root_field);
     }
@@ -781,7 +781,7 @@ pub async fn execute_query_plan<'n, 's, 'ir>(
         })
         .await;
 
-    for executed_root_field in executed_root_fields.into_iter() {
+    for executed_root_field in executed_root_fields {
         let (alias, root_field) = executed_root_field;
         root_fields.insert(alias, root_field);
     }

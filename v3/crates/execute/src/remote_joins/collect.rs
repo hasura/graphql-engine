@@ -101,7 +101,7 @@ fn collect_argument_from_rows(
     let mut arguments = HashSet::new();
     for row_set in lhs_response {
         if let Some(ref rows) = row_set.rows {
-            for row in rows.iter() {
+            for row in rows {
                 match lhs_response_type {
                     ProcessResponseAs::Array { .. } | ProcessResponseAs::Object { .. } => {
                         collect_argument_from_row(row, join_fields, path, &mut arguments)?;
@@ -111,7 +111,7 @@ fn collect_argument_from_rows(
                         type_container,
                     } => {
                         let mut command_rows = resolve_command_response_row(row, type_container)?;
-                        for command_row in command_rows.iter_mut() {
+                        for command_row in &mut command_rows {
                             collect_argument_from_row(
                                 command_row,
                                 join_fields,

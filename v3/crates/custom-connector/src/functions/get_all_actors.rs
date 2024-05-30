@@ -23,7 +23,7 @@ pub(crate) fn function_info() -> ndc_models::FunctionInfo {
 
 pub(crate) fn rows(state: &AppState) -> Result<Vec<Row>> {
     let mut actors = vec![];
-    for (_id, actor) in state.actors.iter() {
+    for actor in state.actors.values() {
         let actor_value = serde_json::to_value(actor).map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,

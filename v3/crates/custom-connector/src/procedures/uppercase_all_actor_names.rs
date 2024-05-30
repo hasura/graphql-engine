@@ -15,7 +15,7 @@ pub(crate) fn execute(
 ) -> Result<serde_json::Value> {
     let mut actors_list = vec![];
     let current_state = state.actors.clone();
-    for (actor_id, actor) in current_state.iter() {
+    for (actor_id, actor) in &current_state {
         let id_int = *actor_id;
         let actor_name = actor.get("name").ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -34,8 +34,7 @@ pub(crate) fn execute(
         let actor_name_uppercase = actor_name_str.to_uppercase();
         let actor_name_uppercase_value = serde_json::Value::String(actor_name_uppercase);
 
-        let old_row = actor;
-        let mut new_row = BTreeMap::from_iter(old_row.iter().map(|(k, v)| (k.clone(), v.clone())));
+        let mut new_row = actor.clone();
         new_row.insert("name".into(), actor_name_uppercase_value.clone());
         state.actors.insert(id_int, new_row.clone());
         let actor_json = serde_json::to_value(new_row).map_err(|_| {

@@ -52,7 +52,7 @@ fn execute_query_with_variables(
 ) -> Result<ndc_models::RowSet> {
     let mut argument_values = BTreeMap::new();
 
-    for (argument_name, argument_value) in arguments.iter() {
+    for (argument_name, argument_value) in arguments {
         if argument_values
             .insert(
                 argument_name.clone(),
@@ -144,7 +144,7 @@ fn execute_query(
         None => Ok(sorted),
         Some(expr) => {
             let mut filtered: Vec<Row> = vec![];
-            for item in sorted.into_iter() {
+            for item in sorted {
                 let root = match root {
                     Root::CurrentRow => &item,
                     Root::ExplicitRow(root) => root,
@@ -171,7 +171,7 @@ fn execute_query(
         .as_ref()
         .map(|aggregates| {
             let mut row: IndexMap<String, serde_json::Value> = IndexMap::new();
-            for (aggregate_name, aggregate) in aggregates.iter() {
+            for (aggregate_name, aggregate) in aggregates {
                 row.insert(
                     aggregate_name.clone(),
                     eval_aggregate(aggregate, &paginated)?,
@@ -186,7 +186,7 @@ fn execute_query(
         .as_ref()
         .map(|fields| {
             let mut rows: Vec<IndexMap<String, ndc_models::RowFieldValue>> = vec![];
-            for item in paginated.iter() {
+            for item in &paginated {
                 let row = eval_row(fields, collection_relationships, variables, state, item)?;
                 rows.push(row)
             }
@@ -205,7 +205,7 @@ fn eval_row(
     item: &BTreeMap<String, Value>,
 ) -> Result<IndexMap<String, ndc_models::RowFieldValue>> {
     let mut row = IndexMap::new();
-    for (field_name, field) in fields.iter() {
+    for (field_name, field) in fields {
         row.insert(
             field_name.clone(),
             eval_field(collection_relationships, variables, state, field, item)?,
@@ -331,9 +331,9 @@ fn sort(
         None => Ok(collection),
         Some(order_by) => {
             let mut copy = vec![];
-            for item_to_insert in collection.into_iter() {
+            for item_to_insert in collection {
                 let mut index = 0;
-                for other in copy.iter() {
+                for other in &copy {
                     if let Ordering::Greater = eval_order_by(
                         collection_relationships,
                         variables,
@@ -376,7 +376,7 @@ fn eval_order_by(
 ) -> Result<Ordering> {
     let mut result = Ordering::Equal;
 
-    for element in order_by.elements.iter() {
+    for element in &order_by.elements {
         let v1 = eval_order_by_element(collection_relationships, variables, state, element, t1)?;
         let v2 = eval_order_by_element(collection_relationships, variables, state, element, t2)?;
         let x = match element.order_direction {
@@ -519,7 +519,7 @@ fn eval_path(
 ) -> Result<Vec<Row>> {
     let mut result: Vec<Row> = vec![item.clone()];
 
-    for path_element in path.iter() {
+    for path_element in path {
         let relationship_name = path_element.relationship.as_str();
         let relationship = collection_relationships.get(relationship_name).ok_or((
             StatusCode::BAD_REQUEST,
@@ -570,10 +570,10 @@ fn eval_path_element(
     // should consist of all object relationships, and possibly terminated by a
     // single array relationship, so there should be no double counting.
 
-    for src_row in source.iter() {
+    for src_row in source {
         let mut all_arguments = BTreeMap::new();
 
-        for (argument_name, argument_value) in relationship.arguments.iter() {
+        for (argument_name, argument_value) in &relationship.arguments {
             if all_arguments
                 .insert(
                     argument_name.clone(),
@@ -591,7 +591,7 @@ fn eval_path_element(
             }
         }
 
-        for (argument_name, argument_value) in arguments.iter() {
+        for (argument_name, argument_value) in arguments {
             if all_arguments
                 .insert(
                     argument_name.clone(),
@@ -615,7 +615,7 @@ fn eval_path_element(
             state,
         )?;
 
-        for tgt_row in target.iter() {
+        for tgt_row in &target {
             if let Some(predicate) = predicate {
                 if eval_column_mapping(relationship, src_row, tgt_row)?
                     && eval_expression(
@@ -694,7 +694,7 @@ fn eval_expression(
 ) -> Result<bool> {
     match expr {
         ndc_models::Expression::And { expressions } => {
-            for expr in expressions.iter() {
+            for expr in expressions {
                 if !eval_expression(collection_relationships, variables, state, expr, root, item)? {
                     return Ok(false);
                 }
@@ -702,7 +702,7 @@ fn eval_expression(
             Ok(true)
         }
         ndc_models::Expression::Or { expressions } => {
-            for expr in expressions.iter() {
+            for expr in expressions {
                 if eval_expression(collection_relationships, variables, state, expr, root, item)? {
                     return Ok(true);
                 }
@@ -757,8 +757,8 @@ fn eval_expression(
                     root,
                     item,
                 )?;
-                for left_val in left_vals.iter() {
-                    for right_val in right_vals.iter() {
+                for left_val in &left_vals {
+                    for right_val in &right_vals {
                         if left_val == right_val {
                             return Ok(true);
                         }
@@ -784,8 +784,8 @@ fn eval_expression(
                     root,
                     item,
                 )?;
-                for column_val in column_vals.iter() {
-                    for regex_val in regex_vals.iter() {
+                for column_val in &column_vals {
+                    for regex_val in &regex_vals {
                         let column_str = column_val.as_str().ok_or((
                             StatusCode::BAD_REQUEST,
                             Json(ndc_models::ErrorResponse {
@@ -921,7 +921,7 @@ fn eval_comparison_target(
         ndc_models::ComparisonTarget::Column { name, path } => {
             let rows = eval_path(collection_relationships, variables, state, path, item)?;
             let mut values = vec![];
-            for row in rows.iter() {
+            for row in &rows {
                 let value = eval_column(row, name.as_str())?;
                 values.push(value);
             }
@@ -1121,7 +1121,7 @@ fn eval_column_mapping(
     src_row: &Row,
     tgt_row: &Row,
 ) -> Result<bool> {
-    for (src_column, tgt_column) in relationship.column_mapping.iter() {
+    for (src_column, tgt_column) in &relationship.column_mapping {
         let src_value = eval_column(src_row, src_column)?;
         let tgt_value = eval_column(tgt_row, tgt_column)?;
         if src_value != tgt_value {

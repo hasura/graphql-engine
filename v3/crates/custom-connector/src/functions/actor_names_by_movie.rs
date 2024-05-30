@@ -29,7 +29,7 @@ pub(crate) fn rows(
 
     let mut actor_names_by_movie = vec![];
 
-    for (_id, actor) in state.actors.iter() {
+    for actor in state.actors.values() {
         let actor_movie_id = actor.get("movie_id").ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ndc_models::ErrorResponse {

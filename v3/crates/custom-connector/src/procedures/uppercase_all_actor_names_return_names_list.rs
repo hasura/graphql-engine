@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use axum::{http::StatusCode, Json};
 use ndc_models;
 
@@ -8,7 +6,7 @@ use crate::{query::Result, state::AppState};
 pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
     let mut actors_list = vec![];
     let current_state = state.actors.clone();
-    for (actor_id, actor) in current_state.iter() {
+    for (actor_id, actor) in &current_state {
         let id_int = *actor_id;
         let actor_name = actor.get("name").ok_or((
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -27,8 +25,7 @@ pub(crate) fn execute(state: &mut AppState) -> Result<serde_json::Value> {
         let actor_name_uppercase = actor_name_str.to_uppercase();
         let actor_name_uppercase_value = serde_json::Value::String(actor_name_uppercase);
 
-        let old_row = actor;
-        let mut new_row = BTreeMap::from_iter(old_row.iter().map(|(k, v)| (k.clone(), v.clone())));
+        let mut new_row = actor.clone();
         new_row.insert("name".into(), actor_name_uppercase_value.clone());
         state.actors.insert(id_int, new_row);
         let output_row = state.actors.get(actor_id);

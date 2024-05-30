@@ -65,7 +65,7 @@ pub(crate) fn relay_node_field(
             let node_field_permissions =
                 get_node_field_namespace_permissions(object_type_representation, model);
 
-            for (role, model_predicate) in node_field_permissions.iter() {
+            for (role, model_predicate) in &node_field_permissions {
                 let role_type_permissions = roles_type_permissions.entry(role.clone()).or_default();
                 role_type_permissions
                     .insert(model.model.data_type.clone(), model_predicate.clone());

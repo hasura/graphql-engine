@@ -83,11 +83,10 @@ pub fn get_argument_mappings<'a>(
     ArgumentMappingError,
 > {
     let mut unconsumed_argument_mappings: BTreeMap<&ArgumentName, &models::ConnectorArgumentName> =
-        BTreeMap::from_iter(
-            argument_mapping
-                .iter()
-                .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(v))),
-        );
+        argument_mapping
+            .iter()
+            .map(|(k, v)| (k, models::ConnectorArgumentName::ref_cast(v)))
+            .collect();
 
     let mut resolved_argument_mappings =
         BTreeMap::<ArgumentName, models::ConnectorArgumentName>::new();

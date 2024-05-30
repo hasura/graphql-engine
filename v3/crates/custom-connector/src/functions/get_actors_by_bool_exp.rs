@@ -52,7 +52,7 @@ pub(crate) fn rows(
 
     // this is very limited, we can only compare id columns with "_eq"
     if column == "id" && operator == "_eq" {
-        for (_id, actor) in state.actors.iter() {
+        for actor in state.actors.values() {
             let actor_value = serde_json::to_value(actor).map_err(|_| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,

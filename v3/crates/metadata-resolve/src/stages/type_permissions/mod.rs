@@ -91,7 +91,7 @@ pub fn resolve_output_type_permission(
     // exist in this type definition
     for type_permission in &type_permissions.permissions {
         if let Some(output) = &type_permission.output {
-            for field_name in output.allowed_fields.iter() {
+            for field_name in &output.allowed_fields {
                 if !object_type_representation.fields.contains_key(field_name) {
                     return Err(Error::UnknownFieldInOutputPermissionsDefinition {
                         field_name: field_name.clone(),
@@ -124,7 +124,7 @@ pub(crate) fn resolve_input_type_permission(
             for FieldPreset {
                 field: field_name,
                 value,
-            } in input.field_presets.iter()
+            } in &input.field_presets
             {
                 // check if the field exists on this type
                 match object_type_representation.fields.get(field_name) {

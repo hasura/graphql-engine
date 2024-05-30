@@ -208,7 +208,12 @@ pub fn resolve_graphql_config(
                             // TODO: Naveen: Currently we do not allow enabling a specific direction
                             // for orderableField. In future when we support this, we would like to
                             // build different enum types for different variations of directions.
-                            if HashSet::from_iter(order_by_enum_type.directions.iter().cloned())
+                            let input_directions = order_by_enum_type
+                                .directions
+                                .iter()
+                                .copied()
+                                .collect::<HashSet<_>>();
+                            if input_directions
                                 != HashSet::from([OrderByDirection::Asc, OrderByDirection::Desc])
                             {
                                 let invalid_directions = order_by_enum_type

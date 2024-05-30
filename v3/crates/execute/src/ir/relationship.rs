@@ -354,7 +354,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         source_field: source_field_path,
         target_field: target_field_path,
         target_ndc_column,
-    } in annotation.mappings.iter()
+    } in &annotation.mappings
     {
         let source_column = get_field_mapping_of_field_name(
             type_mappings,
@@ -434,7 +434,7 @@ pub(crate) fn build_remote_command_relationship<'n, 's>(
     for metadata_resolve::RelationshipCommandMapping {
         source_field: source_field_path,
         argument_name: target_argument_name,
-    } in annotation.mappings.iter()
+    } in &annotation.mappings
     {
         let source_column = get_field_mapping_of_field_name(
             type_mappings,

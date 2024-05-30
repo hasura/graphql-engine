@@ -158,7 +158,7 @@ impl MetadataAccessor {
             Metadata::Versioned(MetadataWithVersion::V2(metadata)) => {
                 let mut accessor: MetadataAccessor =
                     MetadataAccessor::new_empty(Some(metadata.flags));
-                for supergraph_object in metadata.supergraph.objects.into_iter() {
+                for supergraph_object in metadata.supergraph.objects {
                     load_metadata_supergraph_object(supergraph_object, &mut accessor);
                 }
                 for subgraph in metadata.subgraphs {

@@ -99,7 +99,7 @@ impl Line {
 
     fn append_to(&self, bytes: &[u8], s: &mut String) {
         let mut i = self.start;
-        for &escape_char_i in self.escape_chars.iter() {
+        for &escape_char_i in &self.escape_chars {
             s.push_str(unsafe { from_utf8_unchecked(&bytes[i..escape_char_i]) });
             i = escape_char_i + 1;
         }
@@ -186,7 +186,7 @@ fn parse_block_string(bytes: &[u8]) -> Result<(String, Consumed, usize), (Error,
 
     // Trim the common indentation from the lines (excluding the first line)
     if let Some(common_indent) = common_indent {
-        for line in lines[1..].iter_mut() {
+        for line in &mut lines[1..] {
             line.trim_front(common_indent);
         }
     }

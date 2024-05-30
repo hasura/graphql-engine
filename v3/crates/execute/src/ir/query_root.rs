@@ -37,7 +37,7 @@ pub fn generate_ir<'n, 's>(
         .clone()
         .ok_or_else(|| gql::normalized_ast::Error::NoTypenameFound)?;
     let mut ir = IndexMap::new();
-    for (alias, field) in selection_set.fields.iter() {
+    for (alias, field) in &selection_set.fields {
         let field_call = field.field_call()?;
         let field_ir = match field_call.name.as_str() {
             "__typename" => Ok(root_field::QueryRootField::TypeName {

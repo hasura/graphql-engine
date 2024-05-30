@@ -59,7 +59,7 @@ pub(crate) fn rows(
 
     let mut actors_by_movie = vec![];
 
-    for (_id, actor) in state.actors.iter() {
+    for actor in state.actors.values() {
         let actor_movie_id_int = get_actor_movie_id(actor)?;
         if actor_movie_id_int == movie_id_int {
             actors_by_movie.push(actor.clone())

@@ -75,7 +75,10 @@ pub(crate) fn execute(
                 }),
             )
         })?;
-    let new_row = BTreeMap::from_iter(actor_obj.iter().map(|(k, v)| (k.clone(), v.clone())));
+    let new_row = actor_obj
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect::<BTreeMap<_, _>>();
     let old_row = state.actors.insert(id_int, new_row);
     old_row.map_or(Ok(serde_json::Value::Null), |old_row| {
         let old_row_value = serde_json::to_value(old_row).map_err(|_| {

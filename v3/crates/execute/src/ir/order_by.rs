@@ -32,7 +32,7 @@ pub(crate) fn build_ndc_order_by<'s>(
             let mut ndc_order_elements = Vec::new();
             let mut relationships = BTreeMap::new();
 
-            for v in arguments.iter() {
+            for v in arguments {
                 match v {
                     normalized_ast::Value::Object(arguments) => {
                         // Check if the input object contains exactly one key-value pair.
@@ -140,7 +140,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
             // which has a relationship column called `Comments` which has a non-relationship column
             // called `text`, you'll have to provide the following paths to access the `text` column:
             // ["UserPosts", "PostsComments"]
-            for path in relationship_paths.iter() {
+            for path in &relationship_paths {
                 order_by_element_path.push(ndc_models::PathElement {
                     relationship: path.0.clone(),
                     arguments: BTreeMap::new(),

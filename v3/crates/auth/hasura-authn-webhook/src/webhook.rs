@@ -170,7 +170,7 @@ async fn make_auth_hook_request(
     let http_request_builder = match auth_hook_config.method {
         AuthHookMethod::Get => {
             let mut auth_hook_headers = tracing_util::get_trace_headers();
-            for (header_name, header_value) in client_headers.iter() {
+            for (header_name, header_value) in client_headers {
                 if !COMMON_CLIENT_HEADERS_TO_IGNORE.contains(header_name.as_str()) {
                     auth_hook_headers.insert(header_name, header_value.clone());
                 }
@@ -182,7 +182,7 @@ async fn make_auth_hook_request(
         }
         AuthHookMethod::Post => {
             let mut auth_hook_headers = HashMap::new();
-            for (header_name, header_value) in client_headers.iter() {
+            for (header_name, header_value) in client_headers {
                 auth_hook_headers.insert(
                     header_name.to_string(),
                     header_value
@@ -231,7 +231,7 @@ async fn make_auth_hook_request(
             let auth_hook_response: HashMap<String, String> =
                 response.json().await.map_err(InternalError::ReqwestError)?;
             let mut session_variables = HashMap::new();
-            for (k, v) in auth_hook_response.iter() {
+            for (k, v) in &auth_hook_response {
                 match SessionVariable::from_str(k) {
                     Ok(session_variable) => {
                         session_variables

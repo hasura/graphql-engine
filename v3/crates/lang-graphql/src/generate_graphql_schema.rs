@@ -51,7 +51,7 @@ fn build_namespace_schema<'s, S: crate::schema::SchemaContext>(
     let nr = crate::validation::normalize_request(ns, schema, request)
         .map_err(|e| Error::NormalizeIntrospectionQuery(e.to_string()))?;
     let mut result = HashMap::new();
-    for (_alias, field) in nr.selection_set.fields.iter() {
+    for (_alias, field) in &nr.selection_set.fields {
         let field_call = field.field_call().map_err(|_| Error::FieldCallNotFound)?;
         match field_call.name.as_str() {
             "__schema" => {

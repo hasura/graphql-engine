@@ -139,7 +139,7 @@ pub fn build_boolean_expression_input_schema(
 
         // relationship fields
         // TODO(naveen): Add support for command relationships
-        for (rel_name, relationship) in object_type_representation.relationships.iter() {
+        for (rel_name, relationship) in &object_type_representation.relationships {
             if let metadata_resolve::RelationshipTarget::Model {
                 model_name,
                 relationship_type,

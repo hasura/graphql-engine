@@ -156,7 +156,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                 })?;
 
     // validate comparable fields
-    for comparable_field in object_boolean_expression.comparable_fields.iter() {
+    for comparable_field in &object_boolean_expression.comparable_fields {
         if !object_type_representation
             .object_type
             .fields
@@ -307,7 +307,7 @@ pub fn resolve_boolean_expression_info(
             graphql_config_error: GraphqlConfigError::MissingFilterInputFieldInGraphqlConfig,
         })?;
 
-    for (field_name, field_mapping) in field_mappings.iter() {
+    for (field_name, field_mapping) in field_mappings {
         // Generate comparison expression for fields mapped to simple scalar type
         if let Some((scalar_type_name, scalar_type_info)) =
             data_connector_scalar_types::get_simple_scalar(
@@ -317,9 +317,7 @@ pub fn resolve_boolean_expression_info(
         {
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
                 let mut operators = BTreeMap::new();
-                for (op_name, op_definition) in
-                    scalar_type_info.scalar_type.comparison_operators.iter()
-                {
+                for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
                     operators.insert(
                         OperatorName(op_name.clone()),
                         resolve_ndc_type(
