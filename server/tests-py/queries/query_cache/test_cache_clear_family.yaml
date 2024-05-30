@@ -70,10 +70,10 @@
           last_name: Bar
 
 - description: call the cache clear endpoint
-  url: /pro/cache/clear?family=84e1f3f29c75859c2cffe4c6c52f738a46ce8fd3
+  url: /pro/cache/clear?family=89e2d56a8a0c692199451a88c380586fb5146ade
   method: POST
   status: 200
   query:
   response:
     message: success
-    clearedItemCount: '2'
+    clearedItemCount: 2

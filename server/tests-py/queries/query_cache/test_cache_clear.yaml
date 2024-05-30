@@ -76,4 +76,4 @@
   query:
   response:
     message: success
-    clearedItemCount: '2'
+    clearedItemCount: 2
