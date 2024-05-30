@@ -334,7 +334,6 @@ pub fn resolve_boolean_expression_info(
                     scalar_fields.insert(
                         field_name.clone(),
                         ComparisonExpressionInfo {
-                            data_connector_name: data_connector_name.clone(),
                             scalar_type_name: scalar_type_name.clone(),
                             type_name: graphql_type_name.clone(),
                             ndc_column: field_mapping.column.clone(),

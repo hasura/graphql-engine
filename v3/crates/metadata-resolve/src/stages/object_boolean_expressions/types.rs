@@ -40,7 +40,6 @@ pub struct ObjectBooleanExpressionType {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
-    pub data_connector_name: Qualified<DataConnectorName>,
     pub scalar_type_name: String,
     pub type_name: ast::TypeName,
     pub ndc_column: String,
