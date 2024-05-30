@@ -11,7 +11,7 @@ use lang_graphql::ast::common::{self as ast, Name};
 use open_dds::types::Deprecated;
 use open_dds::{
     arguments::ArgumentName,
-    data_connector::DataConnectorName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     models::{ModelName, OrderableField},
     types::{CustomTypeName, FieldName},
 };
@@ -67,7 +67,7 @@ pub struct SelectManyGraphQlDefinition {
 // TODO: add support for aggregates
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct OrderByExpressionInfo {
-    pub ndc_column: String,
+    pub ndc_column: DataConnectorColumnName,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

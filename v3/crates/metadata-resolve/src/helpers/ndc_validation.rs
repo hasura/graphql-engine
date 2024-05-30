@@ -2,7 +2,7 @@ use crate::stages::{commands, data_connectors, models, object_types};
 use ndc_models;
 use open_dds::{
     commands::{CommandName, DataConnectorCommand, FunctionName, ProcedureName},
-    data_connector::DataConnectorName,
+    data_connector::{DataConnectorColumnName, DataConnectorName},
     models::ModelName,
     types::{CustomTypeName, FieldName},
 };
@@ -44,7 +44,7 @@ pub enum NDCValidationError {
         model_name: Qualified<ModelName>,
         field_name: FieldName,
         collection_name: String,
-        column_name: String,
+        column_name: DataConnectorColumnName,
     },
     #[error("procedure {procedure_name} is not defined in data connector {db_name}")]
     NoSuchProcedure {
@@ -64,7 +64,7 @@ pub enum NDCValidationError {
         command_name: Qualified<CommandName>,
         field_name: FieldName,
         func_proc_name: String,
-        column_name: String,
+        column_name: DataConnectorColumnName,
     },
     #[error("column {column_name} has type {column_type} in collection {collection_name} in data connector {db_name}, not type {field_type}")]
     ColumnTypeDoesNotMatch {
@@ -72,7 +72,7 @@ pub enum NDCValidationError {
         model_name: ModelName,
         field_name: FieldName,
         collection_name: String,
-        column_name: String,
+        column_name: DataConnectorColumnName,
         field_type: String,
         column_type: String,
     },
@@ -178,7 +178,7 @@ pub fn validate_ndc(
         let _column =
             collection_type
                 .fields
-                .get(column_name)
+                .get(&column_name.0)
                 .ok_or(NDCValidationError::NoSuchColumn {
                     db_name: db.name.clone(),
                     model_name: model_name.clone(),
@@ -334,7 +334,7 @@ pub fn validate_ndc_command(
                     // Check if the field mappings for the output_type is valid
                     for (field_name, field_mapping) in field_mappings {
                         let column_name = &field_mapping.column;
-                        if !command_source_ndc_type.fields.contains_key(column_name) {
+                        if !command_source_ndc_type.fields.contains_key(&column_name.0) {
                             return Err(NDCValidationError::NoSuchColumnForCommand {
                                 db_name: db.name.clone(),
                                 command_name: command_name.clone(),

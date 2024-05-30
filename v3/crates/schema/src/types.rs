@@ -11,7 +11,9 @@ use std::{
 
 use open_dds::{
     arguments::ArgumentName,
-    commands, models,
+    commands,
+    data_connector::DataConnectorColumnName,
+    models,
     types::{self},
 };
 
@@ -79,7 +81,7 @@ pub enum ModelFilterArgument {
     AndOp,
     OrOp,
     NotOp,
-    Field { ndc_column: String },
+    Field { ndc_column: DataConnectorColumnName },
     RelationshipField(FilterRelationshipAnnotation),
 }
 
@@ -197,7 +199,7 @@ pub enum ModelInputAnnotation {
     IsNullOperation,
     ModelOrderByExpression,
     ModelOrderByArgument {
-        ndc_column: String,
+        ndc_column: DataConnectorColumnName,
     },
     ModelOrderByRelationshipArgument(OrderByRelationshipAnnotation),
 
@@ -289,7 +291,7 @@ pub struct ArgumentNameAndPath {
     pub ndc_argument_name: Option<metadata_resolve::ConnectorArgumentName>,
     /// Optional path of field names to traverse to get to a field, in case of
     /// complex input object types
-    pub field_path: Vec<String>,
+    pub field_path: Vec<DataConnectorColumnName>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Display)]

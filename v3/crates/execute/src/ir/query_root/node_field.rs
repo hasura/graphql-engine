@@ -127,7 +127,7 @@ pub(crate) fn relay_node_ir<'n, 's>(
                         })?;
                     Ok(ndc_models::Expression::BinaryComparisonOperator {
                         column: ndc_models::ComparisonTarget::Column {
-                            name: field_mapping.column.clone(),
+                            name: field_mapping.column.0.clone(),
                             path: vec![],
                         },
                         operator: field_mapping.equal_operator.clone(),

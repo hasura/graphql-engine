@@ -394,7 +394,7 @@ pub(crate) fn build_remote_relationship<'n, 's>(
         let target_value_variable = format!("${}", &target_column.column);
         let comparison_exp = ndc_models::Expression::BinaryComparisonOperator {
             column: ndc_models::ComparisonTarget::Column {
-                name: target_column.column.clone(),
+                name: target_column.column.0.clone(),
                 path: vec![],
             },
             operator: target_column.equal_operator.clone(),

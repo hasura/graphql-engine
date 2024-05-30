@@ -6,14 +6,14 @@ use crate::types::subgraph::{
 };
 use lang_graphql::ast::common as ast;
 
-use open_dds::types::CustomTypeName;
+use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct NdcColumnForComparison {
-    pub column: String,
+    pub column: DataConnectorColumnName,
     pub equal_operator: String,
 }
 

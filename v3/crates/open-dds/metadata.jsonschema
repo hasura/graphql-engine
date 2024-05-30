@@ -1178,10 +1178,18 @@
       "properties": {
         "name": {
           "description": "The name of the target column",
-          "type": "string"
+          "allOf": [
+            {
+              "$ref": "#/definitions/DataConnectorColumnName"
+            }
+          ]
         }
       },
       "additionalProperties": false
+    },
+    "DataConnectorColumnName": {
+      "description": "The name of a column in a data connector.",
+      "type": "string"
     },
     "ScalarTypeV1": {
       "$id": "https://hasura.io/jsonschemas/metadata/ScalarTypeV1",

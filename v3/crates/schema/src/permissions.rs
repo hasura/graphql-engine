@@ -1,4 +1,7 @@
-use open_dds::types::{CustomTypeName, FieldName};
+use open_dds::{
+    data_connector::DataConnectorColumnName,
+    types::{CustomTypeName, FieldName},
+};
 use std::collections::{BTreeMap, HashMap};
 
 use crate::types;
@@ -224,7 +227,7 @@ pub(crate) fn get_command_namespace_annotations(
 }
 
 fn build_annotations_from_input_object_type_permissions(
-    field_path: &mut [String],
+    field_path: &mut [DataConnectorColumnName],
     type_reference: &QualifiedTypeReference,
     ndc_argument_name: &Option<ConnectorArgumentName>,
     object_types: &BTreeMap<
@@ -268,7 +271,18 @@ fn build_annotations_from_input_object_type_permissions(
                 // recursively process all the fields of this input object type
                 for (field_name, field_definition) in &object_type_repr.object_type.fields {
                     let mut field_path_ = field_path.to_owned();
-                    field_path_.push(field_name.to_string());
+                    let ndc_field = field_mappings
+                        .and_then(|mappings| {
+                            mappings
+                                .get(field_name)
+                                .map(|field_mapping| field_mapping.column.clone())
+                        })
+                        .ok_or_else(|| crate::Error::InternalMappingNotFound {
+                            type_name: object_type.clone(),
+                            field_name: field_name.clone(),
+                        })?;
+
+                    field_path_.push(ndc_field.clone());
                     build_annotations_from_input_object_type_permissions(
                         &mut field_path_,
                         &field_definition.field_type,
@@ -303,7 +317,7 @@ fn build_preset_map_from_input_object_type_permission(
     permission: &metadata_resolve::TypeInputPermission,
     field_mappings: Option<&BTreeMap<FieldName, metadata_resolve::FieldMapping>>,
     type_reference: &QualifiedTypeReference,
-    field_path: &[String],
+    field_path: &[DataConnectorColumnName],
     ndc_argument_name: &Option<ConnectorArgumentName>,
     object_type: &Qualified<CustomTypeName>,
 ) -> Result<

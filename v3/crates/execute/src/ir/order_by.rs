@@ -170,7 +170,7 @@ pub(crate) fn build_ndc_order_by_element<'s>(
                 order_direction,
                 // TODO(naveen): When aggregates are supported, extend this to support other ndc_models::OrderByTarget
                 target: ndc_models::OrderByTarget::Column {
-                    name: ndc_column.clone(),
+                    name: ndc_column.0.clone(),
                     path: order_by_element_path,
                 },
             };

@@ -7,7 +7,7 @@ use lang_graphql::ast::common::{self as ast};
 use std::collections::BTreeSet;
 
 use open_dds::{
-    data_connector::{DataConnectorName, DataConnectorObjectType},
+    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorObjectType},
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
@@ -42,7 +42,7 @@ pub struct ObjectBooleanExpressionType {
 pub struct ComparisonExpressionInfo {
     pub scalar_type_name: String,
     pub type_name: ast::TypeName,
-    pub ndc_column: String,
+    pub ndc_column: DataConnectorColumnName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     pub is_null_operator_name: ast::Name,
 }

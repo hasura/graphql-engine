@@ -12,7 +12,10 @@ use metadata_resolve::{
 };
 use ndc_models;
 use nonempty::NonEmpty;
-use open_dds::types::{CustomTypeName, InbuiltType};
+use open_dds::{
+    data_connector::DataConnectorColumnName,
+    types::{CustomTypeName, InbuiltType},
+};
 use schema::GDS;
 use schema::{
     Annotation, ArgumentNameAndPath, ArgumentPresets, InputAnnotation, ModelInputAnnotation,
@@ -30,7 +33,7 @@ use super::permissions;
 /// it will modify the JSON object to -
 ///   `{"name": "Queen Mary University of London", "location": {"city": "London", "country": "UK"}}`
 pub(crate) fn follow_field_path_and_insert_value(
-    field_path: &NonEmpty<String>,
+    field_path: &NonEmpty<DataConnectorColumnName>,
     object_slice: &mut serde_json::Map<String, serde_json::Value>,
     value: serde_json::Value,
 ) -> Result<(), error::Error> {
@@ -43,7 +46,7 @@ pub(crate) fn follow_field_path_and_insert_value(
         // if rest is *not* empty, pick the field from the current object, and
         // recursively process with the rest
         Some(tail) => {
-            match object_slice.get_mut(field_name) {
+            match object_slice.get_mut(&field_name.0) {
                 None => {
                     // object should have this field; if it doesn't then all the fields are preset
                     object_slice.insert(

@@ -9,7 +9,10 @@ use serde::{
 };
 
 use crate::{
-    data_connector::{DataConnectorName, DataConnectorObjectType, DataConnectorScalarType},
+    data_connector::{
+        DataConnectorColumnName, DataConnectorName, DataConnectorObjectType,
+        DataConnectorScalarType,
+    },
     identifier::Identifier,
     impl_JsonSchema_with_OpenDd_for, impl_OpenDd_default_for,
     models::EnableAllOrSpecific,
@@ -398,7 +401,7 @@ pub enum FieldMapping {
 /// The target column in a data connector object that a source field maps to.
 pub struct ColumnFieldMapping {
     /// The name of the target column
-    pub name: String, // TODO: Map field arguments
+    pub name: DataConnectorColumnName, // TODO: Map field arguments
 }
 
 /// The name of a field in a user-defined object type.

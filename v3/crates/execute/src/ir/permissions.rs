@@ -4,7 +4,7 @@ use hasura_authn_core::{SessionVariableValue, SessionVariables};
 use lang_graphql::normalized_ast;
 use ndc_models;
 
-use open_dds::types::InbuiltType;
+use open_dds::{data_connector::DataConnectorColumnName, types::InbuiltType};
 
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
@@ -165,7 +165,7 @@ pub(crate) fn process_model_predicate<'s>(
 }
 
 fn make_permission_binary_boolean_expression(
-    ndc_column: String,
+    ndc_column: DataConnectorColumnName,
     argument_type: &QualifiedTypeReference,
     operator: &str,
     value_expression: &metadata_resolve::ValueExpression,
@@ -180,7 +180,7 @@ fn make_permission_binary_boolean_expression(
     )?;
     Ok(ndc_models::Expression::BinaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_column,
+            name: ndc_column.0,
             path: Vec::new(),
         },
         operator: operator.to_owned(),
@@ -191,12 +191,12 @@ fn make_permission_binary_boolean_expression(
 }
 
 fn make_permission_unary_boolean_expression(
-    ndc_column: String,
+    ndc_column: DataConnectorColumnName,
     operator: ndc_models::UnaryComparisonOperator,
 ) -> Result<ndc_models::Expression, error::Error> {
     Ok(ndc_models::Expression::UnaryComparisonOperator {
         column: ndc_models::ComparisonTarget::Column {
-            name: ndc_column,
+            name: ndc_column.0,
             path: Vec::new(),
         },
         operator,

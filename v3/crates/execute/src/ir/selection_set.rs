@@ -103,7 +103,7 @@ impl<'s> ResultSelectionSet<'s> {
     pub(crate) fn contains(&self, other_field: &metadata_resolve::FieldMapping) -> Option<String> {
         self.fields.iter().find_map(|(alias, field)| match field {
             FieldSelection::Column { column, .. } => {
-                if *column == other_field.column {
+                if *column == other_field.column.0 {
                     Some(alias.clone())
                 } else {
                     None
@@ -135,7 +135,7 @@ fn build_global_id_fields(
         fields.insert(
             global_col_id_alias,
             FieldSelection::Column {
-                column: field_mapping.column.clone(),
+                column: field_mapping.column.0.clone(),
                 nested_selection: None,
             },
         );
@@ -242,7 +242,7 @@ pub(crate) fn generate_selection_set_ir<'s>(
                     fields.insert(
                         field.alias.to_string(),
                         FieldSelection::Column {
-                            column: field_mapping.column.clone(),
+                            column: field_mapping.column.0.clone(),
                             nested_selection,
                         },
                     );

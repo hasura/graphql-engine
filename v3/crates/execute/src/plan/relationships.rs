@@ -121,7 +121,7 @@ pub(crate) fn process_model_relationship_definition(
             })?;
 
             if column_mapping
-                .insert(source_column.column, target_column.column.clone())
+                .insert(source_column.column.0, target_column.column.0.clone())
                 .is_some()
             {
                 Err(error::InternalError::MappingExistsInRelationship {
@@ -182,7 +182,7 @@ pub(crate) fn process_command_relationship_definition(
             })?;
 
             let relationship_argument = ndc_models::RelationshipArgument::Column {
-                name: source_column.column,
+                name: source_column.column.0,
             };
 
             if arguments

@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 pub mod types;
-use open_dds::types::CustomTypeName;
+use open_dds::{data_connector::DataConnectorColumnName, types::CustomTypeName};
+use ref_cast::RefCast;
 pub use types::{
     DataConnectorTypeMappingsForObject, DataConnectorTypeMappingsOutput, FieldDefinition,
     FieldMapping, ObjectTypeRepresentation, ObjectTypeWithTypeMappings,
@@ -287,7 +288,7 @@ pub fn resolve_data_connector_type_mapping(
         .collect::<BTreeMap<_, _>>();
     let mut resolved_field_mappings = BTreeMap::new();
     for field_name in type_representation.fields.keys() {
-        let resolved_field_mapping_column: &str =
+        let resolved_field_mapping_column: &DataConnectorColumnName =
             if let Some(field_mapping) = unconsumed_field_mappings.remove(field_name) {
                 match field_mapping {
                     open_dds::types::FieldMapping::Column(column_mapping) => &column_mapping.name,
@@ -295,11 +296,11 @@ pub fn resolve_data_connector_type_mapping(
             } else {
                 // If no mapping is defined for a field, implicitly create a mapping
                 // with the same column name as the field.
-                &field_name.0 .0
+                DataConnectorColumnName::ref_cast(&field_name.0 .0)
             };
         let source_column = get_column(ndc_object_type, field_name, resolved_field_mapping_column)?;
         let resolved_field_mapping = FieldMapping {
-            column: resolved_field_mapping_column.to_string(),
+            column: resolved_field_mapping_column.clone(),
             column_type: source_column.r#type.clone(),
         };
 
@@ -338,11 +339,11 @@ pub fn resolve_data_connector_type_mapping(
 fn get_column<'a>(
     ndc_type: &'a ndc_models::ObjectType,
     field_name: &open_dds::types::FieldName,
-    column: &str,
+    column: &DataConnectorColumnName,
 ) -> Result<&'a ndc_models::ObjectField, TypeMappingValidationError> {
     ndc_type
         .fields
-        .get(column)
+        .get(&column.0)
         .ok_or(TypeMappingValidationError::UnknownTargetColumn {
             field_name: field_name.clone(),
             column_name: column.to_string(),

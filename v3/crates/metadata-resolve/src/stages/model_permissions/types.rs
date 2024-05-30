@@ -3,6 +3,7 @@ use crate::types::error::{Error, RelationshipError};
 use crate::types::permission::ValueExpression;
 use crate::types::subgraph::{deserialize_qualified_btreemap, serialize_qualified_btreemap};
 use open_dds::{
+    data_connector::DataConnectorColumnName,
     models::ModelName,
     relationships::{RelationshipName, RelationshipType},
     types::CustomTypeName,
@@ -40,12 +41,12 @@ pub struct SelectPermission {
 pub enum ModelPredicate {
     UnaryFieldComparison {
         field: FieldName,
-        ndc_column: String,
+        ndc_column: DataConnectorColumnName,
         operator: ndc_models::UnaryComparisonOperator,
     },
     BinaryFieldComparison {
         field: FieldName,
-        ndc_column: String,
+        ndc_column: DataConnectorColumnName,
         operator: String,
         argument_type: QualifiedTypeReference,
         value: ValueExpression,

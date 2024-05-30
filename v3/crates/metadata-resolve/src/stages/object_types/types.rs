@@ -11,7 +11,9 @@ use open_dds::models::ModelName;
 use crate::types::subgraph::Qualified;
 
 use lang_graphql::ast::common as ast;
-use open_dds::data_connector::{DataConnectorName, DataConnectorObjectType};
+use open_dds::data_connector::{
+    DataConnectorColumnName, DataConnectorName, DataConnectorObjectType,
+};
 
 /// A mapping from a data connector to their objects, which contain field types.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -119,7 +121,7 @@ pub struct ResolvedApolloFederationObjectKey {
 /// Mapping from a column to its type.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FieldMapping {
-    pub column: String,
+    pub column: DataConnectorColumnName,
     pub column_type: ndc_models::Type,
 }
 

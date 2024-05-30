@@ -1,6 +1,3 @@
-use indexmap::IndexMap;
-use std::collections::{BTreeMap, HashMap};
-
 use super::commands;
 use super::error;
 use super::model_selection;
@@ -12,7 +9,10 @@ use crate::remote_joins::types::{
     JoinLocations, JoinNode, LocationKind, MonotonicCounter, RemoteJoinType, TargetField,
 };
 use crate::remote_joins::types::{Location, RemoteJoin};
+use indexmap::IndexMap;
 use metadata_resolve::FieldMapping;
+use open_dds::data_connector::DataConnectorColumnName;
+use std::collections::{BTreeMap, HashMap};
 
 pub(crate) fn process_nested_selection<'s, 'ir>(
     nested_selection: &'ir NestedSelection<'s>,
@@ -251,7 +251,7 @@ fn process_remote_relationship_field_mapping(
             ndc_fields.insert(
                 internal_alias.clone(),
                 ndc_models::Field::Column {
-                    column: field.column.clone(),
+                    column: field.column.0.clone(),
                     fields: None,
                 },
             );
@@ -261,8 +261,8 @@ fn process_remote_relationship_field_mapping(
     }
 }
 
-fn make_hasura_phantom_field(field_name: &str) -> String {
-    format!("__hasura_phantom_field__{}", field_name)
+fn make_hasura_phantom_field(field_name: &DataConnectorColumnName) -> String {
+    format!("__hasura_phantom_field__{}", field_name.0)
 }
 
 pub(crate) fn collect_relationships_from_nested_selection(

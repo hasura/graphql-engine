@@ -82,6 +82,25 @@ pub struct DataConnectorScalarType(pub String);
 )]
 pub struct DataConnectorOperatorName(pub String);
 
+/// The name of a column in a data connector.
+#[repr(transparent)]
+#[derive(
+    Serialize,
+    Deserialize,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    JsonSchema,
+    ref_cast::RefCast,
+    derive_more::Display,
+    opendds_derive::OpenDd,
+)]
+pub struct DataConnectorColumnName(pub String);
+
 #[derive(Serialize, Clone, Debug, PartialEq, opendds_derive::OpenDd)]
 #[serde(tag = "version", content = "definition")]
 #[serde(rename_all = "camelCase")]
