@@ -114,17 +114,25 @@ class TestRemoteSchemaPermissionsExecution:
         hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role.yaml')
 
-    @pytest.mark.usefixtures('pro_tests_fixtures', 'flush_redis')
-    def test_execution_with_subset_of_fields_exposed_to_role_with_caching(self, hge_ctx):
-        hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
-        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role_cached.yaml')
-
     def test_execution_with_subset_of_arguments_exposed_to_role(self, hge_ctx):
         hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_arguments.yaml')
         check_query_f(hge_ctx, self.dir() + 'execution_with_partial_args_exposed_to_role.yaml')
 
     def test_execution_with_unknown_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + 'unknown_role_execution.yaml')
+
+@pytest.mark.admin_secret
+@use_test_fixtures
+@pytest.mark.usefixtures('pro_tests_fixtures', 'enterprise_edition', 'flush_redis')
+class TestRemoteSchemaPermissionsExecutionPro:
+
+    @classmethod
+    def dir(cls):
+        return "queries/remote_schemas/permissions/"
+
+    def test_execution_with_subset_of_fields_exposed_to_role_with_caching(self, hge_ctx):
+        hge_ctx.v1metadataq_f(self.dir() + 'add_permission_with_valid_subset_of_fields.yaml')
+        check_query_f(hge_ctx, self.dir() + 'execution_with_partial_fields_exposed_to_role_cached.yaml')
 
 @use_test_fixtures
 class TestCustomizedRemoteSchemaPermissionsExecution:
