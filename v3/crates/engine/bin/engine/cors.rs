@@ -1,3 +1,4 @@
+use axum::http::header::HeaderName;
 use reqwest::Method;
 use std::time::Duration;
 use tower_http::cors;
@@ -18,13 +19,15 @@ pub fn build_cors_layer(cors_allow_origin: &[String]) -> cors::CorsLayer {
             })
         })
     };
-
+    // Allow traceresponse to be retrievable on CORS
+    let trace_response_header_name = HeaderName::from_static("traceresponse");
     cors::CorsLayer::new()
         .max_age(Duration::from_secs(24 * 60 * 60)) // 24 hours
         .allow_headers(cors::AllowHeaders::mirror_request())
         .allow_origin(cors_allow_origin)
         .allow_credentials(true)
         .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
+        .expose_headers([trace_response_header_name])
 }
 
 #[cfg(test)]
