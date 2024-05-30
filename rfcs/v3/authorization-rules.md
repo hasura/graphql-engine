@@ -325,3 +325,244 @@ The above proposal has major implications for engine, the `lang-graphql` crate i
 4. **Are any changes required to the user's authentication system?**
 
    No changes are required to existing authentication systems. However, to fully utilize the power of authorization rules you would want to inject more granular claims (instead of simply roles) during authentication.
+
+## Before / After comparison
+
+Imagine the following data models for an internal API targeted at a company's own developers and support agents.
+
+- User: id, name, email, is_gov
+- UserActivityRecord: id, user_id, details, is_hidden
+- SupportTickets: id, assigned_agent_id
+
+And these are the potential authorization considerations:
+
+- Two personas: Developers and Support Agents
+  - Developers can generally view all user's information
+  - Support agents can only view data for users whose tickets they have been assigned
+- Some user information is protected
+  - PII fields (name, email) unless the API consumer has explicit access
+  - Government user data is restricted unless the API consumer has explicit access
+
+### Before
+
+You would need to define the following roles and provision them appropriately in the authentication system.
+
+- developer_base
+- developer_with_pii_access
+- developer_with_gov_access
+- developer_with_pii_access_and_gov_access
+- support_agent_base
+- support_agent_with_pii_access
+- support_agent_with_gov_access
+- support_agent_with_pii_access_and_gov_access
+
+And the permissions would be very hard to manage. Eg:
+
+```yaml
+kind: TypePermission
+version: v1
+definition:
+  typeName: User
+  roles:
+    - role: developer_base
+      output:
+        allowedFields: [id]
+    - role: developer_with_pii_access
+      output:
+        allowedFields: [id, name, email]
+    - role: developer_with_gov_access
+      output:
+        allowedFields: [id]
+    - role: developer_with_pii_access_and_gov_access
+      output:
+        allowedFields: [id, name, email]
+    - role: support_agent_base
+      output:
+        allowedFields: [id]
+    - role: support_agent_with_pii_access
+      output:
+        allowedFields: [id, name, email]
+    - role: support_agent_with_gov_access
+      output:
+        allowedFields: [id]
+    - role: support_agent_with_pii_access_and_gov_access
+      output:
+        allowedFields: [id, name, email]
+```
+
+The model permissions for User and UserActivity would be massive. For example:
+
+```yaml
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: User
+  roles:
+    - role: developer_base # Same for developer_with_pii_access
+      select:
+        filter:
+          not:
+            fieldComparison:
+              fieldName: is_gov
+              operator: _eq
+              value: literal: true
+    - role: developer_with_gov_access # Same for developer_with_pii_access_and_gov_access
+      select:
+        filter: null
+    - role: support_agent_base # Same for support_agent_with_pii_access
+      select:
+        filter:
+          and:
+            - relationship:
+                name: tickets
+                predicate:
+                  fieldComparison:
+                    field: agent_id
+                    operator: _eq
+                    value: sessionVariable: x-hasura-agent-id
+            - not:
+                fieldComparison:
+                  fieldName: is_gov
+                  operator: _eq
+                  value: literal: true
+      - role: support_agent_with_gov_access # Same for support_agent_with_pii_access_and_gov_access
+        select:
+          filter:
+            relationship:
+              name: tickets
+              predicate:
+                fieldComparison:
+                  field: agent_id
+                  operator: _eq
+                  value: sessionVariable: x-hasura-agent-id
+
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: UserActivity
+  roles:
+    - role: developer_base # Same for developer_with_pii_access
+      select:
+        filter:
+          relationship:
+            name: user
+            predicate:
+              not:
+                fieldComparison:
+                  fieldName: is_gov
+                  operator: _eq
+                  value: literal: true
+    - role: developer_with_gov_access # Same for developer_with_pii_access_and_gov_access
+      select:
+        filter: null
+    - role: support_agent_base # Same for support_agent_with_pii_access
+      select:
+        filter:
+          and:
+            - relationship:
+                name: tickets
+                predicate:
+                  fieldComparison:
+                    field: agent_id
+                    operator: _eq
+                    value: sessionVariable: x-hasura-agent-id
+            - relationship:
+                name: user
+                not:
+                  fieldComparison:
+                    fieldName: is_gov
+                    operator: _eq
+                    value: literal: true
+      - role: support_agent_with_gov_access # Same for support_agent_with_pii_access_and_gov_access
+        select:
+          filter:
+            relationship:
+              name: tickets
+              predicate:
+                fieldComparison:
+                  field: agent_id
+                  operator: _eq
+                  value: sessionVariable: x-hasura-agent-id
+```
+
+### After
+
+The authentication system would be simple.
+Two roles:
+- developer
+- support_agent
+
+Some extra session variables injected based on access
+- has_access_to_pii
+- has_access_to_gov
+
+```yaml
+kind: TypePermissions
+version: v2
+definition:
+  typeName: User
+  authorizationRules:
+    # Rule 1: Allow id field for everyone
+    - allowFields: [id]
+    # Rule 2: Allow name and email if pii access is allowed
+    - allowFields: [name, email]
+      condition:
+        equals:
+          left: sessionVariable: x-hasura-has-pii-access
+          right: literal: true
+
+kind: ModelPermissions
+version: v2
+definition:
+  modelName: User
+  authorizationRules:
+    # Rule 1: Developers are allowed to access all users by default
+    - allowObjects: "*"
+      condition:
+        equals:
+          left: sessionVariable: x-hasura-role
+          right: literal: developer
+    # Rule 2: Support agents are allowed to access users they have support
+    # tickets for.
+    - allowObjects:
+        relationship:
+          name: tickets
+          predicate:
+             fieldComparison:
+               field: agent_id
+               operator: _eq
+               value: sessionVariable: x-hasura-agent-id
+        condition:
+          equals:
+            left: sessionVariable: x-hasura-role
+            right: literal: support_agent
+    # Rule 3: If a developer / support_agent does not have gov access,
+    # don't allow them to access gov users.
+    - denyObjects:
+       fieldComparison:
+         fieldName: is_gov
+         operator: _eq
+         value: literal: true
+       condition:
+         not:
+           equals:
+             left: sessionVariable: x-hasura-has-gov-access
+             right: literal: true
+
+kind: ModelPermissions
+version: v2
+definition:
+  modelName: UserActivity
+  authorizationRules:
+    # Rule 1: By default allow access to user activity if someone has access to the user itself
+    - allowObjects:
+        relationship:
+          name: user
+          relatedObjectAllowed: true
+    # Rule 2: Disallow activity that is explicitly hidden
+    - denyObjects:
+        fieldComparison:
+          fieldName: is_hidden
+          operator: _eq
+          value: literal: true
+```
