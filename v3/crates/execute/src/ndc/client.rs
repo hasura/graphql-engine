@@ -62,11 +62,11 @@ pub struct InvalidConnectorError {
 /// Configuration for the API client
 /// Contains all the information necessary to perform requests.
 #[derive(Debug, Clone)]
-pub struct Configuration {
-    pub base_path: reqwest::Url,
+pub struct Configuration<'s> {
+    pub base_path: &'s reqwest::Url,
     pub user_agent: Option<String>,
     pub client: reqwest::Client,
-    pub headers: HeaderMap<HeaderValue>,
+    pub headers: &'s HeaderMap<HeaderValue>,
     pub response_size_limit: Option<usize>,
 }
 
@@ -74,7 +74,7 @@ pub struct Configuration {
 ///
 /// <https://hasura.github.io/ndc-spec/specification/capabilities.html>
 pub async fn capabilities_get(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
 ) -> Result<ndc_models::CapabilitiesResponse, Error> {
     let tracer = tracing_util::global_tracer();
     tracer
@@ -84,7 +84,7 @@ pub async fn capabilities_get(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(&configuration.base_path, &["capabilities"])?;
+                    let url = append_path(configuration.base_path, &["capabilities"])?;
                     let request =
                         construct_request(configuration, reqwest::Method::GET, url, identity);
                     execute_request(configuration, request).await
@@ -98,7 +98,7 @@ pub async fn capabilities_get(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request>
 pub async fn explain_query_post(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
     query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -109,7 +109,7 @@ pub async fn explain_query_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(&configuration.base_path, &["query", "explain"])?;
+                    let url = append_path(configuration.base_path, &["query", "explain"])?;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(query_request)
@@ -125,7 +125,7 @@ pub async fn explain_query_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1>
 pub async fn explain_mutation_post(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
     mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -136,7 +136,7 @@ pub async fn explain_mutation_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(&configuration.base_path, &["mutation", "explain"])?;
+                    let url = append_path(configuration.base_path, &["mutation", "explain"])?;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(mutation_request)
@@ -152,7 +152,7 @@ pub async fn explain_mutation_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/mutations/index.html>
 pub async fn mutation_post(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
     mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::MutationResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -163,7 +163,7 @@ pub async fn mutation_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(&configuration.base_path, &["mutation"])?;
+                    let url = append_path(configuration.base_path, &["mutation"])?;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(mutation_request)
@@ -179,7 +179,7 @@ pub async fn mutation_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/queries/index.html>
 pub async fn query_post(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
     query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::QueryResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -190,7 +190,7 @@ pub async fn query_post(
             SpanVisibility::Internal,
             || {
                 Box::pin(async {
-                    let url = append_path(&configuration.base_path, &["query"])?;
+                    let url = append_path(configuration.base_path, &["query"])?;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(query_request)
@@ -246,7 +246,7 @@ fn construct_request(
 
 /// Execute a request and deserialize the JSON response
 async fn execute_request<T: DeserializeOwned>(
-    configuration: &Configuration,
+    configuration: &Configuration<'_>,
     request: reqwest::RequestBuilder,
 ) -> Result<T, Error> {
     let tracer = tracing_util::global_tracer();

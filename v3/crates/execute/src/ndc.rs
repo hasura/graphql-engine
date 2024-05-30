@@ -1,5 +1,7 @@
 pub mod response;
 
+use std::borrow::Cow;
+
 use axum::http::HeaderMap;
 use serde_json as json;
 
@@ -75,13 +77,13 @@ pub(crate) async fn fetch_from_data_connector<'s>(
             || {
                 Box::pin(async {
                     let headers =
-                        append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
                     let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers,
+                        headers: &headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
                     client::query_post(&ndc_config, query_request).await
@@ -93,18 +95,19 @@ pub(crate) async fn fetch_from_data_connector<'s>(
 }
 
 // This function appends project-id (if present) to the HeaderMap defined by the data_connector object
-pub fn append_project_id_to_headers(
-    mut headers: HeaderMap,
+pub fn append_project_id_to_headers<'a>(
+    headers: &'a HeaderMap,
     project_id: Option<&ProjectId>,
-) -> Result<HeaderMap, client::Error> {
+) -> Result<Cow<'a, HeaderMap>, client::Error> {
     match project_id {
-        None => Ok(headers),
+        None => Ok(Cow::Borrowed(headers)),
         Some(project_id) => {
-            headers.append(
+            let mut modified_headers = headers.clone();
+            modified_headers.append(
                 "project-id",
                 reqwest::header::HeaderValue::from_str(&project_id.0)?,
             );
-            Ok(headers)
+            Ok(Cow::Owned(modified_headers))
         }
     }
 }
@@ -202,13 +205,13 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
             || {
                 Box::pin(async {
                     let headers =
-                        append_project_id_to_headers(data_connector.headers.0.clone(), project_id)?;
+                        append_project_id_to_headers(&data_connector.headers.0, project_id)?;
                     let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers,
+                        headers: &headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
                     client::mutation_post(&ndc_config, query_request).await

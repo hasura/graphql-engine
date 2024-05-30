@@ -292,7 +292,7 @@ async fn fetch_explain_from_data_connector(
                         user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers: data_connector.headers.0.clone(),
+                        headers: &data_connector.headers.0,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
                     // TODO: use capabilities from the data connector context

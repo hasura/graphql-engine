@@ -217,14 +217,14 @@ pub enum ResolvedDataConnectorUrl {
 }
 
 impl ResolvedDataConnectorUrl {
-    pub fn get_url(&self, operation: OperationType) -> reqwest::Url {
+    pub fn get_url(&self, operation: OperationType) -> &reqwest::Url {
         match self {
-            ResolvedDataConnectorUrl::SingleUrl(url) => url.0.clone(),
+            ResolvedDataConnectorUrl::SingleUrl(url) => &url.0,
             ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls { read, write }) => {
                 match operation {
-                    OperationType::Query => read.0.clone(),
-                    OperationType::Mutation => write.0.clone(),
-                    OperationType::Subscription => write.0.clone(),
+                    OperationType::Query => &read.0,
+                    OperationType::Mutation => &write.0,
+                    OperationType::Subscription => &write.0,
                 }
             }
         }
