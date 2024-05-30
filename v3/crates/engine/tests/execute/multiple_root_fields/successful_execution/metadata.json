@@ -289,8 +289,7 @@
                 "capabilities": {
                   "query": {
                     "aggregates": {},
-                    "variables": {},
-                    "explain": {}
+                    "variables": {}
                   },
                   "relationships": {
                     "relation_comparisons": {},
@@ -955,7 +954,9 @@
                     "relation_comparisons": {},
                     "order_by_aggregate": {}
                   },
-                  "mutation": {}
+                  "mutation": {
+                    "explain": {}
+                  }
                 },
                 "version": "0.1.0"
               }

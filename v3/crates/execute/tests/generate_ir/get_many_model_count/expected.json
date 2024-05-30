@@ -36,6 +36,10 @@
                                   },
                                   "headers": {
                                     "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                  },
+                                  "capabilities": {
+                                    "supports_explaining_queries": true,
+                                    "supports_explaining_mutations": false
                                   }
                                 },
                                 "collection": "article",
@@ -147,6 +151,10 @@
                                         },
                                         "headers": {
                                           "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                        },
+                                        "capabilities": {
+                                          "supports_explaining_queries": true,
+                                          "supports_explaining_mutations": false
                                         }
                                       },
                                       "collection": "author",
@@ -258,6 +266,10 @@
                                               },
                                               "headers": {
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supports_explaining_queries": true,
+                                                "supports_explaining_mutations": false
                                               }
                                             },
                                             "collection": "article",
@@ -467,6 +479,10 @@
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              },
+              "capabilities": {
+                "supports_explaining_queries": true,
+                "supports_explaining_mutations": false
               }
             },
             "arguments": {},
@@ -486,6 +502,10 @@
                           },
                           "headers": {
                             "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          },
+                          "capabilities": {
+                            "supports_explaining_queries": true,
+                            "supports_explaining_mutations": false
                           }
                         },
                         "collection": "article",
@@ -512,6 +532,10 @@
                                     },
                                     "headers": {
                                       "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    },
+                                    "capabilities": {
+                                      "supports_explaining_queries": true,
+                                      "supports_explaining_mutations": false
                                     }
                                   },
                                   "collection": "author",
@@ -538,6 +562,10 @@
                                               },
                                               "headers": {
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supports_explaining_queries": true,
+                                                "supports_explaining_mutations": false
                                               }
                                             },
                                             "collection": "article",
@@ -584,6 +612,10 @@
                                               },
                                               "headers": {
                                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                              },
+                                              "capabilities": {
+                                                "supports_explaining_queries": true,
+                                                "supports_explaining_mutations": false
                                               }
                                             },
                                             "source_type_mappings": {
@@ -628,6 +660,10 @@
                                                   },
                                                   "headers": {
                                                     "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                                  },
+                                                  "capabilities": {
+                                                    "supports_explaining_queries": true,
+                                                    "supports_explaining_mutations": false
                                                   }
                                                 },
                                                 "collection": "article",
@@ -711,6 +747,10 @@
                                     },
                                     "headers": {
                                       "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                    },
+                                    "capabilities": {
+                                      "supports_explaining_queries": true,
+                                      "supports_explaining_mutations": false
                                     }
                                   },
                                   "source_type_mappings": {
@@ -755,6 +795,10 @@
                                         },
                                         "headers": {
                                           "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                                        },
+                                        "capabilities": {
+                                          "supports_explaining_queries": true,
+                                          "supports_explaining_mutations": false
                                         }
                                       },
                                       "collection": "author",
@@ -838,6 +882,10 @@
                           },
                           "headers": {
                             "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                          },
+                          "capabilities": {
+                            "supports_explaining_queries": true,
+                            "supports_explaining_mutations": false
                           }
                         },
                         "source_type_mappings": {
@@ -882,6 +930,10 @@
                               },
                               "headers": {
                                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+                              },
+                              "capabilities": {
+                                "supports_explaining_queries": true,
+                                "supports_explaining_mutations": false
                               }
                             },
                             "collection": "article",

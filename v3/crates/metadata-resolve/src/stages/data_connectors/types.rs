@@ -10,7 +10,6 @@ use open_dds::{
         self, DataConnectorName, DataConnectorScalarType, DataConnectorUrl, ReadWriteUrls,
         VersionedSchemaAndCapabilities,
     },
-    EnvironmentValue,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -147,6 +146,7 @@ pub struct DataConnectorLink {
     pub name: Qualified<DataConnectorName>,
     pub url: ResolvedDataConnectorUrl,
     pub headers: SerializableHeaderMap,
+    pub capabilities: DataConnectorCapabilities,
 }
 
 impl std::hash::Hash for DataConnectorLink {
@@ -161,10 +161,9 @@ impl std::hash::Hash for DataConnectorLink {
 impl DataConnectorLink {
     pub(crate) fn new(
         name: Qualified<DataConnectorName>,
-        url: DataConnectorUrl,
-        headers: &IndexMap<String, EnvironmentValue>,
+        info: &DataConnectorCoreInfo<'_>,
     ) -> Result<Self, Error> {
-        let url = match url {
+        let url = match info.url {
             DataConnectorUrl::SingleUrl(url) => ResolvedDataConnectorUrl::SingleUrl(
                 SerializableUrl::new(&url.value).map_err(|e| Error::InvalidDataConnectorUrl {
                     data_connector_name: name.clone(),
@@ -188,7 +187,7 @@ impl DataConnectorLink {
                 })
             }
         };
-        let headers = SerializableHeaderMap::new(headers).map_err(|e| match e {
+        let headers = SerializableHeaderMap::new(info.headers).map_err(|e| match e {
             HeaderError::InvalidHeaderName { header_name } => Error::InvalidHeaderName {
                 data_connector: name.clone(),
                 header_name,
@@ -198,7 +197,21 @@ impl DataConnectorLink {
                 header_name,
             },
         })?;
-        Ok(Self { name, url, headers })
+        let capabilities = DataConnectorCapabilities {
+            supports_explaining_queries: info.capabilities.capabilities.query.explain.is_some(),
+            supports_explaining_mutations: info
+                .capabilities
+                .capabilities
+                .mutation
+                .explain
+                .is_some(),
+        };
+        Ok(Self {
+            name,
+            url,
+            headers,
+            capabilities,
+        })
     }
 }
 
@@ -229,6 +242,12 @@ impl ResolvedDataConnectorUrl {
             }
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct DataConnectorCapabilities {
+    pub supports_explaining_queries: bool,
+    pub supports_explaining_mutations: bool,
 }
 
 #[cfg(test)]

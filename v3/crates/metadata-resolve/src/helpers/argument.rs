@@ -476,8 +476,7 @@ pub(crate) fn resolve_model_predicate_with_type(
 
                                 let data_connector_link = data_connectors::DataConnectorLink::new(
                                     data_connector_name.clone(),
-                                    data_connector_context.inner.url.clone(),
-                                    data_connector_context.inner.headers,
+                                    &data_connector_context.inner,
                                 )?;
 
                                 // look up this type in the context of it's data connector

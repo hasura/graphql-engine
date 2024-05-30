@@ -104,6 +104,10 @@
               },
               "headers": {
                 "hasura-m-auth-token": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!#$&'()*+,/:;=?@[]\""
+              },
+              "capabilities": {
+                "supports_explaining_queries": true,
+                "supports_explaining_mutations": false
               }
             },
             "collection": "article",

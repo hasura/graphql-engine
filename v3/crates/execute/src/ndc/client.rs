@@ -1,5 +1,3 @@
-use std::convert::identity;
-
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
@@ -64,34 +62,9 @@ pub struct InvalidConnectorError {
 #[derive(Debug, Clone)]
 pub struct Configuration<'s> {
     pub base_path: &'s reqwest::Url,
-    pub user_agent: Option<String>,
     pub client: reqwest::Client,
     pub headers: &'s HeaderMap<HeaderValue>,
     pub response_size_limit: Option<usize>,
-}
-
-/// GET on /capabilities endpoint
-///
-/// <https://hasura.github.io/ndc-spec/specification/capabilities.html>
-pub async fn capabilities_get(
-    configuration: &Configuration<'_>,
-) -> Result<ndc_models::CapabilitiesResponse, Error> {
-    let tracer = tracing_util::global_tracer();
-    tracer
-        .in_span_async(
-            "capabilities_get",
-            "Get capabilities",
-            SpanVisibility::Internal,
-            || {
-                Box::pin(async {
-                    let url = append_path(configuration.base_path, &["capabilities"])?;
-                    let request =
-                        construct_request(configuration, reqwest::Method::GET, url, identity);
-                    execute_request(configuration, request).await
-                })
-            },
-        )
-        .await
 }
 
 /// POST on /query/explain endpoint
@@ -230,11 +203,6 @@ fn construct_request(
                 let mut request_builder = configuration.client.request(method, url);
                 // Apply customizations
                 request_builder = modify(request_builder);
-                // Set user agent if provided
-                if let Some(ref user_agent) = configuration.user_agent {
-                    request_builder =
-                        request_builder.header(reqwest::header::USER_AGENT, user_agent);
-                }
                 // Set headers from configuration
                 request_builder = request_builder.headers(configuration.headers.clone());
                 // Return the prepared request

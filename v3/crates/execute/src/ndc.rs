@@ -80,7 +80,6 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                         append_project_id_to_headers(&data_connector.headers.0, project_id)?;
                     let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
-                        user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
                         headers: &headers,
@@ -208,7 +207,6 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                         append_project_id_to_headers(&data_connector.headers.0, project_id)?;
                     let ndc_config = client::Configuration {
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
-                        user_agent: None,
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
                         headers: &headers,

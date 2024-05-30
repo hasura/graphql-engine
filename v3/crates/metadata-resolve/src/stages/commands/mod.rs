@@ -349,8 +349,7 @@ pub fn resolve_command_source(
     let command_source = CommandSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
-            data_connector_context.inner.url.clone(),
-            data_connector_context.inner.headers,
+            &data_connector_context.inner,
         )?,
         source: command_source.data_connector_command.clone(),
         type_mappings,

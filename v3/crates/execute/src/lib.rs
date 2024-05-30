@@ -400,36 +400,31 @@ mod tests {
     use schema::GDS;
 
     #[test]
-    fn test_generate_ir() {
+    fn test_generate_ir() -> Result<(), Box<dyn std::error::Error>> {
         let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
         let mut mint = Mint::new(&test_dir);
 
-        let schema = fs::read_to_string(test_dir.join("schema.json")).unwrap();
+        let schema = fs::read_to_string(test_dir.join("schema.json"))?;
 
-        let gds = GDS::new(open_dds::Metadata::from_json_str(&schema).unwrap()).unwrap();
-        let schema = GDS::build_schema(&gds).unwrap();
+        let gds = GDS::new(open_dds::Metadata::from_json_str(&schema)?)?;
+        let schema = GDS::build_schema(&gds)?;
 
-        for input_file in fs::read_dir(test_dir.join("generate_ir")).unwrap() {
-            let entry = input_file.unwrap();
-            let raw_request = {
-                let path = entry.path();
-                assert!(path.is_dir());
-                fs::read_to_string(path.join("request.gql")).unwrap()
-            };
-            let expected_path = {
-                let path = entry.path();
-                let test_name = path.file_name().unwrap().to_str().unwrap();
-                PathBuf::from_iter(["generate_ir", test_name, "expected.json"])
-            };
+        for input_file in fs::read_dir(test_dir.join("generate_ir"))? {
+            let path = input_file?.path();
+            assert!(path.is_dir());
 
-            let session = {
-                let path = entry.path();
-                let session_vars_path = path.join("session_variables.json");
-                resolve_session(session_vars_path)
-            };
-            let query = Parser::new(&raw_request)
-                .parse_executable_document()
-                .unwrap();
+            let test_name = path
+                .file_name()
+                .ok_or_else(|| format!("{path:?} is not a normal file or directory"))?;
+
+            let raw_request = fs::read_to_string(path.join("request.gql"))?;
+            let expected_path = PathBuf::from("generate_ir")
+                .join(test_name)
+                .join("expected.json");
+
+            let session_vars_path = path.join("session_variables.json");
+            let session = resolve_session(session_vars_path);
+            let query = Parser::new(&raw_request).parse_executable_document()?;
 
             let request = Request {
                 operation_name: None,
@@ -437,25 +432,25 @@ mod tests {
                 variables: HashMap::new(),
             };
 
-            let normalized_request = normalize_request(&session.role, &schema, &request).unwrap();
+            let normalized_request = normalize_request(&session.role, &schema, &request)?;
 
-            let ir = generate_ir(&schema, &session, &normalized_request).unwrap();
-            let mut expected = mint
-                .new_goldenfile_with_differ(
-                    expected_path,
-                    Box::new(|file1, file2| {
-                        let json1: serde_json::Value =
-                            serde_json::from_reader(File::open(file1).unwrap()).unwrap();
-                        let json2: serde_json::Value =
-                            serde_json::from_reader(File::open(file2).unwrap()).unwrap();
-                        if json1 != json2 {
-                            text_diff(file1, file2)
-                        }
-                    }),
-                )
-                .unwrap();
-            write!(expected, "{}", serde_json::to_string_pretty(&ir).unwrap()).unwrap();
+            let ir = generate_ir(&schema, &session, &normalized_request)?;
+            let mut expected = mint.new_goldenfile_with_differ(
+                expected_path,
+                Box::new(|file1, file2| {
+                    let json1: serde_json::Value =
+                        serde_json::from_reader(File::open(file1).unwrap()).unwrap();
+                    let json2: serde_json::Value =
+                        serde_json::from_reader(File::open(file2).unwrap()).unwrap();
+                    if json1 != json2 {
+                        text_diff(file1, file2)
+                    }
+                }),
+            )?;
+            write!(expected, "{}", serde_json::to_string_pretty(&ir)?)?;
         }
+
+        Ok(())
     }
 
     // TODO: remove duplication between this function and 'add_session'

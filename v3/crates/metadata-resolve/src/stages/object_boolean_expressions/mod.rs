@@ -268,8 +268,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
 
     let data_connector_link = data_connectors::DataConnectorLink::new(
         data_connector_name,
-        data_connector_context.inner.url.clone(),
-        data_connector_context.inner.headers,
+        &data_connector_context.inner,
     )?;
 
     let resolved_boolean_expression = ObjectBooleanExpressionType {

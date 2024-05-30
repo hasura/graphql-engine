@@ -700,8 +700,7 @@ fn resolve_model_source(
     let resolved_model_source = ModelSource {
         data_connector: data_connectors::DataConnectorLink::new(
             qualified_data_connector_name,
-            data_connector_context.inner.url.clone(),
-            data_connector_context.inner.headers,
+            &data_connector_context.inner,
         )?,
         collection: model_source.collection.clone(),
         type_mappings,
