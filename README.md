@@ -14,19 +14,19 @@ to data via a single, composable, secure API endpoint.
 [![Latest release](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
 [![Docs](https://img.shields.io/badge/docs-v2.x-yellow.svg?style=flat)](https://hasura.io/docs)
 
-Hasura V2 is the current stable version of the Hasura GraphQL Engine. Recommended for production use. Please find more 
+Hasura V2 is the current stable version of the Hasura GraphQL Engine. Please find more 
 detailed information about the V2 Hasura Graphql Engine in the `v2` folder and this [README](V2-README.md).
 
 ## Hasura V3
 
 [//]: # (TODO update version badge)
 [//]: # ([![Latest release]&#40;https://img.shields.io/github/v/release/hasura/graphql-engine&#41;]&#40;https://github.com/hasura/graphql-engine/releases/latest&#41;)
-[![Docs](https://img.shields.io/badge/docs-v3.x.alpha-yellow.svg?style=flat)](https://hasura.io/docs/3.0/)
+[![Docs](https://img.shields.io/badge/docs-v3.x.beta-yellow.svg?style=flat)](https://hasura.io/docs/3.0/getting-started/overview/)
 
-The future of data delivery. Currently in `alpha`. [Read more](https://hasura.io/ddn)
+The future of data delivery. Currently in `beta` and soon to be generally available, supporting PostgreSQL (and its flavors), MongoDB, Clickhouse and MS SQL Server. Also supports writing custom business logic using the Typescript Connector SDK. Here is the recommended [Getting Started](https://hasura.io/docs/3.0/getting-started/overview/) guide on DDN.
 
-The Hasura V3 engine code, which powers Hasura DDN, is in the `V3` folder of this repo. You can find more detailed 
-information about the Hasura DDN Graphql Engine in this [README](/v3/README.md).
+The Hasura v3 engine code, which powers Hasura DDN, is in the `v3` folder of this repo. You can find more detailed 
+information about in this [v3 README](/v3/README.md).
 
 The Hasura DDN architecture includes Data Connectors to connect to data sources. All Hasura connectors are also 
 available completely open source. Check out the [Connector Hub](https://hasura.io/connectors/) which lists all 
@@ -104,10 +104,10 @@ This includes everything in the [`docs`](v2/docs) and [`community`](v2/community
 directories.
 
 ### V3
-The [Native Data Connectors](https://github.com/hasura/ndc-hub) are available under 
+All the [Data Connectors](https://github.com/hasura/ndc-hub) are available under 
 the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
-The core [V3 GraphQL Engine](v3/) is intended to be licensed under Apache 2.0. However, due to certain MPL/GPL dependencies, we are restricted. Hasura intends to update these dependencies soon and publish a long term license under which this code gets available.
+The core [V3 GraphQL Engine](v3/) is intended to be licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
 
 
