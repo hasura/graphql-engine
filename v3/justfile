@@ -58,14 +58,10 @@ fix-format:
 ci-test: docker-refresh
   just docker_with_test_env cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast
 
-test TESTNAME='':
+test *ARGS:
   #!/usr/bin/env bash
-  if [[ -z '{{TESTNAME}}' ]]; then
-    COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast)
-  else
-    COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast -E 'test(={{TESTNAME}})')
-  fi
-  echo "${COMMAND[*]}"
+  COMMAND=(cargo nextest run --archive-file=./bin/nextest.tar.zst --no-fail-fast "$@")
+  echo "cargo nextest run --no-fail-fast $*"
   just docker_with_test_env "${COMMAND[@]}"
 
 update-golden-files: docker-refresh
@@ -124,8 +120,16 @@ stop-docker:
 # 127.0.0.1 custom_connector
 
 # run the tests using local engine (once)
-test-local: start-docker-test-deps
-  cargo test
+test-local *ARGS: start-docker-test-deps
+  #!/usr/bin/env bash
+  if command -v cargo-nextest; then
+    COMMAND=(cargo nextest run)
+  else
+    COMMAND=(cargo test)
+  fi
+  COMMAND+=(--no-fail-fast "$@")
+  echo "${COMMAND[*]}"
+  "${COMMAND[@]}"
 
 # run a watch process that runs the tests locally
 watch-local: start-docker-test-deps start-docker-run-deps
