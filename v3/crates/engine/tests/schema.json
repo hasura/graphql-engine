@@ -1961,6 +1961,33 @@
           "kind": "ObjectBooleanExpressionType",
           "version": "v1",
           "definition": {
+            "name": "artist_bool_exp",
+            "objectType": "Artist",
+            "dataConnectorName": "db",
+            "dataConnectorObjectType": "Artist",
+            "comparableFields": [
+              {
+                "fieldName": "ArtistId",
+                "operators": {
+                  "enableAll": true
+                }
+              },
+              {
+                "fieldName": "Name",
+                "operators": {
+                  "enableAll": true
+                }
+              }
+            ],
+            "graphql": {
+              "typeName": "ArtistBoolExp"
+            }
+          }
+        },
+        {
+          "kind": "ObjectBooleanExpressionType",
+          "version": "v1",
+          "definition": {
             "name": "album_bool_exp",
             "objectType": "Album",
             "dataConnectorName": "db",
@@ -2401,6 +2428,7 @@
               }
             ],
             "arguments": [],
+            "filterExpressionType": "album_bool_exp",
             "graphql": {
               "selectUniques": [
                 {
@@ -2516,6 +2544,7 @@
               }
             ],
             "arguments": [],
+            "filterExpressionType": "artist_bool_exp",
             "graphql": {
               "selectUniques": [
                 {
