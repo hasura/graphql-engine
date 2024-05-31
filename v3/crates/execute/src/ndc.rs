@@ -82,10 +82,10 @@ pub(crate) async fn fetch_from_data_connector<'s>(
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers: &headers,
+                        headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
-                    client::query_post(&ndc_config, query_request).await
+                    client::query_post(ndc_config, query_request).await
                     // .map_err(error::RequestError::from) // error::Error -> InternalError -> Error
                 })
             },
@@ -209,10 +209,10 @@ pub(crate) async fn fetch_from_data_connector_mutation<'s>(
                         base_path: data_connector.url.get_url(ast::OperationType::Mutation),
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers: &headers,
+                        headers,
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
-                    client::mutation_post(&ndc_config, query_request).await
+                    client::mutation_post(ndc_config, query_request).await
                 })
             },
         )

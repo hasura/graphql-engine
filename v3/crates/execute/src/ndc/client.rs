@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use reqwest::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize};
 use thiserror::Error;
@@ -63,7 +65,7 @@ pub struct InvalidConnectorError {
 pub struct Configuration<'s> {
     pub base_path: &'s reqwest::Url,
     pub client: reqwest::Client,
-    pub headers: &'s HeaderMap<HeaderValue>,
+    pub headers: Cow<'s, HeaderMap<HeaderValue>>,
     pub response_size_limit: Option<usize>,
 }
 
@@ -71,7 +73,7 @@ pub struct Configuration<'s> {
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request>
 pub async fn explain_query_post(
-    configuration: &Configuration<'_>,
+    configuration: Configuration<'_>,
     query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -83,11 +85,12 @@ pub async fn explain_query_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["query", "explain"])?;
+                    let response_size_limit = configuration.response_size_limit;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(query_request)
                         });
-                    execute_request(configuration, request).await
+                    execute_request(request, response_size_limit).await
                 })
             },
         )
@@ -98,7 +101,7 @@ pub async fn explain_query_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/explain.html?highlight=%2Fexplain#request-1>
 pub async fn explain_mutation_post(
-    configuration: &Configuration<'_>,
+    configuration: Configuration<'_>,
     mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::ExplainResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -110,11 +113,12 @@ pub async fn explain_mutation_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["mutation", "explain"])?;
+                    let response_size_limit = configuration.response_size_limit;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(mutation_request)
                         });
-                    execute_request(configuration, request).await
+                    execute_request(request, response_size_limit).await
                 })
             },
         )
@@ -125,7 +129,7 @@ pub async fn explain_mutation_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/mutations/index.html>
 pub async fn mutation_post(
-    configuration: &Configuration<'_>,
+    configuration: Configuration<'_>,
     mutation_request: &ndc_models::MutationRequest,
 ) -> Result<ndc_models::MutationResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -137,11 +141,12 @@ pub async fn mutation_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["mutation"])?;
+                    let response_size_limit = configuration.response_size_limit;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(mutation_request)
                         });
-                    execute_request(configuration, request).await
+                    execute_request(request, response_size_limit).await
                 })
             },
         )
@@ -152,7 +157,7 @@ pub async fn mutation_post(
 ///
 /// <https://hasura.github.io/ndc-spec/specification/queries/index.html>
 pub async fn query_post(
-    configuration: &Configuration<'_>,
+    configuration: Configuration<'_>,
     query_request: &ndc_models::QueryRequest,
 ) -> Result<ndc_models::QueryResponse, Error> {
     let tracer = tracing_util::global_tracer();
@@ -164,11 +169,12 @@ pub async fn query_post(
             || {
                 Box::pin(async {
                     let url = append_path(configuration.base_path, &["query"])?;
+                    let response_size_limit = configuration.response_size_limit;
                     let request =
                         construct_request(configuration, reqwest::Method::POST, url, |r| {
                             r.json(query_request)
                         });
-                    execute_request(configuration, request).await
+                    execute_request(request, response_size_limit).await
                 })
             },
         )
@@ -188,7 +194,7 @@ fn append_path(url: &reqwest::Url, path: &[&str]) -> Result<reqwest::Url, Error>
 }
 
 fn construct_request(
-    configuration: &Configuration,
+    configuration: Configuration,
     method: reqwest::Method,
     url: reqwest::Url,
     modify: impl FnOnce(reqwest::RequestBuilder) -> reqwest::RequestBuilder,
@@ -204,7 +210,7 @@ fn construct_request(
                 // Apply customizations
                 request_builder = modify(request_builder);
                 // Set headers from configuration
-                request_builder = request_builder.headers(configuration.headers.clone());
+                request_builder = request_builder.headers(configuration.headers.into_owned());
                 // Return the prepared request
                 Successful::new(request_builder)
             },
@@ -214,8 +220,8 @@ fn construct_request(
 
 /// Execute a request and deserialize the JSON response
 async fn execute_request<T: DeserializeOwned>(
-    configuration: &Configuration<'_>,
     request: reqwest::RequestBuilder,
+    response_size_limit: Option<usize>,
 ) -> Result<T, Error> {
     let tracer = tracing_util::global_tracer();
 
@@ -246,7 +252,7 @@ async fn execute_request<T: DeserializeOwned>(
                 Box::pin(async {
                     let response_status = response.status();
                     if !response_status.is_client_error() && !response_status.is_server_error() {
-                        let result = match configuration.response_size_limit {
+                        let result = match response_size_limit {
                             None => response.json().await?,
                             Some(size_limit) => {
                                 handle_response_with_size_limit(response, size_limit).await?

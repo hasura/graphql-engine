@@ -1,3 +1,7 @@
+pub mod types;
+
+use std::borrow::Cow;
+
 use super::remote_joins::types::{JoinNode, RemoteJoinType};
 use super::HttpContext;
 use crate::ndc::client as ndc_client;
@@ -7,12 +11,11 @@ use crate::{error, plan};
 use async_recursion::async_recursion;
 use hasura_authn_core::Session;
 use lang_graphql as gql;
+use lang_graphql::ast::common as ast;
 use lang_graphql::{http::RawRequest, schema::Schema};
 use nonempty::NonEmpty;
 use schema::GDS;
 use tracing_util::SpanVisibility;
-pub mod types;
-use lang_graphql::ast::common as ast;
 
 pub async fn execute_explain(
     http_context: &HttpContext,
@@ -291,13 +294,13 @@ async fn fetch_explain_from_data_connector(
                         base_path: data_connector.url.get_url(ast::OperationType::Query),
                         // This is isn't expensive, reqwest::Client is behind an Arc
                         client: http_context.client.clone(),
-                        headers: &data_connector.headers.0,
+                        headers: Cow::Borrowed(&data_connector.headers.0),
                         response_size_limit: http_context.ndc_response_size_limit,
                     };
                     match ndc_request {
                         types::NDCRequest::Query(query_request) => {
                             if data_connector.capabilities.supports_explaining_queries {
-                                ndc_client::explain_query_post(&ndc_config, query_request)
+                                ndc_client::explain_query_post(ndc_config, query_request)
                                     .await
                                     .map(Some)
                                     .map_err(error::FieldError::from)
@@ -307,7 +310,7 @@ async fn fetch_explain_from_data_connector(
                         }
                         types::NDCRequest::Mutation(mutation_request) => {
                             if data_connector.capabilities.supports_explaining_mutations {
-                                ndc_client::explain_mutation_post(&ndc_config, mutation_request)
+                                ndc_client::explain_mutation_post(ndc_config, mutation_request)
                                     .await
                                     .map(Some)
                                     .map_err(error::FieldError::from)
