@@ -71,8 +71,10 @@ pub(crate) fn collect_type_mapping_for_source(
                     ndc_object_type_name,
                     ..
                 } = inserted_mapping;
-                if ndc_object_type_name != *mapping_to_collect.ndc_object_type_name {
-                    return Err(
+                return if ndc_object_type_name == *mapping_to_collect.ndc_object_type_name {
+                    Ok(())
+                } else {
+                    Err(
                         TypeMappingCollectionError::MappingToMultipleDataConnectorObjectType {
                             type_name: mapping_to_collect.type_name.clone(),
                             ndc_type_1: ndc_object_type_name,
@@ -80,10 +82,8 @@ pub(crate) fn collect_type_mapping_for_source(
                                 mapping_to_collect.ndc_object_type_name.to_string(),
                             ),
                         },
-                    );
-                } else {
-                    return Ok(());
-                }
+                    )
+                };
             }
 
             let object_types::TypeMapping::Object { field_mappings, .. } = type_mapping;

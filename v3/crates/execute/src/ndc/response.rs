@@ -39,9 +39,8 @@ async fn handle_response_by_chunks_with_size_limit<T: for<'de> serde::Deserializ
                 "Size exceeds the limit {}",
                 size_limit
             )));
-        } else {
-            buf.extend_from_slice(&chunk);
         }
+        buf.extend_from_slice(&chunk);
     }
     Ok(serde_json::from_slice(&buf)?)
 }

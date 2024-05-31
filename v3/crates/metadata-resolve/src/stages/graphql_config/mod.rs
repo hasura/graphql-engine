@@ -214,8 +214,10 @@ pub fn resolve_graphql_config(
                                 .copied()
                                 .collect::<HashSet<_>>();
                             if input_directions
-                                != HashSet::from([OrderByDirection::Asc, OrderByDirection::Desc])
+                                == HashSet::from([OrderByDirection::Asc, OrderByDirection::Desc])
                             {
+                                mk_name(&order_by_enum_type.type_name)
+                            } else {
                                 let invalid_directions = order_by_enum_type
                                     .directions
                                     .iter()
@@ -228,8 +230,6 @@ pub fn resolve_graphql_config(
                                             directions: invalid_directions,
                                         },
                                 })
-                            } else {
-                                mk_name(&order_by_enum_type.type_name)
                             }
                         }),
                         _ => Err(Error::GraphqlConfigError {

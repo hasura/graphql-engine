@@ -309,14 +309,14 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
             let normalized_field_value = match (argument_value, &argument_info.default_value) {
                 // Neither argument value nor default value
                 (None, None) => {
-                    if !argument_type.nullable {
+                    if argument_type.nullable {
+                        None
+                    } else {
                         return Err(Error::RequiredArgumentNotFound {
                             type_name: type_name.clone(),
                             field_name: field_name.clone(),
                             argument_name: name.clone(),
                         });
-                    } else {
-                        None
                     }
                 }
 
@@ -382,14 +382,14 @@ fn normalize_arguments<'q, 's, S: schema::SchemaContext>(
     }
 
     // Finally we check if there are any arguments that aren't defined on the field
-    if !arguments_map.is_empty() {
+    if arguments_map.is_empty() {
+        Ok(normalized_arguments)
+    } else {
         Err(Error::ArgumentsNotFound {
             type_name: type_name.clone(),
             field_name: field_name.clone(),
             argument_names: arguments_map.keys().copied().cloned().collect(),
         })
-    } else {
-        Ok(normalized_arguments)
     }
 }
 

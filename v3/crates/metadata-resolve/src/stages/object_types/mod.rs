@@ -155,13 +155,13 @@ pub fn resolve_object_type(
                 global_id_enabled_types.insert(qualified_type_name.clone(), Vec::new());
             };
             for global_id_field in global_id_fields {
-                if !resolved_fields.contains_key(global_id_field) {
+                if resolved_fields.contains_key(global_id_field) {
+                    resolved_global_id_fields.push(global_id_field.clone())
+                } else {
                     return Err(Error::UnknownFieldInGlobalId {
                         field_name: global_id_field.clone(),
                         type_name: qualified_type_name.clone(),
                     });
-                } else {
-                    resolved_global_id_fields.push(global_id_field.clone())
                 }
             }
         }

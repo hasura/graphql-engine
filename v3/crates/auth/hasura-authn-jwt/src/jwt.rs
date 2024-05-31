@@ -670,16 +670,16 @@ pub(crate) fn get_authorization_token(
                     Cookie::parse(cookie_header).map_err(|e| Error::CookieParseError { err: e })?;
                 (cookie_value.name_raw(), cookie_value.value_raw())
             };
-            if cookie_name != Some(name) {
-                return Err(Error::CookieNameNotFound {
-                    cookie_name: name.to_string(),
-                });
-            } else {
+            if cookie_name == Some(name) {
                 cookie_value
                     .ok_or(Error::MissingCookieValue {
                         cookie_name: name.to_string(),
                     })?
                     .to_string()
+            } else {
+                return Err(Error::CookieNameNotFound {
+                    cookie_name: name.to_string(),
+                });
             }
         }
     })

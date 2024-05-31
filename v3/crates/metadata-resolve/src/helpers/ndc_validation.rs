@@ -133,11 +133,8 @@ pub fn validate_ndc(
     model: &models::Model,
     schema: &data_connectors::DataConnectorSchema,
 ) -> std::result::Result<(), NDCValidationError> {
-    let model_source = match &model.source {
-        Some(model_source) => model_source,
-        None => {
-            return Ok(());
-        }
+    let Some(model_source) = &model.source else {
+        return Ok(());
     };
     let db = &model_source.data_connector;
 
@@ -239,11 +236,8 @@ pub fn validate_ndc_command(
     schema: &data_connectors::DataConnectorSchema,
 ) -> std::result::Result<(), NDCValidationError> {
     // Check if the command source exists for the command
-    let command_source = match &command.source {
-        Some(command_source) => command_source,
-        None => {
-            return Ok(());
-        }
+    let Some(command_source) = &command.source else {
+        return Ok(());
     };
 
     let db = &command_source.data_connector;

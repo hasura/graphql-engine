@@ -20,15 +20,15 @@ pub fn limit_recursion(_attr: TokenStream, item: TokenStream) -> TokenStream {
     // Check return type
     let return_type_check = if let ReturnType::Type(_, type_path) = &input_fn.sig.output {
         let type_str = quote! {#type_path}.to_string();
-        if !type_str.contains("Result") {
-            Some(quote_spanned! {type_path.span()=>
+        if type_str.contains("Result") {
+            None
+        } else {
+            Some(quote_spanned! { type_path.span() =>
                 compile_error!("`#[limit_recursion]` can only be used on functions that return `Result`.");
             })
-        } else {
-            None
         }
     } else {
-        Some(quote_spanned! {input_fn.sig.output.span()=>
+        Some(quote_spanned! { input_fn.sig.output.span() =>
             compile_error!("`#[limit_recursion]` can only be used on functions that return `Result`.");
         })
     };

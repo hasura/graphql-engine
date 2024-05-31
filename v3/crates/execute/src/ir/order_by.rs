@@ -39,9 +39,7 @@ pub(crate) fn build_ndc_order_by<'s>(
                         // This is done because the users might provide multiple key-value pairs
                         // in a single input object and the server might interpret it arbitrarily
                         // since input objects values are unordered key-value pair lists.
-                        if arguments.len() != 1 {
-                            Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?
-                        } else {
+                        if arguments.len() == 1 {
                             let argument = arguments
                                     .first()
                                     .ok_or(error::InternalEngineError::InternalGeneric {
@@ -57,6 +55,8 @@ pub(crate) fn build_ndc_order_by<'s>(
                                 usage_counts,
                             )?;
                             ndc_order_elements.extend(order_by_element);
+                        } else {
+                            Err(error::Error::OrderByObjectShouldExactlyHaveOneKeyValuePair)?
                         }
                     }
                     _ => Err(error::InternalEngineError::InternalGeneric {

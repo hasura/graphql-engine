@@ -356,9 +356,7 @@ fn get_relationship_capabilities(
     target_name: &RelationshipTargetName,
     data_connectors: &data_connectors::DataConnectors,
 ) -> Result<Option<RelationshipCapabilities>, Error> {
-    let data_connector = if let Some(data_connector) = &source_data_connector {
-        data_connector
-    } else {
+    let Some(data_connector) = &source_data_connector else {
         return Ok(None);
     };
 

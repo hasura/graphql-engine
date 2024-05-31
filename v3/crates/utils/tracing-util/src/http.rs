@@ -71,7 +71,9 @@ impl<T> Traceable for TraceableHttpResponse<T> {
 
     fn get_error(&self) -> Option<Self::ErrorType<'_>> {
         // If the response status is not OK, return an error.
-        if self.response.status() != http::StatusCode::OK {
+        if self.response.status() == http::StatusCode::OK {
+            None
+        } else {
             Some(ResponseError {
                 error: format!(
                     "HTTP request to {} failed with status {}",
@@ -79,8 +81,6 @@ impl<T> Traceable for TraceableHttpResponse<T> {
                     self.response.status()
                 ),
             })
-        } else {
-            None
         }
     }
 }

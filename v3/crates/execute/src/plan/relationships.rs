@@ -92,7 +92,7 @@ pub(crate) fn process_model_relationship_definition(
         target_ndc_column,
     } in mappings
     {
-        if !matches!(
+        if matches!(
             metadata_resolve::relationship_execution_category(
                 source_data_connector,
                 &target_source.model.data_connector,
@@ -100,8 +100,6 @@ pub(crate) fn process_model_relationship_definition(
             ),
             metadata_resolve::RelationshipExecutionCategory::Local
         ) {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
-        } else {
             let target_column = target_ndc_column.as_ref().ok_or_else(|| {
                 error::InternalError::InternalGeneric {
                     description: format!(
@@ -129,6 +127,8 @@ pub(crate) fn process_model_relationship_definition(
                     relationship_name: relationship_name.clone(),
                 })?
             }
+        } else {
+            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
         }
     }
     let ndc_relationship = ndc_models::Relationship {
@@ -161,7 +161,7 @@ pub(crate) fn process_command_relationship_definition(
         argument_name: target_argument,
     } in &annotation.mappings
     {
-        if !matches!(
+        if matches!(
             metadata_resolve::relationship_execution_category(
                 source_data_connector,
                 &target_source.details.data_connector,
@@ -169,8 +169,6 @@ pub(crate) fn process_command_relationship_definition(
             ),
             metadata_resolve::RelationshipExecutionCategory::Local
         ) {
-            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
-        } else {
             let source_column = relationship::get_field_mapping_of_field_name(
                 source_type_mappings,
                 &annotation.source_type,
@@ -194,6 +192,8 @@ pub(crate) fn process_command_relationship_definition(
                     relationship_name: annotation.relationship_name.clone(),
                 })?
             }
+        } else {
+            Err(error::InternalError::RemoteRelationshipsAreNotSupported)?
         }
     }
 
