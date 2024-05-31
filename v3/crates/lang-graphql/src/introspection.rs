@@ -91,7 +91,6 @@ pub fn schema_type<'s, S: schema::SchemaContext>(
         match field_call.name.as_str() {
             "__typename" => Ok(json::to_value(type_name)?),
             // "description" => Ok(json::to_value(&scalar.description)?),
-            "description" => Ok(json::Value::Null),
             "types" => {
                 // we publish only those types that are reachable for the
                 // namespace
@@ -173,8 +172,7 @@ fn scalar_type<'s, S: schema::SchemaContext>(
             "kind" => Ok(json::to_value("SCALAR")?),
             "name" => Ok(json::to_value(&scalar.name)?),
             "description" => Ok(json::to_value(&scalar.description)?),
-            // TODO
-            "specifiedByURL" => Ok(json::Value::Null),
+            // TODO: "specifiedByURL"
             _ => Ok(json::Value::Null),
         }
     })
@@ -511,8 +509,7 @@ fn input_value<'s, S: schema::SchemaContext>(
                 &input_value.field_type,
                 &field.selection_set,
             )),
-            // TODO
-            "defaultValue" => Ok(json::Value::Null),
+            // TODO: "defaultValue"
             "isDeprecated" => Ok(json::to_value(
                 input_value.deprecation_status.is_deprecated(),
             )?),

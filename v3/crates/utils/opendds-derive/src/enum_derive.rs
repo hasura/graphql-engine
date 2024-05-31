@@ -27,8 +27,9 @@ impl EnumTagType {
 
     fn generate_tag(&self) -> String {
         match self {
-            EnumTagType::Internal { tag } => tag.to_string(),
-            EnumTagType::Adjacent { tag, content: _ } => tag.to_string(),
+            EnumTagType::Internal { tag } | EnumTagType::Adjacent { tag, content: _ } => {
+                tag.to_string()
+            }
         }
     }
 }

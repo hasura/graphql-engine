@@ -236,8 +236,7 @@ impl ResolvedDataConnectorUrl {
             ResolvedDataConnectorUrl::ReadWriteUrls(ResolvedReadWriteUrls { read, write }) => {
                 match operation {
                     OperationType::Query => &read.0,
-                    OperationType::Mutation => &write.0,
-                    OperationType::Subscription => &write.0,
+                    OperationType::Mutation | OperationType::Subscription => &write.0,
                 }
             }
         }

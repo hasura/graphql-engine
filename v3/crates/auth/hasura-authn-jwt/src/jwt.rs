@@ -105,24 +105,24 @@ impl Error {
     pub fn to_status_code(&self) -> StatusCode {
         match self {
             Error::Internal(_e) => StatusCode::INTERNAL_SERVER_ERROR,
-            Error::ErrorDecodingAuthorizationHeader(_) => StatusCode::BAD_REQUEST,
-            Error::KidHeaderNotFound => StatusCode::BAD_REQUEST,
-            Error::ExpectedStringifiedJson => StatusCode::BAD_REQUEST,
-            Error::DisallowedDefaultRole => StatusCode::BAD_REQUEST,
-            Error::ParseClaimsMapEntryError {
+            Error::ErrorDecodingAuthorizationHeader(_)
+            | Error::KidHeaderNotFound
+            | Error::ExpectedStringifiedJson
+            | Error::DisallowedDefaultRole
+            | Error::ParseClaimsMapEntryError {
                 claim_name: _,
                 err: _,
-            } => StatusCode::BAD_REQUEST,
-            Error::RequiredClaimNotFound { claim_name: _ } => StatusCode::BAD_REQUEST,
-            Error::AuthorizationHeaderSourceNotFound { header_name: _ } => StatusCode::BAD_REQUEST,
-            Error::CookieNotFound => StatusCode::BAD_REQUEST,
-            Error::CookieNameNotFound { cookie_name: _ } => StatusCode::BAD_REQUEST,
-            Error::AuthorizationHeaderParseError {
+            }
+            | Error::RequiredClaimNotFound { claim_name: _ }
+            | Error::AuthorizationHeaderSourceNotFound { header_name: _ }
+            | Error::CookieNotFound
+            | Error::CookieNameNotFound { cookie_name: _ }
+            | Error::AuthorizationHeaderParseError {
                 err: _,
                 header_name: _,
-            } => StatusCode::BAD_REQUEST,
-            Error::CookieParseError { err: _ } => StatusCode::BAD_REQUEST,
-            Error::MissingCookieValue { cookie_name: _ } => StatusCode::BAD_REQUEST,
+            }
+            | Error::CookieParseError { err: _ }
+            | Error::MissingCookieValue { cookie_name: _ } => StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -424,17 +424,16 @@ pub struct Claims {
 fn get_decoding_key(secret_config: &JWTKeyConfig) -> Result<DecodingKey, Error> {
     let secret_key = secret_config.key.value.as_bytes();
     match secret_config.algorithm {
-        jwt::Algorithm::HS256 => Ok(jwt::DecodingKey::from_secret(secret_key)),
-        jwt::Algorithm::HS384 => Ok(jwt::DecodingKey::from_secret(secret_key)),
-        jwt::Algorithm::HS512 => Ok(jwt::DecodingKey::from_secret(secret_key)),
-        jwt::Algorithm::ES256 => jwt::DecodingKey::from_ec_pem(secret_key),
-        jwt::Algorithm::ES384 => jwt::DecodingKey::from_ec_pem(secret_key),
-        jwt::Algorithm::RS256 => jwt::DecodingKey::from_rsa_pem(secret_key),
-        jwt::Algorithm::RS384 => jwt::DecodingKey::from_rsa_pem(secret_key),
-        jwt::Algorithm::RS512 => jwt::DecodingKey::from_rsa_pem(secret_key),
-        jwt::Algorithm::PS256 => jwt::DecodingKey::from_rsa_pem(secret_key),
-        jwt::Algorithm::PS384 => jwt::DecodingKey::from_rsa_pem(secret_key),
-        jwt::Algorithm::PS512 => jwt::DecodingKey::from_rsa_pem(secret_key),
+        jwt::Algorithm::HS256 | jwt::Algorithm::HS384 | jwt::Algorithm::HS512 => {
+            Ok(jwt::DecodingKey::from_secret(secret_key))
+        }
+        jwt::Algorithm::ES256 | jwt::Algorithm::ES384 => jwt::DecodingKey::from_ec_pem(secret_key),
+        jwt::Algorithm::RS256
+        | jwt::Algorithm::RS384
+        | jwt::Algorithm::RS512
+        | jwt::Algorithm::PS256
+        | jwt::Algorithm::PS384
+        | jwt::Algorithm::PS512 => jwt::DecodingKey::from_rsa_pem(secret_key),
         jwt::Algorithm::EdDSA => jwt::DecodingKey::from_ed_pem(secret_key),
     }
     .map_err(|e| Error::Internal(InternalError::JWTDecodingKeyError(e)))

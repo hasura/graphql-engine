@@ -163,9 +163,10 @@ pub(crate) fn get_type_kind(
                 .map_err(|_| Error::InternalTypeNotFound {
                     type_name: type_name.to_owned(),
                 })? {
-                    TypeRepresentation::Object(_) => Ok(super::TypeKind::Object),
                     TypeRepresentation::Scalar(_) => Ok(super::TypeKind::Scalar),
-                    TypeRepresentation::BooleanExpression(_) => Ok(super::TypeKind::Object),
+                    TypeRepresentation::Object(_) | TypeRepresentation::BooleanExpression(_) => {
+                        Ok(super::TypeKind::Object)
+                    }
                 }
             }
         },

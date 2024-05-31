@@ -135,8 +135,8 @@ pub enum ProcessResponseAs<'ir> {
 impl<'ir> ProcessResponseAs<'ir> {
     pub fn is_nullable(&self) -> bool {
         match self {
-            ProcessResponseAs::Object { is_nullable } => *is_nullable,
-            ProcessResponseAs::Array { is_nullable } => *is_nullable,
+            ProcessResponseAs::Object { is_nullable }
+            | ProcessResponseAs::Array { is_nullable } => *is_nullable,
             ProcessResponseAs::CommandResponse { type_container, .. } => type_container.nullable,
         }
     }

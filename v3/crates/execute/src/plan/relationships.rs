@@ -19,7 +19,6 @@ pub(crate) fn collect_relationships(
     // from selection fields
     for field in ir.selection.fields.values() {
         match field {
-            FieldSelection::Column { .. } => (),
             FieldSelection::ModelRelationshipLocal {
                 query,
                 name,
@@ -47,10 +46,11 @@ pub(crate) fn collect_relationships(
                     )?;
                 }
             }
+            FieldSelection::Column { .. }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector
-            FieldSelection::ModelRelationshipRemote { .. } => (),
-            FieldSelection::CommandRelationshipRemote { .. } => (),
+            | FieldSelection::ModelRelationshipRemote { .. }
+            | FieldSelection::CommandRelationshipRemote { .. } => (),
         };
     }
 

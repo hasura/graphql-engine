@@ -256,8 +256,9 @@ impl<'a> EnumVariant<'a> {
                     // Preserve casing for kinded enums
                     Tagged::KindInternal => variant_name.to_string(),
                     // Use camel-casing for versioned enums
-                    Tagged::VersionInternal => variant_name.to_string().to_case(Case::Camel),
-                    Tagged::VersionWithDefinition => variant_name.to_string().to_case(Case::Camel),
+                    Tagged::VersionInternal | Tagged::VersionWithDefinition => {
+                        variant_name.to_string().to_case(Case::Camel)
+                    }
                 },
             }
         });

@@ -29,9 +29,9 @@ pub(crate) fn get_select_filter_predicate<'s>(
         .as_ref()
         .and_then(|annotation| match annotation {
             schema::NamespaceAnnotation::Model { filter, .. } => Some(filter),
-            schema::NamespaceAnnotation::NodeFieldTypeMappings(_) => None,
-            schema::NamespaceAnnotation::EntityTypeMappings(_) => None,
-            schema::NamespaceAnnotation::Command(_) => None,
+            schema::NamespaceAnnotation::NodeFieldTypeMappings(_)
+            | schema::NamespaceAnnotation::EntityTypeMappings(_)
+            | schema::NamespaceAnnotation::Command(_) => None,
         })
         // If we're hitting this case, it means that the caller of this
         // function expects a filter predicate, but it was not annotated
@@ -52,8 +52,8 @@ pub(crate) fn get_argument_presets(
     match namespaced_info.as_ref() {
         None => Ok(None), // no annotation is fine...
         Some(annotation) => match annotation {
-            schema::NamespaceAnnotation::Command(argument_presets) => Ok(Some(argument_presets)),
-            schema::NamespaceAnnotation::Model {
+            schema::NamespaceAnnotation::Command(argument_presets)
+            | schema::NamespaceAnnotation::Model {
                 argument_presets, ..
             } => Ok(Some(argument_presets)),
             other_namespace_annotation =>

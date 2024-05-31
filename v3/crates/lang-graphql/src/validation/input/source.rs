@@ -27,13 +27,13 @@ impl<'q, 's> LocationType<'q, 's> {
             LocationType::Argument {
                 type_,
                 default_value: _,
-            } => type_,
-            LocationType::Field {
+            }
+            | LocationType::Field {
                 type_,
                 default_value: _,
-            } => type_,
-            LocationType::List { type_ } => type_,
-            LocationType::NoLocation { type_ } => type_,
+            }
+            | LocationType::List { type_ }
+            | LocationType::NoLocation { type_ } => type_,
         }
     }
     pub fn default_value(&self) -> Option<&'s gql::ConstValue> {
@@ -41,13 +41,12 @@ impl<'q, 's> LocationType<'q, 's> {
             LocationType::Argument {
                 type_: _,
                 default_value,
-            } => *default_value,
-            LocationType::Field {
+            }
+            | LocationType::Field {
                 type_: _,
                 default_value,
             } => *default_value,
-            LocationType::List { type_: _ } => None,
-            LocationType::NoLocation { type_: _ } => None,
+            LocationType::List { type_: _ } | LocationType::NoLocation { type_: _ } => None,
         }
     }
 }

@@ -56,8 +56,7 @@ where
                     );
                 }
             }
-            sdl::TypeSystemDefinition::Schema(_) => {}
-            sdl::TypeSystemDefinition::Directive(_) => {}
+            sdl::TypeSystemDefinition::Schema(_) | sdl::TypeSystemDefinition::Directive(_) => {}
         }
     }
 

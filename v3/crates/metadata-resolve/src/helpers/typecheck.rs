@@ -27,8 +27,8 @@ pub fn typecheck_value_expression(
     value_expression: &open_dds::permissions::ValueExpression,
 ) -> Result<(), TypecheckError> {
     match &value_expression {
-        open_dds::permissions::ValueExpression::SessionVariable(_) => Ok(()),
-        open_dds::permissions::ValueExpression::BooleanExpression(_) => Ok(()),
+        open_dds::permissions::ValueExpression::SessionVariable(_)
+        | open_dds::permissions::ValueExpression::BooleanExpression(_) => Ok(()),
         open_dds::permissions::ValueExpression::Literal(json_value) => {
             typecheck_qualified_type_reference(ty, json_value)
         }
@@ -85,12 +85,11 @@ fn typecheck_inbuilt_type(
     value: &serde_json::Value,
 ) -> Result<(), TypecheckError> {
     match (inbuilt, value) {
-        (open_dds::types::InbuiltType::Int, serde_json::Value::Number(_)) => Ok(()),
-        (open_dds::types::InbuiltType::Float, serde_json::Value::Number(_)) => Ok(()),
-        (open_dds::types::InbuiltType::String, serde_json::Value::String(_)) => Ok(()),
-        (open_dds::types::InbuiltType::ID, serde_json::Value::String(_)) => Ok(()),
-        (open_dds::types::InbuiltType::Boolean, serde_json::Value::Bool(_)) => Ok(()),
-
+        (open_dds::types::InbuiltType::Int, serde_json::Value::Number(_))
+        | (open_dds::types::InbuiltType::Float, serde_json::Value::Number(_))
+        | (open_dds::types::InbuiltType::String, serde_json::Value::String(_))
+        | (open_dds::types::InbuiltType::ID, serde_json::Value::String(_))
+        | (open_dds::types::InbuiltType::Boolean, serde_json::Value::Bool(_)) => Ok(()),
         _ => Err(TypecheckError::ScalarTypeMismatch {
             expected: inbuilt.clone(),
             actual: value.clone(),

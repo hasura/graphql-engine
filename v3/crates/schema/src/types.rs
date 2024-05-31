@@ -380,31 +380,31 @@ impl Display for TypeId {
 impl TypeId {
     pub fn to_type_name(&self) -> ast::TypeName {
         match self {
-            TypeId::QueryRoot { graphql_type_name } => graphql_type_name.clone(),
-            TypeId::MutationRoot { graphql_type_name } => graphql_type_name.clone(),
-            TypeId::OutputType {
+            TypeId::QueryRoot { graphql_type_name }
+            | TypeId::MutationRoot { graphql_type_name }
+            | TypeId::OutputType {
                 graphql_type_name, ..
-            } => graphql_type_name.clone(),
-            TypeId::ScalarType {
+            }
+            | TypeId::ScalarType {
                 graphql_type_name, ..
-            } => graphql_type_name.clone(),
-            TypeId::InputObjectType {
+            }
+            | TypeId::InputObjectType {
+                graphql_type_name, ..
+            }
+            | TypeId::InputObjectBooleanExpressionType {
+                graphql_type_name, ..
+            }
+            | TypeId::ScalarTypeComparisonExpression {
+                graphql_type_name, ..
+            }
+            | TypeId::ModelOrderByExpression {
+                graphql_type_name, ..
+            }
+            | TypeId::OrderByEnumType {
                 graphql_type_name, ..
             } => graphql_type_name.clone(),
             TypeId::NodeRoot => ast::TypeName(mk_name!("Node")),
             TypeId::ModelArgumentsInput { type_name, .. } => type_name.clone(),
-            TypeId::InputObjectBooleanExpressionType {
-                graphql_type_name, ..
-            } => graphql_type_name.clone(),
-            TypeId::ScalarTypeComparisonExpression {
-                graphql_type_name, ..
-            } => graphql_type_name.clone(),
-            TypeId::ModelOrderByExpression {
-                graphql_type_name, ..
-            } => graphql_type_name.clone(),
-            TypeId::OrderByEnumType {
-                graphql_type_name, ..
-            } => graphql_type_name.clone(),
             TypeId::ApolloFederationType(PossibleApolloFederationTypes::Entity) => {
                 ast::TypeName(mk_name!("_Entity"))
             }

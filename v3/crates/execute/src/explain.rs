@@ -37,19 +37,8 @@ pub(crate) async fn explain_query_plan(
     // Here, we are assuming that all root fields are executed in parallel.
     for (alias, node) in query_plan {
         match node {
-            NodeQueryPlan::NDCQueryExecution(ndc_query_execution) => {
-                let sequence_steps = get_execution_steps(
-                    http_context,
-                    alias,
-                    &ndc_query_execution.process_response_as,
-                    ndc_query_execution.execution_tree.remote_executions,
-                    types::NDCRequest::Query(ndc_query_execution.execution_tree.root_node.query),
-                    ndc_query_execution.execution_tree.root_node.data_connector,
-                )
-                .await;
-                parallel_root_steps.push(Box::new(types::Step::Sequence(sequence_steps)));
-            }
-            NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
+            NodeQueryPlan::NDCQueryExecution(ndc_query_execution)
+            | NodeQueryPlan::RelayNodeSelect(Some(ndc_query_execution)) => {
                 let sequence_steps = get_execution_steps(
                     http_context,
                     alias,
@@ -270,10 +259,10 @@ fn simplify_step(step: Box<types::Step>) -> Box<types::Step> {
                 Box::new(types::Step::Sequence(simplified_steps))
             }
         }
-        types::Step::ModelSelect(_) => step,
-        types::Step::CommandSelect(_) => step,
-        types::Step::HashJoin => step,
-        types::Step::ForEach(_) => step,
+        types::Step::ModelSelect(_)
+        | types::Step::CommandSelect(_)
+        | types::Step::HashJoin
+        | types::Step::ForEach(_) => step,
     }
 }
 

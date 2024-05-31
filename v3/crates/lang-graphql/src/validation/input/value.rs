@@ -47,6 +47,7 @@ enum VariableValue<'q, 's, S: schema::SchemaContext> {
 }
 
 impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
+    #[allow(clippy::match_same_arms)] // lifetimes are different
     pub fn into_json(self) -> serde_json::Value {
         match self {
             Self::Json(value, _, _) => value.clone(),
@@ -70,15 +71,8 @@ impl<'q, 's, S: schema::SchemaContext> VariableValue<'q, 's, S> {
                 &LocationType::NoLocation { type_ },
                 type_info,
             ),
-            VariableValue::Const(value, type_, type_info) => normalize(
-                schema,
-                namespace,
-                &(),
-                *value,
-                &LocationType::NoLocation { type_ },
-                type_info,
-            ),
-            VariableValue::Normalized(value, type_, type_info) => normalize(
+            VariableValue::Const(value, type_, type_info)
+            | VariableValue::Normalized(value, type_, type_info) => normalize(
                 schema,
                 namespace,
                 &(),

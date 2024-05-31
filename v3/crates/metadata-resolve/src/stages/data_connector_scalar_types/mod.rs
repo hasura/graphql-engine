@@ -152,8 +152,8 @@ pub fn get_simple_scalar<'a>(
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }
-        ndc_models::Type::Array { element_type: _ } => None,
-        ndc_models::Type::Predicate {
+        ndc_models::Type::Array { element_type: _ }
+        | ndc_models::Type::Predicate {
             object_type_name: _,
         } => None,
     }

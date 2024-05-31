@@ -320,8 +320,8 @@ pub(crate) fn collect_relationships_from_selection(
             }
             // we ignore remote relationships as we are generating relationship
             // definition for one data connector
-            FieldSelection::ModelRelationshipRemote { .. } => (),
-            FieldSelection::CommandRelationshipRemote { .. } => (),
+            FieldSelection::ModelRelationshipRemote { .. }
+            | FieldSelection::CommandRelationshipRemote { .. } => (),
         };
     }
     Ok(())

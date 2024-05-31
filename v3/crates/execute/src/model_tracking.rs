@@ -52,10 +52,10 @@ pub fn get_all_usage_counts_in_query(ir: &IndexMap<Alias, RootField<'_, '_>>) ->
     for ir_field in ir.values() {
         match ir_field {
             root_field::RootField::QueryRootField(ir) => match ir {
-                root_field::QueryRootField::TypeName { .. } => {}
-                root_field::QueryRootField::SchemaField { .. } => {}
-                root_field::QueryRootField::TypeField { .. } => {}
-                root_field::QueryRootField::ApolloFederation(
+                root_field::QueryRootField::TypeName { .. }
+                | root_field::QueryRootField::SchemaField { .. }
+                | root_field::QueryRootField::TypeField { .. }
+                | root_field::QueryRootField::ApolloFederation(
                     root_field::ApolloFederationRootFields::ServiceField { .. },
                 ) => {}
                 root_field::QueryRootField::ModelSelectOne { ir, .. } => {

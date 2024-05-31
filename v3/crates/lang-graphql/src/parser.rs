@@ -237,8 +237,7 @@ impl<'a> Parser<'a> {
 
     pub fn is_next_token(&self, expected: &lexer::Token) -> bool {
         match self.peek() {
-            None => false,
-            Some(Err(_)) => false,
+            None | Some(Err(_)) => false,
             Some(Ok(token)) => token.item == *expected,
         }
     }
