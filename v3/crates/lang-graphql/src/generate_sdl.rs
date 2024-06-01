@@ -40,10 +40,10 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    ast::common as ast,
+    ast::{common as ast, value::ConstValue},
     schema::{
-        DeprecationStatus, Directive, Enum, Field, InputObject, Interface, Namespaced, Object,
-        Scalar, Schema, SchemaContext, TypeInfo, Union,
+        DeprecationStatus, Directive, Enum, Field, InputField, InputObject, Interface, Namespaced,
+        Object, Scalar, Schema, SchemaContext, TypeInfo, Union,
     },
 };
 
@@ -95,10 +95,12 @@ impl<S: SchemaContext> InputObject<S> {
                 field.get(namespace).map(|(data, _)| {
                     with_description(
                         &data.description,
-                        format_field_with_type(
+                        format_field_with_type::<S>(
                             field_name,
+                            &BTreeMap::new(),
                             &data.field_type,
-                            Some(&data.deprecation_status),
+                            &data.deprecation_status,
+                            namespace,
                         ),
                     )
                 })
@@ -388,8 +390,10 @@ fn generate_fields_sdl<S: SchemaContext>(
                     &data.description,
                     format_field_with_type(
                         field_name,
+                        &data.arguments,
                         &data.field_type,
-                        Some(&data.deprecation_status),
+                        &data.deprecation_status,
+                        namespace,
                     ),
                 ));
             }
@@ -398,20 +402,113 @@ fn generate_fields_sdl<S: SchemaContext>(
     fields_sdl
 }
 
-fn format_field_with_type(
+/// Format an input field as SDL, including default values if present.
+///
+/// Syntax:
+///
+///    <field_name>: <field_type> = <default_value>
+///
+fn format_input_field_with_type(
     field_name: &ast::Name,
     field_type: &ast::TypeContainer<ast::TypeName>,
-    deprecation_status: Option<&DeprecationStatus>,
+    deprecation_status: &DeprecationStatus,
+    default_value: Option<&ConstValue>,
 ) -> String {
-    let field_sdl = format!("{}: {}", field_name, field_type);
-    match deprecation_status {
-        Some(deprecation_status) => format!(
+    let field_sdl = match default_value {
+        None => format!("{}: {}", field_name, field_type),
+        Some(default_value) => {
+            let default_value_sdl = default_value.to_json().to_string();
+            let mut default_value_lines = default_value_sdl.lines();
+            let multiple_lines = {
+                default_value_lines.next();
+                default_value_lines.next().is_some()
+            };
+            if multiple_lines {
+                format!(
+                    "{}: {}\n  = {}",
+                    field_name,
+                    field_type,
+                    with_indent(default_value_sdl.as_str())
+                )
+            } else {
+                format!("{}: {} = {}", field_name, field_type, default_value_sdl)
+            }
+        }
+    };
+    if deprecation_status == &DeprecationStatus::NotDeprecated {
+        field_sdl
+    } else {
+        format!(
             "{} {}",
             field_sdl,
             generate_directives_sdl(&[], Some(deprecation_status))
-        ),
-        _ => field_sdl,
+        )
     }
+}
+
+/// Format an (output) field as SDL, including field arguments if present.
+///
+/// Syntax:
+///
+///    <field_name>(<generate_arguments_sdl(field_arguments)>): <field_type>
+///
+fn format_field_with_type<S: SchemaContext>(
+    field_name: &ast::Name,
+    field_arguments: &BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
+    field_type: &ast::TypeContainer<ast::TypeName>,
+    deprecation_status: &DeprecationStatus,
+    namespace: &S::Namespace,
+) -> String {
+    let field_sdl = if field_arguments.is_empty() {
+        format!("{}: {}", field_name, field_type)
+    } else {
+        let arguments_sdl = generate_arguments_sdl(field_arguments, namespace);
+        let mut arguments_lines = arguments_sdl.lines();
+        let multiple_lines = {
+            arguments_lines.next();
+            arguments_lines.next().is_some()
+        };
+
+        if multiple_lines {
+            format!(
+                "{}(\n{}\n  ): {}",
+                field_name,
+                with_indent(arguments_sdl.as_str()),
+                field_type
+            )
+        } else {
+            format!("{}({}): {}", field_name, arguments_sdl, field_type)
+        }
+    };
+    if deprecation_status == &DeprecationStatus::NotDeprecated {
+        field_sdl
+    } else {
+        format!(
+            "{} {}",
+            field_sdl,
+            generate_directives_sdl(&[], Some(deprecation_status))
+        )
+    }
+}
+
+fn generate_arguments_sdl<S: SchemaContext>(
+    field_arguments: &BTreeMap<ast::Name, Namespaced<S, InputField<S>>>,
+    namespace: &S::Namespace,
+) -> String {
+    field_arguments
+        .iter()
+        .filter_map(|(field_name, namespaced)| {
+            namespaced.get(namespace).map(|(input_field, _)| {
+                format_input_field_with_type(
+                    field_name,
+                    &input_field.field_type,
+                    &input_field.deprecation_status,
+                    input_field.default_value.as_ref(),
+                )
+            })
+        })
+        .collect::<Vec<String>>()
+        .join(",\n")
 }
 
 fn with_description(description: &Option<String>, sdl: String) -> String {

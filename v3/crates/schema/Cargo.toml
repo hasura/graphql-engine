@@ -7,6 +7,11 @@ license.workspace = true
 [lib]
 bench = false
 
+[[bin]]
+name = "build-schema-from-metadata"
+path = "bin/build-schema-from-metadata/main.rs"
+bench = false
+
 [dependencies]
 hasura-authn-core = { path = "../auth/hasura-authn-core" }
 json-ext = { path = "../utils/json-ext" }
