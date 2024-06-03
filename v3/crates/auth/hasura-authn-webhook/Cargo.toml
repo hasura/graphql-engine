@@ -24,7 +24,7 @@ thiserror = "1.0"
 [dev-dependencies]
 mockito = { version = "1.1.0", default-features = false, features = [] }
 rand = "0.8.5"
-tokio = "1.29.0"
+tokio = "1.38.0"
 
 [lints]
 workspace = true

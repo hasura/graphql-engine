@@ -9,7 +9,7 @@ bench = false
 
 [dependencies]
 futures-util = "0.3"
-tokio = { version = "1.26.0", features = [
+tokio = { version = "1.38.0", features = [
   "macros",
   "rt-multi-thread",
   "time",

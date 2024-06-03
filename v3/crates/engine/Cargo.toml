@@ -42,7 +42,7 @@ serde = "1.0.202"
 serde_json = "1.0.116"
 serde_path_to_error = "0.1.14"
 thiserror = "1.0"
-tokio = { version = "1.26.0", features = [
+tokio = { version = "1.38.0", features = [
   "macros",
   "parking_lot",
   "rt-multi-thread",
