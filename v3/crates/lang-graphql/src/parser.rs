@@ -308,6 +308,7 @@ impl<'a> Parser<'a> {
         ))
     }
 
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     pub fn peek_fail(
         &self,

@@ -69,6 +69,7 @@ impl SimpleValue {
         }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             // Both integer and float input values are accepted for Float type.

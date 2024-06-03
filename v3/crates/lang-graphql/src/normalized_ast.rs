@@ -129,6 +129,7 @@ impl<'s, S: SchemaContext> Value<'s, S> {
         }
     }
 
+    #[allow(clippy::cast_precision_loss)]
     pub fn as_float(&self) -> Result<f64> {
         match self {
             // Both integer and float input values are accepted for Float type.

@@ -49,6 +49,7 @@ impl<'a> Parser<'a> {
     }
 
     // These 'inline' attributes contribute to about 10% improvement in parse times
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn parse_field(&mut self) -> super::Result<Spanning<Field>> {
         let name1 = self.parse_name()?;
@@ -84,6 +85,7 @@ impl<'a> Parser<'a> {
         ))
     }
 
+    #[allow(clippy::inline_always)]
     #[inline(always)]
     fn parse_spread(&mut self) -> super::Result<Spanning<Selection>> {
         let spread = self.parse_punctuation(lexer::Punctuation::Spread)?;

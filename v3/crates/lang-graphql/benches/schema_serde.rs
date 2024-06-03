@@ -1,3 +1,5 @@
+#![allow(clippy::cast_precision_loss)]
+
 use human_bytes::human_bytes;
 use lang_graphql::schema::{sdl, Schema};
 
