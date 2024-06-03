@@ -20,7 +20,7 @@ serde = "1.0.202"
 serde_json = { version = "1.0.116", features = ["preserve_order"] }
 serde_path_to_error = "0.1.14"
 strum = "0.26.2"
-strum_macros = "0.26.2"
+strum_macros = "0.26.3"
 thiserror = "1.0"
 
 [dev-dependencies]
