@@ -22,6 +22,7 @@ use tracing_util::{
 
 use base64::engine::Engine;
 use engine::authentication::{AuthConfig, AuthConfig::V1 as V1AuthConfig, AuthModeConfig};
+use engine::internal_flags::{resolve_unstable_features, UnstableFeature};
 use engine::VERSION;
 use execute::HttpContext;
 use hasura_authn_core::Session;
@@ -73,6 +74,14 @@ struct ServerOptions {
         value_delimiter = ','
     )]
     cors_allow_origin: Vec<String>,
+    /// List of internal unstable features to enable, separated by commas
+    #[arg(
+        long = "unstable-feature",
+        value_name = "UNSTABLE_FEATURES",
+        env = "UNSTABLE_FEATURES",
+        value_delimiter = ','
+    )]
+    unstable_features: Vec<UnstableFeature>,
 }
 
 struct EngineState {
@@ -270,7 +279,12 @@ impl EngineRouter {
 async fn start_engine(server: &ServerOptions) -> Result<(), StartupError> {
     let auth_config =
         read_auth_config(&server.authn_config_path).map_err(StartupError::ReadAuth)?;
-    let schema = read_schema(&server.metadata_path).map_err(StartupError::ReadSchema)?;
+
+    let metadata_resolve_flags = resolve_unstable_features(&server.unstable_features);
+
+    let schema = read_schema(&server.metadata_path, &metadata_resolve_flags)
+        .map_err(StartupError::ReadSchema)?;
+
     let http_context = HttpContext {
         client: reqwest::Client::new(),
         ndc_response_size_limit: None,
@@ -520,10 +534,16 @@ async fn handle_explain_request(
     response
 }
 
-fn read_schema(metadata_path: &PathBuf) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
+fn read_schema(
+    metadata_path: &PathBuf,
+    metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
+) -> Result<gql::schema::Schema<GDS>, anyhow::Error> {
     let raw_metadata = std::fs::read_to_string(metadata_path)?;
     let metadata = open_dds::Metadata::from_json_str(&raw_metadata)?;
-    Ok(engine::build::build_schema(metadata)?)
+    Ok(engine::build::build_schema(
+        metadata,
+        metadata_resolve_flags,
+    )?)
 }
 
 fn read_auth_config(path: &PathBuf) -> Result<AuthConfig, anyhow::Error> {

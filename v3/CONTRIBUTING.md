@@ -65,6 +65,14 @@ To use this:
 1. Run `which rustc` to verify that the Rust compiler is being provided by Nix.
    You should see a path starting with `/nix/store/` and ending in `/bin/rustc`.
 
+## Unstable features
+
+When starting the engine, you can use the `UNSTABLE_FEATURES` env var to enable
+work in progress features. Currently available:
+
+- `enable-boolean-expression-types` - allow the new `BooleanExpressionType`
+  metadata kind
+
 ## Additional Reading
 
 - [Architecture](docs/architecture.md)

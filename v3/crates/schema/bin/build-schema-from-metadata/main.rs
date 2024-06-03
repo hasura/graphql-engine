@@ -24,7 +24,7 @@ pub fn main() {
     let metadata =
         open_dds::traits::OpenDd::deserialize(serde_json::from_str(&metadata_string).unwrap())
             .unwrap();
-    let gds = schema::GDS::new(metadata).unwrap();
+    let gds = schema::GDS::new_with_default_flags(metadata).unwrap();
     let sch = gds.build_schema().unwrap();
 
     let namespace_schemas = build_namespace_schemas(&sch).unwrap();

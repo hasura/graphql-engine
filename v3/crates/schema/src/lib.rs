@@ -12,7 +12,9 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 
-use metadata_resolve::{resolve, Error as ResolveMetadataError, Metadata, Qualified};
+use metadata_resolve::{
+    resolve, Error as ResolveMetadataError, Metadata, MetadataResolveFlagsInternal, Qualified,
+};
 
 use self::types::PossibleApolloFederationTypes;
 
@@ -47,8 +49,18 @@ pub struct GDS {
 }
 
 impl GDS {
-    pub fn new(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
-        let resolved_metadata = resolve(user_metadata, &Default::default())?;
+    pub fn new(
+        user_metadata: open_dds::Metadata,
+        metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
+    ) -> Result<Self, Error> {
+        let resolved_metadata = resolve(user_metadata, metadata_resolve_flags)?;
+        Ok(GDS {
+            metadata: resolved_metadata,
+        })
+    }
+
+    pub fn new_with_default_flags(user_metadata: open_dds::Metadata) -> Result<Self, Error> {
+        let resolved_metadata = resolve(user_metadata, &MetadataResolveFlagsInternal::default())?;
         Ok(GDS {
             metadata: resolved_metadata,
         })

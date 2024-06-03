@@ -77,7 +77,11 @@ pub fn test_execution_expectation_legacy(
             metadata
         );
 
-        let gds = GDS::new(metadata)?;
+        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
+            enable_boolean_expression_types: true,
+        };
+
+        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
         let schema = GDS::build_schema(&gds)?;
 
         // Ensure schema is serialized successfully.
@@ -150,7 +154,7 @@ pub(crate) fn test_introspection_expectation(
             metadata
         );
 
-        let gds = GDS::new(metadata)?;
+        let gds = GDS::new_with_default_flags(metadata)?;
         let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.
@@ -250,7 +254,12 @@ pub fn test_execution_expectation(
             metadata
         );
 
-        let gds = GDS::new(metadata)?;
+        // This is where we'll want to enable pre-release features in tests
+        let metadata_resolve_flags = metadata_resolve::MetadataResolveFlagsInternal {
+            enable_boolean_expression_types: true,
+        };
+
+        let gds = GDS::new(metadata, &metadata_resolve_flags)?;
         let schema = GDS::build_schema(&gds)?;
 
         // Verify successful serialization and deserialization of the schema.
@@ -390,7 +399,9 @@ pub fn test_execute_explain(
                 .iter()
                 .map(|path| root_test_dir.join(path)),
         )?;
-        let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata)?)?;
+
+        let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata)?)?;
+
         let schema = GDS::build_schema(&gds)?;
         let session = {
             let session_variables_raw = r#"{

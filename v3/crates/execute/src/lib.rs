@@ -406,7 +406,7 @@ mod tests {
 
         let schema = fs::read_to_string(test_dir.join("schema.json"))?;
 
-        let gds = GDS::new(open_dds::Metadata::from_json_str(&schema)?)?;
+        let gds = GDS::new_with_default_flags(open_dds::Metadata::from_json_str(&schema)?)?;
         let schema = GDS::build_schema(&gds)?;
 
         for input_file in fs::read_dir(test_dir.join("generate_ir"))? {

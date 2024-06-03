@@ -46,7 +46,8 @@ pub fn bench_execute(
     let metadata_path = test_path.join("metadata.json");
     let metadata = merge_with_common_metadata(&metadata_path, &common_metadata_path);
 
-    let gds = GDS::new(open_dds::traits::OpenDd::deserialize(metadata).unwrap()).unwrap();
+    let gds = GDS::new_with_default_flags(open_dds::traits::OpenDd::deserialize(metadata).unwrap())
+        .unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
     let http_context = HttpContext {
         client: reqwest::Client::new(),

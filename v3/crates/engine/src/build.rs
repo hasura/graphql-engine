@@ -14,7 +14,10 @@ pub enum BuildError {
     EncodingError(#[from] bincode::Error),
 }
 
-pub fn build_schema(metadata: open_dds::Metadata) -> Result<gql_schema::Schema<GDS>, BuildError> {
-    let gds = schema::GDS::new(metadata)?;
+pub fn build_schema(
+    metadata: open_dds::Metadata,
+    metadata_resolve_flags: &metadata_resolve::MetadataResolveFlagsInternal,
+) -> Result<gql_schema::Schema<GDS>, BuildError> {
+    let gds = schema::GDS::new(metadata, metadata_resolve_flags)?;
     Ok(gds.build_schema()?)
 }

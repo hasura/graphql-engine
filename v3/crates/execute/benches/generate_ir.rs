@@ -14,7 +14,7 @@ pub fn bench_generate_ir(c: &mut Criterion) {
     let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
     let metadata_json_str = fs::read_to_string(test_dir.join("schema.json")).unwrap();
     let metadata = open_dds::Metadata::from_json_str(&metadata_json_str).unwrap();
-    let gds = GDS::new(metadata).unwrap();
+    let gds = GDS::new_with_default_flags(metadata).unwrap();
     let schema = GDS::build_schema(&gds).unwrap();
 
     let mut group = c.benchmark_group("generate_ir");
