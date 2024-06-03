@@ -114,7 +114,8 @@ pub fn build_boolean_expression_input_schema(
             let annotation = types::Annotation::Input(InputAnnotation::BooleanExpression(
                 BooleanExpressionAnnotation::BooleanExpressionArgument {
                     field: types::ModelFilterArgument::Field {
-                        ndc_column: comparison_expression.ndc_column.clone(),
+                        field_name: field_name.clone(),
+                        object_type: object_boolean_expression_type.object_type.clone(),
                     },
                 },
             ));
@@ -200,9 +201,6 @@ pub fn build_boolean_expression_input_schema(
                                     relationship_type: relationship_type.clone(),
                                     mappings: mappings.clone(),
                                     source_data_connector: local_data_connector.link.clone(),
-                                    source_type_mappings: object_boolean_expression_type
-                                        .type_mappings
-                                        .clone(),
                                 };
 
                                 let namespace_annotations =

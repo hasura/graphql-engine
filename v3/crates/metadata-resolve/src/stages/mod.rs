@@ -71,7 +71,6 @@ pub fn resolve(
         &data_connectors,
         &data_connector_scalars,
         &object_types_with_permissions,
-        &scalar_types,
         &graphql_types,
         &graphql_config,
     )?;

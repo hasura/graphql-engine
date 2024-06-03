@@ -91,6 +91,7 @@ pub(crate) fn model_selection_ir<'s>(
         .ok_or_else(|| error::InternalEngineError::InternalGeneric {
             description: format!("type '{data_type}' not found in model source type_mappings"),
         })?;
+
     let selection = selection_set::generate_selection_set_ir(
         selection_set,
         &model_source.data_connector,

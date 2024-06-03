@@ -119,6 +119,17 @@ pub enum InternalDeveloperError {
         mapping_kind: &'static str,
     },
 
+    #[error("Type mapping not found for the type name {type_name:}")]
+    TypeMappingNotFound {
+        type_name: Qualified<CustomTypeName>,
+    },
+
+    #[error("Field mapping not found for the field {field_name:} of type {type_name:}")]
+    FieldMappingNotFound {
+        type_name: Qualified<CustomTypeName>,
+        field_name: FieldName,
+    },
+
     #[error("Type mapping not found for the type name {type_name:} while executing the relationship {relationship_name:}")]
     TypeMappingNotFoundForRelationship {
         type_name: Qualified<CustomTypeName>,

@@ -1,4 +1,4 @@
-use crate::stages::{data_connectors, object_types};
+use crate::stages::data_connectors;
 
 use crate::types::subgraph::{Qualified, QualifiedTypeReference};
 use std::collections::BTreeMap;
@@ -7,7 +7,7 @@ use lang_graphql::ast::common::{self as ast};
 use std::collections::BTreeSet;
 
 use open_dds::{
-    data_connector::{DataConnectorColumnName, DataConnectorName, DataConnectorObjectType},
+    data_connector::{DataConnectorName, DataConnectorObjectType},
     types::{CustomTypeName, FieldName, OperatorName},
 };
 use serde::{Deserialize, Serialize};
@@ -29,8 +29,6 @@ pub struct ObjectBooleanExpressionDataConnector {
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
-    pub type_mappings:
-        BTreeMap<Qualified<open_dds::types::CustomTypeName>, object_types::TypeMapping>,
     pub graphql: Option<BooleanExpressionInfo>,
 
     /// in future we'll not be using this at all, for now it is here, and we use it only to check
@@ -42,7 +40,6 @@ pub struct ObjectBooleanExpressionType {
 pub struct ComparisonExpressionInfo {
     pub scalar_type_name: String,
     pub type_name: ast::TypeName,
-    pub ndc_column: DataConnectorColumnName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     pub is_null_operator_name: ast::Name,
 }

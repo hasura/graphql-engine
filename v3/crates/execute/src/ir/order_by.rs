@@ -1,12 +1,11 @@
 use std::collections::BTreeMap;
 
+use crate::model_tracking::{count_model, UsagesCounts};
 use lang_graphql::normalized_ast::{self as normalized_ast, InputField};
 use ndc_models;
-use serde::Serialize;
-
-use crate::model_tracking::{count_model, UsagesCounts};
 use schema::OrderByRelationshipAnnotation;
 use schema::{Annotation, InputAnnotation, ModelInputAnnotation};
+use serde::Serialize;
 
 use super::relationship::LocalModelRelationshipInfo;
 use super::selection_set::NDCRelationshipName;

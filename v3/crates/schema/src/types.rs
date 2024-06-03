@@ -81,7 +81,10 @@ pub enum ModelFilterArgument {
     AndOp,
     OrOp,
     NotOp,
-    Field { ndc_column: DataConnectorColumnName },
+    Field {
+        field_name: types::FieldName,
+        object_type: Qualified<types::CustomTypeName>,
+    },
     RelationshipField(FilterRelationshipAnnotation),
 }
 

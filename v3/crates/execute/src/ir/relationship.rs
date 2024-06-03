@@ -75,14 +75,14 @@ pub type TargetField = (FieldName, metadata_resolve::NdcColumnForComparison);
 
 pub(crate) fn generate_model_relationship_ir<'s>(
     field: &Field<'s, GDS>,
-    annotation: &'s ModelRelationshipAnnotation,
+    relationship_annotation: &'s ModelRelationshipAnnotation,
     source_data_connector: &'s metadata_resolve::DataConnectorLink,
-    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    source_type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     session_variables: &SessionVariables,
     usage_counts: &mut UsagesCounts,
 ) -> Result<FieldSelection<'s>, error::Error> {
     // Add the target model being used in the usage counts
-    count_model(&annotation.model_name, usage_counts);
+    count_model(&relationship_annotation.model_name, usage_counts);
     let field_call = field.field_call()?;
 
     let mut limit = None;
@@ -122,8 +122,13 @@ pub(crate) fn generate_model_relationship_ir<'s>(
                     InputAnnotation::BooleanExpression(
                         BooleanExpressionAnnotation::BooleanExpression,
                     ) => {
-                        filter_clause =
-                            resolve_filter_expression(argument.value.as_object()?, usage_counts)?
+                        if let Some(model_source) = &relationship_annotation.target_source {
+                            filter_clause = resolve_filter_expression(
+                                argument.value.as_object()?,
+                                &model_source.model.type_mappings,
+                                usage_counts,
+                            )?
+                        }
                     }
 
                     _ => {
@@ -142,7 +147,7 @@ pub(crate) fn generate_model_relationship_ir<'s>(
         }
     }
     let target_source =
-        annotation
+        relationship_annotation
             .target_source
             .as_ref()
             .ok_or_else(|| match &field.selection_set.type_name {
@@ -162,9 +167,9 @@ pub(crate) fn generate_model_relationship_ir<'s>(
         metadata_resolve::RelationshipExecutionCategory::Local => build_local_model_relationship(
             field,
             field_call,
-            annotation,
+            relationship_annotation,
             source_data_connector,
-            type_mappings,
+            source_type_mappings,
             target_source,
             filter_clause,
             limit,
@@ -177,8 +182,8 @@ pub(crate) fn generate_model_relationship_ir<'s>(
             build_remote_relationship(
                 field,
                 field_call,
-                annotation,
-                type_mappings,
+                relationship_annotation,
+                source_type_mappings,
                 target_source,
                 filter_clause,
                 limit,

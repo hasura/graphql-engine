@@ -3,12 +3,16 @@ use std::collections::BTreeMap;
 use indexmap::IndexMap;
 use lang_graphql::ast::common as ast;
 use lang_graphql::normalized_ast;
+use metadata_resolve::{FieldMapping, Qualified};
 use ndc_models;
 use serde::Serialize;
 
 use crate::ir::error;
 use crate::model_tracking::{count_model, UsagesCounts};
-use open_dds::data_connector::DataConnectorColumnName;
+use open_dds::{
+    data_connector::DataConnectorColumnName,
+    types::{CustomTypeName, FieldName},
+};
 use schema::FilterRelationshipAnnotation;
 use schema::GDS;
 use schema::{self};
@@ -28,13 +32,14 @@ pub(crate) struct ResolvedFilterExpression<'s> {
 /// Generates the IR for GraphQL 'where' boolean expression
 pub(crate) fn resolve_filter_expression<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ResolvedFilterExpression<'s>, error::Error> {
     let mut expressions = Vec::new();
     let mut relationships = BTreeMap::new();
     for field in fields.values() {
         let field_filter_expression =
-            build_filter_expression(field, &mut relationships, usage_counts)?;
+            build_filter_expression(field, &mut relationships, type_mappings, usage_counts)?;
         expressions.push(field_filter_expression);
     }
     let expression = ndc_models::Expression::And { expressions };
@@ -49,6 +54,7 @@ pub(crate) fn resolve_filter_expression<'s>(
 fn build_filter_expression<'s>(
     field: &normalized_ast::InputField<'s, GDS>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
     match field.info.generic {
@@ -68,6 +74,7 @@ fn build_filter_expression<'s>(
                 and_expressions.push(resolve_filter_object(
                     value_object,
                     relationships,
+                    type_mappings,
                     usage_counts,
                 )?);
             }
@@ -90,6 +97,7 @@ fn build_filter_expression<'s>(
                 or_expressions.push(resolve_filter_object(
                     value_object,
                     relationships,
+                    type_mappings,
                     usage_counts,
                 )?);
             }
@@ -108,7 +116,7 @@ fn build_filter_expression<'s>(
             let not_value = field.value.as_object()?;
 
             let not_filter_expression =
-                resolve_filter_object(not_value, relationships, usage_counts)?;
+                resolve_filter_object(not_value, relationships, type_mappings, usage_counts)?;
             Ok(ndc_models::Expression::Not {
                 expression: Box::new(not_filter_expression),
             })
@@ -116,9 +124,15 @@ fn build_filter_expression<'s>(
         // The column that we want to use for filtering.
         schema::Annotation::Input(InputAnnotation::BooleanExpression(
             BooleanExpressionAnnotation::BooleanExpressionArgument {
-                field: schema::ModelFilterArgument::Field { ndc_column: column },
+                field:
+                    schema::ModelFilterArgument::Field {
+                        field_name,
+                        object_type,
+                    },
             },
         )) => {
+            let FieldMapping { column, .. } =
+                get_field_mapping_of_field_name(type_mappings, object_type, field_name)?;
             let mut expressions = Vec::new();
             for (_op_name, op_value) in field.value.as_object()? {
                 match op_value.info.generic {
@@ -155,7 +169,6 @@ fn build_filter_expression<'s>(
                         relationship_type,
                         source_type,
                         source_data_connector,
-                        source_type_mappings,
                         target_source,
                         target_type,
                         target_model_name,
@@ -174,7 +187,7 @@ fn build_filter_expression<'s>(
                     relationship_type,
                     source_type,
                     source_data_connector,
-                    source_type_mappings,
+                    source_type_mappings: type_mappings,
                     target_source,
                     target_type,
                     mappings,
@@ -188,8 +201,12 @@ fn build_filter_expression<'s>(
             let mut expressions = Vec::new();
 
             for field in filter_object.values() {
-                let field_filter_expression =
-                    build_filter_expression(field, relationships, usage_counts)?;
+                let field_filter_expression = build_filter_expression(
+                    field,
+                    relationships,
+                    &target_source.model.type_mappings,
+                    usage_counts,
+                )?;
                 expressions.push(field_filter_expression);
             }
 
@@ -210,16 +227,44 @@ fn build_filter_expression<'s>(
     }
 }
 
+/// get column name for field name
+fn get_field_mapping_of_field_name(
+    type_mappings: &BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
+    type_name: &Qualified<CustomTypeName>,
+    field_name: &FieldName,
+) -> Result<metadata_resolve::FieldMapping, error::Error> {
+    let type_mapping = type_mappings.get(type_name).ok_or_else(|| {
+        error::InternalDeveloperError::TypeMappingNotFound {
+            type_name: type_name.clone(),
+        }
+    })?;
+    match type_mapping {
+        metadata_resolve::TypeMapping::Object { field_mappings, .. } => Ok(field_mappings
+            .get(field_name)
+            .ok_or_else(|| error::InternalDeveloperError::FieldMappingNotFound {
+                type_name: type_name.clone(),
+                field_name: field_name.clone(),
+            })?
+            .clone()),
+    }
+}
+
 /// Generate a filter expression from an input object fields
 fn resolve_filter_object<'s>(
     fields: &IndexMap<ast::Name, normalized_ast::InputField<'s, GDS>>,
     relationships: &mut BTreeMap<NDCRelationshipName, LocalModelRelationshipInfo<'s>>,
+    type_mappings: &'s BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     usage_counts: &mut UsagesCounts,
 ) -> Result<ndc_models::Expression, error::Error> {
     let mut expressions = Vec::new();
 
     for field in fields.values() {
-        expressions.push(build_filter_expression(field, relationships, usage_counts)?)
+        expressions.push(build_filter_expression(
+            field,
+            relationships,
+            type_mappings,
+            usage_counts,
+        )?)
     }
     Ok(ndc_models::Expression::And { expressions })
 }

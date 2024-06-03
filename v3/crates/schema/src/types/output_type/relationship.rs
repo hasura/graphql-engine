@@ -33,11 +33,6 @@ pub struct FilterRelationshipAnnotation {
     pub relationship_type: RelationshipType,
     pub source_type: Qualified<CustomTypeName>,
     pub source_data_connector: metadata_resolve::DataConnectorLink,
-    #[serde(
-        serialize_with = "serialize_qualified_btreemap",
-        deserialize_with = "deserialize_qualified_btreemap"
-    )]
-    pub source_type_mappings: BTreeMap<Qualified<CustomTypeName>, metadata_resolve::TypeMapping>,
     pub target_source: metadata_resolve::ModelTargetSource,
     pub target_type: Qualified<CustomTypeName>,
     pub target_model_name: Qualified<ModelName>,
