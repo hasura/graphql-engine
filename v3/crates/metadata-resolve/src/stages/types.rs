@@ -9,8 +9,8 @@ use open_dds::{commands::CommandName, models::ModelName, types::CustomTypeName};
 use crate::types::subgraph::Qualified;
 
 use crate::stages::{
-    command_permissions, graphql_config, model_permissions, object_boolean_expressions,
-    relationships, scalar_types,
+    boolean_expressions, command_permissions, graphql_config, model_permissions,
+    object_boolean_expressions, relationships, scalar_types,
 };
 
 /// Resolved and validated metadata for a project. Used internally in the v3 server.
@@ -25,6 +25,7 @@ pub struct Metadata {
         Qualified<CustomTypeName>,
         object_boolean_expressions::ObjectBooleanExpressionType,
     >,
+    pub boolean_expression_types: boolean_expressions::BooleanExpressionTypes,
     pub graphql_config: graphql_config::GlobalGraphqlConfig,
     pub roles: Vec<Role>,
 }

@@ -1826,7 +1826,6 @@ dependencies = [
  "derive_more",
  "hasura-authn-core",
  "indexmap 2.2.6",
- "json_value_merge",
  "lang-graphql",
  "lazy_static",
  "ndc-models",

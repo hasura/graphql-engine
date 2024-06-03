@@ -148,7 +148,9 @@ pub struct ComparisonOperator {
     pub argument_type: TypeReference,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema, opendds_derive::OpenDd)]
+#[derive(
+    Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema, opendds_derive::OpenDd,
+)]
 #[serde(rename_all = "camelCase")]
 #[opendd(json_schema(title = "DataConnectorOperatorMapping"))]
 pub struct DataConnectorOperatorMapping {

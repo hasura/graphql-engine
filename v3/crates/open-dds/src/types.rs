@@ -223,6 +223,7 @@ pub enum InbuiltType {
 
 #[derive(
     Serialize,
+    Deserialize,
     Clone,
     Debug,
     PartialEq,

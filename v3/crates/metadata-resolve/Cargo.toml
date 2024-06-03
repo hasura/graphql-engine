@@ -27,7 +27,6 @@ url = "2.4.1"
 [dev-dependencies]
 test-each = "*"
 anyhow = "*"
-json_value_merge = "*"
 similar-asserts = "*"
 
 [lints]

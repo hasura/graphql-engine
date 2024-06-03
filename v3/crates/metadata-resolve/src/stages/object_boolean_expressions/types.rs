@@ -12,7 +12,7 @@ use open_dds::{
 };
 use serde::{Deserialize, Serialize};
 
-pub struct BooleanExpressionsOutput {
+pub struct ObjectBooleanExpressionsOutput {
     pub object_boolean_expression_types:
         BTreeMap<Qualified<CustomTypeName>, ObjectBooleanExpressionType>,
     pub graphql_types: BTreeSet<ast::TypeName>,
@@ -29,7 +29,7 @@ pub struct ObjectBooleanExpressionDataConnector {
 pub struct ObjectBooleanExpressionType {
     pub name: Qualified<CustomTypeName>,
     pub object_type: Qualified<CustomTypeName>,
-    pub graphql: Option<BooleanExpressionInfo>,
+    pub graphql: Option<BooleanExpressionGraphqlConfig>,
 
     /// in future we'll not be using this at all, for now it is here, and we use it only to check
     /// the user has not included something that does not make sense
@@ -45,7 +45,7 @@ pub struct ComparisonExpressionInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct BooleanExpressionGraphqlConfig {
+pub struct BooleanExpressionGraphqlFieldConfig {
     pub where_field_name: ast::Name,
     pub and_operator_name: ast::Name,
     pub or_operator_name: ast::Name,
@@ -53,8 +53,8 @@ pub struct BooleanExpressionGraphqlConfig {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct BooleanExpressionInfo {
+pub struct BooleanExpressionGraphqlConfig {
     pub type_name: ast::TypeName,
     pub scalar_fields: BTreeMap<FieldName, ComparisonExpressionInfo>,
-    pub graphql_config: BooleanExpressionGraphqlConfig,
+    pub graphql_config: BooleanExpressionGraphqlFieldConfig,
 }

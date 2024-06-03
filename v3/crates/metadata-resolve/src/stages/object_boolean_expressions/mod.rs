@@ -15,8 +15,9 @@ use open_dds::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 pub use types::{
-    BooleanExpressionGraphqlConfig, BooleanExpressionInfo, BooleanExpressionsOutput,
-    ComparisonExpressionInfo, ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
+    BooleanExpressionGraphqlConfig, BooleanExpressionGraphqlFieldConfig, ComparisonExpressionInfo,
+    ObjectBooleanExpressionDataConnector, ObjectBooleanExpressionType,
+    ObjectBooleanExpressionsOutput,
 };
 
 /// resolve object boolean expression types
@@ -30,7 +31,7 @@ pub fn resolve(
     object_types: &BTreeMap<Qualified<CustomTypeName>, type_permissions::ObjectTypeWithPermissions>,
     existing_graphql_types: &BTreeSet<ast::TypeName>,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<BooleanExpressionsOutput, Error> {
+) -> Result<ObjectBooleanExpressionsOutput, Error> {
     let mut object_boolean_expression_types = BTreeMap::new();
     let mut graphql_types = existing_graphql_types.clone();
 
@@ -59,7 +60,7 @@ pub fn resolve(
             ));
         }
     }
-    Ok(BooleanExpressionsOutput {
+    Ok(ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
     })
@@ -223,7 +224,7 @@ pub(crate) fn resolve_object_boolean_expression_type(
                         },
                 })?;
 
-            resolve_boolean_expression_info(
+            resolve_boolean_expression_graphql_config(
                 &data_connector_name,
                 graphql_type_name.clone(),
                 subgraph,
@@ -253,14 +254,14 @@ pub(crate) fn resolve_object_boolean_expression_type(
 }
 
 // record filter expression info
-pub fn resolve_boolean_expression_info(
+pub fn resolve_boolean_expression_graphql_config(
     data_connector_name: &Qualified<open_dds::data_connector::DataConnectorName>,
     where_type_name: ast::TypeName,
     subgraph: &str,
     scalars: &data_connector_scalar_types::ScalarTypeWithRepresentationInfoMap,
     type_mappings: &object_types::TypeMapping,
     graphql_config: &graphql_config::GraphqlConfig,
-) -> Result<BooleanExpressionInfo, Error> {
+) -> Result<BooleanExpressionGraphqlConfig, Error> {
     let mut scalar_fields = BTreeMap::new();
 
     let object_types::TypeMapping::Object { field_mappings, .. } = type_mappings;
@@ -314,10 +315,10 @@ pub fn resolve_boolean_expression_info(
         }
     }
 
-    Ok(BooleanExpressionInfo {
+    Ok(BooleanExpressionGraphqlConfig {
         type_name: where_type_name,
         scalar_fields,
-        graphql_config: (BooleanExpressionGraphqlConfig {
+        graphql_config: (BooleanExpressionGraphqlFieldConfig {
             where_field_name: filter_graphql_config.where_field_name.clone(),
             and_operator_name: filter_graphql_config.operator_names.and.clone(),
             or_operator_name: filter_graphql_config.operator_names.or.clone(),

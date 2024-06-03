@@ -636,12 +636,23 @@ pub enum BooleanExpressionError {
         name: Qualified<CustomTypeName>,
         model: Qualified<ModelName>,
     },
+    #[error("unknown scalar boolean expression type {scalar_boolean_expression:} is used in boolean expression {boolean_expression:}")]
+    ScalarBooleanExpressionCouldNotBeFound {
+        boolean_expression: Qualified<CustomTypeName>,
+        scalar_boolean_expression: Qualified<CustomTypeName>,
+    },
     #[error("the boolean expression type {name:} used in model {model:} corresponds to object type {boolean_expression_object_type:} whereas the model's object type is {model_object_type:}")]
     BooleanExpressionTypeForInvalidObjectTypeInModel {
         name: Qualified<CustomTypeName>,
         boolean_expression_object_type: Qualified<CustomTypeName>,
         model: Qualified<ModelName>,
         model_object_type: Qualified<CustomTypeName>,
+    },
+    #[error("field {field:} is missing a mapping for data connector {data_connector_name:} in boolean expression {boolean_expression_name:}")]
+    DataConnectorMappingMissingForField {
+        boolean_expression_name: Qualified<CustomTypeName>,
+        field: FieldName,
+        data_connector_name: Qualified<DataConnectorName>,
     },
 }
 

@@ -1,5 +1,5 @@
 mod apollo;
-mod check_boolean_expressions_flag;
+mod boolean_expressions;
 pub mod command_permissions;
 pub mod commands;
 pub mod data_connector_scalar_types;
@@ -27,9 +27,6 @@ pub fn resolve(
 ) -> Result<Metadata, Error> {
     let metadata_accessor: open_dds::accessor::MetadataAccessor =
         open_dds::accessor::MetadataAccessor::new(metadata);
-
-    // check if metadata contains fancy new kinds that are hidden behind a feature flag
-    check_boolean_expressions_flag::resolve(&metadata_accessor, flags)?;
 
     // The graphql config represents the shape of the Hasura features in the graphql schema,
     // and which features should be enabled or disabled. We check this structure is valid.
@@ -63,7 +60,7 @@ pub fn resolve(
     let object_types_with_permissions =
         type_permissions::resolve(&metadata_accessor, &object_types)?;
 
-    let object_boolean_expressions::BooleanExpressionsOutput {
+    let object_boolean_expressions::ObjectBooleanExpressionsOutput {
         object_boolean_expression_types,
         graphql_types,
     } = object_boolean_expressions::resolve(
@@ -73,6 +70,19 @@ pub fn resolve(
         &object_types_with_permissions,
         &graphql_types,
         &graphql_config,
+    )?;
+
+    // resolve fancy new boolean expression types
+    let boolean_expressions::BooleanExpressionsOutput {
+        boolean_expression_types,
+        ..
+    } = boolean_expressions::resolve(
+        &metadata_accessor,
+        flags,
+        &graphql_config,
+        &data_connectors,
+        &object_types_with_permissions,
+        &scalar_types,
     )?;
 
     let models::ModelsOutput {
@@ -148,6 +158,7 @@ pub fn resolve(
         models: models_with_permissions,
         commands: commands_with_permissions,
         object_boolean_expression_types,
+        boolean_expression_types,
         graphql_config: graphql_config.global,
         roles,
     })

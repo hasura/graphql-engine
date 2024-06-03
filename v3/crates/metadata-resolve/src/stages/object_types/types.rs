@@ -65,6 +65,10 @@ impl DataConnectorTypeMappingsForObject {
         Ok(())
     }
 
+    pub fn data_connector_names(&self) -> impl Iterator<Item = &Qualified<DataConnectorName>> {
+        self.0.keys()
+    }
+
     pub fn object_types_for_data_connector(
         &self,
         data_connector_name: &Qualified<DataConnectorName>,

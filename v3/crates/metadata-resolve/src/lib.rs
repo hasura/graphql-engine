@@ -27,7 +27,7 @@ pub use stages::models::{
     SelectUniqueGraphQlDefinition,
 };
 pub use stages::object_boolean_expressions::{
-    BooleanExpressionInfo, ComparisonExpressionInfo, ObjectBooleanExpressionType,
+    BooleanExpressionGraphqlConfig, ComparisonExpressionInfo, ObjectBooleanExpressionType,
 };
 pub use stages::object_types::{
     FieldMapping, ObjectTypeRepresentation, ResolvedObjectApolloFederationConfig, TypeMapping,
