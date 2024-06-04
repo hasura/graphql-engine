@@ -44,12 +44,14 @@ fix:
 format:
   cargo fmt --check
   prettier --check .
+  ! command -v nix || nix fmt -- --check .
 alias fmt := format
 
 fix-local:
   cargo clippy --all-targets --no-deps --fix --allow-no-vcs
   cargo fmt
   just fix-format
+  ! command -v nix || nix fmt
 
 fix-format:
   prettier --write .
@@ -146,6 +148,7 @@ watch-local: start-docker-test-deps start-docker-run-deps
 # check the code is fine
 lint-local:
   cargo clippy --all-targets --no-deps
+  ! command -v nix || nix flake check
 
 # ensure we don't have unused dependencies:
 machete:

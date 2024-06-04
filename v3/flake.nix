@@ -2,8 +2,8 @@
   description = "DDN Engine";
 
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs;
-    flake-utils.url = github:numtide/flake-utils;
+    nixpkgs.url = "github:NixOS/nixpkgs";
+    flake-utils.url = "github:numtide/flake-utils";
 
     crane = {
       url = "github:ipetkov/crane";
@@ -46,6 +46,51 @@
           formatter = pkgs.nixpkgs-fmt;
 
           packages = {
+            ###### ENGINE
+
+            # engine binary for whichever is the local machine
+            engine = rust.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "engine";
+            };
+
+            # engine binary for x86_64-linux
+            engine-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "engine";
+            };
+
+            # engine binary for aarch64-linux
+            engine-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "engine";
+            };
+
+            # engine docker files for whichever is the local machine
+            engine-docker = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.engine;
+              image-name = "ghcr.io/hasura/v3-engine";
+              tag = "dev";
+              port = "3000";
+            };
+
+            # engine docker for x86_64-linux
+            engine-docker-x86_64-linux = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.engine-x86_64-linux;
+              architecture = "amd64";
+              image-name = "ghcr.io/hasura/v3-engine";
+              port = "3000";
+            };
+
+            # engine docker for aarch64-linux
+            engine-docker-aarch64-linux = pkgs.callPackage ./nix/docker.nix {
+              package = self.packages.${localSystem}.engine-aarch64-linux;
+              architecture = "arm64";
+              image-name = "ghcr.io/hasura/v3-engine";
+              port = "3000";
+            };
+
+            default = self.packages.${localSystem}.engine;
 
             ###### CUSTOM_CONNECTOR
 
@@ -56,18 +101,16 @@
             };
 
             # custom-connector binary for x86_64-linux
-            custom-connector-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "custom-connector";
-              };
+            custom-connector-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "custom-connector";
+            };
 
-            # custom-connector binary for x86_64-linux
-            custom-connector-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "custom-connector";
-              };
+            # custom-connector binary for aarch64-linux
+            custom-connector-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "custom-connector";
+            };
 
             # custom-connector docker files for whichever is the local machine
             custom-connector-docker = pkgs.callPackage ./nix/docker.nix {
@@ -102,18 +145,16 @@
             };
 
             # dev-auth-webhook binary for x86_64-linux
-            dev-auth-webhook-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "dev-auth-webhook";
-              };
+            dev-auth-webhook-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "dev-auth-webhook";
+            };
 
-            # dev-auth-webhook binary for x86_64-linux
-            dev-auth-webhook-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "dev-auth-webhook";
-              };
+            # dev-auth-webhook binary for aarch64-linux
+            dev-auth-webhook-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix {
+              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
+              pname = "dev-auth-webhook";
+            };
 
             # dev-auth-webhook docker files for whichever is the local machine
             dev-auth-webhook-docker = pkgs.callPackage ./nix/docker.nix {
@@ -139,54 +180,13 @@
               port = "3050";
             };
 
-            ###### ENGINE
+            ### SCRIPTS
 
-            # engine binary for whichever is the local machine
-            engine = rust.callPackage ./nix/app.nix {
-              version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-              pname = "engine";
+            publish-docker-image = pkgs.writeShellApplication {
+              name = "publish-docker-image";
+              runtimeInputs = with pkgs; [ coreutils skopeo ];
+              text = builtins.readFile ./.github/scripts/deploy.sh;
             };
-
-            # engine binary for x86_64-linux
-            engine-x86_64-linux = rust-x86_64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "engine";
-              };
-
-            # engine binary for x86_64-linux
-            engine-aarch64-linux = rust-aarch64-linux.callPackage ./nix/app.nix
-              {
-                version = if self ? "dirtyRev" then self.dirtyShortRev else self.shortRev;
-                pname = "engine";
-              };
-
-            # engine docker files for whichever is the local machine
-            engine-docker = pkgs.callPackage ./nix/docker.nix {
-              package = self.packages.${localSystem}.engine;
-              image-name = "ghcr.io/hasura/v3-engine";
-              tag = "dev";
-              port = "3000";
-            };
-
-            # engine docker for x86_64-linux
-            engine-docker-x86_64-linux = pkgs.callPackage ./nix/docker.nix {
-              package = self.packages.${localSystem}.engine-x86_64-linux;
-              architecture = "amd64";
-              image-name = "ghcr.io/hasura/v3-engine";
-              port = "3000";
-            };
-
-            # engine docker for aarch64-linux
-            engine-docker-aarch64-linux = pkgs.callPackage ./nix/docker.nix {
-              package = self.packages.${localSystem}.engine-aarch64-linux;
-              architecture = "arm64";
-              image-name = "ghcr.io/hasura/v3-engine";
-              port = "3000";
-            };
-
-            default = self.packages.${localSystem}.engine;
-
           };
 
           apps = {
