@@ -92,10 +92,10 @@ pub(crate) fn resolve(
     }
 
     Ok(DataConnectorTypeMappingsOutput {
-        object_types,
         graphql_types,
         global_id_enabled_types,
         apollo_federation_entity_enabled_types,
+        object_types,
     })
 }
 

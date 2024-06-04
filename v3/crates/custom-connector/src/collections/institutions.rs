@@ -136,8 +136,8 @@ pub fn parse_institution(
 
     Ok(Institution {
         name,
-        staff,
         location,
+        staff,
         departments,
     })
 }
@@ -157,8 +157,8 @@ pub fn parse_institution_query(
 
     Ok(Institution {
         name,
-        staff,
         location,
+        staff,
         departments,
     })
 }

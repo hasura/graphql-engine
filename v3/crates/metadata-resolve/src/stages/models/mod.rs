@@ -129,8 +129,8 @@ pub fn resolve(
     Ok(ModelsOutput {
         models,
         graphql_types,
-        apollo_federation_entity_enabled_types,
         global_id_enabled_types,
+        apollo_federation_entity_enabled_types,
     })
 }
 
