@@ -823,7 +823,7 @@ pub(crate) fn get_ndc_column_for_comparison<F: Fn() -> String>(
         })?;
 
     // Determine whether the ndc type is a simple scalar and get scalar type info
-    let (_field_ndc_type_scalar, scalar_type_info) =
+    let scalar_type_info =
         data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
             .ok_or_else(|| Error::UncomparableNonScalarFieldType {
                 comparison_location: comparison_location(),

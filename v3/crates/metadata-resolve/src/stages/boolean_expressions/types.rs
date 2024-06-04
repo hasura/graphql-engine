@@ -50,7 +50,6 @@ pub struct ResolvedScalarBooleanExpressionType {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ComparisonExpressionInfo {
-    pub scalar_type_name: String,
     pub type_name: ast::TypeName,
     pub operators: BTreeMap<OperatorName, QualifiedTypeReference>,
     pub is_null_operator_name: ast::Name,

@@ -355,7 +355,6 @@ pub enum TypeId {
         graphql_type_name: ast::TypeName,
     },
     ScalarTypeComparisonExpression {
-        scalar_type_name: String,
         graphql_type_name: ast::TypeName,
         operators: Vec<(ast::Name, QualifiedTypeReference)>,
         is_null_operator_name: ast::Name,

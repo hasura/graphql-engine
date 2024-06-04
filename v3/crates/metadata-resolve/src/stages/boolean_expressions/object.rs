@@ -186,18 +186,14 @@ fn resolve_object_boolean_graphql(
                 }
             };
 
-            if let Some((scalar_type, qualified_type_name)) =
-                match &scalar_boolean_expression_type.r#type {
-                    TypeName::Inbuilt(_) => None,
-                    TypeName::Custom(type_name) => {
-                        let qualified_type_name =
-                            Qualified::new(subgraph.to_string(), type_name.to_owned());
-                        scalar_types
-                            .get(&qualified_type_name)
-                            .map(|scalar_type| (scalar_type, qualified_type_name))
-                    }
+            if let Some(scalar_type) = match &scalar_boolean_expression_type.r#type {
+                TypeName::Inbuilt(_) => None,
+                TypeName::Custom(type_name) => {
+                    let qualified_type_name =
+                        Qualified::new(subgraph.to_string(), type_name.to_owned());
+                    scalar_types.get(&qualified_type_name)
                 }
-            {
+            } {
                 if let Some(graphql_type_name) = &scalar_type.graphql_type_name {
                     let mut operators = BTreeMap::new();
                     for (op_name, op_definition) in
@@ -214,7 +210,6 @@ fn resolve_object_boolean_graphql(
                         scalar_fields.insert(
                             comparable_field_name.clone(),
                             ComparisonExpressionInfo {
-                                scalar_type_name: qualified_type_name.to_string(),
                                 type_name: graphql_type_name.clone(),
                                 operators,
                                 is_null_operator_name: filter_graphql_config

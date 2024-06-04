@@ -186,7 +186,6 @@ impl gql_schema::SchemaContext for GDS {
                 self, builder, type_name, model_name,
             ),
             types::TypeId::ScalarTypeComparisonExpression {
-                scalar_type_name: _,
                 graphql_type_name,
                 operators,
                 is_null_operator_name,

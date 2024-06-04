@@ -334,7 +334,7 @@ pub(crate) fn resolve_model_predicate_with_type(
             let field_ndc_type = &field_mapping.column_type;
 
             // Get scalar type info from the data connector
-            let (_, scalar_type_info) =
+            let scalar_type_info =
                 data_connector_scalar_types::get_simple_scalar(field_ndc_type.clone(), scalars)
                     .ok_or_else(|| Error::TypePredicateError {
                         type_predicate_error: TypePredicateError::UnsupportedFieldInTypePredicate {

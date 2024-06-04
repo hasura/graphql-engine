@@ -276,12 +276,10 @@ pub fn resolve_boolean_expression_graphql_config(
 
     for (field_name, field_mapping) in field_mappings {
         // Generate comparison expression for fields mapped to simple scalar type
-        if let Some((scalar_type_name, scalar_type_info)) =
-            data_connector_scalar_types::get_simple_scalar(
-                field_mapping.column_type.clone(),
-                scalars,
-            )
-        {
+        if let Some(scalar_type_info) = data_connector_scalar_types::get_simple_scalar(
+            field_mapping.column_type.clone(),
+            scalars,
+        ) {
             if let Some(graphql_type_name) = &scalar_type_info.comparison_expression_name.clone() {
                 let mut operators = BTreeMap::new();
                 for (op_name, op_definition) in &scalar_type_info.scalar_type.comparison_operators {
@@ -301,7 +299,6 @@ pub fn resolve_boolean_expression_graphql_config(
                     scalar_fields.insert(
                         field_name.clone(),
                         ComparisonExpressionInfo {
-                            scalar_type_name: scalar_type_name.clone(),
                             type_name: graphql_type_name.clone(),
                             operators,
                             is_null_operator_name: filter_graphql_config

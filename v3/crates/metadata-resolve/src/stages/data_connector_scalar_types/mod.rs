@@ -143,12 +143,9 @@ fn convert_data_connectors_contexts<'a>(
 pub fn get_simple_scalar<'a>(
     t: ndc_models::Type,
     scalars: &'a ScalarTypeWithRepresentationInfoMap<'a>,
-) -> Option<(String, &'a ScalarTypeWithRepresentationInfo<'a>)> {
+) -> Option<&'a ScalarTypeWithRepresentationInfo<'a>> {
     match t {
-        ndc_models::Type::Named { name } => scalars
-            .0
-            .get(DataConnectorScalarType::ref_cast(&name))
-            .map(|info| (name, info)),
+        ndc_models::Type::Named { name } => scalars.0.get(DataConnectorScalarType::ref_cast(&name)),
         ndc_models::Type::Nullable { underlying_type } => {
             get_simple_scalar(*underlying_type, scalars)
         }
